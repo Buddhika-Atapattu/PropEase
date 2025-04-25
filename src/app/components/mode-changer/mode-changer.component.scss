@@ -1,0 +1,27 @@
+@use "../../styles/global.scss" as *;
+
+button {
+  position: fixed;
+  right: 20px;
+  top: 20px;
+  display: flex;
+  background-color: #fff;
+  padding: 0;
+  margin: 0;
+  justify-content: center;
+  align-items: center;
+  width: 25px;
+  height: 25px;
+  z-index: 1000;
+  .mode-changer {
+    width: 15px;
+    height: 15px;
+  }
+}
+
+button:hover {
+  background-color: $dark-fourth-color;
+}
+button:active {
+  background-color: $dark-third-color;
+}

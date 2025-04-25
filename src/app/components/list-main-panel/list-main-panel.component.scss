@@ -1,0 +1,33 @@
+@use "../../styles/global.scss" as *;
+
+.side-panel {
+  border-radius: 20px;
+  padding: 2rem;
+  transition: all 0.3s ease-in-out;
+  min-height: 85vh;
+
+  &.dark {
+    background-color: $dark-secondary-color;
+    color: $dark-text-color;
+  }
+
+  &.light {
+    background-color: $light-secondary-color;
+    color: $light-text-color;
+  }
+
+  h3 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  ul {
+    padding: 0;
+    list-style: none;
+
+    li {
+      padding: 0.5rem 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+  }
+}

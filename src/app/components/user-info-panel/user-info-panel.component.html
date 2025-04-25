@@ -1,0 +1,9 @@
+<div class="user-info-panel" [ngClass]="mode ? 'dark-mode' : 'light-mode'">
+  <div class="user-info-content">
+    <h5>User Profile</h5>
+    <p><strong>Username:</strong> {{ user?.username }}</p>
+    <p><strong>Email:</strong> admin&#64;propease.com</p>
+    <button class="logout-btn" (click)="logout()">Logout</button>
+    <button class="close-btn" (click)="close()">×</button>
+  </div>
+</div>

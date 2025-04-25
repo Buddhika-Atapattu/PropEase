@@ -1,1 +1,82 @@
-/* You can add global styles to this file, and also import other style files */
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@use "@angular/material" as mat;
+/* Importing Bootstrap SCSS file. */
+@use "bootstrap/scss/bootstrap" as *;
+
+:root {
+  --primary-bg: #fdf6e3;
+  --text-color: #1f1f1f;
+}
+
+//dark mode
+.dark {
+  --primary-bg: #08122f;
+  --text-color: #fefefe;
+}
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        theme-type: light,
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+} /* You can add global styles to this file, and also import other style files */
+
+html,
+body {
+  height: 100%;
+  #app-preloader {
+    position: fixed;
+    inset: 0;
+    background-color: #0e0e24;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 9999;
+
+    .preloader-wrapper {
+      text-align: center;
+
+      img {
+        width: 120px;
+        height: auto;
+        animation: pulse 1.5s infinite ease-in-out;
+      }
+
+      p {
+        color: #d29e00;
+        font-weight: 500;
+        margin-top: 1rem;
+      }
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+  }
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--primary-bg) !important;
+  color: var(--text-color) !important;
+}

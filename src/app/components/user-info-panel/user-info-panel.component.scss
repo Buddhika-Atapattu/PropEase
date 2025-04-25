@@ -1,0 +1,114 @@
+.user-info-panel {
+  position: absolute;
+  top: 80px;
+  left: 40px;
+  width: 260px;
+  border-radius: 12px;
+  padding: 1rem;
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+
+  &.light-mode {
+    background-color: #fff;
+    color: #000;
+
+    .user-info-content {
+      h5 {
+        color: #3f3f3f;
+      }
+
+      .logout-btn {
+        background-color: #d29e00;
+        color: white;
+
+        &:hover {
+          background-color: #b18600;
+        }
+      }
+
+      .close-btn {
+        color: #999;
+
+        &:hover {
+          color: #333;
+        }
+      }
+    }
+  }
+
+  &.dark-mode {
+    background-color: #1e1e2e;
+    color: #fcefcb;
+
+    .user-info-content {
+      h5 {
+        color: #ffcc00;
+      }
+
+      .logout-btn {
+        background-color: #ff8c00;
+        color: #fff;
+
+        &:hover {
+          background-color: #cc7200;
+        }
+      }
+
+      .close-btn {
+        color: #ccc;
+
+        &:hover {
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  .user-info-content {
+    position: relative;
+
+    h5 {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      margin: 0 0 0.5rem;
+      font-size: 14px;
+    }
+
+    .logout-btn,
+    .close-btn {
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .logout-btn {
+      padding: 6px 12px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: transparent;
+      font-size: 20px;
+    }
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-15px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

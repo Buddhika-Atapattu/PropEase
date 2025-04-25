@@ -1,0 +1,15 @@
+//Global variable for the app
+//dark mode
+$primery-color: #0c0950 !default;
+$secondary-color: #161179 !default;
+$third-color: #261fb3 !default;
+$text-color: #fbe4d6 !default;
+$gold-color: #f9c74f !default;
+
+.dark-mode {
+  --primery-color: #0c0950;
+  --secondary-color: #161179;
+  --third-color: #261fb3;
+  --text-color: #fbe4d6;
+  --gold-color: #f9c74f;
+}

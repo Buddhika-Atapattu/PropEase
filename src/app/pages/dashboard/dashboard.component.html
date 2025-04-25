@@ -1,0 +1,53 @@
+<app-top-progress-bar></app-top-progress-bar>
+
+<nav class="navbar navbar-expand-lg dashboard-navbar">
+  <div class="container-fluid">
+    <div class="row d-flex align-items-center w-100">
+      <div class="col-6 d-flex justify-content-start align-items-center">
+        <button
+          class="user-image-btn"
+          title="User Profile"
+          (click)="menuOpen = !menuOpen"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHx8MA%3D%3D"
+            alt="User Profile"
+            class="user-image"
+          />
+        </button>
+        <app-user-info-panel *ngIf="menuOpen" (closePanel)="menuOpen = false" />
+      </div>
+      <div class="col-6">
+        <span
+          class="navbar-brand d-flex justify-content-end align-items-center"
+        >
+          <img
+            src="/Images/company-images/cover-no-bg.webp"
+            alt="Logo"
+            class="logo"
+          />
+        </span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<ng-container *ngIf="mode !== null">
+  <div
+    class="{{
+      mode
+        ? 'container-fluid dashboard-wrapper-dark'
+        : 'container-fluid dashboard-wrapper-light'
+    }}>"
+  >
+    <app-mode-changer></app-mode-changer>
+    <div class="row g-4">
+      <div class="col-12 col-md-3">
+        <app-list-main-panel></app-list-main-panel>
+      </div>
+      <div class="col-12 col-md-9">
+        <app-main-panel></app-main-panel>
+      </div>
+    </div>
+  </div>
+</ng-container>

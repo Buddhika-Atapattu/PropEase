@@ -1,0 +1,17 @@
+<ng-container *ngIf="mode !== null">
+  <ng-container *ngIf="!mode; else lightTemplate">
+    <div class="example-button-container">
+      <button mat-icon-button aria-label="Dark mode" (click)="toggleMode()">
+        <img src="/moon.ico" alt="dark-mode" class="mode-changer" />
+      </button>
+    </div>
+  </ng-container>
+
+  <ng-template #lightTemplate>
+    <div class="example-button-container">
+      <button mat-icon-button aria-label="Light mode" (click)="toggleMode()">
+        <img src="/sun.ico" alt="light-mode" class="mode-changer" />
+      </button>
+    </div>
+  </ng-template>
+</ng-container>
