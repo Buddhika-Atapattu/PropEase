@@ -26,6 +26,16 @@
           background-color: #b18600;
         }
       }
+      .profile-btn {
+        background-color: #d29e00;
+        color: white;
+        position: absolute;
+        right: 0;
+
+        &:hover {
+          background-color: #b18600;
+        }
+      }
 
       .close-btn {
         color: #999;
@@ -49,6 +59,16 @@
       .logout-btn {
         background-color: #ff8c00;
         color: #fff;
+
+        &:hover {
+          background-color: #cc7200;
+        }
+      }
+      .profile-btn {
+        background-color: #ff8c00;
+        color: #fff;
+        position: absolute;
+        right: 0;
 
         &:hover {
           background-color: #cc7200;
@@ -80,13 +100,15 @@
     }
 
     .logout-btn,
-    .close-btn {
+    .close-btn,
+    .profile-btn {
       border: none;
       cursor: pointer;
       transition: 0.3s;
     }
 
-    .logout-btn {
+    .logout-btn,
+    .profile-btn {
       padding: 6px 12px;
       border-radius: 5px;
       margin-top: 10px;

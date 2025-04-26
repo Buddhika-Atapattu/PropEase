@@ -1,0 +1,59 @@
+@use "../../styles/global.scss" as *;
+
+.error-page-wrapper {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease;
+
+  &.light-mode {
+    background: $light-primery-color;
+    color: $light-text-color;
+  }
+
+  &.dark-mode {
+    background: $dark-secondary-color;
+    color: $dark-text-color;
+  }
+
+  .error-content {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+
+    .error-code {
+      font-size: 8rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    .error-message {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .error-description {
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .home-button {
+      background-color: $dark-third-color;
+      border: none;
+      color: white;
+      padding: 10px 25px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
+
+      &:hover {
+        background-color: $dark-fourth-color;
+        transform: scale(1.05);
+      }
+    }
+  }
+}

@@ -1,9 +1,40 @@
-<div *ngIf="mode !== null" class="side-panel" [ngClass]="mode ? 'dark' : 'light'">
-  <h3>Quick Actions</h3>
+<div class="side-panel">
+  <button mat-icon-button class="expand-btn" (click)="togglePanel()">
+    <mat-icon>{{ isExpanded() ? "chevron_left" : "chevron_right" }}</mat-icon>
+  </button>
+
+  <!-- <h3 *ngIf="isExpanded()">Quick Actions</h3> -->
+
   <ul>
-    <li>View Properties</li>
-    <li>Add New Listing</li>
-    <li>Manage Agents</li>
-    <li>Reports</li>
+    <li>
+      <button mat-button (click)="navigateTo('dashboard')">
+        <mat-icon>home</mat-icon>
+        <span *ngIf="isExpanded()">Home</span>
+      </button>
+    </li>
+    <li>
+      <button mat-button (click)="navigateTo('properties')">
+        <mat-icon>business</mat-icon>
+        <span *ngIf="isExpanded()">View Properties</span>
+      </button>
+    </li>
+    <li>
+      <button mat-button>
+        <mat-icon>add_circle_outline</mat-icon>
+        <span *ngIf="isExpanded()">Add Listing</span>
+      </button>
+    </li>
+    <li>
+      <button mat-button>
+        <mat-icon>group</mat-icon>
+        <span *ngIf="isExpanded()">Manage Agents</span>
+      </button>
+    </li>
+    <li>
+      <button mat-button>
+        <mat-icon>assessment</mat-icon>
+        <span *ngIf="isExpanded()">Reports</span>
+      </button>
+    </li>
   </ul>
 </div>

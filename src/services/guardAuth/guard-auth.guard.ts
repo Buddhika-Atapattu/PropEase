@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '../auth/auth.service'; // adjust if needed
+import { AuthService } from '../auth/auth.service';
 
 export const guardAuth: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
@@ -9,7 +9,7 @@ export const guardAuth: CanActivateFn = (route, state) => {
   if (authService.isUserLoggedIn()) {
     return true;
   } else {
-    router.navigateByUrl('/login', { replaceUrl: true });
+    router.navigateByUrl('/login');
     return false;
   }
 };

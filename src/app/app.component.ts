@@ -4,16 +4,17 @@ import {
   OnDestroy,
   Inject,
   PLATFORM_ID,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { WindowsRefService } from '../services/windowRef.service';
-import { Subscription } from 'rxjs';
-import { ModeChangerComponent } from './components/mode-changer/mode-changer.component';
-import { LoginComponent } from './pages/login/login.component';
+import { Subscription, filter } from 'rxjs';
+import { Router, NavigationEnd } from '@angular/router';
 import { AuthService, UserCredentials } from '../services/auth/auth.service';
-import { Router } from '@angular/router';
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
-import { TopProgressBarComponent } from "./components/top-progress-bar/top-progress-bar.component";
+
+import { ModeChangerComponent } from './components/mode-changer/mode-changer.component';
+import { TopProgressBarComponent } from './components/top-progress-bar/top-progress-bar.component';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -21,23 +22,25 @@ import { TopProgressBarComponent } from "./components/top-progress-bar/top-progr
   imports: [
     CommonModule,
     ModeChangerComponent,
-    LoginComponent,
-    DashboardComponent,
-    TopProgressBarComponent
-],
+    TopProgressBarComponent,
+    RouterModule,
+  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
 export class AppComponent implements OnInit, OnDestroy {
+  title = 'PropEase';
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
+  private navEndSub: Subscription | null = null;
 
   constructor(
     private windowRef: WindowsRefService,
     private authService: AuthService,
     private router: Router,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private cdRef: ChangeDetectorRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -45,26 +48,52 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (this.isBrowser) {
       this.windowRef.initTheme();
+
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
 
-      const user = this.authService.getUser();
-      const isValidUser =
-        user?.username === this.authService.getDefinedUser.username &&
-        user?.password === this.authService.getDefinedUser.password;
+      // Wait for the router to fully resolve the path
+      this.navEndSub = this.router.events
+        .pipe(filter((e) => e instanceof NavigationEnd))
+        .subscribe((event: any) => {
+          const path = event.url;
+          const user = this.authService.getUser();
+          const isValidUser =
+            user?.username === this.authService.getDefinedUser.username &&
+            user?.password === this.authService.getDefinedUser.password;
 
-      console.log('isValidUser:', isValidUser);
+          console.log('NavigationEnd -> Path:', path);
+          console.log('User Valid:', isValidUser);
 
-      if (user && isValidUser) {
-        this.authService.setCredentials(user);
-        this.router.navigate(['/dashboard']);
-        console.log(user);
-      } else {
-        this.authService.clearCredentials();
-        this.router.navigate(['/login']);
-      }
+          // const safePaths = ['/', '/login'];
+
+          // if (safePaths.includes(path)) {
+          //   if (user && isValidUser) {
+          //     this.authService.setCredentials(user);
+          //     this.router.navigate(['/dashboard']);
+          //   } else {
+          //     this.authService.clearCredentials();
+          //     this.router.navigate(['/login']);
+          //   }
+          // }
+
+          // if (user && isValidUser) {
+          //   this.authService.setCredentials(user);
+          //   this.router.navigate(['/dashboard']);
+          // } else {
+          //   this.authService.clearCredentials();
+          //   this.router.navigate(['/login']);
+          // }
+
+          // If it's a valid path like `/dashboard`, `/properties`, do nothing
+          // If it's an invalid path like `/abcxyz`, Angular will now properly load 404
+        });
     }
+  }
+
+  ngAfterViewInit() {
+    this.cdRef.detectChanges();
   }
 
   get isUserLoggedIn(): boolean {
@@ -75,15 +104,8 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.authService.getUser();
   }
 
-  protected goToTheDashboard(): void {
-    if (this.isUserLoggedIn) {
-      this.router.navigate(['/dashboard']);
-    } else {
-      this.router.navigate(['/login']);
-    }
-  }
-
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
+    this.navEndSub?.unsubscribe();
   }
 }

@@ -1,33 +1,162 @@
 @use "../../styles/global.scss" as *;
 
-.side-panel {
-  border-radius: 20px;
-  padding: 2rem;
-  transition: all 0.3s ease-in-out;
-  min-height: 85vh;
-
-  &.dark {
-    background-color: $dark-secondary-color;
-    color: $dark-text-color;
-  }
-
-  &.light {
+:host-context(html) {
+  .side-panel {
+    position: relative;
+    border-radius: 20px;
+    padding: 2rem 1rem;
+    transition: all 0.3s ease-in-out;
+    min-height: 85vh;
+    overflow-x: hidden;
     background-color: $light-secondary-color;
-    color: $light-text-color;
+    color: $light-text-color !important;
+    &.side-panel-collapsed {
+      width: 4rem; // collapsed width
+      transition: all 2s ease; // <- Keep transition here too
+    }
+
+    h3 {
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      font-size: 20px;
+      text-align: center;
+    }
+
+    ul {
+      padding: 0;
+      list-style: none;
+      margin-top: 2rem;
+
+      li {
+        margin-bottom: 1rem;
+
+        button {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          font-weight: 500;
+          font-size: 20px;
+          padding: 10px;
+          border-radius: 12px;
+          transition: background-color 0.3s ease, color 0.3s ease;
+          color: $light-text-color !important;
+
+          mat-icon {
+            font-size: 20px;
+            margin-right: 12px;
+            color: $light-text-color !important;
+          }
+
+          span {
+            transition: opacity 0.3s ease;
+          }
+
+          &:hover {
+            background-color: rgba(255, 140, 0, 0.1);
+          }
+        }
+      }
+    }
+
+    .expand-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background-color: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+
+      mat-icon {
+        color: $dark-third-color;
+      }
+
+      &:hover {
+        background-color: rgba(255, 140, 0, 0.2);
+      }
+    }
   }
+}
 
-  h3 {
-    font-weight: 600;
-    margin-bottom: 1rem;
-  }
+:host-context(html.dark) {
+  .side-panel {
+    position: relative;
+    border-radius: 20px;
+    padding: 2rem 1rem;
+    transition: all 0.3s ease-in-out;
+    min-height: 85vh;
+    overflow-x: hidden;
+    background-color: $dark-secondary-color;
+    color: $dark-text-color !important;
+    &.side-panel-collapsed {
+      width: 4rem; // collapsed width
+      transition: all 2s ease; // <- Keep transition here too
+    }
+    h3 {
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      font-size: 20px;
+      text-align: center;
+    }
 
-  ul {
-    padding: 0;
-    list-style: none;
+    ul {
+      padding: 0;
+      list-style: none;
+      margin-top: 2rem;
 
-    li {
-      padding: 0.5rem 0;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+      li {
+        margin-bottom: 1rem;
+
+        button {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          font-weight: 500;
+          font-size: 20px;
+          padding: 10px;
+          border-radius: 12px;
+          transition: background-color 0.3s ease, color 0.3s ease;
+          color: $dark-text-color !important;
+
+          mat-icon {
+            font-size: 20px;
+            margin-right: 12px;
+            color: $dark-text-color !important;
+          }
+
+          span {
+            transition: opacity 0.3s ease;
+          }
+
+          &:hover {
+            background-color: rgba(255, 140, 0, 0.1);
+          }
+        }
+      }
+    }
+
+    .expand-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background-color: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+
+      mat-icon {
+        color: $dark-third-color;
+      }
+
+      &:hover {
+        background-color: rgba(255, 140, 0, 0.2);
+      }
     }
   }
 }

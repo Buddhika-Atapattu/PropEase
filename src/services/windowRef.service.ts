@@ -42,6 +42,10 @@ export class WindowsRefService {
     this.modeSubject.next(mode);
   }
 
+  setLightMode(): void {
+    this.setDarkMode(false);
+  }
+
   toggleDarkMode(): void {
     const current = this.modeSubject.value;
     this.setDarkMode(!current);

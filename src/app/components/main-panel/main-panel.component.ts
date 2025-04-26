@@ -8,11 +8,13 @@ import {
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { PropertiesMainPanelComponent } from '../properties/properties-main-panel/properties-main-panel.component';
 
 @Component({
   selector: 'app-main-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PropertiesMainPanelComponent],
   templateUrl: './main-panel.component.html',
   styleUrl: './main-panel.component.scss',
 })
@@ -23,9 +25,14 @@ export class MainPanelComponent implements OnInit, OnDestroy {
 
   constructor(
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private route: ActivatedRoute
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
+    this.route.url.subscribe((segments) => {
+      const path = segments.map((s) => s.path).join('/');
+      console.log('Full path:', path);
+    });
   }
 
   ngOnInit(): void {

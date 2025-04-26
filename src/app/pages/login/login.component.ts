@@ -49,7 +49,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   protected hidePassword: boolean = true;
   protected isEmpty: boolean = true;
   protected isValid: boolean = false;
-  protected rememberMe: Boolean = false;
+  protected rememberMe: boolean = false;
   private user: UserCredentials | null = null;
 
   constructor(
@@ -66,7 +66,12 @@ export class LoginComponent implements OnInit, OnDestroy {
       // Subscribe to dark/light mode
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
+        // console.log(this.mode);
       });
+
+      this.authService.loginUserCredentials.username = this.username;
+      this.authService.loginUserCredentials.password = this.password;
+      this.authService.loginUserCredentials.rememberMe = this.rememberMe;
 
       // Load cookies if available
       const savedUsername = this.getCookie('username');

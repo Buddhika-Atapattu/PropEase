@@ -15,7 +15,7 @@ import { TopProgressBarComponent } from '../../components/top-progress-bar/top-p
 import { UserInfoPanelComponent } from '../../components/user-info-panel/user-info-panel.component';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { Subscription } from 'rxjs';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../services/auth/auth.service';
 
 @Component({
@@ -24,7 +24,8 @@ import { AuthService } from '../../../services/auth/auth.service';
   imports: [
     CommonModule,
     ListMainPanelComponent,
-    MainPanelComponent,
+    // MainPanelComponent,
+    RouterModule,
     ModeChangerComponent,
     TopProgressBarComponent,
     UserInfoPanelComponent,

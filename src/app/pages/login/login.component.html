@@ -1,79 +1,85 @@
-<div class="{{ !mode ? 'row login-light' : 'row login-dark' }}">
-  <!-- Left: Logo Panel -->
-  <div class="col-md-6 ps-0 d-flex justify-content-center align-items-center">
-    <div class="main-container">
-      <div class="image-container">
-        <img
-          src="/Images/company-images/company-logo-animated.gif"
-          alt="Animated Company Logo"
-        />
+<!-- login.component.html -->
+<div
+  class="container-fluid min-vh-100 d-flex align-items-center justify-content-center p-0"
+>
+  <div class="row w-100 min-vh-100 p-0">
+    <!-- Left Panel: Company Logo -->
+    <div class="col-md-6 d-flex justify-content-center align-items-center p-0">
+      <div class="main-container">
+        <div class="image-container">
+          <img
+            src="/Images/company-images/company-logo-animated.gif"
+            alt="Animated Company Logo"
+          />
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Right: Login Form -->
-  <div class="col-md-6 pe-0 d-flex justify-content-center align-items-center">
-    <div class="login-form-container">
-      <form class="form" (ngSubmit)="login()" autocomplete="off">
-        <h2 class="login-title">Welcome to PropEase</h2>
-        <p class="login-subtitle">Your property, our priority</p>
+    <!-- Right Panel: Login Form -->
+    <div class="col-md-6 d-flex justify-content-center align-items-center">
+      <div class="login-form-container">
+        <form class="form" (ngSubmit)="login()" autocomplete="off">
+          <h2 class="login-title text-center">Welcome to PropEase</h2>
+          <p class="login-subtitle text-center">Your property, our priority</p>
 
-        <mat-form-field class="form-field" appearance="fill">
-          <mat-label>Username / Email</mat-label>
-          <input
-            matInput
-            type="text"
-            [(ngModel)]="username"
-            name="username"
-            required
-            placeholder="Enter your username or email"
-          />
-        </mat-form-field>
+          <mat-form-field appearance="fill" class="form-field">
+            <mat-label>Username / Email</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="username"
+              name="username"
+              required
+              placeholder="Enter your username or email"
+            />
+          </mat-form-field>
 
-        <mat-form-field class="form-field" appearance="fill">
-          <mat-label>Password</mat-label>
-          <input
-            matInput
-            [type]="hidePassword ? 'password' : 'text'"
-            [(ngModel)]="password"
-            name="password"
-            required
-            placeholder="Enter your password"
-          />
-          <button
-            type="button"
-            mat-icon-button
-            matSuffix
-            (click)="hidePassword = !hidePassword"
-            [attr.aria-label]="'Toggle password visibility'"
-            [attr.aria-pressed]="!hidePassword"
+          <mat-form-field appearance="fill" class="form-field">
+            <mat-label>Password</mat-label>
+            <input
+              matInput
+              [type]="hidePassword ? 'password' : 'text'"
+              [(ngModel)]="password"
+              name="password"
+              required
+              placeholder="Enter your password"
+            />
+            <button
+              type="button"
+              mat-icon-button
+              matSuffix
+              (click)="hidePassword = !hidePassword"
+              aria-label="Toggle password visibility"
+              [attr.aria-pressed]="!hidePassword"
+            >
+              <mat-icon>{{
+                hidePassword ? "visibility_off" : "visibility"
+              }}</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <div
+            class="form-footer d-flex justify-content-between align-items-center"
           >
-            <mat-icon>{{
-              hidePassword ? "visibility_off" : "visibility"
-            }}</mat-icon>
-          </button>
-        </mat-form-field>
+            <mat-checkbox
+              [(ngModel)]="rememberMe"
+              name="rememberMe"
+              class="remember-me-checkbox"
+            >
+              Remember me
+            </mat-checkbox>
 
-        <div class="form-footer">
-          <mat-checkbox
-            class="remember-me-checkbox"
-            [(ngModel)]="rememberMe"
-            name="rememberMe"
-            (change)="updateRememberMe($event)"
-          >
-            Remember me
-          </mat-checkbox>
-
-          <button
-            mat-raised-button
-            color="primary"
-            class="login-button"
-            type="submit"
-          >
-            Login
-          </button>
-        </div>
-      </form>
+            <button
+              mat-raised-button
+              class="login-button"
+              color="primary"
+              type="submit"
+            >
+              Login
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>

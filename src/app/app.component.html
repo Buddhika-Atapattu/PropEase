@@ -1,9 +1,3 @@
 <app-top-progress-bar />
-<div *ngIf="!isUserLoggedIn; else dashboard" class="container-fluid">
-  <app-mode-changer></app-mode-changer>
-  <app-login />
-</div>
-
-<ng-template #dashboard>
-  <app-dashboard />
-</ng-template>
+<app-mode-changer></app-mode-changer>
+<router-outlet></router-outlet>
