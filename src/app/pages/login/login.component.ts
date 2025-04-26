@@ -145,7 +145,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       };
       this.authService.setCredentials(user);
       this.saveToCookies();
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/dashboard/home']);
     } else {
       console.error('Invalid username or password.');
       this.authService.clearCredentials();

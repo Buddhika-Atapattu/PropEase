@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { PageNavigatorService } from './page-navigator.service';
+import { ExpandableService } from './expandable.service';
 
-describe('PageNavigatorService', () => {
-  let service: PageNavigatorService;
+describe('ExpandableService', () => {
+  let service: ExpandableService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(PageNavigatorService);
+    service = TestBed.inject(ExpandableService);
   });
 
   it('should be created', () => {

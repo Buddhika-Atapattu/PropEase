@@ -1,0 +1,35 @@
+@use "../../../styles/global.scss" as *;
+
+.main-panel {
+  border-radius: 20px;
+  padding: 2rem;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+
+  &.dark {
+    background: linear-gradient(
+      145deg,
+      $dark-secondary-color,
+      darken($dark-secondary-color, 5%)
+    );
+    color: $dark-text-color;
+  }
+
+  &.light {
+    background: linear-gradient(
+      145deg,
+      $light-primery-color,
+      lighten($light-primery-color, 2%)
+    );
+    color: $light-text-color;
+  }
+
+  h2 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 16px;
+  }
+}

@@ -40,7 +40,7 @@ export class WindowsRefService {
       localStorage.setItem('preferred-mode', mode ? 'dark' : 'light');
     }
     this.modeSubject.next(mode);
-  }
+  } 
 
   setLightMode(): void {
     this.setDarkMode(false);

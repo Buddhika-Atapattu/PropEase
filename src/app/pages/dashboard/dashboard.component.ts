@@ -4,19 +4,17 @@ import {
   OnDestroy,
   Inject,
   PLATFORM_ID,
-  EventEmitter,
-  Output,
 } from '@angular/core';
 import { ListMainPanelComponent } from '../../components/list-main-panel/list-main-panel.component';
-import { MainPanelComponent } from '../../components/main-panel/main-panel.component';
-import { ModeChangerComponent } from '../../components/mode-changer/mode-changer.component';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
 import { TopProgressBarComponent } from '../../components/top-progress-bar/top-progress-bar.component';
+import { ModeChangerComponent } from '../../components/mode-changer/mode-changer.component';
 import { UserInfoPanelComponent } from '../../components/user-info-panel/user-info-panel.component';
 import { WindowsRefService } from '../../../services/windowRef.service';
-import { Subscription } from 'rxjs';
-import { Router, RouterModule } from '@angular/router';
+import { ExpandableService } from '../../../services/expandable/expandable.service';
 import { AuthService } from '../../../services/auth/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -24,7 +22,6 @@ import { AuthService } from '../../../services/auth/auth.service';
   imports: [
     CommonModule,
     ListMainPanelComponent,
-    // MainPanelComponent,
     RouterModule,
     ModeChangerComponent,
     TopProgressBarComponent,
@@ -33,17 +30,21 @@ import { AuthService } from '../../../services/auth/auth.service';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit, OnDestroy {
   protected menuOpen: boolean = false;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
+  protected isExpanded: boolean = true;
+
   private modeSub: Subscription | null = null;
+  private expandSub: Subscription | null = null;
 
   constructor(
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
     private authService: AuthService,
-    private router: Router
+    private expandableService: ExpandableService,
+    private router: Router,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -52,12 +53,23 @@ export class DashboardComponent {
     if (this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
-        console.log('MainPanel detected mode:', this.mode);
       });
+
+      this.expandSub = this.expandableService.isExpanded$.subscribe(
+        (expanded) => {
+          this.isExpanded = expanded;
+          console.log('Dashboard detected expand state:', expanded);
+        }
+      );
     }
   }
 
-  protected openMenu() {
+  protected openMenu(): void {
     this.menuOpen = !this.menuOpen;
+  }
+
+  ngOnDestroy(): void {
+    this.modeSub?.unsubscribe();
+    this.expandSub?.unsubscribe();
   }
 }

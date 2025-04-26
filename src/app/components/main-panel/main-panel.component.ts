@@ -9,12 +9,11 @@ import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
-import { PropertiesMainPanelComponent } from '../properties/properties-main-panel/properties-main-panel.component';
 
 @Component({
   selector: 'app-main-panel',
   standalone: true,
-  imports: [CommonModule, PropertiesMainPanelComponent],
+  imports: [CommonModule],
   templateUrl: './main-panel.component.html',
   styleUrl: './main-panel.component.scss',
 })

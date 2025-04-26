@@ -1,1 +1,8 @@
-<p>properties-main-panel works!</p>
+<div
+  *ngIf="mode !== null"
+  class="main-panel"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <h2>Properties Dashboard Area</h2>
+  <p>This is the main content panel for PropEase users.</p>
+</div>

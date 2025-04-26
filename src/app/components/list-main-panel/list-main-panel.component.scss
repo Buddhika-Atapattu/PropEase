@@ -1,99 +1,127 @@
 @use "../../styles/global.scss" as *;
 
+.main-container-of-side-panel {
+  position: relative;
+}
+
+//Light mode
 :host-context(html) {
   .side-panel {
-    position: relative;
+    position: absolute;
     border-radius: 20px;
     padding: 2rem 1rem;
-    transition: all 0.3s ease-in-out;
+    width: 100%;
+    top: 0;
+    left: 0;
     min-height: 85vh;
     overflow-x: hidden;
     background-color: $light-secondary-color;
     color: $light-text-color !important;
     &.side-panel-collapsed {
-      width: 4rem; // collapsed width
-      transition: all 2s ease; // <- Keep transition here too
+      display: flex;
+      width: 100%;
+      justify-content: center;
     }
+  }
 
-    h3 {
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      font-size: 20px;
-      text-align: center;
-    }
+  h3 {
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    font-size: 20px;
+    text-align: center;
+  }
 
-    ul {
-      padding: 0;
-      list-style: none;
-      margin-top: 2rem;
+  ul {
+    padding: 0;
+    list-style: none;
+    margin-top: 2rem;
 
-      li {
-        margin-bottom: 1rem;
+    li {
+      margin-bottom: 1rem;
 
-        button {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          font-weight: 500;
+      button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        font-weight: 500;
+        font-size: 20px;
+        padding: 10px;
+        border-radius: 12px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        color: $light-text-color !important;
+        &.btn-cllapse {
+          font-size: 30px;
+          width: 40px;
+          height: 40px;
+        }
+
+        mat-icon {
           font-size: 20px;
-          padding: 10px;
-          border-radius: 12px;
-          transition: background-color 0.3s ease, color 0.3s ease;
+          margin-right: 12px;
           color: $light-text-color !important;
-
-          mat-icon {
-            font-size: 20px;
-            margin-right: 12px;
-            color: $light-text-color !important;
+          &.cllapse {
+            font-size: 30px;
+            height: 40px;
+            width: 40px;
+            margin: 0;
           }
+        }
 
-          span {
-            transition: opacity 0.3s ease;
-          }
+        span {
+          transition: opacity 0.3s ease;
+        }
 
-          &:hover {
-            background-color: rgba(255, 140, 0, 0.1);
-          }
+        &:hover {
+          background-color: rgba(255, 140, 0, 0.1);
         }
       }
     }
+  }
 
-    .expand-btn {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background-color: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
+  .expand-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background-color: rgb(255 255 255 / 50%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    &.expand-cllapse-btn {
+      right: auto !important;
+    }
 
-      mat-icon {
-        color: $dark-third-color;
-      }
-
+    mat-icon {
+      color: $dark-third-color;
       &:hover {
-        background-color: rgba(255, 140, 0, 0.2);
+        background: none;
       }
     }
   }
 }
 
+//Dark mode
 :host-context(html.dark) {
   .side-panel {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
     border-radius: 20px;
     padding: 2rem 1rem;
-    transition: all 0.3s ease-in-out;
     min-height: 85vh;
     overflow-x: hidden;
     background-color: $dark-secondary-color;
     color: $dark-text-color !important;
     &.side-panel-collapsed {
-      width: 4rem; // collapsed width
-      transition: all 2s ease; // <- Keep transition here too
+      display: flex;
+      width: 100%;
+      justify-content: center;
     }
     h3 {
       font-weight: 600;
@@ -121,11 +149,22 @@
           border-radius: 12px;
           transition: background-color 0.3s ease, color 0.3s ease;
           color: $dark-text-color !important;
+          &.btn-cllapse {
+            font-size: 30px;
+            width: 40px;
+            height: 40px;
+          }
 
           mat-icon {
-            font-size: 20px;
+            font-size: 19px;
             margin-right: 12px;
             color: $dark-text-color !important;
+            &.cllapse {
+              font-size: 30px;
+              height: 40px;
+              width: 40px;
+              margin: 0;
+            }
           }
 
           span {
@@ -140,6 +179,9 @@
     }
 
     .expand-btn {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       position: absolute;
       top: 1rem;
       right: 1rem;
@@ -149,9 +191,15 @@
       border-radius: 50%;
       width: 40px;
       height: 40px;
+      &.expand-cllapse-btn {
+        right: auto !important;
+      }
 
       mat-icon {
         color: $dark-third-color;
+        &:hover {
+          background: none;
+        }
       }
 
       &:hover {

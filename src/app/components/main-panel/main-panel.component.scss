@@ -5,6 +5,7 @@
   padding: 2rem;
   transition: all 0.3s ease-in-out;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  min-height: 85vh;
 
   &.dark {
     background: linear-gradient(

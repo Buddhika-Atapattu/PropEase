@@ -1,4 +1,4 @@
-<app-top-progress-bar></app-top-progress-bar>
+<!-- <app-top-progress-bar></app-top-progress-bar>
 
 <nav class="navbar navbar-expand-lg dashboard-navbar">
   <div class="container-fluid">
@@ -42,13 +42,76 @@
   >
     <app-mode-changer></app-mode-changer>
     <div class="row g-4">
-      <div class="col-12 col-md-3">
+      <div
+        class="list-panel-col"
+        [ngClass]="
+          isExpanded
+            ? 'col-3 col-md-3 col-expand'
+            : 'col-1 col-md-1 col-collapse'
+        "
+      >
         <app-list-main-panel></app-list-main-panel>
       </div>
-      <div class="col-12 col-md-9">
-        <!-- <app-main-panel></app-main-panel> -->
+      <div
+        class="main-panel-col"
+        [ngClass]="
+          isExpanded
+            ? 'col-9 col-md-9 col-expand'
+            : 'col-11 col-md-11 col-collapse'
+        "
+      >
         <router-outlet></router-outlet>
       </div>
     </div>
   </div>
-</ng-container>
+</ng-container> -->
+
+<!-- test -->
+<app-top-progress-bar></app-top-progress-bar>
+
+<div class="dashboard-container">
+  <!-- Sidebar -->
+  <aside
+    [ngClass]="{
+      sidebar: true,
+      collapsed: !isExpanded,
+      dark: mode,
+      light: !mode
+    }"
+  >
+    <app-list-main-panel></app-list-main-panel>
+  </aside>
+
+  <!-- Navbar -->
+  <header [ngClass]="{ 'dashboard-navbar': true, dark: mode, light: !mode }">
+    <div class="d-flex justify-content-between align-items-center w-100 px-4">
+      <div class="d-flex align-items-center">
+        <button
+          class="user-image-btn"
+          title="User Profile"
+          (click)="menuOpen = !menuOpen"
+        >
+          <img
+            src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=600&auto=format&fit=crop&q=60"
+            alt="User Profile"
+            class="user-image"
+          />
+        </button>
+        <app-user-info-panel *ngIf="menuOpen" (closePanel)="menuOpen = false" />
+      </div>
+      <div class="d-flex align-items-center">
+        <img
+          src="/Images/company-images/cover-no-bg.webp"
+          alt="Logo"
+          class="logo me-2"
+        />
+        <app-mode-changer></app-mode-changer>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main [ngClass]="{ 'main-content': true, dark: mode, light: !mode }">
+    <router-outlet></router-outlet>
+  </main>
+</div>
