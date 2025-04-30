@@ -5,6 +5,7 @@ import {
   OnDestroy,
   Inject,
   PLATFORM_ID,
+  NgZone,
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { WindowsRefService } from '../../../services/windowRef.service';
@@ -14,6 +15,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+
 import {
   MatCheckboxChange,
   MatCheckboxModule,
@@ -54,8 +56,9 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   constructor(
     private windowRef: WindowsRefService,
-    private authService: AuthService,
+    protected authService: AuthService,
     private router: Router,
+    private ngZone: NgZone,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -68,10 +71,6 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.mode = val;
         // console.log(this.mode);
       });
-
-      this.authService.loginUserCredentials.username = this.username;
-      this.authService.loginUserCredentials.password = this.password;
-      this.authService.loginUserCredentials.rememberMe = this.rememberMe;
 
       // Load cookies if available
       const savedUsername = this.getCookie('username');
@@ -90,6 +89,10 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
+  }
+
+  get auth(): AuthService {
+    return this.authService;
   }
 
   protected updateRememberMe(event: MatCheckboxChange): void {
@@ -127,31 +130,41 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected login(): void {
+  // Login Method
+  protected async login(): Promise<void> {
     if (!this.username || !this.password) {
       console.error('Username and password cannot be empty.');
       this.isEmpty = true;
       return;
     }
 
-    const isValid =
-      this.username === this.authService.getDefinedUser.username &&
-      this.password === this.authService.getDefinedUser.password;
+    this.user = {
+      username: this.username,
+      password: this.password,
+      rememberMe: this.rememberMe,
+    };
 
-    if (isValid) {
-      const user: UserCredentials = {
-        username: this.username,
-        password: this.password,
-      };
-      this.authService.setCredentials(user);
+    this.authService.loginUserCredentials = this.user;
+    await this.authService.callApiUsers();
+
+    if (
+      this.authService.getIsValidUser &&
+      this.authService.getLoggedUser !== null
+    ) {
+      console.log(this.authService.getLoggedUser.role.role);
       this.saveToCookies();
-      this.router.navigate(['/dashboard/home']);
+      // this.router.navigate(['/dashboard/home']);
+
+      this.ngZone.run(() => {
+        this.router.navigate(['/dashboard/home']);
+      });
     } else {
       console.error('Invalid username or password.');
       this.authService.clearCredentials();
       this.username = '';
       this.password = '';
       this.saveToCookies(); // Clears cookies if login fails
+      this.router.navigate(['/login']);
     }
   }
 }

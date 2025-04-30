@@ -1,4 +1,5 @@
 @use "../../../styles/global.scss" as *;
+@use "sass:color";
 
 .main-panel {
   border-radius: 20px;
@@ -10,7 +11,7 @@
     background: linear-gradient(
       145deg,
       $dark-secondary-color,
-      darken($dark-secondary-color, 5%)
+      color.adjust($dark-secondary-color, $lightness: -5%)
     );
     color: $dark-text-color;
   }
@@ -19,7 +20,7 @@
     background: linear-gradient(
       145deg,
       $light-primery-color,
-      lighten($light-primery-color, 2%)
+      color.adjust($light-primery-color, $lightness: 2%)
     );
     color: $light-text-color;
   }

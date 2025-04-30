@@ -63,7 +63,7 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
     return this.authService.getUser();
   }
 
-  logout(): void {
+  protected logout(): void {
     this.authService.clearCredentials();
     document.cookie = 'username=; Max-Age=0; path=/';
     document.cookie = 'password=; Max-Age=0; path=/';
@@ -71,7 +71,11 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  close(): void {
+  protected open() {
+    this.router.navigate(['/dashboard/user-profile']);
+  }
+
+  protected close(): void {
     this.closePanel.emit();
   }
 }

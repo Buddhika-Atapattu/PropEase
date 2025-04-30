@@ -1,19 +1,25 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
-export class WindowsRefService {
+export class WindowsRefService implements OnDestroy {
   private isBrowser: boolean;
   private modeSubject = new BehaviorSubject<boolean | null>(null);
+  private mediaQueryList: MediaQueryList | null = null;
 
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
+
     if (this.isBrowser) {
-      const prefersDark = window.matchMedia(
-        '(prefers-color-scheme: dark)'
-      ).matches;
-      this.setDarkMode(prefersDark);
+      this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+      this.setDarkMode(this.mediaQueryList.matches);
+      console.log('Initial Theme:', this.mediaQueryList.matches);
+
+      this.mediaQueryList.addEventListener(
+        'change',
+        this.handleSystemThemeChange.bind(this)
+      );
     }
   }
 
@@ -34,13 +40,19 @@ export class WindowsRefService {
     });
   }
 
+  private handleSystemThemeChange(event: MediaQueryListEvent): void {
+    const isDark = event.matches;
+    console.log('System Theme Changed:', isDark ? 'Dark' : 'Light');
+    this.setDarkMode(isDark);
+  }
+
   setDarkMode(mode: boolean): void {
     if (this.isBrowser) {
       document.documentElement.classList.toggle('dark', mode);
       localStorage.setItem('preferred-mode', mode ? 'dark' : 'light');
     }
     this.modeSubject.next(mode);
-  } 
+  }
 
   setLightMode(): void {
     this.setDarkMode(false);
@@ -53,5 +65,14 @@ export class WindowsRefService {
 
   get currentMode(): boolean | null {
     return this.modeSubject.value;
+  }
+
+  ngOnDestroy(): void {
+    if (this.mediaQueryList) {
+      this.mediaQueryList.removeEventListener(
+        'change',
+        this.handleSystemThemeChange.bind(this)
+      );
+    }
   }
 }

@@ -8,11 +8,11 @@
 :host-context(html) {
   .side-panel {
     position: absolute;
-    border-radius: 20px;
-    padding: 2rem 1rem;
-    width: 100%;
     top: 0;
     left: 0;
+    width: 100%;
+    border-radius: 20px;
+    padding: 2rem 1rem;
     min-height: 85vh;
     overflow-x: hidden;
     background-color: $light-secondary-color;
@@ -45,26 +45,47 @@
         align-items: center;
         justify-content: flex-start;
         font-weight: 500;
-        font-size: 20px;
+        font-size: 15px;
         padding: 10px;
         border-radius: 12px;
         transition: background-color 0.3s ease, color 0.3s ease;
         color: $light-text-color !important;
         &.btn-cllapse {
-          font-size: 30px;
           width: 40px;
           height: 40px;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+          padding: 0;
+
+          mat-icon {
+            font-size: 0px;
+            height: 20px;
+            width: 20px;
+            margin: 0.2rem;
+          }
+
+          span {
+            display: none !important; // no invisible span taking space
+          }
         }
 
         mat-icon {
-          font-size: 20px;
+          font-size: 0px;
           margin-right: 12px;
           color: $light-text-color !important;
           &.cllapse {
-            font-size: 30px;
-            height: 40px;
-            width: 40px;
-            margin: 0;
+            font-size: 0px;
+            height: 20px;
+            width: 20px;
+            margin: 0.2rem;
+          }
+          ::ng-deep svg {
+            fill: currentColor;
+            ::ng-deep path {
+              fill: currentColor;
+              stroke: #ffe18d;
+            }
           }
         }
 
@@ -86,12 +107,12 @@
     position: absolute;
     top: 1rem;
     right: 1rem;
-    background-color: rgb(255 255 255 / 50%);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-radius: 50%;
     width: 40px;
     height: 40px;
+    background-color: rgb(255 255 255 / 50%);
     &.expand-cllapse-btn {
       right: auto !important;
     }
@@ -144,26 +165,47 @@
           align-items: center;
           justify-content: flex-start;
           font-weight: 500;
-          font-size: 20px;
+          font-size: 15px;
           padding: 10px;
           border-radius: 12px;
           transition: background-color 0.3s ease, color 0.3s ease;
           color: $dark-text-color !important;
           &.btn-cllapse {
-            font-size: 30px;
             width: 40px;
             height: 40px;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 0;
+
+            mat-icon {
+              font-size: 0px;
+              height: 20px;
+              width: 20px;
+              margin: 0.2rem;
+            }
+
+            span {
+              display: none !important; // no invisible span taking space
+            }
           }
 
           mat-icon {
-            font-size: 19px;
+            font-size: 0px;
             margin-right: 12px;
             color: $dark-text-color !important;
             &.cllapse {
-              font-size: 30px;
-              height: 40px;
-              width: 40px;
-              margin: 0;
+              font-size: 0px;
+              height: 20px;
+              width: 20px;
+              margin: 0.2rem;
+            }
+            ::ng-deep svg {
+              fill: currentColor;
+              ::ng-deep path {
+                fill: currentColor;
+                stroke: #1a1a2e;
+              }
             }
           }
 
@@ -185,12 +227,12 @@
       position: absolute;
       top: 1rem;
       right: 1rem;
-      background-color: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
       border-radius: 50%;
       width: 40px;
       height: 40px;
+      background-color: rgba(255, 255, 255, 0.15);
       &.expand-cllapse-btn {
         right: auto !important;
       }

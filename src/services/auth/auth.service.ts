@@ -1,15 +1,44 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { filter, firstValueFrom } from 'rxjs';
 
 export interface UserCredentials {
   username: string;
   password: string;
+  rememberMe?: boolean;
 }
 
-interface UserCredentialsWithRememberMe extends UserCredentials {
-  rememberMe?: boolean; // Optional property for rememberMe
+//User data pattern
+export interface Address {
+  street: string;
+  houseNumber: string;
+  city: string;
+  postcode: string;
+  country?: string;
+  stateOrProvince?: string;
 }
 
+export interface Role {
+  role: 'admin' | 'agent' | 'tenant' | 'operator' | 'developer' | 'user';
+}
+
+export interface NewUser {
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  username: string;
+  email: string;
+  password: string;
+  age: number;
+  image?: string | File;
+  phoneNumber?: string;
+  role: Role;
+  address: Address;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -17,104 +46,80 @@ export class AuthService {
   private user: UserCredentials | null = null;
   private isLoggedIn = false;
   private rememberMe = false;
-
-  // Predefined hardcoded user
-  private readonly definedUser: UserCredentials = {
-    username: 'admin',
-    password: 'admin',
-  };
-
   private username: string = '';
   private password: string = '';
-  private loginUser: UserCredentials = {
-    username: this.username,
-    password: this.password,
-  };
+  private loggedUser: NewUser | null = null;
+  private isValidUser: boolean = false;
+  private users: NewUser[] = [];
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
-    this.loadCredentialsFromCookies();
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private http: HttpClient
+  ) {
+    // this.loadCredentialsFromCookies();
   }
 
-  set loginUserCredentials(user: UserCredentialsWithRememberMe) {
+  set loginUserCredentials(user: UserCredentials) {
+    // console.log(user);
     this.username = user.username;
     this.password = user.password;
     this.rememberMe = user.rememberMe || false; // Default to false if not provided
-    this.loginUser = {
-      username: this.username,
-      password: this.password,
-    };
   }
+
   // Return the current logged-in user
   getUser(): UserCredentials | null {
     return this.user;
   }
 
-  // Return the default user
-  get getDefinedUser(): UserCredentials {
-    return this.definedUser;
-  }
+  public async callApiUsers(): Promise<void> {
+    try {
+      console.log('username: ', this.username, ' password: ', this.password);
 
-  loadCredentialsFromCookies() {
-    if (isPlatformBrowser(this.platformId)) {
-      const username = this.getCookie('username');
-      const password = this.getCookie('password');
-      console.log(username, password);
-      if (username && password) {
-        this.setCredentials({ username, password });
+      const users = await firstValueFrom(
+        this.http.get<NewUser[]>('http://localhost:3000/users')
+      );
+
+      const user = users.find(
+        (u) =>
+          (u.username === this.username || u.email === this.username) &&
+          u.password === this.password
+      );
+
+      this.loggedUser = user || null;
+
+      if (user) {
+        this.loggedUser = user;
+        this.isValidUser = true;
+        this.isLoggedIn = true;
+      } else {
+        this.isValidUser = false;
+        this.isLoggedIn = false;
       }
+    } catch (error) {
+      console.error('Error: ', error);
     }
   }
 
-  setCookie(name: string, value: string, days: number): void {
-    const date = new Date();
-    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-    const expires = 'expires=' + date.toUTCString();
-    document.cookie = `${name}=${value}; ${expires}; path=/`;
+  get getIsValidUser(): boolean {
+    return this.isValidUser;
   }
 
-  getCookie(name: string): string | null {
-    const nameEQ = name + '=';
-    const ca = document.cookie.split(';');
-    for (let c of ca) {
-      while (c.charAt(0) === ' ') c = c.substring(1);
-      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length);
-    }
-    return null;
+  get allUsers(): NewUser[] {
+    return this.users;
   }
 
-  deleteCookie(name: string): void {
-    document.cookie = `${name}=; Max-Age=0; path=/`;
-  }
-
-  saveToCookies(): void {
-    if (this.rememberMe) {
-      this.setCookie('username', this.username, 30);
-      this.setCookie('password', this.password, 30);
-    } else {
-      this.deleteCookie('username');
-      this.deleteCookie('password');
-    }
-  }
-
-  // Set user login credentials
-  setCredentials(credentials: UserCredentials): void {
-    this.user = credentials;
-    this.isLoggedIn = true;
+  get getLoggedUser(): NewUser | null {
+    return this.loggedUser;
   }
 
   // Clear user login credentials
-  clearCredentials(): void {
+  public clearCredentials(): void {
     this.user = null;
     this.isLoggedIn = false;
   }
 
   // Check if the user is logged in
-  isUserLoggedIn(): boolean {
+  public isUserLoggedIn(): boolean {
     return this.isLoggedIn;
-  }
-
-  // Get the credentials (alias for getUser)
-  getCredentials(): UserCredentials | null {
-    return this.user;
   }
 }

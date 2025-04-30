@@ -11,84 +11,23 @@
     </button>
 
     <!-- <h3 *ngIf="isExpanded()">Quick Actions</h3> -->
-
-    <ul>
-      <li>
+    <ul class="">
+      <li class="m-0" *ngFor="let link of linkLists">
         <button
           mat-button
-          (click)="navigateTo('home')"
+          (click)="navigateTo(link.url)"
           [ngClass]="
             isExpanded()
-              ? ''
-              : 'd-flex justify-content-center align-items-center btn-cllapse my-3'
-          "
-        >
-          <mat-icon [ngClass]="isExpanded() ? '' : 'cllapse'">home</mat-icon>
-          <!-- <span class="delay-expand" *ngIf="isExpanded()">Home</span> -->
-          <span class="delay-expand">Home</span>
-        </button>
-      </li>
-      <li>
-        <button
-          mat-button
-          (click)="navigateTo('properties')"
-          [ngClass]="
-            isExpanded()
-              ? ''
+              ? 'd-flex justify-content-start align-items-center'
               : 'd-flex justify-content-center align-items-center btn-cllapse'
           "
         >
-          <mat-icon [ngClass]="isExpanded() ? '' : 'cllapse'"
-            >business</mat-icon
-          >
-          <span *ngIf="isExpanded()">View Properties</span>
-        </button>
-      </li>
-      <li>
-        <button
-          mat-button
-          (click)="navigateTo('properties')"
-          [ngClass]="
-            isExpanded()
-              ? ''
-              : 'd-flex justify-content-center align-items-center btn-cllapse'
-          "
-        >
-          <mat-icon [ngClass]="isExpanded() ? '' : 'cllapse'"
-            >add_circle_outline</mat-icon
-          >
-
-          <span *ngIf="isExpanded()">Add Listing</span>
-        </button>
-      </li>
-      <li>
-        <button
-          mat-button
-          (click)="navigateTo('properties')"
-          [ngClass]="
-            isExpanded()
-              ? ''
-              : 'd-flex justify-content-center align-items-center btn-cllapse'
-          "
-        >
-          <mat-icon [ngClass]="isExpanded() ? '' : 'cllapse'">group</mat-icon>
-          <span *ngIf="isExpanded()">Manage Agents</span>
-        </button>
-      </li>
-      <li>
-        <button
-          mat-button
-          (click)="navigateTo('properties')"
-          [ngClass]="
-            isExpanded()
-              ? ''
-              : 'd-flex justify-content-center align-items-center btn-cllapse'
-          "
-        >
-          <mat-icon [ngClass]="isExpanded() ? '' : 'cllapse'"
-            >assessment</mat-icon
-          >
-          <span *ngIf="isExpanded()">Reports</span>
+          <mat-icon
+            matTooltip="{{ isExpanded() ? '' : link.toolTip }}"
+            [svgIcon]="link.mat_icon"
+            [ngClass]="isExpanded() ? '' : 'cllapse'"
+          ></mat-icon>
+          <span class="delay-expand">{{ link.icon_text }}</span>
         </button>
       </li>
     </ul>

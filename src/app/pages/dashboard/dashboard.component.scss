@@ -1,76 +1,3 @@
-// @use "../../styles/global.scss" as *;
-
-// .dashboard-wrapper-light {
-//   padding: 2rem;
-//   background: linear-gradient(to right, #f0f4f8, #e8efff);
-// }
-
-// .dashboard-wrapper-dark {
-//   padding: 2rem;
-//   background: linear-gradient(to right, #101325, #1f1f2e);
-// }
-
-// .dashboard-navbar {
-//   background-color: transparent;
-//   padding: 1rem 2rem;
-//   // border-bottom: 2px solid rgba(200, 200, 200, 0.1);
-
-//   .user-image-btn {
-//     background-color: transparent;
-//     border: none;
-//     cursor: pointer;
-//     display: flex;
-//     align-items: center;
-//     justify-content: center;
-//     width: 62px;
-//     height: 62px;
-//     border-top-left-radius: 100%;
-//     border-top-right-radius: 100%;
-//     border-bottom-left-radius: 100%;
-//     border-bottom-right-radius: 100%;
-//     transition: all 0.3s ease-in-out;
-//     overflow: hidden;
-//     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-
-//     &:hover {
-//       background-color: rgba(200, 200, 200, 0.1);
-//     }
-
-//     img {
-//       width: inherit;
-//       height: inherit;
-//       object-fit: cover;
-//     }
-//   }
-
-//   .navbar-brand {
-//     font-size: 20px;
-//     font-weight: bold;
-//     color: $dark-third-color;
-//     .logo {
-//       width: auto;
-//       height: 50px;
-//       margin-right: 10px;
-//       object-fit: cover;
-//     }
-//   }
-// }
-
-// .list-panel-col {
-//   transition: all 0.3s ease-in-out;
-//   &.col-collapse {
-//     width: 5%;
-//   }
-// }
-
-// .main-panel-col {
-//   transition: all 0.3s ease-in-out;
-//   &.col-collapse {
-//     width: 95%;
-//   }
-// }
-
-// test
 @use "../../styles/global.scss" as *;
 
 .dashboard-container {
@@ -128,11 +55,11 @@
   z-index: 1100;
 
   &.dark {
-    background-color: #0e0e24;
+    background-color: $dark-dashboard-color;
   }
 
   &.light {
-    background-color: #f0f4f8;
+    background-color: $light-dashboard-color;
   }
 }
 
@@ -151,7 +78,11 @@
   }
 
   &.light {
-    background: linear-gradient(145deg, #f0f4f8, #e8efff);
+    background: linear-gradient(
+      145deg,
+      $light-dashboard-color,
+      $light-secondary-color
+    );
     color: $light-text-color;
   }
 }

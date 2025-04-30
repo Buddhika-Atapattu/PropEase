@@ -80,3 +80,26 @@ body {
   background-color: var(--primary-bg) !important;
   color: var(--text-color) !important;
 }
+
+// scrollbar style
+// === Light Mode Scrollbar (default) ===
+html {
+  ::-webkit-scrollbar {
+    width: 0.4rem;
+    height: 0.4rem;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #ffde7c; // light background
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #b48c00; // light gray thumb
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #675100; // darker gray on hover
+  }
+}

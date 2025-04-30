@@ -5,6 +5,8 @@
     <p class="error-description">
       Oops! The page you're looking for doesn’t exist or has been moved.
     </p>
-    <button class="home-button" (click)="goHome()">Back to Home</button>
+    <button class="home-button" (click)="goHome()">
+      {{ userLogIn ? "Back to Home" : "Login" }}
+    </button>
   </div>
 </div>

@@ -1,6 +1,7 @@
 // Dark Core Colors
 $dark-primery-color: #08122f !default; // Deep Navy background
 $dark-secondary-color: #1a1a2e !default; // Shadow Indigo for sections
+$dark-dashboard-color: #101325 !default; // Dark deep Navy background
 $dark-third-color: #d29e00 !default; // Bright Brand Gold
 $dark-fourth-color: #b48c00 !default; // Muted Accent Gold
 $dark-text-color: #fefefe !default; // Clear White text
@@ -13,10 +14,12 @@ $dark-shadow-color: rgba(0, 0, 0, 0.6) !default; // Card & modal shadows
 $dark-success-color: #28a745 !default; // Success feedback
 $dark-warning-color: #ffc107 !default; // Warning color
 $dark-error-color: #dc3545 !default; // Error/validation
+$dark-expand-hover-color: rgba(255, 140, 0, 0.1) !default; // Dark expand hover
 
 // Light Core Colors
 $light-primery-color: #fdf6e3 !default; // Soft neutral background
 $light-secondary-color: #ffe18d !default; // Golden Cream highlight
+$light-dashboard-color: #ffedbd !default; // Golden Cream
 $light-third-color: #d29e00 !default; // Brand Gold
 $light-fourth-color: #08122f !default; // Brand Navy
 $light-text-color: #1f1f1f !default; // Ink Gray

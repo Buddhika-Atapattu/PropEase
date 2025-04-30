@@ -59,35 +59,9 @@ export class AppComponent implements OnInit, OnDestroy {
         .subscribe((event: any) => {
           const path = event.url;
           const user = this.authService.getUser();
-          const isValidUser =
-            user?.username === this.authService.getDefinedUser.username &&
-            user?.password === this.authService.getDefinedUser.password;
-
-          console.log('NavigationEnd -> Path:', path);
-          console.log('User Valid:', isValidUser);
-
-          // const safePaths = ['/', '/login'];
-
-          // if (safePaths.includes(path)) {
-          //   if (user && isValidUser) {
-          //     this.authService.setCredentials(user);
-          //     this.router.navigate(['/dashboard']);
-          //   } else {
-          //     this.authService.clearCredentials();
-          //     this.router.navigate(['/login']);
-          //   }
-          // }
-
-          // if (user && isValidUser) {
-          //   this.authService.setCredentials(user);
-          //   this.router.navigate(['/dashboard']);
-          // } else {
-          //   this.authService.clearCredentials();
-          //   this.router.navigate(['/login']);
-          // }
-
-          // If it's a valid path like `/dashboard`, `/properties`, do nothing
-          // If it's an invalid path like `/abcxyz`, Angular will now properly load 404
+          // const isValidUser =
+          //   user?.username === this.authService.getDefinedUser.username &&
+          //   user?.password === this.authService.getDefinedUser.password;
         });
     }
   }

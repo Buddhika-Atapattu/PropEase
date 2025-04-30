@@ -2,6 +2,10 @@ import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
+import {
+  AuthService,
+  UserCredentials,
+} from '../../../services/auth/auth.service';
 
 @Component({
   selector: 'app-error-page',
@@ -17,7 +21,8 @@ export class Error404Component {
   constructor(
     private router: Router,
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private authService: AuthService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
@@ -27,7 +32,16 @@ export class Error404Component {
     }
   }
 
+  get userLogIn(): boolean {
+    return this.authService.isUserLoggedIn();
+  }
+
   goHome(): void {
-    this.router.navigate(['/']);
+    if (this.authService.isUserLoggedIn()) {
+      this.router.navigate(['/dashboard/home']);
+    } else {
+      this.authService.clearCredentials();
+      this.router.navigate(['/']);
+    }
   }
 }

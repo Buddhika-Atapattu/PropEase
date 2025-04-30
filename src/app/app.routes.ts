@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { guardAuth } from '../services/guardAuth/guard-auth.guard';
+import { AuthGuard } from '../services/guardAuth/guard-auth.guard';
 
 export const routes: Routes = [
   {
@@ -18,7 +18,7 @@ export const routes: Routes = [
       import('./pages/dashboard/dashboard.component').then(
         (m) => m.DashboardComponent
       ),
-    canActivate: [guardAuth],
+    canActivate: [AuthGuard],
     children: [
       {
         path: 'home',
@@ -35,6 +35,13 @@ export const routes: Routes = [
           ).then((m) => m.PropertiesMainPanelComponent),
       },
       {
+        path: 'user-profile',
+        loadComponent: () =>
+          import('./components/user-profile/user-profile.component').then(
+            (m) => m.UserProfileComponent
+          ),
+      },
+      {
         path: '**',
         loadComponent: () =>
           import('./pages/error404/error404.component').then(
@@ -42,6 +49,9 @@ export const routes: Routes = [
           ),
       },
     ],
+    data: {
+      roles: ['admin'],
+    },
   },
   {
     path: '**',
