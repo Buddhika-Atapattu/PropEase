@@ -10,11 +10,12 @@ import {
   Output,
   HostListener,
 } from '@angular/core';
-import { AuthService } from '../../../services/auth/auth.service';
+import { AuthService, NewUser,LoggedUserType } from '../../../services/auth/auth.service';
 import { Router } from '@angular/router';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
+import User from '../../../../../back-end/src/api/user';
 
 @Component({
   selector: 'app-user-info-panel',
@@ -28,6 +29,7 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
+  protected user: LoggedUserType | null = null;
 
   constructor(
     private windowRef: WindowsRefService,
@@ -37,6 +39,9 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
     private elementRef: ElementRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
+    if (this.authService.getLoggedUser !== null) {
+      this.user = this.authService.getLoggedUser;
+    }
   }
 
   ngOnInit(): void {
@@ -57,10 +62,6 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
     if (!clickedInside) {
       this.close();
     }
-  }
-
-  get user() {
-    return this.authService.getUser();
   }
 
   protected logout(): void {

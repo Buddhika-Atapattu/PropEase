@@ -4,8 +4,7 @@ import { AuthGuard } from '../services/guardAuth/guard-auth.guard';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () =>
-      import('./pages/login/login.component').then((m) => m.LoginComponent),
+    loadComponent: () => import('./app.component').then((m) => m.AppComponent),
   },
   {
     path: 'login',
@@ -26,6 +25,9 @@ export const routes: Routes = [
           import('./components/main-panel/main-panel.component').then(
             (m) => m.MainPanelComponent
           ),
+        data: {
+          roles: ['admin', 'agent', 'tenant', 'operator', 'developer', 'user'],
+        },
       },
       {
         path: 'properties',
@@ -33,6 +35,7 @@ export const routes: Routes = [
           import(
             './components/properties/properties-main-panel/properties-main-panel.component'
           ).then((m) => m.PropertiesMainPanelComponent),
+        data: { roles: ['admin'] },
       },
       {
         path: 'user-profile',
@@ -40,18 +43,18 @@ export const routes: Routes = [
           import('./components/user-profile/user-profile.component').then(
             (m) => m.UserProfileComponent
           ),
+        data: {
+          roles: ['admin', 'agent', 'tenant', 'operator', 'developer', 'user'],
+        },
       },
       {
-        path: '**',
+        path: 'unauthorized',
         loadComponent: () =>
           import('./pages/error404/error404.component').then(
             (m) => m.Error404Component
           ),
       },
     ],
-    data: {
-      roles: ['admin'],
-    },
   },
   {
     path: '**',

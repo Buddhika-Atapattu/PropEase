@@ -1,0 +1,8 @@
+<div
+  *ngIf="Mode !== null"
+  class="skeleton"
+  [ngClass]="Mode ? 'dark' : 'light'"
+  [style.width]="width"
+  [style.height]="height"
+  [style.borderRadius]="borderRadius"
+></div>

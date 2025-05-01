@@ -13,8 +13,9 @@ import { ModeChangerComponent } from '../../components/mode-changer/mode-changer
 import { UserInfoPanelComponent } from '../../components/user-info-panel/user-info-panel.component';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { ExpandableService } from '../../../services/expandable/expandable.service';
-import { AuthService } from '../../../services/auth/auth.service';
+import { AuthService, NewUser, LoggedUserType } from '../../../services/auth/auth.service';
 import { Subscription } from 'rxjs';
+import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -26,6 +27,7 @@ import { Subscription } from 'rxjs';
     ModeChangerComponent,
     TopProgressBarComponent,
     UserInfoPanelComponent,
+    SkeletonLoaderComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -35,9 +37,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   protected isExpanded: boolean = true;
-
   private modeSub: Subscription | null = null;
   private expandSub: Subscription | null = null;
+  protected user: LoggedUserType | null = null;
 
   constructor(
     private windowRef: WindowsRefService,
@@ -47,6 +49,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
+    if (this.authService.getLoggedUser !== null) {
+      this.user = this.authService.getLoggedUser;
+    }
   }
 
   ngOnInit(): void {

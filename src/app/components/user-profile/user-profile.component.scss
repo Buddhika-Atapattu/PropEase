@@ -6,7 +6,6 @@
   padding: 2rem;
   transition: all 0.3s ease-in-out;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  min-height: 85vh;
 
   &.dark {
     background: linear-gradient(
@@ -26,12 +25,28 @@
     color: $light-text-color;
   }
 
-  h2 {
-    font-weight: 600;
-    margin-bottom: 1rem;
-  }
-
-  p {
-    font-size: 16px;
+  .image-container {
+    position: relative;
+    overflow: hidden;
+    width: 7rem;
+    height: 7rem;
+    max-width: 10rem;
+    max-height: 10rem;
+    border-radius: 5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    &.dark {
+      box-shadow: -4px 0px 20px 0px #08122f;
+    }
+    &.light {
+      box-shadow: -4px 0px 20px 0px #ffbf70;
+    }
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   }
 }

@@ -16,6 +16,7 @@ import {
 })
 export class Error404Component {
   public mode: boolean | null = null;
+  protected isUnauthorized: boolean = false;
   isBrowser: boolean;
 
   constructor(
@@ -29,6 +30,9 @@ export class Error404Component {
       this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
+    }
+    if (this.router.url.split('/')[2] === 'unauthorized') {
+      this.isUnauthorized = true;
     }
   }
 

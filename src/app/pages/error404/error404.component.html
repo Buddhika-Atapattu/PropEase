@@ -1,12 +1,24 @@
 <div class="error-page-wrapper" [ngClass]="mode ? 'dark-mode' : 'light-mode'">
   <div class="error-content">
-    <h1 class="error-code">404</h1>
-    <h2 class="error-message">Page Not Found</h2>
-    <p class="error-description">
-      Oops! The page you're looking for doesn’t exist or has been moved.
-    </p>
-    <button class="home-button" (click)="goHome()">
-      {{ userLogIn ? "Back to Home" : "Login" }}
-    </button>
+    <div *ngIf="!isUnauthorized; else notFound">
+      <h1 class="error-code">404</h1>
+      <h2 class="error-message">Page Not Found</h2>
+      <p class="error-description">
+        Oops! The page you're looking for doesn’t exist or has been moved.
+      </p>
+      <button class="home-button" (click)="goHome()">
+        {{ userLogIn ? "Back to Home" : "Login" }}
+      </button>
+    </div>
   </div>
 </div>
+<ng-template #notFound>
+  <h1 class="error-code">Unauthorized!</h1>
+  <h2 class="error-message">Privent authority</h2>
+  <p class="error-description">
+    Oops! The page you're looking for is unauthorized to you. Contact the admin.
+  </p>
+  <button class="home-button" (click)="goHome()">
+    {{ userLogIn ? "Back to Home" : "Login" }}
+  </button>
+</ng-template>

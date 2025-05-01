@@ -3,6 +3,126 @@
   class="main-panel"
   [ngClass]="mode ? 'dark' : 'light'"
 >
-  <h2>User profile area</h2>
-  <p>This is the main content panel for PropEase users.</p>
+  <div class="container">
+    <!-- User image row -->
+    <div class="row d-flex justify-content-center align-items-center">
+      <div
+        class="col-md-3 position-relative d-flex justify-content-center align-items-center"
+      >
+        <div class="image-container" [ngClass]="mode ? 'dark' : 'light'">
+          <app-skeleton-loader
+            *ngIf="!user?.image; else userImage"
+            [Mode]="mode"
+            [width]="'10rem'"
+            [height]="'10rem'"
+            [borderRadius]="'50%'"
+          />
+          <ng-template #userImage>
+            <img src="{{ user?.image }}" alt="User image" />
+          </ng-template>
+        </div>
+      </div>
+    </div>
+    <!-- User details row -->
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <!-- firstname -->
+        <div class="row">
+          <div class="col-12 border-bottom-1 mb-3">
+            <app-skeleton-loader
+              *ngIf="!user?.firstName; else firstname"
+              [Mode]="mode"
+              [width]="'100%'"
+              [height]="'100%'"
+              [borderRadius]="'5px'"
+            ></app-skeleton-loader>
+            <ng-template #firstname>
+              <h6>
+                First name: <strong>{{ user?.firstName }}</strong>
+              </h6>
+            </ng-template>
+          </div>
+        </div>
+        <!-- middleName -->
+        <div
+          class="row"
+          *ngIf="user?.middleName !== '' || user?.middleName !== null"
+        >
+          <div class="col-12 border-bottom-1 mb-3">
+            <app-skeleton-loader
+              *ngIf="!user?.middleName; else middleName"
+              [Mode]="mode"
+              [width]="'100%'"
+              [height]="'100%'"
+              [borderRadius]="'5px'"
+            ></app-skeleton-loader>
+            <ng-template #middleName>
+              <h6>
+                Middle name: <strong>{{ user?.middleName }}</strong>
+              </h6>
+            </ng-template>
+          </div>
+        </div>
+        <!-- lastName -->
+        <div class="row">
+          <div class="col-12 border-bottom-1 mb-3">
+            <app-skeleton-loader
+              *ngIf="!user?.lastName; else lastName"
+              [Mode]="mode"
+              [width]="'100%'"
+              [height]="'100%'"
+              [borderRadius]="'5px'"
+            ></app-skeleton-loader>
+            <ng-template #lastName>
+              <h6>
+                Last name: <strong>{{ user?.lastName }}</strong>
+              </h6>
+            </ng-template>
+          </div>
+        </div>
+        <!-- username -->
+        <div class="row">
+          <div class="col-12 border-bottom-1 mb-3">
+            <app-skeleton-loader
+              *ngIf="!user?.username; else username"
+              [Mode]="mode"
+              [width]="'100%'"
+              [height]="'100%'"
+              [borderRadius]="'5px'"
+            ></app-skeleton-loader>
+            <ng-template #username>
+              <h6>
+                Username: <strong>{{ user?.username }}</strong>
+              </h6>
+            </ng-template>
+          </div>
+        </div>
+        <!-- email -->
+        <div class="row">
+          <div class="col-12 border-bottom-1 mb-3">
+            <app-skeleton-loader
+              *ngIf="!user?.email; else email"
+              [Mode]="mode"
+              [width]="'100%'"
+              [height]="'100%'"
+              [borderRadius]="'5px'"
+            ></app-skeleton-loader>
+            <ng-template #email>
+              <h6>
+                Email: <strong>{{ user?.email }}</strong>
+              </h6>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6"></div>
+    </div>
+  </div>
 </div>
+<ng-template #defaultImage>
+  <img
+    src="https://media.istockphoto.com/id/1167753373/vector/woman-avatar-isolated-on-white-background-vector-illustration-for-your-design.jpg?s=612x612&w=0&k=20&c=Y2a_YXRjZ3bXa3Jn2EStSXv7hJly0uEkdlWk4tdbI6U="
+    alt="User image"
+  />
+</ng-template>
+<!--  -->

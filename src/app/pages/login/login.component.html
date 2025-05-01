@@ -18,7 +18,12 @@
     <!-- Right Panel: Login Form -->
     <div class="col-md-6 d-flex justify-content-center align-items-center">
       <div class="login-form-container">
-        <form class="form" (ngSubmit)="login()" autocomplete="off">
+        <form
+          class="form"
+          (ngSubmit)="login()"
+          autocomplete="off"
+          #loginForm="ngForm"
+        >
           <h2 class="login-title text-center">Welcome to PropEase</h2>
           <p class="login-subtitle text-center">Your property, our priority</p>
 

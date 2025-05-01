@@ -24,7 +24,10 @@ import {
   NewUser,
   Address,
   Role,
+  UsersType,
+  LoggedUserType,
 } from '../../../services/auth/auth.service';
+import { SkeletonLoaderComponent } from '../shared/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-user-profile',
@@ -38,6 +41,7 @@ import {
     MatButtonModule,
     MatIconModule,
     MatCheckboxModule,
+    SkeletonLoaderComponent,
   ],
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.scss'], // Correct: `styleUrls` not `styleUrl`
@@ -47,6 +51,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
   private isEditable: boolean = false;
+  protected user: LoggedUserType | null = null;
+  protected isEditing: boolean = false;
 
   constructor(
     private windowRef: WindowsRefService,
@@ -59,7 +65,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       const path = segments.map((s) => s.path).join('/');
       console.log('Full path:', path);
     });
-    console.log(this.authService.getLoggedUser);
+    this.user = this.authService.getLoggedUser;
   }
 
   ngOnInit(): void {
@@ -69,6 +75,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         console.log('MainPanel detected mode:', this.mode);
       });
     }
+
+    console.log(this.user);
   }
 
   get isEditableForm(): boolean {
@@ -77,6 +85,10 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
   set isEditableForm(value: boolean) {
     this.isEditable = value;
+  }
+
+  get getUser(): LoggedUserType | null {
+    return this.authService.getLoggedUser;
   }
 
   get auth(): AuthService {

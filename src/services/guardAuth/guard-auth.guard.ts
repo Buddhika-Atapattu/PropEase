@@ -1,49 +1,107 @@
-// auth.guard.ts
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import {
   CanActivate,
   ActivatedRouteSnapshot,
   RouterStateSnapshot,
   Router,
 } from '@angular/router';
-import { AuthService } from '../auth/auth.service';
-import { Observable } from 'rxjs';
+import { AuthService, NewUser, LoggedUserType } from '../auth/auth.service';
+import { isPlatformBrowser } from '@angular/common';
+import { WindowsRefService } from '../windowRef.service';
+import { CryptoService } from '../cryptoService/crypto.service';
+
+interface RoleAccess {
+  role: 'admin' | 'agent' | 'tenant' | 'operator' | 'developer' | 'user';
+  access: boolean;
+  URLs: string[];
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthGuard implements CanActivate {
-  constructor(private authService: AuthService, private router: Router) {}
+  private isBrowser: boolean;
+  private user: LoggedUserType | null = null;
+  private ROLE_ACCESS: RoleAccess[] = [
+    { role: 'admin', access: true, URLs: ['**'] },
+    { role: 'agent', access: true, URLs: ['/dashboard/home'] },
+    { role: 'tenant', access: true, URLs: ['/dashboard/home'] },
+    {
+      role: 'operator',
+      access: true,
+      URLs: ['/dashboard/home', '/dashboard/user-profile'],
+    },
+    { role: 'developer', access: true, URLs: ['/dashboard'] },
+    { role: 'user', access: true, URLs: ['/dashboard/home'] },
+  ];
+
+  private ROLES: string[] = [
+    'admin',
+    'agent',
+    'tenant',
+    'operator',
+    'developer',
+    'user',
+  ];
+
+  constructor(
+    private windowRef: WindowsRefService,
+    private authService: AuthService,
+    private router: Router,
+    private cryptoService: CryptoService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
+
+  // private async decription(): Promise<void> {
+  //   if (this.isBrowser) {
+  //     CryptoService.KEY_PASSWORD = '@Buddhika#1996@';
+  //     const retrieved = localStorage.getItem('ENCRYPED_LOGGED_USER');
+  //     if (retrieved) {
+  //       this.user = await this.cryptoService.decrypt(retrieved);
+  //       console.log('Decrypted Users:', this.user);
+  //       this.authService.setLoggedUser = this.user;
+  //       this.authService.isUserLoggedIn();
+  //     }
+  //   }
+  // }
 
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
-  ): boolean | Observable<boolean> | Promise<boolean> {
-    const isLoggedIn = this.authService.isUserLoggedIn();
-    const loggedUser = this.authService.getLoggedUser;
-    const allowedRoles = route.data['roles'] as string[] | undefined;
+  ): boolean {
+    let isLoggedIn = this.authService.isUserLoggedIn();
+    let loggedUser = this.authService.getLoggedUser;
 
-    // Not logged in? Redirect to login
     if (!isLoggedIn || !loggedUser) {
       this.router.navigateByUrl('/login');
       return false;
     }
 
-    // Admin has full access regardless of route roles
-    if (loggedUser.role.role === 'admin') {
+    const currentPath = state.url;
+    const userRole = loggedUser.role.role;
+
+    if (!this.ROLES.includes(userRole)) {
+      this.router.navigateByUrl('/login');
+      return false;
+    }
+
+    const accessEntry = this.ROLE_ACCESS.find((r) => r.role === userRole);
+    if (!accessEntry || !accessEntry.access) {
+      this.router.navigateByUrl('/unauthorized');
+      return false;
+    }
+    if (accessEntry.URLs.includes('**')) {
       return true;
     }
-
-    // Check allowed roles if provided
-    if (
-      allowedRoles &&
-      allowedRoles.length > 0 &&
-      !allowedRoles.includes(loggedUser.role.role)
-    ) {
-      // this.router.navigateByUrl('/unauthorized');
-      // return false;
+    const isAllowed = accessEntry.URLs.some((path) =>
+      currentPath.startsWith(path)
+    );
+    if (!isAllowed) {
+      this.router.navigateByUrl('/unauthorized');
+      return false;
     }
-
     return true;
   }
 }
