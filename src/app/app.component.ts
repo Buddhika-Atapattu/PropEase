@@ -21,7 +21,8 @@ import { ModeChangerComponent } from './components/mode-changer/mode-changer.com
 import { TopProgressBarComponent } from './components/top-progress-bar/top-progress-bar.component';
 import { RouterModule } from '@angular/router';
 import { UrlControllerService } from '../services/userController/user-controller.service';
-
+// import { CheckInternetStatusComponent } from "./components/check-internet-status/check-internet-status.component";
+// CheckInternetStatusComponent
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -87,11 +88,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   get isUserLoggedIn(): boolean {
-    return this.authService.isUserLoggedIn();
-  }
-
-  get getUser(): UserCredentials | null {
-    return this.authService.getUser();
+    return this.authService.isUserLoggedIn;
   }
 
   ngOnDestroy(): void {

@@ -37,11 +37,11 @@ export class Error404Component {
   }
 
   get userLogIn(): boolean {
-    return this.authService.isUserLoggedIn();
+    return this.authService.isUserLoggedIn;
   }
 
   goHome(): void {
-    if (this.authService.isUserLoggedIn()) {
+    if (this.authService.isUserLoggedIn) {
       this.router.navigate(['/dashboard/home']);
     } else {
       this.authService.clearCredentials();

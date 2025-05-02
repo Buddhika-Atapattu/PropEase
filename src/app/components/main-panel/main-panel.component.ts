@@ -30,7 +30,6 @@ export class MainPanelComponent implements OnInit, OnDestroy {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.route.url.subscribe((segments) => {
       const path = segments.map((s) => s.path).join('/');
-      console.log('Full path:', path);
     });
   }
 
@@ -38,7 +37,6 @@ export class MainPanelComponent implements OnInit, OnDestroy {
     if (this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
-        console.log('MainPanel detected mode:', this.mode);
       });
     }
   }

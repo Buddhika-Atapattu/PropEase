@@ -54,24 +54,11 @@ export class AuthGuard implements CanActivate {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
-  // private async decription(): Promise<void> {
-  //   if (this.isBrowser) {
-  //     CryptoService.KEY_PASSWORD = '@Buddhika#1996@';
-  //     const retrieved = localStorage.getItem('ENCRYPED_LOGGED_USER');
-  //     if (retrieved) {
-  //       this.user = await this.cryptoService.decrypt(retrieved);
-  //       console.log('Decrypted Users:', this.user);
-  //       this.authService.setLoggedUser = this.user;
-  //       this.authService.isUserLoggedIn();
-  //     }
-  //   }
-  // }
-
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): boolean {
-    let isLoggedIn = this.authService.isUserLoggedIn();
+    let isLoggedIn = this.authService.isUserLoggedIn;
     let loggedUser = this.authService.getLoggedUser;
 
     if (!isLoggedIn || !loggedUser) {

@@ -163,7 +163,6 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
 
       this.expandSub = this.expandableService.isExpanded$.subscribe(
         (expanded) => {
-          console.log('Expanded:', expanded);
           this.isExpanded.set(expanded);
           this.applyPanelState(expanded);
         }

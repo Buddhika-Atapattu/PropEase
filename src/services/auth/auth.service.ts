@@ -1,9 +1,9 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { filter, firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { CryptoService } from '../../services/cryptoService/crypto.service';
+import { APIsService } from '../APIs/apis.service';
 
 export interface UserCredentials {
   username: string;
@@ -11,7 +11,6 @@ export interface UserCredentials {
   rememberMe?: boolean;
 }
 
-//User data pattern
 export interface Address {
   street: string;
   houseNumber: string;
@@ -25,7 +24,7 @@ export interface Role {
   role: 'admin' | 'agent' | 'tenant' | 'operator' | 'developer' | 'user';
 }
 
-export interface NewUser {
+export interface BaseUser {
   __id?: string;
   __v?: number;
   firstName: string;
@@ -33,25 +32,6 @@ export interface NewUser {
   lastName: string;
   username: string;
   email: string;
-  password: string;
-  age: number;
-  image?: string | File;
-  phoneNumber?: string;
-  role: Role;
-  address: Address;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-export interface UsersType {
-  __id?: string;
-  __v?: number;
-  firstName: string;
-  middleName?: string;
-  lastName: string;
-  username: string;
-  email: string;
-  password: string;
   age: number;
   image?: string | File;
   phoneNumber?: string;
@@ -62,99 +42,56 @@ export interface UsersType {
   updatedAt: Date;
 }
 
-export interface LoggedUserType {
-  __id?: string;
-  __v?: number;
-  firstName: string;
-  middleName?: string;
-  lastName: string;
-  username: string;
-  email: string;
-  age: number;
-  image?: string | File;
-  phoneNumber?: string;
-  role: Role;
-  address: Address;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+export interface NewUser extends BaseUser {
+  password: string;
 }
+
+export interface UsersType extends NewUser {}
+
+export interface LoggedUserType extends Omit<NewUser, 'password'> {}
+
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  private isBrowser: boolean;
   private isLoggedIn = false;
   private rememberMe = false;
-  private username: string = '';
-  private password: string = '';
-  private loggedUser: LoggedUserType | null = null;
-  private isValidUser: boolean = false;
-  private users: UsersType[] = [];
-  private isBrowser: boolean;
-  private localUser: LoggedUserType | null = null;
-  private isUserActive: boolean = false;
+  private username = '';
+  private password = '';
   private user: UserCredentials = {
-    username: this.username,
-    password: this.password,
-    rememberMe: this.rememberMe,
+    username: '',
+    password: '',
+    rememberMe: false,
   };
+
+  private loggedUser: LoggedUserType | null = null;
+  private localUser: LoggedUserType | null = null;
+  private isValidUser = false;
+  private isUserActive = false;
+  private users: UsersType[] = [];
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private http: HttpClient,
     private router: Router,
-    private cryptoService: CryptoService
+    private cryptoService: CryptoService,
+    private APIs: APIsService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    // this.getLocalLoggedUser()
   }
 
-  private async getLocalLoggedUser(): Promise<LoggedUserType | null> {
-    if (this.isBrowser) {
-      const getLoggedUserDataFromLocalStorage: string | null =
-        localStorage.getItem('ENCRYPED_LOGGED_USER');
-      if (getLoggedUserDataFromLocalStorage !== null) {
-        const getLoggedUser: LoggedUserType = await this.cryptoService.decrypt(
-          getLoggedUserDataFromLocalStorage
-        );
-        this.localUser = getLoggedUser;
-        this.loggedUser = getLoggedUser;
-        this.isUserActive = getLoggedUser.isActive;
-        this.isValidUser = true;
-        this.isLoggedIn = true;
-        return getLoggedUser;
-      } else {
-        return null;
-      }
-    }
-    return Promise.resolve(null);
-  }
-
-  set loginUserCredentials(user: UserCredentials) {
-    this.username = user.username;
-    this.password = user.password;
-    this.rememberMe = user.rememberMe || false; // Default to false if not provided
-  }
-
-  public async getAndAssignValuesFromLocalUser(): Promise<LoggedUserType | null> {
-    return await this.getLocalLoggedUser();
-  }
-
-  // Return the current logged-in user
-  getUser(): UserCredentials | null {
+  // Getters
+  get getUserCredentials(): UserCredentials | null {
     return this.user;
-  }
-
-  get LocalUser(): LoggedUserType | null {
-    return this.localUser;
-  }
-
-  set setLoggedUser(user: LoggedUserType | null) {
-    this.loggedUser = user;
   }
 
   get getLoggedUser(): LoggedUserType | null {
     return this.loggedUser;
+  }
+
+  get LocalUser(): LoggedUserType | null {
+    return this.localUser;
   }
 
   get IsActiveUser(): boolean {
@@ -165,18 +102,117 @@ export class AuthService {
     return this.isValidUser;
   }
 
-  get allUsers(): LoggedUserType[] {
+  get allUsers(): UsersType[] {
     return this.users;
   }
 
-  // Clear user login credentials
-  public clearCredentials(): void {
-    this.user = {} as UserCredentials;
-    this.isLoggedIn = false;
+  // Entry point to trigger user verification
+  get verifyUser(): Promise<boolean | undefined> {
+    return this.sendUserCredentialsAndGetUserData(this.user);
   }
 
-  // Check if the user is logged in
-  public isUserLoggedIn(): boolean {
+  get isUserLoggedIn(): boolean {
     return this.isLoggedIn;
+  }
+
+  // Setters
+  set loginUserCredentials(user: UserCredentials) {
+    this.username = user.username;
+    this.password = user.password;
+    this.rememberMe = user.rememberMe || false;
+  }
+
+  set isUserLoggedIn(value: boolean) {
+    this.isLoggedIn = value;
+  }
+
+
+
+  set setLoggedUser(user: LoggedUserType | null) {
+    this.loggedUser = user;
+  }
+
+  set logginUser(user: UserCredentials) {
+    this.user = user;
+  }
+
+  public async sendVerifyUser(): Promise<boolean | undefined> {
+    return await this.APIs.verifyUser(this.user);
+  }
+
+  // Main user verification logic
+  private async sendUserCredentialsAndGetUserData(
+    user: UserCredentials
+  ): Promise<boolean | undefined> {
+    try {
+      const user: UserCredentials = {
+        username: this.username,
+        password: this.password,
+        rememberMe: this.rememberMe,
+      };
+
+      const data: LoggedUserType = await this.APIs.verifyUser(user);
+      if (data) {
+        this.setLoggedUser = data;
+        this.user = user;
+
+        const canSaveAllUsers = ['admin', 'operator'].includes(data.role.role);
+        if (canSaveAllUsers) {
+          const users = await this.APIs.getAllUsers();
+          localStorage.setItem(
+            'USERS',
+            await this.cryptoService.encrypt(users)
+          );
+        } else {
+          this.user = { username: '', password: '', rememberMe: false };
+        }
+
+        return true;
+      }
+    } catch (error) {
+      console.error('User verification failed:', error);
+    }
+
+    return false;
+  }
+
+  // Post-login steps to run after authentication
+  private async afterUserLoggedInOperatios(): Promise<void> {
+    const isVerified = await this.sendUserCredentialsAndGetUserData(this.user);
+    if (this.isBrowser && isVerified) {
+      const encryptedUser = await this.cryptoService.encrypt(this.localUser!);
+      const encryptedPassword = await this.cryptoService.encrypt(this.password);
+
+      localStorage.setItem('ENCRYPED_LOGGED_USER', encryptedUser);
+      localStorage.setItem('IS_USER_LOGGED_IN', 'true');
+      localStorage.setItem('PASSWORD', encryptedPassword);
+    }
+  }
+
+  // Decrypt and return local stored user if available
+  private async getLocalLoggedUser(): Promise<LoggedUserType | null> {
+    if (this.isBrowser) {
+      const encrypted = localStorage.getItem('ENCRYPED_LOGGED_USER');
+      if (encrypted) {
+        const decryptedUser = await this.cryptoService.decrypt(encrypted);
+        this.localUser = decryptedUser;
+        this.loggedUser = decryptedUser;
+        this.isUserActive = decryptedUser.isActive;
+        this.isValidUser = true;
+        this.isLoggedIn = true;
+        return decryptedUser;
+      }
+    }
+    return null;
+  }
+
+  // Public method to retrieve and assign local user
+  public async getAndAssignValuesFromLocalUser(): Promise<LoggedUserType | null> {
+    return await this.getLocalLoggedUser();
+  }
+
+  clearCredentials(): void {
+    this.user = {} as UserCredentials;
+    this.isLoggedIn = false;
   }
 }

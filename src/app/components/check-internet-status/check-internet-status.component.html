@@ -1,0 +1,6 @@
+<div *ngIf="showOnlineMessage">
+  <div class="message-container" [ngClass]="isOnline ? 'good' : 'bad'">
+    <p>{{ isOnline ? "Online" : "Offline" }}</p>
+  </div>
+</div>
+<!--  -->

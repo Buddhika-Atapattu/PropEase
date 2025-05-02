@@ -13,7 +13,11 @@ import { ModeChangerComponent } from '../../components/mode-changer/mode-changer
 import { UserInfoPanelComponent } from '../../components/user-info-panel/user-info-panel.component';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { ExpandableService } from '../../../services/expandable/expandable.service';
-import { AuthService, NewUser, LoggedUserType } from '../../../services/auth/auth.service';
+import {
+  AuthService,
+  NewUser,
+  LoggedUserType,
+} from '../../../services/auth/auth.service';
 import { Subscription } from 'rxjs';
 import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
 
@@ -63,7 +67,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.expandSub = this.expandableService.isExpanded$.subscribe(
         (expanded) => {
           this.isExpanded = expanded;
-          console.log('Dashboard detected expand state:', expanded);
         }
       );
     }
