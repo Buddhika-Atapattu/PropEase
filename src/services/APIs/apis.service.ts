@@ -62,7 +62,6 @@ export interface LoggedUserType extends Omit<NewUser, 'password'> {}
 export class APIsService {
   private isBrowser: boolean;
   constructor(
-    private cryptoService: CryptoService,
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {

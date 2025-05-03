@@ -4,7 +4,11 @@ import {
   isDevMode,
 } from '@angular/core';
 import { provideRouter, RouterModule, Route } from '@angular/router';
-import { HashLocationStrategy, LocationStrategy } from '@angular/common';
+import {
+  HashLocationStrategy,
+  LocationStrategy,
+  PathLocationStrategy,
+} from '@angular/common';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { routes } from './app.routes';
 import {
@@ -15,20 +19,19 @@ import { provideServiceWorker } from '@angular/service-worker';
 // import { environment } from './environments/environment';
 import { environment } from '../environments/environment';
 
+// HashLocationStrategy  ||| && !isDevMode()
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    { provide: LocationStrategy, useClass: HashLocationStrategy },
+    { provide: LocationStrategy, useClass: PathLocationStrategy },
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch()),
-    provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000',
-    }),
     // provideServiceWorker('ngsw-worker.js', {
-    //   enabled: environment.production && !isDevMode(),
-    //   registrationStrategy: 'registerWhenStable:3000',
+    //   enabled: !isDevMode(),
+    //   registrationStrategy: 'registerWhenStable:30000',
     // }),
   ],
+
 };

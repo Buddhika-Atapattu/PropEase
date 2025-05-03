@@ -58,7 +58,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnInit(): void {
+  async ngOnInit() {
     if (this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
@@ -69,6 +69,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.isExpanded = expanded;
         }
       );
+    }
+    const role = this.authService.getLoggedUser?.role.role;
+    if (role && this.isBrowser) {
+      await this.authService.sendUserCredentialsAndGetUserData(role);
+      await this.authService.afterUserLoggedInOperatios();
     }
   }
 

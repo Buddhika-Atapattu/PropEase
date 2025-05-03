@@ -107,9 +107,6 @@ export class AuthService {
   }
 
   // Entry point to trigger user verification
-  get verifyUser(): Promise<boolean | undefined> {
-    return this.sendUserCredentialsAndGetUserData(this.user);
-  }
 
   get isUserLoggedIn(): boolean {
     return this.isLoggedIn;
@@ -126,8 +123,6 @@ export class AuthService {
     this.isLoggedIn = value;
   }
 
-
-
   set setLoggedUser(user: LoggedUserType | null) {
     this.loggedUser = user;
   }
@@ -141,56 +136,48 @@ export class AuthService {
   }
 
   // Main user verification logic
-  private async sendUserCredentialsAndGetUserData(
-    user: UserCredentials
+  public async sendUserCredentialsAndGetUserData(
+    role: string
   ): Promise<boolean | undefined> {
-    try {
-      const user: UserCredentials = {
-        username: this.username,
-        password: this.password,
-        rememberMe: this.rememberMe,
-      };
-
-      const data: LoggedUserType = await this.APIs.verifyUser(user);
-      if (data) {
-        this.setLoggedUser = data;
-        this.user = user;
-
-        const canSaveAllUsers = ['admin', 'operator'].includes(data.role.role);
+    if (this.isBrowser) {
+      try {
+        const canSaveAllUsers = ['admin', 'operator'].includes(role);
         if (canSaveAllUsers) {
           const users = await this.APIs.getAllUsers();
-          localStorage.setItem(
-            'USERS',
-            await this.cryptoService.encrypt(users)
-          );
-        } else {
-          this.user = { username: '', password: '', rememberMe: false };
+          const encryptedUsers = await this.cryptoService.encrypt(users);
+          if (encryptedUsers) {
+            localStorage.setItem('USERS', encryptedUsers);
+          }
         }
-
         return true;
+      } catch (error) {
+        console.error('User verification failed:', error);
+        return false;
       }
-    } catch (error) {
-      console.error('User verification failed:', error);
+    } else {
+      return false;
     }
-
-    return false;
   }
 
   // Post-login steps to run after authentication
-  private async afterUserLoggedInOperatios(): Promise<void> {
-    const isVerified = await this.sendUserCredentialsAndGetUserData(this.user);
-    if (this.isBrowser && isVerified) {
-      const encryptedUser = await this.cryptoService.encrypt(this.localUser!);
-      const encryptedPassword = await this.cryptoService.encrypt(this.password);
-
-      localStorage.setItem('ENCRYPED_LOGGED_USER', encryptedUser);
-      localStorage.setItem('IS_USER_LOGGED_IN', 'true');
-      localStorage.setItem('PASSWORD', encryptedPassword);
+  public async afterUserLoggedInOperatios(): Promise<void> {
+    if (this.isBrowser) {
+      if (this.isValidUser) {
+        const encryptedUser = await this.cryptoService.encrypt(this.localUser!);
+        const encryptedPassword = await this.cryptoService.encrypt(
+          this.password
+        );
+        if (encryptedUser && encryptedPassword) {
+          localStorage.setItem('ENCRYPED_LOGGED_USER', encryptedUser);
+          localStorage.setItem('IS_USER_LOGGED_IN', 'true');
+          localStorage.setItem('PASSWORD', encryptedPassword);
+        }
+      }
     }
   }
 
   // Decrypt and return local stored user if available
-  private async getLocalLoggedUser(): Promise<LoggedUserType | null> {
+  public async getLocalLoggedUser(): Promise<LoggedUserType | null> {
     if (this.isBrowser) {
       const encrypted = localStorage.getItem('ENCRYPED_LOGGED_USER');
       if (encrypted) {
@@ -204,11 +191,6 @@ export class AuthService {
       }
     }
     return null;
-  }
-
-  // Public method to retrieve and assign local user
-  public async getAndAssignValuesFromLocalUser(): Promise<LoggedUserType | null> {
-    return await this.getLocalLoggedUser();
   }
 
   clearCredentials(): void {

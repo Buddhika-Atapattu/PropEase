@@ -1,67 +1,95 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CryptoService {
+  private isBrowser: boolean;
   private encoder = new TextEncoder();
   private decoder = new TextDecoder();
 
   private readonly keyPassword = '@Buddhika#1996@'; // could be a user hash or session value
 
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
+
   // Derive a crypto key from the password
-  private async getKey(): Promise<CryptoKey> {
-    const baseKey = await crypto.subtle.importKey(
-      'raw',
-      this.encoder.encode(this.keyPassword),
-      { name: 'PBKDF2' },
-      false,
-      ['deriveKey']
-    );
+  private async getKey(): Promise<CryptoKey | null> {
+    if (this.isBrowser) {
+      const baseKey = await crypto.subtle.importKey(
+        'raw',
+        this.encoder.encode(this.keyPassword),
+        { name: 'PBKDF2' },
+        false,
+        ['deriveKey']
+      );
 
-    return crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt: this.encoder.encode('my-salt'), // Optional: personalize
-        iterations: 100000,
-        hash: 'SHA-256',
-      },
-      baseKey,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt', 'decrypt']
-    );
+      return crypto.subtle.deriveKey(
+        {
+          name: 'PBKDF2',
+          salt: this.encoder.encode('my-salt'), // Optional: personalize
+          iterations: 100000,
+          hash: 'SHA-256',
+        },
+        baseKey,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+      );
+    } else {
+      return null;
+    }
   }
 
-  public async encrypt(data: any): Promise<string> {
-    const key = await this.getKey();
-    const iv = crypto.getRandomValues(new Uint8Array(12)); // Initialization vector
-    const encodedData = this.encoder.encode(JSON.stringify(data));
-    const encrypted = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      encodedData
-    );
+  public async encrypt(data: any): Promise<string | null> {
+    if (this.isBrowser) {
+      const key = await this.getKey();
+      if (key !== null) {
+        const iv = crypto.getRandomValues(new Uint8Array(12)); // Initialization vector
+        const encodedData = this.encoder.encode(JSON.stringify(data));
+        const encrypted = await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          key,
+          encodedData
+        );
 
-    // Store IV + encrypted data as base64
-    return btoa(
-      String.fromCharCode(...iv) +
-        String.fromCharCode(...new Uint8Array(encrypted))
-    );
+        // Store IV + encrypted data as base64
+        return btoa(
+          String.fromCharCode(...iv) +
+            String.fromCharCode(...new Uint8Array(encrypted))
+        );
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
   }
 
-  public async decrypt(cipherText: string): Promise<any> {
-    const rawData = Uint8Array.from(atob(cipherText), (c) => c.charCodeAt(0));
-    const iv = rawData.slice(0, 12);
-    const encryptedData = rawData.slice(12);
-    const key = await this.getKey();
+  public async decrypt(cipherText: string): Promise<any | null> {
+    if (this.isBrowser) {
+      const key = await this.getKey();
+      if (key !== null) {
+        const rawData = Uint8Array.from(atob(cipherText), (c) =>
+          c.charCodeAt(0)
+        );
+        const iv = rawData.slice(0, 12);
+        const encryptedData = rawData.slice(12);
 
-    const decrypted = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      encryptedData
-    );
-    const decoded = this.decoder.decode(decrypted);
-    return JSON.parse(decoded);
+        const decrypted = await crypto.subtle.decrypt(
+          { name: 'AES-GCM', iv },
+          key,
+          encryptedData
+        );
+        const decoded = this.decoder.decode(decrypted);
+        return JSON.parse(decoded);
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
   }
 }

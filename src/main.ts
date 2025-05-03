@@ -15,5 +15,20 @@ bootstrapApplication(AppComponent, appConfig)
         preloader.remove();
       }, 500);
     }
+
+    // Register custom service worker
+    if (
+      'serviceWorker' in navigator &&
+      (location.protocol === 'https:' || location.hostname === 'localhost')
+    ) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
+          console.log('✅ Custom Service Worker registered:', registration);
+        })
+        .catch((error) => {
+          console.error('❌ Custom Service Worker registration failed:', error);
+        });
+    }
   })
   .catch((err) => console.error(err));

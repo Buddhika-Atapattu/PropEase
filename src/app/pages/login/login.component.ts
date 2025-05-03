@@ -126,19 +126,25 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.authService.getLoggedUser !== null &&
         this.authService.getLoggedUser.isActive
       ) {
-        const username = await this.cryptoService.encrypt(this.username || '');
-        const password = await this.cryptoService.encrypt(this.password || '');
-        if (username !== null && password !== null) {
-          this.saveToCookies(username, password);
-          this.authService.isUserLoggedIn = true;
-          this.router.navigate(['/dashboard/home']);
-        } else {
-          console.error('Username or password is null');
-          this.authService.clearCredentials();
-          this.username = '';
-          this.password = '';
-          await this.saveToCookies('', ''); // clear cookies if login fails
-          this.router.navigate(['/login']);
+        if (this.isBrowser) {
+          const username = await this.cryptoService.encrypt(
+            this.username || ''
+          );
+          const password = await this.cryptoService.encrypt(
+            this.password || ''
+          );
+          if (username !== null && password !== null) {
+            this.saveToCookies(username, password);
+            this.authService.isUserLoggedIn = true;
+            this.router.navigate(['/dashboard/home']);
+          } else {
+            console.error('Username or password is null');
+            this.authService.clearCredentials();
+            this.username = '';
+            this.password = '';
+            await this.saveToCookies('', ''); // clear cookies if login fails
+            this.router.navigate(['/login']);
+          }
         }
       } else {
         console.error('Username or password is null');
