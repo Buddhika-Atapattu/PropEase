@@ -11,6 +11,14 @@ import { CryptoService } from '../cryptoService/crypto.service';
 import { HttpClient } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 
+export interface Country {
+  name: string;
+  code: string;
+  emoji: string;
+  unicode: string;
+  image: string;
+}
+
 export interface UserCredentials {
   username: string;
   password: string;
@@ -34,10 +42,11 @@ export interface BaseUser {
   __id?: string;
   __v?: number;
   firstName: string;
-  middleName?: string;
+  middleName?: string | null;
   lastName: string;
   username: string;
   email: string;
+  dateOfBirth?: Date | null;
   age: number;
   image?: string | File;
   phoneNumber?: string;
@@ -53,6 +62,8 @@ export interface NewUser extends BaseUser {
 }
 
 export interface UsersType extends NewUser {}
+
+export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> {}
 
 export interface LoggedUserType extends Omit<NewUser, 'password'> {}
 
@@ -85,5 +96,35 @@ export class APIsService {
         )
       )) || null
     );
+  }
+
+  public async getCountries(): Promise<Country[] | null> {
+    return (
+      (await firstValueFrom(
+        this.http.get<Country[]>(
+          'https://cdn.jsdelivr.net/npm/country-flag-emoji-json@2.0.0/dist/index.json'
+        )
+      )) || null
+    );
+  }
+
+  public async updateUser(
+    user: FormData,
+    username: UserCredentials['username']
+  ): Promise<UpdateUserType | null> {
+    if (username) {
+      const param = new URLSearchParams();
+      param.set('username', username);
+      const url = await firstValueFrom(
+        this.http.put<UpdateUserType>(
+          `http://localhost:3000/user-update/${param.toString()}`,
+          user
+        )
+      );
+      console.log(url);
+      return url;
+    } else {
+      return null;
+    }
   }
 }

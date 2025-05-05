@@ -28,10 +28,11 @@ export interface BaseUser {
   __id?: string;
   __v?: number;
   firstName: string;
-  middleName?: string;
+  middleName?: string | null;
   lastName: string;
   username: string;
   email: string;
+  dateOfBirth?: Date | null;
   age: number;
   image?: string | File;
   phoneNumber?: string;
@@ -47,6 +48,8 @@ export interface NewUser extends BaseUser {
 }
 
 export interface UsersType extends NewUser {}
+
+export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> {}
 
 export interface LoggedUserType extends Omit<NewUser, 'password'> {}
 
@@ -144,14 +147,21 @@ export class AuthService {
         const canSaveAllUsers = ['admin', 'operator'].includes(role);
         if (canSaveAllUsers) {
           const users = await this.APIs.getAllUsers();
+          if (!users) {
+            throw new Error('Users are not fetched');
+          }
           const encryptedUsers = await this.cryptoService.encrypt(users);
           if (encryptedUsers) {
             localStorage.setItem('USERS', encryptedUsers);
+          } else {
+            throw new Error('Users are not encrypted');
           }
+        } else {
+          throw new Error('User is not admin or operator');
         }
         return true;
       } catch (error) {
-        console.error('User verification failed:', error);
+        console.error('Error', error);
         return false;
       }
     } else {

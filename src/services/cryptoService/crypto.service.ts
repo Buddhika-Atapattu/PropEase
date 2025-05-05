@@ -44,7 +44,7 @@ export class CryptoService {
   }
 
   public async encrypt(data: any): Promise<string | null> {
-    if (this.isBrowser) {
+    if (this.isBrowser && data !== null) {
       const key = await this.getKey();
       if (key !== null) {
         const iv = crypto.getRandomValues(new Uint8Array(12)); // Initialization vector
@@ -69,7 +69,7 @@ export class CryptoService {
   }
 
   public async decrypt(cipherText: string): Promise<any | null> {
-    if (this.isBrowser) {
+    if (this.isBrowser && cipherText.length > 0) {
       const key = await this.getKey();
       if (key !== null) {
         const rawData = Uint8Array.from(atob(cipherText), (c) =>

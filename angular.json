@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/front-end",
+            "outputPath": "dist/PropEase",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -72,10 +72,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "front-end:build:production"
+              "buildTarget": "PropEase:build:production"
             },
             "development": {
-              "buildTarget": "front-end:build:development"
+              "buildTarget": "PropEase:build:development"
             }
           },
           "defaultConfiguration": "development"

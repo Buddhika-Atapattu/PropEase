@@ -81,13 +81,33 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.initializeFromCookies();
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     if (this.isBrowser) {
       (window as any).LoginComponent = this;
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
     }
+    // auto login
+    if (this.isBrowser) {
+      if (
+        this.getCookie('username') !== null &&
+        this.getCookie('password') !== null
+      ) {
+        const username: string | null = await this.cryptoService.decrypt(
+          this.getCookie('username') || ''
+        );
+        const password: string | null = await this.cryptoService.decrypt(
+          this.getCookie('password') || ''
+        );
+
+        this.username = username;
+        this.password = password;
+        this.rememberMe = true;
+        this.login();
+      }
+    }
+    return Promise.resolve();
   }
 
   ngOnDestroy(): void {

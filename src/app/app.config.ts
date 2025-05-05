@@ -18,6 +18,7 @@ import {
 import { provideServiceWorker } from '@angular/service-worker';
 // import { environment } from './environments/environment';
 import { environment } from '../environments/environment';
+import { provideNativeDateAdapter } from '@angular/material/core';
 
 // HashLocationStrategy  ||| && !isDevMode()
 
@@ -28,10 +29,10 @@ export const appConfig: ApplicationConfig = {
     { provide: LocationStrategy, useClass: PathLocationStrategy },
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch()),
+    provideNativeDateAdapter(),
     // provideServiceWorker('ngsw-worker.js', {
     //   enabled: !isDevMode(),
     //   registrationStrategy: 'registerWhenStable:30000',
     // }),
   ],
-
 };

@@ -1,17 +1,17 @@
 {
-  "name": "front-end",
+  "name": "PropEase",
   "version": "0.0.0",
   "private": true,
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --no-hmr",
+    "start": "ng serve --hmr",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "serve:ssr": "node dist/front-end/server/server.mjs",
-    "build:ssr": "ng build && ng run front-end:server",
-    "prerender": "ng run front-end:prerender"
+    "serve:ssr": "node dist/PropEase/server/server.mjs",
+    "build:ssr": "ng build && ng run PropEase:server",
+    "prerender": "ng run PropEase:prerender"
   },
   "dependencies": {
     "@angular/animations": "^19.2.0",
