@@ -220,7 +220,25 @@
   }
   .list-group,
   .list-group-item {
-    color: #fff;
+    color: #ffffff;
+    .active-status {
+      .active {
+        margin-left: 1rem;
+        ::ng-deep {
+          svg {
+            fill: green;
+          }
+        }
+      }
+      .wrong {
+        margin-left: 1rem;
+        ::ng-deep {
+          svg {
+            fill: red;
+          }
+        }
+      }
+    }
   }
   .bottom-btn-edit {
     background: linear-gradient(90deg, #ae8300, #ffc107, #ae8300);
