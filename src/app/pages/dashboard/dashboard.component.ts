@@ -56,6 +56,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.authService.getLoggedUser !== null) {
       this.user = this.authService.getLoggedUser;
     }
+    if (typeof this.user?.image === 'string') {
+      const imageURL = this.user.image.split('.');
+      if (imageURL[1] === undefined) {
+        this.user.image = '/Images/user-images/dummy-user/dummy-user.jpg';
+      } else {
+        this.user.image = this.user.image;
+      }
+    }
   }
 
   async ngOnInit() {

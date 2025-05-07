@@ -23,7 +23,7 @@
 }
 
 // Light Mode
-:host-context(html) {
+:host-context(html.light) {
   height: 100vh;
   background: linear-gradient(135deg, #fffaf3, #f1e8d9);
 

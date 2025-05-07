@@ -10,12 +10,15 @@ import {
   Output,
   HostListener,
 } from '@angular/core';
-import { AuthService, NewUser,LoggedUserType } from '../../../services/auth/auth.service';
+import {
+  AuthService,
+  NewUser,
+  LoggedUserType,
+} from '../../../services/auth/auth.service';
 import { Router } from '@angular/router';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import User from '../../../../../back-end/src/api/user';
 
 @Component({
   selector: 'app-user-info-panel',

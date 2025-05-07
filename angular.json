@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "PropEase": {
+    "propease-fontend": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/PropEase",
+            "outputPath": "dist/propease-fontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -72,10 +72,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "PropEase:build:production"
+              "buildTarget": "propease-fontend:build:production"
             },
             "development": {
-              "buildTarget": "PropEase:build:development"
+              "buildTarget": "propease-fontend:build:development"
             }
           },
           "defaultConfiguration": "development"

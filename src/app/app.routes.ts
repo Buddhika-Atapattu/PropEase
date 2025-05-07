@@ -4,7 +4,8 @@ import { AuthGuard } from '../services/guardAuth/guard-auth.guard';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent),
+    loadComponent: () =>
+      import('./pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: 'login',
@@ -40,7 +41,7 @@ export const routes: Routes = [
       {
         path: 'user-profile',
         loadComponent: () =>
-          import('./components/user-profile/user-profile.component').then(
+          import('./pages/user-profile/user-profile.component').then(
             (m) => m.UserProfileComponent
           ),
         data: {

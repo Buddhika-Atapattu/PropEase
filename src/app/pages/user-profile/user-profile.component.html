@@ -1,0 +1,484 @@
+<div *ngIf="mode !== null" class="main-panel">
+  <div class="position-relative py-2">
+    <button type="button" (click)="changeEdit()" class="edit-btn">
+      <mat-icon
+        *ngIf="isEditing === false"
+        aria-hidden="false"
+        aria-label="Example home icon"
+        fontIcon="edit"
+        class="edit-icon"
+      ></mat-icon>
+      <mat-icon
+        *ngIf="isEditing === true"
+        aria-hidden="false"
+        aria-label="Example home icon"
+        fontIcon="cancel"
+        class="edit-icon"
+      ></mat-icon>
+    </button>
+  </div>
+  <div *ngIf="isEditing === false; else editProfile">
+    <div class="container-fluid profile-container">
+      <div class="row d-flex justify-content-center align-items-center">
+        <div
+          class="col-md-3 position-relative d-flex justify-content-center align-items-center"
+        >
+          <div class="image-container-btn">
+            <div class="image-container">
+              <app-skeleton-loader
+                *ngIf="!userimage; else userImage"
+                [Mode]="mode"
+                [width]="'10rem'"
+                [height]="'10rem'"
+                [borderRadius]="'50%'"
+              ></app-skeleton-loader>
+
+              <ng-template #userImage>
+                <img
+                  [src]="userimage"
+                  alt="User image"
+                  (error)="onImageError()"
+                  class="clickable-image"
+                />
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- details -->
+      <!-- user name -->
+      <div class="row mt-4 d-flex justify-content-center align-items-center">
+        <div class="col-md-8 user-detals">
+          <div class="row">
+            <div class="col-12">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                  Name: {{ firstname }} {{ middlename }} {{ lastname }}
+                </li>
+                <li class="list-group-item">Email: {{ email }}</li>
+                <li class="list-group-item">Contact Number: {{ phone }}</li>
+                <li class="list-group-item text-capitalize">
+                  Address: No.{{ houseNumber }}, {{ street }}, {{ city }},
+                  {{ stateOrProvince }}, {{ country }} - {{ postcode }}
+                </li>
+                <li class="list-group-item">Age: {{ age }}</li>
+                <li class="list-group-item">
+                  Date of Birth: {{ birthDay | date : "yyyy-MM-dd" }}
+                </li>
+                <li class="list-group-item">Role: {{ role | uppercase }}</li>
+                <li class="list-group-item active-status">
+                  Active:
+                  <mat-icon
+                    *ngIf="isActive"
+                    aria-hidden="false"
+                    aria-label="Example home icon"
+                    svgIcon="active"
+                    class="active"
+                  ></mat-icon>
+                  <mat-icon
+                    *ngIf="!isActive"
+                    aria-hidden="false"
+                    aria-label="Example home icon"
+                    svgIcon="wrong"
+                    class="wrong"
+                  ></mat-icon>
+                </li>
+              </ul>
+              <div
+                class="row d-flex justify-content-end align-items-center mt-4"
+              >
+                <div
+                  class="col-3 d-flex justify-content-end align-items-center"
+                >
+                  <button
+                    type="button"
+                    (click)="changeEdit()"
+                    class="bottom-btn-edit"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form for user details edit -->
+  <ng-template #editProfile>
+    <form
+      (ngSubmit)="updateUserData()"
+      class="profile-form"
+      autocomplete="off"
+      #userForm="ngForm"
+      method="PUT"
+      enctype="multipart/form-data"
+    >
+      <div class="container-fluid profile-container">
+        <!-- User image row -->
+        <div class="row d-flex justify-content-center align-items-center">
+          <div
+            class="col-md-3 position-relative d-flex justify-content-center align-items-center"
+          >
+            <button
+              type="button"
+              class="image-container-btn"
+              (click)="triggerFileInput()"
+            >
+              <div class="image-container">
+                <app-skeleton-loader
+                  *ngIf="!userimage; else userImage"
+                  [Mode]="mode"
+                  [width]="'10rem'"
+                  [height]="'10rem'"
+                  [borderRadius]="'50%'"
+                ></app-skeleton-loader>
+
+                <ng-template #userImage>
+                  <img
+                    [src]="
+                      userUploadedImage !== '' ? userUploadedImage : userimage
+                    "
+                    alt="User image"
+                    (error)="onImageError()"
+                    class="clickable-image"
+                  />
+                </ng-template>
+
+                <!-- Hidden file input -->
+                <input
+                  type="file"
+                  #fileInput
+                  (change)="onFileSelected($event)"
+                  accept="image/*"
+                  hidden
+                  name="userimage"
+                  accept="image/*"
+                />
+              </div>
+            </button>
+          </div>
+          <!-- User guidline for the button -->
+          <div class="row d-flex justify-content-center align-item-center mt-2">
+            <div
+              class="col-md-6 d-flex justify-content-center align-item-center"
+            >
+              <span class="button-text"
+                >"Click the image to upload new user image!"</span
+              >
+            </div>
+          </div>
+          <!-- User text typed data -->
+          <div
+            class="row d-flex justify-content-center align-items-center mt-4"
+          >
+            <div class="col-md-12">
+              <!-- Name -->
+              <div
+                class="row d-flex justify-content-bitween align-items-center"
+              >
+                <div class="col-md-4">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                  >
+                    <mat-label>First Name</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="firstname"
+                      name="firstname"
+                      required
+                      placeholder="First name"
+                    />
+                  </mat-form-field>
+                </div>
+                <div class="col-md-4">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                    ><mat-label>Middel Name</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="middlename"
+                      name="middlename"
+                      placeholder="Middle name"
+                  /></mat-form-field>
+                </div>
+                <div class="col-md-4">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                    ><mat-label>Last Name</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="lastname"
+                      name="lastname"
+                      required
+                      placeholder="Last name"
+                  /></mat-form-field>
+                </div>
+              </div>
+              <!-- Email and Contact -->
+              <div class="row d-flex justify-content-start align-items-center">
+                <!-- Email -->
+                <div class="col-md-6">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                  >
+                    <mat-label>Email</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="email"
+                      name="email"
+                      required
+                      placeholder="Email"
+                    />
+                  </mat-form-field>
+                </div>
+                <!-- Contact Number -->
+                <div class="col-md-6">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                  >
+                    <mat-label>Contact Number</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="phone"
+                      name="phone"
+                      required
+                      placeholder="Contact Number"
+                    />
+                  </mat-form-field>
+                </div>
+              </div>
+              <!-- Address -->
+              <div class="row">
+                <!-- House Number -->
+                <div class="col-md-4">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                  >
+                    <mat-label>House Number</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="houseNumber"
+                      name="houseNumber"
+                      required
+                      placeholder="House Number"
+                    />
+                  </mat-form-field>
+                </div>
+                <!-- Street -->
+                <div class="col-md-4">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                  >
+                    <mat-label>Street</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="street"
+                      name="street"
+                      required
+                      placeholder="Street"
+                    />
+                  </mat-form-field>
+                </div>
+                <!-- City -->
+                <div class="col-md-4">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                  >
+                    <mat-label>City</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="city"
+                      name="city"
+                      required
+                      placeholder="City"
+                    />
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <!-- State or Province -->
+                <div class="col-md-4">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                  >
+                    <mat-label>State or Province</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="stateOrProvince"
+                      name="stateOrProvince"
+                      required
+                      placeholder="State or Province"
+                    />
+                  </mat-form-field>
+                </div>
+                <!-- ZIP code -->
+                <div class="col-md-4">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                  >
+                    <mat-label>ZIP code</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="postcode"
+                      name="postcode"
+                      required
+                      placeholder="ZIP code"
+                    />
+                  </mat-form-field>
+                </div>
+                <!-- Country -->
+                <div class="col-md-4">
+                  <mat-form-field class="example-full-width w-100">
+                    <mat-label>Country</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [formControl]="countryControl"
+                      [matAutocomplete]="auto"
+                      title="Country"
+                      required
+                      placeholder="Enter your country"
+                      (ngModelChange)="onCountryChange($event)"
+                    />
+                    <mat-autocomplete
+                      #auto="matAutocomplete"
+                      [displayWith]="displayFn"
+                    >
+                      <mat-option
+                        *ngFor="let option of filteredCountries | async"
+                        [value]="option"
+                      >
+                        <img
+                          [src]="option.image"
+                          width="24"
+                          height="16"
+                          style="margin-right: 8px"
+                          alt="{{ option.code }}"
+                        />
+                        {{ option.name }}
+                      </mat-option>
+                    </mat-autocomplete>
+                  </mat-form-field>
+                </div>
+              </div>
+              <!-- Age and date of birth -->
+              <div
+                class="row d-flex justify-content-bitween align-items-center"
+              >
+                <div class="col-md-6">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                  >
+                    <mat-label>Age</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="age"
+                      name="userage"
+                      required
+                      placeholder="Age"
+                    />
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100 DOB"
+                  >
+                    <mat-label>Date of Birth</mat-label>
+                    <input
+                      matInput
+                      [matDatepicker]="picker"
+                      placeholder="Date of Birth"
+                      [(ngModel)]="birthDay"
+                      name="age"
+                      required
+                      placeholder="MM/DD/YYYY"
+                    />
+                    <mat-datepicker-toggle
+                      matIconSuffix
+                      [for]="picker"
+                    ></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                  </mat-form-field>
+                </div>
+              </div>
+              <!-- Role if user is admin -->
+              <div class="row" *ngIf="isAdmin">
+                <div class="col-md-6">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                  >
+                    <mat-label>User role</mat-label>
+                    <mat-select
+                      [(value)]="role"
+                      class="text-capitalize"
+                      required
+                    >
+                      @for (role of definedRole; track role) {
+                      <mat-option [value]="role.role"
+                        ><p class="text-capitalize">
+                          {{ role.role }}
+                        </p></mat-option
+                      >
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                  >
+                    <mat-label>User Active Status</mat-label>
+                    <mat-select [(value)]="isActive" required>
+                      @for (status of userActiveStatus; track status) {
+                      <mat-option [value]="status.isActive">{{
+                        status.typeName
+                      }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div
+                class="row d-flex justify-content-end align-items-center mt-4"
+              >
+                <div
+                  class="col-md-3 d-flex justify-content-end align-items-center mt-4"
+                >
+                  <button class="submit-btn" type="submit">Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+</div>

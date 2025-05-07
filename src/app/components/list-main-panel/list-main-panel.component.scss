@@ -5,7 +5,7 @@
 }
 
 //Light mode
-:host-context(html) {
+:host-context(html.light) {
   .side-panel {
     position: absolute;
     top: 0;

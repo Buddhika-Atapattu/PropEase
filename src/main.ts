@@ -3,6 +3,14 @@
 import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
+import { destroyPlatform } from '@angular/core';
+
+// 🛡 Fix: Destroy previous platform instance if it exists (for Vite HMR safety)
+try {
+  destroyPlatform();
+} catch (err) {
+  // It's okay if no platform exists yet
+}
 
 bootstrapApplication(AppComponent, appConfig)
   .then(() => {

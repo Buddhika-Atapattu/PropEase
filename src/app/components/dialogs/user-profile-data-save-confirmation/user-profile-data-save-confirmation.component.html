@@ -1,0 +1,12 @@
+<div class="main-content">
+  <h2 mat-dialog-title>Confirm Update!</h2>
+  <mat-dialog-content>
+    <p>Are you sure you want to save the changes to your profile?</p>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" class="cancel-btn">Cancel</button>
+    <button mat-button color="primary" (click)="onConfirm()" class="save-btn">
+      Yes, Save
+    </button>
+  </mat-dialog-actions>
+</div>

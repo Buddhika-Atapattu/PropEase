@@ -1,4 +1,4 @@
-const CACHE_NAME = "PropEase-cache-v1";
+const CACHE_NAME = "propease-fontend-cache-v1";
 const urlsToCache = [
   "/",
   "/index.html",

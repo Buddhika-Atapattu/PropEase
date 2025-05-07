@@ -48,7 +48,13 @@ export class WindowsRefService implements OnDestroy {
 
   setDarkMode(mode: boolean): void {
     if (this.isBrowser) {
-      document.documentElement.classList.toggle('dark', mode);
+      if (mode) {
+        document.documentElement.classList.remove('light');
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.classList.add('light');
+      }
       localStorage.setItem('preferred-mode', mode ? 'dark' : 'light');
     }
     this.modeSubject.next(mode);

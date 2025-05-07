@@ -82,7 +82,7 @@ export class APIsService {
   public async getAllUsers(): Promise<any> {
     return (
       (await firstValueFrom(
-        this.http.get<UsersType[]>('http://localhost:3000/users')
+        this.http.get<UsersType[]>('http://localhost:3000/api-user/users')
       )) || null
     );
   }
@@ -91,7 +91,7 @@ export class APIsService {
     return (
       (await firstValueFrom(
         this.http.post<LoggedUserType>(
-          'http://localhost:3000/verify-user',
+          'http://localhost:3000/api-user/verify-user',
           user
         )
       )) || null
@@ -113,11 +113,9 @@ export class APIsService {
     username: UserCredentials['username']
   ): Promise<UpdateUserType | null> {
     if (username) {
-      const param = new URLSearchParams();
-      param.set('username', username);
       const url = await firstValueFrom(
         this.http.put<UpdateUserType>(
-          `http://localhost:3000/user-update/${param.toString()}`,
+          `http://localhost:3000/api-user/user-update/${username}`,
           user
         )
       );

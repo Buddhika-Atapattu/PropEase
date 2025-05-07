@@ -8,6 +8,19 @@
   padding: 2rem;
   transition: all 0.3s ease-in-out;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  .edit-btn {
+    position: absolute;
+    top: 0.2rem;
+    right: 1rem;
+    padding: 0;
+    margin: 0;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+  }
   .profile-container {
     padding: 4rem 2rem;
     border-radius: 2rem;
@@ -63,11 +76,35 @@
       font-weight: 500;
       font-size: 14pt;
     }
+    .user-detals {
+      min-height: 15rem;
+      padding: 2rem;
+      border-radius: 2rem;
+    }
   }
 }
 
+.list-group,
+.list-group-item {
+  background: none !important;
+  border: none;
+  .active-status {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+
+.bottom-btn-edit {
+  min-width: 4rem;
+  min-height: 2rem;
+  border-radius: 2rem;
+  border: none;
+  font-weight: 500;
+}
+
 // Light Mode
-:host-context(html) {
+:host-context(html.light) {
   .main-panel {
     background: linear-gradient(
       145deg,
@@ -75,6 +112,13 @@
       color.adjust($light-primery-color, $lightness: 2%)
     );
     color: $light-text-color;
+    .edit-btn {
+      ::ng-deep {
+        .edit-icon {
+          color: #1e1e2d;
+        }
+      }
+    }
     .profile-container {
       background-color: #ffe394;
       box-shadow: inset 0rem 0rem 1rem 0rem #ddc47e;
@@ -95,7 +139,42 @@
         );
         box-shadow: 0rem 0rem 0.5rem 0rem rgb(169, 169, 169);
       }
+      .user-detals {
+        background-color: #fef8e8;
+        box-shadow: 0rem 0rem 0.5rem 0.2rem #e7cd85;
+      }
     }
+  }
+  .list-group,
+  .list-group-item {
+    color: #0f1220;
+    .active-status {
+      .active {
+        margin-left: 1rem;
+        ::ng-deep {
+          svg {
+            fill: green;
+          }
+        }
+      }
+      .wrong {
+        margin-left: 1rem;
+        ::ng-deep {
+          svg {
+            fill: red;
+          }
+        }
+      }
+    }
+  }
+  .bottom-btn-edit {
+    background: linear-gradient(
+      90deg,
+      rgb(235 151 36),
+      #ffba00,
+      rgb(235 151 36)
+    );
+    box-shadow: 0rem 0rem 0.5rem 0rem rgb(169, 169, 169);
   }
 }
 
@@ -108,6 +187,13 @@
       color.adjust($dark-secondary-color, $lightness: 2%)
     );
     color: $dark-text-color;
+    .edit-btn {
+      ::ng-deep {
+        .edit-icon {
+          color: #fff;
+        }
+      }
+    }
     .profile-container {
       background-color: #1e1e2d;
       box-shadow: inset 0rem 0rem 1rem 0rem #0f1220;
@@ -123,12 +209,23 @@
         background: linear-gradient(90deg, #ae8300, #ffc107, #ae8300);
         box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0);
       }
+      .user-detals {
+        background-color: #0f1220;
+        box-shadow: 0rem 0rem 0.5rem 0.2rem #151520;
+      }
     }
   }
   ::ng-deep .cdk-overlay-pane {
     background-color: #08122f !important;
   }
-  // .col-md-3,.col-
+  .list-group,
+  .list-group-item {
+    color: #fff;
+  }
+  .bottom-btn-edit {
+    background: linear-gradient(90deg, #ae8300, #ffc107, #ae8300);
+    box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0);
+  }
 }
 
 // background-color: #08122f;

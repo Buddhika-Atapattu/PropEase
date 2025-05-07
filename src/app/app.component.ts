@@ -36,7 +36,7 @@ import { UrlControllerService } from '../services/userController/user-controller
   styleUrl: './app.component.scss',
 })
 export class AppComponent implements OnInit, OnDestroy {
-  title = 'PropEase';
+  title = 'propease-fontend';
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
