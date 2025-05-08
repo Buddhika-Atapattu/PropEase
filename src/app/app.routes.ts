@@ -49,7 +49,22 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'users',
+        loadComponent: () =>
+          import('./pages/users/users.component').then((m) => m.UsersComponent),
+        data: {
+          roles: ['admin', 'agent', 'tenant', 'operator', 'developer', 'user'],
+        },
+      },
+      {
         path: 'unauthorized',
+        loadComponent: () =>
+          import('./pages/error404/error404.component').then(
+            (m) => m.Error404Component
+          ),
+      },
+      {
+        path: '**',
         loadComponent: () =>
           import('./pages/error404/error404.component').then(
             (m) => m.Error404Component

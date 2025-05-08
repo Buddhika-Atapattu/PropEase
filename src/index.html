@@ -1,20 +1,16 @@
 <!DOCTYPE html>
-
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>propease-fontend</title>
+    <title>propease-frontend</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#1976d2" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="msapplication-navbutton-color" content="#1976d2" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="#1976d2" />
-    <meta name="msapplication-TileColor" content="#1976d2" />
     <meta name="author" content="Buddhika Atapattu" />
     <meta
-      name="discription"
-      content="This system built for property management"
+      name="description"
+      content="This system is built for property management"
     />
     <link
       rel="icon"
@@ -22,7 +18,7 @@
       href="/Images/company-images/LogoIcon.ico"
     />
     <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&amp;display=swap"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap"
       rel="stylesheet"
     />
     <link
@@ -31,20 +27,178 @@
     />
     <link rel="apple-touch-icon" href="/Images/company-images/logo128.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+
+    <style>
+      :root {
+        --bg-color: #fdf6e3;
+        --second-bg-color: #9c9171;
+        --text-color: #08122f;
+        --logo-glow: rgba(255, 215, 0, 0.8);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg-color: #08122f;
+          --second-bg-color: #000000;
+          --text-color: #fdf6e3;
+          --logo-glow: rgba(255, 215, 0, 0.8);
+        }
+      }
+
+      #app-preloader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        overflow: hidden;
+        background: linear-gradient(
+          135deg,
+          var(--bg-color) 0%,
+          var(--second-bg-color) 100%
+        );
+        transition: background 0.5s ease-in-out;
+      }
+
+      #preloader-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        z-index: 1;
+      }
+
+      .logo-wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        z-index: 2;
+        color: var(--text-color);
+        font-family: "Roboto", sans-serif;
+        animation: fadeIn 1s ease-in-out forwards;
+      }
+
+      .preloader-logo {
+        width: 200px;
+        height: auto;
+        border-radius: 5rem;
+        box-shadow: 0 0 25px var(--logo-glow);
+        animation: float 4s ease-in-out infinite,
+          pulse 2.5s ease-in-out infinite;
+      }
+
+      .loading-text {
+        margin-top: 1rem;
+        font-size: 1.2rem;
+        color: var(--text-color);
+        animation: fadeIn 2s ease-in-out infinite alternate;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translate(-50%, -48%);
+        }
+        50% {
+          transform: translate(-50%, -52%);
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0.3;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
   </head>
+
   <body class="mat-typography">
     <app-root></app-root>
+
     <div id="app-preloader">
-      <div class="preloader-wrapper">
+      <canvas id="preloader-container"></canvas>
+      <div class="logo-wrapper">
         <img
           src="/Images/company-images/company-logo-animated.gif"
-          alt="Loading propease-fontend..."
+          alt="Company Logo"
+          class="preloader-logo"
         />
-        <p>Loading propease-fontend...</p>
+        <!-- <p class="loading-text text-uppercase">Loading Propease...</p> -->
       </div>
     </div>
+
     <noscript
       >Please enable JavaScript to continue using this application.</noscript
     >
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const canvas = document.getElementById("preloader-container");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        const numParticles = 100;
+
+        class Particle {
+          constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.radius = Math.random() * 1.8 + 0.5;
+            this.color = "rgba(255, 215, 0, 0.8)";
+            this.speedX = (Math.random() - 0.5) * 0.6;
+            this.speedY = (Math.random() - 0.5) * 0.6;
+          }
+
+          update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+
+            if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+          }
+
+          draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.shadowColor = "gold";
+            ctx.shadowBlur = 10;
+            ctx.fill();
+          }
+        }
+
+        for (let i = 0; i < numParticles; i++) {
+          particles.push(new Particle());
+        }
+
+        function animate() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          particles.forEach((p) => {
+            p.update();
+            p.draw();
+          });
+          requestAnimationFrame(animate);
+        }
+
+        animate();
+      });
+    </script>
   </body>
 </html>

@@ -53,10 +53,23 @@ import {
   MatDialogModule,
 } from '@angular/material/dialog';
 import { UserProfileDataSaveConfirmationComponent } from '../../components/dialogs/user-profile-data-save-confirmation/user-profile-data-save-confirmation.component';
+import {
+  msg,
+  msgTypes,
+  NotificationComponent,
+} from '../../components/dialogs/notification/notification.component';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { ProgressBarComponent } from "../../components/dialogs/progress-bar/progress-bar.component";
 
 interface userActiveStatusType {
   typeName: string;
   isActive: boolean;
+}
+
+export interface MSG_DATA_TYPE extends UpdateUserType {
+  status: string;
+  message: string;
+  user: UpdateUserType;
 }
 
 @Component({
@@ -78,7 +91,10 @@ interface userActiveStatusType {
     MatSelectModule,
     MatDividerModule,
     MatDialogModule,
-  ],
+    NotificationComponent,
+    MatProgressBarModule,
+    ProgressBarComponent
+],
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.scss'], // Correct: `styleUrls` not `styleUrl`
 })
@@ -135,6 +151,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   protected birthDay: Date | null = new Date();
   protected userUploadedImage: string = '';
   public isEditConfirm: boolean = false;
+  protected progerssOfUpload: number = 0;
+  @ViewChild(ProgressBarComponent) progress!:ProgressBarComponent;
+  @ViewChild(NotificationComponent) notification!: NotificationComponent;
 
   constructor(
     private windowRef: WindowsRefService,
@@ -266,7 +285,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   private async openDialog() {
     try {
       if (this.mode !== null) {
-        console.log('Mode is dark: ', this.mode);
+        // console.log('Mode is dark: ', this.mode);
         const dialogRef: MatDialogRef<UserProfileDataSaveConfirmationComponent> =
           this.dialog.open(UserProfileDataSaveConfirmationComponent, {
             data: {
@@ -275,7 +294,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
           });
 
         const result = await firstValueFrom(dialogRef.afterClosed());
-        console.log('Dialog result:', result);
         this.isEditConfirm = result === true;
       }
     } catch (error) {
@@ -286,6 +304,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   protected async updateUserData(): Promise<void> {
     await this.openDialog().then(async () => {
       if (this.user !== null && this.isEditConfirm) {
+        this.progress.start();
+        this.progerssOfUpload = 0;
         const formData = new FormData();
         formData.append('firstname', this.firstname);
         formData.append('middlename', this.middlename || '');
@@ -318,7 +338,19 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         formData.append('dateOfBirth', this.birthDay?.toString() || '');
         formData.append('username', this.user?.username || '');
         const user = this.user?.username;
-        await this.API.updateUser(formData, user);
+        await this.API.updateUser(formData, user).then(
+          (data: MSG_DATA_TYPE | null) => {
+            // console.log(data?.status, data?.message);
+            if (this.notification && data)
+              this.notification.notification(
+                data?.status as msgTypes,
+                data?.message as string
+              );
+          }
+        ).finally(()=>{
+          stop();
+          this.progress.complete();
+        });
       } else {
         console.error('User: ', this.user);
       }

@@ -1,0 +1,51 @@
+.notification {
+  position: fixed;
+  top: 5rem;
+  z-index: 10000;
+  right: 1rem;
+  padding: 0.5em;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  border-radius: 0.372rem;
+  transition: ease out;
+  color: #fff !important;
+  animation-name: transition_btn;
+  animation-duration: 1s;
+
+  &.success {
+    background-color: green;
+  }
+  &.error {
+    background-color: red;
+  }
+  &.warning {
+    background-color: orange;
+  }
+  &.info {
+    background-color: blue;
+  }
+  .text {
+    color: #fff;
+  }
+  .btn {
+    border-left: 1px solid #fff;
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-radius: 0;
+    color: #fff;
+    margin-left: 1rem;
+    cursor: pointer;
+  }
+}
+
+@keyframes transition_btn {
+  from {
+    right: -100%;
+  }
+  to {
+    right: 1rem;
+  }
+}

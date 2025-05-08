@@ -1,0 +1,51 @@
+// progress-bar.component.scss
+@use "../../../styles/global.scss" as *;
+
+.main-container-loader {
+  position: fixed;
+  right: 1rem;
+  width: 20rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  z-index: 10000;
+  border-radius: 0.372rem;
+  .progress-container {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 0rem 1rem;
+    .progress-bar {
+      height: 100%;
+      transition: width 0.3s ease-in-out;
+    }
+  }
+}
+
+// light
+:host-context(html.light) {
+  .main-container-loader {
+    background-color: #ffe394;
+    .progress-container {
+      background: #ffffff;
+      .progress-bar {
+        background-color: #a57c00;
+      }
+    }
+  }
+}
+// dark
+:host-context(html.dark) {
+  .main-container-loader {
+    background-color: #08122f;
+    .progress-container {
+      background: #ffffff;
+      .progress-bar {
+        background-color: #a57c00;
+      }
+    }
+  }
+}

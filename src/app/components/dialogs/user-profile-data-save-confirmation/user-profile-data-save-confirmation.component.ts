@@ -40,7 +40,6 @@ export class UserProfileDataSaveConfirmationComponent {
     public dialogRef: MatDialogRef<UserProfileDataSaveConfirmationComponent>
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    console.log(this.data);
   }
   protected onCancel() {
     this.dialogRef.close(false);

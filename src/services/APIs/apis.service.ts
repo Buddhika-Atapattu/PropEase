@@ -67,6 +67,11 @@ export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> {}
 
 export interface LoggedUserType extends Omit<NewUser, 'password'> {}
 
+export interface MSG_DATA_TYPE extends UpdateUserType {
+  status: string;
+  message: string;
+  user: UpdateUserType;
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -111,16 +116,15 @@ export class APIsService {
   public async updateUser(
     user: FormData,
     username: UserCredentials['username']
-  ): Promise<UpdateUserType | null> {
+  ): Promise<MSG_DATA_TYPE | null> {
     if (username) {
-      const url = await firstValueFrom(
-        this.http.put<UpdateUserType>(
+      const data = await firstValueFrom(
+        this.http.put<MSG_DATA_TYPE>(
           `http://localhost:3000/api-user/user-update/${username}`,
           user
         )
       );
-      console.log(url);
-      return url;
+      return data;
     } else {
       return null;
     }

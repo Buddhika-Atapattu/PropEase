@@ -50,6 +50,12 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
       toolTip: 'Properties',
     },
     {
+      url: 'users',
+      mat_icon: 'users-icon',
+      icon_text: 'Users',
+      toolTip: 'Users',
+    },
+    {
       url: 'tenat',
       mat_icon: 'tenant-icon',
       icon_text: 'Tenants',
@@ -109,6 +115,13 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
       'property-icon',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
         '/Images/Icons/property.svg'
+      )
+    );
+    // users icon
+    this.matIconRegistry.addSvgIcon(
+      'users-icon',
+      this.domSanitizer.bypassSecurityTrustResourceUrl(
+        '/Images/Icons/users.svg'
       )
     );
     // tenant icon
