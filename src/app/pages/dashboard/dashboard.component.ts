@@ -44,6 +44,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private modeSub: Subscription | null = null;
   private expandSub: Subscription | null = null;
   protected user: LoggedUserType | null = null;
+  protected isLoading: boolean = true;
 
   constructor(
     private windowRef: WindowsRefService,
@@ -54,6 +55,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.authService.getLoggedUser !== null) {
+      setInterval(() => {
+        this.isLoading = false;
+      }, 500);
       this.user = this.authService.getLoggedUser;
     }
     if (typeof this.user?.image === 'string') {

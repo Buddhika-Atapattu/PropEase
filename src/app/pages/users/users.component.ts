@@ -12,7 +12,7 @@ import { ActivatedRoute } from '@angular/router';
 import { APIsService, UsersType } from '../../../services/APIs/apis.service';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { SkeletonLoaderComponent } from "../../components/shared/skeleton-loader/skeleton-loader.component";
+import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-users',
@@ -28,6 +28,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   protected pageCount: number = 0;
   protected currentPage: number = 0;
   protected search: string = '';
+  protected loading: boolean = true;
 
   constructor(
     private windowRef: WindowsRefService,
@@ -69,7 +70,14 @@ export class UsersComponent implements OnInit, OnDestroy {
       0,
       10,
       this.search
-    );
+    ).then((data)=>{
+      this.loading = true;
+      return data;
+    }).finally(() => {
+      setInterval(() => {
+        this.loading = false;
+      }, 500);
+    });
     if (usersArray) {
       this.users = usersArray.data;
       this.pageCount = Math.round(usersArray.count / 10) + 1;
@@ -84,8 +92,15 @@ export class UsersComponent implements OnInit, OnDestroy {
       0,
       10,
       this.search
-    );
-    console.log(usersArray);
+    ).then((data)=>{
+      this.loading = true;
+      return data;
+    }).finally(() => {
+      setInterval(() => {
+        this.loading = false;
+      }, 500);
+    });
+    // console.log(usersArray);
     if (usersArray) {
       this.users = usersArray.data;
       this.pageCount = Math.round(usersArray.count / 10) + 1;
@@ -98,7 +113,14 @@ export class UsersComponent implements OnInit, OnDestroy {
       number,
       10,
       this.search
-    );
+    ).then((data)=>{
+      this.loading = true;
+      return data;
+    }).finally(() => {
+      setInterval(() => {
+        this.loading = false;
+      }, 500);
+    });
     if (usersArray) {
       this.users = usersArray.data;
       this.pageCount = Math.round(usersArray.count / 10) + 1;

@@ -24,26 +24,53 @@
         />
       </div>
     </div>
-    <div class="row add-user-row" *ngFor="let user of users">
+    <div class="row add-user-row" *ngFor="let user of users; let i = index">
       <div class="col-md-4">
         <app-skeleton-loader
-          *ngIf="!user.image"
+          *ngIf="loading"
           [width]="'100px'"
           [height]="'100px'"
           borderRadius="100px"
           [Mode]="mode"
         />
         <img
-          *ngIf="user.image"
+          *ngIf="!loading"
           class="user-image-main"
           [src]="user.image"
           alt="user image"
         />
       </div>
       <div class="col-md-4">
-        <h5>{{ user.firstName }} {{ user.middleName }} {{ user.lastName }}</h5>
-        <p class="text-muted-custom pb-1 mb-1">{{ user.email }}</p>
-        <p class="text-muted-custom pb-1 mb-1">{{ user.phoneNumber }}</p>
+        <app-skeleton-loader
+          *ngIf="loading"
+          [width]="'25rem'"
+          [height]="'1.5rem'"
+          borderRadius="0.357rem"
+          [Mode]="mode"
+        />
+        <h5 *ngIf="!loading">
+          {{ user.firstName }} {{ user.middleName }} {{ user.lastName }}
+        </h5>
+        <app-skeleton-loader
+          *ngIf="loading"
+          [width]="'25rem'"
+          [height]="'0.75rem'"
+          borderRadius="0.357rem"
+          [Mode]="mode"
+        />
+        <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+          {{ user.email }}
+        </p>
+        <app-skeleton-loader
+          *ngIf="loading"
+          [width]="'25rem'"
+          [height]="'0.75rem'"
+          borderRadius="0.357rem"
+          [Mode]="mode"
+        />
+        <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+          {{ user.phoneNumber }}
+        </p>
       </div>
       <div class="col-md-4 d-flex justify-content-end align-items-center">
         <button class="btn btn-success bg-success me-2 btn-view" type="button">

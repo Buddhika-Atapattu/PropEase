@@ -59,7 +59,7 @@ import {
   NotificationComponent,
 } from '../../components/dialogs/notification/notification.component';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { ProgressBarComponent } from "../../components/dialogs/progress-bar/progress-bar.component";
+import { ProgressBarComponent } from '../../components/dialogs/progress-bar/progress-bar.component';
 
 interface userActiveStatusType {
   typeName: string;
@@ -93,8 +93,8 @@ export interface MSG_DATA_TYPE extends UpdateUserType {
     MatDialogModule,
     NotificationComponent,
     MatProgressBarModule,
-    ProgressBarComponent
-],
+    ProgressBarComponent,
+  ],
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.scss'], // Correct: `styleUrls` not `styleUrl`
 })
@@ -152,8 +152,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   protected userUploadedImage: string = '';
   public isEditConfirm: boolean = false;
   protected progerssOfUpload: number = 0;
-  @ViewChild(ProgressBarComponent) progress!:ProgressBarComponent;
+  @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
   @ViewChild(NotificationComponent) notification!: NotificationComponent;
+  protected isLoading: boolean = true;
 
   constructor(
     private windowRef: WindowsRefService,
@@ -183,6 +184,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     );
     this.user = this.authService.getLoggedUser;
     if (this.user !== null) {
+      setInterval(() => {
+        this.isLoading = false;
+      }, 500);
       this.firstname = this.user.firstName;
       this.middlename = this.user.middleName;
       this.lastname = this.user.lastName;
@@ -338,19 +342,19 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         formData.append('dateOfBirth', this.birthDay?.toString() || '');
         formData.append('username', this.user?.username || '');
         const user = this.user?.username;
-        await this.API.updateUser(formData, user).then(
-          (data: MSG_DATA_TYPE | null) => {
+        await this.API.updateUser(formData, user)
+          .then((data: MSG_DATA_TYPE | null) => {
             // console.log(data?.status, data?.message);
             if (this.notification && data)
               this.notification.notification(
                 data?.status as msgTypes,
                 data?.message as string
               );
-          }
-        ).finally(()=>{
-          stop();
-          this.progress.complete();
-        });
+          })
+          .finally(() => {
+            stop();
+            this.progress.complete();
+          });
       } else {
         console.error('User: ', this.user);
       }

@@ -13,7 +13,7 @@
 
   &.dark {
     background-color: color.adjust($dark-secondary-color, $lightness: 15%);
-    box-shadow: 2px 4px 6px 0px #101325;
+    // box-shadow: 2px 4px 6px 0px #101325;
     &::after {
       content: "";
       position: absolute;
@@ -32,8 +32,8 @@
   }
 
   &.light {
-    background-color: color.adjust($light-primery-color, $lightness: 30%);
-    box-shadow: 2px 4px 6px 0px #c4c4c4;
+    background-color: hsl(43.64deg 100% 87.06%);
+    // box-shadow: 2px 4px 6px 0px #c4c4c4;
     &::after {
       content: "";
       position: absolute;

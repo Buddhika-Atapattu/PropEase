@@ -23,11 +23,11 @@
           (click)="menuOpen = !menuOpen"
         >
           <app-skeleton-loader
-            *ngIf="!user?.image; else userImage"
+            *ngIf="isLoading; else userImage"
             [Mode]="mode"
-            [width]="'40px'"
-            [height]="'40px'"
-            [borderRadius]="'50%'"
+            [width]="'4rem'"
+            [height]="'4rem'"
+            [borderRadius]="'100%'"
           />
           <ng-template #userImage>
             <img

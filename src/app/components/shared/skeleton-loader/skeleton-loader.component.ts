@@ -29,6 +29,7 @@ export class SkeletonLoaderComponent {
   @Input() height: string = '100%';
   @Input() borderRadius: string = '100%';
   @Input() Mode: boolean | null = null;
+  @Input() key!: number;
 
   ngOnInit(): void {}
 }
