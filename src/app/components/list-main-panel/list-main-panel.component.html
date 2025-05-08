@@ -16,6 +16,7 @@
         <button
           mat-button
           (click)="navigateTo(link.url)"
+          class="{{ currecntURL === link.url ? 'active' : '' }}"
           [ngClass]="
             isExpanded()
               ? 'd-flex justify-content-start align-items-center'

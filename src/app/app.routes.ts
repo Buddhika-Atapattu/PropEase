@@ -53,7 +53,17 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/users/users.component').then((m) => m.UsersComponent),
         data: {
-          roles: ['admin', 'agent', 'tenant', 'operator', 'developer', 'user'],
+          roles: ['admin', 'operator'],
+        },
+      },
+      {
+        path: 'access-control',
+        loadComponent: () =>
+          import('./pages/access-control/access-control.component').then(
+            (m) => m.AccessControlComponent
+          ),
+        data: {
+          roles: ['admin'],
         },
       },
       {

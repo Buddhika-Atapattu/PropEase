@@ -8,56 +8,15 @@
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
   .main-container {
     border-radius: 2rem;
-    // min-height: 50rem;
+    height: 24rem;
     overflow: hidden;
-    // overflow-y: scroll;
     display: block;
     padding: 2rem;
-
     .add-user-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1rem;
-      border-radius: 0.372rem;
-      padding: 1rem;
-      .add-user-btn {
-        border: none;
-        border-radius: 0.372rem;
-        padding: 0.5rem 1.5rem;
-      }
-      mat-icon {
-        ::ng-deep svg {
-          fill: currentColor;
-          ::ng-deep path {
-            fill: currentColor;
-          }
-        }
-      }
-    }
-    .search-input {
-      border: 0.25rem solid #ffb200;
-      width: 100%;
-      padding: 1rem;
-      border-radius: 2rem;
-      background: #fff;
-      color: #000000;
-      box-shadow: 0rem 0rem 0.5rem 0rem #4e4d4d;
-    }
-    .pagination-list-group {
-      display: inline-flex;
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      .pagination-list-group-item {
-        .pagination-btn {
-          padding: 0.5rem 1rem;
-          margin: 0.5rem;
-          border-radius: 0.5rem;
-          border: none;
-          font-weight: 700;
-        }
-      }
     }
   }
 
@@ -74,10 +33,6 @@
       .add-user-row {
         background-color: $dark-primery-color;
         box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
-        .add-user-btn {
-          background: $dark-btn-bg-color;
-          box-shadow: $dark-btn-box-shadow;
-        }
       }
     }
   }
@@ -95,10 +50,6 @@
       .add-user-row {
         background-color: #ffe394;
         box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
-        .add-user-btn {
-          background: $light-btn-bg-color;
-          box-shadow: $light-btn-box-shadow;
-        }
       }
     }
   }

@@ -11,11 +11,12 @@ import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { ExpandableService } from '../../../services/expandable/expandable.service';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { filter } from 'rxjs/operators';
 
 interface PageLinkLists {
   url: string;
@@ -36,6 +37,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
   isBrowser: boolean;
   private modeSub: Subscription | null = null;
   private expandSub: Subscription | null = null;
+  protected currecntURL: string = '';
   protected linkLists: PageLinkLists[] = [
     {
       url: 'home',
@@ -86,7 +88,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
       toolTip: 'Payments',
     },
     {
-      url: 'accessControl',
+      url: 'access-control',
       mat_icon: 'access-icon',
       icon_text: 'Access Control',
       toolTip: 'Access Control',
@@ -105,6 +107,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     private domSanitizer: DomSanitizer
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
+
     // home icon
     this.matIconRegistry.addSvgIcon(
       'home-icon',
@@ -166,6 +169,15 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
         '/Images/Icons/access-control.svg'
       )
     );
+
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        console.log('URL changed to:', event.urlAfterRedirects);
+        const urlArray: Array<string> = event.urlAfterRedirects.split('/');
+        const url: string = urlArray[urlArray.length - 1];
+        this.currecntURL = url;
+      });
   }
 
   ngOnInit(): void {

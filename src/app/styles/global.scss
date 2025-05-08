@@ -2,9 +2,12 @@
 $dark-primery-color: #08122f !default; // Deep Navy background
 $dark-secondary-color: #1a1a2e !default; // Shadow Indigo for sections
 $dark-dashboard-color: #101325 !default; // Dark deep Navy background
+$dark-dashboard-dark-color: #0b0b14 !default; // Dark deep Navy background
 $dark-third-color: #d29e00 !default; // Bright Brand Gold
 $dark-fourth-color: #b48c00 !default; // Muted Accent Gold
 $dark-text-color: #fefefe !default; // Clear White text
+$dark-btn-bg-color: linear-gradient(90deg, #ae8300, #ffc107, #ae8300) !default;
+$dark-btn-box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0) !default;
 
 // Additional Semantic Colors
 $dark-border-color: #2a2e3b !default; // Subtle border tone
@@ -20,9 +23,17 @@ $dark-expand-hover-color: rgba(255, 140, 0, 0.1) !default; // Dark expand hover
 $light-primery-color: #fdf6e3 !default; // Soft neutral background
 $light-secondary-color: #ffe18d !default; // Golden Cream highlight
 $light-dashboard-color: #ffedbd !default; // Golden Cream
+$light-dashboard-dark-color: #dbcba2 !default; // Golden Cream
 $light-third-color: #d29e00 !default; // Brand Gold
 $light-fourth-color: #08122f !default; // Brand Navy
 $light-text-color: #1f1f1f !default; // Ink Gray
+$light-btn-bg-color: linear-gradient(
+  90deg,
+  rgb(235 151 36),
+  #ffba00,
+  rgb(235 151 36)
+) !default;
+$light-btn-box-shadow: 0rem 0rem 0.5rem 0rem rgb(169, 169, 169);
 
 // Additional Semantic Colors
 $light-border-color: #e0e0e0 !default; // Soft gray borders
@@ -34,15 +45,70 @@ $light-warning-color: #f0ad4e !default; // Alert yellow
 $light-error-color: #dc3545 !default; // Error red
 
 :host-context(html.light) {
-  .sub-pannel {
-    background-color: #ffe394;
-    box-shadow: inset 0rem 0rem 1rem 0rem #ddc47e;
+  .user-image-main {
+    width: 5rem;
+    height: 5rem;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 100rem;
+    box-shadow: 0rem 0rem 1rem 0rem #6b6b6b;
+  }
+
+  .btn-edit {
+    background: $light-btn-bg-color;
+    box-shadow: $light-btn-box-shadow;
+    color: #fff !important;
+  }
+
+  .btn-view {
+    background: linear-gradient(134deg, #00c416, #6fe600, #53d10a);
+    box-shadow: 0rem 0rem 0.5rem 0rem rgb(108, 98, 69);
+  }
+
+  .btn-delete {
+    background: linear-gradient(90deg, #ae0000, #ff0707, #ae0000);
+    box-shadow: 0rem 0rem 0.5rem 0rem rgb(108 98 69);
+  }
+
+  .btn-custom {
+    background: linear-gradient(90deg, #08122f, #10192f, #222b44);
+  }
+  .text-muted-custom {
+    color: #4e4e4e !important;
   }
 }
 
 :host-context(html.dark) {
-  .sub-pannel {
-    background-color: #ffe394;
-    box-shadow: inset 0rem 0rem 1rem 0rem #08122f;
+  .user-image-main {
+    width: 5rem;
+    height: 5rem;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 100rem;
+    box-shadow: 0rem 0rem 1rem 0rem #0f0f0f;
+  }
+
+  .btn-edit {
+    background: $dark-btn-bg-color;
+    box-shadow: $dark-btn-box-shadow;
+    color: #fff !important;
+  }
+
+  .btn-view {
+    background: linear-gradient(134deg, #00c416, #6fe600, #53d10a);
+    box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0);
+  }
+
+  .btn-delete {
+    background: linear-gradient(90deg, #ae0000, #ff0707, #ae0000);
+    box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0);
+  }
+
+  .btn-custom {
+    background: linear-gradient(134deg, #0c1957 0%, #4400d0 30%, #43007a 100%);
+    box-shadow: 0rem 0rem 0.5rem 0rem $dark-dashboard-dark-color;
+  }
+  .text-muted-custom {
+    color: #a6a6a6 !important;
   }
 }

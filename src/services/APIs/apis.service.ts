@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { firstValueFrom, Subscription, pipe, take } from 'rxjs';
 import { CryptoService } from '../cryptoService/crypto.service';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 
 export interface Country {
@@ -84,7 +84,7 @@ export class APIsService {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
-  public async getAllUsers(): Promise<any> {
+  public async getAllUsers(): Promise<UsersType[] | null> {
     return (
       (await firstValueFrom(
         this.http.get<UsersType[]>('http://localhost:3000/api-user/users')
@@ -128,5 +128,29 @@ export class APIsService {
     } else {
       return null;
     }
+  }
+
+  public async getAllUsersWithPagination(
+    start: number,
+    limit: number,
+    search?: string
+  ): Promise<any> {
+    let params = new HttpParams();
+    if (search !== undefined) {
+      params = params.set('search', search.trim());
+    }
+    return await firstValueFrom(
+      this.http.get<object | null>(
+        `http://localhost:3000/api-user/users-with-pagination/${start}/${limit}`,
+        { params }
+      )
+    )
+      .then((data) => {
+        return data;
+      })
+      .catch((error) => {
+        console.error(error);
+        return null;
+      });
   }
 }
