@@ -3,87 +3,123 @@
   class="main-panel"
   [ngClass]="mode ? 'dark' : 'light'"
 >
+  <!-- top means hear -->
   <div class="container-fluid main-container">
-    <div class="row add-user-row">
-      <div class="col-md-4">
-        <h5>Add new user</h5>
-      </div>
-      <div class="col-md-4 d-flex justify-content-end align-items-center">
-        <button class="add-user-btn" type="button">
-          <h6 class="m-0 p-0">Add user</h6>
-        </button>
-      </div>
-    </div>
-    <div class="row my-4">
-      <div class="col-md-12">
+    <!-- I need to make this top row appire in top when the page scroll down -->
+    <div class="row add-user-row top-row">
+      <div class="col-md-10 position-relative">
         <input
           type="text"
-          placeholder="Search user by name or email"
+          placeholder="Search user by name, email, or username"
           class="search-input"
           (input)="searchUsers($event)"
         />
+        <mat-icon
+          class="mat-icon-rtl-mirror search-icon"
+          svgIcon="search"
+        ></mat-icon>
       </div>
-    </div>
-    <div class="row add-user-row" *ngFor="let user of users; let i = index">
-      <div class="col-md-4">
-        <app-skeleton-loader
-          *ngIf="loading"
-          [width]="'100px'"
-          [height]="'100px'"
-          borderRadius="100px"
-          [Mode]="mode"
-        />
-        <img
-          *ngIf="!loading"
-          class="user-image-main"
-          [src]="user.image"
-          alt="user image"
-        />
-      </div>
-      <div class="col-md-4">
-        <app-skeleton-loader
-          *ngIf="loading"
-          [width]="'25rem'"
-          [height]="'1.5rem'"
-          borderRadius="0.357rem"
-          [Mode]="mode"
-        />
-        <h5 *ngIf="!loading">
-          {{ user.firstName }} {{ user.middleName }} {{ user.lastName }}
-        </h5>
-        <app-skeleton-loader
-          *ngIf="loading"
-          [width]="'25rem'"
-          [height]="'0.75rem'"
-          borderRadius="0.357rem"
-          [Mode]="mode"
-        />
-        <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
-          {{ user.email }}
-        </p>
-        <app-skeleton-loader
-          *ngIf="loading"
-          [width]="'25rem'"
-          [height]="'0.75rem'"
-          borderRadius="0.357rem"
-          [Mode]="mode"
-        />
-        <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
-          {{ user.phoneNumber }}
-        </p>
-      </div>
-      <div class="col-md-4 d-flex justify-content-end align-items-center">
-        <button class="btn btn-success bg-success me-2 btn-view" type="button">
-          <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon>
-        </button>
-        <button class="btn btn-warning bg-warning mx-2 btn-edit" type="button">
-          <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon>
-        </button>
-        <button class="btn btn-danger bg-danger ms-2 btn-delete" type="button">
-          <mat-icon class="mat-icon-rtl-mirror" svgIcon="delete"></mat-icon>
+      <div class="col-md-2 d-flex justify-content-end align-items-center">
+        <button class="add-user-btn" type="button" (click)="addUser()">
+          <mat-icon
+            class="mat-icon-rtl-mirror"
+            svgIcon="add-new-user"
+          ></mat-icon>
+          <h6 class="mb-0 p-0">Add user</h6>
         </button>
       </div>
     </div>
+    <!-- top bar ended -->
+    <!-- This user container should scrollable -->
+    <div class="user-scroll-wrapper">
+      <div class="user-container">
+        <div class="row add-user-row" *ngFor="let user of users; let i = index">
+          <div class="col-md-4">
+            <app-skeleton-loader
+              *ngIf="loading"
+              [width]="'100px'"
+              [height]="'100px'"
+              borderRadius="100px"
+              [Mode]="mode"
+            />
+            <img
+              *ngIf="!loading"
+              class="user-image-main"
+              [src]="user.image"
+              alt="user image"
+            />
+          </div>
+          <div class="col-md-4">
+            <app-skeleton-loader
+              *ngIf="loading"
+              [width]="'25rem'"
+              [height]="'1.5rem'"
+              borderRadius="0.357rem"
+              [Mode]="mode"
+            />
+            <h5 *ngIf="!loading">
+              {{ user.name }}
+            </h5>
+            <app-skeleton-loader
+              *ngIf="loading"
+              [width]="'25rem'"
+              [height]="'0.75rem'"
+              borderRadius="0.357rem"
+              [Mode]="mode"
+            />
+            <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+              {{ user.email }}
+            </p>
+            <app-skeleton-loader
+              *ngIf="loading"
+              [width]="'25rem'"
+              [height]="'0.75rem'"
+              borderRadius="0.357rem"
+              [Mode]="mode"
+            />
+            <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+              {{ user.phoneNumber }}
+            </p>
+            <app-skeleton-loader
+              *ngIf="loading"
+              [width]="'25rem'"
+              [height]="'0.75rem'"
+              borderRadius="0.357rem"
+              [Mode]="mode"
+            />
+            <p
+              *ngIf="!loading"
+              class="text-muted-custom pb-1 mb-1 text-capitalize"
+            >
+              {{ user.role }}
+            </p>
+          </div>
+          <div class="col-md-4 d-flex justify-content-end align-items-center">
+            <button
+              class="btn btn-success bg-success me-2 btn-view"
+              type="button"
+            >
+              <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon>
+            </button>
+            <button
+              class="btn btn-warning bg-warning mx-2 btn-edit"
+              type="button"
+            >
+              <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon>
+            </button>
+            <button
+              class="btn btn-danger bg-danger ms-2 btn-delete"
+              type="button"
+            >
+              <mat-icon class="mat-icon-rtl-mirror" svgIcon="delete"></mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- user container ended -->
+    <!-- do not do any thing to here after -->
     <div class="row d-flex justify-content-center align-items-center mt-4">
       <div class="col-md-6 d-flex justify-content-center align-items-center">
         <ul

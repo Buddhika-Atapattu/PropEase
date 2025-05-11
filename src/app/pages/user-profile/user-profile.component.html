@@ -65,7 +65,7 @@
                   />
                 </li>
                 <li *ngIf="!isLoading" class="list-group-item">
-                  Name: {{ firstname }} {{ middlename }} {{ lastname }}
+                  Name: {{ name }}
                 </li>
                 <li class="list-group-item">
                   <app-skeleton-loader
@@ -269,48 +269,44 @@
               <div
                 class="row d-flex justify-content-bitween align-items-center"
               >
-                <div class="col-md-4">
+                <!-- name -->
+                <div class="col-md-8">
                   <mat-form-field
                     appearance="fill"
                     class="form-field me-3 w-100"
                   >
-                    <mat-label>First Name</mat-label>
+                    <mat-label>Name</mat-label>
                     <input
                       matInput
                       type="text"
-                      [(ngModel)]="firstname"
+                      [(ngModel)]="name"
                       name="firstname"
                       required
                       placeholder="First name"
                     />
                   </mat-form-field>
                 </div>
+                <!-- gender -->
                 <div class="col-md-4">
                   <mat-form-field
                     appearance="fill"
                     class="form-field me-3 w-100"
-                    ><mat-label>Middel Name</mat-label>
-                    <input
-                      matInput
-                      type="text"
-                      [(ngModel)]="middlename"
-                      name="middlename"
-                      placeholder="Middle name"
-                  /></mat-form-field>
-                </div>
-                <div class="col-md-4">
-                  <mat-form-field
-                    appearance="fill"
-                    class="form-field me-3 w-100"
-                    ><mat-label>Last Name</mat-label>
-                    <input
-                      matInput
-                      type="text"
-                      [(ngModel)]="lastname"
-                      name="lastname"
+                  >
+                    <mat-label>User gender</mat-label>
+                    <mat-select
+                      [(value)]="gender"
+                      class="text-capitalize"
                       required
-                      placeholder="Last name"
-                  /></mat-form-field>
+                    >
+                      @for (gender of definedGenders; track gender) {
+                      <mat-option [value]="gender"
+                        ><p class="text-capitalize">
+                          {{ gender }}
+                        </p></mat-option
+                      >
+                      }
+                    </mat-select>
+                  </mat-form-field>
                 </div>
               </div>
               <!-- Email and Contact -->
@@ -531,9 +527,9 @@
                       required
                     >
                       @for (role of definedRole; track role) {
-                      <mat-option [value]="role.role"
+                      <mat-option [value]="role"
                         ><p class="text-capitalize">
-                          {{ role.role }}
+                          {{ role }}
                         </p></mat-option
                       >
                       }
@@ -562,7 +558,15 @@
                 <div
                   class="col-md-3 d-flex justify-content-end align-items-center mt-4"
                 >
-                  <button class="submit-btn" type="submit">Save</button>
+                  <button class="submit-btn btn-custom" type="submit">
+                    <mat-icon
+                      aria-hidden="false"
+                      aria-label="Example home icon"
+                    >
+                      save
+                    </mat-icon>
+                    Save
+                  </button>
                 </div>
               </div>
             </div>

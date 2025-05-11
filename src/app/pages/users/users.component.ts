@@ -8,7 +8,7 @@ import {
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { APIsService, UsersType } from '../../../services/APIs/apis.service';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -34,6 +34,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
+    private router: Router,
     private APIsService: APIsService,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer
@@ -58,6 +59,18 @@ export class UsersComponent implements OnInit, OnDestroy {
         '/Images/Icons/delete.svg'
       )
     );
+    this.matIconRegistry.addSvgIcon(
+      'add-new-user',
+      this.domSanitizer.bypassSecurityTrustResourceUrl(
+        '/Images/Icons/add-new-user.svg'
+      )
+    );
+    this.matIconRegistry.addSvgIcon(
+      'search',
+      this.domSanitizer.bypassSecurityTrustResourceUrl(
+        '/Images/Icons/search.svg'
+      )
+    );
   }
 
   async ngOnInit(): Promise<void> {
@@ -70,19 +83,21 @@ export class UsersComponent implements OnInit, OnDestroy {
       0,
       10,
       this.search
-    ).then((data)=>{
-      this.loading = true;
-      return data;
-    }).finally(() => {
-      setInterval(() => {
-        this.loading = false;
-      }, 500);
-    });
+    )
+      .then((data) => {
+        this.loading = true;
+        return data;
+      })
+      .finally(() => {
+        setInterval(() => {
+          this.loading = false;
+        }, 500);
+      });
     if (usersArray) {
       this.users = usersArray.data;
       this.pageCount = Math.round(usersArray.count / 10) + 1;
     }
-    console.log(Math.round(usersArray.count / 10) + 1);
+    // console.log(Math.round(usersArray.count / 10) + 1);
     Promise.resolve();
   }
 
@@ -92,14 +107,16 @@ export class UsersComponent implements OnInit, OnDestroy {
       0,
       10,
       this.search
-    ).then((data)=>{
-      this.loading = true;
-      return data;
-    }).finally(() => {
-      setInterval(() => {
-        this.loading = false;
-      }, 500);
-    });
+    )
+      .then((data) => {
+        this.loading = true;
+        return data;
+      })
+      .finally(() => {
+        setInterval(() => {
+          this.loading = false;
+        }, 500);
+      });
     // console.log(usersArray);
     if (usersArray) {
       this.users = usersArray.data;
@@ -113,14 +130,16 @@ export class UsersComponent implements OnInit, OnDestroy {
       number,
       10,
       this.search
-    ).then((data)=>{
-      this.loading = true;
-      return data;
-    }).finally(() => {
-      setInterval(() => {
-        this.loading = false;
-      }, 500);
-    });
+    )
+      .then((data) => {
+        this.loading = true;
+        return data;
+      })
+      .finally(() => {
+        setInterval(() => {
+          this.loading = false;
+        }, 500);
+      });
     if (usersArray) {
       this.users = usersArray.data;
       this.pageCount = Math.round(usersArray.count / 10) + 1;
@@ -140,6 +159,10 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.currentPage++;
       await this.changePage(this.currentPage);
     }
+  }
+
+  protected addUser() {
+    this.router.navigate(['/dashboard/add-new-user']);
   }
 
   ngOnDestroy(): void {

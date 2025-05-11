@@ -20,25 +20,49 @@ export interface Address {
   stateOrProvince?: string;
 }
 
-export interface Role {
-  role: 'admin' | 'agent' | 'tenant' | 'operator' | 'developer' | 'user';
+export interface PermissionEntry {
+  module: string;
+  actions: string[];
 }
+
+export interface ROLE_ACCESS_MAP {
+  role: string;
+  permissions: PermissionEntry[];
+}
+
+export type Role =
+  | 'admin'
+  | 'agent'
+  | 'tenant'
+  | 'owner'
+  | 'operator'
+  | 'manager'
+  | 'developer'
+  | 'user';
 
 export interface BaseUser {
   __id?: string;
   __v?: number;
-  firstName: string;
-  middleName?: string | null;
-  lastName: string;
+  name: string;
   username: string;
   email: string;
   dateOfBirth?: Date | null;
   age: number;
   image?: string | File;
   phoneNumber?: string;
-  role: Role;
+  role:
+    | 'admin'
+    | 'agent'
+    | 'tenant'
+    | 'owner'
+    | 'operator'
+    | 'manager'
+    | 'developer'
+    | 'user';
+  gender: string;
   address: Address;
   isActive: boolean;
+  access: ROLE_ACCESS_MAP;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,6 +76,264 @@ export interface UsersType extends NewUser {}
 export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> {}
 
 export interface LoggedUserType extends Omit<NewUser, 'password'> {}
+
+export type AccessMap = {
+  [module: string]: string[]; // list of actions allowed
+};
+
+export const ACCESS_OPTIONS: ReadonlyArray<{
+  module: string;
+  actions: ReadonlyArray<string>;
+}> = [
+  {
+    module: 'User Management',
+    actions: [
+      'view',
+      'create',
+      'update',
+      'delete',
+      'activate',
+      'deactivate',
+      'reset password',
+      'assign roles',
+    ] as const,
+  },
+  {
+    module: 'Property Management',
+    actions: [
+      'view',
+      'create',
+      'update',
+      'delete',
+      'assign agent',
+      'upload documents',
+      'manage amenities',
+      'change status',
+    ] as const,
+  },
+  {
+    module: 'Tenant Management',
+    actions: [
+      'view',
+      'create',
+      'update',
+      'delete',
+      'assign to property',
+      'view lease history',
+    ] as const,
+  },
+  {
+    module: 'Owner Management',
+    actions: [
+      'view',
+      'create',
+      'update',
+      'delete',
+      'view documents',
+      'assign to property',
+    ] as const,
+  },
+  {
+    module: 'Agent Management',
+    actions: [
+      'view',
+      'create',
+      'update',
+      'delete',
+      'assign properties',
+      'track performance',
+    ] as const,
+  },
+  {
+    module: 'Lease Management',
+    actions: [
+      'view',
+      'create',
+      'update',
+      'terminate',
+      'renew',
+      'upload document',
+      'track expiry',
+    ] as const,
+  },
+  {
+    module: 'Payment & Billing',
+    actions: [
+      'view',
+      'record manual',
+      'generate invoice',
+      'update invoice',
+      'delete invoice',
+      'view balance',
+      'export reports',
+      'configure rates',
+    ] as const,
+  },
+  {
+    module: 'Maintenance Requests',
+    actions: [
+      'view',
+      'create',
+      'assign technician',
+      'update status',
+      'close',
+      'track progress',
+      'upload documents',
+      'add cost',
+      'generate report',
+    ] as const,
+  },
+  {
+    module: 'Compliance Management',
+    actions: [
+      'upload certificates',
+      'view status',
+      'set reminders',
+      'update record',
+      'delete record',
+      'notify parties',
+    ] as const,
+  },
+  {
+    module: 'Document Management',
+    actions: ['upload', 'download', 'delete', 'share', 'categorize'] as const,
+  },
+  {
+    module: 'Communication & Notification',
+    actions: [
+      'send',
+      'view logs',
+      'customize templates',
+      'schedule',
+      'notify',
+    ] as const,
+  },
+  {
+    module: 'Report Management',
+    actions: [
+      'generate financial',
+      'generate occupancy',
+      'export lease',
+      'customize templates',
+      'view audit logs',
+      'download',
+    ] as const,
+  },
+  {
+    module: 'Audit Logs',
+    actions: [
+      'view logs',
+      'filter logs',
+      'export',
+      'monitor login',
+      'track role changes',
+    ] as const,
+  },
+  {
+    module: 'Dashboard & Analytics',
+    actions: [
+      'view analytics',
+      'customize widgets',
+      'download',
+      'view real time',
+    ] as const,
+  },
+  {
+    module: 'System Settings',
+    actions: [
+      'manage roles',
+      'configure preferences',
+      'configure payments',
+      'manage integrations',
+      'backup restore',
+    ] as const,
+  },
+  {
+    module: 'Support & Helpdesk',
+    actions: [
+      'view tickets',
+      'respond',
+      'assign staff',
+      'close ticket',
+      'track history',
+      'send feedback',
+    ] as const,
+  },
+  {
+    module: 'Access Control',
+    actions: [
+      'grant access',
+      'revoke access',
+      'set restrictions',
+      'control sessions',
+    ] as const,
+  },
+];
+
+export const DEFAULT_ROLE_ACCESS: Record<Role, AccessMap> = {
+  admin: Object.fromEntries(
+    ACCESS_OPTIONS.map((mod) => [mod.module, [...mod.actions]])
+  ),
+
+  agent: {
+    'Property Management': ['view', 'update', 'upload documents'],
+    'Tenant Management': ['view', 'assign to property'],
+    'Communication & Notification': ['send', 'view logs'],
+    'Dashboard & Analytics': ['view analytics'],
+  },
+
+  tenant: {
+    'Lease Management': ['view'],
+    'Payment & Billing': ['view', 'view balance'],
+    'Maintenance Requests': ['view', 'create'],
+    'Communication & Notification': ['view logs'],
+  },
+
+  owner: {
+    'Property Management': ['view'],
+    'Tenant Management': ['view'],
+    'Report Management': ['generate financial', 'download'],
+  },
+
+  operator: {
+    'User Management': ['view', 'update'],
+    'Maintenance Requests': ['view', 'assign technician', 'close'],
+  },
+
+  manager: {
+    'User Management': ['view', 'update', 'assign roles'],
+    'Property Management': ['view', 'assign agent'],
+    'Compliance Management': ['view status', 'update record'],
+    'Report Management': ['generate occupancy', 'download'],
+  },
+
+  developer: {
+    'System Settings': ['configure preferences', 'manage integrations'],
+    'Dashboard & Analytics': ['customize widgets', 'view analytics'],
+    'Audit Logs': ['view logs'],
+  },
+
+  user: {
+    'Dashboard & Analytics': ['view analytics'],
+    'Communication & Notification': ['view logs'],
+  },
+};
+
+export function getDefaultAccessByRole(role: Role): {
+  [module: string]: { [action: string]: boolean };
+} {
+  const allowed = DEFAULT_ROLE_ACCESS[role] ?? {};
+  const result: Record<string, Record<string, boolean>> = {};
+
+  for (const { module, actions } of ACCESS_OPTIONS) {
+    result[module] = {};
+    for (const action of actions) {
+      result[module][action] = allowed[module]?.includes(action) ?? false;
+    }
+  }
+
+  return result;
+}
 
 @Injectable({
   providedIn: 'root',

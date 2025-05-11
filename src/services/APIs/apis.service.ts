@@ -34,25 +34,49 @@ export interface Address {
   stateOrProvince?: string;
 }
 
-export interface Role {
-  role: 'admin' | 'agent' | 'tenant' | 'operator' | 'developer' | 'user';
+export interface PermissionEntry {
+  module: string;
+  actions: string[];
 }
+
+export interface ROLE_ACCESS_MAP {
+  role: string;
+  permissions: PermissionEntry[];
+}
+
+export type Role =
+  | 'admin'
+  | 'agent'
+  | 'tenant'
+  | 'owner'
+  | 'operator'
+  | 'manager'
+  | 'developer'
+  | 'user';
 
 export interface BaseUser {
   __id?: string;
   __v?: number;
-  firstName: string;
-  middleName?: string | null;
-  lastName: string;
+  name: string;
   username: string;
   email: string;
   dateOfBirth?: Date | null;
   age: number;
   image?: string | File;
   phoneNumber?: string;
-  role: Role;
+  role:
+    | 'admin'
+    | 'agent'
+    | 'tenant'
+    | 'owner'
+    | 'operator'
+    | 'manager'
+    | 'developer'
+    | 'user';
+  gender: string;
   address: Address;
   isActive: boolean;
+  access: ROLE_ACCESS_MAP;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -67,10 +91,18 @@ export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> {}
 
 export interface LoggedUserType extends Omit<NewUser, 'password'> {}
 
+export type AccessMap = {
+  [module: string]: string[]; // list of actions allowed
+};
+
 export interface MSG_DATA_TYPE extends UpdateUserType {
   status: string;
   message: string;
   user: UpdateUserType;
+}
+
+export interface validateType {
+  status: string;
 }
 @Injectable({
   providedIn: 'root',
@@ -103,14 +135,13 @@ export class APIsService {
     );
   }
 
-  public async getCountries(): Promise<Country[] | null> {
-    return (
-      (await firstValueFrom(
-        this.http.get<Country[]>(
-          'https://cdn.jsdelivr.net/npm/country-flag-emoji-json@2.0.0/dist/index.json'
-        )
-      )) || null
+  public async getCountries(): Promise<string> {
+    const countries = await firstValueFrom(
+      this.http.get<Country[]>(
+        'https://cdn.jsdelivr.net/npm/country-flag-emoji-json@2.0.0/dist/index.json'
+      )
     );
+    return JSON.stringify(countries) || '';
   }
 
   public async updateUser(
@@ -152,5 +183,38 @@ export class APIsService {
         console.error(error);
         return null;
       });
+  }
+
+  public async getUserByUsername(username: string): Promise<validateType> {
+    return await firstValueFrom(
+      this.http.get<validateType>(
+        `http://localhost:3000/api-user/user-username/${username}`
+      )
+    );
+  }
+
+  public async getUserByEmail(email: string): Promise<validateType> {
+    return await firstValueFrom(
+      this.http.get<validateType>(
+        `http://localhost:3000/api-user/user-email/${email}`
+      )
+    );
+  }
+
+  public async getUserByPhone(phone: string): Promise<validateType> {
+    return await firstValueFrom(
+      this.http.get<validateType>(
+        `http://localhost:3000/api-user/user-phone/${phone}`
+      )
+    );
+  }
+
+  public async createNewUser(data: FormData): Promise<MSG_DATA_TYPE> {
+    return await firstValueFrom(
+      this.http.post<MSG_DATA_TYPE>(
+        'http://localhost:3000/api-user/create-user',
+        data
+      )
+    );
   }
 }

@@ -108,9 +108,8 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   protected isEditing: boolean = false;
 
   //User data
-  protected firstname: BaseUser['firstName'] = '';
-  protected middlename: BaseUser['middleName'] = '';
-  protected lastname: BaseUser['lastName'] = '';
+  protected name: BaseUser['name'] = '';
+  protected gender: BaseUser['gender'] = '';
   protected email: BaseUser['email'] = '';
   protected phone: BaseUser['phoneNumber'] = '';
   protected street: Address['street'] = '';
@@ -118,7 +117,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   protected city: Address['city'] = '';
   protected postcode: Address['postcode'] = '';
   protected stateOrProvince: Address['stateOrProvince'] = '';
-  protected role: Role['role'] = 'user';
+  protected role: Role = 'user';
   protected userimage: BaseUser['image'] = '';
   protected selectedUserImage: File = new File([], '');
   protected age: BaseUser['age'] = 0;
@@ -130,12 +129,14 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   protected countryControl = new FormControl<string>('');
   protected filteredCountries!: Observable<Country[]>;
   protected readonly definedRole: Role[] = [
-    { role: 'admin' },
-    { role: 'agent' },
-    { role: 'tenant' },
-    { role: 'operator' },
-    { role: 'developer' },
-    { role: 'user' },
+    'admin',
+    'agent',
+    'tenant',
+    'owner',
+    'operator',
+    'manager',
+    'developer',
+    'user',
   ];
   protected readonly userActiveStatus: userActiveStatusType[] = [
     {
@@ -155,6 +156,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
   @ViewChild(NotificationComponent) notification!: NotificationComponent;
   protected isLoading: boolean = true;
+  protected readonly definedGenders: string[] = ['male', 'female', 'other'];
 
   constructor(
     private windowRef: WindowsRefService,
@@ -187,9 +189,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       setInterval(() => {
         this.isLoading = false;
       }, 500);
-      this.firstname = this.user.firstName;
-      this.middlename = this.user.middleName;
-      this.lastname = this.user.lastName;
+      console.log(this.user.gender);
+      this.name = this.user.name;
+      this.gender = this.user.gender;
       this.email = this.user.email;
       this.phone = this.user.phoneNumber;
       this.street = this.user.address.street;
@@ -197,7 +199,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       this.city = this.user.address.city;
       this.postcode = this.user.address.postcode;
       this.stateOrProvince = this.user.address.stateOrProvince;
-      this.role = this.user.role.role;
+      this.role = this.user.role;
       this.country = this.user.address.country;
       this.userimage = this.user.image;
       this.age = this.user.age;
@@ -205,7 +207,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       this.updatedAt = this.user.updatedAt;
       this.countryControl.setValue(this.user.address.country ?? null);
       this.onCountryChange(this.user.address.country ?? '');
-      this.isAdmin = this.user.role.role === 'admin';
+      this.isAdmin = this.user.role === 'admin';
       this.birthDay = this.user.dateOfBirth || null;
       if (typeof this.userimage === 'string') {
         const imageURL = this.userimage.split('.');
@@ -236,7 +238,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   }
 
   private async mainFilterCountries(name: string): Promise<Country[]> {
-    const countries = await this.API.getCountries();
+    const countries = await JSON.parse(await this.API.getCountries());
     if (countries !== null) {
       this.countries = countries;
       this.filteredCountries = this.countryControl.valueChanges.pipe(
@@ -307,13 +309,13 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
   protected async updateUserData(): Promise<void> {
     await this.openDialog().then(async () => {
+      console.log(this.birthDay);
       if (this.user !== null && this.isEditConfirm) {
         this.progress.start();
         this.progerssOfUpload = 0;
         const formData = new FormData();
-        formData.append('firstname', this.firstname);
-        formData.append('middlename', this.middlename || '');
-        formData.append('lastname', this.lastname);
+        formData.append('name', this.name);
+        formData.append('gender', this.gender);
         formData.append('email', this.email);
         formData.append('phone', this.phone || '');
         formData.append('street', this.street);

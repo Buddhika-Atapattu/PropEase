@@ -1,0 +1,171 @@
+@use "../../../styles/global.scss" as *;
+@use "sass:color";
+
+::ng-deep .cdk-overlay-container {
+  z-index: 100000;
+}
+
+.camera-container {
+  position: fixed;
+  z-index: 100000;
+  border-radius: 1rem;
+  padding: 0.5rem;
+  display: block;
+  cursor: grab;
+  &:active {
+    cursor: grabbing;
+  }
+  .close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 2rem;
+    height: 2rem;
+    background-color: #ffffff36;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 1;
+    button {
+      width: inherit;
+      height: inherit;
+      background: none;
+      border: none;
+      padding: 0rem;
+      margin: 0rem;
+      &:hover {
+        background: none;
+      }
+    }
+    ::ng-deep mat-icon {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      ::ng-deep svg {
+        ::ng-deep path {
+          fill: #ffffff;
+        }
+      }
+    }
+  }
+  .video-frame {
+    width: 30rem;
+    height: 25rem;
+    min-width: 10rem;
+    min-height: 10rem;
+    border-radius: 4px;
+    background: #000;
+  }
+  mat-form-field {
+    width: 100%;
+    ::ng-deep .cdk-overlay-container {
+      z-index: 1000000;
+    }
+  }
+
+  .capture-btn {
+    width: 100%;
+    height: 4rem;
+    border-radius: 0.5rem;
+    border: none;
+    font-size: 25pt;
+    text-transform: uppercase;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    align-self: center;
+  }
+}
+
+.controls {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+:host-context(html.light) {
+  .camera-container {
+    background: linear-gradient(45deg, #ffbe56, #ffd258);
+    mat-form-field {
+      color: #fff;
+      background: $light-btn-bg-color;
+      margin-bottom: 0.5rem;
+      border-radius: 0.7rem;
+      ::ng-deep mat-label {
+        color: #fff;
+        font-weight: 600;
+      }
+      ::ng-deep mat-select {
+        ::ng-deep mat-mdc-select-trigger {
+          ::ng-deep .mat-mdc-select-value {
+            color: #fff;
+          }
+        }
+        ::ng-deep .mat-mdc-select-arrow-wrapper {
+          ::ng-deep .mat-mdc-select-arrow {
+            ::ng-deep svg {
+              ::ng-deep path {
+                fill: #fff;
+              }
+            }
+          }
+        }
+      }
+      ::ng-deep .mat-mdc-text-field-wrapper {
+        background: $light-btn-bg-color;
+        color: #fff;
+      }
+      ::ng-deep .mat-mdc-form-field-bottom-align {
+        height: 0rem;
+      }
+    }
+    .capture-btn {
+      background: $light-btn-bg-color;
+    }
+  }
+}
+
+:host-context(html.dark) {
+  .camera-container {
+    background: linear-gradient(45deg, #29005b, #15006c);
+    mat-form-field {
+      color: #fff;
+      background: $dark-btn-bg-color;
+      margin-bottom: 0.5rem;
+      border-radius: 0.7rem;
+      ::ng-deep mat-label {
+        color: #fff;
+        font-weight: 600;
+      }
+      ::ng-deep mat-select {
+        ::ng-deep mat-mdc-select-trigger {
+          ::ng-deep .mat-mdc-select-value {
+            color: #fff;
+          }
+        }
+        ::ng-deep .mat-mdc-select-arrow-wrapper {
+          ::ng-deep .mat-mdc-select-arrow {
+            ::ng-deep svg {
+              ::ng-deep path {
+                fill: #fff;
+              }
+            }
+          }
+        }
+      }
+      ::ng-deep .mat-mdc-text-field-wrapper {
+        background: $dark-btn-bg-color;
+        color: #fff;
+      }
+      ::ng-deep .mat-mdc-form-field-bottom-align {
+        height: 0rem;
+      }
+    }
+    .capture-btn {
+      background: $dark-btn-bg-color;
+    }
+  }
+}

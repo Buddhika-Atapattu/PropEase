@@ -67,6 +67,16 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'add-new-user',
+        loadComponent: () =>
+          import('./pages/add-new-user/add-new-user.component').then(
+            (m) => m.AddNewUserComponent
+          ),
+        data: {
+          roles: ['admin'],
+        },
+      },
+      {
         path: 'unauthorized',
         loadComponent: () =>
           import('./pages/error404/error404.component').then(

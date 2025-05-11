@@ -1,0 +1,679 @@
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  Inject,
+  PLATFORM_ID,
+  ViewChild,
+  ElementRef,
+  ChangeDetectionStrategy,
+  computed,
+  signal,
+} from '@angular/core';
+import { WindowsRefService } from '../../../services/windowRef.service';
+import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
+import { Subscription } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatButtonModule } from '@angular/material/button';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { provideNativeDateAdapter } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDividerModule } from '@angular/material/divider';
+import {
+  MatCheckboxChange,
+  MatCheckboxModule,
+} from '@angular/material/checkbox';
+import {
+  AuthService,
+  UserCredentials,
+  NewUser,
+  Address,
+  Role,
+  UsersType,
+  LoggedUserType,
+  BaseUser,
+  UpdateUserType,
+  ACCESS_OPTIONS,
+  getDefaultAccessByRole,
+  DEFAULT_ROLE_ACCESS,
+  AccessMap,
+} from '../../../services/auth/auth.service';
+import {
+  APIsService,
+  Country,
+  MSG_DATA_TYPE,
+  PermissionEntry,
+  ROLE_ACCESS_MAP,
+  validateType,
+} from '../../../services/APIs/apis.service';
+import { Observable, of, firstValueFrom } from 'rxjs';
+import { map, startWith, mapTo } from 'rxjs/operators';
+import { DomSanitizer } from '@angular/platform-browser';
+import {
+  MAT_DIALOG_DATA,
+  MatDialog,
+  MatDialogActions,
+  MatDialogClose,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle,
+  MatDialogModule,
+} from '@angular/material/dialog';
+import { UserProfileDataSaveConfirmationComponent } from '../../components/dialogs/user-profile-data-save-confirmation/user-profile-data-save-confirmation.component';
+import {
+  msg,
+  msgTypes,
+  NotificationComponent,
+} from '../../components/dialogs/notification/notification.component';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { ProgressBarComponent } from '../../components/dialogs/progress-bar/progress-bar.component';
+import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
+import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
+import { CameraBoxComponent } from '../../components/dialogs/camera-box/camera-box.component';
+
+// SkeletonLoaderComponent
+
+interface userAccessType {
+  access: string[];
+}
+
+interface userActiveStatusType {
+  typeName: string;
+  isActive: boolean;
+}
+
+interface MODEL_CHECK {
+  model: string;
+  check: boolean;
+  action: string;
+}
+
+//  SkeletonLoaderComponent, NotificationComponent, ProgressBarComponent,
+
+@Component({
+  selector: 'app-add-new-user',
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCheckboxModule,
+    MatAutocompleteModule,
+    AsyncPipe,
+    MatDatepickerModule,
+    MatSelectModule,
+    MatDividerModule,
+    MatDialogModule,
+    MatProgressBarModule,
+    NotificationComponent,
+    ProgressBarComponent,
+    ImageCropperComponent,
+    CameraBoxComponent,
+  ],
+  templateUrl: './add-new-user.component.html',
+  styleUrl: './add-new-user.component.scss',
+})
+export class AddNewUserComponent implements OnInit, OnDestroy {
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
+  @ViewChild(NotificationComponent) notification!: NotificationComponent;
+  @ViewChild(ImageCropperComponent) imageCropper!: ImageCropperComponent;
+  @ViewChild(CameraBoxComponent) cameraBox!: CameraBoxComponent;
+
+  protected readonly definedMaleDummyImageURL =
+    '/Images/user-images/dummy-user/dummy-user.jpg';
+  protected readonly definedWomanDummyImageURL =
+    '/Images/user-images/dummy-user/dummy_woman.jpg';
+  protected definedImage: string =
+    '/Images/user-images/dummy-user/dummy-user.jpg';
+
+  protected mode: boolean | null = null;
+  protected isBrowser: boolean;
+  private modeSub: Subscription | null = null;
+  protected users: UsersType[] = [];
+  protected pageCount: number = 0;
+  protected currentPage: number = 0;
+  protected search: string = '';
+  protected loading: boolean = true;
+  protected userUploadedImage: string = '';
+  protected countryControl = new FormControl<string>('');
+
+  protected countries: Country[] = [];
+  protected filteredCountries!: Observable<Country[]>;
+  protected isValidAge: boolean = false;
+  protected isUsernameExist: boolean = false;
+  protected hidePassword: boolean = true;
+  private readonly strongPasswordPattern: RegExp =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])[A-Za-z\d\W_]{8,}$/;
+  private readonly usernamePattern: RegExp = /^[a-zA-Z0-9._-]{4,20}$/;
+  protected usernameMatchPattern: boolean = true;
+  protected passwordMatchPattern: boolean = true;
+  protected isEmailExist: boolean = false;
+  protected emailMatchPattern: boolean = true;
+  private readonly emailPattern: RegExp =
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  private readonly phonePattern: RegExp = /^\+?[0-9\s\-()]{10,15}$/;
+  protected phoneMatchPattern: boolean = true;
+  protected isPhoneExist: boolean = false;
+  protected readonly definedGender: string[] = ['male', 'female', 'other'];
+  protected accessOptions = ACCESS_OPTIONS;
+  protected selectedPermissions: {
+    [module: string]: { [action: string]: boolean };
+  } = {};
+  protected allSelected: { [module: string]: boolean } = {};
+  protected autoSelectedRoleAccess: Record<Role, AccessMap> =
+    DEFAULT_ROLE_ACCESS;
+  protected isCameraOpen: boolean = false;
+
+  //User data
+  protected username: string = '';
+  protected password: string = '';
+  protected fullname: string = '';
+  protected email: string = '';
+  protected phone: string = '';
+  protected street: string = '';
+  protected typedCountry: Country | string | null = '';
+  protected houseNumber: string = '';
+  protected city: string = '';
+  protected postcode: string = '';
+  protected stateOrProvince: string = '';
+  protected role: string = '';
+  protected userimage: File | null = null;
+  protected age: string = '';
+  protected dateOfBirth: Date = new Date();
+  protected isActive: boolean = false;
+  protected updatedAt: Date = new Date();
+  protected createdAt: Date = new Date();
+  protected userGender: string = '';
+  protected modelCheck: MODEL_CHECK = {
+    model: '',
+    check: false,
+    action: '',
+  };
+
+  //User access
+  protected userAccess: userAccessType[] = [];
+
+  //defined roles
+  protected readonly definedRole: Role[] = [
+    'admin',
+    'agent',
+    'tenant',
+    'owner',
+    'operator',
+    'manager',
+    'developer',
+    'user',
+  ];
+
+  //User status manager
+  protected readonly userActiveStatus: userActiveStatusType[] = [
+    {
+      typeName: 'Active',
+      isActive: true,
+    },
+    {
+      typeName: 'Inactive',
+      isActive: false,
+    },
+  ];
+
+  //<=========== Cropper Variables =========>
+  protected selectedImageChangedEvent: any = null;
+  protected croppedImageBase64: string = '';
+  // userUploadedImage: string = ''; // This will be shown as final image
+  protected showCropper = false;
+  protected croppedImage: any = '';
+
+  constructor(
+    private windowRef: WindowsRefService,
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private activeRouter: ActivatedRoute,
+    private router: Router,
+    private authService: AuthService,
+    private API: APIsService,
+    private crypto: CryptoService,
+    private matIconRegistry: MatIconRegistry,
+    private domSanitizer: DomSanitizer,
+    private dialog: MatDialog
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.activeRouter.url.subscribe((segments) => {
+      const path = segments.map((s) => s.path).join('/');
+    });
+
+    this.matIconRegistry.addSvgIcon(
+      'camera',
+      this.domSanitizer.bypassSecurityTrustResourceUrl(
+        '/Images/Icons/camera.svg'
+      )
+    );
+    this.matIconRegistry.addSvgIcon(
+      'upload',
+      this.domSanitizer.bypassSecurityTrustResourceUrl(
+        '/Images/Icons/upload.svg'
+      )
+    );
+    this.matIconRegistry.addSvgIcon(
+      'insert',
+      this.domSanitizer.bypassSecurityTrustResourceUrl(
+        '/Images/Icons/user-plus.svg'
+      )
+    );
+  }
+
+  async ngOnInit(): Promise<void> {
+    if (this.isBrowser) {
+      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+        this.mode = val;
+      });
+    }
+  }
+
+  protected detectGender(value: string) {
+    if (value === 'Male') {
+      this.definedImage = this.definedMaleDummyImageURL;
+    } else if (value === 'Female') {
+      this.definedImage = this.definedWomanDummyImageURL;
+    } else {
+      this.definedImage = this.definedMaleDummyImageURL;
+    }
+  }
+
+  //<=========== Capture the image and upload the image ============>
+
+  protected openCamera(): void {
+    this.isCameraOpen = true;
+  }
+
+  protected closeCamera(): void {
+    this.isCameraOpen = false;
+  }
+
+  protected convertToTheBlob(data: string): File {
+    const byteString = atob(data.split(',')[1]); // decode base64
+    const byteArray = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i++) {
+      byteArray[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: 'image/png' });
+    return new File([blob], 'image.png', { type: 'image/png' });
+  }
+
+  protected handleImage(imageData: string) {
+    console.log('Image from child:', imageData);
+    this.userUploadedImage = imageData;
+    this.userimage = this.convertToTheBlob(imageData);
+    console.log(this.userimage);
+    this.isCameraOpen = false;
+  }
+
+  //<=========== End Capture the image and upload the image ============>
+
+  //<=========== Image Upload with Cropper ============>
+  protected triggerFileInput() {
+    document.querySelector<HTMLInputElement>('#fileInput')?.click();
+  }
+
+  protected onFileSelected(event: any): void {
+    this.selectedImageChangedEvent = event;
+    this.showCropper = true;
+  }
+
+  protected imageCropped(event: ImageCroppedEvent): void {
+    console.log('Cropped event: ', event);
+    this.croppedImageBase64 = event.objectUrl as string;
+    this.croppedImage = event;
+  }
+
+  protected saveCroppedImage(): void {
+    this.userUploadedImage = this.croppedImageBase64;
+    this.userimage = this.croppedImage.blob;
+    this.showCropper = false;
+    console.log(this.userimage);
+    this.resetCropper();
+  }
+
+  protected cancelCrop(): void {
+    this.userUploadedImage = '';
+    this.userimage = null;
+    this.resetCropper();
+  }
+
+  private resetCropper(): void {
+    this.selectedImageChangedEvent = null;
+    this.croppedImageBase64 = '';
+    this.showCropper = false;
+  }
+
+  //<=========== End Image Upload with Cropper ============>
+
+  //<=========== Validating the Date of birth ============>
+  protected validateDateOfBirth(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const dateOfBirth = new Date(input.value);
+    const today = new Date();
+    const age = today.getFullYear() - dateOfBirth.getFullYear();
+    this.age = age.toString();
+    if (age < 18) {
+      this.isValidAge = false;
+    } else {
+      this.isValidAge = true;
+    }
+  }
+
+  protected async onCountryChange(value: string): Promise<void> {
+    this.typedCountry = value;
+    console.log(this.typedCountry);
+    this.countries = await this.mainFilterCountries(value);
+  }
+
+  private async mainFilterCountries(name: string): Promise<Country[]> {
+    const countries = await JSON.parse(await this.API.getCountries());
+    if (countries !== null) {
+      this.countries = countries;
+      this.filteredCountries = this.countryControl.valueChanges.pipe(
+        startWith(this.typedCountry),
+        map((value: string | Country | null) => {
+          const name = typeof value === 'string' ? value : value?.name;
+          return name ? this._filterCountries(name) : this.countries.slice();
+        })
+      );
+    }
+    return this.countries;
+  }
+
+  private _filterCountries(name: string): Country[] {
+    const filterValue = name.toLowerCase();
+    return this.countries.filter((c) =>
+      c.name.toLowerCase().includes(filterValue)
+    );
+  }
+
+  protected displayFn(country: Country): string {
+    return typeof country === 'string' ? country : country?.name ?? '';
+  }
+  //<=========== End Country selector ============>
+
+  //<=========== Checking the username ============>
+  protected async checkUsername(event: Event): Promise<void> {
+    this.usernameMatchPattern = false;
+    const input = event.target as HTMLInputElement;
+    if (this.usernamePattern.test(input.value)) {
+      this.usernameMatchPattern = true;
+    } else {
+      this.usernameMatchPattern = false;
+    }
+    if (this.usernameMatchPattern) {
+      const checking: validateType = await this.API.getUserByUsername(
+        input.value
+      );
+      if (checking.status === 'true') {
+        this.isUsernameExist = true;
+      } else {
+        this.isUsernameExist = false;
+      }
+    }
+  }
+  //<=========== End Checking the username ============>
+
+  //<=========== Checking the password ============>
+  protected checkPassword(event: Event) {
+    this.passwordMatchPattern = false;
+    const input = event.target as HTMLInputElement;
+    const password = input.value;
+    if (this.strongPasswordPattern.test(password)) {
+      this.passwordMatchPattern = true;
+    } else {
+      this.passwordMatchPattern = false;
+    }
+  }
+  //<=========== End Checking the password ============>
+
+  //<=========== Checking the email ============>
+  protected async checkEmail(event: Event): Promise<void> {
+    this.emailMatchPattern = false;
+    const input = event.target as HTMLInputElement;
+    if (this.emailPattern.test(input.value)) {
+      this.emailMatchPattern = true;
+    } else {
+      this.emailMatchPattern = false;
+    }
+    if (this.emailMatchPattern) {
+      const checking: validateType = await this.API.getUserByEmail(input.value);
+      console.log(checking);
+      if (checking.status === 'true') {
+        this.isEmailExist = true;
+      } else {
+        this.isEmailExist = false;
+      }
+    }
+  }
+  //<=========== End Checking the password ============>
+
+  protected async checkPhone(event: Event): Promise<void> {
+    console.log(this.phone);
+    this.phoneMatchPattern = false;
+    const input = event.target as HTMLInputElement;
+    const phone = input.value;
+    if (this.phonePattern.test(phone)) {
+      this.phoneMatchPattern = true;
+      const checking: validateType = await this.API.getUserByPhone(phone);
+      if (checking.status === 'true') {
+        this.isPhoneExist = true;
+      } else {
+        this.isPhoneExist = false;
+      }
+    } else {
+      this.phoneMatchPattern = false;
+    }
+  }
+
+  //<======= Role Access autocomplete =======>
+  protected hasModel(model: string): boolean {
+    // const
+    if (
+      this.role in this.autoSelectedRoleAccess &&
+      model in this.autoSelectedRoleAccess[this.role as Role]
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  protected hasAccess(access: string, model: string): boolean {
+    if (
+      this.role in this.autoSelectedRoleAccess &&
+      model in this.autoSelectedRoleAccess[this.role as Role] &&
+      this.autoSelectedRoleAccess[this.role as Role][model].includes(access)
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  protected toggleAccess(
+    isChecked: boolean,
+    module: string,
+    action: string
+  ): void {
+    if (!(this.role in this.autoSelectedRoleAccess)) return;
+
+    const accessMap = this.autoSelectedRoleAccess[this.role as Role];
+
+    if (isChecked) {
+      // If module doesn't exist yet, create it
+      if (!accessMap[module]) {
+        accessMap[module] = [];
+      }
+
+      // Add action if it's not already there
+      if (!accessMap[module].includes(action)) {
+        accessMap[module].push(action);
+      }
+    } else {
+      // Remove action if it exists
+      const index = accessMap[module]?.indexOf(action);
+      if (index !== -1) {
+        accessMap[module].splice(index, 1);
+      }
+    }
+  }
+
+  protected toggleModule(isChecked: boolean, module: string): void {
+    if (!(this.role in this.autoSelectedRoleAccess)) return;
+
+    const accessMap = this.autoSelectedRoleAccess[this.role as Role];
+
+    if (isChecked) {
+      const fullActions =
+        ACCESS_OPTIONS.find((opt) => opt.module === module)?.actions || [];
+      accessMap[module] = [...fullActions];
+    } else {
+      delete accessMap[module]; // or set it to an empty array if you prefer
+    }
+  }
+
+  protected setPermissionsByRole(role: Role) {
+    this.selectedPermissions = getDefaultAccessByRole(role);
+    this.updateAllSelectedStates();
+  }
+
+  protected updateAllSelectedStates() {
+    for (const mod of this.accessOptions) {
+      const allTrue = mod.actions.every(
+        (act) => this.selectedPermissions[mod.module]?.[act]
+      );
+      this.allSelected[mod.module] = allTrue;
+    }
+  }
+
+  protected toggleAllActions(module: string, isChecked: boolean) {
+    for (const action in this.selectedPermissions[module]) {
+      this.selectedPermissions[module][action] = isChecked;
+    }
+    this.updateAllSelectedStates();
+  }
+
+  protected onPermissionChange(module: string) {
+    this.updateAllSelectedStates();
+  }
+
+  protected getRoleAccessPayload(): ROLE_ACCESS_MAP {
+    const role = this.role;
+    const permissions: PermissionEntry[] = [];
+
+    if (role in this.autoSelectedRoleAccess) {
+      const modules = this.autoSelectedRoleAccess[role as Role];
+
+      for (const [module, actions] of Object.entries(modules)) {
+        if (actions.length > 0) {
+          permissions.push({ module, actions });
+        }
+      }
+    }
+
+    return { role, permissions };
+  }
+
+  //<=======End  Role Access autocomplete =======>
+
+  protected async insertNewUser(): Promise<boolean> {
+    if (
+      this.isActive &&
+      !this.isEmailExist &&
+      !this.isPhoneExist &&
+      !this.isUsernameExist &&
+      this.passwordMatchPattern &&
+      this.emailMatchPattern &&
+      this.usernameMatchPattern &&
+      this.phoneMatchPattern &&
+      this.isValidAge
+    ) {
+      const formData: FormData = new FormData();
+      this.progress.start();
+      formData.append('name', this.fullname);
+      formData.append('username', this.username);
+      formData.append('email', this.email);
+      formData.append('userPassword', this.password);
+      formData.append('phoneNumber', this.phone);
+      formData.append('role', this.role);
+      formData.append('access', JSON.stringify(this.getRoleAccessPayload()));
+      formData.append('isActive', this.isActive.toString());
+      formData.append('dateOfBirth', this.dateOfBirth.toString());
+      formData.append('age', this.age);
+      formData.append('gender', this.userGender);
+      formData.append('houseNumber', this.houseNumber);
+      formData.append('street', this.street);
+      formData.append('city', this.city);
+      formData.append('postcode', this.postcode);
+      if (typeof this.typedCountry === 'string') {
+        formData.append('country', this.typedCountry);
+      } else {
+        formData.append('country', this.typedCountry?.name as string);
+      }
+      formData.append('stateOrProvince', this.stateOrProvince);
+
+      if (this.userimage !== null) {
+        formData.append(
+          'userimage',
+          this.userimage,
+          `${this.username}_image.png`
+        );
+      } else {
+        console.error('Image is empty!');
+        return false;
+      }
+
+      const verifyEmail: object =
+        await this.crypto.generateEmailVerificationToken();
+      formData.append('verifyEmail', JSON.stringify(verifyEmail));
+      const now = new Date();
+      const oneMonth = new Date(
+        new Date(now.setMonth(now.getMonth() + 1)).getTime()
+      );
+
+      formData.append(
+        'otpValidTime',
+        JSON.stringify({
+          otpValidTime: oneMonth,
+        })
+      );
+      formData.append('updatedAt', this.updatedAt.toString());
+      formData.append('createdAt', this.createdAt.toString());
+
+      await this.API.createNewUser(formData)
+        .then((data: MSG_DATA_TYPE | null) => {
+          // console.log(data?.status, data?.message);
+          if (this.notification && data)
+            this.notification.notification(
+              data?.status as msgTypes,
+              data?.message as string
+            );
+        })
+        .finally(() => {
+          stop();
+          this.progress.complete();
+        });
+      setInterval(() => {
+        this.router.navigate(['/dashboard/users']);
+      }, 1000);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.modeSub?.unsubscribe();
+  }
+}

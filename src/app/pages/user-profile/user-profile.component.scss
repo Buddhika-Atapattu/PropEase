@@ -68,13 +68,16 @@
       transition: all 0.3s ease-in-out;
     }
     .submit-btn {
-      border: none;
-      width: 10rem;
-      height: 3rem;
-      text-align: center;
-      border-radius: 10rem;
-      font-weight: 500;
-      font-size: 14pt;
+      width: 7rem;
+      padding: 0.5rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-content: center;
+      border-radius: 0.357rem;
+      mat-icon {
+        margin: 0rem 0.357rem;
+      }
     }
     .user-detals {
       min-height: 15rem;
@@ -130,15 +133,15 @@
       .button-text {
         color: #000;
       }
-      .submit-btn {
-        background: linear-gradient(
-          90deg,
-          rgb(235 151 36),
-          #ffba00,
-          rgb(235 151 36)
-        );
-        box-shadow: 0rem 0rem 0.5rem 0rem rgb(169, 169, 169);
-      }
+      // .submit-btn {
+      //   background: linear-gradient(
+      //     90deg,
+      //     rgb(235 151 36),
+      //     #ffba00,
+      //     rgb(235 151 36)
+      //   );
+      //   box-shadow: 0rem 0rem 0.5rem 0rem rgb(169, 169, 169);
+      // }
       .user-detals {
         background-color: #fef8e8;
         box-shadow: 0rem 0rem 0.5rem 0.2rem #e7cd85;
@@ -205,10 +208,10 @@
       .button-text {
         color: #fff;
       }
-      .submit-btn {
-        background: linear-gradient(90deg, #ae8300, #ffc107, #ae8300);
-        box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0);
-      }
+      // .submit-btn {
+      //   background: linear-gradient(90deg, #ae8300, #ffc107, #ae8300);
+      //   box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0);
+      // }
       .user-detals {
         background-color: #0f1220;
         box-shadow: 0rem 0rem 0.5rem 0.2rem #151520;

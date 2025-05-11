@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import angular from '@analogjs/vite-plugin-angular'; // Or your respective Angular plugin
+import angular from '@analogjs/vite-plugin-angular';
 import history from 'connect-history-api-fallback';
 import type { Connect } from 'vite';
 
@@ -10,31 +10,30 @@ export default defineConfig({
       name: 'spa-fallback',
       configureServer(server) {
         const middleware = history({
-          // Rewriting rules
+          disableDotRule: true, // Important for Angular routing with dots in paths
+          htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
           rewrites: [
             {
-              // Matching all assets URLs
-              from: /^\/assets\/.*$/,
+              from: /^\/public\/.*$/,
               to: (context) => {
-                console.log('Parsed URL:', context.parsedUrl.pathname); // Check this in the console
-                // Ensure that `context.parsedUrl.pathname` is never null
+                console.log('Parsed URL:', context.parsedUrl.pathname);
                 return context.parsedUrl.pathname || '/';
               },
             },
             {
-              // Default fallback rewrite for all other URLs
-              from: /^(?!\/assets\/).*$/,
-              to: (context) => {
-                return '/index.html'; // Fallback to index.html for SPA routing
-              },
+              from: /^(?!\/public\/).*$/, // For anything else
+              to: '/index.html',
             },
           ],
         }) as Connect.NextHandleFunction;
+
         server.middlewares.use(middleware);
       },
     },
   ],
   server: {
     port: 4200,
+    open: true, // Optional: Automatically open browser
+    strictPort: true, // Optional: Avoid random fallback ports
   },
 });

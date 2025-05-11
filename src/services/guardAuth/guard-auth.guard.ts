@@ -22,18 +22,6 @@ interface RoleAccess {
 export class AuthGuard implements CanActivate {
   private isBrowser: boolean;
   private user: LoggedUserType | null = null;
-  private ROLE_ACCESS: RoleAccess[] = [
-    { role: 'admin', access: true, URLs: ['**'] },
-    { role: 'agent', access: true, URLs: ['/dashboard/home'] },
-    { role: 'tenant', access: true, URLs: ['/dashboard/home'] },
-    {
-      role: 'operator',
-      access: true,
-      URLs: ['/dashboard/home', '/dashboard/user-profile'],
-    },
-    { role: 'developer', access: true, URLs: ['/dashboard'] },
-    { role: 'user', access: true, URLs: ['/dashboard/home'] },
-  ];
 
   private ROLES: string[] = [
     'admin',
@@ -67,28 +55,13 @@ export class AuthGuard implements CanActivate {
     }
 
     const currentPath = state.url;
-    const userRole = loggedUser.role.role;
+    const userRole = loggedUser.role;
 
     if (!this.ROLES.includes(userRole)) {
       this.router.navigateByUrl('/login');
       return false;
     }
 
-    const accessEntry = this.ROLE_ACCESS.find((r) => r.role === userRole);
-    if (!accessEntry || !accessEntry.access) {
-      this.router.navigateByUrl('/unauthorized');
-      return false;
-    }
-    if (accessEntry.URLs.includes('**')) {
-      return true;
-    }
-    const isAllowed = accessEntry.URLs.some((path) =>
-      currentPath.startsWith(path)
-    );
-    if (!isAllowed) {
-      this.router.navigateByUrl('/unauthorized');
-      return false;
-    }
     return true;
   }
 }

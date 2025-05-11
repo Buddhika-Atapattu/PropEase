@@ -13,7 +13,32 @@
     // overflow-y: scroll;
     display: block;
     padding: 2rem;
-
+    .top-row {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background-color: inherit; // respects dark/light mode
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+      // border-bottom: 1px solid #ddd; // optional subtle line
+    }
+    .user-scroll-wrapper {
+      max-height: calc(100vh - 200px); // Adjust based on header/footer height
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+    /* Optional: Style scroll bar for elegance */
+    .user-scroll-wrapper::-webkit-scrollbar {
+      width: 6px;
+    }
+    .user-scroll-wrapper::-webkit-scrollbar-thumb {
+      background: #d0a600;
+      border-radius: 4px;
+    }
+    .user-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+      background: #9c7d00;
+    }
     .add-user-row {
       display: flex;
       justify-content: space-between;
@@ -25,14 +50,38 @@
         border: none;
         border-radius: 0.372rem;
         padding: 0.5rem 1.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: 700;
+      }
+      .search-icon {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 2rem;
+        cursor: pointer;
+        ::ng-deep svg {
+          fill: #000;
+          ::ng-deep path {
+            fill: transparent;
+            stroke: #4e4d4d;
+          }
+        }
       }
       mat-icon {
         ::ng-deep svg {
           fill: currentColor;
+          ::ng-deep rect {
+            fill: transparent;
+          }
           ::ng-deep path {
             fill: currentColor;
           }
         }
+      }
+      h6 {
+        margin-top: 0.3rem;
       }
     }
     .search-input {

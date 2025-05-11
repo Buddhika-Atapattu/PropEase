@@ -82,7 +82,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       );
     }
-    const role = this.authService.getLoggedUser?.role.role;
+    const role = this.authService.getLoggedUser?.role;
     if (role && this.isBrowser) {
       await this.authService.sendUserCredentialsAndGetUserData(role);
       await this.authService.afterUserLoggedInOperatios();

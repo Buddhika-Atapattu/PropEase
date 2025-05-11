@@ -1,0 +1,56 @@
+<div #cameraBox class="camera-container" (mousedown)="onMouseDown($event)">
+  <div class="close-btn">
+    <button (click)="onClose()">
+      <mat-icon
+        aria-hidden="false"
+        aria-label="Example home icon"
+        svgIcon="close"
+      ></mat-icon>
+    </button>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-12 p-0">
+        <video
+          #video
+          autoplay
+          playsinline
+          muted
+          preload="auto"
+          loop
+          class="video-frame"
+        ></video>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 p-0">
+        <canvas #canvas hidden></canvas>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 p-0">
+        <mat-form-field appearance="fill" class="position-relative">
+          <mat-label class="position-relative">Select Camera</mat-label>
+          <mat-select
+            class="position-relative"
+            [(value)]="selectedDeviceId"
+            (selectionChange)="onSelectCamera($event.value)"
+          >
+            <mat-option
+              class="position-relative"
+              *ngFor="let device of videoDevices"
+              [value]="device.deviceId"
+            >
+              {{ device.label || "Camera" }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 p-0">
+        <button class="capture-btn" (click)="captureImage()">Capture</button>
+      </div>
+    </div>
+  </div>
+</div>

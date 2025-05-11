@@ -137,6 +137,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         .then((data) => {
           if (data && typeof data === 'object' && 'username' in data) {
             this.authService.setLoggedUser = data as LoggedUserType;
+            console.log(data);
           } else {
             this.authService.setLoggedUser = null;
           }

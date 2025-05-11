@@ -173,7 +173,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
-        console.log('URL changed to:', event.urlAfterRedirects);
+        // console.log('URL changed to:', event.urlAfterRedirects);
         const urlArray: Array<string> = event.urlAfterRedirects.split('/');
         const url: string = urlArray[urlArray.length - 1];
         this.currecntURL = url;

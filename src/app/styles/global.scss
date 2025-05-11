@@ -44,6 +44,27 @@ $light-success-color: #198754 !default; // Success green
 $light-warning-color: #f0ad4e !default; // Alert yellow
 $light-error-color: #dc3545 !default; // Error red
 
+.submit-btn {
+  width: 7rem;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  border-radius: 0.357rem;
+  mat-icon {
+    margin: 0rem 0.357rem;
+  }
+}
+
+code {
+  background: linear-gradient(45deg, #3e3e3e, #3e3e3e) !important;
+  padding: 0.1rem 0.5rem !important;
+  margin: 0rem 0.2rem !important;
+  color: #fff !important;
+  border-radius: 0.352rem !important;
+}
+
 :host-context(html.light) {
   .user-image-main {
     width: 5rem;
@@ -55,26 +76,34 @@ $light-error-color: #dc3545 !default; // Error red
   }
 
   .btn-edit {
+    border: none !important;
     background: $light-btn-bg-color;
     box-shadow: $light-btn-box-shadow;
     color: #fff !important;
   }
 
   .btn-view {
+    border: none !important;
     background: linear-gradient(134deg, #00c416, #6fe600, #53d10a);
     box-shadow: 0rem 0rem 0.5rem 0rem rgb(108, 98, 69);
   }
 
   .btn-delete {
+    border: none !important;
     background: linear-gradient(90deg, #ae0000, #ff0707, #ae0000);
     box-shadow: 0rem 0rem 0.5rem 0rem rgb(108 98 69);
   }
 
   .btn-custom {
+    border: none;
     background: linear-gradient(90deg, #08122f, #10192f, #222b44);
   }
   .text-muted-custom {
     color: #4e4e4e !important;
+  }
+
+  .text-default {
+    color: #000 !important;
   }
 }
 
@@ -89,26 +118,33 @@ $light-error-color: #dc3545 !default; // Error red
   }
 
   .btn-edit {
+    border: none !important;
     background: $dark-btn-bg-color;
     box-shadow: $dark-btn-box-shadow;
     color: #fff !important;
   }
 
   .btn-view {
+    border: none !important;
     background: linear-gradient(134deg, #00c416, #6fe600, #53d10a);
     box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0);
   }
 
   .btn-delete {
+    border: none !important;
     background: linear-gradient(90deg, #ae0000, #ff0707, #ae0000);
     box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0);
   }
 
   .btn-custom {
+    border: none;
     background: linear-gradient(134deg, #0c1957 0%, #4400d0 30%, #43007a 100%);
     box-shadow: 0rem 0rem 0.5rem 0rem $dark-dashboard-dark-color;
   }
   .text-muted-custom {
     color: #a6a6a6 !important;
+  }
+  .text-default {
+    color: #ffffff !important;
   }
 }

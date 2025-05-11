@@ -1,6 +1,9 @@
 {
-  "name": "propease-fontend",
-  "short_name": "propease-fontend",
+  "name": "propease",
+  "short_name": "propease",
+  "description": "propease",
+  "lang": "en",
+  "dir": "ltr",
   "theme_color": "#1976d2",
   "background_color": "#fafafa",
   "display": "standalone",
