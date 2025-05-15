@@ -51,7 +51,8 @@
   </header>
 
   <!-- Main Content -->
+
   <main [ngClass]="{ 'main-content': true, dark: mode, light: !mode }">
-    <router-outlet></router-outlet>
+    <div class="dashboard-main-container"><router-outlet></router-outlet></div>
   </main>
 </div>

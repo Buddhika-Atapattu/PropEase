@@ -1,0 +1,140 @@
+<div class="container-fluid" *ngIf="mode !== null">
+  <!-- loging details table row -->
+  <div class="row" *ngIf="userLoggedData">
+    <div class="col-md-6">&nbsp;</div>
+    <div class="col-md-6">
+      <h2 class="text-center my-2">Loging Details</h2>
+
+      <!-- loader -->
+      <div class="table-responsive" *ngIf="isLoading">
+        <table class="w-100">
+          <thead>
+            <tr class="border-bottom-custom mt-3">
+              <th class="w-50 text-default">IP Address</th>
+              <th class="w-50 text-default">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let i of [].constructor(10); let idx = index"
+              class="border-bottom-custom mt-3"
+            >
+              <td class="p-1">
+                <app-skeleton-loader
+                  [Mode]="mode"
+                  [width]="'20rem'"
+                  [height]="'1.5rem'"
+                  [borderRadius]="'0.159rem'"
+                ></app-skeleton-loader>
+              </td>
+              <td>
+                <app-skeleton-loader
+                  [Mode]="mode"
+                  [width]="'20rem'"
+                  [height]="'1.5rem'"
+                  [borderRadius]="'0.159rem'"
+                ></app-skeleton-loader>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- data -->
+      <div *ngIf="!isLoading" class="table-responsive">
+        <table
+          mat-table
+          [dataSource]="dataSource"
+          class="mat-elevation-z8"
+          matSort
+          (matSortChange)="sortData($event)"
+        >
+          <ng-container matColumnDef="IP Address">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header="ip_address"
+              class="w-50 text-default text-center"
+            >
+              IP Address
+            </th>
+            <td mat-cell *matCellDef="let element" class="text-default">
+              {{ element.ip_address }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="Date">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header="date"
+              class="w-50 text-default text-center"
+            >
+              Date
+            </th>
+            <td mat-cell *matCellDef="let element" class="text-default">
+              {{ element.date | date : "'MMMM d, y HH:mm:ss" }}
+            </td>
+          </ng-container>
+
+          <tr
+            mat-header-row
+            *matHeaderRowDef="displayedColumns"
+            class="text-default border-bottom-custom"
+          ></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumns"
+            class="text-default border-bottom-custom"
+          ></tr>
+        </table>
+      </div>
+
+      <!-- pagination -->
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <ul class="pagination justify-content-center d-flex">
+            <li class="d-flex justify-content-center align-items-center">
+              <button
+                type="button"
+                class="page-item-btn btn-custom w-100 h-75 fw-bold"
+                (click)="goThreePagesBack()"
+              >
+                <i class="fa fa-angle-double-left"></i>
+              </button>
+            </li>
+            <li
+              class="d-flex justify-content-center align-items-center"
+              *ngFor="
+                let i of [].constructor(getActualEnd() - getActualStart() + 1);
+                let idx = index
+              "
+            >
+              <button
+                type="button"
+                class="page-item-btn btn-custom w-100 h-75 fw-bold"
+                [ngClass]="
+                  getCurrentPage() === getActualStart() + idx
+                    ? 'active'
+                    : 'inactive'
+                "
+                (click)="goToThePage(getActualStart() + idx)"
+              >
+                {{ getActualStart() + idx }}
+              </button>
+            </li>
+            <li class="d-flex justify-content-center align-items-center">
+              <button
+                type="button"
+                class="page-item-btn btn-custom w-100 h-75 fw-bold"
+                (click)="goThreePagesForward()"
+              >
+                <i class="fa fa-angle-double-right"></i>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

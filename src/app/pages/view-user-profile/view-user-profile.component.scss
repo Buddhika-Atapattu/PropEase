@@ -1,0 +1,218 @@
+@use "../../styles/global.scss" as *;
+@use "sass:color";
+
+.main-panel {
+  position: relative;
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  .page-indecator {
+    position: absolute;
+    top: 0%;
+    left: 1%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .page-indicator-btn {
+      background: none;
+      border: none;
+      margin: 0 0.5rem;
+      padding: 0;
+      cursor: pointer;
+      font-weight: 100;
+      text-transform: uppercase;
+      font-size: 10pt;
+    }
+  }
+  .user-image-row {
+    position: relative;
+    border-radius: 1rem;
+    height: 10rem;
+    margin-top: 2rem;
+    margin-bottom: 10rem;
+    .image-container {
+      position: absolute;
+      bottom: -50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      .user-image {
+        width: 10rem;
+        height: 10rem;
+        border-radius: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+    }
+  }
+
+  .list-group {
+    background: none !important;
+    border: none !important;
+    .list-group-item {
+      background: none !important;
+      border: none !important;
+    }
+  }
+  .tab-row {
+    position: relative;
+    .tab-list {
+      position: absolute;
+      bottom: -0.4rem;
+      display: flex;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      z-index: 1;
+      .tab-list-item {
+        .tab-list-item-btn {
+          position: relative;
+          margin: 0rem;
+          border: none;
+          background: none;
+
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          align-content: center;
+          padding: 0.5rem 2rem;
+          color: currentColor;
+          transition: all 0.3s ease-in-out;
+          cursor: pointer;
+
+          &::before {
+            content: "";
+            position: absolute;
+            bottom: -0.4rem;
+            left: -4rem;
+            width: 100%;
+            height: 0.3rem;
+            background-color: #e8bd00;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+            opacity: 0;
+          }
+
+          &::after {
+            content: "";
+            position: absolute;
+            bottom: -0.4rem;
+            left: 0;
+            width: 100%;
+            height: 0.3rem;
+            background-color: #e8bd00;
+            transform: scaleX(0);
+            transform-origin: left;
+            opacity: 0;
+            transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+          }
+          &.active::after {
+            transform: scaleX(1);
+            opacity: 1;
+            transition-delay: 0.1s;
+          }
+
+          // &.active {
+          //   opacity: 1;
+          //   transform: translateY(0);
+          //   visibility: visible;
+          //   z-index: 2;
+
+          //   &::after {
+          //     transform: scaleX(1);
+          //     opacity: 1;
+          //     transition-delay: 0.2s;
+          //   }
+          // }
+          // &.active {
+          //   opacity: 1;
+          //   transform: translateY(0);
+          //   transition: opacity 0.8s ease, transform 0.8s ease;
+          //   visibility: visible;
+          //   pointer-events: auto;
+          //   z-index: 2;
+          //   &::before {
+          //     transition-delay: 0.2s ease;
+          //   }
+          // }
+        }
+      }
+    }
+  }
+
+  &.dark {
+    background: linear-gradient(
+      145deg,
+      $dark-secondary-color,
+      color.adjust($dark-secondary-color, $lightness: 2%)
+    );
+    color: $dark-text-color;
+
+    .page-indecator {
+      color: #e8bd00;
+      .page-indicator-btn {
+        color: #e8bd00;
+      }
+    }
+    .user-image-row {
+      background: linear-gradient(
+        45deg,
+        color.adjust($dark-third-color, $lightness: -20%),
+        $dark-third-color,
+        color.adjust($dark-third-color, $lightness: -20%)
+      );
+      .image-container {
+        .user-image {
+          box-shadow: 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
+        }
+      }
+    }
+
+    .tab-row {
+      border-bottom: rgba($dark-third-color, 0.5) solid 0.4rem;
+    }
+
+    .active {
+      border-bottom: $dark-third-color solid 0.4rem;
+    }
+  }
+
+  &.light {
+    background: linear-gradient(
+      145deg,
+      $light-primery-color,
+      color.adjust($light-primery-color, $lightness: 2%)
+    );
+    color: $light-text-color;
+    .page-indecator {
+      color: #100a2b;
+      .page-indicator-btn {
+        color: #100a2b;
+      }
+    }
+    .user-image-row {
+      background: linear-gradient(
+        45deg,
+        color.adjust($dark-primery-color, $lightness: 15%),
+        color.adjust($dark-primery-color, $lightness: 10%),
+        color.adjust($dark-primery-color, $lightness: 15%)
+      );
+      .image-container {
+        .user-image {
+          box-shadow: 0rem 0rem 1rem 0rem #100a2b;
+        }
+      }
+    }
+
+    .tab-row {
+      border-bottom: rgba($light-secondary-color, 0.5) solid 0.4rem;
+    }
+
+    .active {
+      border-bottom: color.adjust($light-secondary-color, $lightness: -15%)
+        solid 0.4rem;
+    }
+  }
+}

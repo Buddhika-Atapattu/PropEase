@@ -1,0 +1,132 @@
+<div
+  *ngIf="mode !== null && user !== null"
+  class="main-panel"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <div class="container-fluid">
+    <!-- page indicator -->
+    <div class="row page-indecator">
+      <span
+        ><button type="button" class="page-indicator-btn" (click)="goToUsers()">
+          Users
+        </button>
+        <i class="fa-solid fa-angle-right my-2"></i
+        ><button type="button" class="page-indicator-btn" (click)="goToUser()">
+          {{ user.name }}
+        </button>
+      </span>
+    </div>
+    <!-- end page indicator -->
+    <!-- user-image row -->
+    <div class="row user-image-row">
+      <div
+        class="col-md-12 d-flex justify-content-center align-items-center mt-5"
+      >
+        <div class="image-container">
+          <app-skeleton-loader
+            *ngIf="isLoading"
+            [width]="'10rem'"
+            [height]="'10rem'"
+            [Mode]="mode"
+            [borderRadius]="'50%'"
+          ></app-skeleton-loader>
+          <img
+            *ngIf="!isLoading"
+            [src]="definedImage"
+            class="user-image"
+            alt="user image"
+          />
+        </div>
+      </div>
+    </div>
+    <!-- end user-image row -->
+    <!-- tabs -->
+    <div class="row mt-4 tab-row">
+      <div
+        class="col-md-12 overflow-hidden d-flex flex-wrap justify-content-start align-items-center p-0"
+      >
+        <ul class="tab-list">
+          <li class="tab-list-item" [class.active]="isInfoPanelOpen">
+            <button
+              class="tab-list-item-btn"
+              (click)="goToInfomation()"
+              #tabButton
+            >
+              Informations
+            </button>
+          </li>
+          <li
+            class="tab-list-item"
+            [class.active]="isAccessibilityPanelOpen"
+          >
+            <button
+              class="tab-list-item-btn"
+              (click)="goToAccessibility()"
+              #tabButton
+            >
+              Accessibilite
+            </button>
+          </li>
+          <li
+            class="tab-list-item"
+            [class.active]="isDocumentsPanelOpen"
+          >
+            <button
+              class="tab-list-item-btn"
+              (click)="goToDocuments()"
+              #tabButton
+            >
+              Documents
+            </button>
+          </li>
+          <li
+            class="tab-list-item"
+            [class.active]="isActivitiesPanelOpen"
+          >
+            <button
+              class="tab-list-item-btn"
+              (click)="goToActivities()"
+              #tabButton
+            >
+              Activities
+            </button>
+          </li>
+          <li
+            class="tab-list-item"
+            [class.active]="isPropertiesPanelOpen"
+          >
+            <button
+              class="tab-list-item-btn"
+              (click)="goToProperties()"
+              #tabButton
+            >
+              Properties
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Data row -->
+    <div class="row mt-5">
+      <div class="col-md-12">
+        <app-user-informations
+          *ngIf="isInfoPanelOpen"
+          [user]="user"
+        ></app-user-informations>
+        <app-accessabilities
+          *ngIf="isAccessibilityPanelOpen"
+          [user]="user"
+        ></app-accessabilities>
+        <app-documents
+          *ngIf="isDocumentsPanelOpen"
+          [user]="user"
+        ></app-documents>
+        <app-activities
+          *ngIf="isActivitiesPanelOpen"
+          [user]="user"
+        ></app-activities>
+      </div>
+    </div>
+  </div>
+</div>

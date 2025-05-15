@@ -1,0 +1,144 @@
+@use "../../../styles/global.scss" as *;
+
+.document-select {
+  border: none;
+  margin: 0.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  // background: linear-gradient(145deg, #4b00d2, #7a3ded);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  mat-icon {
+    width: 2rem;
+    height: 2rem;
+    color: #fff;
+  }
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.image-container {
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+  border-radius: 2rem;
+  margin-top: 2rem;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.file-preview-row {
+  display: flex;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  div {
+    .row {
+      .row-card {
+        position: relative;
+        margin: 1.5rem 0rem;
+        padding: 0.5rem;
+        border-radius: 1rem;
+        cursor: pointer;
+        &:hover .date {
+          opacity: 1;
+        }
+        .date {
+          opacity: 0;
+          position: absolute;
+          color: #fff !important;
+          top: -2rem;
+          left: -1rem;
+          width: auto;
+          padding: 0.3rem 0.6rem;
+          border-radius: 0.357rem;
+          font-size: 10pt;
+          font-weight: 500;
+          transition: all 0.3s ease;
+        }
+
+        div {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          align-content: center;
+          mat-icon {
+            width: 3rem;
+            height: 3rem;
+          }
+          .card-text {
+            width: 15rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      }
+    }
+  }
+}
+
+.submit-row {
+  button {
+    text-transform: uppercase;
+    font-weight: 500;
+    ::ng-deep mat-icon {
+      margin-right: 1rem;
+      ::ng-deep svg {
+        fill: #0000;
+        ::ng-deep path {
+          fill: #0000;
+        }
+      }
+    }
+  }
+}
+
+// Theming strokes for the SVG inside mat-icon
+:host-context(html.light) {
+  .document-select {
+    ::ng-deep mat-icon svg path {
+      stroke: #ffffff;
+    }
+  }
+
+  .image-container {
+    box-shadow: 0rem 0rem 1rem 0rem #cacaca;
+  }
+
+  .row-card {
+    background: linear-gradient(145deg, #ffc628, #ffdb7a, #ffbc00);
+    .date {
+      background: linear-gradient(145deg, #002591, #0f235d, #002591);
+    }
+  }
+}
+
+:host-context(html.dark) {
+  .document-select {
+    ::ng-deep mat-icon svg path {
+      stroke: #ffffff;
+    }
+  }
+
+  .image-container {
+    box-shadow: 0rem 0rem 1rem 0rem #090a12;
+  }
+
+  .row-card {
+    background: linear-gradient(145deg, #826200, #c49400, #826200);
+    .date {
+      background: linear-gradient(145deg, #540091, #0f235d, #540091);
+    }
+  }
+}

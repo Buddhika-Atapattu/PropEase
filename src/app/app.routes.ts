@@ -77,6 +77,16 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'view-user-profile/:username',
+        loadComponent: () =>
+          import('./pages/view-user-profile/view-user-profile.component').then(
+            (m) => m.ViewUserProfileComponent
+          ),
+        data: {
+          roles: ['admin'],
+        },
+      },
+      {
         path: 'unauthorized',
         loadComponent: () =>
           import('./pages/error404/error404.component').then(

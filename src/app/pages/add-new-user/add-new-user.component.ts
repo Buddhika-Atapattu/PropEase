@@ -6,9 +6,7 @@ import {
   PLATFORM_ID,
   ViewChild,
   ElementRef,
-  ChangeDetectionStrategy,
-  computed,
-  signal,
+  HostListener,
 } from '@angular/core';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
@@ -20,24 +18,22 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import {
+  MatMomentDateModule,
+  MomentDateAdapter,
+} from '@angular/material-moment-adapter';
+import {
+  DateAdapter,
+  MAT_DATE_FORMATS,
+  MAT_DATE_LOCALE,
+} from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import {
-  MatCheckboxChange,
-  MatCheckboxModule,
-} from '@angular/material/checkbox';
-import {
-  AuthService,
-  UserCredentials,
-  NewUser,
-  Address,
   Role,
   UsersType,
-  LoggedUserType,
-  BaseUser,
-  UpdateUserType,
   ACCESS_OPTIONS,
   getDefaultAccessByRole,
   DEFAULT_ROLE_ACCESS,
@@ -51,33 +47,20 @@ import {
   ROLE_ACCESS_MAP,
   validateType,
 } from '../../../services/APIs/apis.service';
-import { Observable, of, firstValueFrom } from 'rxjs';
-import { map, startWith, mapTo } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 import { DomSanitizer } from '@angular/platform-browser';
+import { MatDialogModule } from '@angular/material/dialog';
 import {
-  MAT_DIALOG_DATA,
-  MatDialog,
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogRef,
-  MatDialogTitle,
-  MatDialogModule,
-} from '@angular/material/dialog';
-import { UserProfileDataSaveConfirmationComponent } from '../../components/dialogs/user-profile-data-save-confirmation/user-profile-data-save-confirmation.component';
-import {
-  msg,
   msgTypes,
   NotificationComponent,
 } from '../../components/dialogs/notification/notification.component';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ProgressBarComponent } from '../../components/dialogs/progress-bar/progress-bar.component';
-import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { CameraBoxComponent } from '../../components/dialogs/camera-box/camera-box.component';
-
-// SkeletonLoaderComponent
+import { EditorComponent } from '@tinymce/tinymce-angular';
 
 interface userAccessType {
   access: string[];
@@ -110,6 +93,7 @@ interface MODEL_CHECK {
     MatAutocompleteModule,
     AsyncPipe,
     MatDatepickerModule,
+    MatMomentDateModule,
     MatSelectModule,
     MatDividerModule,
     MatDialogModule,
@@ -117,6 +101,7 @@ interface MODEL_CHECK {
     NotificationComponent,
     ProgressBarComponent,
     ImageCropperComponent,
+    EditorComponent,
     CameraBoxComponent,
   ],
   templateUrl: './add-new-user.component.html',
@@ -124,11 +109,12 @@ interface MODEL_CHECK {
 })
 export class AddNewUserComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
   @ViewChild(NotificationComponent) notification!: NotificationComponent;
   @ViewChild(ImageCropperComponent) imageCropper!: ImageCropperComponent;
   @ViewChild(CameraBoxComponent) cameraBox!: CameraBoxComponent;
-
+  @HostListener('document:paste', ['$event'])
   protected readonly definedMaleDummyImageURL =
     '/Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL =
@@ -194,11 +180,13 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
   protected updatedAt: Date = new Date();
   protected createdAt: Date = new Date();
   protected userGender: string = '';
+  protected userBio: string = '';
   protected modelCheck: MODEL_CHECK = {
     model: '',
     check: false,
     action: '',
   };
+  protected bioData: string = '';
 
   //User access
   protected userAccess: userAccessType[] = [];
@@ -234,22 +222,24 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
   protected showCropper = false;
   protected croppedImage: any = '';
 
+  init: EditorComponent['init'] = {
+    plugins: 'lists link image table code help wordcount',
+  };
+
+  protected isDragOver: boolean = false;
+
   constructor(
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private activeRouter: ActivatedRoute,
     private router: Router,
-    private authService: AuthService,
     private API: APIsService,
     private crypto: CryptoService,
     private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer,
-    private dialog: MatDialog
+    private domSanitizer: DomSanitizer
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    this.activeRouter.url.subscribe((segments) => {
-      const path = segments.map((s) => s.path).join('/');
-    });
+    this.activeRouter.url.subscribe((segments) => {});
 
     this.matIconRegistry.addSvgIcon(
       'camera',
@@ -273,6 +263,11 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     if (this.isBrowser) {
+      // Prevent default drag/drop behavior globally
+      window.addEventListener('dragover', this.preventDefault, {
+        passive: false,
+      });
+      window.addEventListener('drop', this.preventDefault, { passive: false });
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -319,6 +314,80 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
 
   //<=========== End Capture the image and upload the image ============>
 
+  //<=========== Image Past On File Input ============>
+
+  protected handlePaste(event: ClipboardEvent): void {
+    event.preventDefault();
+
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) {
+          this.processPastedFile(file);
+        }
+      }
+    }
+  }
+
+  protected processPastedFile(file: File) {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+
+    const input = this.fileInput.nativeElement;
+    input.files = dataTransfer.files;
+
+    // Trigger the same file selection logic
+    this.onFileSelected({ target: input } as any);
+  }
+
+  //<=========== End Image Past On File Input ============>
+
+  //<=========== Image Drag and Dropt ============>
+
+  protected onDragOver(event: DragEvent): void {
+    event.preventDefault(); // Crucial to allow drop
+    this.isDragOver = true;
+  }
+
+  protected onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = false;
+  }
+
+  protected onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        this.processDroppedFile(file);
+      }
+    }
+  }
+
+  protected processDroppedFile(file: File) {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+
+    const input = this.fileInput.nativeElement;
+    input.files = dataTransfer.files;
+
+    // Trigger your upload handler
+    this.onFileSelected({ target: input } as any);
+  }
+
+  private preventDefault(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  //<=========== End Image Drag and Dropt ============>
+
   //<=========== Image Upload with Cropper ============>
   protected triggerFileInput() {
     document.querySelector<HTMLInputElement>('#fileInput')?.click();
@@ -357,18 +426,53 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
 
   //<=========== End Image Upload with Cropper ============>
 
-  //<=========== Validating the Date of birth ============>
-  protected validateDateOfBirth(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const dateOfBirth = new Date(input.value);
-    const today = new Date();
-    const age = today.getFullYear() - dateOfBirth.getFullYear();
+  //<=========== Page indicator ============>
+  protected goToUsers() {
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate(['/dashboard/users']);
+    });
+  }
+
+  protected async goToUser() {
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate(['/dashboard/add-new-user']);
+    });
+  }
+  //<=========== End Page indicator ============>
+
+  //<=========== Check the Age ============>
+
+  protected checkAge(value: string | number) {
+    const age = Number(value);
     this.age = age.toString();
-    if (age < 18) {
+    this.isValidAge = age >= 18;
+    console.log(this.isValidAge);
+  }
+
+  //<=========== End Check the Age ============>
+
+  //<=========== Validating the Date of birth ============>
+  protected validateDateOfBirth(value: Date | string): void {
+    if (!value) {
       this.isValidAge = false;
-    } else {
-      this.isValidAge = true;
+      this.age = '';
+      return;
     }
+
+    const dateOfBirth = new Date(value);
+    const today = new Date();
+
+    // Calculate age precisely, accounting for month/day
+    let age = today.getFullYear() - dateOfBirth.getFullYear();
+    const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+    const dayDiff = today.getDate() - dateOfBirth.getDate();
+
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      age--;
+    }
+
+    this.age = age.toString();
+    this.isValidAge = age >= 18;
   }
 
   protected async onCountryChange(value: string): Promise<void> {
@@ -564,7 +668,7 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
     this.updateAllSelectedStates();
   }
 
-  protected onPermissionChange(module: string) {
+  protected onPermissionChange() {
     this.updateAllSelectedStates();
   }
 
@@ -588,6 +692,7 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
   //<=======End  Role Access autocomplete =======>
 
   protected async insertNewUser(): Promise<boolean> {
+    console.log(this.userBio);
     if (
       this.isActive &&
       !this.isEmailExist &&
@@ -616,6 +721,7 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
       formData.append('street', this.street);
       formData.append('city', this.city);
       formData.append('postcode', this.postcode);
+      formData.append('bio', this.userBio);
       if (typeof this.typedCountry === 'string') {
         formData.append('country', this.typedCountry);
       } else {
@@ -674,6 +780,11 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.isBrowser) {
+      window.removeEventListener('dragover', this.preventDefault);
+      window.removeEventListener('drop', this.preventDefault);
+    }
+
     this.modeSub?.unsubscribe();
   }
 }

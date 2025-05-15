@@ -14,14 +14,31 @@ import {
   provideClientHydration,
   withEventReplay,
 } from '@angular/platform-browser';
-import { provideServiceWorker } from '@angular/service-worker';
-import { environment } from '../environments/environment';
-import { provideNativeDateAdapter } from '@angular/material/core';
+import {
+  MAT_DATE_FORMATS,
+  MAT_DATE_LOCALE,
+  DateAdapter,
+  MatDateFormats,
+} from '@angular/material/core';
+import {
+  MomentDateAdapter,
+  MAT_MOMENT_DATE_ADAPTER_OPTIONS,
+} from '@angular/material-moment-adapter';
 import { provideAnimations } from '@angular/platform-browser/animations';
-
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
-
 import { routes } from './app.routes';
+
+export const MY_DATE_FORMATS: MatDateFormats = {
+  parse: {
+    dateInput: 'DD/MM/YYYY',
+  },
+  display: {
+    dateInput: 'DD/MM/YYYY',
+    monthYearLabel: 'MMM YYYY',
+    dateA11yLabel: 'DD/MM/YYYY',
+    monthYearA11yLabel: 'MMMM YYYY',
+  },
+};
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -31,9 +48,17 @@ export const appConfig: ApplicationConfig = {
     { provide: LocationStrategy, useClass: PathLocationStrategy },
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch()),
-    provideNativeDateAdapter(),
+    { provide: MAT_DATE_LOCALE, useValue: 'en-GB' },
+    {
+      provide: DateAdapter,
+      useClass: MomentDateAdapter,
+      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS],
+    },
+    {
+      provide: MAT_DATE_FORMATS,
+      useValue: MY_DATE_FORMATS,
+    },
 
-    // Dialog defaults (no need for provideMatDialog)
     {
       provide: MAT_DIALOG_DEFAULT_OPTIONS,
       useValue: {

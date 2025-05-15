@@ -1,0 +1,136 @@
+<div *ngIf="user !== null && mode !== null" class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <app-skeleton-loader
+        *ngIf="isLoading"
+        [width]="'50rem'"
+        [Mode]="mode"
+        [borderRadius]="'0.2rem'"
+        [height]="'4rem'"
+      ></app-skeleton-loader>
+      <h1 *ngIf="!isLoading" class="text-capitalize">
+        {{ user.name }}: {{ user.role }}
+        <mat-icon
+          *ngIf="isActive"
+          aria-hidden="false"
+          aria-label="Example home icon"
+          svgIcon="active"
+          [ngClass]="{ success: isActive }"
+        ></mat-icon>
+        <mat-icon
+          *ngIf="!isActive"
+          aria-hidden="false"
+          aria-label="Example home icon"
+          svgIcon="inactive"
+          [ngClass]="{ danger: !isActive }"
+        ></mat-icon>
+      </h1>
+      <ul class="list-group">
+        <li class="list-group-item user-info-sm">
+          <app-skeleton-loader
+            *ngIf="isLoading"
+            [width]="'20rem'"
+            [height]="'1rem'"
+            [Mode]="mode"
+            [borderRadius]="'0.2rem'"
+          ></app-skeleton-loader>
+        </li>
+        <li *ngIf="!isLoading" class="list-group-item user-info-sm">
+          {{ user.email }}
+        </li>
+        <li class="list-group-item user-info-sm">
+          <app-skeleton-loader
+            *ngIf="isLoading"
+            [width]="'20rem'"
+            [height]="'1rem'"
+            [Mode]="mode"
+            [borderRadius]="'0.2rem'"
+          ></app-skeleton-loader>
+        </li>
+        <li *ngIf="!isLoading" class="list-group-item user-info-sm">
+          {{ user.phoneNumber }}
+        </li>
+        <li class="list-group-item user-info-sm">
+          <app-skeleton-loader
+            *ngIf="isLoading"
+            [width]="'20rem'"
+            [height]="'1rem'"
+            [Mode]="mode"
+            [borderRadius]="'0.2rem'"
+          ></app-skeleton-loader>
+        </li>
+        <li *ngIf="!isLoading" class="list-group-item user-info-sm">
+          {{ user.address.houseNumber }}, {{ user.address.street }},
+        </li>
+        <li class="list-group-item user-info-sm">
+          <app-skeleton-loader
+            *ngIf="isLoading"
+            [width]="'20rem'"
+            [height]="'1rem'"
+            [Mode]="mode"
+            [borderRadius]="'0.2rem'"
+          ></app-skeleton-loader>
+        </li>
+        <li *ngIf="!isLoading" class="list-group-item user-info-sm">
+          {{ user.address.city }}, {{ user.address.stateOrProvince }}
+        </li>
+        <li class="list-group-item user-info-sm">
+          <app-skeleton-loader
+            *ngIf="isLoading"
+            [width]="'20rem'"
+            [height]="'1rem'"
+            [Mode]="mode"
+            [borderRadius]="'0.2rem'"
+          ></app-skeleton-loader>
+        </li>
+        <li *ngIf="!isLoading" class="list-group-item user-info-sm">
+          {{ user.address.country }}. {{ user.address.postcode }}
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="row mt-5">
+    <div class="col-md-12">
+      <app-skeleton-loader
+        *ngIf="isLoading"
+        [width]="'50rem'"
+        [height]="'2rem'"
+        [Mode]="mode"
+        [borderRadius]="'0.2rem'"
+      ></app-skeleton-loader>
+      <app-skeleton-loader
+        *ngIf="isLoading"
+        [width]="'50rem'"
+        [height]="'1rem'"
+        [Mode]="mode"
+        [borderRadius]="'0.2rem'"
+        class="mt-2"
+      ></app-skeleton-loader>
+      <app-skeleton-loader
+        *ngIf="isLoading"
+        [width]="'50rem'"
+        [height]="'1rem'"
+        [Mode]="mode"
+        [borderRadius]="'0.2rem'"
+        class="mt-2"
+      ></app-skeleton-loader>
+      <app-skeleton-loader
+        *ngIf="isLoading"
+        [width]="'50rem'"
+        [height]="'1rem'"
+        [Mode]="mode"
+        [borderRadius]="'0.2rem'"
+        class="mt-2"
+      ></app-skeleton-loader>
+      <app-skeleton-loader
+        *ngIf="isLoading"
+        [width]="'50rem'"
+        [height]="'1rem'"
+        [Mode]="mode"
+        [borderRadius]="'0.2rem'"
+        class="mt-2"
+      ></app-skeleton-loader>
+      <div *ngIf="!isLoading" [innerHTML]="user.bio"></div>
+    </div>
+  </div>
+</div>

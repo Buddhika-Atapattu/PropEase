@@ -31,6 +31,7 @@ import {
   MatCheckboxChange,
   MatCheckboxModule,
 } from '@angular/material/checkbox';
+import { ActivityTrackerService } from '../../../services/activityTacker/activity-tracker.service';
 
 @Component({
   selector: 'app-login',
@@ -75,7 +76,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private APIs: APIsService,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private appRef: ApplicationRef
+    private appRef: ApplicationRef,
+    private activityTrackerService: ActivityTrackerService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.initializeFromCookies();
@@ -104,7 +106,9 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.username = username;
         this.password = password;
         this.rememberMe = true;
-        this.login();
+        if (this.username !== '' && this.password !== '' && this.rememberMe) {
+          this.login();
+        }
       }
     }
     return Promise.resolve();
@@ -137,7 +141,6 @@ export class LoginComponent implements OnInit, OnDestroy {
         .then((data) => {
           if (data && typeof data === 'object' && 'username' in data) {
             this.authService.setLoggedUser = data as LoggedUserType;
-            console.log(data);
           } else {
             this.authService.setLoggedUser = null;
           }
@@ -148,6 +151,8 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.authService.getLoggedUser.isActive
       ) {
         if (this.isBrowser) {
+          this.activityTrackerService.loggedUser =
+            this.authService.getLoggedUser;
           const username = await this.cryptoService.encrypt(
             this.username || ''
           );

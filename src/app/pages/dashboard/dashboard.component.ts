@@ -20,6 +20,7 @@ import {
 } from '../../../services/auth/auth.service';
 import { Subscription } from 'rxjs';
 import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
+import { ActivityTrackerService } from '../../../services/activityTacker/activity-tracker.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -51,6 +52,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private expandableService: ExpandableService,
     private router: Router,
+    private activityTrackerService: ActivityTrackerService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -87,10 +89,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
       await this.authService.sendUserCredentialsAndGetUserData(role);
       await this.authService.afterUserLoggedInOperatios();
     }
+    await this.insertLoggedUserTracks();
   }
 
   protected openMenu(): void {
     this.menuOpen = !this.menuOpen;
+  }
+
+  protected async insertLoggedUserTracks() {
+    const date = new Date();
+    this.activityTrackerService.userLoggedTime = date;
+
+    const data = {
+      username: this.user?.username,
+      date: date,
+    };
+    await this.activityTrackerService
+      .saveLoggedUserDataToTracking(data)
+      .then((data) => {
+        // console.log('Data: ', data);
+      })
+      .catch((error) => {
+        if (error) {
+          console.log('Error: ', error);
+        }
+      });
   }
 
   ngOnDestroy(): void {

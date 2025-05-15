@@ -1,5 +1,13 @@
 <div class="main-container-loader" *ngIf="show">
   <div class="progress-container" *ngIf="show">
     <div class="progress-bar" [style.width.%]="progressValue"></div>
+    <p
+      class="progress-text"
+      [ngClass]="isError ? 'error' : ''"
+      [ngClass]="isSuccess ? 'success' : ''"
+      [ngClass]="isWarning ? 'warning' : ''"
+    >
+      {{ progressValue }}%
+    </p>
   </div>
 </div>

@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { CryptoService } from '../../services/cryptoService/crypto.service';
 import { APIsService } from '../APIs/apis.service';
+import { ActivityTrackerService } from '../activityTacker/activity-tracker.service';
 
 export interface UserCredentials {
   username: string;
@@ -50,6 +51,7 @@ export interface BaseUser {
   age: number;
   image?: string | File;
   phoneNumber?: string;
+  bio: string;
   role:
     | 'admin'
     | 'agent'
@@ -361,7 +363,8 @@ export class AuthService {
     private http: HttpClient,
     private router: Router,
     private cryptoService: CryptoService,
-    private APIs: APIsService
+    private APIs: APIsService,
+    private trackerService: ActivityTrackerService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -410,6 +413,7 @@ export class AuthService {
 
   set setLoggedUser(user: LoggedUserType | null) {
     this.loggedUser = user;
+    this.trackerService.loggedUser = user;
   }
 
   set logginUser(user: UserCredentials) {

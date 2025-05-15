@@ -7,12 +7,13 @@ import {
 } from '@angular/core';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { ActivatedRoute, Router } from '@angular/router';
+import { filter, Subscription } from 'rxjs';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { APIsService, UsersType } from '../../../services/APIs/apis.service';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
 
 @Component({
   selector: 'app-users',
@@ -29,6 +30,8 @@ export class UsersComponent implements OnInit, OnDestroy {
   protected currentPage: number = 0;
   protected search: string = '';
   protected loading: boolean = true;
+  private routeSub: Subscription | null = null;
+  private routerSub: Subscription | null = null;
 
   constructor(
     private windowRef: WindowsRefService,
@@ -37,12 +40,11 @@ export class UsersComponent implements OnInit, OnDestroy {
     private router: Router,
     private APIsService: APIsService,
     private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer
+    private domSanitizer: DomSanitizer,
+    private crypto: CryptoService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    this.route.url.subscribe((segments) => {
-      const path = segments.map((s) => s.path).join('/');
-    });
+
     this.matIconRegistry.addSvgIcon(
       'view',
       this.domSanitizer.bypassSecurityTrustResourceUrl('/Images/Icons/view.svg')
@@ -79,6 +81,18 @@ export class UsersComponent implements OnInit, OnDestroy {
         this.mode = val;
       });
     }
+    this.routerSub = this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => this.init());
+
+    this.routeSub = this.route.url.subscribe((segments) => {
+      const path = segments.map((s) => s.path).join('/');
+    });
+    await this.init();
+    Promise.resolve();
+  }
+
+  protected async init() {
     const usersArray = await this.APIsService.getAllUsersWithPagination(
       0,
       10,
@@ -97,8 +111,6 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.users = usersArray.data;
       this.pageCount = Math.round(usersArray.count / 10) + 1;
     }
-    // console.log(Math.round(usersArray.count / 10) + 1);
-    Promise.resolve();
   }
 
   protected async searchUsers(event: Event) {
@@ -136,7 +148,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         return data;
       })
       .finally(() => {
-        setInterval(() => {
+        setTimeout(() => {
           this.loading = false;
         }, 500);
       });
@@ -165,7 +177,20 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboard/add-new-user']);
   }
 
+  protected async viewUser(data: string) {
+    if (this.isBrowser) {
+      if (data !== '' && this.crypto) {
+        const username = await this.APIsService.generateToken(data);
+        this.router.navigate(['/dashboard/view-user-profile', username.token]);
+      } else {
+        console.log(data);
+      }
+    }
+  }
+
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
+    this.routeSub?.unsubscribe();
+    this.routerSub?.unsubscribe();
   }
 }

@@ -10,6 +10,9 @@ import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
 export class ProgressBarComponent {
   @Input() show = false;
   progressValue = 0;
+  protected isError: boolean = false;
+  protected isSuccess: boolean = false;
+  protected isWarning: boolean = false;
 
   start() {
     this.show = true;
@@ -26,7 +29,20 @@ export class ProgressBarComponent {
 
   complete() {
     this.progressValue = 100;
-    setTimeout(() => (this.show = false), 300); // smooth close
+    this.isSuccess = true;
+    setTimeout(() => (this.show = false), 1000); // smooth close
+  }
+
+  stop() {
+    this.progressValue = this.progressValue;
+    this.isWarning = true;
+    setTimeout(() => (this.show = false), 1000); // smooth close
+  }
+
+  error() {
+    this.progressValue = this.progressValue;
+    this.isError = true;
+    setTimeout(() => (this.show = false), 1000); // smooth close
   }
 
   reset() {

@@ -1,0 +1,60 @@
+@use "../../../styles/global.scss" as *;
+
+.table-responsive {
+  table {
+    background: none;
+    color: currentColor;
+  }
+}
+
+:host-context(html.light) {
+  .table-responsive {
+    table {
+      background: none;
+      color: $dark-primery-color !important;
+      ::ng-deep th {
+        color: currentColor;
+      }
+      ::ng-deep td {
+        color: $dark-primery-color !important;
+      }
+    }
+  }
+  ::ng-deep .mat-sort-header-arrow {
+    ::ng-deep svg {
+      fill: $dark-primery-color !important;
+    }
+  }
+
+  button {
+    &.active {
+      background: linear-gradient(90deg, #ffd000, #b99700, #ffd000);
+    }
+  }
+}
+
+:host-context(html.dark) {
+  .table-responsive {
+    table {
+      background: none;
+      color: $light-primery-color !important;
+      ::ng-deep th {
+        color: currentColor;
+      }
+      ::ng-deep td {
+        color: $light-primery-color !important;
+      }
+    }
+  }
+  ::ng-deep .mat-sort-header-arrow {
+    ::ng-deep svg {
+      fill: $light-primery-color !important;
+    }
+  }
+
+  button {
+    &.active {
+      background: linear-gradient(90deg, #ffd000, #b99700, #ffd000);
+    }
+  }
+}

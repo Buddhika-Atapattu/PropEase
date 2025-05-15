@@ -1,0 +1,39 @@
+.container-fluid {
+  h1 {
+    ::ng-deep mat-icon {
+      width: 2rem;
+      height: 2rem;
+      display: inline-flex;
+      justify-self: center;
+      flex-wrap: wrap;
+      align-items: center;
+      ::ng-deep &.success {
+        ::ng-deep svg {
+          ::ng-deep path {
+            fill: green;
+          }
+        }
+      }
+      ::ng-deep &.danger {
+        ::ng-deep svg {
+          ::ng-deep path {
+            fill: red;
+          }
+        }
+      }
+    }
+  }
+  .list-group {
+    padding: 0;
+    margin: 0;
+    border: none;
+    .list-group-item {
+      padding: 0.2rem 0rem;
+      margin: 0;
+      background: transparent;
+      color: currentColor;
+      border: none;
+      font-weight: 100;
+    }
+  }
+}

@@ -42,7 +42,7 @@ export class NotificationComponent {
     this.status = status;
     this.message = message;
     this.showNotification = true;
-    console.log('status: ', status, 'message: ', message);
+    // console.log('status: ', status, 'message: ', message);
     setTimeout(() => {
       this.showNotification = false;
     }, 5000);

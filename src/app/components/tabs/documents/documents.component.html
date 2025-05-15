@@ -1,0 +1,164 @@
+<app-notification #notificationComp></app-notification>
+<app-progress-bar></app-progress-bar>
+<div *ngIf="user !== null && mode !== null" class="container-fluid">
+  <form
+    action=""
+    method="POST"
+    enctype="multipart/form-data"
+    (ngSubmit)="insertDocumnets()"
+    class="profile-form"
+    autocomplete="off"
+    #userForm="ngForm"
+  >
+    <div class="row d-flex justify-content-center align-item-center">
+      <div class="col-md-6 d-flex justify-content-center align-item-center">
+        <div class="d-flex align-items-center gap-3">
+          <h2 class="m-0">Select Documents</h2>
+          <button
+            type="button"
+            class="document-select btn-custom"
+            (click)="triggerFileInput()"
+            aria-label="Upload document"
+          >
+            <mat-icon svgIcon="document" aria-hidden="false"></mat-icon>
+            <input
+              type="file"
+              id="fileInput"
+              (change)="onFileSelected($event)"
+              accept="
+                      .doc, .docx, .dot, .dotx, .rtf, .odt, .txt,
+                      .xls, .xlsx, .xlsm, .xlt, .xltx, .ods, .csv, .tsv,
+                      .ppt, .pptx, .pptm, .pot, .potx, .odp,
+                      .pdf,
+                      .jpeg, .jpg, .png, .webp, .gif, .ico, .svg,
+                      application/msword,
+                      application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                      application/vnd.openxmlformats-officedocument.wordprocessingml.template,
+                      application/rtf,
+                      application/vnd.ms-excel,
+                      application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+                      application/vnd.openxmlformats-officedocument.spreadsheetml.template,
+                      text/csv,
+                      text/tab-separated-values,
+                      application/vnd.ms-powerpoint,
+                      application/vnd.openxmlformats-officedocument.presentationml.presentation,
+                      application/vnd.openxmlformats-officedocument.presentationml.template,
+                      application/vnd.oasis.opendocument.text,
+                      application/vnd.oasis.opendocument.spreadsheet,
+                      application/vnd.oasis.opendocument.presentation,
+                      application/pdf,
+                      text/plain,
+                      image/jpeg,
+                      image/png,
+                      image/webp,
+                      image/gif,
+                      image/jpg,
+                      image/ico,
+                      image/svg+xml
+                    "
+              hidden
+              multiple
+            />
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="row file-preview-row" *ngIf="isFileSelected">
+      <div *ngFor="let file of selectedFiles; let i = index" class="col-md-4">
+        <div class="row d-flex justify-content-center align-item-center my-2">
+          <div class="col-md-12">
+            <div
+              class="row d-flex justify-content-center align-item-center row-card"
+            >
+              <div class="col-sm-2">
+                <mat-icon
+                  svgIcon="{{ file.icon }}"
+                  aria-hidden="false"
+                ></mat-icon>
+              </div>
+              <div class="col-sm-8">
+                <p class="card-text">{{ file.name }}</p>
+              </div>
+              <div class="col-sm-2">
+                <button
+                  class="btn btn-danger"
+                  (click)="deleteFile(i)"
+                  type="button"
+                >
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row submit-row" *ngIf="isFileSelected">
+      <div class="col-md-12 d-flex justify-content-end align-item-center">
+        <button type="submit" class="document-select btn-custom">
+          <mat-icon svgIcon="upload" aria-hidden="false"></mat-icon> Upload
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <br />
+  <hr />
+  <br />
+
+  <div class="row file-preview-row" *ngIf="!isNoData && documents.length > 0">
+    <div class="col-md-4" *ngFor="let document of documents">
+      <div class="row d-flex justify-content-center align-item-center my-2">
+        <div class="col-md-12">
+          <app-skeleton-loader
+            *ngIf="isLoading"
+            [width]="'20rem'"
+            [height]="'4rem'"
+            [borderRadius]="'0.435rem'"
+            [Mode]="mode"
+          ></app-skeleton-loader>
+          <div
+            *ngIf="!isLoading"
+            class="row d-flex justify-content-center align-item-center row-card"
+          >
+            <div class="date">
+              {{ document.uploadDate | date : "dd/MM/YYYY HH:mm:ss" }}
+            </div>
+            <div class="col-sm-2">
+              <mat-icon
+                svgIcon="{{ chooceIcon(document.extension.split('.')[1]) }}"
+                aria-hidden="false"
+              ></mat-icon>
+            </div>
+            <div class="col-sm-8">
+              <p class="card-text">{{ document.originalName }}</p>
+            </div>
+            <div class="col-sm-2">
+              <button
+                class="btn btn-custom text-light"
+                type="button"
+                (click)="downloadFile(document.URL)"
+              >
+                <i class="fa-solid fa-download"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    *ngIf="isNoData"
+    class="row mt-5 d-flex justify-content-center align-item-center"
+  >
+    <div class="col-md-6">
+      <h1 class="text-center">No Documents Found</h1>
+      <div
+        class="image-container d-flex justify-content-center align-item-center"
+      >
+        <img src="/Images/System-images/noDoc.jpg" alt="no doc image" />
+      </div>
+    </div>
+  </div>
+</div>

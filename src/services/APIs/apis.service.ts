@@ -62,6 +62,7 @@ export interface BaseUser {
   email: string;
   dateOfBirth?: Date | null;
   age: number;
+  bio: string;
   image?: string | File;
   phoneNumber?: string;
   role:
@@ -99,10 +100,31 @@ export interface MSG_DATA_TYPE extends UpdateUserType {
   status: string;
   message: string;
   user: UpdateUserType;
+  token: string;
+}
+
+export interface MSG_WITH_BASEUSER {
+  status: string;
+  message: string;
+  user: BaseUser;
+  data: any;
 }
 
 export interface validateType {
   status: string;
+  user: UsersType;
+}
+
+export interface UDER_DOC_TYPES extends MSG_WITH_BASEUSER {
+  originalName: string;
+  storedName: string;
+  mimeType: string;
+  size: number;
+  path: string;
+  URL: string;
+  extension: string;
+  uploadDate: Date;
+  download: string;
 }
 @Injectable({
   providedIn: 'root',
@@ -217,4 +239,42 @@ export class APIsService {
       )
     );
   }
+
+  public async generateToken(username: string): Promise<MSG_DATA_TYPE> {
+    return await firstValueFrom(
+      this.http.post<MSG_DATA_TYPE>(
+        'http://localhost:3000/api-user/generate-token',
+        { username }
+      )
+    );
+  }
+
+  public async uploadDocuments(
+    data: FormData,
+    username: string
+  ): Promise<MSG_WITH_BASEUSER> {
+    return await firstValueFrom(
+      this.http.post<MSG_WITH_BASEUSER>(
+        `http://localhost:3000/api-user/user-document-upload/${username}`,
+        data
+      )
+    );
+  }
+
+  public async getUserByToken(token: string): Promise<MSG_WITH_BASEUSER> {
+    return await firstValueFrom(
+      this.http.get<MSG_WITH_BASEUSER>(
+        `http://localhost:3000/api-user/user-token/${token}`
+      )
+    );
+  }
+
+  public async getUserDocuments(username: string): Promise<UDER_DOC_TYPES> {
+    return await firstValueFrom(
+      this.http.get<UDER_DOC_TYPES>(
+        `http://localhost:3000/api-user/uploads/${username}/documents`
+      )
+    );
+  }
+
 }

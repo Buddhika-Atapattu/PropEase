@@ -11,7 +11,18 @@
   class="main-panel"
   [ngClass]="mode ? 'dark' : 'light'"
 >
-  <div class="container-fluid">
+  <div class="container-fluid overflow-hidden">
+    <div class="row page-indecator">
+      <span
+        ><button type="button" class="page-indicator-btn" (click)="goToUsers()">
+          Users
+        </button>
+        <i class="fa-solid fa-angle-right my-2"></i
+        ><button type="button" class="page-indicator-btn" (click)="goToUser()">
+          Add new User
+        </button>
+      </span>
+    </div>
     <form
       action=""
       method="POST"
@@ -57,16 +68,37 @@
                 ></mat-icon>
               </button>
             </div>
+            <!-- File Input -->
+            <input
+              type="file"
+              id="fileInput"
+              #fileInput
+              (change)="onFileSelected($event)"
+              accept="image/*"
+              hidden
+            />
           </div>
+        </div>
+      </div>
 
-          <!-- File Input -->
-          <input
-            type="file"
-            id="fileInput"
-            (change)="onFileSelected($event)"
-            accept="image/*"
-            hidden
-          />
+      <!-- Drop and down row -->
+      <div class="row d-flex jsutify-content-center align-item-center my-5">
+        <div
+          class="col-md-8 d-flex jsutify-content-center align-item-center mx-auto"
+        >
+          <div
+            *ngIf="!showCropper"
+            #dropZone
+            class="drop-down-container"
+            [ngClass]="isDragOver ? 'active' : ''"
+            (dragover)="onDragOver($event)"
+            (drop)="onDrop($event)"
+            (dragleave)="onDragLeave($event)"
+            [class.drag-over]="isDragOver"
+            (paste)="handlePaste($event)"
+          >
+            Drag and Drop / Copy and Paste
+          </div>
         </div>
       </div>
 
@@ -389,12 +421,16 @@
           <div class="row d-flex justify-content-bitween align-items-center">
             <div class="col-md-6">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
-                <mat-label>Age</mat-label>
+                <mat-label [ngClass]="isValidAge ? '' : 'text-danger'">
+                  {{ isValidAge ? "Age" : "Invalid Age" }}</mat-label
+                >
                 <input
                   matInput
                   type="text"
                   [(ngModel)]="age"
+                  (ngModelChange)="checkAge($event)"
                   name="userage"
+                  inputmode="numeric"
                   required
                   placeholder="Age"
                 />
@@ -416,9 +452,9 @@
                   placeholder="Date of Birth"
                   [(ngModel)]="dateOfBirth"
                   name="age"
-                  (input)="validateDateOfBirth($event)"
+                  (ngModelChange)="validateDateOfBirth($event)"
                   required
-                  placeholder="MM/DD/YYYY"
+                  placeholder="DD/MM/YYYY"
                 />
                 <mat-datepicker-toggle
                   matIconSuffix
@@ -461,18 +497,31 @@
       </div>
       <!-- end data entry section -->
 
+      <!-- user bio row -->
+      <div class="row my-5">
+        <div class="col-md-12">
+          <h3>User Bio:</h3>
+          <div class="my-4">
+            <editor
+              apiKey="azinteymcwk49hq4199jdh7mjyoqb88jqz88upe7gestbrp5"
+              [init]="init"
+              [(ngModel)]="userBio"
+              [ngModelOptions]="{ standalone: true }"
+              name="userBio"
+              aria-placeholder="user bio"
+              aria-autocomplete="none"
+            />
+          </div>
+        </div>
+      </div>
+      <!-- user bio row -->
+
       <!-- user access row start -->
       <div class="row my-5" *ngIf="role !== ''">
         <div class="col-md-12"><h1>User Access</h1></div>
         <hr />
       </div>
       <!-- end user access row end -->
-      <!-- <section class="example-section">
-        <mat-checkbox class="example-margin">Check me!</mat-checkbox>
-        <mat-checkbox class="example-margin" [disabled]="true"
-          >Disabled</mat-checkbox
-        >
-      </section> -->
       <!-- user access grant -->
       <div class="row" *ngIf="role !== ''">
         <div
