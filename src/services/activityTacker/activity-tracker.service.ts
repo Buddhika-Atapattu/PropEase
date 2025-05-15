@@ -5,6 +5,7 @@ import { filter } from 'rxjs/operators';
 import { AuthService, BaseUser, LoggedUserType } from '../auth/auth.service';
 import { firstValueFrom, Subscription, pipe, take } from 'rxjs';
 import { CryptoService } from '../cryptoService/crypto.service';
+import * as moment from 'moment';
 
 export interface MSG {
   status: string;
@@ -47,14 +48,48 @@ export class ActivityTrackerService {
     );
   }
 
+  private formatDateOnly(date: moment.Moment | Date | string): string {
+    // If it's a Moment object
+    if (moment.isMoment(date)) {
+      return date.format('YYYY-MM-DD');
+    }
+
+    // If it's a native Date or string
+    const parsedDate = new Date(date);
+    if (isNaN(parsedDate.getTime())) {
+      throw new Error('Invalid date provided to formatDateOnly');
+    }
+
+    const year = parsedDate.getFullYear();
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   public async getLoggedUserTracking(
     username: string,
     start: number,
-    limit: number
+    limit: number,
+    startDate?: Date,
+    endDate?: Date
   ): Promise<MSG> {
+    let URL = `http://localhost:3000/api-tracking/get-logged-user-tracking/${username}/${start}/${limit}`;
+
+    const queryParams: string[] = [];
+    if (startDate)
+      queryParams.push(`startDate=${this.formatDateOnly(startDate)}`);
+    if (endDate) queryParams.push(`endDate=${this.formatDateOnly(endDate)}`);
+    if (queryParams.length > 0) {
+      URL += `?${queryParams.join('&')}`;
+    }
+
+    return await firstValueFrom(this.http.get<MSG>(URL));
+  }
+
+  public async getLoggedAllUsersTracking(): Promise<MSG> {
     return await firstValueFrom(
       this.http.get<MSG>(
-        `http://localhost:3000/api-tracking/get-logged-user-tracking/${username}/${start}/${limit}`
+        `http://localhost:3000/api-tracking/get-all-users-login-counts`
       )
     );
   }

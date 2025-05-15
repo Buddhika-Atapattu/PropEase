@@ -1,4 +1,4 @@
-<div *ngIf="showNotification" class="notification" [ngClass]="status">
+<div *ngIf="showNotification" class="notification" [ngClass]="status" #notification>
   <div class="text py-0">{{ message }}</div>
   <button class="btn py-0" (click)="close()">X</button>
 </div>

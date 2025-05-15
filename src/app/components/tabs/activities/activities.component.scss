@@ -1,9 +1,71 @@
 @use "../../../styles/global.scss" as *;
 
+.date-picker-btn {
+  ::ng-deep mat-icon {
+    width: 1rem;
+    height: 1rem;
+    &.search {
+      ::ng-deep svg {
+        ::ng-deep path {
+          stroke: #fff !important;
+          fill: transparent !important;
+        }
+      }
+    }
+    ::ng-deep svg {
+      ::ng-deep path {
+        stroke: #fff !important;
+        fill: #fff !important;
+      }
+    }
+  }
+}
+
 .table-responsive {
   table {
     background: none;
     color: currentColor;
+  }
+}
+
+::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  height: 0 !important;
+}
+
+.chart-wrapper {
+  ::ng-deep svg {
+    width: 100%;
+    height: 100%;
+    ::ng-deep rect {
+      fill: #0000 !important;
+    }
+    ::ng-deep g {
+      ::ng-deep text {
+        fill: currentColor !important;
+      }
+    }
+    ::ng-deep .google-visualization-tooltip {
+      ::ng-deep g {
+        ::ng-deep text {
+          fill: #000 !important;
+        }
+      }
+      color: currentColor !important;
+    }
+  }
+}
+
+//No data
+.image-container {
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+  border-radius: 2rem;
+  margin-top: 2rem;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 
@@ -28,8 +90,18 @@
 
   button {
     &.active {
-      background: linear-gradient(90deg, #ffd000, #b99700, #ffd000);
+      background: linear-gradient(
+        145deg,
+        #ffd51b 0%,
+        #ffd000 30%,
+        #ffd51b 100%
+      );
     }
+  }
+  .chart-wrapper {
+    border-radius: 3rem;
+    padding: 2rem;
+    // background: linear-gradient(145deg, #fff29c, #ffdf77, #fff29c);
   }
 }
 
@@ -54,7 +126,17 @@
 
   button {
     &.active {
-      background: linear-gradient(90deg, #ffd000, #b99700, #ffd000);
+      background: linear-gradient(
+        145deg,
+        #ffd000 0%,
+        #b99700 30%,
+        #ffd000 100%
+      );
     }
+  }
+  .chart-wrapper {
+    border-radius: 3rem;
+    padding: 2rem;
+    // background: linear-gradient(145deg, #0c1957 0%, #4400d0 30%, #43007a 100%);
   }
 }

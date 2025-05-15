@@ -24,6 +24,7 @@
             <input
               type="file"
               id="fileInput"
+              #fileInput
               (change)="onFileSelected($event)"
               accept="
                       .doc, .docx, .dot, .dotx, .rtf, .odt, .txt,
@@ -63,6 +64,28 @@
         </div>
       </div>
     </div>
+
+    <div class="row d-flex jsutify-content-center align-item-center my-5">
+      <div
+        class="col-md-8 d-flex jsutify-content-center align-item-center mx-auto"
+      >
+        <div
+          #dropZone
+          class="drop-down-container"
+          [ngClass]="isDragOver ? 'active' : ''"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop($event)"
+          (dragleave)="onDragLeave($event)"
+          [class.drag-over]="isDragOver"
+          (paste)="handlePaste($event)"
+          (click)="triggerFileInput()"
+          aria-label="Upload document"
+        >
+          Drag and Drop / Copy and Paste
+        </div>
+      </div>
+    </div>
+
     <div class="row file-preview-row" *ngIf="isFileSelected">
       <div *ngFor="let file of selectedFiles; let i = index" class="col-md-4">
         <div class="row d-flex justify-content-center align-item-center my-2">

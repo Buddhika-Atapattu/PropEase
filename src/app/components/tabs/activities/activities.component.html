@@ -1,12 +1,97 @@
+<app-notification></app-notification>
+<app-progress-bar></app-progress-bar>
 <div class="container-fluid" *ngIf="mode !== null">
-  <!-- loging details table row -->
-  <div class="row" *ngIf="userLoggedData">
-    <div class="col-md-6">&nbsp;</div>
-    <div class="col-md-6">
+  <!-- table date picker row -->
+  <div class="row" *ngIf="userLoggedData && user !== null">
+    <div class="col-md-12">
       <h2 class="text-center my-2">Loging Details</h2>
+      <form
+        action=""
+        method="GET"
+        enctype="multipart/form-data"
+        (ngSubmit)="search()"
+        class="profile-form"
+        autocomplete="off"
+        #userForm="ngForm"
+      >
+        <div
+          class="row mt-5 mb-1 d-flex justify-content-center align-items-center"
+        >
+          <h6 class="my-2 text-style">
+            Search by dates | total records: {{ userLoggedTimes }}
+          </h6>
+          <div
+            class="col-md-5 d-flex justify-content-center align-items-center"
+          >
+            <mat-form-field appearance="fill" class="form-field w-100">
+              <mat-label>Select the start date</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pickerStart"
+                placeholder="Date Start"
+                [(ngModel)]="startDate"
+                name="startDate"
+                placeholder="DD/MM/YYYY"
+              />
+              <mat-datepicker-toggle
+                matIconSuffix
+                [for]="pickerStart"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #pickerStart></mat-datepicker>
+            </mat-form-field>
+          </div>
+          <div
+            class="col-md-5 d-flex justify-content-center align-items-center"
+          >
+            <mat-form-field appearance="fill" class="form-field w-100">
+              <mat-label>Select the end date</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pickerEnd"
+                placeholder="Date End"
+                [(ngModel)]="endDate"
+                name="endDate"
+                placeholder="DD/MM/YYYY"
+              />
+              <mat-datepicker-toggle
+                matIconSuffix
+                [for]="pickerEnd"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #pickerEnd></mat-datepicker>
+            </mat-form-field>
+          </div>
+          <div
+            class="col-md-2 d-flex justify-content-between align-items-center date-picker-btn"
+          >
+            <button type="submit" class="btn-custom">
+              <mat-icon
+                aria-hidden="false"
+                aria-label="Example home icon"
+                svgIcon="search"
+                class="search"
+              ></mat-icon>
+            </button>
+            <button type="button" class="btn-edit" (click)="reset()">
+              <mat-icon
+                aria-hidden="false"
+                aria-label="Example home icon"
+                svgIcon="reset"
+              ></mat-icon>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
 
+  <!-- table loader row -->
+  <div class="row" *ngIf="userLoggedData && user !== null">
+    <div class="col-md-12">
       <!-- loader -->
-      <div class="table-responsive" *ngIf="isLoading">
+      <div
+        class="table-responsive d-flex justify-content-center align-items-center"
+        *ngIf="isLoading"
+      >
         <table class="w-100">
           <thead>
             <tr class="border-bottom-custom mt-3">
@@ -39,9 +124,20 @@
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
 
+  <!-- table data row -->
+  <div
+    class="row"
+    *ngIf="userLoggedData && user !== null && !isLoggedTableEmpty"
+  >
+    <div class="col-md-12">
       <!-- data -->
-      <div *ngIf="!isLoading" class="table-responsive">
+      <div
+        *ngIf="!isLoading"
+        class="table-responsive d-flex justify-content-center align-items-center"
+      >
         <table
           mat-table
           [dataSource]="dataSource"
@@ -89,7 +185,15 @@
           ></tr>
         </table>
       </div>
+    </div>
+  </div>
 
+  <!-- pagination row -->
+  <div
+    class="row"
+    *ngIf="userLoggedData && user !== null && !isLoggedTableEmpty"
+  >
+    <div class="col-md-12">
       <!-- pagination -->
       <div class="row mt-4">
         <div class="col-md-12">
@@ -134,6 +238,59 @@
             </li>
           </ul>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-5" *ngIf="!isLoggedTableEmpty">
+    <!-- User login campaire to the others according to the table -->
+    <div
+      class="col-md-6 d-flex justify-content-center align-items-center"
+      *ngIf="tablePieChart !== null"
+    >
+      <app-skeleton-loader
+        [Mode]="mode"
+        [width]="'35rem'"
+        [height]="'21rem'"
+        [borderRadius]="'3rem'"
+        *ngIf="isLoading"
+      ></app-skeleton-loader>
+      <div class="chart-wrapper w-100" *ngIf="!isLoading">
+        <h5 class="mb-3 text-uppercase">User Login Comparison</h5>
+        <google-chart
+          class="google-chart d-flex mx-auto"
+          [title]="tablePieChart.title"
+          [type]="tablePieChart.type"
+          [data]="tablePieChart.data"
+          [options]="tablePieChart.options || {}"
+          [width]="
+            tablePieChart.width !== undefined ? +tablePieChart.width : undefined
+          "
+          [height]="
+            tablePieChart.height !== undefined
+              ? +tablePieChart.height
+              : undefined
+          "
+        ></google-chart>
+      </div>
+    </div>
+    <!-- User login campaire to the others at all time -->
+  </div>
+
+  <!-- No table data -->
+  <div
+    *ngIf="isLoggedTableEmpty"
+    class="row mt-5 d-flex justify-content-center align-item-center"
+  >
+    <div class="col-md-6">
+      <h1 class="text-center">No Activities Found</h1>
+      <div
+        class="image-container d-flex justify-content-center align-item-center"
+      >
+        <img
+          src="/Images/System-images/noActivities.jpg"
+          alt="no activities image"
+        />
       </div>
     </div>
   </div>

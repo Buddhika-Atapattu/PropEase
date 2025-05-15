@@ -7,6 +7,7 @@ import {
   PLATFORM_ID,
   NgZone,
   ApplicationRef,
+  ViewChild,
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { WindowsRefService } from '../../../services/windowRef.service';
@@ -32,6 +33,10 @@ import {
   MatCheckboxModule,
 } from '@angular/material/checkbox';
 import { ActivityTrackerService } from '../../../services/activityTacker/activity-tracker.service';
+import {
+  msgTypes,
+  NotificationComponent,
+} from '../../components/dialogs/notification/notification.component';
 
 @Component({
   selector: 'app-login',
@@ -45,11 +50,14 @@ import { ActivityTrackerService } from '../../../services/activityTacker/activit
     MatButtonModule,
     MatIconModule,
     MatCheckboxModule,
+    NotificationComponent,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
 export class LoginComponent implements OnInit, OnDestroy {
+  @ViewChild(NotificationComponent, { static: true })
+  notification!: NotificationComponent;
   protected username: string | null = '';
   protected password: string | null = '';
   protected rememberMe: boolean = false;
@@ -57,6 +65,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   protected isEmpty: boolean = true;
   protected isValid: boolean = false;
   protected mode: boolean | null = null;
+  protected isError: boolean = false;
+  protected message: string = '';
 
   private isBrowser: boolean;
   private modeSub: Subscription | null = null;
@@ -126,6 +136,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   // Login handler
   protected async login(): Promise<void> {
     if (!this.username || !this.password) {
+      this.notification.notification(
+        'error',
+        'Username and password cannot be empty.'
+      );
       console.error('Username and password cannot be empty.');
       this.isEmpty = true;
       return;
@@ -145,6 +159,12 @@ export class LoginComponent implements OnInit, OnDestroy {
             this.authService.setLoggedUser = null;
           }
           return data;
+        })
+        .catch((error) => {
+          if (error) {
+            console.log(error.error.error);
+            this.notification.notification('error', error.error.error);
+          }
         });
       if (
         this.authService.getLoggedUser !== null &&

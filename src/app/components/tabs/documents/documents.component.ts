@@ -8,6 +8,8 @@ import {
   SimpleChanges,
   ViewChild,
   AfterViewInit,
+  ElementRef,
+  OnDestroy,
 } from '@angular/core';
 import {
   APIsService,
@@ -60,7 +62,10 @@ interface selectedFiles {
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.scss',
 })
-export class DocumentsComponent implements OnInit, OnChanges, AfterViewInit {
+export class DocumentsComponent
+  implements OnInit, OnChanges, AfterViewInit, OnDestroy
+{
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild(NotificationComponent, { static: true })
   notification!: NotificationComponent;
   @ViewChild(ProgressBarComponent, { static: true })
@@ -78,6 +83,47 @@ export class DocumentsComponent implements OnInit, OnChanges, AfterViewInit {
   protected selectedFiles: selectedFiles[] = [];
   protected username: string = '';
   protected documents: UDER_DOC_TYPES[] = [];
+  protected isDragOver: boolean = false;
+  protected isNotType: boolean = false;
+  private readonly allowedTypes = [
+    // Word Documents
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+    'application/rtf',
+
+    // Excel Documents
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+    'text/csv',
+    'text/tab-separated-values',
+
+    // PowerPoint Documents
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.openxmlformats-officedocument.presentationml.template',
+
+    // OpenDocument Formats
+    'application/vnd.oasis.opendocument.text',
+    'application/vnd.oasis.opendocument.spreadsheet',
+    'application/vnd.oasis.opendocument.presentation',
+
+    // PDF
+    'application/pdf',
+
+    // Plain Text
+    'text/plain',
+
+    // Common Image Types
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/jpg',
+    'image/ico',
+    'image/svg+xml',
+  ];
 
   constructor(
     private APIs: APIsService,
@@ -90,108 +136,7 @@ export class DocumentsComponent implements OnInit, OnChanges, AfterViewInit {
     private domSanitizer: DomSanitizer
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    this.matIconRegistry.addSvgIcon(
-      'document',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/documents.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'upload',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/upload.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'pdf',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/pdf.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'txt',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/txt.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'xml',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/xml.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'excel',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/excel.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'word',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/word.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'powerpoint',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/powerpoint.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'zip',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/zip.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'file',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/file-empty.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'jpeg',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/jpeg.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'png',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/png.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'webp',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/webp.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'gif',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/gif.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'jpg',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/jpg.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'ico',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/ico.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'svg',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/file-types/svg.svg'
-      )
-    );
+    this.registerCustomIcons();
   }
 
   async ngOnInit(): Promise<void> {
@@ -199,6 +144,10 @@ export class DocumentsComponent implements OnInit, OnChanges, AfterViewInit {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
+      window.addEventListener('dragover', this.preventDefault, {
+        passive: false,
+      });
+      window.addEventListener('drop', this.preventDefault, { passive: false });
     }
     await this.callTheAPI();
   }
@@ -241,17 +190,140 @@ export class DocumentsComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
+  //<================== Icons ==================>
+  private registerCustomIcons(): void {
+    const iconMap = {
+      document: 'documents.svg',
+      upload: 'upload.svg',
+      pdf: 'file-types/pdf.svg',
+      txt: 'file-types/txt.svg',
+      xml: 'file-types/xml.svg',
+      excel: 'file-types/excel.svg',
+      word: 'file-types/word.svg',
+      powerpoint: 'file-types/powerpoint.svg',
+      zip: 'file-types/zip.svg',
+      file: 'file-types/file-empty.svg',
+      jpeg: 'file-types/jpeg.svg',
+      png: 'file-types/png.svg',
+      webp: 'file-types/webp.svg',
+      gif: 'file-types/gif.svg',
+      jpg: 'file-types/jpg.svg',
+      ico: 'file-types/ico.svg',
+      svg: 'file-types/svg.svg',
+      image: 'file-types/image.svg',
+    };
+
+    for (const [name, path] of Object.entries(iconMap)) {
+      this.matIconRegistry.addSvgIcon(
+        name,
+        this.domSanitizer.bypassSecurityTrustResourceUrl(
+          `/Images/Icons/${path}`
+        )
+      );
+    }
+  }
+  //<================== End Icons ==================>
+
+  //<================== File Input Button Trigger ==================>
   protected triggerFileInput() {
     document.querySelector<HTMLInputElement>('#fileInput')?.click();
   }
+  //<================== End File Input Button Trigger ==================>
 
-  protected getAllDocuments() {
-    if (this.user) {
-    } else {
-      console.error('User not found!');
+  //<================== File Copy and paste ==================>
+  protected handlePaste(event: ClipboardEvent): void {
+    event.preventDefault();
+
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    const validFiles: File[] = [];
+
+    for (const item of items) {
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file && this.allowedTypes.includes(file.type)) {
+          validFiles.push(file);
+        }
+      }
+    }
+
+    if (validFiles.length > 0) {
+      this.processPastedFiles(validFiles);
     }
   }
 
+  protected processPastedFiles(files: File[]): void {
+    const dataTransfer = new DataTransfer();
+    for (const file of files) {
+      dataTransfer.items.add(file);
+    }
+
+    const input = this.fileInput.nativeElement as HTMLInputElement;
+    input.files = dataTransfer.files;
+
+    // Reuse existing file selection handler
+    this.onFileSelected({ target: input } as unknown as Event);
+  }
+  //<================== End File Copy and paste ==================>
+
+  //<================== File Drag and Drop ==================>
+  protected onDragOver(event: DragEvent): void {
+    event.preventDefault(); // Crucial to allow drop
+    this.isDragOver = true;
+  }
+
+  protected onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = false;
+  }
+
+  protected onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      // Filter allowed types and collect valid files
+      const validFiles: File[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files.item(i);
+        if (file && this.allowedTypes.includes(file.type)) {
+          validFiles.push(file);
+        } else {
+          this.isNotType = true;
+        }
+      }
+
+      if (validFiles.length > 0) {
+        this.processDroppedFiles(validFiles);
+      }
+    }
+  }
+
+  // Accepts an array of Files, not FileList
+  protected processDroppedFiles(files: File[]): void {
+    const dataTransfer = new DataTransfer();
+    for (const file of files) {
+      dataTransfer.items.add(file);
+    }
+
+    const input = this.fileInput.nativeElement as HTMLInputElement;
+
+    // Replace input files with the new DataTransfer file list
+    input.files = dataTransfer.files;
+
+    // Trigger your upload handler
+    this.onFileSelected({ target: input } as unknown as Event);
+  }
+
+  private preventDefault(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  //<================== End File Drag and Drop ==================>
+
+  //<================== Choose icon ==================>
   protected chooceIcon(type: string): string {
     switch (type) {
       case 'doc':
@@ -327,82 +399,87 @@ export class DocumentsComponent implements OnInit, OnChanges, AfterViewInit {
         return 'zip';
         break;
       case 'png':
-        return 'png';
+        return 'image';
         break;
       case 'jpeg':
-        return 'jpeg';
+        return 'image';
         break;
-      // case 'webp':
-      //   return 'webp';
-      //   break;
+      case 'webp':
+        return 'image';
+        break;
       case 'gif':
-        return 'gif';
+        return 'image';
         break;
       case 'jpg':
-        return 'jpg';
+        return 'image';
         break;
       case 'ico':
-        return 'ico';
+        return 'image';
         break;
       case 'svg':
-        return 'svg';
+        return 'image';
         break;
       default:
         return 'file';
     }
   }
+  //<================== End Choose icon ==================>
 
-  protected onFileSelected(event: Event) {
+  //<================== File input ==================>
+  protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     let fileSize: number = 0;
-
     if (input.files && input.files.length > 0) {
       this.file = input.files;
-      // this.selectedFile = [];
       this.isFileSelected = true;
-      for (let i of this.file) {
-        let data: selectedFiles = {
-          name: '',
-          size: 0,
-          icon: '',
-          file: null,
+
+      for (let i = 0; i < this.file.length; i++) {
+        const file = this.file[i];
+        const data: selectedFiles = {
+          name: file.name,
+          size: file.size / (1024 * 1024),
+          icon: this.chooceIcon(file.name.split('.').pop() || ''),
+          file: file,
         };
-        data.name = i.name;
-        data.file = i;
-        const type = i.name.split('.');
-        data.icon = this.chooceIcon(type[type.length - 1]);
-        data.size = i.size / (1024 * 1024);
+
         this.selectedFiles.push(data);
-        fileSize += i.size;
+        fileSize += file.size;
       }
+
       if (fileSize !== 0 && this.notification) {
-        if (fileSize / (1024 * 1024) > 10 * (1024 * 1024))
+        if (fileSize > 10 * 1024 * 1024) {
           this.notification.notification(
             'error' as msgTypes,
             'File sizes should less than 10MB'
           );
+        }
       } else {
         console.error('Notification not found');
       }
-      // console.log(fileSize);
     } else {
       this.file = null;
     }
   }
+  //<================== End File input ==================>
 
+  //<================== File Delete Item from array of files ==================>
   protected deleteFile(index: number) {
     // console.log('File deleted');
     this.selectedFiles.splice(index, 1);
     if (this.selectedFiles.length === 0) this.isFileSelected = false;
   }
+  //<================== End File Delete Item from array of files ==================>
 
+  //<================== Download the documents ==================>
   protected async downloadFile(downloadURL: string) {
     if (this.isBrowser) {
       window.open(downloadURL, '_blank');
       URL.revokeObjectURL(downloadURL);
     }
   }
+  //<================== End Download the documents ==================>
 
+  //<================== Insert the documents ==================>
   protected async insertDocumnets() {
     if (this.selectedFiles.length === 0 && this.notification) {
       this.notification?.notification('error', 'No files selected to upload.');
@@ -443,5 +520,15 @@ export class DocumentsComponent implements OnInit, OnChanges, AfterViewInit {
         console.error('User not found!');
       }
     }
+  }
+  //<================== End Insert the documents ==================>
+
+  ngOnDestroy(): void {
+    if (this.isBrowser) {
+      window.removeEventListener('dragover', this.preventDefault);
+      window.removeEventListener('drop', this.preventDefault);
+    }
+
+    this.modeSub?.unsubscribe();
   }
 }

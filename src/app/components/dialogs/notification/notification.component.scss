@@ -1,7 +1,7 @@
 .notification {
   position: fixed;
   top: 5rem;
-  z-index: 10000;
+  z-index: 1000000000000000000000;
   right: 1rem;
   padding: 0.5em;
   display: flex;
@@ -13,6 +13,7 @@
   color: #fff !important;
   animation-name: transition_btn;
   animation-duration: 1s;
+  cursor: pointer;
 
   &.success {
     background-color: green;

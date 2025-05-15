@@ -103,3 +103,40 @@ html {
     background: #675100; // darker gray on hover
   }
 }
+
+::selection {
+  background-color: #5500ff; // Your custom selection background
+  color: #ffffff; // Your custom selection text color
+}
+
+/* Optional - Firefox-specific */
+::-moz-selection {
+  background-color: #5500ff;
+  color: #ffffff;
+}
+
+:host-context(html.light) {
+  ::selection {
+    background-color: #1b1633; // Your custom selection background
+    color: #ffffff; // Your custom selection text color
+  }
+
+  /* Optional - Firefox-specific */
+  ::-moz-selection {
+    background-color: #1b1633;
+    color: #ffffff;
+  }
+}
+
+:host-context(html.dark) {
+  ::selection {
+    background-color: #ffd900; // Your custom selection background
+    color: #1b1633; // Your custom selection text color
+  }
+
+  /* Optional - Firefox-specific */
+  ::-moz-selection {
+    background-color: #ffd900;
+    color: #1b1633;
+  }
+}

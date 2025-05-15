@@ -26,10 +26,12 @@ export interface msg {
   styleUrl: './notification.component.scss',
 })
 export class NotificationComponent {
+  @ViewChild('notification') notificationElement!: ElementRef<HTMLDivElement>;
   private isBrowser: boolean;
   protected status: msg['type'] = 'error';
   protected message: string = '';
   protected showNotification: boolean = false;
+  protected isHovered: boolean = false;
 
   constructor(
     private windowRef: WindowsRefService,
@@ -42,10 +44,27 @@ export class NotificationComponent {
     this.status = status;
     this.message = message;
     this.showNotification = true;
-    // console.log('status: ', status, 'message: ', message);
-    setTimeout(() => {
-      this.showNotification = false;
-    }, 5000);
+
+    if (this.isBrowser) {
+      this.notificationElement.nativeElement.addEventListener(
+        'mouseover',
+        () => {
+          this.notificationElement.nativeElement.style.cursor = 'pointer';
+          this.isHovered = true;
+        }
+      );
+      this.notificationElement.nativeElement.addEventListener(
+        'mouseout',
+        () => {
+          this.isHovered = false;
+        }
+      );
+    }
+    if (!this.isHovered) {
+      setTimeout(() => {
+        this.showNotification = false;
+      }, 5000);
+    }
   }
 
   protected close() {

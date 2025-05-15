@@ -1,3 +1,5 @@
+@use "./font/leckerli-one/leckerli-one.scss" as *;
+
 // Dark Core Colors
 $dark-primery-color: #08122f !default; // Deep Navy background
 $dark-secondary-color: #1a1a2e !default; // Shadow Indigo for sections
@@ -57,6 +59,15 @@ $light-error-color: #dc3545 !default; // Error red
   }
 }
 
+.text-style {
+  font-family: "Leckerli One", cursive;
+  color: currentColor;
+  font-size: 12pt;
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 code {
   background: linear-gradient(45deg, #3e3e3e, #3e3e3e) !important;
   padding: 0.1rem 0.5rem !important;
@@ -80,18 +91,69 @@ code {
     background: $light-btn-bg-color;
     box-shadow: $light-btn-box-shadow;
     color: #fff !important;
+    margin: 0.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    mat-icon {
+      width: 2rem;
+      height: 2rem;
+      color: #fff;
+    }
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
   }
 
   .btn-view {
     border: none !important;
     background: linear-gradient(134deg, #00c416, #6fe600, #53d10a);
     box-shadow: 0rem 0rem 0.5rem 0rem rgb(108, 98, 69);
+    margin: 0.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    mat-icon {
+      width: 2rem;
+      height: 2rem;
+      color: #fff;
+    }
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
   }
 
   .btn-delete {
     border: none !important;
     background: linear-gradient(90deg, #ae0000, #ff0707, #ae0000);
     box-shadow: 0rem 0rem 0.5rem 0rem rgb(108 98 69);
+    margin: 0.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    mat-icon {
+      width: 2rem;
+      height: 2rem;
+      color: #fff;
+    }
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
   }
 
   .btn-custom {
@@ -146,18 +208,69 @@ code {
     background: $dark-btn-bg-color;
     box-shadow: $dark-btn-box-shadow;
     color: #fff !important;
+    margin: 0.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    mat-icon {
+      width: 2rem;
+      height: 2rem;
+      color: #fff;
+    }
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
   }
 
   .btn-view {
     border: none !important;
     background: linear-gradient(134deg, #00c416, #6fe600, #53d10a);
     box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0);
+    margin: 0.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    mat-icon {
+      width: 2rem;
+      height: 2rem;
+      color: #fff;
+    }
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
   }
 
   .btn-delete {
     border: none !important;
     background: linear-gradient(90deg, #ae0000, #ff0707, #ae0000);
     box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0);
+    margin: 0.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    mat-icon {
+      width: 2rem;
+      height: 2rem;
+      color: #fff;
+    }
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
   }
 
   .btn-custom {
@@ -172,7 +285,6 @@ code {
     justify-content: center;
     transition: all 0.3s ease;
     cursor: pointer;
-
     mat-icon {
       width: 2rem;
       height: 2rem;
