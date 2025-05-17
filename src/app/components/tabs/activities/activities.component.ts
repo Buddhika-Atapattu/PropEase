@@ -9,296 +9,54 @@ import {
   ViewChild,
   AfterViewInit,
 } from '@angular/core';
-import {
-  APIsService,
-  BaseUser,
-  UDER_DOC_TYPES,
-} from '../../../../services/APIs/apis.service';
-import { WindowsRefService } from '../../../../services/windowRef.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { CryptoService } from '../../../../services/cryptoService/crypto.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-loader.component';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatButtonModule } from '@angular/material/button';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import {
-  msgTypes,
-  NotificationComponent,
-} from '../../dialogs/notification/notification.component';
-import { ProgressBarComponent } from '../../dialogs/progress-bar/progress-bar.component';
-import {
-  ActivityTrackerService,
-  MSG,
-} from '../../../../services/activityTacker/activity-tracker.service';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { Sort, MatSortModule, MatSort } from '@angular/material/sort';
-import { GoogleChartsModule, ChartType } from 'angular-google-charts';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import {
-  MatMomentDateModule,
-  MomentDateAdapter,
-} from '@angular/material-moment-adapter';
-import {
-  DateAdapter,
-  MAT_DATE_FORMATS,
-  MAT_DATE_LOCALE,
-} from '@angular/material/core';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDialogModule } from '@angular/material/dialog';
 
-//
+import { AuthService, BaseUser } from '../../../../services/auth/auth.service';
+import { WindowsRefService } from '../../../../services/windowRef.service';
 
-interface allUsersLoginCounts {
-  id: string;
-  username: string;
-  loginCount: number;
-}
-
-interface userTrackingLoggedData {
-  ip_address: string;
-  date: string;
-}
-
-interface userTrackingData {
-  totalCount: number;
-  data: userTrackingLoggedData[];
-  username: string;
-  id: string;
-}
-
-interface AllData {
-  allUsersLoginCounts: allUsersLoginCounts[];
-  totalLoginCount: number;
-  userTrackingData: userTrackingData;
-}
-
-//Main logged user data type
-interface UserLoggedData {
-  status: string;
-  message: string;
-  data: AllData;
-}
-
-//All user API
-interface DataWithUsernameLoginCount {
-  username: string;
-  loginCount: number;
-}
-interface AllUserCount {
-  status: string;
-  totalCount: number;
-  users: DataWithUsernameLoginCount[];
-}
-
-//PieChart
-export interface GoogleChartConfig {
-  title?: string;
-  type: ChartType;
-  data: any[][];
-  columns?: string[];
-  options?: GoogleChartOptions;
-  width?: number | string;
-  height?: number | string;
-}
-
-export interface GoogleChartOptions {
-  // Global styling
-  title?: string;
-  backgroundColor?: string | ChartFill;
-  fontName?: string;
-  fontSize?: number;
-  colors?: string[];
-
-  // Chart area
-  chartArea?: {
-    left?: number | string;
-    top?: number | string;
-    width?: number | string;
-    height?: number | string;
-  };
-
-  // Legend styling
-  legend?: {
-    position?: 'top' | 'bottom' | 'left' | 'right' | 'none';
-    alignment?: 'start' | 'center' | 'end';
-    textStyle?: {
-      color?: string;
-      fontName?: string;
-      fontSize?: number;
-      bold?: boolean;
-      italic?: boolean;
-    };
-  };
-
-  // Axis styling (for bar/line/column charts)
-  hAxis?: AxisOptions;
-  vAxis?: AxisOptions;
-
-  // Tooltips
-  tooltip?: {
-    isHtml?: boolean;
-    showColorCode?: boolean;
-    trigger?: 'focus' | 'selection' | 'none';
-    textStyle?: {
-      color?: string;
-      fontName?: string;
-      fontSize?: number;
-      bold?: boolean;
-      italic?: boolean;
-    };
-  };
-
-  // Pie chart specific
-  is3D?: boolean;
-  pieHole?: number; // for donut chart
-  pieSliceText?: 'percentage' | 'value' | 'label' | 'none';
-  slices?: {
-    [index: number]: {
-      color?: string;
-      offset?: number;
-      textStyle?: {
-        color?: string;
-      };
-    };
-  };
-
-  // Line/Area chart specific
-  curveType?: 'none' | 'function';
-  pointSize?: number;
-  lineWidth?: number;
-
-  // Bar chart specific
-  bar?: {
-    groupWidth?: string;
-  };
-
-  // Misc
-  animation?: {
-    startup?: boolean;
-    duration?: number;
-    easing?: 'linear' | 'in' | 'out' | 'inAndOut';
-  };
-  enableInteractivity?: boolean;
-  reverseCategories?: boolean;
-  series?: any;
-}
-
-export interface AxisOptions {
-  title?: string;
-  minValue?: number;
-  maxValue?: number;
-  format?: string;
-  gridlines?: {
-    color?: string;
-    count?: number;
-  };
-  textStyle?: {
-    color?: string;
-    fontSize?: number;
-    fontName?: string;
-    bold?: boolean;
-    italic?: boolean;
-  };
-}
-
-export interface ChartFill {
-  fillOpacity?: number;
-  stroke?: string;
-  strokeWidth?: number;
-}
+import { LoggedDataComponent } from '../components/logged-data/logged-data.component';
+import { UserFileManagementComponent } from '../components/user-file-management/user-file-management.component';
+import { UserCreatinonManagementComponent } from '../components/user-creatinon-management/user-creatinon-management.component';
 
 @Component({
   selector: 'app-activities',
+  standalone: true,
   imports: [
     CommonModule,
-    MatIconModule,
-    SkeletonLoaderComponent,
-    MatInputModule,
-    MatFormFieldModule,
-    MatButtonModule,
-    MatAutocompleteModule,
-    FormsModule,
-    ReactiveFormsModule,
-    NotificationComponent,
-    ProgressBarComponent,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    GoogleChartsModule,
-    MatMomentDateModule,
-    MatSelectModule,
-    MatDividerModule,
-    MatDialogModule,
-    MatDatepickerModule,
+    LoggedDataComponent,
+    UserFileManagementComponent,
+    UserCreatinonManagementComponent,
   ],
   templateUrl: './activities.component.html',
-  standalone: true,
   styleUrl: './activities.component.scss',
 })
 export class ActivitiesComponent implements OnInit, OnChanges, AfterViewInit {
-  @ViewChild(NotificationComponent, { static: true })
-  notification!: NotificationComponent;
-  @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(ProgressBarComponent, { static: true })
-  progress!: ProgressBarComponent;
+  @ViewChild(LoggedDataComponent, { static: true })
+  loggedData!: LoggedDataComponent;
+
+  @ViewChild(UserFileManagementComponent, { static: true })
+  userFileManagement!: UserFileManagementComponent;
+
+  @ViewChild(UserCreatinonManagementComponent, { static: true })
+  userCreationManagement!: UserCreatinonManagementComponent;
+
   @Input() user: BaseUser | null = null;
+
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
-  private modeSub: Subscription | null = null;
-  protected isActive: boolean = false;
-  protected isLoading: boolean = true;
   protected username: string = '';
+  protected loggedUser: BaseUser | null = null;
 
-  //<========= Logged user table and pie chart variables =========>
-  protected isLoggedTableEmpty: boolean = false;
-  protected userLoggedData: UserLoggedData | null = null;
-  protected displayedColumns: string[] = ['IP Address', 'Date'];
-  protected dataSource = new MatTableDataSource<userTrackingLoggedData>();
-  protected userLoggedTimes: number = 0;
-  protected userLoggedCurrentPage: number = 1;
-  protected startDate: Date | null = null;
-  protected endDate: Date | null = null;
-  //Pie chart according to the table
-  protected tablePieChart: GoogleChartConfig | null = null;
-  protected tableAllUsersLogingTimes: number = 0;
-  protected tableUserLoggedTimes: number = 0;
+  private modeSub: Subscription | null = null;
 
   constructor(
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer,
-    private router: Router,
-    private activatedRouter: ActivatedRoute,
-    private crypto: CryptoService,
-    private APIs: APIsService,
-    private activityTrackerService: ActivityTrackerService
+    private authService: AuthService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    this.iconMaker();
-  }
-
-  private iconMaker() {
-    const icons = [
-      { name: 'search', path: '/Images/Icons/search.svg' },
-      { name: 'reset', path: '/Images/Icons/reset.svg' },
-    ];
-
-    for (let icon of icons) {
-      this.matIconRegistry.addSvgIcon(
-        icon.name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path)
-      );
-    }
+    this.loggedUser = this.authService.getLoggedUser;
   }
 
   async ngOnInit(): Promise<void> {
@@ -308,244 +66,39 @@ export class ActivitiesComponent implements OnInit, OnChanges, AfterViewInit {
       });
     }
 
-    if (this.startDate && this.endDate) {
-      await this.getLoggedUserLoginTracking(1, this.startDate, this.endDate);
-    } else {
-      await this.getLoggedUserLoginTracking(1);
-    }
+    // Initial username setup if available early
     if (this.user) {
       this.username = this.user.username;
     }
   }
 
-  ngAfterViewInit(): void {}
-
-  protected getCurrentPage() {
-    return this.userLoggedCurrentPage;
-  }
-
-  protected totalPages(): number {
-    if (this.userLoggedTimes !== 0) return Math.ceil(this.userLoggedTimes / 10);
-    else return 0;
-  }
-
-  protected getActualStart(): number {
-    const actualStart = Math.ceil(this.userLoggedCurrentPage - 3);
-    if (actualStart < 0) return 1;
-    else return actualStart;
-  }
-
-  protected getActualEnd(): number {
-    const actualEnd = Math.ceil(this.userLoggedCurrentPage + 3);
-    if (
-      actualEnd > this.userLoggedCurrentPage &&
-      actualEnd <= this.totalPages()
-    )
-      return actualEnd;
-    else return this.totalPages();
-  }
-
-  protected async goToThePage(number: number): Promise<void> {
-    this.userLoggedCurrentPage = number;
-    if (this.startDate && this.endDate) {
-      await this.getLoggedUserLoginTracking(
-        number,
-        this.startDate,
-        this.endDate
-      );
-    } else {
-      await this.getLoggedUserLoginTracking(number);
+  ngAfterViewInit(): void {
+    // Ensure refresh is called after view is initialized (for ViewChild access)
+    if (this.user) {
+      setTimeout(() => {
+        this.refresh(this.user!.username);
+      });
     }
-  }
-
-  protected async goThreePagesBack() {
-    if (this.userLoggedCurrentPage - 3 > 0) {
-      this.userLoggedCurrentPage = Math.ceil(this.userLoggedCurrentPage - 3);
-      if (this.startDate && this.endDate) {
-        await this.getLoggedUserLoginTracking(
-          this.userLoggedCurrentPage,
-          this.startDate,
-          this.endDate
-        );
-      } else {
-        await this.getLoggedUserLoginTracking(this.userLoggedCurrentPage);
-      }
-    } else {
-      this.userLoggedCurrentPage = 1;
-      if (this.startDate && this.endDate) {
-        await this.getLoggedUserLoginTracking(1, this.startDate, this.endDate);
-      } else {
-        await this.getLoggedUserLoginTracking(1);
-      }
-    }
-  }
-
-  protected async goThreePagesForward() {
-    if (this.userLoggedCurrentPage + 3 < this.totalPages()) {
-      this.userLoggedCurrentPage = Math.ceil(this.userLoggedCurrentPage + 3);
-      if (this.startDate && this.endDate) {
-        await this.getLoggedUserLoginTracking(
-          this.userLoggedCurrentPage,
-          this.startDate,
-          this.endDate
-        );
-      } else {
-        await this.getLoggedUserLoginTracking(this.userLoggedCurrentPage);
-      }
-    } else {
-      this.userLoggedCurrentPage = this.totalPages();
-      if (this.startDate && this.endDate) {
-        await this.getLoggedUserLoginTracking(
-          this.totalPages(),
-          this.startDate,
-          this.endDate
-        );
-      } else {
-        await this.getLoggedUserLoginTracking(this.totalPages());
-      }
-    }
-  }
-
-  private async getLoggedUserLoginTracking(
-    pageNumber: number,
-    startDate?: Date,
-    endDate?: Date
-  ): Promise<void> {
-    if (!this.user) return;
-
-    this.isLoading = true;
-
-    const username = this.user.username;
-    const start = (pageNumber - 1) * 10;
-    const limit = 10;
-
-    try {
-      // Call service that returns UserLoggedData typed object
-      const response: UserLoggedData =
-        await this.activityTrackerService.getLoggedUserTracking(
-          username,
-          start,
-          limit,
-          startDate,
-          endDate
-        );
-
-      if (
-        response &&
-        response.status === 'success' &&
-        response.data &&
-        response.data.userTrackingData
-      ) {
-        this.tableAllUsersLogingTimes = response.data.totalLoginCount;
-        this.tableUserLoggedTimes = response.data.userTrackingData.totalCount;
-        const chartUserPercentage =
-          (this.tableUserLoggedTimes / this.tableAllUsersLogingTimes) * 100;
-        const otherPercentage = 100 - chartUserPercentage;
-
-        this.tablePieChart = <GoogleChartConfig>{
-          title: 'User Login Activity',
-          type: ChartType.PieChart,
-          columns: ['Username', 'Login Count'],
-          data: [
-            [this.username, chartUserPercentage],
-            ['Other Users', otherPercentage],
-          ],
-          options: {
-            is3D: true,
-            pieSliceText: 'percentage',
-            backgroundColor: '#00000000',
-            fontName: 'Roboto',
-            fontSize: 14,
-            legend: {
-              position: 'right',
-              textStyle: { color: '#333', fontSize: 12 },
-            },
-            chartArea: {
-              left: 0,
-              top: 0,
-              width: '100%',
-              height: '100%',
-            },
-            slices: {
-              0: { color: '#ff00dd' },
-              1: { color: '#22ff00' },
-            },
-            tooltip: {
-              textStyle: { color: '#000' },
-              showColorCode: true,
-            },
-          },
-          // width: 500,
-          // height: 500,
-        };
-        this.userLoggedData = response;
-        const trackingData = response.data.userTrackingData;
-
-        this.userLoggedTimes = trackingData.totalCount;
-
-        this.dataSource = new MatTableDataSource<userTrackingLoggedData>(
-          trackingData.data
-        );
-        this.dataSource.sort = this.sort;
-
-        this.isLoggedTableEmpty = trackingData.data.length === 0;
-      } else {
-        this.isLoggedTableEmpty = true;
-      }
-    } catch (error) {
-      console.error('Error retrieving login tracking data:', error);
-      this.isLoggedTableEmpty = true;
-    } finally {
-      this.isLoading = false;
-    }
-  }
-
-  protected sortData(sort: Sort): void {
-    const data = this.userLoggedData?.data.userTrackingData.data.slice() ?? [];
-    if (!sort.active || sort.direction === '') {
-      this.dataSource = new MatTableDataSource<userTrackingLoggedData>(data);
-      this.dataSource.sort = this.sort;
-      return;
-    }
-
-    const sortedData = data.sort((a, b) => {
-      const isAsc = sort.direction === 'asc';
-      switch (sort.active) {
-        case 'ip_address':
-          return this.compare(a.ip_address, b.ip_address, isAsc);
-        case 'date':
-          return this.compare(new Date(a.date), new Date(b.date), isAsc);
-        default:
-          return 0;
-      }
-    });
-    this.dataSource = new MatTableDataSource<userTrackingLoggedData>(
-      sortedData
-    );
-    this.dataSource.sort = this.sort;
-  }
-
-  private compare(a: any, b: any, isAsc: boolean): number {
-    return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
-  }
-
-  protected async search() {
-    if (this.startDate && this.endDate) {
-      await this.getLoggedUserLoginTracking(1, this.startDate, this.endDate);
-    } else {
-      await this.getLoggedUserLoginTracking(1);
-    }
-  }
-
-  protected async reset() {
-    this.startDate = null;
-    this.endDate = null;
-    await this.getLoggedUserLoginTracking(1);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['user'] && this.user) {
-      this.username = this.user.username;
+      this.refresh(this.user.username);
+    }
+  }
+
+  // 🔁 Called when parent changes user or manually needs refresh
+  public refresh(username: string): void {
+    this.username = username;
+
+    if (this.loggedData) {
+      this.loggedData.refresh(this.username);
+    }
+    if (this.userFileManagement) {
+      this.userFileManagement.refresh(this.username);
+    }
+    if (this.userCreationManagement) {
+      this.userCreationManagement.refresh(this.username);
     }
   }
 }

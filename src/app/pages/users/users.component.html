@@ -7,7 +7,13 @@
   <div class="container-fluid main-container">
     <!-- I need to make this top row appire in top when the page scroll down -->
     <div class="row add-user-row top-row">
-      <div class="col-md-10 position-relative">
+      <div
+        [ngClass]="
+          LOGGED_USER?.role === 'admin'
+            ? 'col-md-10 position-relative'
+            : 'col-md-12'
+        "
+      >
         <input
           type="text"
           placeholder="Search user by name, email, or username"
@@ -19,7 +25,14 @@
           svgIcon="search"
         ></mat-icon>
       </div>
-      <div class="col-md-2 d-flex justify-content-end align-items-center">
+      <div
+        *ngIf="LOGGED_USER?.role === 'admin'"
+        [ngClass]="
+          LOGGED_USER?.role === 'admin'
+            ? 'col-md-2 d-flex justify-content-end align-items-center'
+            : 'd-none'
+        "
+      >
         <button class="add-user-btn" type="button" (click)="addUser()">
           <mat-icon
             class="mat-icon-rtl-mirror"
@@ -94,6 +107,10 @@
               class="text-muted-custom pb-1 mb-1 text-capitalize"
             >
               {{ user.role }}
+              <i
+                [ngClass]="user.isActive ? 'text-success' : 'text-danger'"
+                class="fa-solid fa-circle"
+              ></i>
             </p>
           </div>
           <div class="col-md-4 d-flex justify-content-end align-items-center">
@@ -105,12 +122,14 @@
               <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon>
             </button>
             <button
+              *ngIf="LOGGED_USER?.role === 'admin'"
               class="btn btn-warning bg-warning mx-2 btn-edit"
               type="button"
             >
               <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon>
             </button>
             <button
+              *ngIf="LOGGED_USER?.role === 'admin'"
               class="btn btn-danger bg-danger ms-2 btn-delete"
               type="button"
             >

@@ -173,7 +173,6 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
-        // console.log('URL changed to:', event.urlAfterRedirects);
         const urlArray: Array<string> = event.urlAfterRedirects.split('/');
         const url: string = urlArray[urlArray.length - 1];
         this.currecntURL = url;
@@ -213,8 +212,6 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     this.isExpanded.set(expanded);
     this.applyPanelState(expanded);
 
-    console.log('toggle status', this.isExpanded());
-
     if (this.isBrowser) {
       if (this.isExpanded() === true && isPlatformBrowser(this.platformId)) {
         setTimeout(() => {
@@ -227,7 +224,6 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
             element.style.display = 'inline';
             element.style.transition = 'opacity 0.2s ease';
           });
-          console.log('Got it after expansion');
         }, 0);
       } else {
         if (this.isExpanded() === false && isPlatformBrowser(this.platformId)) {

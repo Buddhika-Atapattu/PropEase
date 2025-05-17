@@ -1,5 +1,5 @@
 <div
-  *ngIf="mode !== null && user !== null"
+  *ngIf="mode !== null && user !== null && LOGGED_USER !== null"
   class="main-panel"
   [ngClass]="mode ? 'dark' : 'light'"
 >
@@ -56,6 +56,7 @@
             </button>
           </li>
           <li
+            *ngIf="LOGGED_USER.role === 'admin'"
             class="tab-list-item"
             [class.active]="isAccessibilityPanelOpen"
           >
@@ -68,6 +69,12 @@
             </button>
           </li>
           <li
+            *ngIf="
+              LOGGED_USER.role === 'admin' ||
+              LOGGED_USER.role === 'agent' ||
+              LOGGED_USER.role === 'operator' ||
+              LOGGED_USER.role === 'manager'
+            "
             class="tab-list-item"
             [class.active]="isDocumentsPanelOpen"
           >
@@ -80,6 +87,7 @@
             </button>
           </li>
           <li
+            *ngIf="LOGGED_USER.role === 'admin'"
             class="tab-list-item"
             [class.active]="isActivitiesPanelOpen"
           >
@@ -92,6 +100,12 @@
             </button>
           </li>
           <li
+            *ngIf="
+              LOGGED_USER.role === 'admin' ||
+              LOGGED_USER.role === 'agent' ||
+              LOGGED_USER.role === 'operator' ||
+              LOGGED_USER.role === 'manager'
+            "
             class="tab-list-item"
             [class.active]="isPropertiesPanelOpen"
           >
@@ -115,15 +129,21 @@
           [user]="user"
         ></app-user-informations>
         <app-accessabilities
-          *ngIf="isAccessibilityPanelOpen"
+          *ngIf="isAccessibilityPanelOpen && LOGGED_USER.role === 'admin'"
           [user]="user"
         ></app-accessabilities>
         <app-documents
-          *ngIf="isDocumentsPanelOpen"
+          *ngIf="
+            isDocumentsPanelOpen &&
+            (LOGGED_USER.role === 'admin' ||
+              LOGGED_USER.role === 'agent' ||
+              LOGGED_USER.role === 'operator' ||
+              LOGGED_USER.role === 'manager')
+          "
           [user]="user"
         ></app-documents>
         <app-activities
-          *ngIf="isActivitiesPanelOpen"
+          *ngIf="isActivitiesPanelOpen && LOGGED_USER.role === 'admin'"
           [user]="user"
         ></app-activities>
       </div>

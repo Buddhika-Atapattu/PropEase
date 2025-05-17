@@ -364,7 +364,7 @@ export class AuthService {
     private router: Router,
     private cryptoService: CryptoService,
     private APIs: APIsService,
-    private trackerService: ActivityTrackerService
+    private activityTrackerService: ActivityTrackerService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -413,7 +413,7 @@ export class AuthService {
 
   set setLoggedUser(user: LoggedUserType | null) {
     this.loggedUser = user;
-    this.trackerService.loggedUser = user;
+    this.activityTrackerService.loggedUser = user;
   }
 
   set logginUser(user: UserCredentials) {
@@ -447,7 +447,7 @@ export class AuthService {
         }
         return true;
       } catch (error) {
-        console.error('Error', error);
+        // console.error('Error', error);
         return false;
       }
     } else {
@@ -483,10 +483,31 @@ export class AuthService {
         this.isUserActive = decryptedUser.isActive;
         this.isValidUser = true;
         this.isLoggedIn = true;
+
         return decryptedUser;
       }
     }
     return null;
+  }
+
+  public async insertLoggedUserTracks() {
+    const date = new Date();
+    this.activityTrackerService.userLoggedTime = date;
+
+    const data = {
+      username: this.user?.username,
+      date: date,
+    };
+    await this.activityTrackerService
+      .saveLoggedUserDataToTracking(data)
+      .then((data) => {
+        // console.log(data);
+      })
+      .catch((error) => {
+        if (error) {
+          // console.log('Error: ', error);
+        }
+      });
   }
 
   clearCredentials(): void {

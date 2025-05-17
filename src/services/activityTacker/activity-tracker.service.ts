@@ -93,4 +93,48 @@ export class ActivityTrackerService {
       )
     );
   }
+
+  public async getUserFileActivity(
+    username: string,
+    start: number,
+    limit: number,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<MSG> {
+    let URL = `http://localhost:3000/api-tracking/user-file-management-activity/${username}/${start}/${limit}`;
+
+    const queryParams: string[] = [];
+    if (startDate) {
+      queryParams.push(`startDate=${this.formatDateOnly(startDate)}`);
+    }
+    if (endDate) {
+      queryParams.push(`endDate=${this.formatDateOnly(endDate)}`);
+    }
+    if (queryParams.length > 0) {
+      URL += `?${queryParams.join('&')}`;
+    }
+    return await firstValueFrom(this.http.get<MSG>(URL));
+  }
+
+  public async getCreatedUsersBasedOnCreator(
+    username: string,
+    start: number,
+    limit: number,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<MSG> {
+    let URL = `http://localhost:3000/api-tracking/get-created-users-based-on-creator/${username}/${start}/${limit}`;
+
+    const queryParams: string[] = [];
+    if (startDate) {
+      queryParams.push(`startDate=${this.formatDateOnly(startDate)}`);
+    }
+    if (endDate) {
+      queryParams.push(`endDate=${this.formatDateOnly(endDate)}`);
+    }
+    if (queryParams.length > 0) {
+      URL += `?${queryParams.join('&')}`;
+    }
+    return await firstValueFrom(this.http.get<MSG>(URL));
+  }
 }

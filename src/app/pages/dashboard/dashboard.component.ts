@@ -89,32 +89,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
       await this.authService.sendUserCredentialsAndGetUserData(role);
       await this.authService.afterUserLoggedInOperatios();
     }
-    await this.insertLoggedUserTracks();
+    // await this.insertLoggedUserTracks();
   }
 
   protected openMenu(): void {
     this.menuOpen = !this.menuOpen;
   }
 
-  protected async insertLoggedUserTracks() {
-    const date = new Date();
-    this.activityTrackerService.userLoggedTime = date;
+  // protected async insertLoggedUserTracks() {
+  //   const date = new Date();
+  //   this.activityTrackerService.userLoggedTime = date;
 
-    const data = {
-      username: this.user?.username,
-      date: date,
-    };
-    await this.activityTrackerService
-      .saveLoggedUserDataToTracking(data)
-      .then((data) => {
-        // console.log('Data: ', data);
-      })
-      .catch((error) => {
-        if (error) {
-          console.log('Error: ', error);
-        }
-      });
-  }
+  //   const data = {
+  //     username: this.user?.username,
+  //     date: date,
+  //   };
+  //   await this.activityTrackerService
+  //     .saveLoggedUserDataToTracking(data)
+  //     .then((data) => {
+  //       console.log(data);
+  //     })
+  //     .catch((error) => {
+  //       if (error) {
+  //         console.log('Error: ', error);
+  //       }
+  //     });
+  // }
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();

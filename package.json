@@ -35,11 +35,13 @@
     "bootstrap": "^5.3.3",
     "dotenv": "^16.5.0",
     "express": "^4.18.2",
+    "file-saver": "^2.0.5",
     "moment": "^2.30.1",
     "ngx-image-cropper": "^9.1.5",
     "quill": "^2.0.3",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "xlsx": "^0.18.5",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
@@ -51,6 +53,7 @@
     "@types/ckeditor__ckeditor5-build-classic": "^29.0.1",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^4.17.17",
+    "@types/file-saver": "^2.0.7",
     "@types/jasmine": "~5.1.0",
     "jasmine-core": "~5.6.0",
     "karma": "~6.4.0",

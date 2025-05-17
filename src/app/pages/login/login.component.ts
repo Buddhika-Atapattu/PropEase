@@ -101,6 +101,15 @@ export class LoginComponent implements OnInit, OnDestroy {
       });
     }
     // auto login
+    await this.autoLogin();
+    return Promise.resolve();
+  }
+
+  ngOnDestroy(): void {
+    this.modeSub?.unsubscribe();
+  }
+
+  private async autoLogin() {
     if (this.isBrowser) {
       if (
         this.getCookie('username') !== null &&
@@ -113,19 +122,44 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.getCookie('password') || ''
         );
 
+        const getLoggedUserData = localStorage.getItem('loggedUser');
+
+        const loggedUser: LoggedUserType | null = JSON.parse(
+          await this.cryptoService.decrypt(getLoggedUserData || '')
+        );
+
         this.username = username;
         this.password = password;
         this.rememberMe = true;
+
         if (this.username !== '' && this.password !== '' && this.rememberMe) {
-          this.login();
+          if (loggedUser) {
+            this.authService.logginUser = {
+              username: this.username ?? '',
+              password: this.password ?? '',
+              rememberMe: true,
+            };
+            this.authService.setLoggedUser = loggedUser;
+            if (this.authService.getLoggedUser !== null) {
+              this.activityTrackerService.loggedUser = loggedUser;
+              this.authService.getLoggedUser.isActive = true;
+              this.authService.isUserLoggedIn = true;
+              this.router.navigate(['/dashboard/home']);
+            }
+          } else {
+            this.notification.notification(
+              'error',
+              'No saved data found. Please login again.'
+            );
+          }
+        } else {
+          this.notification.notification(
+            'error',
+            'No saved data found. Please login again.'
+          );
         }
       }
     }
-    return Promise.resolve();
-  }
-
-  ngOnDestroy(): void {
-    this.modeSub?.unsubscribe();
   }
 
   // Checkbox event handler
@@ -140,8 +174,10 @@ export class LoginComponent implements OnInit, OnDestroy {
         'error',
         'Username and password cannot be empty.'
       );
+
       console.error('Username and password cannot be empty.');
       this.isEmpty = true;
+
       return;
     } else {
       const user = {
@@ -149,10 +185,11 @@ export class LoginComponent implements OnInit, OnDestroy {
         password: this.password,
         rememberMe: this.rememberMe,
       };
+
       this.authService.logginUser = user;
       const verifiedUser = await this.authService
         .sendVerifyUser()
-        .then((data) => {
+        .then(async (data) => {
           if (data && typeof data === 'object' && 'username' in data) {
             this.authService.setLoggedUser = data as LoggedUserType;
           } else {
@@ -162,7 +199,6 @@ export class LoginComponent implements OnInit, OnDestroy {
         })
         .catch((error) => {
           if (error) {
-            console.log(error.error.error);
             this.notification.notification('error', error.error.error);
           }
         });
@@ -179,9 +215,15 @@ export class LoginComponent implements OnInit, OnDestroy {
           const password = await this.cryptoService.encrypt(
             this.password || ''
           );
-          if (username !== null && password !== null) {
+          const loggedUser = await this.cryptoService.encrypt(
+            JSON.stringify(this.authService.getLoggedUser)
+          );
+
+          if (username !== null && password !== null && loggedUser !== null) {
+            localStorage.setItem('loggedUser', loggedUser);
             this.saveToCookies(username, password);
             this.authService.isUserLoggedIn = true;
+            await this.authService.insertLoggedUserTracks();
             this.router.navigate(['/dashboard/home']);
           } else {
             console.error('Username or password is null');
@@ -194,6 +236,10 @@ export class LoginComponent implements OnInit, OnDestroy {
         }
       } else {
         console.error('Username or password is null');
+        this.notification.notification(
+          'error',
+          'Error in logging. Refresh the browser!'
+        );
         this.authService.clearCredentials();
         this.username = '';
         this.password = '';
@@ -227,7 +273,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     username: string,
     password: string
   ): Promise<void> {
-    if (this.rememberMe && this.username && this.password) {
+    if (
+      this.rememberMe &&
+      this.username &&
+      this.password &&
+      this.authService.getLoggedUser !== null
+    ) {
       this.setCookie('username', username, 30);
       this.setCookie('password', password, 30);
     } else {

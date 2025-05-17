@@ -34,6 +34,7 @@ import {
   NotificationComponent,
 } from '../../dialogs/notification/notification.component';
 import { ProgressBarComponent } from '../../dialogs/progress-bar/progress-bar.component';
+import { AuthService } from '../../../../services/auth/auth.service';
 
 interface selectedFiles {
   name: string;
@@ -133,7 +134,8 @@ export class DocumentsComponent
     private activatedRouter: ActivatedRoute,
     private crypto: CryptoService,
     private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer
+    private domSanitizer: DomSanitizer,
+    private authService: AuthService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.registerCustomIcons();
@@ -158,9 +160,6 @@ export class DocumentsComponent
         .then((data) => {
           if (data) {
             this.documents = data.data as UDER_DOC_TYPES[];
-            for (let item of data.data as UDER_DOC_TYPES[]) {
-              // console.log(item);
-            }
           }
         })
         .catch((error) => {
@@ -182,7 +181,9 @@ export class DocumentsComponent
     }
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void {
+    // this.notification.notification('', '');
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['user'] && this.user) {
@@ -328,97 +329,66 @@ export class DocumentsComponent
     switch (type) {
       case 'doc':
         return 'word';
-        break;
       case 'docx':
         return 'word';
-        break;
       case 'dot':
         return 'word';
-        break;
       case 'dotx':
         return 'word';
-        break;
       case 'rtf':
         return 'word';
-        break;
       case 'odt':
         return 'word';
-        break;
       case 'txt':
         return 'txt';
-        break;
       case 'xml':
         return 'xml';
-        break;
       case 'xls':
         return 'excel';
-        break;
       case 'xlsx':
         return 'excel';
-        break;
       case 'xlsm':
         return 'excel';
-        break;
       case 'xlt':
         return 'excel';
-        break;
       case 'xltx':
         return 'excel';
-        break;
       case 'ods':
         return 'excel';
-        break;
       case 'csv':
         return 'excel';
-        break;
       case 'tsv':
         return 'excel';
-        break;
       case 'ppt':
         return 'powerpoint';
-        break;
       case 'pptx':
         return 'powerpoint';
-        break;
       case 'pptm':
         return 'powerpoint';
-        break;
       case 'pot':
         return 'powerpoint';
-        break;
       case 'potx':
         return 'powerpoint';
-        break;
       case 'odp':
         return 'powerpoint';
-        break;
       case 'pdf':
         return 'pdf';
-        break;
       case 'zip':
         return 'zip';
-        break;
       case 'png':
         return 'image';
-        break;
       case 'jpeg':
         return 'image';
-        break;
       case 'webp':
         return 'image';
-        break;
       case 'gif':
         return 'image';
-        break;
       case 'jpg':
         return 'image';
-        break;
       case 'ico':
         return 'image';
-        break;
       case 'svg':
         return 'image';
-        break;
       default:
         return 'file';
     }
@@ -464,7 +434,6 @@ export class DocumentsComponent
 
   //<================== File Delete Item from array of files ==================>
   protected deleteFile(index: number) {
-    // console.log('File deleted');
     this.selectedFiles.splice(index, 1);
     if (this.selectedFiles.length === 0) this.isFileSelected = false;
   }
@@ -490,6 +459,11 @@ export class DocumentsComponent
         const formData = new FormData();
         this.progress.start();
         formData.append('username', this.user?.username);
+        formData.append(
+          'uploader',
+          this.authService.getLoggedUser?.username ||
+            'Error By taking logged user'
+        );
         for (let item of this.selectedFiles) {
           formData.append('files', item.file as File);
         }

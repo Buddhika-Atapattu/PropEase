@@ -11,13 +11,13 @@ import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
-  selector: 'app-main-panel',
+  selector: 'app-main',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './main-panel.component.html',
-  styleUrl: './main-panel.component.scss',
+  templateUrl: './main.component.html',
+  styleUrl: './main.component.scss',
 })
-export class MainPanelComponent implements OnInit, OnDestroy {
+export class MainComponent implements OnInit, OnDestroy {
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;

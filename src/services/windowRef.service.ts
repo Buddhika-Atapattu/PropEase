@@ -14,7 +14,6 @@ export class WindowsRefService implements OnDestroy {
     if (this.isBrowser) {
       this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
       this.setDarkMode(this.mediaQueryList.matches);
-      console.log('Initial Theme:', this.mediaQueryList.matches);
 
       this.mediaQueryList.addEventListener(
         'change',
@@ -42,7 +41,6 @@ export class WindowsRefService implements OnDestroy {
 
   private handleSystemThemeChange(event: MediaQueryListEvent): void {
     const isDark = event.matches;
-    console.log('System Theme Changed:', isDark ? 'Dark' : 'Light');
     this.setDarkMode(isDark);
   }
 

@@ -1,0 +1,557 @@
+<app-notification></app-notification>
+<app-progress-bar></app-progress-bar>
+<div class="container-fluid" *ngIf="mode !== null">
+  <!-- table date picker row -->
+  <form
+    action=""
+    method="GET"
+    enctype="multipart/form-data"
+    (ngSubmit)="search()"
+    class="profile-form"
+    autocomplete="off"
+    #userForm="ngForm"
+  >
+    <div class="row mt-5 mb-1" *ngIf="loggedUser && user !== null">
+      <h2 class="text-center my-2">User Creation Records</h2>
+      <h6 class="my-2 text-style">
+        Search by dates | total records: {{ totalRecords }}
+      </h6>
+      <!-- date pickers -->
+      <div class="col-md-9">
+        <div class="row">
+          <div
+            class="col-md-6 d-flex justify-content-center align-items-center"
+          >
+            <mat-form-field appearance="fill" class="form-field w-100">
+              <mat-label [ngClass]="isTableEmpty ? 'text-danger' : ''">{{
+                isTableEmpty ? "Click the reset" : "Select the start date"
+              }}</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pickerStart"
+                placeholder="Date Start"
+                [(ngModel)]="startDate"
+                name="startDate"
+                [ngClass]="isTableEmpty ? 'text-danger' : ''"
+                placeholder="MM/DD/YYYY"
+              />
+              <mat-datepicker-toggle
+                matIconSuffix
+                [for]="pickerStart"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #pickerStart></mat-datepicker>
+            </mat-form-field>
+          </div>
+          <div
+            class="col-md-6 d-flex justify-content-center align-items-center"
+          >
+            <mat-form-field appearance="fill" class="form-field w-100">
+              <mat-label [ngClass]="isTableEmpty ? 'text-danger' : ''">{{
+                isTableEmpty ? "Click the reset" : "Select the end date"
+              }}</mat-label>
+              <input
+                matInput
+                [matDatepicker]="pickerEnd"
+                placeholder="Date End"
+                [(ngModel)]="endDate"
+                [ngClass]="isTableEmpty ? 'text-danger' : ''"
+                name="endDate"
+                placeholder="MM/DD/YYYY"
+              />
+              <mat-datepicker-toggle
+                matIconSuffix
+                [for]="pickerEnd"
+              ></mat-datepicker-toggle>
+              <mat-datepicker #pickerEnd></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+      <!-- date pickers end -->
+      <!-- btns -->
+      <div class="col-md-3">
+        <div class="row">
+          <div class="col-md-4">
+            <button
+              type="submit"
+              class="btn-custom w-100 date-picker-btn"
+              mat-raised-button
+              matTooltip="Search"
+              matTooltipPosition="above"
+              matTooltipPositionAtOrigin="left"
+              [disabled]="isTableEmpty"
+            >
+              <mat-icon
+                aria-hidden="false"
+                aria-label="Example home icon"
+                svgIcon="search"
+                class="search"
+              ></mat-icon>
+            </button>
+          </div>
+          <div class="col-md-4">
+            <button
+              type="button"
+              class="btn-edit w-100 date-picker-btn"
+              (click)="reset()"
+              mat-raised-button
+              matTooltip="Reset"
+              matTooltipPosition="above"
+              matTooltipPositionAtOrigin="left"
+            >
+              <mat-icon
+                aria-hidden="false"
+                aria-label="Example home icon"
+                svgIcon="reset"
+              ></mat-icon>
+            </button>
+          </div>
+          <div class="col-md-4">
+            <button
+              type="button"
+              class="btn-view w-100 date-picker-btn"
+              (click)="exportToExcel()"
+              mat-raised-button
+              matTooltip="Download to excel"
+              matTooltipPosition="above"
+              matTooltipPositionAtOrigin="left"
+            >
+              <mat-icon
+                aria-hidden="false"
+                aria-label="Example home icon"
+                class="excel"
+                svgIcon="fileExcel"
+              ></mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- btns end -->
+    </div>
+  </form>
+
+  <!-- table data row -->
+  <div class="row" *ngIf="loggedUser && user !== null && !isTableEmpty">
+    <div class="col-md-12">
+      <!-- data -->
+      <div
+        class="table-responsive d-flex justify-content-center align-items-center"
+      >
+        <table
+          mat-table
+          [dataSource]="dataSource"
+          class="mat-elevation-z8"
+          class="w-100"
+          matSort
+          (matSortChange)="sortData($event)"
+        >
+          <ng-container
+            *ngFor="let col of displayedColumns"
+            [matColumnDef]="col"
+          >
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header="{{ col }}"
+              class="w-50 text-default text-center"
+            >
+              <div *ngIf="isLoading">
+                <app-skeleton-loader
+                  [Mode]="mode"
+                  [width]="'5rem'"
+                  [height]="'1.5rem'"
+                  [borderRadius]="'0.159rem'"
+                ></app-skeleton-loader>
+              </div>
+              <div *ngIf="!isLoading">
+                {{ col }}
+              </div>
+            </th>
+            <td mat-cell *matCellDef="let element" class="text-default">
+              <ng-container [ngSwitch]="col">
+                <ng-container *ngSwitchCase="'Image'">
+                  <div *ngIf="isLoading">
+                    <app-skeleton-loader
+                      [Mode]="mode"
+                      [width]="'5rem'"
+                      [height]="'5rem'"
+                      [borderRadius]="'10rem'"
+                    ></app-skeleton-loader>
+                  </div>
+                  <div *ngIf="!isLoading">
+                    <img
+                      [src]="imageGenerator(element.image, element.gender)"
+                      alt="User image"
+                      class="table-image"
+                    />
+                  </div>
+                </ng-container>
+
+                <div *ngIf="loggedUser !== null">
+                  <ng-container *ngSwitchCase="'Username'" class="text-center">
+                    <div *ngIf="isLoading">
+                      <app-skeleton-loader
+                        [Mode]="mode"
+                        [width]="'5rem'"
+                        [height]="'1.5rem'"
+                        [borderRadius]="'0.159rem'"
+                      ></app-skeleton-loader>
+                    </div>
+                    <div *ngIf="!isLoading">
+                      <p
+                        class="m-0 p-0"
+                        matTooltip="{{
+                          loggedUser.username == element.username
+                            ? 'You'
+                            : element.username
+                        }}"
+                        matTooltipPosition="above"
+                        matTooltipPositionAtOrigin="left"
+                      >
+                        {{
+                          loggedUser.username == element.username
+                            ? "You"
+                            : element.username
+                        }}
+                      </p>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <div *ngIf="loggedUser !== null">
+                  <ng-container *ngSwitchCase="'Email'" class="text-center">
+                    <div *ngIf="isLoading">
+                      <app-skeleton-loader
+                        [Mode]="mode"
+                        [width]="'5rem'"
+                        [height]="'1.5rem'"
+                        [borderRadius]="'0.159rem'"
+                      ></app-skeleton-loader>
+                    </div>
+                    <div *ngIf="!isLoading">
+                      <p
+                        class="m-0 p-0 text-normal"
+                        matTooltip="{{ element.email }}"
+                        matTooltipPosition="above"
+                        matTooltipPositionAtOrigin="left"
+                      >
+                        {{ element.email }}
+                      </p>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <div *ngIf="loggedUser !== null">
+                  <ng-container *ngSwitchCase="'DoB'" class="text-center">
+                    <div *ngIf="isLoading">
+                      <app-skeleton-loader
+                        [Mode]="mode"
+                        [width]="'5rem'"
+                        [height]="'1.5rem'"
+                        [borderRadius]="'0.159rem'"
+                      ></app-skeleton-loader>
+                    </div>
+                    <div *ngIf="!isLoading">
+                      <p
+                        class="m-0 p-0"
+                        matTooltip="{{
+                          element.dateOfBirth | date : 'MMMM d, y' | uppercase
+                        }}"
+                        matTooltipPosition="above"
+                        matTooltipPositionAtOrigin="left"
+                      >
+                        {{
+                          element.dateOfBirth | date : "MMMM d, y" | uppercase
+                        }}
+                      </p>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <div *ngIf="loggedUser !== null">
+                  <ng-container
+                    *ngSwitchCase="'Created At'"
+                    class="text-center"
+                  >
+                    <div *ngIf="isLoading">
+                      <app-skeleton-loader
+                        [Mode]="mode"
+                        [width]="'5rem'"
+                        [height]="'1.5rem'"
+                        [borderRadius]="'0.159rem'"
+                      ></app-skeleton-loader>
+                    </div>
+                    <div *ngIf="!isLoading">
+                      <p
+                        class="m-0 p-0"
+                        matTooltip="{{
+                          element.createdAt | date : 'MMMM d, y' | uppercase
+                        }}"
+                        matTooltipPosition="above"
+                        matTooltipPositionAtOrigin="left"
+                      >
+                        {{ element.createdAt | date : "MMMM d, y" | uppercase }}
+                      </p>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <div *ngIf="loggedUser !== null">
+                  <ng-container
+                    *ngSwitchCase="'Updated At'"
+                    class="text-center"
+                  >
+                    <div *ngIf="isLoading">
+                      <app-skeleton-loader
+                        [Mode]="mode"
+                        [width]="'5rem'"
+                        [height]="'1.5rem'"
+                        [borderRadius]="'0.159rem'"
+                      ></app-skeleton-loader>
+                    </div>
+                    <div *ngIf="!isLoading">
+                      <p
+                        class="m-0 p-0"
+                        matTooltip="{{
+                          element.updatedAt | date : 'MMMM d, y' | uppercase
+                        }}"
+                        matTooltipPosition="above"
+                        matTooltipPositionAtOrigin="left"
+                      >
+                        {{ element.updatedAt | date : "MMMM d, y" | uppercase }}
+                      </p>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <div *ngIf="loggedUser !== null">
+                  <ng-container *ngSwitchCase="'Uploader'" class="text-center">
+                    <div *ngIf="isLoading">
+                      <app-skeleton-loader
+                        [Mode]="mode"
+                        [width]="'5rem'"
+                        [height]="'1.5rem'"
+                        [borderRadius]="'0.159rem'"
+                      ></app-skeleton-loader>
+                    </div>
+                    <div *ngIf="!isLoading">
+                      <p
+                        class="p-0 m-0"
+                        matTooltip="{{
+                          loggedUser.username == element.uploader
+                            ? 'You'
+                            : element.username
+                        }}"
+                        matTooltipPosition="above"
+                        matTooltipPositionAtOrigin="left"
+                      >
+                        {{
+                          loggedUser.username == element.uploader
+                            ? "You"
+                            : element.username
+                        }}
+                      </p>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <div *ngIf="loggedUser !== null">
+                  <ng-container *ngSwitchCase="'Creator'" class="text-center">
+                    <div *ngIf="isLoading">
+                      <app-skeleton-loader
+                        [Mode]="mode"
+                        [width]="'5rem'"
+                        [height]="'1.5rem'"
+                        [borderRadius]="'0.159rem'"
+                      ></app-skeleton-loader>
+                    </div>
+                    <div *ngIf="!isLoading">
+                      <p
+                        class="p-0 m-0"
+                        matTooltip="{{
+                          loggedUser.username == element.creator
+                            ? 'You'
+                            : element.creator
+                        }}"
+                        matTooltipPosition="above"
+                        matTooltipPositionAtOrigin="left"
+                      >
+                        {{
+                          loggedUser.username == element.creator
+                            ? "You"
+                            : element.creator
+                        }}
+                      </p>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <div *ngIf="loggedUser !== null">
+                  <ng-container *ngSwitchCase="'Is Active'" class="text-center">
+                    <div *ngIf="isLoading">
+                      <app-skeleton-loader
+                        [Mode]="mode"
+                        [width]="'5rem'"
+                        [height]="'1.5rem'"
+                        [borderRadius]="'0.159rem'"
+                      ></app-skeleton-loader>
+                    </div>
+                    <div *ngIf="!isLoading">
+                      <i
+                        matTooltip="{{ element.isActive ? 'Yes' : 'No' }}"
+                        matTooltipPosition="above"
+                        matTooltipPositionAtOrigin="left"
+                        class="text-center"
+                        [ngClass]="
+                          element.isActive ? 'text-success' : 'text-danger'
+                        "
+                        class="fa-solid fa-circle"
+                      ></i>
+                    </div>
+                  </ng-container>
+                </div>
+
+                <ng-container *ngSwitchCase="'Visit'">
+                  <div *ngIf="isLoading">
+                    <app-skeleton-loader
+                      [Mode]="mode"
+                      [width]="'5rem'"
+                      [height]="'1.5rem'"
+                      [borderRadius]="'0.159rem'"
+                    ></app-skeleton-loader>
+                  </div>
+                  <div *ngIf="!isLoading">
+                    <button
+                      mat-raised-button
+                      class="btn-edit visit"
+                      (click)="visitUser(element.username)"
+                      matTooltip="{{ element.username }}"
+                      matTooltipPosition="above"
+                      matTooltipPositionAtOrigin="left"
+                    >
+                      <mat-icon svgIcon="userID"></mat-icon>
+                    </button>
+                  </div>
+                </ng-container>
+
+                <ng-container *ngSwitchDefault>
+                  <div *ngIf="isLoading">
+                    <app-skeleton-loader
+                      [Mode]="mode"
+                      [width]="'5rem'"
+                      [height]="'1.5rem'"
+                      [borderRadius]="'0.159rem'"
+                    ></app-skeleton-loader>
+                  </div>
+                  <div *ngIf="!isLoading">
+                    <p
+                      class="p-0 m-0 text-capitalize"
+                      matTooltip="{{ generateColData(col, element) }}"
+                      matTooltipPosition="above"
+                      matTooltipPositionAtOrigin="left"
+                    >
+                      {{ generateColData(col, element) }}
+                    </p>
+                  </div>
+                </ng-container>
+              </ng-container>
+            </td>
+          </ng-container>
+          <tr
+            mat-header-row
+            *matHeaderRowDef="displayedColumns"
+            class="text-default border-bottom-custom"
+          ></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumns"
+            class="text-default border-bottom-custom"
+          ></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- pagination row -->
+  <div
+    class="row"
+    *ngIf="
+      loggedUser && user !== null && !isTableEmpty && !isPaginationDisabled
+    "
+  >
+    <div class="col-md-12">
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <ul class="pagination justify-content-center d-flex">
+            <!-- << Button -->
+            <li class="d-flex justify-content-center align-items-center">
+              <button
+                type="button"
+                class="page-item-btn btn-custom w-100 h-75 fw-bold"
+                (click)="goTwoPagesBack()"
+              >
+                <i class="fa fa-angle-double-left"></i>
+              </button>
+            </li>
+
+            <!-- Page number buttons -->
+            <li
+              class="d-flex justify-content-center align-items-center"
+              *ngFor="
+                let i of [].constructor(getActualEnd() - getActualStart() + 1);
+                let idx = index
+              "
+            >
+              <button
+                type="button"
+                class="page-item-btn btn-custom w-100 h-75 fw-bold"
+                [ngClass]="
+                  currentPage === getActualStart() + idx ? 'active' : 'inactive'
+                "
+                (click)="setCurrentPage(idx)"
+              >
+                {{ getActualStart() + idx }}
+              </button>
+            </li>
+
+            <!-- >> Button -->
+            <li class="d-flex justify-content-center align-items-center">
+              <button
+                type="button"
+                class="page-item-btn btn-custom w-100 h-75 fw-bold"
+                (click)="goTwoPagesForward()"
+              >
+                <i class="fa fa-angle-double-right"></i>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No table data -->
+  <div
+    *ngIf="isTableEmpty"
+    class="row mt-5 d-flex justify-content-center align-item-center"
+  >
+    <div class="col-md-8 d-flex justify-content-center align-item-center">
+      <div class="">
+        <h5 class="text-center text-uppercase" *ngIf="startDate && endDate">
+          User Creation Data Not Found between
+          {{ startDate | date : "MMMM d, y" }} -
+          {{ endDate | date : "MMMM d, y" }}
+        </h5>
+        <h5 class="text-center text-uppercase" *ngIf="!startDate && !endDate">
+          User Creation Data Not Found
+        </h5>
+        <div class="image-container">
+          <img
+            src="/Images/System-images/noActivities.jpg"
+            alt="no activities image"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

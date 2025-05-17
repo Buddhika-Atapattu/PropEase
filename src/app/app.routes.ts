@@ -23,9 +23,7 @@ export const routes: Routes = [
       {
         path: 'home',
         loadComponent: () =>
-          import('./components/main-panel/main-panel.component').then(
-            (m) => m.MainPanelComponent
-          ),
+          import('./pages/main/main.component').then((m) => m.MainComponent),
         data: {
           roles: ['admin', 'agent', 'tenant', 'operator', 'developer', 'user'],
         },
@@ -33,9 +31,9 @@ export const routes: Routes = [
       {
         path: 'properties',
         loadComponent: () =>
-          import(
-            './components/properties/properties-main-panel/properties-main-panel.component'
-          ).then((m) => m.PropertiesMainPanelComponent),
+          import('./pages/properties/properties-main-panel.component').then(
+            (m) => m.PropertiesMainPanelComponent
+          ),
         data: { roles: ['admin'] },
       },
       {

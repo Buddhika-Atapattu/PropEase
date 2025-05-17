@@ -7,6 +7,7 @@ import {
   ViewChild,
   ElementRef,
   HostListener,
+  AfterViewInit,
 } from '@angular/core';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
@@ -38,6 +39,7 @@ import {
   getDefaultAccessByRole,
   DEFAULT_ROLE_ACCESS,
   AccessMap,
+  LoggedUserType,
 } from '../../../services/auth/auth.service';
 import {
   APIsService,
@@ -61,6 +63,7 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { CameraBoxComponent } from '../../components/dialogs/camera-box/camera-box.component';
 import { EditorComponent } from '@tinymce/tinymce-angular';
+import { AuthService } from '../../../services/auth/auth.service';
 
 interface userAccessType {
   access: string[];
@@ -107,7 +110,7 @@ interface MODEL_CHECK {
   templateUrl: './add-new-user.component.html',
   styleUrl: './add-new-user.component.scss',
 })
-export class AddNewUserComponent implements OnInit, OnDestroy {
+export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
@@ -159,6 +162,7 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
   protected autoSelectedRoleAccess: Record<Role, AccessMap> =
     DEFAULT_ROLE_ACCESS;
   protected isCameraOpen: boolean = false;
+  private loogedUser: LoggedUserType | null = null;
 
   //User data
   protected username: string = '';
@@ -236,29 +240,13 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
     private API: APIsService,
     private crypto: CryptoService,
     private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer
+    private domSanitizer: DomSanitizer,
+    private authService: AuthService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.activeRouter.url.subscribe((segments) => {});
-
-    this.matIconRegistry.addSvgIcon(
-      'camera',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/camera.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'upload',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/upload.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'insert',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/user-plus.svg'
-      )
-    );
+    this.iconCreator();
+    this.loogedUser = this.authService.getLoggedUser;
   }
 
   async ngOnInit(): Promise<void> {
@@ -271,6 +259,25 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
+    }
+  }
+
+  ngAfterViewInit() {
+    this.notification.notification('', '');
+  }
+
+  private iconCreator() {
+    const icons = [
+      { name: 'camera', path: '/Images/Icons/camera.svg' },
+      { name: 'upload', path: '/Images/Icons/upload.svg' },
+      { name: 'insert', path: '/Images/Icons/user-plus.svg' },
+    ];
+
+    for (let icon of icons) {
+      this.matIconRegistry.addSvgIcon(
+        icon.name,
+        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path)
+      );
     }
   }
 
@@ -305,10 +312,8 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
   }
 
   protected handleImage(imageData: string) {
-    console.log('Image from child:', imageData);
     this.userUploadedImage = imageData;
     this.userimage = this.convertToTheBlob(imageData);
-    console.log(this.userimage);
     this.isCameraOpen = false;
   }
 
@@ -399,7 +404,6 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
   }
 
   protected imageCropped(event: ImageCroppedEvent): void {
-    console.log('Cropped event: ', event);
     this.croppedImageBase64 = event.objectUrl as string;
     this.croppedImage = event;
   }
@@ -408,7 +412,6 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
     this.userUploadedImage = this.croppedImageBase64;
     this.userimage = this.croppedImage.blob;
     this.showCropper = false;
-    console.log(this.userimage);
     this.resetCropper();
   }
 
@@ -446,7 +449,6 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
     const age = Number(value);
     this.age = age.toString();
     this.isValidAge = age >= 18;
-    console.log(this.isValidAge);
   }
 
   //<=========== End Check the Age ============>
@@ -477,7 +479,6 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
 
   protected async onCountryChange(value: string): Promise<void> {
     this.typedCountry = value;
-    console.log(this.typedCountry);
     this.countries = await this.mainFilterCountries(value);
   }
 
@@ -554,7 +555,6 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
     }
     if (this.emailMatchPattern) {
       const checking: validateType = await this.API.getUserByEmail(input.value);
-      console.log(checking);
       if (checking.status === 'true') {
         this.isEmailExist = true;
       } else {
@@ -565,7 +565,6 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
   //<=========== End Checking the password ============>
 
   protected async checkPhone(event: Event): Promise<void> {
-    console.log(this.phone);
     this.phoneMatchPattern = false;
     const input = event.target as HTMLInputElement;
     const phone = input.value;
@@ -692,7 +691,6 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
   //<=======End  Role Access autocomplete =======>
 
   protected async insertNewUser(): Promise<boolean> {
-    console.log(this.userBio);
     if (
       this.isActive &&
       !this.isEmailExist &&
@@ -756,10 +754,10 @@ export class AddNewUserComponent implements OnInit, OnDestroy {
       );
       formData.append('updatedAt', this.updatedAt.toString());
       formData.append('createdAt', this.createdAt.toString());
+      formData.append('creator', this.loogedUser?.username as string);
 
       await this.API.createNewUser(formData)
         .then((data: MSG_DATA_TYPE | null) => {
-          // console.log(data?.status, data?.message);
           if (this.notification && data)
             this.notification.notification(
               data?.status as msgTypes,

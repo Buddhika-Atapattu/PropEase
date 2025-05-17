@@ -23,10 +23,11 @@
       // border-bottom: 1px solid #ddd; // optional subtle line
     }
     .user-scroll-wrapper {
-      max-height: calc(100vh - 200px); // Adjust based on header/footer height
-      overflow-x: hidden;
-      overflow-y: auto;
+      // max-height: calc(100vh - 200px); // Adjust based on header/footer height
+      // overflow-x: hidden;
+      // overflow-y: visible;
       padding-right: 0.5rem;
+      padding-left: 0.5rem;
     }
     /* Optional: Style scroll bar for elegance */
     .user-scroll-wrapper::-webkit-scrollbar {
@@ -59,7 +60,7 @@
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        right: 2rem;
+        right: 4rem;
         cursor: pointer;
         ::ng-deep svg {
           fill: #000;

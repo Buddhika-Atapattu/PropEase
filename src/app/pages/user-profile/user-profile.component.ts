@@ -7,6 +7,7 @@ import {
   ViewChild,
   ElementRef,
   ChangeDetectionStrategy,
+  AfterViewInit,
 } from '@angular/core';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
@@ -98,7 +99,7 @@ export interface MSG_DATA_TYPE extends UpdateUserType {
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.scss'], // Correct: `styleUrls` not `styleUrl`
 })
-export class UserProfileComponent implements OnInit, OnDestroy {
+export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -172,24 +173,12 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     this.route.url.subscribe((segments) => {
       const path = segments.map((s) => s.path).join('/');
     });
-    this.matIconRegistry.addSvgIcon(
-      'active',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/correct.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'wrong',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/wrong.svg'
-      )
-    );
+    this.iconMaker();
     this.user = this.authService.getLoggedUser;
     if (this.user !== null) {
       setInterval(() => {
         this.isLoading = false;
       }, 500);
-      console.log(this.user.gender);
       this.name = this.user.name;
       this.gender = this.user.gender;
       this.email = this.user.email;
@@ -225,6 +214,24 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
+    }
+  }
+
+  ngAfterViewInit() {
+    this.notification.notification('', '');
+  }
+
+  private iconMaker() {
+    const icons = [
+      { name: 'active', path: '/Images/Icons/correct.svg' },
+      { name: 'wrong', path: '/Images/Icons/wrong.svg' },
+    ];
+
+    for (let icon of icons) {
+      this.matIconRegistry.addSvgIcon(
+        icon.name,
+        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path)
+      );
     }
   }
 
@@ -291,7 +298,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   private async openDialog() {
     try {
       if (this.mode !== null) {
-        // console.log('Mode is dark: ', this.mode);
         const dialogRef: MatDialogRef<UserProfileDataSaveConfirmationComponent> =
           this.dialog.open(UserProfileDataSaveConfirmationComponent, {
             data: {
@@ -309,7 +315,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
 
   protected async updateUserData(): Promise<void> {
     await this.openDialog().then(async () => {
-      console.log(this.birthDay);
       if (this.user !== null && this.isEditConfirm) {
         this.progress.start();
         this.progerssOfUpload = 0;
@@ -346,7 +351,6 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         const user = this.user?.username;
         await this.API.updateUser(formData, user)
           .then((data: MSG_DATA_TYPE | null) => {
-            // console.log(data?.status, data?.message);
             if (this.notification && data)
               this.notification.notification(
                 data?.status as msgTypes,

@@ -20,6 +20,8 @@ import { AccessabilitiesComponent } from '../../components/tabs/accessabilities/
 import { DocumentsComponent } from '../../components/tabs/documents/documents.component';
 import { ActivitiesComponent } from '../../components/tabs/activities/activities.component';
 import { MatTabsModule } from '@angular/material/tabs';
+import { AuthService } from '../../../services/auth/auth.service';
+import { RefreshService } from '../../../services/refresh/refresh.service';
 
 @Component({
   selector: 'app-view-user-profile',
@@ -64,6 +66,7 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
   protected isPropertiesPanelOpen: boolean = false;
 
   protected definedUserImage: string = '';
+  protected LOGGED_USER: BaseUser | null = null;
 
   constructor(
     private windowRef: WindowsRefService,
@@ -71,14 +74,18 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
     private router: Router,
     private activatedRouter: ActivatedRoute,
     private crypto: CryptoService,
-    private APIs: APIsService
+    private APIs: APIsService,
+    private authService: AuthService,
+    private refreshService: RefreshService
   ) {
+    this.LOGGED_USER = this.authService.getLoggedUser;
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.activatedRouter.url.subscribe((segments) => {
       const path = segments.map((s) => s.path).join('/');
     });
     this.activatedRouter.params.subscribe((param) => {
       this.username = param['username'];
+      this.loadData();
     });
   }
 
@@ -88,39 +95,43 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
         this.mode = val;
       });
     }
-    const data = await this.APIs.getUserByToken(this.username);
-    if (data) {
-      this.user = data.user;
-      if (typeof this.user.image === 'string') {
-        const imageArray: string[] = this.user.image
-          ? this.user.image.split('/')
-          : [];
-        if (imageArray.length > 0) {
-          if (
-            this.definedImageExtentionArray.includes(
-              imageArray[imageArray.length - 1].split('.')[1]
-            )
-          ) {
-            this.definedImage = this.user.image;
-          } else {
-            if (this.user.gender === 'male') {
-              this.definedImage = this.definedMaleDummyImageURL;
+
+    Promise.resolve();
+  }
+
+  private async loadData() {
+    if (this.isBrowser) {
+      const data = await this.APIs.getUserByToken(this.username);
+      if (data) {
+        this.user = data.user;
+        if (typeof this.user.image === 'string') {
+          const imageArray: string[] = this.user.image
+            ? this.user.image.split('/')
+            : [];
+          if (imageArray.length > 0) {
+            if (
+              this.definedImageExtentionArray.includes(
+                imageArray[imageArray.length - 1].split('.')[1]
+              )
+            ) {
+              this.definedImage = this.user.image;
             } else {
-              this.definedImage = this.definedWomanDummyImageURL;
+              if (this.user.gender === 'male') {
+                this.definedImage = this.definedMaleDummyImageURL;
+              } else {
+                this.definedImage = this.definedWomanDummyImageURL;
+              }
             }
           }
         }
+        this.definedImage;
+        setTimeout(() => {
+          this.isLoading = false;
+        }, 500);
+      } else {
+        this.router.navigate(['/dashboard/unauthorized']);
       }
-
-      console.log(this.user.image);
-      this.definedImage;
-      setTimeout(() => {
-        this.isLoading = false;
-      }, 500);
-    } else {
-      this.router.navigate(['/dashboard/unauthorized']);
     }
-    Promise.resolve();
   }
 
   protected goToUsers() {
@@ -132,7 +143,6 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
   protected async goToUser() {
     if (this.user) {
       const username = await this.APIs.generateToken(this.user?.username);
-      console.log(username);
       if (username)
         this.router
           .navigateByUrl('/', { skipLocationChange: true })
@@ -146,9 +156,8 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
   }
 
   protected goToInfomation() {
-    if(this.isBrowser){
-      const activeBTN = document.querySelector('.active')
-
+    if (this.isBrowser) {
+      const activeBTN = document.querySelector('.active');
     }
     this.isInfoPanelOpen = true;
     this.isAccessibilityPanelOpen = false;
@@ -169,7 +178,6 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
     this.isDocumentsPanelOpen = true;
     this.isActivitiesPanelOpen = false;
     this.isPropertiesPanelOpen = false;
-    console.log(this.isDocumentsPanelOpen);
   }
   protected goToActivities() {
     this.isInfoPanelOpen = false;

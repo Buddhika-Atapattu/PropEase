@@ -1,4 +1,5 @@
 @use "./font/leckerli-one/leckerli-one.scss" as *;
+@use "./font/Tagesschrift-Regular/Tagesschrift-Regular.scss" as *;
 
 // Dark Core Colors
 $dark-primery-color: #08122f !default; // Deep Navy background
@@ -103,6 +104,7 @@ code {
       width: 2rem;
       height: 2rem;
       color: #fff;
+      margin: 0rem auto;
     }
     &:hover {
       transform: scale(1.05);
@@ -126,6 +128,7 @@ code {
       width: 2rem;
       height: 2rem;
       color: #fff;
+      margin: 0rem auto;
     }
     &:hover {
       transform: scale(1.05);
@@ -149,6 +152,7 @@ code {
       width: 2rem;
       height: 2rem;
       color: #fff;
+      margin: 0rem auto;
     }
     &:hover {
       transform: scale(1.05);
@@ -168,11 +172,11 @@ code {
     justify-content: center;
     transition: all 0.3s ease;
     cursor: pointer;
-
     mat-icon {
       width: 2rem;
       height: 2rem;
       color: #fff;
+      margin: 0rem auto;
     }
 
     &:hover {
@@ -220,6 +224,7 @@ code {
       width: 2rem;
       height: 2rem;
       color: #fff;
+      margin: 0rem auto;
     }
     &:hover {
       transform: scale(1.05);
@@ -243,6 +248,7 @@ code {
       width: 2rem;
       height: 2rem;
       color: #fff;
+      margin: 0rem auto;
     }
     &:hover {
       transform: scale(1.05);
@@ -266,6 +272,7 @@ code {
       width: 2rem;
       height: 2rem;
       color: #fff;
+      margin: 0rem auto;
     }
     &:hover {
       transform: scale(1.05);
@@ -289,6 +296,7 @@ code {
       width: 2rem;
       height: 2rem;
       color: #fff;
+      margin: 0rem auto;
     }
 
     &:hover {

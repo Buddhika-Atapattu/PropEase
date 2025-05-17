@@ -16,7 +16,6 @@ export default defineConfig({
             {
               from: /^\/public\/.*$/,
               to: (context) => {
-                console.log('Parsed URL:', context.parsedUrl.pathname);
                 return context.parsedUrl.pathname || '/';
               },
             },
