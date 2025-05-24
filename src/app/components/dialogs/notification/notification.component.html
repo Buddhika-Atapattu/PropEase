@@ -8,5 +8,8 @@
   (mouseout)="onMouseOut()"
 >
   <div class="text py-0">{{ message }}</div>
-  <button class="btn py-0" (click)="close()">X</button>
+  <button class="btn py-0" (click)="close()">
+    <i class="fa-solid fa-xmark"></i>
+    <span class="sr-only">Close</span>
+  </button>
 </div>

@@ -86,6 +86,11 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
     this.activatedRouter.params.subscribe((param) => {
       this.username = param['username'];
       this.loadData();
+      this.isInfoPanelOpen = true;
+      this.isAccessibilityPanelOpen = false;
+      this.isDocumentsPanelOpen = false;
+      this.isActivitiesPanelOpen = false;
+      this.isPropertiesPanelOpen = false;
     });
   }
 
@@ -156,9 +161,6 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
   }
 
   protected goToInfomation() {
-    if (this.isBrowser) {
-      const activeBTN = document.querySelector('.active');
-    }
     this.isInfoPanelOpen = true;
     this.isAccessibilityPanelOpen = false;
     this.isDocumentsPanelOpen = false;

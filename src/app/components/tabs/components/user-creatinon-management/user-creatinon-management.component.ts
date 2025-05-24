@@ -53,7 +53,7 @@ interface Data {
   dateOfBirth: string;
   age: number;
   gender: string;
-  image: number;
+  image: string;
   phoneNumber: string;
   role: string;
   isActive: boolean;
@@ -391,36 +391,51 @@ export class UserCreatinonManagementComponent
     }
   }
 
-  protected sortData(sort: Sort) {
-    const data = this.dataSource.data.slice();
-    if (!sort.active || sort.direction === '') {
-      this.dataSource.data = data;
-      return;
-    }
-    this.dataSource.data = data.sort((a, b) => {
-      const isAsc = sort.direction === 'asc';
-      switch (sort.active) {
-        case 'Name':
-          return this.compare(a.name, b.name, isAsc);
-        case 'Username':
-          return this.compare(a.username, b.username, isAsc);
-        case 'Birth Day':
-          return this.compare(a.dateOfBirth, b.dateOfBirth, isAsc);
-        case 'Role':
-          return this.compare(a.role, b.role, isAsc);
-        default:
-          return 0;
-      }
-    });
-  }
-  private compare(
-    a: number | string | Date,
-    b: number | string | Date,
-    isAsc: boolean
-  ) {
-    return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
+  protected sortData(sort: Sort): void {
+  const data = this.dataSource.data.slice();
+  const isAsc = sort.direction === 'asc';
+
+  if (!sort.active || sort.direction === '') {
+    this.dataSource.data = data;
+    return;
   }
 
+  // Map displayed column labels to actual Data fields
+  const columnFieldMap: { [key: string]: keyof Data } = {
+    'Name': 'name',
+    'Username': 'username',
+    'Email': 'email',
+    'DoB': 'dateOfBirth',
+    'Age': 'age',
+    'Gender': 'gender',
+    'Phone': 'phoneNumber',
+    'Role': 'role',
+    'Is Active': 'isActive',
+    'Creator': 'creator',
+    'Created At': 'createdAt',
+    'Updated At': 'updatedAt',
+  };
+
+  const field = columnFieldMap[sort.active];
+
+  if (field) {
+    this.dataSource.data = data.sort((a, b) =>
+      this.compare(a[field], b[field], isAsc)
+    );
+  }
+}
+
+  private compare(a: any, b: any, isAsc: boolean): number {
+  if (a == null && b != null) return isAsc ? -1 : 1;
+  if (a != null && b == null) return isAsc ? 1 : -1;
+  if (a == null && b == null) return 0;
+
+  if (typeof a === 'string' && typeof b === 'string') {
+    return a.localeCompare(b) * (isAsc ? 1 : -1);
+  }
+
+  return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
+}
   // Called when user triggers a search (e.g., clicks "Search" button)
   protected async search(): Promise<void> {
     this.currentPage = 1; // Reset to first page

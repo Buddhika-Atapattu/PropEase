@@ -6,7 +6,9 @@
   <!-- top means hear -->
   <div class="container-fluid main-container">
     <!-- I need to make this top row appire in top when the page scroll down -->
-    <div class="row add-user-row top-row">
+    <div
+      class="row add-user-row top-row d-flex justify-content-between align-items-center"
+    >
       <div
         [ngClass]="
           LOGGED_USER?.role === 'admin'

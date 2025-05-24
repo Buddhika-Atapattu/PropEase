@@ -37,6 +37,7 @@
               matInput
               type="text"
               [(ngModel)]="username"
+              [disabled]="isUserSaved"
               name="username"
               required
               placeholder="Enter your username or email"
@@ -49,6 +50,7 @@
               matInput
               [type]="hidePassword ? 'password' : 'text'"
               [(ngModel)]="password"
+              [disabled]="isUserSaved"
               name="password"
               required
               placeholder="Enter your password"

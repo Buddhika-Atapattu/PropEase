@@ -1,0 +1,691 @@
+<app-notification />
+<app-progress-bar />
+
+<div
+  *ngIf="mode !== null && loggedUser !== null"
+  class="main-panel"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <div class="container-fluid">
+    <div class="row page-indecator">
+      <span
+        ><button
+          type="button"
+          class="page-indicator-btn"
+          (click)="goToProperties()"
+        >
+          Properties
+        </button>
+        <i class="fa-solid fa-angle-right my-2"></i
+        ><button
+          type="button"
+          class="page-indicator-btn"
+          (click)="goToListing()"
+        >
+          Property Listing
+        </button>
+      </span>
+    </div>
+    <!-- page title -->
+    <div class="row">
+      <h1 class="text-style text-center display-4">Property Listing</h1>
+    </div>
+    <div class="row d-flex justify-content-center align-item-center">
+      <div class="col-md-8">
+        <h5 class="text-center text-style my-3">
+          You can add images or documents by copying and pasting, dragging and
+          dropping, or selecting files manually by clicking to the specific
+          areas.
+        </h5>
+      </div>
+    </div>
+    <!-- end page title -->
+
+    <!-- form start -->
+    <form
+      action=""
+      method="POST"
+      enctype="multipart/form-data"
+      (ngSubmit)="submit()"
+      class="profile-form"
+      autocomplete="off"
+      #userForm="ngForm"
+    >
+      <!-- Property images inputs -->
+      <div class="row mt-5">
+        <h2>Property Images:</h2>
+        <div class="d-flex justify-content-center align-items-center">
+          <div class="col-md-8 mt-2">
+            <div
+              class="drop-down-container"
+              (click)="triggerPropertyImages()"
+              (dragover)="onDragOverPropertyImage($event)"
+              (drop)="onDropPropertyImage($event)"
+              (dragleave)="onDragLeavePropertyImage($event)"
+              (paste)="handlePastePropertyImage($event)"
+              [class.drag-over]="isPropertyImageDragOver"
+              [ngClass]="isPropertyImageDragOver ? 'active' : ''"
+            >
+              <span>Drop property images here</span>
+            </div>
+            <input
+              type="file"
+              name="propertyImages"
+              #propertyImages
+              hidden="hidden"
+              accept="image/*"
+              multiple="multiple"
+              (change)="onFileSelectedPropertyImage($event)"
+            />
+          </div>
+        </div>
+      </div>
+      <!-- end property images inputs -->
+
+      <!-- property images preview -->
+      <div
+        class="row mt-5 image-preview"
+        *ngIf="propertyImages.files && propertyImages.files.length > 0"
+      >
+        <div
+          class="col-md-3 my-4 d-flex justify-content-center align-items-center"
+          *ngFor="let image of propertyImagePreview; let i = index"
+        >
+          <div class="image-preview-container">
+            <div class="image-text">
+              <ul>
+                <li class="list-of-text">Name:{{ image.name }}</li>
+                <li class="list-of-text">Width:{{ image.width }}px</li>
+                <li class="list-of-text">Height:{{ image.height }}px</li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              class="remove-btn"
+              (click)="removePropertyImage(i)"
+            >
+              <mat-icon
+                aria-hidden="false"
+                aria-label="Example home icon"
+                svgIcon="close"
+              ></mat-icon>
+            </button>
+            <img [src]="image.URL" alt="property image" />
+          </div>
+        </div>
+      </div>
+      <!-- end property images preview -->
+
+      <!-- property documents inputs -->
+      <div class="row mt-5">
+        <h2>Property Documents:</h2>
+        <div class="d-flex justify-content-center align-items-center">
+          <div class="col-md-8 mt-2">
+            <div
+              class="drop-down-container"
+              (click)="triggerPropertyDocs()"
+              (dragover)="onDragOverPropertyDocs($event)"
+              (drop)="onDropPropertyDocs($event)"
+              (dragleave)="onDragLeavePropertyDocs($event)"
+              (paste)="handlePastePropertyDocs($event)"
+              [class.drag-over]="isPropertyImageDragOver"
+              [ngClass]="isPropertyDocsDragOver ? 'active' : ''"
+            >
+              <span>Drop property Documents here</span>
+            </div>
+            <input
+              type="file"
+              name="propertyImages"
+              #propertyDocs
+              hidden="hidden"
+              accept=""
+              multiple="multiple"
+              (change)="onPropertyDocsSelect($event)"
+            />
+          </div>
+        </div>
+      </div>
+      <!-- end property documents input -->
+
+      <!-- property document preview -->
+      <div
+        class="row mt-5 document-preview"
+        *ngIf="propertyDocsPreview && propertyDocsPreview.length > 0"
+      >
+        <div
+          class="col-md-4 my-4 d-flex justify-content-center align-items-center"
+          *ngFor="let doc of propertyDocsPreview; let i = index"
+        >
+          <div class="row doc-preview-container">
+            <div class="col-2">
+              <mat-icon [svgIcon]="doc.icon"></mat-icon>
+            </div>
+            <div class="col-8">
+              <p class="p-0">{{ doc.name }}</p>
+            </div>
+            <div class="col-2 button-col" (click)="removeDocs(i)">
+              <button type="button">
+                <i class="fa-solid fa-rectangle-xmark"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- end property document preview -->
+
+      <!-- General Property Info -->
+      <!-- property title, type, status -->
+      <div class="row mt-5">
+        <h3>General Property Info:</h3>
+        <!-- title -->
+        <div class="col-md-4">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Title</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="title"
+              name="title"
+              required
+              placeholder="Title"
+            />
+          </mat-form-field>
+        </div>
+        <!-- end title -->
+
+        <!-- type -->
+        <div class="col-md-4">
+          <mat-form-field class="example-full-width w-100" appearance="fill">
+            <mat-label>Type</mat-label>
+            <input
+              type="text"
+              placeholder="Type"
+              aria-label="Type"
+              name="type"
+              matInput
+              required
+              (ngModelChange)="filterTypeOperation($event)"
+              [(ngModel)]="type"
+              [matAutocomplete]="typeAuto"
+            />
+            <mat-autocomplete #typeAuto="matAutocomplete">
+              <mat-option
+                *ngFor="let option of propertyTypeSort()"
+                [value]="option"
+              >
+                {{ option }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <!-- end type -->
+
+        <!-- status -->
+        <div class="col-md-4">
+          <mat-form-field class="example-full-width w-100" appearance="fill">
+            <mat-label>Status</mat-label>
+            <input
+              type="text"
+              placeholder="Status"
+              aria-label="Status"
+              name="status"
+              matInput
+              required
+              (ngModelChange)="filterStatusOperation($event)"
+              [(ngModel)]="status"
+              [matAutocomplete]="statusAuto"
+            />
+            <mat-autocomplete #statusAuto="matAutocomplete">
+              <mat-option
+                *ngFor="let option of propertyStatusSort()"
+                [value]="option"
+              >
+                {{ option }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <!-- end status -->
+      </div>
+      <!-- end property title, type, status -->
+
+      <!-- price, currenct, area, owner infor -->
+      <div class="row">
+        <!-- price -->
+        <div class="col-md-4 position-relative">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Price</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="price"
+              name="price"
+              required
+              placeholder="Price"
+            />
+            <button
+              type="button"
+              class="btn mx-2"
+              mat-icon
+              matSuffix
+              (click)="openCurrency()"
+            >
+              {{
+                isCurrencySelected ? countryActualCurrency : "Choose Currency"
+              }}
+            </button>
+          </mat-form-field>
+
+          <div
+            *ngIf="isPriceCurrencyPanelOpen"
+            [ngClass]="isPriceCurrencyPanelOpen ? 'd-flex' : 'd-none'"
+            class="currency-container"
+          >
+            <mat-form-field appearance="fill" class="w-100">
+              <mat-label
+                [ngClass]="countryOfCurrencySelectedError ? 'text-danger' : ''"
+                >{{
+                  countryOfCurrencySelectedError
+                    ? "Please select the country!"
+                    : "Select the country by type"
+                }}</mat-label
+              >
+              <input
+                matInput
+                [(ngModel)]="selectedCountryWithCurrency"
+                [matAutocomplete]="auto"
+                placeholder="Type the country name and select"
+                (ngModelChange)="selectCountriesWithCurrencies($event)"
+                name="selectedCurrencyWithCurrency"
+                [ngClass]="countryOfCurrencySelectedError ? 'text-danger' : ''"
+                required
+              />
+              <mat-autocomplete
+                #auto="matAutocomplete"
+                [displayWith]="displayCountryWithCurrencyFlag"
+                (optionSelected)="selectCountryWithCurrency($event)"
+              >
+                <mat-option
+                  *ngFor="let option of filteredCountriesWithCurrency | async"
+                  [value]="option"
+                >
+                  <img
+                    [src]="option.flags.svg"
+                    alt="{{ option.flags.alt }}"
+                    width="20"
+                    height="12"
+                    style="margin-right: 8px"
+                  />
+                  {{ option.name.common }}
+                </mat-option>
+              </mat-autocomplete>
+              <button
+                type="button"
+                class="btn mx-2"
+                mat-icon
+                matSuffix
+                (click)="closeCurrency()"
+              >
+                <i class="fa-solid fa-square-xmark"></i>
+              </button>
+            </mat-form-field>
+          </div>
+        </div>
+        <!-- end price -->
+
+        <!-- area -->
+        <div class="col-md-4">
+          <mat-form-field
+            appearance="fill"
+            class="form-field me-3 w-100 d-flex"
+          >
+            <mat-label>Area</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="area"
+              name="area"
+              required
+              placeholder="Area"
+            />
+            <span
+              class="mx-3 h4"
+              mat-icon
+              matSuffix
+              aria-label="Toggle password visibility"
+            >
+              <span>ft<sup>2</sup></span>
+            </span>
+          </mat-form-field>
+        </div>
+        <!-- end area -->
+
+        <!-- owner infor -->
+        <div class="col-md-4">
+          <mat-form-field appearance="fill" class="w-100">
+            <mat-label [ngClass]="isOwnerNotSelected ? 'text-danger' : ''">{{
+              isOwnerNotSelected
+                ? "Please select the owner from the list!"
+                : "Select the owner"
+            }}</mat-label>
+            <input
+              matInput
+              [(ngModel)]="ownerName"
+              name="ownerName"
+              [ngClass]="isOwnerNotSelected ? 'text-danger' : ''"
+              [matAutocomplete]="auto"
+              placeholder="Type and select the owner"
+              (ngModelChange)="filterOwnerThroughAllUsers($event)"
+              required
+            />
+            <mat-autocomplete
+              #auto="matAutocomplete"
+              (optionSelected)="getTheSelectedOwner($event)"
+            >
+              <mat-option
+                *ngFor="let user of filterOwner"
+                [value]="user.name"
+                class="d-flex justify-content-between align-items-center"
+              >
+                <img
+                  [src]="user.image"
+                  alt="{{ user.name }}"
+                  width="30"
+                  height="30"
+                  style="
+                    margin-right: 8px;
+                    object-fit: cover;
+                    object-position: center;
+                    border-radius: 100%;
+                    width: 30px;
+                    height: 30px;
+                  "
+                />
+                {{ user.name }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <!-- end owner infor -->
+      </div>
+      <!-- end price, currenct, area, owner infro -->
+      <!-- General Property Info End -->
+
+      <!-- property description -->
+      <div class="row mt-5">
+        <div class="col-md-12">
+          <h3>Discription:</h3>
+          <div>
+            <editor
+              apiKey="azinteymcwk49hq4199jdh7mjyoqb88jqz88upe7gestbrp5"
+              [init]="init"
+              [(ngModel)]="description"
+              [ngModelOptions]="{ standalone: true }"
+              name="description"
+              aria-placeholder="user bio"
+              aria-autocomplete="none"
+            />
+          </div>
+        </div>
+      </div>
+      <!-- end property description -->
+
+      <!-- property address -> houser number, streat, city -->
+      <div class="row mt-5">
+        <h3>Address:</h3>
+        <div class="col-md-4">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>House number</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="AddressHouseNumber"
+              name="AddressHouseNumber"
+              required
+              placeholder="House number"
+            />
+          </mat-form-field>
+        </div>
+        <div class="col-md-4">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Streat</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="AddressStreet"
+              name="AddressStreet"
+              required
+              placeholder="Streat"
+            />
+          </mat-form-field>
+        </div>
+        <div class="col-md-4">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>City</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="AddressCity"
+              name="AddressCity"
+              required
+              placeholder="City"
+            />
+          </mat-form-field>
+        </div>
+      </div>
+      <!-- end property address -> houser number, streat, city -->
+
+      <!-- property address -> State/ Province, streat, city -->
+      <div class="row">
+        <div class="col-md-4">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>State/ Province</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="AddressStateOrProvince"
+              name="AddressStateOrProvince"
+              required
+              placeholder="State/ Province"
+            />
+          </mat-form-field>
+        </div>
+        <div class="col-md-4">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Postal Code</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="AddressPostcode"
+              name="AddressPostcode"
+              required
+              placeholder="Postal Code"
+            />
+          </mat-form-field>
+        </div>
+        <div class="col-md-4">
+          <mat-form-field class="example-full-width w-100">
+            <mat-label [ngClass]="countryMissMatch ? 'text-danger' : ''">{{
+              countryMissMatch
+                ? "Match country with selected currency"
+                : "Country"
+            }}</mat-label>
+            <input
+              matInput
+              [ngClass]="countryMissMatch ? 'text-danger' : ''"
+              type="text"
+              [(ngModel)]="AddressCountry"
+              name="AddressCountry"
+              [matAutocomplete]="countriesAuto"
+              title="Country"
+              required
+              placeholder="Enter your country"
+              (ngModelChange)="addressMainFilterCountries($event)"
+            />
+            <mat-autocomplete
+              #countriesAuto="matAutocomplete"
+              [displayWith]="addressDisplayFlag"
+              (optionSelected)="countryMacher()"
+            >
+              <mat-option
+                *ngFor="let option of AddressFilteredCountries | async"
+                [value]="option"
+              >
+                <img
+                  [src]="option.image"
+                  width="24"
+                  height="16"
+                  style="margin-right: 8px"
+                  alt="{{ option.code }}"
+                />
+                {{ option.name }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- specification info -->
+      <div class="row mt-4">
+        <h3>Specification info:</h3>
+        <div class="col-md-4">
+          <mat-form-field class="w-100">
+            <mat-label>Bedrooms</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="bedrooms"
+              name="bedrooms"
+              title="bedrooms"
+              required
+              placeholder="Bedrooms"
+            />
+          </mat-form-field>
+        </div>
+        <div class="col-md-4">
+          <mat-form-field class="w-100">
+            <mat-label>Barthrooms</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="bathrooms"
+              name="bathrooms"
+              title="bathrooms"
+              required
+              placeholder="Barthrooms"
+            />
+          </mat-form-field>
+        </div>
+        <div class="col-md-4">
+          <mat-form-field class="w-100">
+            <mat-label>Maidrooms</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="maidrooms"
+              name="maidrooms"
+              title="maidrooms"
+              required
+              placeholder="Maidrooms"
+            />
+          </mat-form-field>
+        </div>
+      </div>
+      <!-- end specification info -->
+
+      <!-- property amenities -->
+      <div class="row mt-4 d-flex align-items-center">
+        <h3>Features Amenity:</h3>
+        <div class="col-md-4">
+          <mat-form-field class="example-full-width w-100">
+            <mat-label>Features Amenity</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="featureAmenity"
+              name="featureAmenity"
+              [matAutocomplete]="FeaturesAmenity"
+              title="FeaturesAmenity"
+              placeholder="Enter your country"
+              (ngModelChange)="filterFeatureAmenityOperation($event)"
+              (keydown)="addFeaturesAmenityEnter($event)"
+            />
+            <button
+              *ngIf="isAmenitiesNotIncluded"
+              type="button"
+              mat-button
+              matSuffix
+              class="btn text-dark"
+              (click)="addNewAminity()"
+            >
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <mat-autocomplete
+              #FeaturesAmenity="matAutocomplete"
+              (optionSelected)="addFeaturesAmenity($event)"
+            >
+              <mat-option
+                *ngFor="let option of propertyAmenitiesSort()"
+                [value]="option"
+              >
+                {{ option }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <div class="col-md-8">
+          <p class="text-style text-center">
+            To select amenities, choose from the existing list by type, or press
+            Enter to add a new item.
+          </p>
+        </div>
+      </div>
+      <!-- end property amenities -->
+
+      <!-- property amenties preview -->
+      <div
+        class="row my-3 d-flex justify-content-center align-item-center amenties-container"
+        *ngIf="featureAmenities.length > 0"
+      >
+        <div
+          *ngFor="let item of featureAmenities; let i = index"
+          class="col-md-3 m-2"
+        >
+          <div
+            class="btn-edit d-flex justify-content-between"
+            (click)="cancelAmenty(i)"
+          >
+            {{ item }}
+            <button type="button">
+              <i class="fa-solid fa-square-xmark"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- end property amenties -->
+
+      <!-- google map -->
+      <div class="row mt-4">
+        <h4>Choose the location of map:</h4>
+        <div class="col-md-12">
+          <app-map
+            [mode]="mode"
+            (locationSelected)="onLocationPicked($event)"
+          ></app-map>
+        </div>
+      </div>
+      <!-- end google map -->
+
+      <!-- submit btn -->
+      <div class="row mt-5 d-flex justify-content-end align-item-center">
+        <div class="col-md-2 d-flex justify-content-end align-item-center">
+          <button type="submit" class="btn-custom fw-bold submit-btn">
+            <mat-icon svgIcon="upload" class="me-1"></mat-icon> Save
+          </button>
+        </div>
+      </div>
+      <!-- end submit btn -->
+    </form>
+    <!-- form end -->
+  </div>
+</div>

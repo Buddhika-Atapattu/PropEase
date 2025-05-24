@@ -3,6 +3,43 @@
   class="main-panel"
   [ngClass]="mode ? 'dark' : 'light'"
 >
-  <h2>Properties Dashboard Area</h2>
-  <p>This is the main content panel for propease-fontend users.</p>
+  <div class="container-fluid main-container">
+    <div class="row add-user-row top-row">
+      <div
+        [ngClass]="
+          LOGGED_USER?.role === 'admin'
+            ? 'col-md-10 position-relative'
+            : 'col-md-12'
+        "
+      >
+        <input
+          type="text"
+          placeholder="Search property address..."
+          class="search-input"
+          (input)="searchUsers($event)"
+        />
+        <mat-icon
+          class="mat-icon-rtl-mirror search-icon"
+          svgIcon="search"
+        ></mat-icon>
+      </div>
+      <div
+        *ngIf="LOGGED_USER?.role === 'admin'"
+        [ngClass]="
+          LOGGED_USER?.role === 'admin'
+            ? 'col-md-2 d-flex justify-content-end align-items-center'
+            : 'd-none'
+        "
+      >
+        <button
+          class="add-user-btn btn-edit"
+          type="button"
+          (click)="propertyListing()"
+        >
+          <mat-icon class="mat-icon-rtl-mirror" svgIcon="listing"></mat-icon>
+          <h6 class="mb-0 p-0">Listing</h6>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

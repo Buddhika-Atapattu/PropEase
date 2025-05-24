@@ -85,6 +85,16 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'property-listing',
+        loadComponent: () =>
+          import(
+            './pages/property/property-listing/property-listing.component'
+          ).then((m) => m.PropertyListingComponent),
+        data: {
+          roles: ['admin'],
+        },
+      },
+      {
         path: 'unauthorized',
         loadComponent: () =>
           import('./pages/error404/error404.component').then(

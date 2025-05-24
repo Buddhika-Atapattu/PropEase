@@ -479,12 +479,14 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   protected async onCountryChange(value: string): Promise<void> {
     this.typedCountry = value;
-    this.countries = await this.mainFilterCountries(value);
+    this.countries = await this.mainFilterCountries();
   }
 
-  private async mainFilterCountries(name: string): Promise<Country[]> {
-    const countries = await JSON.parse(await this.API.getCountries());
-    if (countries !== null) {
+  private async mainFilterCountries(): Promise<Country[]> {
+    const countries: Country[] = await this.API.getCountries();
+    if (!Array.isArray(countries)) return [];
+
+    if (countries) {
       this.countries = countries;
       this.filteredCountries = this.countryControl.valueChanges.pipe(
         startWith(this.typedCountry),

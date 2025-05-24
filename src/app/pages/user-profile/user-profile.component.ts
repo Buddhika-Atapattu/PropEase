@@ -245,7 +245,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private async mainFilterCountries(name: string): Promise<Country[]> {
-    const countries = await JSON.parse(await this.API.getCountries());
+    const countries = await this.API.getCountries();
     if (countries !== null) {
       this.countries = countries;
       this.filteredCountries = this.countryControl.valueChanges.pipe(

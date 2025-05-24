@@ -77,6 +77,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     rememberMe: false,
   };
 
+  protected isUserSaved:boolean = false;
+
   constructor(
     private windowRef: WindowsRefService,
     protected authService: AuthService,
@@ -134,6 +136,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
         if (this.username !== '' && this.password !== '' && this.rememberMe) {
           if (loggedUser) {
+            this.isUserSaved = true;
             this.authService.logginUser = {
               username: this.username ?? '',
               password: this.password ?? '',

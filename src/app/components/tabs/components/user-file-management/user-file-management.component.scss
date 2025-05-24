@@ -5,16 +5,54 @@
 }
 
 .table-responsive {
+  margin-top: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   ::ng-deep table {
-    display: block;
-    width: 100% !important;
+    display: table-caption;
+    width: 100%;
+    min-width: 768px;
+    table-layout: auto;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 1rem;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: break-word;
+    }
+  }
+
+  .mat-header-row,
+  .mat-row {
+    display: table;
+    width: 100%;
     table-layout: fixed;
+  }
+
+  .table-image {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center;
+    margin: 1rem auto;
   }
   .download {
     ::ng-deep mat-icon {
       ::ng-deep svg {
+        fill: #fff !important;
+        stroke: #fff !important;
         ::ng-deep path {
           fill: #fff !important;
+          stroke: #fff !important;
+        }
+        ::ng-deep circle {
+          fill: #fff !important;
+          stroke: #fff !important;
         }
       }
     }

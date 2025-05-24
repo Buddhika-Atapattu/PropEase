@@ -81,6 +81,19 @@ body {
   color: var(--text-color) !important;
 }
 
+input[type="number"] {
+  /* Chrome, Safari, Edge, Opera */
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
 // scrollbar style
 // === Light Mode Scrollbar (default) ===
 html {

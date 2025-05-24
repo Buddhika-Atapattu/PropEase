@@ -28,6 +28,7 @@
     <link rel="apple-touch-icon" href="/Images/company-images/logo128.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
+
     <style>
       :root {
         --bg-color: #fdf6e3;
@@ -124,7 +125,17 @@
           opacity: 1;
         }
       }
+
+      gmpx-place-autocomplete {
+        display: block;
+        width: 100%;
+        max-width: 500px;
+      }
     </style>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDtyUEKZAgXCBiuteyZVvaAaV0OVm-Wydc&libraries=places&v=weekly&loading=async"
+      async
+    ></script>
   </head>
 
   <body class="mat-typography overflow-hidden">
@@ -203,6 +214,8 @@
         animate();
       });
     </script>
+    <!-- "https://maps.googleapis.com/maps/api/js?key=AIzaSyDtyUEKZAgXCBiuteyZVvaAaV0OVm-Wydc&libraries=marker&libraries=places&v=weekly&loading=async" -->
+
     <script
       src="https://kit.fontawesome.com/caf2306f51.js"
       crossorigin="anonymous"

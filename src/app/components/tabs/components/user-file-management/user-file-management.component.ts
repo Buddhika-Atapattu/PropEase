@@ -322,34 +322,43 @@ export class UserFileManagementComponent
     }
   }
 
-  protected sortData(sort: Sort) {
+  protected sortData(sort: Sort): void {
     const data = this.dataSource.data.slice();
+    const isAsc = sort.direction === 'asc';
+
     if (!sort.active || sort.direction === '') {
       this.dataSource.data = data;
       return;
     }
-    this.dataSource.data = data.sort((a, b) => {
-      const isAsc = sort.direction === 'asc';
-      switch (sort.active) {
-        case 'URL':
-          return this.compare(a.URL, b.URL, isAsc);
-        case 'download':
-          return this.compare(a.download, b.download, isAsc);
-        case 'size':
-          return this.compare(a.size, b.size, isAsc);
-        case 'extension':
-          return this.compare(a.extension, b.extension, isAsc);
-        default:
-          return 0;
-      }
-    });
+
+    // Mapping displayed columns to actual Data interface keys
+    const columnFieldMap: { [key: string]: keyof Data } = {
+      'Original Name': 'originalName',
+      Uploader: 'uploader',
+      UploadDate: 'uploadDate',
+      Username: 'username',
+      // 'Download' intentionally excluded
+    };
+
+    const field = columnFieldMap[sort.active];
+
+    if (field) {
+      this.dataSource.data = data.sort((a, b) =>
+        this.compare(a[field], b[field], isAsc)
+      );
+    }
   }
-  private compare(
-    a: number | string | Date,
-    b: number | string | Date,
-    isAsc: boolean
-  ) {
-    return (a < b ? -1 : 1) * (isAsc ? 1 : -1);
+
+  private compare(a: any, b: any, isAsc: boolean): number {
+    if (a == null && b != null) return isAsc ? -1 : 1;
+    if (a != null && b == null) return isAsc ? 1 : -1;
+    if (a == null && b == null) return 0;
+
+    if (typeof a === 'string' && typeof b === 'string') {
+      return a.localeCompare(b) * (isAsc ? 1 : -1);
+    }
+
+    return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
   }
 
   // Called when user triggers a search (e.g., clicks "Search" button)

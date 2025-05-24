@@ -44,7 +44,9 @@
             ],
             "styles": [
               "src/styles.scss",
-              "src/app/styles/global.scss"
+              "src/app/styles/global.scss",
+              "node_modules/leaflet/dist/leaflet.css",
+              "node_modules/leaflet-geosearch/dist/geosearch.css"
             ],
             "scripts": [],
             "server": "src/main.server.ts",
@@ -118,7 +120,10 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/app/styles/global.scss",
+              "node_modules/leaflet/dist/leaflet.css",
+              "node_modules/leaflet-geosearch/dist/geosearch.css"
             ],
             "scripts": []
           }

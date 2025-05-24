@@ -35,12 +35,11 @@ export class UsersComponent implements OnInit, OnDestroy {
   private routerSub: Subscription | null = null;
   protected LOGGED_USER: BaseUser | null = null;
 
-
   constructor(
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
-    private authService:AuthService,
+    private authService: AuthService,
     private router: Router,
     private APIsService: APIsService,
     private matIconRegistry: MatIconRegistry,
@@ -49,35 +48,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   ) {
     this.LOGGED_USER = this.authService.getLoggedUser;
     this.isBrowser = isPlatformBrowser(this.platformId);
-
-    this.matIconRegistry.addSvgIcon(
-      'view',
-      this.domSanitizer.bypassSecurityTrustResourceUrl('/Images/Icons/view.svg')
-    );
-    this.matIconRegistry.addSvgIcon(
-      'edit',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/pencil-square.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'delete',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/delete.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'add-new-user',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/add-new-user.svg'
-      )
-    );
-    this.matIconRegistry.addSvgIcon(
-      'search',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/search.svg'
-      )
-    );
+    this.iconMaker();
   }
 
   async ngOnInit(): Promise<void> {
@@ -115,6 +86,23 @@ export class UsersComponent implements OnInit, OnDestroy {
     if (usersArray) {
       this.users = usersArray.data;
       this.pageCount = Math.round(usersArray.count / 10) + 1;
+    }
+  }
+
+  private iconMaker() {
+    const iconMap = [
+      { name: 'view', path: '/Images/Icons/view.svg' },
+      { name: 'edit', path: '/Images/Icons/pencil-square.svg' },
+      { name: 'delete', path: '/Images/Icons/delete.svg' },
+      { name: 'add-new-user', path: '/Images/Icons/add-new-user.svg' },
+      { name: 'search', path: '/Images/Icons/search.svg' },
+    ];
+
+    for (let icon of iconMap) {
+      this.matIconRegistry.addSvgIcon(
+        icon.name.toString(),
+        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path.toString())
+      );
     }
   }
 

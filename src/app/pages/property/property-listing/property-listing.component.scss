@@ -1,0 +1,378 @@
+@use "../../../styles/global.scss" as *;
+@use "sass:color";
+
+::ng-deep .tox-statusbar__branding {
+  display: none;
+}
+
+.main-panel {
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+
+  .page-indecator {
+    position: absolute;
+    top: 0%;
+    left: 1%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .page-indicator-btn {
+      background: none;
+      border: none;
+      margin: 0 0.5rem;
+      padding: 0;
+      cursor: pointer;
+      font-weight: 100;
+      text-transform: uppercase;
+      font-size: 10pt;
+    }
+  }
+
+  .drop-down-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative;
+    min-height: 5rem;
+    height: 10rem;
+    width: 100%;
+    border-radius: 2rem;
+    font-size: 25pt;
+    text-transform: uppercase;
+    color: currentColor;
+    cursor: pointer;
+  }
+
+  .error-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    padding: 1rem;
+    border-radius: 1rem;
+    box-shadow: 0rem 0rem 1rem 0rem #0000007d;
+    button {
+      border-left: 0.01rem solid #fff;
+      border-bottom: none;
+      border-top: none;
+      border-right: none;
+      background: none;
+      padding: 0rem 1rem;
+    }
+  }
+
+  .image-preview-container {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 15rem;
+    height: 15rem;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    .image-text {
+      position: absolute;
+      opacity: 0;
+      top: 100rem;
+      font-size: 9pt;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: start;
+      flex-wrap: wrap;
+      align-content: center;
+      background: #ffffff75;
+      color: #000;
+      text-transform: uppercase;
+      font-weight: 500;
+      transition: all 0.5s ease-in-out;
+      ul {
+        margin: 0;
+        list-style: none;
+        padding-left: 2rem;
+      }
+    }
+
+    &:hover .image-text {
+      opacity: 1;
+      top: 0rem;
+    }
+
+    .remove-btn {
+      position: absolute;
+      border: none;
+      top: 5%;
+      right: 5%;
+      transition: all 0.3s ease-in-out;
+      padding: 0rem;
+      border-radius: 100%;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-content: center;
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      }
+      ::ng-deep mat-icon {
+        width: 2rem;
+        height: 2rem;
+        ::ng-deep svg {
+          ::ng-deep path {
+            fill: #fff;
+            stroke: #fff;
+          }
+        }
+      }
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+  }
+
+  ::ng-deep mat-label {
+    &.text-danger ~ .mat-mdc-form-field-required-marker {
+      color: red;
+      margin-left: 2px;
+      margin-right: 2px;
+    }
+  }
+
+  .currency-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0rem 0rem 1rem 0rem #000000b0;
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      height: 0rem;
+      display: none;
+    }
+    input[type="number"] {
+      /* Chrome, Safari, Edge, Opera */
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      /* Firefox */
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+  }
+
+  .amenties-container {
+    box-shadow: inset 0rem 0rem 1rem #00000057;
+    border-radius: 1rem;
+    padding: 2rem;
+    button {
+      margin-left: 0.5rem;
+      border-left: 1px solid #fff;
+      border-top: none;
+      border-right: none;
+      border-bottom: none;
+      background: none;
+      color: #fff;
+    }
+  }
+
+  .document-preview {
+    padding: 2rem;
+    .doc-preview-container {
+      padding: 0.5rem;
+      width: 100%;
+      border-radius: 0.357rem;
+      display: flex;
+      align-content: center;
+      justify-content: center;
+      transition: 0.25s ease-in-out all;
+      cursor: pointer;
+      div {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        align-content: center;
+        button {
+          background: none;
+          border: none;
+        }
+        p {
+          width: 200px; /* Set max width */
+          white-space: nowrap; /* Prevent wrapping */
+          overflow: hidden; /* Hide overflow */
+          text-overflow: ellipsis;
+          margin: 0;
+        }
+      }
+      .button-col {
+        border-left: 0.159rem solid #fff;
+        border-top: none;
+        border-right: none;
+        border-bottom: none;
+        cursor: pointer;
+      }
+    }
+  }
+
+  // Dark Theam
+  &.dark {
+    background: linear-gradient(
+      145deg,
+      $dark-secondary-color,
+      color.adjust($dark-secondary-color, $lightness: 2%)
+    );
+    color: $dark-text-color;
+    .page-indecator {
+      color: #e8bd00;
+      .page-indicator-btn {
+        color: #e8bd00;
+      }
+    }
+
+    .doc-preview-container {
+      background: linear-gradient(144deg, #be8e00, rgb(211 168 0), #a57b00);
+      &:hover {
+        transform: scale(1.056);
+      }
+
+      .button-col {
+        border-left: 0.059rem solid #fff;
+        color: #fff;
+      }
+    }
+    .image-preview,
+    .document-preview {
+      box-shadow: inset 0rem 0rem 1rem #00000057;
+      border-radius: 2rem;
+    }
+    .drop-down-container {
+      box-shadow: inset 0rem 0rem 1rem #00000057;
+      background: linear-gradient(
+        144deg,
+        rgb(0 58 168 / 34%),
+        rgb(90 0 166 / 46%),
+        rgb(20 0 145 / 43%)
+      );
+      border: 0.0159rem solid #ffffff8a;
+      &.active {
+        background: linear-gradient(
+          144deg,
+          rgba(101, 125, 170, 0.34),
+          rgba(118, 79, 150, 0.46),
+          rgba(113, 105, 165, 0.43)
+        );
+        border: 0.0159rem solid #83cfff8a;
+      }
+    }
+    .error-container {
+      background: linear-gradient(45deg, #be0000, #ff0000, #be0000);
+    }
+    .image-preview-container {
+      .remove-btn {
+        background: linear-gradient(45deg, #101325, #1c1c32, #101325);
+      }
+    }
+    .amenties-container {
+      box-shadow: inset 0rem 0rem 1rem #00000057;
+    }
+    .submit-btn {
+      ::ng-deep mat-icon {
+        ::ng-deep svg {
+          fill: #fff;
+          ::ng-deep path {
+            fill: #fff;
+          }
+        }
+      }
+    }
+  }
+
+  // Light Theam
+  &.light {
+    background: linear-gradient(
+      145deg,
+      $light-primery-color,
+      color.adjust($light-primery-color, $lightness: 2%)
+    );
+    color: $light-text-color;
+    .page-indecator {
+      color: #100a2b;
+      .page-indicator-btn {
+        color: #100a2b;
+      }
+    }
+    .image-preview,
+    .document-preview {
+      box-shadow: inset 0rem 0rem 1rem rgb(120 94 0 / 34%);
+    }
+    .drop-down-container {
+      box-shadow: inset 0rem 0rem 1rem rgb(120 94 0 / 34%);
+      background: linear-gradient(
+        144deg,
+        #ffc10757,
+        rgb(255 202 0 / 46%),
+        #ffc1076e
+      );
+      border: 0.0159rem solid #1900ff8a;
+      &.active {
+        background: linear-gradient(
+          144deg,
+          #88784757,
+          rgba(138, 126, 79, 0.46),
+          #9182536e
+        );
+        border: 0.0159rem solid #83cfff8a;
+      }
+    }
+    .error-container {
+      background: linear-gradient(45deg, #ff0000, #ff2020, #ff0000);
+      color: #fff;
+    }
+    .image-preview-container {
+      .remove-btn {
+        background: linear-gradient(45deg, #ffd000, #ffbf00, #ffd000);
+      }
+    }
+    .amenties-container {
+      box-shadow: inset 0rem 0rem 1rem rgb(120 94 0 / 34%);
+    }
+    .submit-btn {
+      ::ng-deep mat-icon {
+        ::ng-deep svg {
+          fill: #fff;
+          ::ng-deep path {
+            fill: #fff;
+          }
+        }
+      }
+    }
+    .doc-preview-container {
+      color: #16111f;
+      background: linear-gradient(144deg, #ffe185, rgb(255, 230, 130), #ffe185);
+      .button-col {
+        border-left: 0.059rem solid #16111f;
+
+        button {
+          color: #16111f;
+        }
+      }
+    }
+  }
+}
