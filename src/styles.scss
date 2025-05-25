@@ -4,9 +4,12 @@
 /* Importing Bootstrap SCSS file. */
 @use "bootstrap/scss/bootstrap" as *;
 
+@use "../src/app/styles/font/Montserrat/Montserrat.scss" as *;
+
 :root {
   --primary-bg: #fdf6e3;
   --text-color: #1f1f1f;
+  font-family: "Montserrat", sans-serif;
 }
 
 //dark mode

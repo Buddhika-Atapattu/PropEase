@@ -344,9 +344,7 @@ export class PropertyListingComponent
         passive: true,
       });
       window.addEventListener('drop', this.preventDefault, { passive: true });
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
-        this.mode = val;
-      });
+
     }
   }
 

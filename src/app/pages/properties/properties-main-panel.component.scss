@@ -83,6 +83,28 @@
           }
         }
       }
+      .filter-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 2rem;
+        background: none;
+        border: none;
+        margin: 0;
+        padding: 0;
+        z-index: 10000;
+        .filter-icon {
+          cursor: pointer;
+          ::ng-deep svg {
+            fill: #ffb200;
+            ::ng-deep path {
+              fill: #ffb200;
+              stroke: #ffb200;
+            }
+          }
+        }
+      }
+
       mat-icon {
         ::ng-deep svg {
           fill: currentColor;

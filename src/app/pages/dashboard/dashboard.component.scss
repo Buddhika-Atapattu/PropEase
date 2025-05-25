@@ -23,7 +23,7 @@
   // background-color: $light-secondary-color;
   background: none !important;
   transition: all 0.3s ease;
-  z-index: 1000;
+  z-index: 1;
 
   &.collapsed {
     width: 80px;
@@ -52,7 +52,7 @@
   background-color: transparent;
   padding: 0 2rem;
   transition: all 0.3s ease;
-  z-index: 1100;
+  z-index: 1;
 
   &.dark {
     background-color: $dark-dashboard-color;

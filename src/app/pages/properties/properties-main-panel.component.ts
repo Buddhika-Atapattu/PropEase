@@ -4,6 +4,8 @@ import {
   OnDestroy,
   Inject,
   PLATFORM_ID,
+  ChangeDetectionStrategy,
+  inject,
 } from '@angular/core';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
@@ -13,6 +15,18 @@ import { ActivatedRoute } from '@angular/router';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { AuthService, BaseUser } from '../../../services/auth/auth.service';
+import { MatDialog } from '@angular/material/dialog';
+import { PropertyFilterDialogComponent } from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
+
+interface filterDialogData {
+  minPrice: number;
+  maxPrice: number;
+  beds: string;
+  bathrooms: string;
+  amenities: string[];
+  type: string;
+  status: string;
+}
 
 @Component({
   selector: 'app-properties-main-panel',
@@ -31,6 +45,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   protected loading: boolean = true;
   private routeSub: Subscription | null = null;
   private routerSub: Subscription | null = null;
+  private filterDialogRefData: filterDialogData | string = '';
 
   constructor(
     private windowRef: WindowsRefService,
@@ -39,7 +54,8 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) {
     this.LOGGED_USER = this.authService.getLoggedUser;
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -69,6 +85,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
       { name: 'delete', path: '/Images/Icons/delete.svg' },
       { name: 'add-new-user', path: '/Images/Icons/add-new-user.svg' },
       { name: 'search', path: '/Images/Icons/search.svg' },
+      { name: 'filter', path: '/Images/Icons/filter.svg' },
     ];
 
     for (let icon of iconMap) {
@@ -85,5 +102,22 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
 
   protected propertyListing() {
     this.router.navigate(['/dashboard/property-listing']);
+  }
+
+  protected openFilter() {
+    const dialogRef = this.dialog.open(PropertyFilterDialogComponent, {
+      width: '100%',
+      height: 'auto',
+      autoFocus: false,
+      data: {},
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result !== null && result !== undefined) {
+        this.filterDialogRefData = result;
+        console.log('Filter dialog closed with result:', result);
+        // Handle any additional logic after the filter dialog is closed
+      }
+    });
   }
 }

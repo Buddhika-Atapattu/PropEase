@@ -1,3 +1,9 @@
+::ng-deep {
+  .mat-mdc-dialog-surface {
+    background: none !important;
+  }
+}
+
 //Light mode
 :host-context(html.light) {
   .main-content {

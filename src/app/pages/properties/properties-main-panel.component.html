@@ -18,10 +18,12 @@
           class="search-input"
           (input)="searchUsers($event)"
         />
-        <mat-icon
-          class="mat-icon-rtl-mirror search-icon"
-          svgIcon="search"
-        ></mat-icon>
+        <button type="button" Mat-button class="search-btn" class="btn filter-btn" (click)="openFilter()">
+          <mat-icon
+            class="mat-icon-rtl-mirror filter-icon"
+            svgIcon="filter"
+          ></mat-icon>
+        </button>
       </div>
       <div
         *ngIf="LOGGED_USER?.role === 'admin'"

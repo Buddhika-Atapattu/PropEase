@@ -15,6 +15,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
 import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { AuthService, BaseUser } from '../../../services/auth/auth.service';
+import { PropertyFilterDialogComponent } from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
 
 @Component({
   selector: 'app-users',
@@ -96,6 +97,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       { name: 'delete', path: '/Images/Icons/delete.svg' },
       { name: 'add-new-user', path: '/Images/Icons/add-new-user.svg' },
       { name: 'search', path: '/Images/Icons/search.svg' },
+      { name: 'filter', path: '/Images/Icons/filter.svg' },
     ];
 
     for (let icon of iconMap) {

@@ -1,0 +1,264 @@
+<div class="container-fluid property-filter-dialog">
+  <!-- panel close button -->
+  <div class="close-btn-container">
+    <button type="button" (click)="closeFilter()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- filter form -->
+  <form action="" method="post" (ngSubmit)="onSubmit()">
+    <!-- heading row -->
+    <div class="row mt-3">
+      <div class="col-12">
+        <h3 class="text-center text-style">Filter Properties</h3>
+      </div>
+    </div>
+
+    <!-- type and status -->
+    <div class="row mt-3">
+      <div class="col-md-12">
+        <p class="p-0"><i class="fa-solid fa-house"></i> Type and status:</p>
+      </div>
+    </div>
+    <div class="row">
+      <!-- Type -->
+      <div class="col-md-6">
+        <mat-form-field class="w-100">
+          <input
+            matInput
+            type="text"
+            class="custom-input"
+            name="type"
+            id="type"
+            [matAutocomplete]="typeAuto"
+            placeholder="Type"
+            [(ngModel)]="selectedType"
+            (ngModelChange)="typeChanging()"
+          />
+          <mat-autocomplete #typeAuto="matAutocomplete">
+            <mat-option
+              *ngFor="let option of propertyTypeSort()"
+              [value]="option"
+            >
+              {{ option }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+      </div>
+
+      <!-- status -->
+      <div class="col-md-6">
+        <mat-form-field class="w-100">
+          <input
+            matInput
+            type="text"
+            class="custom-input"
+            name="status"
+            id="status"
+            [matAutocomplete]="statusAuto"
+            placeholder="Status"
+            [(ngModel)]="selectedStatus"
+            (ngModelChange)="statusChanging()"
+          />
+          <mat-autocomplete #statusAuto="matAutocomplete">
+            <mat-option
+              *ngFor="let option of propertyStatusSort()"
+              [value]="option"
+            >
+              {{ option }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+      </div>
+    </div>
+    <!-- price range by number -->
+    <div class="row mt-3">
+      <div class="col-md-12">
+        <p class="p-0 m-0">
+          <i class="fa-solid fa-money-bills"></i> Price range:
+        </p>
+      </div>
+    </div>
+
+    <div class="row mt-3">
+      <div class="col-md-6">
+        <mat-form-field class="w-100">
+          <input
+            type="number"
+            matInput
+            class="custom-input"
+            [(ngModel)]="minPriceInput"
+            name="minPrice"
+            id="minPrice"
+            (ngModelChange)="onMinInputChange($event)"
+            placeholder="Min Price"
+          />
+        </mat-form-field>
+      </div>
+      <div class="col-md-6">
+        <mat-form-field class="w-100">
+          <input
+            type="number"
+            matInput
+            class="custom-input"
+            [(ngModel)]="maxPriceInput"
+            name="maxPrice"
+            id="maxPrice"
+            (ngModelChange)="onMaxInputChange($event)"
+            placeholder="Max Price"
+          />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- price range by bar -->
+    <div class="row mt-3">
+      <div class="col-md-12 overflow-hidden">
+        <ngx-slider
+          [ngClass]="isSliderChanging ? '' : 'slider-full'"
+          [(value)]="minPrice"
+          [(highValue)]="maxPrice"
+          [options]="sliderOptions"
+          (userChange)="detectSliderChange($event)"
+        ></ngx-slider>
+      </div>
+    </div>
+
+    <!-- beds -->
+    <div class="row mt-3">
+      <div class="col-md-12">
+        <p class="p-0 m-0"><i class="fa-solid fa-bed"></i> Bads:</p>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-md-12 overflow-hidden">
+        <mat-button-toggle-group
+          [(ngModel)]="beds"
+          [name]="'beds' + beds"
+          class="select-btn-toggle-group"
+        >
+          <mat-button-toggle value="0">0</mat-button-toggle>
+          <mat-button-toggle value="1">1</mat-button-toggle>
+          <mat-button-toggle value="2">2</mat-button-toggle>
+          <mat-button-toggle value="3">3</mat-button-toggle>
+          <mat-button-toggle value="4">4</mat-button-toggle>
+          <mat-button-toggle value="5">5</mat-button-toggle>
+          <mat-button-toggle value="6">6</mat-button-toggle>
+          <mat-button-toggle value="7">7</mat-button-toggle>
+          <mat-button-toggle value="8">8</mat-button-toggle>
+          <mat-button-toggle value="9">9</mat-button-toggle>
+          <mat-button-toggle value="10">10</mat-button-toggle>
+          <mat-button-toggle value="10+">10+</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+    </div>
+
+    <!-- bathrooms -->
+    <div class="row mt-3">
+      <div class="col-md-12">
+        <p class="p-0 m-0"><i class="fa-solid fa-bath"></i> Bathrooms:</p>
+      </div>
+    </div>
+    <div class="row mt-3">
+      <div class="col-md-12 overflow-hidden">
+        <mat-button-toggle-group
+          [(ngModel)]="bathrooms"
+          [name]="'beds' + bathrooms"
+          class="select-btn-toggle-group"
+        >
+          <mat-button-toggle value="0">0</mat-button-toggle>
+          <mat-button-toggle value="1">1</mat-button-toggle>
+          <mat-button-toggle value="2">2</mat-button-toggle>
+          <mat-button-toggle value="3">3</mat-button-toggle>
+          <mat-button-toggle value="4">4</mat-button-toggle>
+          <mat-button-toggle value="5">5</mat-button-toggle>
+          <mat-button-toggle value="6">6</mat-button-toggle>
+          <mat-button-toggle value="7">7</mat-button-toggle>
+          <mat-button-toggle value="8">8</mat-button-toggle>
+          <mat-button-toggle value="9">9</mat-button-toggle>
+          <mat-button-toggle value="10">10</mat-button-toggle>
+          <mat-button-toggle value="10+">10+</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+    </div>
+
+    <!-- Amenities -->
+    <div class="row mt-3">
+      <div class="col-md-12">
+        <p class="p-0"><i class="fa-solid fa-gem"></i> Amenities:</p>
+        <mat-form-field class="w-100">
+          <input
+            matInput
+            type="text"
+            [(ngModel)]="amenity"
+            class="custom-input"
+            name="amenity"
+            id="amenity"
+            [matAutocomplete]="FeaturesAmenity"
+            placeholder="Type the amenity that you want"
+            (ngModelChange)="onAmenitiesChange($event)"
+          />
+          <button
+            type="button"
+            mat-button
+            matSuffix
+            class="btn text-dark"
+            (click)="addNewAminity()"
+          >
+            <i class="fa-solid fa-plus"></i>
+          </button>
+          <mat-autocomplete
+            #FeaturesAmenity="matAutocomplete"
+            (optionSelected)="addNewAminity()"
+          >
+            <mat-option
+              *ngFor="let option of propertyAmenitiesSort()"
+              [value]="option"
+            >
+              {{ option }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- amenities preview -->
+    <div class="row">
+      <div
+        class="col-md-6"
+        *ngFor="let selectedAmenity of selectedAmenities; let i = index"
+      >
+        <button
+          type="button"
+          class="btn-custom w-100 d-flex justify-content-between align-items-center"
+        >
+          <div class="col-xs-10">
+            {{ selectedAmenity }}
+          </div>
+          <div class="col-xs-2">
+            <i class="fa-solid fa-xmark" (click)="removeAmenity(i)"></i>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- submit button ans cancel button -->
+    <div class="row d-flex justify-content-end align-item-center mt-3">
+      <div class="col-md-5 d-flex justify-content-between align-item-center">
+        <div class="col-xs-6">
+          <button
+            type="button"
+            class="btn-delete w-100"
+            (click)="closeFilter()"
+          >
+            Cancel
+          </button>
+        </div>
+        <div class="col-xs-6">
+          <button type="submit" class="btn-view w-100">Filter</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
