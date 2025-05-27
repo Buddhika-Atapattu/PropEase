@@ -1,0 +1,26 @@
+<div class="slider-container">
+  <div class="slider-track" (click)="onSliderClick($event)">
+    <div
+      class="slider-range"
+      [style.left.%]="rangePercentLow"
+      [style.width.%]="rangePercentHigh - rangePercentLow"
+    ></div>
+
+    <div
+      class="slider-thumb low"
+      [style.left.%]="rangePercentLow"
+      (mousedown)="onThumbDrag($event, 'low')"
+    ></div>
+
+    <div
+      class="slider-thumb high"
+      [style.left.%]="rangePercentHigh"
+      (mousedown)="onThumbDrag($event, 'high')"
+    ></div>
+  </div>
+
+  <div class="labels">
+    <span>{{ value | number }}</span>
+    <span>{{ highValue | number }}</span>
+  </div>
+</div>

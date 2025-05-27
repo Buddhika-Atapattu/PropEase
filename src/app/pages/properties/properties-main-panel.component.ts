@@ -6,6 +6,8 @@ import {
   PLATFORM_ID,
   ChangeDetectionStrategy,
   inject,
+  ViewChild,
+  ElementRef,
 } from '@angular/core';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
@@ -17,7 +19,15 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { AuthService, BaseUser } from '../../../services/auth/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { PropertyFilterDialogComponent } from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
-
+import {
+  PropertyService,
+  Property,
+  PropertyFilter,
+  BackEndPropertyData,
+} from '../../../services/property/property.service';
+import { ProgressBarComponent } from '../../components/dialogs/progress-bar/progress-bar.component';
+import { NotificationComponent } from '../../components/dialogs/notification/notification.component';
+import { PropertyViewCardComponent } from '../../components/property-view-card/property-view-card.component';
 interface filterDialogData {
   minPrice: number;
   maxPrice: number;
@@ -28,24 +38,49 @@ interface filterDialogData {
   status: string;
 }
 
+interface apiDataTypeForProperties {
+  properties: Property[];
+  count: number;
+}
+
 @Component({
   selector: 'app-properties-main-panel',
-  imports: [CommonModule, MatIconModule],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    NotificationComponent,
+    ProgressBarComponent,
+    PropertyViewCardComponent,
+  ],
   templateUrl: './properties-main-panel.component.html',
   styleUrl: './properties-main-panel.component.scss',
 })
 export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
+  @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
+  @ViewChild(NotificationComponent) notification!: NotificationComponent;
+  @ViewChild('searchInput', { static: true })
+  searchInput!: ElementRef<HTMLInputElement>;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
   protected LOGGED_USER: BaseUser | null = null;
   protected pageCount: number = 0;
-  protected currentPage: number = 0;
+  protected currentPage: number = 1;
   protected search: string = '';
   protected loading: boolean = true;
   private routeSub: Subscription | null = null;
   private routerSub: Subscription | null = null;
   private filterDialogRefData: filterDialogData | string = '';
+  protected properties: BackEndPropertyData[] = [];
+
+  //PAGINATION VARIABLES
+  protected readonly itemsPerPage: number = 10; // Number of items per page
+  protected pageSize: number = 10; // Default page size
+  protected pageStartIndex: number = 0; // Start index for the current page
+  protected pageEndIndex: number = 0; // End index for the current page
+  protected totalItems: number = 0; // Total number of items
+  protected totalPages: number = 0; // Total number of pages
+  protected currentPageNumber: number = 1; // Current page number
 
   constructor(
     private windowRef: WindowsRefService,
@@ -55,7 +90,8 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
     private router: Router,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private propertyService: PropertyService
   ) {
     this.LOGGED_USER = this.authService.getLoggedUser;
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -63,6 +99,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
       const path = segments.map((s) => s.path).join('/');
     });
     this.iconMaker();
+    this.callTheSearchAPI();
   }
 
   ngOnInit(): void {
@@ -86,6 +123,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
       { name: 'add-new-user', path: '/Images/Icons/add-new-user.svg' },
       { name: 'search', path: '/Images/Icons/search.svg' },
       { name: 'filter', path: '/Images/Icons/filter.svg' },
+      { name: 'reset', path: '/Images/Icons/reset.svg' },
     ];
 
     for (let icon of iconMap) {
@@ -96,14 +134,17 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Handles the user search input event, updates the search string
   protected async searchUsers(event: Event) {
     this.search = (event.target as HTMLInputElement).value;
   }
 
+  // Navigates to the property listing page
   protected propertyListing() {
     this.router.navigate(['/dashboard/property-listing']);
   }
 
+  // Opens the property filter dialog and handles the result
   protected openFilter() {
     const dialogRef = this.dialog.open(PropertyFilterDialogComponent, {
       width: '100%',
@@ -115,9 +156,66 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe((result) => {
       if (result !== null && result !== undefined) {
         this.filterDialogRefData = result;
-        console.log('Filter dialog closed with result:', result);
-        // Handle any additional logic after the filter dialog is closed
+        this.callTheSearchAPI();
       }
     });
+  }
+
+  // Resets the filter dialog data and clears the search input
+  protected async resetFilter() {
+    this.filterDialogRefData = '';
+    this.searchInput.nativeElement.value = '';
+    await this.callTheSearchAPI();
+  }
+
+  // Handles the property search input event, updates the search string, and triggers the API call
+  protected async searchProperties(input: Event) {
+    this.search = (input.target as HTMLInputElement).value;
+    await this.callTheSearchAPI();
+  }
+
+  //Calls the property service to fetch properties with pagination, search, and filter options
+  protected async callTheSearchAPI() {
+    try {
+      // Prepare the search value and filter data
+      const searchValue = this.search.trim().toLowerCase();
+      const filterData = JSON.stringify(
+        this.filterDialogRefData as filterDialogData
+      );
+      // Calculate the start and end indices for pagination
+      const startPage = (this.currentPage - 1) * this.itemsPerPage;
+      const endPage = startPage + this.itemsPerPage;
+
+      // Call the property service to get properties with pagination and filter
+      await this.propertyService
+        .getPropertiesWithPaginationAndFilter(
+          startPage,
+          endPage,
+          searchValue,
+          filterData
+        )
+        .then((response) => {
+          if (response.status === 'success') {
+
+            this.properties = response.data.properties;
+            this.totalItems = response.data.count;
+            setInterval(() => {
+              this.loading = false;
+            }, 500);
+          } else {
+            this.loading = true;
+            console.error('Error fetching properties:', response.message);
+            throw new Error(response.message);
+          }
+        });
+    } catch (error: Error | any) {
+      if (error) {
+        this.notification.notification(
+          'error',
+          'Failed to fetch properties. Please try again later.'
+        );
+        console.error('Error in callTheSearchAPI:', error);
+      }
+    }
   }
 }

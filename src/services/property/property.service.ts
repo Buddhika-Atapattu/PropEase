@@ -157,9 +157,13 @@ export interface AddedBy {
 }
 
 export interface PropertyFilter {
-  priceRange: PriceRange;
-  bedrooms: number;
-  bathrooms: number;
+  minPrice: number;
+  maxPrice: number;
+  beds: string;
+  bathrooms: string;
+  amenities: string[];
+  type: string;
+  status: string;
 }
 
 export interface PriceRange {
@@ -277,6 +281,53 @@ export interface MSG {
   data: any;
 }
 
+export interface propertyImages {
+  originalname: string;
+  filename: string;
+  mimetype: string;
+  size: number;
+  imageURL: string;
+}
+
+export interface propertyDocBackend {
+  originalname: string;
+  filename: string;
+  mimetype: string;
+  size: number;
+  documentURL: string;
+}
+
+export interface BackEndPropertyData {
+  propertyDocs: propertyDocBackend[];
+  images: propertyImages[];
+  // Include all other properties from Property
+  id: string;
+  title: string;
+  description: string;
+  type:
+    | 'apartment'
+    | 'house'
+    | 'villa'
+    | 'commercial'
+    | 'land'
+    | 'stodio'
+    | string;
+  status: 'Sale' | 'Rent' | 'Sold' | 'Rented' | string;
+  price: number;
+  currency: string;
+  bedrooms: number;
+  bathrooms: number;
+  maidrooms: number;
+  area: number;
+  address: Address;
+  countryDetails: CountryDetails;
+  featuresAndAmenities: string[];
+  addedBy: AddedBy;
+  location?: GoogleMapLocation;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -298,12 +349,47 @@ export class PropertyService {
   }
 
   //<==================== API ====================>
+  //Insert a property
   public async createProperties(data: FormData, id: string): Promise<MSG> {
     console.log(data);
     return firstValueFrom(
       this.http.post<MSG>(
         ` http://localhost:3000/api-property/insert-property/${id}`,
         data
+      )
+    );
+  }
+
+  /*
+  This api gets all properties with pagination
+  Also this will get the search and filtered properties
+  */
+  public async getPropertiesWithPaginationAndFilter(
+    start: number,
+    end: number,
+    search?: string,
+    filter?: string
+  ): Promise<MSG> {
+    let params = new HttpParams();
+    if (search !== undefined && search !== '' && search !== null) {
+      params = params.append('search', search);
+    }
+    if (filter !== undefined && filter !== '' && filter !== null) {
+      params = params.append('filter', filter);
+    }
+    return firstValueFrom(
+      this.http.get<MSG>(
+        `http://localhost:3000/api-property/get-all-properties-with-pagination/${start}/${end}`,
+        { params }
+      )
+    );
+  }
+
+  //This will gets property by id
+  public async getPropertyById(id: string): Promise<MSG> {
+    return firstValueFrom(
+      this.http.get<MSG>(
+        `http://localhost:3000/api-property/get-single-property-by-id/${id}`
       )
     );
   }

@@ -1,10 +1,12 @@
+<app-notification></app-notification>
+<app-progress-bar></app-progress-bar>
 <div
   *ngIf="mode !== null"
   class="main-panel"
   [ngClass]="mode ? 'dark' : 'light'"
 >
   <div class="container-fluid main-container">
-    <div class="row add-user-row top-row">
+    <div class="row property-bar top-row">
       <div
         [ngClass]="
           LOGGED_USER?.role === 'admin'
@@ -14,14 +16,33 @@
       >
         <input
           type="text"
-          placeholder="Search property address..."
+          placeholder="Search property title, country, or status..."
           class="search-input"
-          (input)="searchUsers($event)"
+          (input)="searchProperties($event)"
         />
-        <button type="button" Mat-button class="search-btn" class="btn filter-btn" (click)="openFilter()">
+        <button
+          type="button"
+          Mat-button
+          class="search-btn"
+          class="btn filter-btn"
+          (click)="openFilter()"
+        >
           <mat-icon
             class="mat-icon-rtl-mirror filter-icon"
             svgIcon="filter"
+          ></mat-icon>
+        </button>
+
+        <button
+          type="button"
+          Mat-button
+          class="search-btn"
+          class="btn reset-btn"
+          (click)="resetFilter()"
+        >
+          <mat-icon
+            class="mat-icon-rtl-mirror reset-icon"
+            svgIcon="reset"
           ></mat-icon>
         </button>
       </div>
@@ -41,6 +62,15 @@
           <mat-icon class="mat-icon-rtl-mirror" svgIcon="listing"></mat-icon>
           <h6 class="mb-0 p-0">Listing</h6>
         </button>
+      </div>
+    </div>
+
+    <div class="user-scroll-wrapper" *ngIf="properties.length > 0">
+      <div class="user-container">
+        <app-property-view-card
+          *ngFor="let property of properties"
+          [property]="property"
+        ></app-property-view-card>
       </div>
     </div>
   </div>

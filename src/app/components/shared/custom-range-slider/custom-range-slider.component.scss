@@ -1,0 +1,39 @@
+.slider-track {
+  position: relative;
+  height: 8px;
+  background: #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.slider-range {
+  position: absolute;
+  height: 100%;
+  background: gold;
+  border-radius: 4px;
+}
+
+.slider-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: gold;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 10px solid #fff;
+  &:hover {
+    background: orange;
+  }
+}
+.high {
+  transform: translate(-100%, -50%);
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  margin-top: 10px;
+}

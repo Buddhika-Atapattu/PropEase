@@ -60,6 +60,7 @@ import {
   Options,
 } from '@angular-slider/ngx-slider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { CustomRangeSliderComponent } from '../../shared/custom-range-slider/custom-range-slider.component';
 // MatButtonToggleModule,
 
 @Component({
@@ -86,9 +87,11 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
     MatAutocompleteModule,
     MatButtonToggleModule,
     MatDialogModule,
+    CustomRangeSliderComponent,
   ],
   templateUrl: './property-filter-dialog.component.html',
   styleUrl: './property-filter-dialog.component.scss',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class PropertyFilterDialogComponent
   implements OnInit, OnDestroy, AfterViewInit
@@ -100,28 +103,7 @@ export class PropertyFilterDialogComponent
 
   //Price range variables
   protected minPriceInput: number = 0;
-  protected maxPriceInput: number = 0;
-  protected isSliderChanging: boolean = false;
-
-  protected sliderOptions: Options = {
-    floor: 0,
-    ceil: 100000000,
-    step: 1,
-    minRange: 0,
-    maxRange: 100000000,
-    maxLimit: 100000000,
-    minLimit: 0,
-    rotate: 0,
-    animate: true,
-    draggableRange: true,
-    showSelectionBar: true,
-    translate: (value: number): string => {
-      return `${value.toLocaleString()}`;
-    },
-  };
-
-  protected maxPrice: number = Number(this.sliderOptions.ceil) ?? 100;
-  protected minPrice: number = Number(this.sliderOptions.floor) ?? 0;
+  protected maxPriceInput: number = 100000000;
 
   //Beds
   protected beds: number = 0;
@@ -219,26 +201,6 @@ export class PropertyFilterDialogComponent
     this.isStatusSelectChanging = true;
   }
   //<=========================== end status changing ===========================>
-
-  //<=========================== Price Range ===========================>
-  protected detectSliderChange(value: ChangeContext) {
-    this.isSliderChanging = true;
-    if (value.pointerType === 1) {
-      this.maxPriceInput = value.highValue ?? this.maxPriceInput;
-    } else {
-      this.minPriceInput = value.value ?? this.minPriceInput;
-    }
-  }
-  protected onMinInputChange(value: number) {
-    this.isSliderChanging = true;
-    this.minPrice = value;
-  }
-
-  protected onMaxInputChange(value: number) {
-    this.isSliderChanging = true;
-    this.maxPrice = value;
-  }
-  //<=========================== End price Range ===========================>
 
   //<=========================== Amenities ===========================>
   protected onAmenitiesChange(input: string): void {

@@ -95,6 +95,16 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'property-view/:propertyID',
+        loadComponent: () =>
+          import('./pages/property/view/view.component').then(
+            (m) => m.ViewComponent
+          ),
+        data: {
+          roles: ['admin'],
+        },
+      },
+      {
         path: 'unauthorized',
         loadComponent: () =>
           import('./pages/error404/error404.component').then(

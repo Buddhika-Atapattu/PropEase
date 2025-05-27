@@ -40,7 +40,7 @@
     .user-scroll-wrapper::-webkit-scrollbar-thumb:hover {
       background: #9c7d00;
     }
-    .add-user-row {
+    .property-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -105,6 +105,29 @@
         }
       }
 
+      .reset-btn {
+        position: absolute;
+        top: 50%;
+        left: 100%;
+        transform: translate(-400%, -50%);
+        width: auto;
+        height: auto;
+        padding: 0;
+        z-index: 10000;
+        .reset-icon {
+          width: 25px;
+          height: 25px;
+          cursor: pointer;
+          ::ng-deep svg {
+            fill: #ffb200;
+            ::ng-deep path {
+              fill: #ffb200;
+              stroke: #ffb200;
+            }
+          }
+        }
+      }
+
       mat-icon {
         ::ng-deep svg {
           fill: currentColor;
@@ -156,7 +179,7 @@
     .main-container {
       background-color: $dark-secondary-color;
       box-shadow: inset 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
-      .add-user-row {
+      .property-bar {
         background-color: $dark-primery-color;
         box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
         .add-user-btn {
@@ -177,7 +200,7 @@
     .main-container {
       background-color: $light-primery-color;
       box-shadow: inset 0rem 0rem 1rem 0rem $light-dashboard-dark-color;
-      .add-user-row {
+      .property-bar {
         background-color: #ffe394;
         box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
         .add-user-btn {

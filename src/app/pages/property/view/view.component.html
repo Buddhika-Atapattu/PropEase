@@ -1,0 +1,64 @@
+<!-- view.component.html -->
+<div
+  *ngIf="mode !== null && property !== null"
+  class="main-panel"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <div class="container-fluid">
+    <div class="row page-indecator">
+      <span>
+        <button
+          type="button"
+          class="page-indicator-btn"
+          (click)="goToProperties()"
+        >
+          Properties
+        </button>
+        <i class="fa-solid fa-angle-right my-2"></i>
+        <button
+          type="button"
+          class="page-indicator-btn"
+          (click)="goToPropertyView()"
+        >
+          Property Listing
+        </button>
+      </span>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-12 d-flex justify-content-center align-item-center">
+        <div class="slider-container">
+          <div class="slider">
+            <div
+              class="tile"
+              [ngClass]="isImageTrasform ? '' : 'fade-out'"
+              *ngFor="
+                let bgPos of imageTiles;
+                let i = index;
+                trackBy: trackByIndex
+              "
+              [ngStyle]="{
+                'background-position': bgPos,
+
+              }"
+            ></div>
+            <img
+              [ngClass]="isImageTrasform ? 'fade-in' : ''"
+              [src]="propertyImages[currentImageIndex].imageURL"
+              alt="property image"
+            />
+          </div>
+          <div class="controls">
+            <button class="left" (click)="prevImage()">
+              <i class="fa-solid fa-angle-left"></i>
+            </button>
+            <button class="right" (click)="nextImage()">
+              <i class="fa-solid fa-angle-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 'background-image':'url(' + propertyImages[currentImageIndex].imageURL + ')' -->

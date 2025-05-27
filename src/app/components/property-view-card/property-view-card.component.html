@@ -1,1 +1,110 @@
-<p>property-view-card works!</p>
+<div
+  *ngIf="mode !== null"
+  class="main-panel"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <div class="row mt-3 property-bar" *ngIf="property">
+    <div class="col-md-4">
+      <app-skeleton-loader
+        *ngIf="loading"
+        [Mode]="mode"
+        [height]="'200px'"
+        [width]="'100%'"
+        [borderRadius]="'0.5rem'"
+      >
+      </app-skeleton-loader>
+      <div *ngIf="!loading" class="property-image-container">
+        <img
+          [src]="property.images[0].imageURL"
+          alt="property image"
+          class="property-image"
+        />
+      </div>
+    </div>
+    <div class="col-md-5">
+      <div class="property-details">
+        <app-skeleton-loader
+          *ngIf="loading"
+          [Mode]="mode"
+          [height]="'30px'"
+          [width]="'100%'"
+          [borderRadius]="'0.125rem'"
+        >
+        </app-skeleton-loader>
+        <h5 *ngIf="!loading" class="property-title">
+          {{ property.title }} | {{ property.type }} | {{ property.status }}
+        </h5>
+        <app-skeleton-loader
+          *ngIf="loading"
+          [Mode]="mode"
+          [height]="'15px'"
+          [width]="'100%'"
+          [borderRadius]="'0.125rem'"
+        >
+        </app-skeleton-loader>
+        <p *ngIf="!loading" class="property-location">
+          {{ property.address.city }}, {{ property.address.stateOrProvince }},
+          {{ property.address.country }}
+        </p>
+        <app-skeleton-loader
+          *ngIf="loading"
+          [Mode]="mode"
+          [height]="'15px'"
+          [width]="'100%'"
+          [borderRadius]="'0.125rem'"
+        >
+        </app-skeleton-loader>
+        <p *ngIf="!loading" class="property-price">
+          Price: {{ property.price | currency : property.currency }}
+        </p>
+        <app-skeleton-loader
+          *ngIf="loading"
+          [Mode]="mode"
+          [height]="'15px'"
+          [width]="'100%'"
+          [borderRadius]="'0.125rem'"
+        >
+        </app-skeleton-loader>
+        <p *ngIf="!loading" class="property-features">
+          <i class="fa fa-bed me-2" aria-hidden="true"></i>
+          {{ property.bedrooms }}
+          <i class="fa fa-bath mx-2" aria-hidden="true"></i>
+          {{ property.bathrooms }}
+          <i class="fa-solid fa-chart-area mx-2" aria-hidden="true"></i
+          >{{ property.area }} sqft
+        </p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="row">
+        <div class="col-sm-4">
+          <button
+            class="btn btn-success bg-success me-2 btn-view"
+            type="button"
+            (click)="gotoTheProperty(property.id)"
+          >
+            <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon>
+          </button>
+        </div>
+        <div class="col-sm-4">
+          <button
+            *ngIf="LOGGED_USER?.role === 'admin'"
+            class="btn btn-warning bg-warning mx-2 btn-edit"
+            type="button"
+          >
+            <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon>
+          </button>
+        </div>
+        <div class="col-sm-4">
+          <button
+            *ngIf="LOGGED_USER?.role === 'admin'"
+            class="btn btn-danger bg-danger ms-2 btn-delete"
+            type="button"
+          >
+            <mat-icon class="mat-icon-rtl-mirror" svgIcon="delete"></mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

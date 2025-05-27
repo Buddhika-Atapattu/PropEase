@@ -91,7 +91,6 @@
             [(ngModel)]="minPriceInput"
             name="minPrice"
             id="minPrice"
-            (ngModelChange)="onMinInputChange($event)"
             placeholder="Min Price"
           />
         </mat-form-field>
@@ -105,7 +104,6 @@
             [(ngModel)]="maxPriceInput"
             name="maxPrice"
             id="maxPrice"
-            (ngModelChange)="onMaxInputChange($event)"
             placeholder="Max Price"
           />
         </mat-form-field>
@@ -113,15 +111,15 @@
     </div>
 
     <!-- price range by bar -->
-    <div class="row mt-3">
-      <div class="col-md-12 overflow-hidden">
-        <ngx-slider
-          [ngClass]="isSliderChanging ? '' : 'slider-full'"
-          [(value)]="minPrice"
-          [(highValue)]="maxPrice"
-          [options]="sliderOptions"
-          (userChange)="detectSliderChange($event)"
-        ></ngx-slider>
+    <div class="row mt-5">
+      <div class="col-md-12">
+        <app-custom-range-slider
+          [(value)]="minPriceInput"
+          [(highValue)]="maxPriceInput"
+          [min]="0"
+          [max]="100000000"
+          [step]="10000"
+        ></app-custom-range-slider>
       </div>
     </div>
 

@@ -1,0 +1,127 @@
+@use "../../../styles/global.scss" as *;
+@use "sass:color";
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.main-panel {
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  min-height: 85vh;
+  padding: 2rem;
+
+  .page-indecator {
+    position: absolute;
+    top: 0%;
+    left: 1%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .page-indicator-btn {
+      background: none;
+      border: none;
+      margin: 0 0.5rem;
+      padding: 0;
+      cursor: pointer;
+      font-weight: 100;
+      text-transform: uppercase;
+      font-size: 10pt;
+    }
+  }
+
+  .slider-container {
+    width: 100vw;
+    height: 75vh;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0.25rem;
+    .slider {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(10, 1fr);
+      // .tile {
+      //   width: 100%;
+      //   height: 100%;
+      //   background-size: 100% 100%;
+      //   transition: transform 0.5s ease, opacity 0.5s ease;
+      // }
+    }
+    .property-image-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        animation: fadeIn 0.5s ease forwards;
+      }
+    }
+    .controls {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-content: center;
+      button {
+        background: none;
+        border: none;
+      }
+    }
+  }
+
+  &.dark {
+    background: linear-gradient(
+      145deg,
+      $dark-secondary-color,
+      color.adjust($dark-secondary-color, $lightness: 2%)
+    );
+    color: $dark-text-color;
+    .page-indecator {
+      color: #e8bd00;
+      .page-indicator-btn {
+        color: #e8bd00;
+      }
+    }
+
+    .slider-container {
+      background: #0c0e1a;
+    }
+  }
+
+  &.light {
+    background: linear-gradient(
+      145deg,
+      $light-primery-color,
+      color.adjust($light-primery-color, $lightness: 2%)
+    );
+    color: $light-text-color;
+    .page-indecator {
+      color: #100a2b;
+      .page-indicator-btn {
+        color: #100a2b;
+      }
+    }
+
+    .slider-container {
+      background: #19171f;
+    }
+  }
+}
