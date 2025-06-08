@@ -54,11 +54,6 @@ import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
 import { WindowsRefService } from '../../../../services/windowRef.service';
 import { Subscription } from 'rxjs';
 import { MatSliderModule } from '@angular/material/slider';
-import {
-  ChangeContext,
-  NgxSliderModule,
-  Options,
-} from '@angular-slider/ngx-slider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { CustomRangeSliderComponent } from '../../shared/custom-range-slider/custom-range-slider.component';
 // MatButtonToggleModule,
@@ -83,7 +78,6 @@ import { CustomRangeSliderComponent } from '../../shared/custom-range-slider/cus
     MatStepperModule,
     MatTableModule,
     MatSliderModule,
-    NgxSliderModule,
     MatAutocompleteModule,
     MatButtonToggleModule,
     MatDialogModule,
