@@ -182,8 +182,8 @@
   &.light {
     background: linear-gradient(
       145deg,
-      $light-primery-color,
-      color.adjust($light-primery-color, $lightness: 2%)
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
     );
     color: $light-text-color;
     .page-indecator {
@@ -195,9 +195,9 @@
     .user-image-row {
       background: linear-gradient(
         45deg,
-        color.adjust($dark-primery-color, $lightness: 15%),
-        color.adjust($dark-primery-color, $lightness: 10%),
-        color.adjust($dark-primery-color, $lightness: 15%)
+        color.adjust($dark-primary-color, $lightness: 15%),
+        color.adjust($dark-primary-color, $lightness: 10%),
+        color.adjust($dark-primary-color, $lightness: 15%)
       );
       .image-container {
         .user-image {

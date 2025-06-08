@@ -1,8 +1,9 @@
 @use "./font/leckerli-one/leckerli-one.scss" as *;
 @use "./font/Tagesschrift-Regular/Tagesschrift-Regular.scss" as *;
+@use "./font/EduVICWANTHand-VariableFont_wght//EduVICWANTHand-VariableFont_wght.scss" as *;
 
 // Dark Core Colors
-$dark-primery-color: #08122f !default; // Deep Navy background
+$dark-primary-color: #08122f !default; // Deep Navy background
 $dark-secondary-color: #1a1a2e !default; // Shadow Indigo for sections
 $dark-dashboard-color: #101325 !default; // Dark deep Navy background
 $dark-dashboard-dark-color: #0b0b14 !default; // Dark deep Navy background
@@ -23,7 +24,7 @@ $dark-error-color: #dc3545 !default; // Error/validation
 $dark-expand-hover-color: rgba(255, 140, 0, 0.1) !default; // Dark expand hover
 
 // Light Core Colors
-$light-primery-color: #fdf6e3 !default; // Soft neutral background
+$light-primary-color: #fdf6e3 !default; // Soft neutral background
 $light-secondary-color: #ffe18d !default; // Golden Cream highlight
 $light-dashboard-color: #ffedbd !default; // Golden Cream
 $light-dashboard-dark-color: #dbcba2 !default; // Golden Cream
@@ -74,6 +75,10 @@ code {
   margin: 0rem 0.2rem !important;
   color: #fff !important;
   border-radius: 0.352rem !important;
+}
+
+.title{
+  font-family: "Edu VIC WA NT Hand", cursive;
 }
 
 :host-context(html.light) {

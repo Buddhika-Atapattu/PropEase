@@ -34,6 +34,9 @@ export class MapComponent implements OnInit, AfterViewInit {
   @Input() mode: boolean = false;
   @Output() locationSelected = new EventEmitter<{ lat: number; lng: number }>();
   @ViewChild('map', { static: false }) mapElement!: ElementRef<HTMLDivElement>;
+  private latitude: number = 0;
+  private longitude: number = 0;
+  private zoom: number = 0;
 
   protected searchTerm: string = '';
   private isBrowser: boolean;
@@ -70,14 +73,20 @@ export class MapComponent implements OnInit, AfterViewInit {
     const { AdvancedMarkerElement } = await google.maps.importLibrary('marker');
 
     const map = new Map(this.mapElement.nativeElement, {
-      center: { lat: 7.8731, lng: 80.7718 },
-      zoom: 6,
+      center: {
+        lat: this.latitude !== 0 ? this.latitude : 7.8731,
+        lng: this.longitude !== 0 ? this.longitude : 80.7718,
+      },
+      zoom: this.zoom !== 0 ? this.zoom : 10,
       mapId: '9ea7a2bc2028bb7af08edbe5',
     });
 
     const marker = new AdvancedMarkerElement({
       map,
-      position: { lat: 7.8731, lng: 80.7718 },
+      position: {
+        lat: this.latitude !== 0 ? this.latitude : 7.8731,
+        lng: this.longitude !== 0 ? this.longitude : 80.7718,
+      },
     });
 
     map.addListener('click', (e: google.maps.MapMouseEvent) => {
@@ -91,6 +100,14 @@ export class MapComponent implements OnInit, AfterViewInit {
         marker.position = { lat, lng };
       }
     });
+  }
+
+  public MapCenterMaker(lat: number, lng: number, zoom: number): void {
+    if (!this.isBrowser) return;
+    this.latitude = lat;
+    this.longitude = lng;
+    this.zoom = zoom;
+    this.ngAfterViewInit();
   }
 
   protected async onSearchChange(input: string) {

@@ -1,0 +1,59 @@
+<div class="container-fluid my-4">
+  <!-- close btn -->
+  <div class="row position-relative">
+    <button type="button" class="close-btn" (click)="closeTheDialog()">
+      <i class="fa-solid fa-rectangle-xmark"></i>
+    </button>
+  </div>
+  <!-- end close btn -->
+  <!-- selected image preview -->
+  <div class="row d-flex justify-content-center align-item-center">
+    <div class="col-md-6 d-flex justify-content-center align-item-center p-4">
+      <div class="property-image-full-container">
+        <div class="image-container">
+          <img
+            [src]="propertyImages[currentImageIndex].imageURL"
+            alt="property image"
+          />
+        </div>
+        <div class="property-image-overlay">
+          <button type="button" (click)="downloadImage(propertyImages[currentImageIndex].imageURL)">
+            <i class="fa-solid fa-download"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- end selected image preview -->
+  <!-- image indicators -->
+  <div class="row">
+    <div class="col-md-12 d-flex justify-content-center align-item-center">
+      <div class="controler-left">
+        <button type="button" (click)="prevImage()">
+          <i class="fa-solid fa-angle-left"></i>
+        </button>
+      </div>
+      <div class="image-indicator-container" #indicatorContainer>
+        <ul>
+          <li
+            *ngFor="let image of propertyImages; let i = index"
+            (click)="changeImage(i)"
+            [id]="'indicator-' + i"
+          >
+            <div *ngIf="i !== currentImageIndex" class="overlay"></div>
+            <img
+              [src]="image.imageURL"
+              alt="property image"
+              [ngClass]="{ active: i === currentImageIndex }"
+            />
+          </li>
+        </ul>
+      </div>
+      <div class="controler-right">
+        <button type="button" (click)="nextImage()">
+          <i class="fa-solid fa-angle-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

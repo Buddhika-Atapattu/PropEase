@@ -70,6 +70,7 @@
         <app-property-view-card
           *ngFor="let property of properties"
           [property]="property"
+          (propertyDeleted)="onPropertyDeleted($event)"
         ></app-property-view-card>
       </div>
     </div>

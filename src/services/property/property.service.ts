@@ -10,11 +10,13 @@ import { firstValueFrom, Subscription, pipe, take } from 'rxjs';
 import { CryptoService } from '../cryptoService/crypto.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
+import { DomSanitizer } from '@angular/platform-browser';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 
 export interface Property {
+  // Basic Property Details
   id: string;
   title: string;
-  description: string;
   type:
     | 'apartment'
     | 'house'
@@ -23,22 +25,92 @@ export interface Property {
     | 'land'
     | 'stodio'
     | string;
-  status: 'Sale' | 'Rent' | 'Sold' | 'Rented' | string;
-  price: number;
-  currency: string;
+  listing: 'Sale' | 'Rent' | 'Sold' | 'Rented' | string;
+  description: string;
+  // End Basic Property Details
+
+  // Location Details
+  countryDetails: CountryDetails;
+  address: Address;
+  location?: GoogleMapLocation;
+  // End Location Details
+
+  // Property Specifications
+  totalArea: number; // in square feet or meters
+  builtInArea: number; // in square feet or meters
+  livingRooms: number;
+  balconies: number;
+  kitchen: number;
   bedrooms: number;
   bathrooms: number;
   maidrooms: number;
-  area: number; // in square feet or meters
-  images: File[];
-  propertyDocs: File[];
-  address: Address;
-  countryDetails: CountryDetails;
+  driverRooms: number;
+  furnishingStatus: 'Furnished' | 'Semi-Furnished' | 'Unfurnished' | string;
+  totalFloors: number;
+  numberOfParking: number;
+  // End Property Specifications
+
+  // Construction & Age
+  builtYear: number;
+  propertyCondition:
+    | 'New'
+    | 'Old'
+    | 'Excellent'
+    | 'Good'
+    | 'Needs Renovation'
+    | string;
+  developerName: string;
+  projectName?: string;
+  ownerShipType: 'Freehold' | 'Leasehold' | 'Company' | 'Trust' | string;
+  // End Construction & Age
+
+  // Financial Details
+  price: number;
+  currency: string;
+  pricePerSqurFeet: number;
+  expectedRentYearly?: number;
+  expectedRentQuartely?: number;
+  expectedRentMonthly?: number;
+  expectedRentDaily?: number;
+  maintenanceFees: number;
+  serviceCharges: number;
+  transferFees?: number;
+  availabilityStatus:
+    | 'Available'
+    | 'Not Available'
+    | 'Pending'
+    | 'Ready to Move'
+    | string;
+  // End Financial Details
+
+  // Features & Amenities
   featuresAndAmenities: string[];
+  // End Features & Amenities
+
+  // Media
+  images: File[];
+  documents: File[];
+  videoTour?: string;
+  virtualTour?: string;
+  // End Media
+
+  // Listing Management
+  listingDate: Date;
+  availabilityDate?: Date;
+  listingExpiryDate?: Date;
+  rentedDate?: Date;
+  soldDate?: Date;
   addedBy: AddedBy;
-  location?: GoogleMapLocation;
-  createdAt: Date;
-  updatedAt: Date;
+  owner: string;
+  // End Listing Management
+
+  // Administrative & Internal Use
+  referenceCode: string;
+  verificationStatus: 'Pending' | 'Verified' | 'Rejected' | 'Approved';
+  priority: 'High' | 'Medium' | 'Low';
+  status: 'Draft' | 'Published' | 'Archived';
+  internalNote: string;
+  // End Administrative & Internal Use
 }
 
 export interface Address {
@@ -186,9 +258,7 @@ export const FEATURES_AMENITIES: string[] = [
   'Garage',
   'Covered Parking',
   'Swimming Pool',
-  'Built-in Wardrobes',
-  'Furnished',
-  'Unfurnished',
+  'Built in Wardrobes',
   'Pets Allowed',
   'Security System',
   'Internet / Wi-Fi',
@@ -229,11 +299,14 @@ export const FEATURES_AMENITIES: string[] = [
   'Burj Khalifa View',
   'View of Water',
   "Children's Play Area",
+  'Walk-in Closet',
+  'View of Landmark',
+  'Lobby in Building',
+  'Kitchen Appliances',
 
   // USA
   'Basement',
   'Fireplace',
-  'Walk-in Closet',
   'Attic',
   'Deck / Patio',
   'Central Heating',
@@ -297,35 +370,10 @@ export interface propertyDocBackend {
   documentURL: string;
 }
 
-export interface BackEndPropertyData {
+export interface BackEndPropertyData
+  extends Omit<Property, 'images' | 'documents'> {
   propertyDocs: propertyDocBackend[];
   images: propertyImages[];
-  // Include all other properties from Property
-  id: string;
-  title: string;
-  description: string;
-  type:
-    | 'apartment'
-    | 'house'
-    | 'villa'
-    | 'commercial'
-    | 'land'
-    | 'stodio'
-    | string;
-  status: 'Sale' | 'Rent' | 'Sold' | 'Rented' | string;
-  price: number;
-  currency: string;
-  bedrooms: number;
-  bathrooms: number;
-  maidrooms: number;
-  area: number;
-  address: Address;
-  countryDetails: CountryDetails;
-  featuresAndAmenities: string[];
-  addedBy: AddedBy;
-  location?: GoogleMapLocation;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 @Injectable({
@@ -333,10 +381,76 @@ export interface BackEndPropertyData {
 })
 export class PropertyService {
   private isBrowser: boolean;
+
+  private iconsMap: { [key: string]: string } = {
+    // Common
+    AirConditioning: 'amenities/air-conditioning.svg',
+    Heating: 'amenities/heating.svg',
+    Balcony: 'amenities/balcony.svg',
+    Garden: 'amenities/garden.svg',
+    Garage: 'amenities/garage.svg',
+    CoveredParking: 'amenities/covered-parking.svg',
+    SwimmingPool: 'amenities/swimming-pool.svg',
+    BuiltinWardrobes: 'amenities/built-in-wardrobes.svg',
+    PetsAllowed: 'amenities/pets-allowed.svg',
+    SecuritySystem: 'amenities/security.svg',
+    InternetWiFi: 'amenities/internet-or-wi-fi.svg',
+    CableTV: 'amenities/cable-TV.svg',
+    LaundryRoom: 'amenities/laundry-room.svg',
+    StorageRoom: 'amenities/storage-room.svg',
+    MaintenanceStaff: 'amenities/maintenance-staff.svg',
+    CCTV: 'amenities/cctv.svg',
+    FireAlarm: 'amenities/fire-alarm.svg',
+    Elevator: 'amenities/elevator.svg',
+    CeilingFan: 'amenities/ceiling-fan.svg',
+    CentralHeating: 'amenities/central-heating.svg',
+    Fireplace: 'amenities/fireplace.svg',
+    OutdoorEntertainmentArea: 'amenities/outdoor-entertainment-area.svg',
+
+    // Luxury
+    PrivatePool: 'amenities/private-pool.svg',
+    SaunaSteamRoom: 'amenities/sauna-or-steam-room.svg',
+    Jacuzzi: 'amenities/jacuzzi.svg',
+    HomeTheater: 'amenities/home-theater.svg',
+    SmartHomeSystem: 'amenities/smart-home-system.svg',
+    PrivateGym: 'amenities/private-gym.svg',
+    BarbecueArea: 'amenities/barbecue-area.svg',
+    WineCellar: 'amenities/wine-cellar.svg',
+    GameRoom: 'amenities/game-room.svg',
+    ServantQuarters: 'amenities/servant-quarters.svg',
+    PrivateElevator: 'amenities/elevator.svg',
+    RooftopTerrace: 'amenities/rooftop-terrace.svg',
+    InfinityPool: 'amenities/swimming-pool.svg',
+
+    //UAE
+    MaidRoom: 'amenities/maid-room.svg',
+    DriverRoom: 'amenities/driver-room.svg',
+    PrayerRoom: 'amenities/prayer-room.svg',
+    CentralAC: 'amenities/central-AC.svg',
+    ChillerFree: 'amenities/chiller-free.svg',
+    SharedGym: 'amenities/private-gym.svg',
+    SharedPool: 'amenities/swimming-pool.svg',
+    NearMetroStation: 'amenities/near-metro-station.svg',
+    NearMosque: 'amenities/near-mosque.svg',
+    SeaView: 'amenities/sea-view.svg',
+    BurjKhalifaView: 'amenities/burj-khalifa-view.svg',
+    ViewofWater: 'amenities/lake-view.svg',
+    ChildrensPlayArea: 'amenities/childrens-play-area.svg',
+    WalkinCloset: 'amenities/walkin-closet.svg',
+    ViewofLandmark: 'amenities/view-landmark.svg',
+    LobbyinBuilding: 'amenities/lobby.svg',
+    KitchenAppliances: 'amenities/kitchen-appliances.svg',
+    ChildrensPool: 'amenities/childrens-pool.svg',
+
+    Defalt: 'amenities/default.svg',
+  };
+
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private cryptoService: CryptoService
+    private cryptoService: CryptoService,
+    private matIconRegistry: MatIconRegistry,
+    private domSanitizer: DomSanitizer
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -346,6 +460,32 @@ export class PropertyService {
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 100000);
     return `${prefix}-${timestamp}-${random.toString().padStart(5, '0')}`;
+  }
+
+  // Amenities icon maker
+  public amenityIconMaker() {
+    for (const [name, path] of Object.entries(this.iconsMap)) {
+      this.matIconRegistry.addSvgIcon(
+        name,
+        this.domSanitizer.bypassSecurityTrustResourceUrl(
+          `/Images/Icons/${path}`
+        )
+      );
+    }
+  }
+
+  public investigateTheAmenityIcon(amenity: string): string {
+    const cleaned = amenity.replace(/[^a-zA-Z0-9]/g, '');
+    const cleanedText = cleaned.trim().toLowerCase();
+    const matchedKey = Object.keys(this.iconsMap).find(
+      (key) => key.toLowerCase() === cleanedText
+    );
+
+    if (matchedKey) {
+      return matchedKey;
+    } else {
+      return 'Defalt';
+    }
   }
 
   //<==================== API ====================>
@@ -393,5 +533,20 @@ export class PropertyService {
       )
     );
   }
+
+  public async getUserData(username: string): Promise<MSG> {
+    return firstValueFrom(
+      this.http.get<MSG>(`http://localhost:3000/api-user/user-data/${username}`)
+    );
+  }
+
+  public async deleteProperty(id: string): Promise<MSG> {
+    return firstValueFrom(
+      this.http.delete<MSG>(
+        `http://localhost:3000/api-property/delete-property/${id.trim()}`
+      )
+    );
+  }
+
   //<==================== END API ====================>
 }

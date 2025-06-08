@@ -6,6 +6,10 @@ import {
   PLATFORM_ID,
   Input,
   AfterViewInit,
+  ViewChild,
+  Output,
+  EventEmitter,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
@@ -18,15 +22,26 @@ import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader
 import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { AuthService, BaseUser } from '../../../services/auth/auth.service';
 import { PropertyFilterDialogComponent } from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
-import { BackEndPropertyData } from '../../../services/property/property.service';
+import { BackEndPropertyData, Property } from '../../../services/property/property.service';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmationComponent } from '../../components/dialogs/confirmation/confirmation.component';
+import { PropertyService } from '../../../services/property/property.service';
+import { NotificationComponent } from '../dialogs/notification/notification.component';
 
 @Component({
   selector: 'app-property-view-card',
-  imports: [CommonModule, MatIconModule, SkeletonLoaderComponent],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    SkeletonLoaderComponent,
+    NotificationComponent,
+  ],
   templateUrl: './property-view-card.component.html',
   styleUrl: './property-view-card.component.scss',
 })
 export class PropertyViewCardComponent implements OnInit, AfterViewInit {
+  @Output() propertyDeleted = new EventEmitter<boolean>();
+  @ViewChild(NotificationComponent) notification!: NotificationComponent;
   @Input() property: BackEndPropertyData | null = null;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -35,7 +50,6 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
   protected loading: boolean = true;
   private routeSub: Subscription | null = null;
   private routerSub: Subscription | null = null;
-  
 
   constructor(
     private windowRef: WindowsRefService,
@@ -46,7 +60,10 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
     private APIsService: APIsService,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
-    private crypto: CryptoService
+    private crypto: CryptoService,
+    private dialog: MatDialog,
+    private propertService: PropertyService,
+    private cdr: ChangeDetectorRef
   ) {
     this.LOGGED_USER = this.authService.getLoggedUser;
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -93,6 +110,46 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
   protected gotoTheProperty(propertyID: string) {
     if (this.isBrowser) {
       this.router.navigate(['/dashboard/property-view', propertyID]);
+    }
+  }
+
+  protected gotoThePropertyEdit(propertyID: string) {
+    if (this.isBrowser) {
+      this.router.navigate(['/dashboard/property-edit', propertyID]);
+    }
+  }
+
+  protected deleteProperty(id: string) {
+    const dialogRef = this.dialog.open(ConfirmationComponent, {
+      data: {
+        title: 'Delete Property',
+        message: 'Are you sure you want to delete this property?',
+        confirmText: true,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe(async (result) => {
+      if (result?.confirmText === true) {
+        try {
+          const respond = await this.propertService.deleteProperty(id);
+          this.notification.notification(respond.status, respond.message);
+          this.propertyDeleted.emit(true);
+        } catch (error: any) {
+          this.notification.notification('error', error.message);
+        }
+      }
+      else{
+        this.propertyDeleted.emit(false);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.modeSub) {
+      this.modeSub.unsubscribe();
+    }
+    if (this.routeSub) {
+      this.routeSub.unsubscribe();
     }
   }
 }

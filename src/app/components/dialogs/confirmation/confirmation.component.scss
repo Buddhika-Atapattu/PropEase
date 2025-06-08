@@ -1,0 +1,36 @@
+@use "../../../styles/global.scss" as *;
+
+::ng-deep {
+  .cdk-global-overlay-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: wrap;
+    align-items: center !important;
+    .mat-mdc-dialog-container {
+      width: auto;
+    }
+    .cdk-overlay-pane.mat-mdc-dialog-panel {
+      max-width: 75vw !important;
+      max-height: 85vh !important;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-content: center;
+    }
+  }
+}
+
+::ng-deep html.dark .mat-mdc-dialog-surface {
+  background: $dark-primary-color !important;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+::ng-deep html.light .mat-mdc-dialog-surface {
+  background: $light-primary-color !important;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+:host-context(html.dark) {
+}

@@ -140,18 +140,18 @@
   .table-responsive {
     table {
       background: none;
-      color: $dark-primery-color !important;
+      color: $dark-primary-color !important;
       ::ng-deep th {
         color: currentColor;
       }
       ::ng-deep td {
-        color: $dark-primery-color !important;
+        color: $dark-primary-color !important;
       }
     }
   }
   ::ng-deep .mat-sort-header-arrow {
     ::ng-deep svg {
-      fill: $dark-primery-color !important;
+      fill: $dark-primary-color !important;
     }
   }
 
@@ -176,18 +176,18 @@
   .table-responsive {
     table {
       background: none;
-      color: $light-primery-color !important;
+      color: $light-primary-color !important;
       ::ng-deep th {
         color: currentColor;
       }
       ::ng-deep td {
-        color: $light-primery-color !important;
+        color: $light-primary-color !important;
       }
     }
   }
   ::ng-deep .mat-sort-header-arrow {
     ::ng-deep svg {
-      fill: $light-primery-color !important;
+      fill: $light-primary-color !important;
     }
   }
 

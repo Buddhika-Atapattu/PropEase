@@ -1,6 +1,6 @@
 <div class="container-fluid">
   <div class="row d-flex justify-content-center align-items-center my-3">
-    <div class="col-md-6 position-relative">
+    <div class="col-md-12 position-relative">
       <input
         class="search-input"
         type="search"
@@ -21,7 +21,7 @@
     *ngIf="isSearching"
     class="row d-flex justify-content-center align-items-center suggestion-row"
   >
-    <div class="col-md-6 d-flex justify-content-center align-items-center">
+    <div class="col-md-10 d-flex justify-content-center align-items-center">
       <ul class="autocomplete-list" [ngClass]="isSearching ? 'show' : 'hide'">
         <li
           *ngFor="let suggestion of suggestions"

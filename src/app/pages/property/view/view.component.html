@@ -5,6 +5,7 @@
   [ngClass]="mode ? 'dark' : 'light'"
 >
   <div class="container-fluid">
+    <!-- page indicator -->
     <div class="row page-indecator">
       <span>
         <button
@@ -24,6 +25,30 @@
         </button>
       </span>
     </div>
+    <!-- end page indicator -->
+
+    <!-- property tile and country -->
+    <div class="row my-5">
+      <div class="col-md-12">
+        <h1 class="display-3 fw-bold text-capitalize title">
+          {{ property.title }}
+        </h1>
+        <div class="d-flex align-item-center">
+          <h6 class="text-capitalize d-flex align-item-center p-0 m-0">
+            {{ property.countryDetails.name.common }}
+          </h6>
+          <img
+            class="country-flag"
+            mat-icon
+            src="{{ property.countryDetails.flags.png }}"
+            alt="{{ property.countryDetails.flags.alt }}"
+          />
+        </div>
+      </div>
+    </div>
+    <!-- end property tile and country -->
+
+    <!-- image slider -->
     <div class="row mt-4">
       <div class="col-md-12 d-flex justify-content-center align-item-center">
         <div class="slider-container">
@@ -41,12 +66,15 @@
 
               }"
             ></div>
+          </div>
+          <div class="property-image-container">
             <img
-              [ngClass]="isImageTrasform ? 'fade-in' : ''"
+              [ngClass]="!isImageTrasform ? 'fade-in' : ''"
               [src]="propertyImages[currentImageIndex].imageURL"
               alt="property image"
             />
           </div>
+
           <div class="controls">
             <button class="left" (click)="prevImage()">
               <i class="fa-solid fa-angle-left"></i>
@@ -58,7 +86,140 @@
         </div>
       </div>
     </div>
+    <!-- end image slider -->
+
+    <!-- property images preview button -->
+    <div class="row mt-4 d-flex justify-content-center align-item-center">
+      <div class="col-md-4 d-flex justify-content-center align-item-center">
+        <button
+          type="button"
+          class="bg-none btn view-images-btn"
+          (click)="imagePreview()"
+        >
+          <mat-icon
+            aria-hidden="false"
+            aria-label="Example view images icon"
+            svgIcon="viewImages"
+          ></mat-icon>
+        </button>
+      </div>
+    </div>
+    <!-- end property images preview button -->
+
+    <!-- property price, currency, type, and status -->
+    <div class="row mt-2">
+      <div class="col-md-12">
+        <h4 class="text-capitalize">
+          {{
+            property.price | currency : property.currency : "symbol" : "1.0-2"
+          }}
+        </h4>
+        <h6 class="text-capitalize">Type: {{ property.type }}</h6>
+        <h6 class="text-capitalize">status: {{ property.status }}</h6>
+        <h6 class="text-capitalize">
+          {{ property.address.houseNumber }}, {{ property.address.street }},
+          {{ property.address.city }}, {{ property.address.stateOrProvince }},
+          {{ property.address.country }} - {{ property.address.postcode }}
+        </h6>
+      </div>
+    </div>
+    <!-- end property price, currency, type, and status -->
+
+    <!-- property specific details  -->
+    <div class="row mt-1">
+      <div class="col-md-12">
+        <ul class="p-0 porperty-specific-details">
+          <li>
+            <span></span>
+            <i class="fa-solid fa-bed"></i> {{ property.bedrooms }}
+          </li>
+          <li><i class="fa-solid fa-bath"></i> {{ property.bathrooms }}</li>
+          <li>
+            <i class="fa-solid fa-chart-area"></i> {{ property.totalArea
+            }}<span class="mx-1 my-0 h6">ft<sup>2</sup></span>
+          </li>
+          <li>
+            <mat-icon
+              svgIcon="maid"
+              aria-hidden="false"
+              aria-label="maid icon"
+              class="maid-icon"
+            ></mat-icon>
+            {{ property.maidrooms }}
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- end property specific details  -->
+
+    <hr />
+
+    <!-- property description -->
+    <h1 class="display-6 my-2">Discription of the property</h1>
+    <div [innerHTML]="property.description"></div>
+    <!-- end property description -->
+
+    <hr />
+
+    <!-- property amenities -->
+    <div class="row mt-4">
+      <h1 class="display-6 my-2">Amenities of the property</h1>
+      <div
+        class="col-md-4"
+        *ngFor="let amenity of property.featuresAndAmenities"
+      >
+        <span class="btn-custom text-light">{{ amenity }}</span>
+      </div>
+    </div>
+    <!-- end property amenities -->
+
+    <hr />
+
+    <div class="row">
+      <div class="col-md-12">
+        <h1 class="display-6 my-2">Location of the property</h1>
+        <iframe
+          name="location"
+          title="location"
+          [src]="property.location?.embeddedUrl | safeUrl"
+          width="100%"
+          height="500"
+          style="border: 0"
+          allowfullscreen="true"
+          loading="lazy"
+        ></iframe>
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="row mt-4 d-flex justify-content-between align-item-center">
+      <div class="col-md-5">
+        <div class="user-card">
+          <div class="user-image">
+            <img src="{{ owner?.image }}" alt="owner details" />
+          </div>
+          <div class="user-details">
+            <h4>Owner Details</h4>
+            <h6 class="p-0 m-0">{{ owner?.name }}</h6>
+            <p class="p-0 m-0">{{ owner?.email }}</p>
+            <p class="p-0 m-0">{{ owner?.phoneNumber }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="user-card">
+          <div class="user-image">
+            <img src="{{ agent?.image }}" alt="owner details" />
+          </div>
+          <div class="user-details">
+            <h4>Agent Details</h4>
+            <h6 class="p-0 m-0">{{ agent?.name }}</h6>
+            <p class="p-0 m-0">{{ agent?.email }}</p>
+            <p class="p-0 m-0">{{ agent?.phoneNumber }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
-
-<!-- 'background-image':'url(' + propertyImages[currentImageIndex].imageURL + ')' -->

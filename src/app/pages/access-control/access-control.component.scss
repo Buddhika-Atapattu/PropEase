@@ -31,7 +31,7 @@
       background-color: $dark-secondary-color;
       box-shadow: inset 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
       .add-user-row {
-        background-color: $dark-primery-color;
+        background-color: $dark-primary-color;
         box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
       }
     }
@@ -40,12 +40,12 @@
   &.light {
     background: linear-gradient(
       145deg,
-      $light-primery-color,
-      color.adjust($light-primery-color, $lightness: 2%)
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
     );
     color: $light-text-color;
     .main-container {
-      background-color: $light-primery-color;
+      background-color: $light-primary-color;
       box-shadow: inset 0rem 0rem 1rem 0rem $light-dashboard-dark-color;
       .add-user-row {
         background-color: #ffe394;

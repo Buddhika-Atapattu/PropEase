@@ -1,3 +1,5 @@
+<app-notification></app-notification>
+
 <div
   *ngIf="mode !== null"
   class="main-panel"
@@ -31,8 +33,8 @@
           [borderRadius]="'0.125rem'"
         >
         </app-skeleton-loader>
-        <h5 *ngIf="!loading" class="property-title">
-          {{ property.title }} | {{ property.type }} | {{ property.status }}
+        <h5 *ngIf="!loading" class="property-title text-capitalize">
+          {{ property.title }} | {{ property.type }} | {{ property.listing }}
         </h5>
         <app-skeleton-loader
           *ngIf="loading"
@@ -42,7 +44,7 @@
           [borderRadius]="'0.125rem'"
         >
         </app-skeleton-loader>
-        <p *ngIf="!loading" class="property-location">
+        <p *ngIf="!loading" class="property-location text-capitalize">
           {{ property.address.city }}, {{ property.address.stateOrProvince }},
           {{ property.address.country }}
         </p>
@@ -54,8 +56,8 @@
           [borderRadius]="'0.125rem'"
         >
         </app-skeleton-loader>
-        <p *ngIf="!loading" class="property-price">
-          Price: {{ property.price | currency : property.currency }}
+        <p *ngIf="!loading" class="property-price text-uppercase fw-bold h4">
+          {{ property.price.toLocaleString() }} {{ property.currency }}
         </p>
         <app-skeleton-loader
           *ngIf="loading"
@@ -71,7 +73,7 @@
           <i class="fa fa-bath mx-2" aria-hidden="true"></i>
           {{ property.bathrooms }}
           <i class="fa-solid fa-chart-area mx-2" aria-hidden="true"></i
-          >{{ property.area }} sqft
+          >{{ property.totalArea }} sqft
         </p>
       </div>
     </div>
@@ -91,6 +93,7 @@
             *ngIf="LOGGED_USER?.role === 'admin'"
             class="btn btn-warning bg-warning mx-2 btn-edit"
             type="button"
+            (click)="gotoThePropertyEdit(property.id)"
           >
             <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon>
           </button>
@@ -100,6 +103,7 @@
             *ngIf="LOGGED_USER?.role === 'admin'"
             class="btn btn-danger bg-danger ms-2 btn-delete"
             type="button"
+            (click)="deleteProperty(property.id)"
           >
             <mat-icon class="mat-icon-rtl-mirror" svgIcon="delete"></mat-icon>
           </button>

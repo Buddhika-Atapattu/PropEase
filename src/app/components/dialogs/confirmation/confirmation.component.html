@@ -1,0 +1,22 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+      <h4 class="display-6">
+        {{ title }}
+      </h4>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <p>{{ message }}</p>
+    </div>
+  </div>
+  <div class="row d-flex justify-content-between align-item-center">
+    <div class="col-sm-4">
+      <button type="button" class="btn-delete" (click)="cancel()">Cancel</button>
+    </div>
+    <div class="col-sm-4">
+      <button type="button" class="btn-view" (click)="confirm()">Confirm</button>
+    </div>
+  </div>
+</div>

@@ -206,8 +206,8 @@
   &.light {
     background: linear-gradient(
       145deg,
-      $light-primery-color,
-      color.adjust($light-primery-color, $lightness: 2%)
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
     );
     color: $light-text-color;
     .page-indecator {

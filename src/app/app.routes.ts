@@ -105,6 +105,16 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'property-edit/:propertyID',
+        loadComponent: () =>
+          import(
+            './pages/property/edit-property-listing/edit-property-listing.component'
+          ).then((m) => m.EditPropertyListingComponent),
+        data: {
+          roles: ['admin'],
+        },
+      },
+      {
         path: 'unauthorized',
         loadComponent: () =>
           import('./pages/error404/error404.component').then(

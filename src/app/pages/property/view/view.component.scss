@@ -2,8 +2,20 @@
 @use "sass:color";
 
 @keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 
@@ -34,42 +46,56 @@
   }
 
   .slider-container {
-    width: 100vw;
+    width: 100%;
     height: 75vh;
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
     border-radius: 0.25rem;
+    overflow: hidden;
+    border-radius: 0.25rem;
     .slider {
-      position: relative;
+      position: absolute;
       width: 100%;
       height: 100%;
       display: grid;
+      z-index: 1;
       grid-template-columns: repeat(10, 1fr);
       grid-template-rows: repeat(10, 1fr);
-      // .tile {
-      //   width: 100%;
-      //   height: 100%;
-      //   background-size: 100% 100%;
-      //   transition: transform 0.5s ease, opacity 0.5s ease;
-      // }
+      .tile {
+        // width: 10%; // based on 10 cols
+        // height: 10%; // based on 10 rows
+        float: left;
+        // background-size: 100% 100%;
+        transition: transform 0.5s ease, opacity 0.5s ease;
+        &.fade-out {
+          transform: scale(0) rotateY(90deg);
+          animation: fadeOut 1s ease-in forwards;
+        }
+      }
+      .fade-in {
+        animation: fadeIn 1s ease-in forwards;
+      }
     }
+
     .property-image-container {
       width: 100%;
       height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
       display: flex;
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position: center;
+      justify-content: center;
+      align-items: center;
       img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        opacity: 0;
-        animation: fadeIn 0.5s ease forwards;
+        object-position: center;
       }
     }
+
     .controls {
       position: absolute;
       top: 50%;
@@ -80,9 +106,101 @@
       flex-wrap: wrap;
       justify-content: space-between;
       align-content: center;
+      z-index: 10;
       button {
-        background: none;
         border: none;
+        width: auto;
+        height: 75vh;
+        padding: 0rem 1rem;
+        background: #00000063;
+      }
+    }
+  }
+
+  .view-images-btn {
+    ::ng-deep {
+      mat-icon {
+        width: 30px;
+        height: 30px;
+      }
+    }
+  }
+
+  ::ng-deep mat-icon {
+    svg {
+      fill: currentColor;
+      stroke: currentColor;
+      path {
+        fill: currentColor;
+        stroke: currentColor;
+      }
+    }
+  }
+
+  ::ng-deep .maid-icon {
+    svg {
+      fill: currentColor;
+      stroke: currentColor;
+      path {
+        fill: currentColor;
+        stroke: currentColor;
+        stroke-width: 0.25rem;
+      }
+    }
+  }
+
+  .country-flag{
+    width: 3rem;
+    height: auto;
+    margin: 0rem 0.5rem;
+    overflow: hidden;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .porperty-specific-details {
+    list-style: none;
+    display: inline-flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    li {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-right: 0.5rem;
+      i {
+        margin-right: 0.5rem;
+      }
+      mat-icon {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+
+  .user-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    .user-image {
+      width: 6rem;
+      height: 6rem;
+      overflow: hidden;
+      border-radius: 100%;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-content: center;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
       }
     }
   }
@@ -104,13 +222,36 @@
     .slider-container {
       background: #0c0e1a;
     }
+
+    .view-images-btn {
+      ::ng-deep {
+        mat-icon {
+          svg {
+            fill: #fff !important;
+            path {
+              fill: #fff !important;
+              stroke: #fff !important;
+            }
+          }
+        }
+      }
+    }
+    .user-card {
+      background: linear-gradient(
+        134deg,
+        #0c1957 0%,
+        #4400d0 30%,
+        #43007a 100%
+      );
+      box-shadow: 0 0 0.5rem 0 #15141a63;
+    }
   }
 
   &.light {
     background: linear-gradient(
       145deg,
-      $light-primery-color,
-      color.adjust($light-primery-color, $lightness: 2%)
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
     );
     color: $light-text-color;
     .page-indecator {
@@ -122,6 +263,19 @@
 
     .slider-container {
       background: #19171f;
+    }
+    .view-images-btn {
+      ::ng-deep {
+        mat-icon {
+          svg {
+            fill: #1a181d !important;
+            path {
+              fill: #1a181d !important;
+              stroke: #1a181d !important;
+            }
+          }
+        }
+      }
     }
   }
 }

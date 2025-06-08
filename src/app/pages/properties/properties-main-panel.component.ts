@@ -174,6 +174,13 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     await this.callTheSearchAPI();
   }
 
+  // Derected property delete and refresh the list
+  protected onPropertyDeleted(event: boolean): void {
+    if (event) {
+      this.callTheSearchAPI();// Refresh the list
+    }
+  }
+
   //Calls the property service to fetch properties with pagination, search, and filter options
   protected async callTheSearchAPI() {
     try {
@@ -196,7 +203,6 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
         )
         .then((response) => {
           if (response.status === 'success') {
-
             this.properties = response.data.properties;
             this.totalItems = response.data.count;
             setInterval(() => {

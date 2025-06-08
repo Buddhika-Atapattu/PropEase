@@ -256,6 +256,7 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
         passive: false,
       });
       window.addEventListener('drop', this.preventDefault, { passive: false });
+      
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });

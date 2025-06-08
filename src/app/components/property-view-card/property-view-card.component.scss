@@ -61,7 +61,7 @@
     );
     color: $dark-text-color;
     .property-bar {
-      background-color: $dark-primery-color;
+      background-color: $dark-primary-color;
       box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
       .add-user-btn {
         background: $dark-btn-bg-color;
@@ -73,8 +73,8 @@
   &.light {
     background: linear-gradient(
       145deg,
-      $light-primery-color,
-      color.adjust($light-primery-color, $lightness: 2%)
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
     );
     color: $light-text-color;
     .property-bar {
