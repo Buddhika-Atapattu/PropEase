@@ -1479,7 +1479,7 @@
               <div class="col-md-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Property Status</mat-label>
-                  <mat-select required>
+                  <mat-select [(ngModel)]="status" name="status" required>
                     <mat-option
                       *ngFor="
                         let option of propertyStatusOptions;

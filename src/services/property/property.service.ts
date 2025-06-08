@@ -18,12 +18,12 @@ export interface Property {
   id: string;
   title: string;
   type:
-    | 'apartment'
-    | 'house'
-    | 'villa'
-    | 'commercial'
-    | 'land'
-    | 'stodio'
+    | 'Apartment'
+    | 'House'
+    | 'Villa'
+    | 'Commercial'
+    | 'Land'
+    | 'Stodio'
     | string;
   listing: 'Sale' | 'Rent' | 'Sold' | 'Rented' | string;
   description: string;
@@ -95,11 +95,11 @@ export interface Property {
   // End Media
 
   // Listing Management
-  listingDate: Date;
-  availabilityDate?: Date;
-  listingExpiryDate?: Date;
-  rentedDate?: Date;
-  soldDate?: Date;
+  listingDate: Date | null;
+  availabilityDate?: Date | null;
+  listingExpiryDate?: Date | null;
+  rentedDate?: Date | null;
+  soldDate?: Date | null;
   addedBy: AddedBy;
   owner: string;
   // End Listing Management
@@ -225,7 +225,7 @@ export interface AddedBy {
   email: string;
   role: 'admin' | 'agent' | 'owner' | string;
   contactNumber?: string;
-  addedAt: Date | string;
+  addedAt: Date | string | null;
 }
 
 export interface PropertyFilter {
@@ -540,10 +540,20 @@ export class PropertyService {
     );
   }
 
+  // Delete the property
   public async deleteProperty(id: string): Promise<MSG> {
     return firstValueFrom(
       this.http.delete<MSG>(
         `http://localhost:3000/api-property/delete-property/${id.trim()}`
+      )
+    );
+  }
+
+  public async updateProperty(data: FormData, id: string): Promise<MSG> {
+    return firstValueFrom(
+      this.http.put<MSG>(
+        `http://localhost:3000/api-property/update-property/${id}`,
+        data
       )
     );
   }

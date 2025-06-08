@@ -28,7 +28,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { Sort, MatSortModule, MatSort } from '@angular/material/sort';
-import { GoogleChartsModule, ChartType } from 'angular-google-charts';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatMomentDateModule } from '@angular/material-moment-adapter';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -79,7 +78,6 @@ interface Data {
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    GoogleChartsModule,
     MatMomentDateModule,
     MatSelectModule,
     MatDividerModule,

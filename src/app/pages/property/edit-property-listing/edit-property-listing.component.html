@@ -134,17 +134,17 @@
                   <mat-label>Listing Type</mat-label>
                   <input
                     type="text"
-                    placeholder="Status"
-                    aria-label="Status"
-                    name="status"
+                    placeholder="Listing Type"
+                    aria-label="Listing Type"
+                    name="listing"
                     matInput
                     required
                     (ngModelChange)="filterListingOperation($event)"
                     [(ngModel)]="listing"
-                    [matAutocomplete]="statusAuto"
+                    [matAutocomplete]="listingAuto"
                     class="text-capitalize"
                   />
-                  <mat-autocomplete #statusAuto="matAutocomplete">
+                  <mat-autocomplete #listingAuto="matAutocomplete">
                     <mat-option
                       *ngFor="let option of propertyListingSort()"
                       [value]="option"
@@ -743,7 +743,7 @@
                     (optionSelected)="getTheSelectedOwner($event)"
                   >
                     <mat-option
-                      *ngFor="let user of filterOwner"
+                      *ngFor="let user of filterOwners"
                       [value]="user.name"
                       class="d-flex justify-content-between align-items-center"
                     >
@@ -1146,7 +1146,7 @@
               </div>
             </div>
             <!-- Property Images -->
-            <div class="row mt-5">
+            <div class="row my-5">
               <h4 class="title">Property Images:</h4>
               <div class="d-flex justify-content-center align-items-center">
                 <div class="col-md-8 mt-2">
@@ -1177,70 +1177,80 @@
             <!-- End Property Images -->
 
             <!-- Property Images Preview -->
-            <div
-              class="row mt-5 image-preview"
-              *ngIf="propertyImagePreview.length > 0"
-            >
-              <div
-                class="col-md-3 my-4 d-flex justify-content-center align-items-center"
-                *ngFor="let image of propertyImagePreview; let i = index"
-              >
-                <div class="image-preview-container">
-                  <div class="image-text">
-                    <ul>
-                      <li class="list-of-text">Name:{{ image.name }}</li>
-                      <li class="list-of-text">Width:{{ image.width }}px</li>
-                      <li class="list-of-text">Height:{{ image.height }}px</li>
-                    </ul>
+            <div *ngIf="propertyImagePreview.length > 0">
+              <h4 class="title my-3 text-capitalize">
+                Preview selected Images:
+              </h4>
+              <div class="row mt-5 image-preview">
+                <div
+                  class="col-md-3 my-4 d-flex justify-content-center align-items-center"
+                  *ngFor="let image of propertyImagePreview; let i = index"
+                >
+                  <div class="image-preview-container">
+                    <div class="image-text">
+                      <ul>
+                        <li class="list-of-text">Name:{{ image.name }}</li>
+                        <li class="list-of-text">Width:{{ image.width }}px</li>
+                        <li class="list-of-text">
+                          Height:{{ image.height }}px
+                        </li>
+                      </ul>
+                    </div>
+                    <button
+                      type="button"
+                      class="remove-btn"
+                      (click)="removePropertyImage(i)"
+                    >
+                      <mat-icon
+                        aria-hidden="false"
+                        aria-label="Example home icon"
+                        svgIcon="close"
+                      ></mat-icon>
+                    </button>
+                    <img [src]="image.URL" alt="property image" />
                   </div>
-                  <button
-                    type="button"
-                    class="remove-btn"
-                    (click)="removePropertyImage(i)"
-                  >
-                    <mat-icon
-                      aria-hidden="false"
-                      aria-label="Example home icon"
-                      svgIcon="close"
-                    ></mat-icon>
-                  </button>
-                  <img [src]="image.URL" alt="property image" />
                 </div>
               </div>
             </div>
             <!-- End Property Images Preview -->
 
-            <!-- Preview uploaded Images -->
-            <div *ngIf="uploadedImages.length > 0" class="row my-5"
-              cdkDropList
-              [cdkDropListData]="uploadedImages"
-              (cdkDropListDropped)="uploadImageReorganizing($event)"
-              >
-              <h4 class="title">Preview uploaded Images:</h4>
+            <!-- Preview Uploaded Images Preview -->
+            <div *ngIf="uploadedImages.length > 0">
+              <h4 class="title my-3 text-capitalize">
+                Preview uploaded Images:
+              </h4>
               <div
-                *ngFor="let image of uploadedImages; let i = index"
-                class="col-md-3 my-4 d-flex justify-content-center align-items-center"
+                class="row my-5 image-preview"
+                cdkDropList
+                [cdkDropListData]="uploadedImages"
+                (cdkDropListDropped)="uploadImageReorganizing($event)"
               >
-                <div class="image-preview-container">
-                  <button
-                    type="button"
-                    class="remove-btn"
-                    (click)="removePropertyUploadedImage(i)"
-                  >
-                    <mat-icon
-                      aria-hidden="false"
-                      aria-label="Example home icon"
-                      svgIcon="close"
-                    ></mat-icon>
-                  </button>
-                  <img [src]="image.imageURL" alt="property image" />
+                <div
+                  *ngFor="let image of uploadedImages; let i = index"
+                  class="col-md-3 my-4 d-flex justify-content-center align-items-center"
+                  cdkDrag
+                >
+                  <div class="image-preview-container">
+                    <button
+                      type="button"
+                      class="remove-btn"
+                      (click)="removePropertyUploadedImage(i)"
+                    >
+                      <mat-icon
+                        aria-hidden="false"
+                        aria-label="Remove"
+                        svgIcon="close"
+                      ></mat-icon>
+                    </button>
+                    <img [src]="image.imageURL" alt="property image" />
+                  </div>
                 </div>
               </div>
             </div>
-            <!-- End Preview uploaded Images -->
+            <!-- End Preview Uploaded Images Preview -->
 
             <!-- Property Documents -->
-            <div class="row mt-5">
+            <div class="row my-5">
               <h4 class="title">Property Documents:</h4>
               <div class="d-flex justify-content-center align-items-center">
                 <div class="col-md-8 mt-2">
@@ -1271,30 +1281,67 @@
             <!-- End Property Documents -->
 
             <!-- Property Documents Preview -->
-            <div
-              class="row mt-5 document-preview"
-              *ngIf="propertyDocsPreview && propertyDocsPreview.length > 0"
-            >
-              <div
-                class="col-md-4 my-4 d-flex justify-content-center align-items-center"
-                *ngFor="let doc of propertyDocsPreview; let i = index"
-              >
-                <div class="row doc-preview-container">
-                  <div class="col-2">
-                    <mat-icon [svgIcon]="doc.icon"></mat-icon>
-                  </div>
-                  <div class="col-8">
-                    <p class="p-0">{{ doc.name }}</p>
-                  </div>
-                  <div class="col-2 button-col" (click)="removeDocs(i)">
-                    <button type="button">
-                      <i class="fa-solid fa-rectangle-xmark"></i>
-                    </button>
+            <div *ngIf="propertyDocsPreview && propertyDocsPreview.length > 0">
+              <h4 class="title my-3 text-capitalize">
+                Preview selected documents:
+              </h4>
+              <div class="row mt-5 document-preview">
+                <div
+                  class="col-md-4 my-4 d-flex justify-content-center align-items-center"
+                  *ngFor="let doc of propertyDocsPreview; let i = index"
+                >
+                  <div class="row doc-preview-container">
+                    <div class="col-2">
+                      <mat-icon [svgIcon]="doc.icon"></mat-icon>
+                    </div>
+                    <div class="col-8">
+                      <p class="p-0">{{ doc.name }}</p>
+                    </div>
+                    <div class="col-2 button-col" (click)="removeDocs(i)">
+                      <button type="button">
+                        <i class="fa-solid fa-rectangle-xmark"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <!-- End Property Documents Preview -->
+
+            <!-- Property Uploaded Documents Preview -->
+            <div
+              *ngIf="
+                uploadedDucumentsPreview && uploadedDucumentsPreview.length > 0
+              "
+            >
+              <h4 class="title my-3 text-capitalize">
+                Preview uploaded Documents:
+              </h4>
+              <div class="row mt-5 document-preview">
+                <div
+                  class="col-md-4 my-4 d-flex justify-content-center align-items-center"
+                  *ngFor="let doc of uploadedDucumentsPreview; let i = index"
+                >
+                  <div class="row doc-preview-container">
+                    <div class="col-2">
+                      <mat-icon [svgIcon]="doc.icon"></mat-icon>
+                    </div>
+                    <div class="col-8">
+                      <p class="p-0">{{ doc.name }}</p>
+                    </div>
+                    <div
+                      class="col-2 button-col"
+                      (click)="removeDocsFromUploaded(i)"
+                    >
+                      <button type="button">
+                        <i class="fa-solid fa-rectangle-xmark"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- End Property Uploaded Documents Preview -->
 
             <!-- Property Video, 360° Virtual Tour -->
             <div class="row mt-5">
@@ -1442,6 +1489,102 @@
               <!-- End Listing Expiry Date -->
             </div>
             <!-- End Listing Date, Availability Date, Listing Expiry Date -->
+
+            <!-- Rented Date, Sold Date, Change Agent -->
+            <div class="row my-3">
+              <!-- Rented Date -->
+              <div class="col-md-4">
+                <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                  <mat-label>Rented Date</mat-label>
+                  <input
+                    matInput
+                    [(ngModel)]="rentedDate"
+                    name="rentedDate"
+                    [matDatepicker]="rentedDateDatePicker"
+                    placeholder="DD/MM/YYYY"
+                  />
+                  <mat-datepicker-toggle
+                    matIconSuffix
+                    [for]="rentedDateDatePicker"
+                  ></mat-datepicker-toggle>
+                  <mat-datepicker #rentedDateDatePicker></mat-datepicker>
+                </mat-form-field>
+              </div>
+              <!-- End Rented Date -->
+
+              <!-- End Sold Date -->
+              <!-- Sold Date -->
+              <div class="col-md-4">
+                <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                  <mat-label>Sold Date</mat-label>
+                  <input
+                    matInput
+                    [(ngModel)]="soldDate"
+                    name="soldDate"
+                    [matDatepicker]="soldDateDatePicker"
+                    placeholder="DD/MM/YYYY"
+                  />
+                  <mat-datepicker-toggle
+                    matIconSuffix
+                    [for]="soldDateDatePicker"
+                  ></mat-datepicker-toggle>
+                  <mat-datepicker #soldDateDatePicker></mat-datepicker>
+                </mat-form-field>
+              </div>
+              <!-- End Sold Date -->
+
+              <!-- Change Agent -->
+              <div class="col-md-4">
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-label
+                    [ngClass]="isAgentNotSelected ? 'text-danger' : ''"
+                    >{{
+                      isAgentNotSelected
+                        ? "Please select the Agent from the list!"
+                        : "Select the Agent"
+                    }}</mat-label
+                  >
+                  <input
+                    matInput
+                    [(ngModel)]="agentName"
+                    name="agentName"
+                    [ngClass]="isAgentNotSelected ? 'text-danger' : ''"
+                    [matAutocomplete]="auto"
+                    placeholder="Type and select the owner"
+                    (ngModelChange)="filterAgentThroughAllUsers($event)"
+                    required
+                  />
+                  <mat-autocomplete
+                    #auto="matAutocomplete"
+                    (optionSelected)="getTheSelectedAgent($event)"
+                  >
+                    <mat-option
+                      *ngFor="let user of filterAgents"
+                      [value]="user.name"
+                      class="d-flex justify-content-between align-items-center"
+                    >
+                      <img
+                        [src]="user.image"
+                        alt="{{ user.name }}"
+                        width="30"
+                        height="30"
+                        style="
+                          margin-right: 8px;
+                          object-fit: cover;
+                          object-position: center;
+                          border-radius: 100%;
+                          width: 30px;
+                          height: 30px;
+                        "
+                      />
+                      {{ user.name }}
+                    </mat-option>
+                  </mat-autocomplete>
+                </mat-form-field>
+              </div>
+              <!-- End Change Agent -->
+            </div>
+            <!-- End Rented Date, Sold Date, Change Agent -->
           </div>
           <!-- End Listing Management -->
 
@@ -1529,7 +1672,7 @@
               <div class="col-md-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Property Status</mat-label>
-                  <mat-select required>
+                  <mat-select [(ngModel)]="status" name="status" required>
                     <mat-option
                       *ngFor="
                         let option of propertyStatusOptions;

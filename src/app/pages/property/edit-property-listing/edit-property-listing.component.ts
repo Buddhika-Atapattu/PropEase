@@ -76,7 +76,11 @@ import {
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MapComponent } from '../../../components/shared/map/map.component';
 import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
-import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import {
+  DragDropModule,
+  CdkDragDrop,
+  moveItemInArray,
+} from '@angular/cdk/drag-drop';
 
 interface propertyImagePreview {
   URL: string;
@@ -255,12 +259,16 @@ export class EditPropertyListingComponent
     'image/webp',
   ];
   protected uploadedImages: propertyImages[] = [];
+  private removeImages: propertyImages[] = [];
 
   // Documents
   private propertyDocuments: File[] = [];
   protected isPropertyDocsDragOver: boolean = false;
   protected propertyDocsPreview: propertyDocPreview[] = [];
   protected uploadedDocuments: propertyDocBackend[] = [];
+  protected uploadedDucumentsPreview: propertyDocPreview[] = [];
+  protected isPropertyDocTypeMissMatched: boolean = false;
+  private removeDocuments: propertyDocBackend[] = [];
 
   private readonly propertyFormallowedDocs = [
     // Word Documents
@@ -308,6 +316,7 @@ export class EditPropertyListingComponent
   protected listingExpiryDate: Property['listingExpiryDate'] = new Date();
 
   // Added by agent
+  protected agentName: string = '';
   protected AddedByUsername: AddedBy['username'] = '';
   protected AddedByName: AddedBy['name'] = '';
   protected AddedByEmail: AddedBy['email'] = '';
@@ -325,14 +334,20 @@ export class EditPropertyListingComponent
         ? this.AddedByAddedAt.toISOString()
         : this.AddedByAddedAt,
   };
+  protected isAgentNotSelected: boolean = false;
+  protected filterAgents: UsersType[] = [];
+  protected selectedAgent: UsersType | null = null;
 
   //Owner information
   protected ownerUsername: string = '';
   protected allUsers: UsersType[] = [];
   protected selectedOwner: UsersType | null = null;
   protected ownerName: string = '';
-  protected filterOwner: UsersType[] = [];
+  protected filterOwners: UsersType[] = [];
   protected isOwnerNotSelected: boolean = false;
+
+  protected rentedDate: Property['rentedDate'] | null = null;
+  protected soldDate: Property['soldDate'] | null = null;
 
   //<================== End Listing Management ==================>
 
@@ -465,12 +480,6 @@ export class EditPropertyListingComponent
     //Assign the values to logged user
     this.loggedUser = this.authService.getLoggedUser;
     this.loggedUsername = this.loggedUser?.username as string;
-    this.AddedByUsername = this.loggedUser?.username as string;
-    this.AddedByName = this.loggedUser?.name as string;
-    this.AddedByEmail = this.loggedUser?.email as string;
-    this.AddedByRole = this.loggedUser?.role as string;
-    this.AddedByContactNumber = this.loggedUser?.phoneNumber as string;
-    this.AddedByAddedAt = new Date();
 
     this.registerCustomIcons();
     // this.id = this.propertyService.generatePropertyId();
@@ -522,7 +531,6 @@ export class EditPropertyListingComponent
   private updateIndicatorPosition(index: number): void {
     const tabEl = this.tabElements.get(index)?.nativeElement;
 
-
     if (tabEl) {
       const { offsetLeft, offsetWidth } = tabEl;
 
@@ -540,8 +548,8 @@ export class EditPropertyListingComponent
       }
     }
 
-    if(this.map && this.currentIndex === 1){
-      this.map.MapCenterMaker(this.mapLocationLat, this.mapLocationLng, 15)
+    if (this.map && this.currentIndex === 1) {
+      this.map.MapCenterMaker(this.mapLocationLat, this.mapLocationLng, 15);
     }
   }
   //<==================== End tab Make ====================>
@@ -572,12 +580,11 @@ export class EditPropertyListingComponent
   private async callTheAPI() {
     if (this.id) {
       await this.propertyService.getPropertyById(this.id).then((response) => {
-        console.log(response);
         // Basic Property Details
         this.title = response.data.title;
-        this.type = response.data.type;
+        this.type = this.capitalize(response.data.type);
         this.filterTypeOperation(this.type);
-        this.listing = response.data.listing;
+        this.listing = this.capitalize(response.data.listing);
         this.filterListingOperation(this.listing);
         this.description = response.data.description;
         // End Basic Property Details
@@ -608,17 +615,19 @@ export class EditPropertyListingComponent
         this.bathrooms = response.data.bathrooms;
         this.maidrooms = response.data.maidrooms;
         this.driverRooms = response.data.driverRooms;
-        this.furnishingStatus = response.data.furnishingStatus;
+        this.furnishingStatus = this.capitalize(response.data.furnishingStatus);
         this.totalFloors = response.data.totalFloors;
         this.numberOfParking = response.data.numberOfParking;
         // End Property Specifications
 
         // Construction & Age
         this.builtYear = response.data.builtYear;
-        this.propertyCondition = response.data.propertyCondition;
+        this.propertyCondition = this.capitalize(
+          response.data.propertyCondition
+        );
         this.developerName = response.data.developerName;
         this.projectName = response.data.projectName;
-        this.ownerShipType = response.data.ownerShipType;
+        this.ownerShipType = this.capitalize(response.data.ownerShipType);
         this.filterOwnerThroughAllUsers(response.data.owner);
         // End Construction & Age
 
@@ -635,7 +644,9 @@ export class EditPropertyListingComponent
         this.maintenanceFees = response.data.maintenanceFees;
         this.serviceCharges = response.data.serviceCharges;
         this.transferFees = response.data.transferFees;
-        this.availabilityStatus = response.data.availabilityStatus;
+        this.availabilityStatus = this.capitalize(
+          response.data.availabilityStatus
+        );
         // End Financial Details
 
         // Features & Amenities
@@ -645,15 +656,66 @@ export class EditPropertyListingComponent
         // Media
         this.uploadedImages = response.data.images;
         this.uploadedDocuments = response.data.documents;
+        this.uploadImageReorganizingOperation();
         this.videoTour = response.data.videoTour;
-        this.propertyVideoUrl(this.videoTour ?? '')
+        this.propertyVideoUrl(this.videoTour ?? '');
         this.virtualTour = response.data.virtualTour;
         this.updateVirtualTourUrl(this.virtualTour ?? '');
         // End Media
+
+        // Listing Management
+        this.listingDate = this.toValidDate(response.data.listingDate);
+        this.availabilityDate = this.toValidDate(
+          response.data.availabilityDate
+        );
+        this.listingExpiryDate = this.toValidDate(
+          response.data.listingExpiryDate
+        );
+        if (response.data.addedBy) {
+          this.AddedBy = response.data.addedBy;
+          this.AddedByUsername = response.data.addedBy.username;
+          this.AddedByName = response.data.addedBy.name;
+          this.AddedByEmail = response.data.addedBy.email;
+          this.AddedByRole = response.data.addedBy.role;
+          this.AddedByContactNumber = response.data.addedBy.contactNumber;
+          this.AddedByAddedAt = new Date(response.data.addedBy.addedAt);
+          this.agentName = response.data.addedBy.name;
+        }
+
+        this.rentedDate = this.toValidDate(response.data.rentedDate);
+        this.soldDate = this.toValidDate(response.data.soldDate);
+        // End Listing Management
+
+        // Administrative & Internal Use
+        this.referenceCode = response.data.referenceCode;
+        this.verificationStatus = this.capitalize(
+          response.data.verificationStatus
+        ) as Property['verificationStatus'];
+        this.priority = this.capitalize(
+          response.data.priority
+        ) as Property['priority'];
+        this.status = this.capitalize(
+          response.data.status
+        ) as Property['status'];
+        this.internalNote = response.data.internalNote;
+        // End Administrative & Internal Use
       });
     }
   }
   //<==================== End Call the API to collect the data ====================>
+
+  //<==================== Make Capitalizing =========================>
+  private capitalize(str: string): string {
+    return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+  }
+  //<==================== End Make Capitalizing =========================>
+
+  //<==================== Validate the Date =========================>
+  private toValidDate(dateStr: string | null | undefined): Date | null {
+    const date = dateStr ? new Date(dateStr) : null;
+    return date instanceof Date && !isNaN(date.getTime()) ? date : null;
+  }
+  //<==================== End Validate the Date =========================>
 
   //<==================== Making sort ====================>
 
@@ -1045,15 +1107,18 @@ export class EditPropertyListingComponent
 
   //Remove uploaded images from the array
   protected removePropertyUploadedImage(index: number) {
-    this.uploadedImages.splice(index, 1);
+    const removerImage = this.uploadedImages.splice(index, 1)[0];
+    this.removeImages.push(removerImage);
   }
 
   //Upload images reorganizing
-  protected uploadImageReorganizing(event: CdkDragDrop<any[]>){
-    moveItemInArray(this.uploadedImages, event.previousIndex, event.currentIndex);
+  protected uploadImageReorganizing(event: CdkDragDrop<any[]>) {
+    moveItemInArray(
+      this.uploadedImages,
+      event.previousIndex,
+      event.currentIndex
+    );
   }
-
-
 
   //<==================== End Property Images ====================>
 
@@ -1178,8 +1243,30 @@ export class EditPropertyListingComponent
   }
 
   protected removeDocs(index: number) {
-    this.propertyDocsPreview.splice(index, 1);
+    this.propertyDocsPreview.splice(index, 1)[0];
     this.propertyDocuments.splice(index, 1);
+  }
+
+  protected removeDocsFromUploaded(index: number) {
+    console.log('Index: ', index);
+    this.uploadedDucumentsPreview.splice(index, 1);
+    const removeDocument = this.uploadedDocuments.splice(index, 1)[0];
+    this.removeDocuments.push(removeDocument);
+  }
+
+  //Uploaded image organization operation
+  private uploadImageReorganizingOperation() {
+    this.uploadedDocuments.forEach((item) => {
+      const dataArray = {
+        name: '',
+        type: '',
+        icon: '',
+      };
+      dataArray.name = item.originalname;
+      dataArray.type = item.originalname.split('.').pop() as string;
+      dataArray.icon = this.chooceIcon(dataArray.type);
+      this.uploadedDucumentsPreview.push(dataArray);
+    });
   }
 
   //<==================== End Property Docs ====================>
@@ -1359,20 +1446,58 @@ export class EditPropertyListingComponent
   }
   //<==================== End currency Controller ====================>
 
+  //<==================== Agent Infor ====================>
+  protected async filterAgentThroughAllUsers(input: string): Promise<void> {
+    this.isAgentNotSelected = true;
+    const users = await this.APIs.getAllUsers();
+    if (users) {
+      this.allUsers = users;
+      this.filterAgents = users.filter((user) =>
+        user.name.toLowerCase().includes(input.toLowerCase())
+      );
+    }
+  }
+
+  protected getTheSelectedAgent(input: MatAutocompleteSelectedEvent): void {
+    const selectedAgent = input.option.value;
+    if (selectedAgent) {
+      this.isAgentNotSelected = false;
+      this.selectedAgent =
+        this.allUsers.find((data) => {
+          const findingUserName = data.name.toLowerCase();
+          const typingUserName = selectedAgent.toLowerCase();
+          return findingUserName === typingUserName;
+        }) || null;
+    } else {
+      this.isAgentNotSelected = true;
+    }
+    if (this.selectedAgent) {
+      this.AddedBy.name = this.selectedAgent.name;
+      this.AddedBy.username = this.selectedAgent.username;
+      this.AddedBy.email = this.selectedAgent.email;
+      this.AddedBy.role = this.selectedAgent.role;
+      this.AddedBy.contactNumber = this.selectedAgent.phoneNumber;
+      this.AddedBy.addedAt = new Date().toISOString();
+    }
+
+    console.log(this.AddedBy);
+  }
+  //<==================== End Agent Infor ====================>
+
   //<==================== Property owner infor ====================>
   protected async filterOwnerThroughAllUsers(input: string): Promise<void> {
     this.isOwnerNotSelected = true;
     const users = await this.APIs.getAllUsers();
     if (users) {
       this.allUsers = users;
-      this.filterOwner = users.filter((user) =>
+      this.filterOwners = users.filter((user) =>
         user.name.toLowerCase().includes(input.toLowerCase())
       );
     }
 
-    if(this.filterOwner.length === 1){
+    if (this.filterOwners.length === 1) {
       this.isOwnerNotSelected = false;
-      this.selectedOwner = this.filterOwner[0];
+      this.selectedOwner = this.filterOwners[0];
       this.ownerUsername = this.selectedOwner.username;
       this.ownerName = this.selectedOwner.name;
     }
@@ -1479,19 +1604,6 @@ export class EditPropertyListingComponent
         stateOrProvince: (this.AddressStateOrProvince ?? '').trim(),
         postcode: this.AddressPostcode.trim(),
         country: this.typeAddressCountry.trim(),
-      };
-
-      // Assemble the Agent info
-      this.AddedBy = {
-        username: this.AddedByUsername.trim(),
-        name: this.AddedByName.trim(),
-        email: this.AddedByEmail.trim(),
-        role: this.AddedByRole.trim(),
-        contactNumber: (this.AddedByContactNumber ?? '').trim(),
-        addedAt:
-          this.AddedByAddedAt instanceof Date
-            ? this.AddedByAddedAt.toISOString().trim()
-            : this.AddedByAddedAt.trim(),
       };
 
       const formData = new FormData();
@@ -1651,13 +1763,13 @@ export class EditPropertyListingComponent
       // End Features & Amenities
 
       // Media
-      if (this.selcetedPropertyImages.length === 0) {
-        throw new Error('Property images is required!');
-      }
+      // if (this.selcetedPropertyImages.length === 0) {
+      //   throw new Error('Property images is required!');
+      // }
 
-      if (this.propertyDocuments.length === 0) {
-        throw new Error('Property documents is required!');
-      }
+      // if (this.propertyDocuments.length === 0) {
+      //   throw new Error('Property documents is required!');
+      // }
       // End Media
 
       // Listing Management
@@ -1735,7 +1847,7 @@ export class EditPropertyListingComponent
       formData.append('driverRooms', this.driverRooms.toString().trim());
       formData.append(
         'furnishingStatus',
-        this.furnishingStatus.toString().trim().toLowerCase()
+        this.furnishingStatus.toString().trim()
       );
       formData.append('totalFloors', this.totalFloors.toString().trim());
       formData.append(
@@ -1748,17 +1860,14 @@ export class EditPropertyListingComponent
       formData.append('builtYear', this.builtYear.toString().trim());
       formData.append(
         'propertyCondition',
-        this.propertyCondition.toString().trim().toLowerCase()
+        this.propertyCondition.toString().trim()
       );
       formData.append('developerName', this.developerName.toString().trim());
       formData.append(
         'projectName',
         this.projectName ? this.projectName.toString().trim() : ''
       );
-      formData.append(
-        'ownerShipType',
-        this.ownerShipType.toString().trim().toLowerCase()
-      );
+      formData.append('ownerShipType', this.ownerShipType.toString().trim());
       // End Construction & Age
 
       // Financial Details
@@ -1799,14 +1908,14 @@ export class EditPropertyListingComponent
       );
       formData.append(
         'availabilityStatus',
-        this.availabilityStatus.toString().trim().toLowerCase()
+        this.availabilityStatus.toString().trim()
       );
       // End Financial Details
 
       // Features & Amenities
       formData.append(
         'featuresAndAmenities',
-        JSON.stringify(this.featureAmenities).trim().toLowerCase()
+        JSON.stringify(this.featureAmenities).trim()
       );
       // End Features & Amenities
 
@@ -1819,13 +1928,35 @@ export class EditPropertyListingComponent
       this.propertyDocuments.forEach((file, idx) => {
         formData.append('documents', file, file.name);
       });
+
+      //Uploaded Images
+      formData.append(
+        'existingImages',
+        JSON.stringify(this.uploadedImages).trim()
+      );
+
+      //Uploaded Documents
+      formData.append(
+        'existingDocuments',
+        JSON.stringify(this.uploadedDocuments).trim()
+      );
+
+      // Remove Images
+      formData.append('removeImages', JSON.stringify(this.removeImages).trim());
+
+      // Remove Documents
+      formData.append(
+        'removeDocuments',
+        JSON.stringify(this.removeDocuments).trim()
+      );
+
       formData.append(
         'videoTour',
-        this.videoTour ? this.videoTour.toString().trim().toLowerCase() : ''
+        this.videoTour ? this.videoTour.toString().trim() : ''
       );
       formData.append(
         'virtualTour',
-        this.virtualTour ? this.virtualTour.toString().trim().toLowerCase() : ''
+        this.virtualTour ? this.virtualTour.toString().trim() : ''
       );
       // End Media
 
@@ -1852,22 +1983,24 @@ export class EditPropertyListingComponent
       formData.append('referenceCode', this.referenceCode.toString().trim());
       formData.append(
         'verificationStatus',
-        this.verificationStatus.toString().trim().toLowerCase()
+        this.verificationStatus.toString().trim()
+      );
+      formData.append('priority', this.priority.toString().trim());
+      formData.append('status', this.status.toString().trim());
+      formData.append('internalNote', this.internalNote.toString().trim());
+      formData.append(
+        'rentedDate',
+        this.rentedDate ? this.rentedDate.toISOString().trim() : ''
       );
       formData.append(
-        'priority',
-        this.priority.toString().trim().toLowerCase()
-      );
-      formData.append('status', this.status.toString().trim().toLowerCase());
-      formData.append(
-        'internalNote',
-        this.internalNote.toString().trim().toLowerCase()
+        'soldDate',
+        this.soldDate ? this.soldDate.toISOString().trim() : ''
       );
       // End Administrative & Internal Use
 
       // API calling
       await this.propertyService
-        .createProperties(formData, this.id)
+        .updateProperty(formData, this.id)
         .then((res) => {
           console.log(res);
           this.notification.notification(res.status, res.message);
@@ -1884,10 +2017,13 @@ export class EditPropertyListingComponent
         })
         .finally(() => {
           this.progress.complete();
-          this.router.navigate(['/dashboard/properties']);
+          setTimeout(() => {
+            this.router.navigate(['/dashboard/properties']);
+          }, 2000);
         });
     } catch (error) {
       if (error) {
+        console.log('Error: ', error);
         this.notification.notification('error', error as string);
       }
     }

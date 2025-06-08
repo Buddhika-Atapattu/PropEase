@@ -39,7 +39,6 @@ import {
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { Sort, MatSortModule, MatSort } from '@angular/material/sort';
-import { GoogleChartsModule, ChartType } from 'angular-google-charts';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import {
   MatMomentDateModule,
@@ -102,15 +101,6 @@ interface AllUserCount {
 }
 
 //PieChart
-export interface GoogleChartConfig {
-  title?: string;
-  type: ChartType;
-  data: any[][];
-  columns?: string[];
-  options?: GoogleChartOptions;
-  width?: number | string;
-  height?: number | string;
-}
 
 export interface GoogleChartOptions {
   // Global styling
@@ -235,7 +225,6 @@ export interface ChartFill {
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    GoogleChartsModule,
     MatMomentDateModule,
     MatSelectModule,
     MatDividerModule,
@@ -275,7 +264,7 @@ export class LoggedDataComponent {
   protected isPaginationOpen: boolean = false;
 
   //Pie chart according to the table
-  protected tablePieChart: GoogleChartConfig | null = null;
+
   protected tableAllUsersLogingTimes: number = 0;
   protected tableUserLoggedTimes: number = 0;
 
@@ -288,8 +277,7 @@ export class LoggedDataComponent {
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
-      google.charts.load('current', { packages: ['corechart'] });
-      google.charts.setOnLoadCallback(() => {});
+      
     }
     this.iconMaker();
   }
@@ -491,42 +479,7 @@ export class LoggedDataComponent {
     chartUserPercentage: number,
     otherPercentage: number
   ): void {
-    this.tablePieChart = <GoogleChartConfig>{
-      title: 'User Login Activity',
-      type: ChartType.PieChart,
-      columns: ['Username', 'Login Count'],
-      data: [
-        [this.username, chartUserPercentage],
-        ['Other Users', otherPercentage],
-      ],
-      options: {
-        is3D: true,
-        pieSliceText: 'percentage',
-        backgroundColor: '#00000000',
-        fontName: 'Roboto',
-        fontSize: 14,
-        legend: {
-          position: 'right',
-          textStyle: { color: '#333', fontSize: 12 },
-        },
-        chartArea: {
-          left: 0,
-          top: 0,
-          width: '100%',
-          height: '100%',
-        },
-        slices: {
-          0: { color: '#ff00dd' },
-          1: { color: '#22ff00' },
-        },
-        tooltip: {
-          textStyle: { color: '#000' },
-          showColorCode: true,
-        },
-      },
-      // width: 500,
-      // height: 500,
-    };
+    
   }
 
   protected sortData(sort: Sort): void {

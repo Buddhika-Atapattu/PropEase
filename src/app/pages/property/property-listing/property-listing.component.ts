@@ -641,7 +641,7 @@ export class PropertyListingComponent
       );
     }
   }
-  
+
   //09. Status of property
   protected propertyStatusOptionsSort() {
     if (this.filterPropertyStatusOptions.length === 0) {
@@ -661,7 +661,6 @@ export class PropertyListingComponent
       return this.filterOwnerShipTypeOptions.sort((a, b) => a.localeCompare(b));
     }
   }
-
 
   //<==================== End Making sort ====================>
 
@@ -857,7 +856,7 @@ export class PropertyListingComponent
     event.preventDefault();
     this.isPropertyImageDragOver = false;
 
-    console.log("event.dataTransfer?.files: ", event.dataTransfer?.files);
+    console.log('event.dataTransfer?.files: ', event.dataTransfer?.files);
 
     const files = event.dataTransfer?.files;
     if (files) {
@@ -894,7 +893,7 @@ export class PropertyListingComponent
   **/
   private propertyImagePreviewMaker(files: FileList): void {
     // Loop through images of property
-    
+
     for (let file of Array.from(files)) {
       // Check if file is an image
       if (!this.allowedImageTypes.includes(file.type)) {
@@ -934,7 +933,7 @@ export class PropertyListingComponent
       reader.readAsDataURL(file);
     }
 
-    console.log(this.propertyImagePreview.length)
+    console.log(this.propertyImagePreview.length);
   }
 
   //Remove image from arrays
@@ -1371,9 +1370,8 @@ export class PropertyListingComponent
         addedAt:
           this.AddedByAddedAt instanceof Date
             ? this.AddedByAddedAt.toISOString().trim()
-            : this.AddedByAddedAt.trim(),
+            : (this.AddedByAddedAt ?? '').trim(),
       };
-
 
       const formData = new FormData();
 
@@ -1489,7 +1487,7 @@ export class PropertyListingComponent
         throw new Error('Owner ship type is required!');
       }
 
-      if(!this.ownerName){
+      if (!this.ownerName) {
         throw new Error('Owner is required!');
       }
       // End Construction & Age
@@ -1599,56 +1597,26 @@ export class PropertyListingComponent
       // End Basic Property Details
 
       // Location Details
-      formData.append(
-        'countryDetails',
-        JSON.stringify(this.country).trim()
-      );
+      formData.append('countryDetails', JSON.stringify(this.country).trim());
       formData.append('address', JSON.stringify(Address).trim());
       formData.append('location', JSON.stringify(this.location).trim());
       // End Location Details
 
       // Property Specifications
-      formData.append(
-        'totalArea',
-        this.totalArea.toString().trim()
-      );
-      formData.append(
-        'builtInArea',
-        this.builtInArea.toString().trim()
-      );
-      formData.append(
-        'livingRooms',
-        this.livingRooms.toString().trim()
-      );
-      formData.append(
-        'balconies',
-        this.balconies.toString().trim()
-      );
+      formData.append('totalArea', this.totalArea.toString().trim());
+      formData.append('builtInArea', this.builtInArea.toString().trim());
+      formData.append('livingRooms', this.livingRooms.toString().trim());
+      formData.append('balconies', this.balconies.toString().trim());
       formData.append('kitchen', this.kitchen.toString().trim());
-      formData.append(
-        'bedrooms',
-        this.bedrooms.toString().trim()
-      );
-      formData.append(
-        'bathrooms',
-        this.bathrooms.toString().trim()
-      );
-      formData.append(
-        'maidrooms',
-        this.maidrooms.toString().trim()
-      );
-      formData.append(
-        'driverRooms',
-        this.driverRooms.toString().trim()
-      );
+      formData.append('bedrooms', this.bedrooms.toString().trim());
+      formData.append('bathrooms', this.bathrooms.toString().trim());
+      formData.append('maidrooms', this.maidrooms.toString().trim());
+      formData.append('driverRooms', this.driverRooms.toString().trim());
       formData.append(
         'furnishingStatus',
-        this.furnishingStatus.toString().trim().toLowerCase()
+        this.furnishingStatus.toString().trim()
       );
-      formData.append(
-        'totalFloors',
-        this.totalFloors.toString().trim()
-      );
+      formData.append('totalFloors', this.totalFloors.toString().trim());
       formData.append(
         'numberOfParking',
         this.numberOfParking.toString().trim()
@@ -1656,43 +1624,32 @@ export class PropertyListingComponent
       // End Property Specifications
 
       // Construction & Age
-      formData.append(
-        'builtYear',
-        this.builtYear.toString().trim()
-      );
+      formData.append('builtYear', this.builtYear.toString().trim());
       formData.append(
         'propertyCondition',
-        this.propertyCondition.toString().trim().toLowerCase()
+        this.propertyCondition.toString().trim()
       );
-      formData.append(
-        'developerName',
-        this.developerName.toString().trim()
-      );
+      formData.append('developerName', this.developerName.toString().trim());
       formData.append(
         'projectName',
         this.projectName ? this.projectName.toString().trim() : ''
       );
       formData.append(
         'ownerShipType',
-        this.ownerShipType.toString().trim().toLowerCase()
+        this.ownerShipType.toString().trim()
       );
       // End Construction & Age
 
       // Financial Details
       formData.append('price', this.price.toString().trim());
-      formData.append(
-        'currency',
-        this.countryActualCurrency.toString().trim()
-      );
+      formData.append('currency', this.countryActualCurrency.toString().trim());
       formData.append(
         'pricePerSqurFeet',
         this.pricePerSqurFeet.toString().trim()
       );
       formData.append(
         'expectedRentYearly',
-        this.expectedRentYearly
-          ? this.expectedRentYearly.toString().trim()
-          : ''
+        this.expectedRentYearly ? this.expectedRentYearly.toString().trim() : ''
       );
       formData.append(
         'expectedRentQuartely',
@@ -1708,34 +1665,27 @@ export class PropertyListingComponent
       );
       formData.append(
         'expectedRentDaily',
-        this.expectedRentDaily
-          ? this.expectedRentDaily.toString().trim()
-          : ''
+        this.expectedRentDaily ? this.expectedRentDaily.toString().trim() : ''
       );
       formData.append(
         'maintenanceFees',
         this.maintenanceFees.toString().trim()
       );
-      formData.append(
-        'serviceCharges',
-        this.serviceCharges.toString().trim()
-      );
+      formData.append('serviceCharges', this.serviceCharges.toString().trim());
       formData.append(
         'transferFees',
-        this.transferFees
-          ? this.transferFees.toString().trim()
-          : ''
+        this.transferFees ? this.transferFees.toString().trim() : ''
       );
       formData.append(
         'availabilityStatus',
-        this.availabilityStatus.toString().trim().toLowerCase()
+        this.availabilityStatus.toString().trim()
       );
       // End Financial Details
 
       // Features & Amenities
       formData.append(
         'featuresAndAmenities',
-        JSON.stringify(this.featureAmenities).trim().toLowerCase()
+        JSON.stringify(this.featureAmenities).trim()
       );
       // End Features & Amenities
 
@@ -1750,24 +1700,19 @@ export class PropertyListingComponent
       });
       formData.append(
         'videoTour',
-        this.videoTour ? this.videoTour.toString().trim().toLowerCase() : ''
+        this.videoTour ? this.videoTour.toString().trim() : ''
       );
       formData.append(
         'virtualTour',
-        this.virtualTour ? this.virtualTour.toString().trim().toLowerCase() : ''
+        this.virtualTour ? this.virtualTour.toString().trim() : ''
       );
       // End Media
 
       // Listing Management
-      formData.append(
-        'listingDate',
-        this.listingDate.toISOString().trim()
-      );
+      formData.append('listingDate', this.listingDate.toISOString().trim());
       formData.append(
         'availabilityDate',
-        this.availabilityDate
-          ? this.availabilityDate.toISOString().trim()
-          : ''
+        this.availabilityDate ? this.availabilityDate.toISOString().trim() : ''
       );
       formData.append(
         'listingExpiryDate',
@@ -1775,10 +1720,7 @@ export class PropertyListingComponent
           ? this.listingExpiryDate.toISOString().trim()
           : ''
       );
-      formData.append(
-        'addedBy',
-        JSON.stringify(this.AddedBy).trim()
-      );
+      formData.append('addedBy', JSON.stringify(this.AddedBy).trim());
       formData.append(
         'owner',
         this.selectedOwner?.username ? this.selectedOwner?.username : ''
@@ -1786,22 +1728,19 @@ export class PropertyListingComponent
       // End Listing Management
 
       // Administrative & Internal Use
-      formData.append(
-        'referenceCode',
-        this.referenceCode.toString().trim()
-      );
+      formData.append('referenceCode', this.referenceCode.toString().trim());
       formData.append(
         'verificationStatus',
-        this.verificationStatus.toString().trim().toLowerCase()
+        this.verificationStatus.toString().trim()
       );
       formData.append(
         'priority',
-        this.priority.toString().trim().toLowerCase()
+        this.priority.toString().trim()
       );
-      formData.append('status', this.status.toString().trim().toLowerCase());
+      formData.append('status', this.status.toString().trim());
       formData.append(
         'internalNote',
-        this.internalNote.toString().trim().toLowerCase()
+        this.internalNote.toString().trim()
       );
       // End Administrative & Internal Use
 
@@ -1815,13 +1754,18 @@ export class PropertyListingComponent
         .catch((error) => {
           if (error) {
             console.log('Error: ', error.error);
-            this.notification.notification(error.error.status, error.error.message);
+            this.notification.notification(
+              error.error.status,
+              error.error.message
+            );
             this.progress.error();
           }
         })
         .finally(() => {
           this.progress.complete();
-          this.router.navigate(['/dashboard/properties']);
+          setInterval(() => {
+            this.router.navigate(['/dashboard/properties']);
+          }, 2000);
         });
     } catch (error) {
       if (error) {
@@ -1831,4 +1775,3 @@ export class PropertyListingComponent
   }
   //<==================== End Form submit ====================>
 }
-

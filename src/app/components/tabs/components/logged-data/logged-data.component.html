@@ -185,25 +185,11 @@
   >
     <div
       class="col-md-6 d-flex justify-content-center align-items-center"
-      *ngIf="tablePieChart !== null"
+
     >
       <div class="chart-wrapper w-100">
         <h5 class="mb-3 text-uppercase">User Login Comparison</h5>
-        <google-chart
-          class="google-chart d-flex mx-auto"
-          [title]="tablePieChart.title"
-          [type]="tablePieChart.type"
-          [data]="tablePieChart.data"
-          [options]="tablePieChart.options || {}"
-          [width]="
-            tablePieChart.width !== undefined ? +tablePieChart.width : undefined
-          "
-          [height]="
-            tablePieChart.height !== undefined
-              ? +tablePieChart.height
-              : undefined
-          "
-        ></google-chart>
+        
       </div>
     </div>
     <div class="col-md-6">
