@@ -346,7 +346,7 @@ export class EditPropertyListingComponent
   protected filterOwners: UsersType[] = [];
   protected isOwnerNotSelected: boolean = false;
 
-  protected rentedDate: Property['rentedDate'] | null = null;
+  protected rentedDate: Property['rentedDate'] | undefined = undefined;
   protected soldDate: Property['soldDate'] | null = null;
 
   //<================== End Listing Management ==================>
