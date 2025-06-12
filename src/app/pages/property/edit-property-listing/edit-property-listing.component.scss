@@ -100,6 +100,7 @@
     flex-wrap: wrap;
     align-items: center;
     position: relative;
+    text-align: center;
     min-height: 5rem;
     height: 10rem;
     width: 100%;
@@ -486,3 +487,131 @@
     }
   }
 }
+
+// Mobile view
+@media (max-width: 768px) {
+  .main-panel {
+    padding: 0.25rem;
+    .tab-container {
+      position: relative;
+      margin-top: 3rem;
+      min-height: 50vh;
+
+      .tab-indicator-row {
+        position: relative;
+        z-index: 10000;
+        div {
+          position: relative;
+
+          .mobile-menu-open-btn {
+            display: block;
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: none;
+            border: none;
+            margin: 0 0.5rem;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.5s ease-in-out;
+            font-weight: 100;
+            text-transform: uppercase;
+            color: currentColor;
+            font-size: 15pt;
+          }
+          ul.tab-list {
+            position: absolute;
+            display: block;
+            top: -200rem;
+            left: 0;
+            right: 0;
+            opacity: 0;
+            overflow: hidden;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 1rem;
+            transition: all 0.5s ease-in-out;
+
+            &.active {
+              top: 3rem;
+              opacity: 1;
+            }
+
+            li.tab-item {
+              font-size: 12pt;
+              display: flex;
+              justify-content: start;
+              align-items: center;
+              cursor: pointer;
+              padding: 0.5rem;
+              position: relative;
+              text-align: left;
+              width: 100%;
+              margin: 0;
+
+              &.active {
+                color: #fff;
+                border-radius: 0.25rem;
+              }
+            }
+
+            .tab-indicator {
+              display: none;
+            }
+          }
+
+          .tab-indicator-devider {
+            display: none;
+          }
+        }
+      }
+    }
+
+    &.dark {
+      .tab-indicator-row {
+        div {
+          position: relative;
+
+          ul.tab-list {
+            background: $dark-dashboard-color;
+            li.tab-item {
+              &.active {
+                color: #fff;
+                background: linear-gradient(
+                  144deg,
+                  rgb(0 58 168 / 34%),
+                  rgb(90 0 166 / 46%),
+                  rgb(20 0 145 / 43%)
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+
+    &.light {
+      .tab-indicator-row {
+        div {
+          position: relative;
+
+          ul.tab-list {
+            background: $light-dashboard-color;
+            li.tab-item {
+              &.active {
+                color: #fff;
+                background: linear-gradient(
+                  144deg,
+                  rgba(255, 191, 0),
+                  rgba(255, 221, 0),
+                  rgba(255, 191, 0)
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

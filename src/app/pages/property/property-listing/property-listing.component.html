@@ -45,7 +45,23 @@
           <div
             class="col-md-12 w-100 d-flex justify-content-center align-items-center"
           >
-            <ul class="tab-list">
+            <button
+              type="button"
+              class="mobile-menu-open-btn"
+              (click)="tabOpenButtonOperation()"
+            >
+              <i
+                [ngClass]="
+                  istabOpenButtonActive
+                    ? 'fa-solid fa-xmark'
+                    : 'fa-solid fa-bars'
+                "
+              ></i>
+            </button>
+            <ul
+              class="tab-list"
+              [ngClass]="istabOpenButtonActive ? 'active' : ''"
+            >
               <li
                 *ngFor="let tab of tabIndicators; let i = index"
                 [id]="'tabIndicator_' + i"
@@ -1087,16 +1103,16 @@
                 <div
                   class="row btn-edit d-flex justify-content-between align-items-center"
                 >
-                  <div class="col-sm-3">
+                  <div class="col-3">
                     <mat-icon
                       class="amenity-icon"
                       [svgIcon]="amenityIconMaker(item)"
                     ></mat-icon>
                   </div>
-                  <div class="col-sm-7">
+                  <div class="col-7">
                     {{ item }}
                   </div>
-                  <div class="col-sm-2">
+                  <div class="col-2">
                     <button type="button" (click)="cancelAmenty(i)">
                       <i class="fa-solid fa-square-xmark"></i>
                     </button>
@@ -1533,9 +1549,9 @@
       </div>
       <!-- end tab container -->
       <!-- Page navigating buttons and submit button -->
-      <div class="row d-flex justify-content-between align-items-center mt-5">
+      <div class="row d-flex justify-content-between align-items-center my-5">
         <!-- Go Back Button -->
-        <div class="col-md-2 d-flex justify-content-start align-items-center">
+        <div class="col d-flex justify-content-start align-items-center">
           <button
             *ngIf="currentIndex !== 0"
             type="button"
@@ -1548,7 +1564,7 @@
         <!-- End Go Back Button -->
 
         <!-- Go Next Button, Submit Button -->
-        <div class="col-md-2 d-flex justify-content-end align-items-center">
+        <div class="col d-flex justify-content-end align-items-center">
           <!-- Go Next Button -->
           <button
             *ngIf="currentIndex !== 8"

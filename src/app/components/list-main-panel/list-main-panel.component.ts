@@ -5,6 +5,8 @@ import {
   Inject,
   PLATFORM_ID,
   signal,
+  Output,
+  EventEmitter,
 } from '@angular/core';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
@@ -33,6 +35,7 @@ interface PageLinkLists {
   styleUrl: './list-main-panel.component.scss',
 })
 export class ListMainPanelComponent implements OnInit, OnDestroy {
+  @Output() closeMobileMenu = new EventEmitter<boolean>();
   mode: boolean | null = null;
   isBrowser: boolean;
   private modeSub: Subscription | null = null;
@@ -97,6 +100,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
 
   isExpanded = signal(true);
   // delayedExpandedClass = signal(false);
+  
 
   constructor(
     private windowRef: WindowsRefService,
@@ -252,7 +256,9 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     }
   }
 
-  navigateTo(path: string): void {
+  protected navigateTo(path: string): void {
+    this.closeMobileMenu.emit(true); 
+    console.log('HI'); // Console i working
     this.router.navigate(['/dashboard', path]);
   }
 }

@@ -30,6 +30,7 @@ import {
 import { ViewPropertyImagesComponent } from '../../../components/dialogs/view-property-images/view-property-images.component';
 import { APIsService, UsersType } from '../../../../services/APIs/apis.service';
 import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
+import { PropertyMoreDetailsPannelComponent } from '../../../components/dialogs/property-more-details-pannel/property-more-details-pannel.component';
 
 @Component({
   selector: 'app-view',
@@ -54,6 +55,12 @@ export class ViewComponent implements OnInit, OnDestroy {
   protected owner: UsersType | null = null;
   protected agent: UsersType | null = null;
 
+  protected isIframeEmbed: boolean = false;
+
+  protected videoPreviewURL: string = '';
+
+  protected virtualPreviewURL: string = '';
+
   constructor(
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -73,8 +80,10 @@ export class ViewComponent implements OnInit, OnDestroy {
       this.propertyID = params['propertyID'];
     });
     this.iconMaker();
+    this.propertyService.amenityIconMaker();
+    
   }
-
+ 
   async ngOnInit(): Promise<void> {
     if (this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
@@ -85,7 +94,6 @@ export class ViewComponent implements OnInit, OnDestroy {
       await this.getAgentDetails();
       this.createImageTiles();
       this.setInitialImage();
-      
     }
   }
 
@@ -109,6 +117,12 @@ export class ViewComponent implements OnInit, OnDestroy {
   }
   //<==================== End Icon maker ====================>
 
+  //<==================== Amenity Icon Maker ====================>
+  protected amenityIconMaker(amenity: string): string {
+    return this.propertyService.investigateTheAmenityIcon(amenity);
+  }
+  //<==================== End Amenity Icon Maker ====================>
+
   //<==================== Page indicator ====================>
   protected goToProperties(): void {
     this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
@@ -130,6 +144,8 @@ export class ViewComponent implements OnInit, OnDestroy {
       .then((response: MSG) => {
         this.property = response.data as BackEndPropertyData;
         this.propertyImages = this.property.images;
+        this.propertyVideoUrl(this.property?.videoTour ?? '')
+        this.updateVirtualTourUrl(this.property?.virtualTour ?? '')
       })
       .catch((error: MSG) => {
         console.error(error);
@@ -232,7 +248,7 @@ export class ViewComponent implements OnInit, OnDestroy {
         currentImageIndex: this.currentImageIndex,
       },
       width: '75vw',
-      height: '100%',
+      height: 'auto',
     });
 
     dialogRef.afterClosed().subscribe((result) => {});
@@ -281,4 +297,58 @@ export class ViewComponent implements OnInit, OnDestroy {
     }
   }
   //<==================== End get the agent details by calling the api ====================>
+
+  //<==================== 360° Virtual Preview ====================>
+  protected updateVirtualTourUrl(input: string): void {
+    this.virtualPreviewURL = input; // trust the embed URL or transform if needed
+  }
+  //<==================== End 360° Virtual Preview ====================>
+
+  //<==================== Property Video Preview ====================>
+  protected propertyVideoUrl(input: string): void {
+    const youtubeMatch = input.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    );
+    const vimeoMatch = input.match(/vimeo\.com\/(\d+)/);
+    const driveMatch = input.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+
+    if (youtubeMatch) {
+      const videoId = youtubeMatch[1];
+      this.videoPreviewURL = `https://www.youtube.com/embed/${videoId}`;
+      this.isIframeEmbed = true;
+    } else if (vimeoMatch) {
+      const videoId = vimeoMatch[1];
+      this.videoPreviewURL = `https://player.vimeo.com/video/${videoId}`;
+      this.isIframeEmbed = true;
+    } else if (driveMatch) {
+      const fileId = driveMatch[1];
+      this.videoPreviewURL = `https://drive.google.com/file/d/${fileId}/preview`;
+      this.isIframeEmbed = true;
+    } else if (input.includes('dropbox.com')) {
+      this.videoPreviewURL = input.replace('?dl=0', '?raw=1');
+      this.isIframeEmbed = false;
+    } else {
+      this.videoPreviewURL = input;
+      this.isIframeEmbed = false;
+    }
+  }
+  //<==================== End Property Video Preview ====================>
+
+  //<==================== Open More Details Pannel ====================>
+  protected openMoreDetailsPannel() {
+    const dialogRef = this.dialog.open(PropertyMoreDetailsPannelComponent, {
+      width: '95vw',
+      height: '95vh',
+      maxHeight: '95vh',
+      maxWidth: '95vw',
+      data: {
+        property: this.property,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      console.log(`Dialog result: ${result}`);
+    });
+  }
+  //<==================== End Open More Details Pannel ====================>
 }

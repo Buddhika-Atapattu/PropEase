@@ -11,6 +11,10 @@
   overflow: hidden;
 }
 
+.menu-icon {
+  display: none;
+}
+
 .sidebar {
   grid-area: sidebar;
   position: fixed;
@@ -52,7 +56,7 @@
   background-color: transparent;
   padding: 0 2rem;
   transition: all 0.3s ease;
-  z-index: 1;
+  z-index: 100;
 
   &.dark {
     background-color: $dark-dashboard-color;
@@ -129,4 +133,140 @@
   height: 50px;
   width: auto;
   object-fit: contain;
+}
+
+.mobile-menu {
+  display: none;
+}
+
+:host-context(html.dark) {
+  @media (max-width: 768px) {
+    .dashboard-container {
+      .menu-icon {
+        button {
+          border: 1px solid #fff;
+          .menu-bar {
+            background-color: #fff;
+          }
+        }
+      }
+    }
+
+    .mobile-menu {
+      background: $dark-secondary-color;
+    }
+  }
+}
+
+:host-context(html.light) {
+  @media (max-width: 768px) {
+    .dashboard-container {
+      .menu-icon {
+        button {
+          border: 1px solid #000;
+          .menu-bar {
+            background-color: #000;
+          }
+        }
+      }
+    }
+
+    .mobile-menu {
+      background: $light-secondary-color;
+    }
+  }
+}
+
+// Mobile version
+@media (max-width: 768px) {
+  .main-content {
+    padding: 0.25rem;
+  }
+  .dashboard-main-container {
+    margin-top: 3rem;
+  }
+  .menu-icon {
+    display: flex;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1000000;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    button {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 2rem;
+      height: 2rem;
+      background: transparent;
+      border: none;
+      padding: 0.4rem;
+      cursor: pointer;
+      border-radius: 0.25rem;
+      transition: transform 0.3s ease;
+
+      .menu-bar {
+        height: 2px;
+        width: 100%;
+        background-color: currentColor;
+        border-radius: 1px;
+        transition: all 0.3s ease;
+      }
+    }
+
+    &.open {
+      button {
+        .menu-bar:nth-child(1) {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%) rotate(45deg);
+        }
+
+        .menu-bar:nth-child(2) {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%) rotate(-45deg);
+        }
+
+        .menu-bar:nth-child(3) {
+          opacity: 0;
+          transform: scale(0);
+        }
+      }
+    }
+  }
+  .dashboard-container {
+    display: block;
+    .dashboard-navbar {
+      display: none;
+    }
+    .sidebar {
+      display: none;
+    }
+    .main-content {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+    }
+  }
+
+  .mobile-menu {
+    display: block;
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    z-index: 100000;
+    top: 0;
+    left: -1000vh;
+    transition: all 0.3s ease;
+    &.menu-open {
+      left: 0;
+    }
+  }
 }

@@ -16,21 +16,24 @@
   }
 }
 
-.close-btn {
-  position: absolute;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  align-content: center;
-  top: 0;
-  left: 100%;
-  transform: translate(-150%, 5%);
-  background: none;
-  border: none;
-  i{
-    font-size: 2rem;
+.top-close-btn-row {
+  height: 4rem;
+  .close-btn {
+    position: absolute;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-content: center;
+    top: 0;
+    left: 100%;
+    transform: translate(-150%, 5%);
+    background: none;
+    border: none;
+    i {
+      font-size: 2rem;
+    }
   }
 }
 
@@ -191,4 +194,21 @@
 //light
 ::ng-deep html.light .mat-mdc-dialog-surface {
   background: $light-primary-color !important;
+}
+
+@media (max-width: 768px) {
+  .controler-left,
+  .controler-right {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    button {
+      height: 100%;
+      width: 2rem;
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+    }
+  }
 }

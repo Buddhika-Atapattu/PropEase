@@ -130,6 +130,8 @@ export class PropertyListingComponent
   protected loggedUser: BaseUser | null = null;
   protected loggedUsername: string = '';
 
+  protected istabOpenButtonActive: boolean = false;
+
   //01. <================== Basic Property Details ==================>
   protected id: Property['id'] = '';
   protected title: Property['title'] = '';
@@ -502,6 +504,13 @@ export class PropertyListingComponent
     this.modeSub?.unsubscribe();
   }
 
+  //<==================== Mobile Tab Open Button ====================>
+  protected tabOpenButtonOperation(){
+    this.istabOpenButtonActive = !this.istabOpenButtonActive;
+  }
+  //<==================== End Mobile Tab Open Button ====================>
+
+
   //<==================== Tab Make ====================>
   protected tabMaker(index: number, tabName: string) {
     if (!this.isBrowser) return;
@@ -511,8 +520,6 @@ export class PropertyListingComponent
 
   private updateIndicatorPosition(index: number): void {
     const tabEl = this.tabElements.get(index)?.nativeElement;
-
-    console.log(tabEl);
 
     if (tabEl) {
       const { offsetLeft, offsetWidth } = tabEl;
@@ -529,6 +536,7 @@ export class PropertyListingComponent
       ) {
         this.indicatorStyle = newStyle;
       }
+      this.istabOpenButtonActive = false;
     }
   }
   //<==================== End tab Make ====================>

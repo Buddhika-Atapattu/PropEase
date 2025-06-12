@@ -47,6 +47,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected user: LoggedUserType | null = null;
   protected isLoading: boolean = true;
 
+  //Mobile
+  protected isMobileMenuOpen: boolean = false;
+
   constructor(
     private windowRef: WindowsRefService,
     private authService: AuthService,
@@ -89,6 +92,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       await this.authService.sendUserCredentialsAndGetUserData(role);
       await this.authService.afterUserLoggedInOperatios();
     }
+
     // await this.insertLoggedUserTracks();
   }
 
@@ -115,6 +119,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   //       }
   //     });
   // }
+
+  protected mobileMenuOpen(): void {
+    console.log('Before:', this.isMobileMenuOpen);
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    console.log('After:', this.isMobileMenuOpen);
+  }
+
+  protected mobileMenuOpenFromLink(input: boolean): void {
+    console.log('From child:', input); // ✅ Should log "true"
+    this.isMobileMenuOpen = !input; // or however you want to use it
+  }
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();

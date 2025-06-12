@@ -138,6 +138,8 @@ export class EditPropertyListingComponent
   protected loggedUser: BaseUser | null = null;
   protected loggedUsername: string = '';
 
+  protected istabOpenButtonActive: boolean = false;
+
   //01. <================== Basic Property Details ==================>
   protected id: Property['id'] = '';
   protected title: Property['title'] = '';
@@ -454,6 +456,7 @@ export class EditPropertyListingComponent
     'Listing',
     'Admin',
   ];
+  
   protected tabIndicatorsActive: boolean = false;
   @ViewChildren('tabElement', { read: ElementRef })
   tabElements!: QueryList<ElementRef>;
@@ -521,6 +524,14 @@ export class EditPropertyListingComponent
     this.modeSub?.unsubscribe();
   }
 
+   //<==================== Mobile Tab Open Button ====================>
+  protected tabOpenButtonOperation(){
+    this.istabOpenButtonActive = !this.istabOpenButtonActive;
+  }
+  //<==================== End Mobile Tab Open Button ====================>
+
+
+
   //<==================== Tab Make ====================>
   protected tabMaker(index: number, tabName: string) {
     if (!this.isBrowser) return;
@@ -546,6 +557,8 @@ export class EditPropertyListingComponent
       ) {
         this.indicatorStyle = newStyle;
       }
+
+      this.istabOpenButtonActive = false;
     }
 
     if (this.map && this.currentIndex === 1) {

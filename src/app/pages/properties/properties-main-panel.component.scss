@@ -1,6 +1,10 @@
 @use "../../styles/global.scss" as *;
 @use "sass:color";
 
+.modile-view-pannel {
+  display: none;
+}
+
 .main-panel {
   border-radius: 20px;
   transition: all 0.3s ease-in-out;
@@ -206,6 +210,115 @@
         .add-user-btn {
           background: $light-btn-bg-color;
           box-shadow: $light-btn-box-shadow;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .main-panel {
+    display: none;
+  }
+  .modile-view-pannel {
+    display: block;
+    padding: 0.25rem !important;
+    .main-container{
+      padding: 0.5rem !important;
+      border-radius: 0.5rem !important;
+      padding: 0.5rem !important;
+      .top-row {
+        padding: 0.5rem !important;
+        input{
+          padding: 0.5rem !important;
+          border-radius: 100rem !important;
+          border: 0.25rem solid #ffb200 !important;
+          box-shadow: 0rem 0rem 0.5rem 0rem #4e4d4d !important;
+          background: #fff !important;
+          color: #000000 !important;
+          width: 100% !important;
+        }
+
+        .add-user-btn{
+          mat-icon{
+            width: 2rem;
+            height: 2rem;
+            ::ng-deep svg{
+              fill: none !important;
+              ::ng-deep path{
+                fill: none !important;
+                stroke: #ffffff;
+              }
+            }
+          }
+        }
+
+        .btn-edit{
+          padding: 0.25rem 0.5rem;
+          margin: 0;
+          width: 100%;
+          mat-icon{
+            width: 2rem;
+            height: 2rem;
+            ::ng-deep svg{
+              fill: #ffffff;
+              ::ng-deep path{
+                fill: #ffffff;
+                stroke: #ffffff;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .pagination-list-group{
+      display: inline-flex;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    &.dark {
+      background: linear-gradient(
+        145deg,
+        $dark-secondary-color,
+        color.adjust($dark-secondary-color, $lightness: 2%)
+      );
+      color: $dark-text-color;
+      .main-container {
+        background-color: $dark-secondary-color;
+        box-shadow: inset 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
+        .property-bar,
+        .top-row {
+          background-color: $dark-primary-color;
+          box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
+          .add-user-btn {
+            background: $dark-btn-bg-color;
+            box-shadow: $dark-btn-box-shadow;
+          }
+        }
+      }
+    }
+
+    &.light {
+      background: linear-gradient(
+        145deg,
+        $light-primary-color,
+        color.adjust($light-primary-color, $lightness: 2%)
+      );
+      color: $light-text-color;
+      .main-container {
+        background-color: $light-primary-color;
+        box-shadow: inset 0rem 0rem 1rem 0rem $light-dashboard-dark-color;
+        .property-bar,
+        .top-row {
+          background-color: #ffe394;
+          box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
+          .add-user-btn {
+            background: $light-btn-bg-color;
+            box-shadow: $light-btn-box-shadow;
+          }
         }
       }
     }

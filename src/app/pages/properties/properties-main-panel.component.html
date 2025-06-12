@@ -74,5 +74,155 @@
         ></app-property-view-card>
       </div>
     </div>
+
+    <div class="row d-flex justify-content-center align-items-center mt-4">
+      <div class="col-md-6 d-flex justify-content-center align-items-center">
+        <ul class="pagination-list-group" *ngIf="pageCount > 1">
+          <li class="pagination-list-group-item">
+            <button
+              class="pagination-btn btn-custom"
+              type="button"
+              (click)="previousPage()"
+            >
+              &laquo;
+            </button>
+          </li>
+          <li
+            *ngFor="let i of [].constructor(pageCount); let index = index"
+            class="pagination-list-group-item"
+          >
+            <button
+              class="pagination-btn btn-custom"
+              type="button"
+              (click)="changePage(index)"
+            >
+              {{ index + 1 }}
+            </button>
+          </li>
+          <li class="pagination-list-group-item">
+            <button
+              class="pagination-btn btn-custom"
+              type="button"
+              (click)="nextPage()"
+            >
+              &raquo;
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile view -->
+<div
+  *ngIf="mode !== null"
+  class="modile-view-pannel"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <div class="container-fluid main-container">
+    <!-- Top search section -->
+    <div class="top-row">
+      <!-- Search input row -->
+      <div class="row">
+        <div class="col-sm-12">
+          <input
+            type="text"
+            placeholder="Search property title, country, or status..."
+            class="search-input"
+            (input)="searchProperties($event)"
+          />
+        </div>
+      </div>
+      <!-- End Search input row -->
+
+      <!-- Search button row -->
+      <div class="row d-flex justify-content-around align-items-center my-3">
+        <div [ngClass]="LOGGED_USER?.role === 'admin' ? 'col-4' : 'col-6'">
+          <button
+            type="button"
+            Mat-button
+            class="btn-edit"
+            (click)="openFilter()"
+          >
+            <mat-icon
+              class="mat-icon-rtl-mirror filter-icon"
+              svgIcon="filter"
+            ></mat-icon>
+          </button>
+        </div>
+        <div [ngClass]="LOGGED_USER?.role === 'admin' ? 'col-4' : 'col-6'">
+          <button
+            type="button"
+            Mat-button
+            class="btn-edit"
+            (click)="resetFilter()"
+          >
+            <mat-icon
+              class="mat-icon-rtl-mirror reset-icon"
+              svgIcon="reset"
+            ></mat-icon>
+          </button>
+        </div>
+        <div *ngIf="LOGGED_USER?.role === 'admin'" class="col-4">
+          <button
+            class="add-user-btn btn-edit d-flex justify-content-center align-items-center"
+            type="button"
+            (click)="propertyListing()"
+          >
+            <mat-icon class="mat-icon-rtl-mirror" svgIcon="listing"></mat-icon>
+          </button>
+        </div>
+      </div>
+      <!-- End search button row -->
+    </div>
+    <!-- End top search section -->
+
+    <div class="user-scroll-wrapper" *ngIf="properties.length > 0">
+      <div class="user-container">
+        <app-property-view-card
+          *ngFor="let property of properties"
+          [property]="property"
+          (propertyDeleted)="onPropertyDeleted($event)"
+        ></app-property-view-card>
+      </div>
+    </div>
+
+    <div class="row d-flex justify-content-center align-items-center mt-4">
+      <div class="col-md-6 d-flex justify-content-center align-items-center">
+        <ul class="pagination-list-group" *ngIf="pageCount > 1">
+          <li class="pagination-list-group-item">
+            <button
+              class="pagination-btn btn-custom"
+              type="button"
+              (click)="previousPage()"
+            >
+              &laquo;
+            </button>
+          </li>
+          <li
+            *ngFor="let i of [].constructor(pageCount); let index = index"
+            class="pagination-list-group-item"
+          >
+            <button
+              class="pagination-btn btn-custom"
+              type="button"
+              (click)="changePage(index)"
+            >
+              {{ index + 1 }}
+            </button>
+          </li>
+          <li class="pagination-list-group-item">
+            <button
+              class="pagination-btn btn-custom"
+              type="button"
+              (click)="nextPage()"
+            >
+              &raquo;
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
 </div>

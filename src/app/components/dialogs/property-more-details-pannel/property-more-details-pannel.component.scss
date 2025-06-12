@@ -1,0 +1,290 @@
+@use "../../../styles/global.scss" as *;
+
+::ng-deep html.dark .mat-mdc-dialog-surface {
+  background: $dark-primary-color !important;
+  padding: 2rem;
+  border-radius: 1rem;
+  color: white;
+}
+
+::ng-deep html.light .mat-mdc-dialog-surface {
+  background: $light-primary-color !important;
+  padding: 2rem;
+  border-radius: 1rem;
+  color: black;
+}
+
+.pannel-close-btn {
+  position: absolute;
+  top: -3rem;
+  right: 0rem;
+  color: currentColor;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 2rem;
+  cursor: pointer;
+  outline: none;
+  z-index: 1000;
+}
+
+.tab-container {
+  position: relative;
+  margin-top: 3rem;
+  min-height: 50vh;
+
+  .tab-indicator-row {
+    .mobile-menu-open-btn{
+      display: none;
+    }
+    div {
+      position: relative;
+
+      ul.tab-list {
+        list-style: none;
+        padding-left: 0;
+        display: flex;
+        position: relative;
+        z-index: 2;
+        margin: 0;
+        width: 100%;
+        justify-content: start;
+        align-items: center;
+
+        li.tab-item {
+          margin: 0 0.5rem;
+          font-size: 12pt;
+          display: flex;
+          justify-content: start;
+          align-items: center;
+          cursor: pointer;
+          padding: 0.5rem;
+          position: relative;
+          text-align: left;
+          width: 100%;
+
+          &.active {
+            color: currentColor;
+          }
+        }
+
+        .tab-indicator {
+          position: absolute;
+          bottom: 0;
+          height: 4px;
+          background: #ae8300;
+          transition: all 0.3s ease-in-out;
+          will-change: transform, width;
+        }
+      }
+
+      .tab-indicator-devider {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        border-bottom: 4px solid rgb(255, 229, 80);
+        z-index: 1;
+      }
+    }
+  }
+}
+
+.lists {
+  list-style: none;
+  display: inline-flex;
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  li {
+    margin-right: 0.5rem;
+    font-size: 20pt;
+    text-transform: capitalize;
+  }
+}
+
+.address-details {
+  display: flex;
+  p {
+    margin-right: 0.5rem;
+    text-transform: capitalize;
+    font-size: 16pt;
+  }
+}
+
+.list-container {
+  border: 2px solid #ae8300;
+  border-radius: 2rem;
+  padding: 2rem;
+  ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    li {
+      font-size: 16pt;
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+.map-container-main {
+  height: 75vh;
+  ::ng-deep input {
+    display: none;
+  }
+
+  ::ng-deep .search-btn {
+    display: none;
+  }
+  ::ng-deep .map-container {
+    .map {
+      height: 75vh;
+    }
+  }
+}
+
+// Mobile view
+@media (max-width: 768px) {
+  ::ng-deep html.dark .mat-mdc-dialog-surface {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .main-panel {
+    padding: 0.25rem;
+
+    .pannel-close-btn {
+      top: -3rem;
+    }
+    .tab-container {
+      position: relative;
+      margin-top: 3rem;
+      min-height: 50vh;
+
+      .tab-indicator-row {
+        position: relative;
+        z-index: 10000;
+        div {
+          position: relative;
+
+          .mobile-menu-open-btn {
+            display: block;
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: none;
+            border: none;
+            margin: 0 0.5rem;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.5s ease-in-out;
+            font-weight: 100;
+            text-transform: uppercase;
+            color: currentColor;
+            font-size: 15pt;
+          }
+          ul.tab-list {
+            position: absolute;
+            display: block;
+            top: -200rem;
+            left: 0;
+            right: 0;
+            opacity: 0;
+            overflow: hidden;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 1rem;
+            transition: all 0.5s ease-in-out;
+
+            &.active {
+              top: 3rem;
+              opacity: 1;
+            }
+
+            li.tab-item {
+              font-size: 12pt;
+              display: flex;
+              justify-content: start;
+              align-items: center;
+              cursor: pointer;
+              padding: 0.5rem;
+              position: relative;
+              text-align: left;
+              width: 100%;
+              margin: 0;
+
+              &.active {
+                color: #fff;
+                border-radius: 0.25rem;
+              }
+            }
+
+            .tab-indicator {
+              display: none;
+            }
+          }
+
+          .tab-indicator-devider {
+            display: none;
+          }
+        }
+      }
+    }
+
+    .address-details {
+      display: block;
+      p {
+        margin-right: 0.5rem;
+        text-transform: capitalize;
+        font-size: 12pt;
+      }
+    }
+
+    &.dark {
+      .tab-indicator-row {
+        div {
+          position: relative;
+
+          ul.tab-list {
+            background: $dark-dashboard-color;
+            li.tab-item {
+              &.active {
+                color: #fff;
+                background: linear-gradient(
+                  144deg,
+                  rgb(0 58 168 / 34%),
+                  rgb(90 0 166 / 46%),
+                  rgb(20 0 145 / 43%)
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+
+    &.light {
+      .tab-indicator-row {
+        div {
+          position: relative;
+
+          ul.tab-list {
+            background: $light-dashboard-color;
+            li.tab-item {
+              &.active {
+                color: #fff;
+                background: linear-gradient(
+                  144deg,
+                  rgba(255, 191, 0),
+                  rgba(255, 221, 0),
+                  rgba(255, 191, 0)
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

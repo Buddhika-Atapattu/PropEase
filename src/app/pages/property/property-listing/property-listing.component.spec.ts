@@ -21,3 +21,4 @@ describe('PropertyListingComponent', () => {
     expect(component).toBeTruthy();
   });
 });
+ 

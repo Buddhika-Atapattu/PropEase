@@ -133,6 +133,12 @@
   }
 }
 
+@media (max-width: 768px) {
+  .expand-btn{
+    display: none !important;
+  }
+}
+
 //Dark mode
 :host-context(html.dark) {
   .side-panel {

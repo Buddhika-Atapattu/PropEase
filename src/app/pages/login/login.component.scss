@@ -187,3 +187,11 @@
     }
   }
 }
+
+
+//Mobile view
+@media (max-width: 768px){
+  .logo-col{
+    display: none !important;
+  }
+}

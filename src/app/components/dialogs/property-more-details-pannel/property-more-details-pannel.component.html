@@ -1,0 +1,344 @@
+<div
+  *ngIf="mode !== null"
+  class="main-panel"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <div class="container-fluid position-relative" *ngIf="property && mode">
+    <button type="button" class="pannel-close-btn" (click)="pannelClose()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <!-- tab container -->
+    <div class="tab-container">
+      <!-- tab indicators -->
+      <div class="row tab-indicator-row">
+        <div
+          class="col-md-12 w-100 d-flex justify-content-center align-items-center"
+        >
+          <button
+            type="button"
+            class="mobile-menu-open-btn"
+            (click)="tabOpenButtonOperation()"
+          >
+            <i
+              [ngClass]="
+                istabOpenButtonActive ? 'fa-solid fa-xmark' : 'fa-solid fa-bars'
+              "
+            ></i>
+          </button>
+          <ul
+            class="tab-list"
+            [ngClass]="istabOpenButtonActive ? 'active' : ''"
+          >
+            <li
+              *ngFor="let tab of tabIndicators; let i = index"
+              [id]="'tabIndicator_' + i"
+              (click)="tabMaker(i, tab)"
+              class="tab-item"
+              #tabElement
+              [ngClass]="i === currentIndex ? 'active' : ''"
+            >
+              {{ tab }}
+            </li>
+            <div class="tab-indicator" [ngStyle]="indicatorStyle"></div>
+          </ul>
+          <span class="tab-indicator-devider"></span>
+        </div>
+      </div>
+      <!-- end tab indicators -->
+
+      <!-- tab wrapper -->
+      <div class="tab-wrapper mt-5">
+        <!-- Basic Property Details -->
+        <div class="tab-content" *ngIf="currentIndex === 0">
+          <div class="row my-4">
+            <div class="col-md-12">
+              <h1 class="title">Basic Property Details:</h1>
+            </div>
+          </div>
+          <!-- Property Title -->
+          <div class="row">
+            <div class="col-md-12">
+              <h1 class="text-capitalize">{{ property.title }}</h1>
+            </div>
+          </div>
+          <!-- End Property Title -->
+
+          <!-- Property Listing and Type -->
+          <div class="row">
+            <div class="col-md-12 d-flex">
+              <ul class="lists">
+                <li>{{ property.listing }}</li>
+                <li>{{ property.type }}</li>
+              </ul>
+            </div>
+          </div>
+          <!-- End Property Listing and Type -->
+
+          <div class="row my-5">
+            <div class="col-md-12">
+              <div [innerHTML]="property.description"></div>
+            </div>
+          </div>
+        </div>
+        <!-- End Basic Property Details -->
+
+        <!-- Location Details -->
+        <div class="tab-content" *ngIf="currentIndex === 1">
+          <div class="row my-4">
+            <div class="col-md-12">
+              <h1 class="title">Location Details:</h1>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="row">
+            <div class="col-md-12">
+              <h1 class="text-capitalize mb-3">Property Address</h1>
+              <div class="address-details">
+                <p class="text-capitalize">
+                  {{ property.address.houseNumber }},
+                </p>
+                <p class="text-capitalize">{{ property.address.city }},</p>
+                <p class="text-capitalize">{{ property.address.street }},</p>
+                <p class="text-capitalize">
+                  {{ property.address.stateOrProvince }},
+                </p>
+                <p class="text-capitalize">{{ property.address.country }},</p>
+                <p class="text-capitalize">{{ property.address.postcode }}.</p>
+              </div>
+            </div>
+          </div>
+          <!-- End Address -->
+
+          <!-- Map -->
+          <div class="row">
+            <div class="col-md-12">
+              <h1 class="text-capitalize mt-3">Property Location</h1>
+              <div class="my-5 map-container-main">
+                <app-map
+                  [mode]="mode"
+                  (locationSelected)="onLocationPicked($event)"
+                ></app-map>
+              </div>
+            </div>
+          </div>
+          <!-- End Map -->
+        </div>
+        <!-- End Location Details -->
+
+        <!-- Property Specifications -->
+        <div class="tab-content" *ngIf="currentIndex === 2">
+          <div class="row my-4">
+            <div class="col-md-12">
+              <h1 class="title">Property Specifications:</h1>
+            </div>
+          </div>
+          <div class="row d-flex justify-content-center align-item-center">
+            <div class="col-md-8">
+              <div class="list-container">
+                <ul>
+                  <li>
+                    Total Area: {{ property.totalArea }}
+                    <span>ft<sup>2</sup></span>
+                  </li>
+                  <li>
+                    Built In Area: {{ property.builtInArea }}
+                    <span>ft<sup>2</sup></span>
+                  </li>
+                  <li>Living Rooms: {{ property.livingRooms }}</li>
+                  <li>Kitchens: {{ property.kitchen }}</li>
+                  <li>Bedrooms: {{ property.bedrooms }}</li>
+                  <li>Bathrooms: {{ property.bathrooms }}</li>
+                  <li>Maidrooms: {{ property.maidrooms }}</li>
+                  <li>Driver Rooms: {{ property.driverRooms }}</li>
+                  <li>Total Floors: {{ property.totalFloors }}</li>
+                  <li class="text-capitalize">
+                    Furnished Status: {{ property.furnishingStatus }}
+                  </li>
+                  <li>Parkings: {{ property.numberOfParking }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End Property Specifications -->
+
+        <!-- Construction & Age -->
+        <div class="tab-content" *ngIf="currentIndex === 3">
+          <div class="row my-4">
+            <div class="col-md-12">
+              <h1 class="title">Construction & Age:</h1>
+            </div>
+          </div>
+          <div class="row d-flex justify-content-center align-item-center">
+            <div class="col-md-8">
+              <div class="list-container">
+                <ul>
+                  <li>Built Year: {{ property.builtYear }}</li>
+                  <li class="text-capitalize">
+                    Property Condition: {{ property.propertyCondition }}
+                  </li>
+                  <li class="text-capitalize">
+                    Developer Name: {{ property.developerName }}
+                  </li>
+                  <li *ngIf="property.projectName" class="text-capitalize">
+                    Project Name: {{ property.projectName }}
+                  </li>
+                  <li class="text-capitalize">
+                    Owner Ship: {{ property.ownerShipType }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End Construction & Age -->
+
+        <!-- Financial Details -->
+        <div class="tab-content" *ngIf="currentIndex === 4">
+          <div class="row my-4">
+            <div class="col-md-12">
+              <h1 class="title">Financial Details:</h1>
+            </div>
+          </div>
+          <div class="row d-flex justify-content-center align-item-center">
+            <div class="col-md-8">
+              <div class="list-container">
+                <ul>
+                  <li>
+                    Price: {{ property.price }}
+                    <span class="text-uppercase mx-1">{{
+                      property.currency
+                    }}</span>
+                  </li>
+                  <li>
+                    Price Per Squr Feet: {{ property.pricePerSqurFeet }}
+                    <span class="text-uppercase mx-1">{{
+                      property.currency
+                    }}</span>
+                  </li>
+                  <li *ngIf="property.expectedRentYearly">
+                    Expected Rent Per Year: {{ property.expectedRentYearly }}
+                    <span class="text-uppercase mx-1">{{
+                      property.currency
+                    }}</span>
+                  </li>
+                  <li *ngIf="property.expectedRentQuartely">
+                    Expected Rent Per Quartely:
+                    {{ property.expectedRentQuartely }}
+                    <span class="text-uppercase mx-1">{{
+                      property.currency
+                    }}</span>
+                  </li>
+                  <li *ngIf="property.expectedRentMonthly">
+                    Expected Rent Per Monthly:
+                    {{ property.expectedRentMonthly }}
+                    <span class="text-uppercase mx-1">{{
+                      property.currency
+                    }}</span>
+                  </li>
+                  <li *ngIf="property.expectedRentDaily">
+                    Expected Rent Per Daily: {{ property.expectedRentDaily }}
+                    <span class="text-uppercase mx-1">{{
+                      property.currency
+                    }}</span>
+                  </li>
+                  <li>
+                    Maintenance Fee: {{ property.maintenanceFees }}
+                    <span class="text-uppercase mx-1">{{
+                      property.currency
+                    }}</span>
+                  </li>
+                  <li>
+                    Service Charge: {{ property.serviceCharges }}
+                    <span class="text-uppercase mx-1">{{
+                      property.currency
+                    }}</span>
+                  </li>
+                  <li *ngIf="property.transferFees">
+                    Transfer Fee: {{ property.transferFees }}
+                    <span class="text-uppercase mx-1">{{
+                      property.currency
+                    }}</span>
+                  </li>
+                  <li class="text-capitalize">
+                    Availability Status: {{ property.availabilityStatus }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End Financial Details -->
+
+        <!-- Listing Management -->
+        <div class="tab-content" *ngIf="currentIndex === 5">
+          <div class="row my-4">
+            <div class="col-md-12">
+              <h1 class="title">Listing Management:</h1>
+            </div>
+          </div>
+          <div class="row d-flex justify-content-center align-item-center">
+            <div class="col-md-8">
+              <div class="list-container">
+                <ul>
+                  <li>
+                    Listing Date:
+                    {{ property.listingDate | date : "dd-MM-yyyy" }}
+                  </li>
+                  <li *ngIf="property.availabilityDate">
+                    Availability Date:
+                    {{ property.availabilityDate | date : "dd-MM-yyyy" }}
+                  </li>
+                  <li *ngIf="property.listingExpiryDate">
+                    Listing Expiring Date:
+                    {{ property.listingExpiryDate | date : "dd-MM-yyyy" }}
+                  </li>
+                  <li *ngIf="property.rentedDate">
+                    Rented Date: {{ property.rentedDate | date : "dd-MM-yyyy" }}
+                  </li>
+                  <li *ngIf="property.soldDate">
+                    Sold Date: {{ property.soldDate | date : "dd-MM-yyyy" }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End Listing Management -->
+
+        <!-- Administrative & Internal Use -->
+        <div class="tab-content" *ngIf="currentIndex === 6">
+          <div class="row my-4">
+            <div class="col-md-12">
+              <h1 class="title">Administrative & Internal Use:</h1>
+            </div>
+          </div>
+          <div class="row d-flex justify-content-center align-item-center">
+            <div class="col-md-8">
+              <div class="list-container">
+                <ul>
+                  <li>Property Reference Code: {{ property.referenceCode }}</li>
+                  <li>
+                    Property Verificcation Status:
+                    {{ property.verificationStatus }}
+                  </li>
+                  <li>Property Priority Status: {{ property.priority }}</li>
+                  <li>Property Status: {{ property.status }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="row my-4">
+            <div class="col-md-12">
+              <div [innerHTML]="property.internalNote"></div>
+            </div>
+          </div>
+        </div>
+        <!-- End Administrative & Internal Use -->
+      </div>
+      <!-- End tab wrapper -->
+    </div>
+    <!-- End tab container -->
+  </div>
+</div>

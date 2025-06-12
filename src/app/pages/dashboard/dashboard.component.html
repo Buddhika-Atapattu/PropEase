@@ -1,6 +1,19 @@
 <app-top-progress-bar></app-top-progress-bar>
 
 <div class="dashboard-container">
+  <!-- Menu Icon -->
+  <div
+    class="menu-icon"
+    (click)="mobileMenuOpen()"
+    [class.open]="isMobileMenuOpen"
+  >
+    <button type="button">
+      <span class="menu-bar"></span>
+      <span class="menu-bar"></span>
+      <span class="menu-bar"></span>
+    </button>
+  </div>
+
   <!-- Sidebar -->
   <aside
     [ngClass]="{
@@ -55,4 +68,51 @@
   <main [ngClass]="{ 'main-content': true, dark: mode, light: !mode }">
     <div class="dashboard-main-container"><router-outlet></router-outlet></div>
   </main>
+</div>
+
+<!-- Mobile version menu -->
+<div class="mobile-menu" [class.menu-open]="isMobileMenuOpen">
+  <div class="container-fluid">
+    <div class="row mt-5">
+      <div class="d-flex justify-content-between align-items-center w-100 px-4">
+        <div class="d-flex align-items-center">
+          <button
+            class="user-image-btn"
+            title="User Profile"
+            (click)="menuOpen = !menuOpen"
+          >
+            <app-skeleton-loader
+              *ngIf="isLoading; else userImage"
+              [Mode]="mode"
+              [width]="'4rem'"
+              [height]="'4rem'"
+              [borderRadius]="'100%'"
+            />
+            <ng-template #userImage>
+              <img
+                src="{{ user?.image }}"
+                alt="User Profile"
+                class="user-image"
+              />
+            </ng-template>
+          </button>
+          <app-user-info-panel
+            *ngIf="menuOpen"
+            (closePanel)="menuOpen = false"
+          />
+        </div>
+        <div class="d-flex align-items-center">
+          <img
+            src="/Images/company-images/cover-no-bg.webp"
+            alt="Logo"
+            class="logo me-2"
+          />
+          <app-mode-changer></app-mode-changer>
+        </div>
+      </div>
+    </div>
+    <app-list-main-panel
+      (closeMobileMenu)="mobileMenuOpenFromLink($event)"
+    ></app-list-main-panel>
+  </div>
 </div>

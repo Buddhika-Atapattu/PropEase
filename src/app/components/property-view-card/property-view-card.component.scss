@@ -1,6 +1,10 @@
 @use "../../styles/global.scss" as *;
 @use "sass:color";
 
+.main-panel-mobile {
+  display: none;
+}
+
 .main-panel {
   .top-row {
     position: sticky;
@@ -83,6 +87,76 @@
       .add-user-btn {
         background: $light-btn-bg-color;
         box-shadow: $light-btn-box-shadow;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .main-panel {
+    display: none;
+  }
+  .main-panel-mobile {
+    display: block;
+    width: 100%;
+    margin: 1rem 0rem;
+
+    &.dark {
+      background: linear-gradient(
+        145deg,
+        $dark-secondary-color,
+        color.adjust($dark-secondary-color, $lightness: 2%)
+      );
+      color: $dark-text-color;
+      .card {
+        background-color: $dark-primary-color;
+        box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      p {
+        color: #fff;
+      }
+
+      .btn-view, .btn-edit, .btn-delete{
+        mat-icon{
+          ::ng-deep svg {
+            fill: currentColor;
+            ::ng-deep rect {
+              fill: transparent;
+            }
+            ::ng-deep path {
+              fill: currentColor;
+            }
+          }
+        }
+      }
+    }
+
+    &.light {
+      background: linear-gradient(
+        145deg,
+        $light-primary-color,
+        color.adjust($light-primary-color, $lightness: 2%)
+      );
+      color: $light-text-color;
+      .card {
+        background-color: $light-primary-color;
+        box-shadow: 0rem 0rem 1rem 0rem $light-secondary-color;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      p {
+        color: #000000;
       }
     }
   }

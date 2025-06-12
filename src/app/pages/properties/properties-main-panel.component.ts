@@ -149,6 +149,8 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(PropertyFilterDialogComponent, {
       width: '100%',
       height: 'auto',
+      maxWidth: '100vw',
+      maxHeight: '100vh',
       autoFocus: false,
       data: {},
     });
@@ -177,7 +179,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   // Derected property delete and refresh the list
   protected onPropertyDeleted(event: boolean): void {
     if (event) {
-      this.callTheSearchAPI();// Refresh the list
+      this.callTheSearchAPI(); // Refresh the list
     }
   }
 
@@ -205,6 +207,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
           if (response.status === 'success') {
             this.properties = response.data.properties;
             this.totalItems = response.data.count;
+            this.pageCount = Math.ceil(this.totalItems / this.itemsPerPage);
             setInterval(() => {
               this.loading = false;
             }, 500);
@@ -222,6 +225,25 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
         );
         console.error('Error in callTheSearchAPI:', error);
       }
+    }
+  }
+
+  protected changePage(index: number) {
+    this.currentPage = index + 1;
+    this.callTheSearchAPI();
+  }
+
+  protected async previousPage() {
+    if (this.currentPage > 0) {
+      this.currentPage--;
+      await this.callTheSearchAPI();
+    }
+  }
+
+  protected async nextPage() {
+    if (this.currentPage < this.pageCount) {
+      this.currentPage++;
+      await this.callTheSearchAPI();
     }
   }
 }

@@ -30,7 +30,7 @@
     <!-- property tile and country -->
     <div class="row my-5">
       <div class="col-md-12">
-        <h1 class="display-3 fw-bold text-capitalize title">
+        <h1 class="display-5 fw-bold text-capitalize title my-5">
           {{ property.title }}
         </h1>
         <div class="d-flex align-item-center">
@@ -110,9 +110,7 @@
     <div class="row mt-2">
       <div class="col-md-12">
         <h4 class="text-capitalize">
-          {{
-            property.price | currency : property.currency : "symbol" : "1.0-2"
-          }}
+          {{ property.price }} {{ property.currency }}
         </h4>
         <h6 class="text-capitalize">Type: {{ property.type }}</h6>
         <h6 class="text-capitalize">status: {{ property.status }}</h6>
@@ -168,7 +166,19 @@
         class="col-md-4"
         *ngFor="let amenity of property.featuresAndAmenities"
       >
-        <span class="btn-custom text-light">{{ amenity }}</span>
+        <div class="row d-flex justify-content-between align-item-center my-3">
+          <div class="col-2 d-flex align-item-center">
+            <mat-icon
+              [svgIcon]="amenityIconMaker(amenity)"
+              aria-hidden="false"
+              aria-label="Amenity Icon"
+              class="amenity-icon"
+            ></mat-icon>
+          </div>
+          <div class="col-10 d-flex align-item-center text-capitalize">
+            {{ amenity }}
+          </div>
+        </div>
       </div>
     </div>
     <!-- end property amenities -->
@@ -193,8 +203,55 @@
 
     <hr />
 
+    <div class="row d-flex justify-content-between align-item-center mt-4">
+      <div class="col-md-6">
+        <h4 class="title">Property Video Tour</h4>
+        <div class="video-container">
+          <div *ngIf="videoPreviewURL" class="video-preview mt-3">
+            <!-- For iframe-based platforms -->
+            <iframe
+              *ngIf="isIframeEmbed"
+              [src]="videoPreviewURL | safeUrl"
+              width="100%"
+              height="315"
+              frameborder="0"
+              allowfullscreen
+              title="Property video preview"
+            ></iframe>
+
+            <!-- For direct video links like Dropbox -->
+            <video
+              *ngIf="!isIframeEmbed"
+              [src]="videoPreviewURL | safeUrl"
+              controls
+              width="100%"
+              height="315"
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <h4 class="title">Property 360° Virtual Tour</h4>
+        <div *ngIf="virtualPreviewURL" class="video-preview mt-3">
+          <iframe
+            [src]="virtualPreviewURL | safeUrl"
+            width="100%"
+            height="500"
+            frameborder="0"
+            allowfullscreen
+            allow="xr-spatial-tracking; fullscreen; autoplay"
+            title="360° Virtual Tour"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
     <div class="row mt-4 d-flex justify-content-between align-item-center">
-      <div class="col-md-5">
+      <div class="col-md-5 my-5">
         <div class="user-card">
           <div class="user-image">
             <img src="{{ owner?.image }}" alt="owner details" />
@@ -207,7 +264,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-5">
+      <div class="col-md-5 my-5">
         <div class="user-card">
           <div class="user-image">
             <img src="{{ agent?.image }}" alt="owner details" />
@@ -219,6 +276,18 @@
             <p class="p-0 m-0">{{ agent?.phoneNumber }}</p>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="row d-flex justify-content-end align-item-center my-4">
+      <div class="col-md-2 d-flex justify-content-center align-item-center">
+        <button
+          type="button"
+          class="btn-custom w-100"
+          (click)="openMoreDetailsPannel()"
+        >
+          More Details
+        </button>
       </div>
     </div>
   </div>
