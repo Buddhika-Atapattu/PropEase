@@ -27,6 +27,7 @@ import {
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { routes } from './app.routes';
+import { provideGoogleCharts } from 'angular-google-charts';
 
 export const MY_DATE_FORMATS: MatDateFormats = {
   parse: {
@@ -42,6 +43,7 @@ export const MY_DATE_FORMATS: MatDateFormats = {
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideGoogleCharts(),
     provideAnimations(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),

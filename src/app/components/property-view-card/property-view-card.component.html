@@ -1,30 +1,30 @@
 <app-notification></app-notification>
-
+<!-- List view -->
 <div
-  *ngIf="mode !== null"
-  class="main-panel"
+  class="row mt-3 property-bar"
+  *ngIf="mode !== null && property && isListView"
   [ngClass]="mode ? 'dark' : 'light'"
 >
-  <div class="row mt-3 property-bar" *ngIf="property">
-    <div class="col-md-4">
-      <app-skeleton-loader
-        *ngIf="loading"
-        [Mode]="mode"
-        [height]="'200px'"
-        [width]="'100%'"
-        [borderRadius]="'0.5rem'"
-      >
-      </app-skeleton-loader>
-      <div *ngIf="!loading" class="property-image-container">
-        <img
-          [src]="property.images[0].imageURL"
-          alt="property image"
-          class="property-image"
-        />
-      </div>
+  <div class="col-xl-4">
+    <app-skeleton-loader
+      *ngIf="loading"
+      [Mode]="mode"
+      [height]="'200px'"
+      [width]="'100%'"
+      [borderRadius]="'0.5rem'"
+    >
+    </app-skeleton-loader>
+    <div *ngIf="!loading" class="property-image-container">
+      <img
+        [src]="property.images[0].imageURL"
+        alt="property image"
+        class="property-image"
+      />
     </div>
-    <div class="col-md-5">
-      <div class="property-details">
+  </div>
+  <div class="col-xl-7">
+    <div class="property-details px-4">
+      <div class="row">
         <app-skeleton-loader
           *ngIf="loading"
           [Mode]="mode"
@@ -34,8 +34,42 @@
         >
         </app-skeleton-loader>
         <h5 *ngIf="!loading" class="property-title text-capitalize">
-          {{ property.title }} | {{ property.type }} | {{ property.listing }}
+          {{ property.title }}
         </h5>
+      </div>
+
+      <div class="row d-flex align-items-center my-2">
+        <div class="col-4 d-flex align-items-center">
+          <app-skeleton-loader
+            *ngIf="loading"
+            [Mode]="mode"
+            [height]="'12pt'"
+            [width]="'100%'"
+            [style]="'width: 100%;'"
+            [borderRadius]="'0.125rem'"
+          >
+          </app-skeleton-loader>
+          <span *ngIf="!loading" class="badge" [ngClass]="property.type">
+            {{ property.type }}
+          </span>
+        </div>
+        <div class="col-4 d-flex align-items-center">
+          <app-skeleton-loader
+            *ngIf="loading"
+            [Mode]="mode"
+            [height]="'12pt'"
+            [width]="'100%'"
+            [style]="'width: 100%;'"
+            [borderRadius]="'0.125rem'"
+          >
+          </app-skeleton-loader>
+          <span *ngIf="!loading" class="badge" [ngClass]="property.listing">
+            {{ property.listing }}
+          </span>
+        </div>
+      </div>
+
+      <div class="row">
         <app-skeleton-loader
           *ngIf="loading"
           [Mode]="mode"
@@ -48,6 +82,9 @@
           {{ property.address.city }}, {{ property.address.stateOrProvince }},
           {{ property.address.country }}
         </p>
+      </div>
+
+      <div class="row">
         <app-skeleton-loader
           *ngIf="loading"
           [Mode]="mode"
@@ -59,6 +96,9 @@
         <p *ngIf="!loading" class="property-price text-uppercase fw-bold h4">
           {{ property.price.toLocaleString() }} {{ property.currency }}
         </p>
+      </div>
+
+      <div class="row">
         <app-skeleton-loader
           *ngIf="loading"
           [Mode]="mode"
@@ -77,41 +117,197 @@
         </p>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="row">
-        <div class="col-4">
-          <button
-            class="btn btn-success bg-success me-2 btn-view"
-            type="button"
-            (click)="gotoTheProperty(property.id)"
-          >
-            <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon>
-          </button>
-        </div>
-        <div class="col-4">
-          <button
-            *ngIf="LOGGED_USER?.role === 'admin'"
-            class="btn btn-warning bg-warning mx-2 btn-edit"
-            type="button"
-            (click)="gotoThePropertyEdit(property.id)"
-          >
-            <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon>
-          </button>
-        </div>
-        <div class="col-4">
-          <button
-            *ngIf="LOGGED_USER?.role === 'admin'"
-            class="btn btn-danger bg-danger ms-2 btn-delete"
-            type="button"
-            (click)="deleteProperty(property.id)"
-          >
-            <mat-icon class="mat-icon-rtl-mirror" svgIcon="delete"></mat-icon>
-          </button>
-        </div>
+  </div>
+  <div class="col-xl-1">
+    <div class="row action-btn-row d-block">
+      <div class="col-4 my-2 d-flex justify-content-center align-items-center">
+        <button
+          *ngIf="isUserCanViewTheProperty()"
+          class="btn btn-success bg-success btn-view"
+          type="button"
+          (click)="gotoTheProperty(property.id)"
+        >
+          <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon>
+        </button>
+      </div>
+      <div class="col-4 my-2 d-flex justify-content-center align-items-center">
+        <button
+          *ngIf="isUserCanEditTheProperty()"
+          class="btn btn-warning bg-warning btn-edit"
+          type="button"
+          (click)="gotoThePropertyEdit(property.id)"
+        >
+          <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon>
+        </button>
+      </div>
+      <div class="col-4 my-2 d-flex justify-content-center align-items-center">
+        <button
+          *ngIf="isUserCanDeleteTheProperty()"
+          class="btn btn-danger bg-danger btn-delete"
+          type="button"
+          (click)="deleteProperty(property.id)"
+        >
+          <mat-icon class="mat-icon-rtl-mirror" svgIcon="delete"></mat-icon>
+        </button>
       </div>
     </div>
   </div>
 </div>
+<!-- End list view -->
+
+<!-- Column view -->
+<div
+  class="card property-bar p-0"
+  *ngIf="mode !== null && property && isColView"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <app-skeleton-loader
+    *ngIf="loading"
+    [Mode]="mode"
+    [height]="'200px'"
+    [width]="'100%'"
+    style="width: 100%"
+    [borderRadius]="'0.5rem'"
+  >
+  </app-skeleton-loader>
+  <div *ngIf="!loading" class="property-image-container">
+    <img
+      [src]="property.images[0].imageURL"
+      alt="property image"
+      class="property-image card-top-img"
+    />
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <app-skeleton-loader
+        *ngIf="loading"
+        [Mode]="mode"
+        [height]="'30px'"
+        [width]="'100%'"
+        style="width: 100%"
+        [borderRadius]="'0.125rem'"
+      >
+      </app-skeleton-loader>
+      <h5 *ngIf="!loading" class="property-title text-capitalize">
+        {{ property.title }}
+      </h5>
+    </div>
+    <div class="row d-flex justify-content-between align-items-center my-2">
+      <div class="col-6">
+        <app-skeleton-loader
+          *ngIf="loading"
+          [Mode]="mode"
+          [height]="'12pt'"
+          [width]="'100%'"
+          [style]="'width: 100%;'"
+          [borderRadius]="'0.125rem'"
+        >
+        </app-skeleton-loader>
+        <span *ngIf="!loading" class="badge" [ngClass]="property.type">
+          {{ property.type }}
+        </span>
+      </div>
+      <div class="col-6 d-flex justify-content-end align-items-center">
+        <app-skeleton-loader
+          *ngIf="loading"
+          [Mode]="mode"
+          [height]="'12pt'"
+          [width]="'100%'"
+          [style]="'width: 100%;'"
+          [borderRadius]="'0.125rem'"
+        >
+        </app-skeleton-loader>
+        <span *ngIf="!loading" class="badge" [ngClass]="property.listing">
+          {{ property.listing }}
+        </span>
+      </div>
+    </div>
+    <div class="row">
+      <app-skeleton-loader
+        *ngIf="loading"
+        [Mode]="mode"
+        [height]="'15px'"
+        [width]="'100%'"
+        style="width: 100%"
+        [borderRadius]="'0.125rem'"
+      >
+      </app-skeleton-loader>
+      <p *ngIf="!loading" class="property-location text-capitalize">
+        {{ property.address.city }}, {{ property.address.stateOrProvince }},
+        {{ property.address.country }}
+      </p>
+    </div>
+    <div class="row">
+      <app-skeleton-loader
+        *ngIf="loading"
+        [Mode]="mode"
+        [height]="'15px'"
+        [width]="'100%'"
+        style="width: 100%"
+        [borderRadius]="'0.125rem'"
+      >
+      </app-skeleton-loader>
+      <p *ngIf="!loading" class="property-price text-uppercase fw-bold h4">
+        {{ property.price.toLocaleString() }} {{ property.currency }}
+      </p>
+    </div>
+    <div class="row">
+      <app-skeleton-loader
+        *ngIf="loading"
+        [Mode]="mode"
+        [height]="'15px'"
+        [width]="'100%'"
+        style="width: 100%"
+        [borderRadius]="'0.125rem'"
+      >
+      </app-skeleton-loader>
+      <p *ngIf="!loading" class="property-features">
+        <i class="fa fa-bed me-2" aria-hidden="true"></i>
+        {{ property.bedrooms }}
+        <i class="fa fa-bath mx-2" aria-hidden="true"></i>
+        {{ property.bathrooms }}
+        <i class="fa-solid fa-chart-area mx-2" aria-hidden="true"></i
+        >{{ property.totalArea }} sqft
+      </p>
+    </div>
+  </div>
+
+  <div class="card-footer">
+    <div class="row action-btn-row">
+      <div class="col-4 d-flex justify-content-center align-items-center">
+        <button
+          *ngIf="isUserCanViewTheProperty()"
+          class="btn btn-success bg-success me-2 btn-view"
+          type="button"
+          (click)="gotoTheProperty(property.id)"
+        >
+          <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon>
+        </button>
+      </div>
+      <div class="col-4 d-flex justify-content-center align-items-center">
+        <button
+          *ngIf="isUserCanEditTheProperty()"
+          class="btn btn-warning bg-warning mx-2 btn-edit"
+          type="button"
+          (click)="gotoThePropertyEdit(property.id)"
+        >
+          <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon>
+        </button>
+      </div>
+      <div class="col-4 d-flex justify-content-center align-items-center">
+        <button
+          *ngIf="isUserCanDeleteTheProperty()"
+          class="btn btn-danger bg-danger ms-2 btn-delete"
+          type="button"
+          (click)="deleteProperty(property.id)"
+        >
+          <mat-icon class="mat-icon-rtl-mirror" svgIcon="delete"></mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End column view -->
 
 <!-- Mobile view -->
 
@@ -149,8 +345,38 @@
           >
           </app-skeleton-loader>
           <h5 *ngIf="!loading" class="property-title text-capitalize">
-            {{ property.title }} | {{ property.type }} | {{ property.listing }}
+            {{ property.title }}
           </h5>
+        </div>
+      </div>
+      <div class="row d-flex justify-content-between align-items-center my-2">
+        <div class="col-6">
+          <app-skeleton-loader
+            *ngIf="loading"
+            [Mode]="mode"
+            [height]="'12pt'"
+            [width]="'100%'"
+            [style]="'width: 100%;'"
+            [borderRadius]="'0.125rem'"
+          >
+          </app-skeleton-loader>
+          <span *ngIf="!loading" class="badge" [ngClass]="property.type">
+            {{ property.type }}
+          </span>
+        </div>
+        <div class="col-6 d-flex justify-content-end align-items-center">
+          <app-skeleton-loader
+            *ngIf="loading"
+            [Mode]="mode"
+            [height]="'12pt'"
+            [width]="'100%'"
+            [style]="'width: 100%;'"
+            [borderRadius]="'0.125rem'"
+          >
+          </app-skeleton-loader>
+          <span *ngIf="!loading" class="badge" [ngClass]="property.listing">
+            {{ property.listing }}
+          </span>
         </div>
       </div>
       <div class="row">
@@ -204,9 +430,10 @@
           </p>
         </div>
       </div>
-      <div class="row">
-        <div class="col-4">
+      <div class="row action-btn-row">
+        <div class="col-4 d-flex justify-content-center align-items-center">
           <button
+            *ngIf="isUserCanViewTheProperty()"
             class="btn btn-success bg-success me-2 btn-view"
             type="button"
             (click)="gotoTheProperty(property.id)"
@@ -214,9 +441,9 @@
             <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon>
           </button>
         </div>
-        <div class="col-4">
+        <div class="col-4 d-flex justify-content-center align-items-center">
           <button
-            *ngIf="LOGGED_USER?.role === 'admin'"
+            *ngIf="isUserCanEditTheProperty()"
             class="btn btn-warning bg-warning mx-2 btn-edit"
             type="button"
             (click)="gotoThePropertyEdit(property.id)"
@@ -224,9 +451,9 @@
             <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon>
           </button>
         </div>
-        <div class="col-4">
+        <div class="col-4 d-flex justify-content-center align-items-center">
           <button
-            *ngIf="LOGGED_USER?.role === 'admin'"
+            *ngIf="isUserCanDeleteTheProperty()"
             class="btn btn-danger bg-danger ms-2 btn-delete"
             type="button"
             (click)="deleteProperty(property.id)"

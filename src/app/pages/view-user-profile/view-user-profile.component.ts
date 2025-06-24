@@ -25,6 +25,7 @@ import { RefreshService } from '../../../services/refresh/refresh.service';
 
 @Component({
   selector: 'app-view-user-profile',
+  standalone: true,
   imports: [
     CommonModule,
     SkeletonLoaderComponent,
@@ -63,10 +64,14 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
   protected isAccessibilityPanelOpen: boolean = false;
   protected isDocumentsPanelOpen: boolean = false;
   protected isActivitiesPanelOpen: boolean = false;
-  protected isPropertiesPanelOpen: boolean = false;
 
   protected definedUserImage: string = '';
   protected LOGGED_USER: BaseUser | null = null;
+  protected isUserCanEdit: boolean = false;
+
+  protected isListPanelOpen: boolean = false;
+
+
 
   constructor(
     private windowRef: WindowsRefService,
@@ -83,14 +88,16 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
     this.activatedRouter.url.subscribe((segments) => {
       const path = segments.map((s) => s.path).join('/');
     });
-    this.activatedRouter.params.subscribe((param) => {
+    this.activatedRouter.params.subscribe(async (param) => {
       this.username = param['username'];
-      this.loadData();
+
       this.isInfoPanelOpen = true;
+
       this.isAccessibilityPanelOpen = false;
       this.isDocumentsPanelOpen = false;
       this.isActivitiesPanelOpen = false;
-      this.isPropertiesPanelOpen = false;
+
+      await this.loadData();
     });
   }
 
@@ -100,8 +107,6 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
         this.mode = val;
       });
     }
-
-    Promise.resolve();
   }
 
   private async loadData() {
@@ -109,6 +114,7 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
       const data = await this.APIs.getUserByToken(this.username);
       if (data) {
         this.user = data.user;
+        this.isUserCanEdit = data.user.username === this.LOGGED_USER?.username;
         if (typeof this.user.image === 'string') {
           const imageArray: string[] = this.user.image
             ? this.user.image.split('/')
@@ -139,6 +145,10 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
     }
   }
 
+  protected toggleListPanel(){
+    this.isListPanelOpen = !this.isListPanelOpen;
+  }
+
   protected goToUsers() {
     this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
       this.router.navigate(['/dashboard/users']);
@@ -165,35 +175,38 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
     this.isAccessibilityPanelOpen = false;
     this.isDocumentsPanelOpen = false;
     this.isActivitiesPanelOpen = false;
-    this.isPropertiesPanelOpen = false;
+    this.isListPanelOpen = false;
   }
   protected goToAccessibility() {
     this.isInfoPanelOpen = false;
     this.isAccessibilityPanelOpen = true;
     this.isDocumentsPanelOpen = false;
     this.isActivitiesPanelOpen = false;
-    this.isPropertiesPanelOpen = false;
+    this.isListPanelOpen = false;
   }
   protected goToDocuments() {
     this.isInfoPanelOpen = false;
     this.isAccessibilityPanelOpen = false;
     this.isDocumentsPanelOpen = true;
     this.isActivitiesPanelOpen = false;
-    this.isPropertiesPanelOpen = false;
+    this.isListPanelOpen = false;
   }
   protected goToActivities() {
     this.isInfoPanelOpen = false;
     this.isAccessibilityPanelOpen = false;
     this.isDocumentsPanelOpen = false;
     this.isActivitiesPanelOpen = true;
-    this.isPropertiesPanelOpen = false;
+    this.isListPanelOpen = false;
   }
-  protected goToProperties() {
-    this.isInfoPanelOpen = false;
-    this.isAccessibilityPanelOpen = false;
-    this.isDocumentsPanelOpen = false;
-    this.isActivitiesPanelOpen = false;
-    this.isPropertiesPanelOpen = true;
+  
+
+  protected async editUser() {
+    if (this.isBrowser && this.LOGGED_USER) {
+      const username = await this.APIs.generateToken(
+        this.LOGGED_USER?.username
+      );
+      this.router.navigate(['/dashboard/edit-user', username.token]);
+    }
   }
 
   ngOnDestroy(): void {

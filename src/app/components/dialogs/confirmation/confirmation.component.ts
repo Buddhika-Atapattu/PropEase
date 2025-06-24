@@ -28,6 +28,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-confirmation',
   imports: [],
+  standalone: true,
   templateUrl: './confirmation.component.html',
   styleUrl: './confirmation.component.scss',
 })

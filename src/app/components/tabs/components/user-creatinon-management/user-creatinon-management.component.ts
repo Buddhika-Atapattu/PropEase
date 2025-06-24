@@ -63,6 +63,7 @@ interface Data {
 
 @Component({
   selector: 'app-user-creatinon-management',
+  standalone: true,
   imports: [
     CommonModule,
     MatIconModule,
@@ -390,50 +391,51 @@ export class UserCreatinonManagementComponent
   }
 
   protected sortData(sort: Sort): void {
-  const data = this.dataSource.data.slice();
-  const isAsc = sort.direction === 'asc';
+    const data = this.dataSource.data.slice();
+    const isAsc = sort.direction === 'asc';
 
-  if (!sort.active || sort.direction === '') {
-    this.dataSource.data = data;
-    return;
+    if (!sort.active || sort.direction === '') {
+      this.dataSource.data = data;
+      return;
+    }
+
+    // Map displayed column labels to actual Data fields
+    const columnFieldMap: { [key: string]: keyof Data } = {
+      Name: 'name',
+      Username: 'username',
+      Email: 'email',
+      DoB: 'dateOfBirth',
+      Age: 'age',
+      Gender: 'gender',
+      Phone: 'phoneNumber',
+      Role: 'role',
+      'Is Active': 'isActive',
+      Creator: 'creator',
+      'Created At': 'createdAt',
+      'Updated At': 'updatedAt',
+    };
+
+    const field = columnFieldMap[sort.active];
+
+    if (field) {
+      this.dataSource.data = data.sort((a, b) =>
+        this.compare(a[field], b[field], isAsc)
+      );
+    }
   }
-
-  // Map displayed column labels to actual Data fields
-  const columnFieldMap: { [key: string]: keyof Data } = {
-    'Name': 'name',
-    'Username': 'username',
-    'Email': 'email',
-    'DoB': 'dateOfBirth',
-    'Age': 'age',
-    'Gender': 'gender',
-    'Phone': 'phoneNumber',
-    'Role': 'role',
-    'Is Active': 'isActive',
-    'Creator': 'creator',
-    'Created At': 'createdAt',
-    'Updated At': 'updatedAt',
-  };
-
-  const field = columnFieldMap[sort.active];
-
-  if (field) {
-    this.dataSource.data = data.sort((a, b) =>
-      this.compare(a[field], b[field], isAsc)
-    );
-  }
-}
 
   private compare(a: any, b: any, isAsc: boolean): number {
-  if (a == null && b != null) return isAsc ? -1 : 1;
-  if (a != null && b == null) return isAsc ? 1 : -1;
-  if (a == null && b == null) return 0;
+    if (a == null && b != null) return isAsc ? -1 : 1;
+    if (a != null && b == null) return isAsc ? 1 : -1;
+    if (a == null && b == null) return 0;
 
-  if (typeof a === 'string' && typeof b === 'string') {
-    return a.localeCompare(b) * (isAsc ? 1 : -1);
+    if (typeof a === 'string' && typeof b === 'string') {
+      return a.localeCompare(b) * (isAsc ? 1 : -1);
+    }
+
+    return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
   }
-
-  return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
-}
+  
   // Called when user triggers a search (e.g., clicks "Search" button)
   protected async search(): Promise<void> {
     this.currentPage = 1; // Reset to first page

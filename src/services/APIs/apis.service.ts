@@ -159,9 +159,9 @@ export interface BaseUser {
   email: string;
   dateOfBirth?: Date | null;
   age: number;
-  bio: string;
   image?: string | File;
   phoneNumber?: string;
+  bio: string;
   role:
     | 'admin'
     | 'agent'
@@ -175,6 +175,8 @@ export interface BaseUser {
   address: Address;
   isActive: boolean;
   access: ROLE_ACCESS_MAP;
+  creator: string;
+  updator?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -198,6 +200,12 @@ export interface MSG_DATA_TYPE extends UpdateUserType {
   message: string;
   user: UpdateUserType;
   token: string;
+}
+
+export interface MSG{
+  status: string;
+  message: string;
+  data: any;
 }
 
 export interface MSG_WITH_BASEUSER {
@@ -265,9 +273,10 @@ export class APIsService {
 
   public async updateUser(
     user: FormData,
-    username: UserCredentials['username']
+    username: string
   ): Promise<MSG_DATA_TYPE | null> {
     if (username) {
+      console.log(username);
       const data = await firstValueFrom(
         this.http.put<MSG_DATA_TYPE>(
           `http://localhost:3000/api-user/user-update/${username}`,
@@ -377,6 +386,37 @@ export class APIsService {
   public async getAllCountryWithCurrency(): Promise<CountryDetails[]> {
     return await firstValueFrom(
       this.http.get<any>('https://restcountries.com/v3.1/all')
+    );
+  }
+
+  public async deleteUserByUsername(username: string): Promise<MSG_DATA_TYPE> {
+    return await firstValueFrom(
+      this.http.delete<MSG_DATA_TYPE>(
+        `http://localhost:3000/api-user/user-delete/${username}`
+      )
+    );
+  }
+
+  public async insertTenant(data: FormData): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.post<MSG>(
+        'http://localhost:3000/api-tenant/insertTenant',
+        data
+      )
+    );
+  }
+  public async getAllTenants(): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.get<MSG>(
+        'http://localhost:3000/api-tenant/get-all-tenants'
+      )
+    );
+  }
+  public async deleteTenant(username: string): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.delete<MSG>(
+        `http://localhost:3000/api-tenant/delete-tenant/${username}`
+      )
     );
   }
 }

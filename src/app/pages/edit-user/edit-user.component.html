@@ -1,0 +1,613 @@
+<app-notification />
+<app-progress-bar />
+<app-camera-box
+  *ngIf="isCameraOpen"
+  (imageCaptured)="handleImage($event)"
+  (closeEvent)="closeCamera()"
+>
+</app-camera-box>
+<app-skeleton-loader></app-skeleton-loader>
+<div
+  *ngIf="mode !== null"
+  class="main-panel"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <div class="container-fluid overflow-hidden">
+    <div class="row page-indecator">
+      <span
+        ><button type="button" class="page-indicator-btn" (click)="goToUsers()">
+          Users
+        </button>
+        <i class="fa-solid fa-angle-right my-2"></i
+        ><button type="button" class="page-indicator-btn" (click)="goToUser()">
+          {{ fullname }}
+        </button>
+      </span>
+    </div>
+    <form
+      action=""
+      method="POST"
+      enctype="multipart/form-data"
+      (ngSubmit)="insertNewUser()"
+      class="profile-form"
+      autocomplete="off"
+      #userForm="ngForm"
+    >
+      <!-- user image -->
+      <div class="row">
+        <div class="col-xl-12 d-flex justify-content-center align-items-center">
+          <div class="main-image-container" *ngIf="!showCropper">
+            <img
+              [src]="
+                userUploadedImage !== ''
+                  ? userUploadedImage
+                  : detectUserImage(userExistedImage, userGender)
+              "
+              alt="User image"
+              class="clickable-image"
+            />
+            <div class="image-overlay">
+              <button type="button" class="camera-btn" (click)="openCamera()">
+                <mat-icon
+                  aria-hidden="false"
+                  aria-label="Example home icon"
+                  svgIcon="camera"
+                ></mat-icon>
+              </button>
+              <!-- User Image or Cropped Image -->
+              <button
+                type="button"
+                class="upload-btn"
+                (click)="triggerFileInput()"
+              >
+                <mat-icon
+                  aria-hidden="false"
+                  aria-label="Example home icon"
+                  svgIcon="upload"
+                ></mat-icon>
+              </button>
+            </div>
+            <!-- File Input -->
+            <input
+              type="file"
+              id="fileInput"
+              #fileInput
+              (change)="onFileSelected($event)"
+              accept="image/*"
+              hidden
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Drop and down row -->
+      <div class="row d-flex jsutify-content-center align-item-center my-5">
+        <div
+          class="col-xl-8 d-flex jsutify-content-center align-item-center mx-auto"
+        >
+          <div
+            *ngIf="!showCropper"
+            #dropZone
+            class="drop-down-container"
+            [ngClass]="isDragOver ? 'active' : ''"
+            (dragover)="onDragOver($event)"
+            (drop)="onDrop($event)"
+            (dragleave)="onDragLeave($event)"
+            [class.drag-over]="isDragOver"
+            (paste)="handlePaste($event)"
+            (click)="triggerFileInput()"
+          >
+            Drag and Drop / Copy and Paste
+          </div>
+        </div>
+      </div>
+
+      <!-- Cropper Section -->
+      <div
+        *ngIf="showCropper"
+        class="row d-flex justify-content-center align-item-center text-center my-4"
+      >
+        <div class="col-xl-6">
+          <image-cropper
+            class="image-cropper mx-auto"
+            [imageChangedEvent]="selectedImageChangedEvent"
+            [maintainAspectRatio]="true"
+            [aspectRatio]="1 / 1"
+            format="png"
+            (imageCropped)="imageCropped($event)"
+          ></image-cropper>
+          <div class="row mt-3 d-flex justify-content-center align-item-center">
+            <div class="col-6 d-flex justify-content-end align-item-center">
+              <button
+                type="button"
+                class="btn btn-view me-2 text-default"
+                (click)="saveCroppedImage()"
+              >
+                Save
+              </button>
+            </div>
+            <div class="col-6 d-flex justify-content-start align-item-center">
+              <button
+                type="button"
+                class="btn btn-delete text-default"
+                (click)="cancelCrop()"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- end user image -->
+      <!-- user guidline -->
+      <div class="row d-flex justify-content-center align-item-center mt-2">
+        <div class="col-xl-6 d-flex justify-content-center align-item-center">
+          <blockquote class="blockquote">
+            <span class="button-text h5">
+              Upload or Capture an Image You may select a user image in one of
+              the following ways:
+              <ul class="list-styled">
+                <li class="mt-1 text-start">
+                  Click or tap to designated area, and select an image file
+                </li>
+                <li class="mt-1 text-start">
+                  Drag and drop the image into the designated area
+                </li>
+                <li class="mt-1 text-start">
+                  Copy and paste the image directly from your clipboard
+                </li>
+                <li class="mt-1 text-start">
+                  Hover over the user placeholder to capture or select an image
+                  using your device’s camera
+                </li>
+              </ul>
+              For best results, ensure the image is clear and centered.
+            </span>
+          </blockquote>
+        </div>
+      </div>
+      <!-- end user guidline -->
+
+      <!-- username and password -->
+      <div class="row mt-4">
+        <div class="col-xl-6" *ngIf="isUserCanChangeTheUserName()">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label [ngClass]="isUsernameExist ? 'text-danger' : ''"
+              >Username {{ isUsernameExist ? "already exist" : "" }}</mat-label
+            >
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="username"
+              name="username"
+              (input)="checkUsername($event)"
+              required
+              placeholder="Username"
+              [disabled]="!isUserCanChangeTheUserName()"
+            />
+          </mat-form-field>
+          <ul class="list-group">
+            <li class="list-group-item">
+              Allows letters <code>A-Z or a-z</code>, digits <code>0-9</code>,
+              dots <code>.</code>, underscores <code>_</code> , hyphens
+              <code>-</code>
+            </li>
+            <li class="list-group-item">
+              Must be between 4 and 20 characters long
+            </li>
+          </ul>
+        </div>
+        <div class="col-xl-6">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label [ngClass]="passwordMatchPattern ? '' : 'text-danger'"
+              >Password
+              {{
+                passwordMatchPattern ? "" : "does not match pattern"
+              }}</mat-label
+            >
+            <input
+              matInput
+              [type]="hidePassword ? 'password' : 'text'"
+              [(ngModel)]="password"
+              name="password"
+              (input)="checkPassword($event)"
+              required
+              [disabled]="!isUserCanResetThePassword()"
+              placeholder="Enter your password"
+            />
+            <button
+              type="button"
+              mat-icon-button
+              matSuffix
+              (click)="hidePassword = !hidePassword"
+              aria-label="Toggle password visibility"
+              [attr.aria-pressed]="!hidePassword"
+            >
+              <mat-icon>{{
+                hidePassword ? "visibility_off" : "visibility"
+              }}</mat-icon>
+            </button>
+          </mat-form-field>
+          <ul class="list-group">
+            <li class="list-group-item">Minimum 8 characters</li>
+            <li class="list-group-item">At least one uppercase letter</li>
+            <li class="list-group-item">At least one lowercase letter</li>
+            <li class="list-group-item">At least one digit</li>
+            <li class="list-group-item">
+              At least one special character <code>(e.g., !&#64;#$%^&*)</code>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <!-- end username and password -->
+
+      <!-- user details row start -->
+      <div class="row mt-5">
+        <div class="col-xl-12"><h1>User Details</h1></div>
+        <hr />
+      </div>
+      <!-- end user details row end -->
+
+      <!-- data entry section -->
+      <div class="row d-flex justify-content-center align-items-center mt-4">
+        <div class="col-xl-12">
+          <!-- Name -->
+          <div class="row d-flex justify-content-bitween align-items-center">
+            <div class="col-xl-8">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label>Full name</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="fullname"
+                  name="fullname"
+                  required
+                  placeholder="Full name"
+                />
+              </mat-form-field>
+            </div>
+            <div class="col-xl-4">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label>User gender</mat-label>
+                <mat-select
+                  required
+                  [(ngModel)]="userGender"
+                  name="userGender"
+                  (selectionChange)="detectGender($event.value)"
+                >
+                  <mat-option
+                    *ngFor="let gender of definedGender"
+                    [value]="gender"
+                    class="text-capitalize"
+                    >{{ gender }}</mat-option
+                  >
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+          <!-- Email and Contact -->
+          <div class="row d-flex justify-content-start align-items-center">
+            <!-- Email -->
+            <div class="col-xl-6">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label
+                  [ngClass]="isEmailExist ? 'text-danger' : ''"
+                  [ngClass]="emailMatchPattern ? '' : 'text-danger'"
+                  >Email {{ isEmailExist ? "already exist" : "" }}
+                  {{
+                    emailMatchPattern ? "" : "does not match pattern"
+                  }}</mat-label
+                >
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="email"
+                  name="email"
+                  (input)="checkEmail($event)"
+                  required
+                  placeholder="Email"
+                />
+              </mat-form-field>
+            </div>
+            <!-- Contact Number -->
+            <div class="col-xl-6">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label
+                  [ngClass]="
+                    isPhoneExist || phoneMatchPattern ? 'text-danger' : ''
+                  "
+                  [ngClass]="phoneMatchPattern ? '' : 'text-danger'"
+                  >Contact Number {{ isPhoneExist ? "already exist" : "" }}
+                  {{
+                    phoneMatchPattern ? "" : "does not match pattern"
+                  }}</mat-label
+                >
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="phone"
+                  name="phone"
+                  (input)="checkPhone($event)"
+                  required
+                  placeholder="Contact Number"
+                />
+              </mat-form-field>
+            </div>
+          </div>
+          <!-- Address -->
+          <div class="row">
+            <!-- House Number -->
+            <div class="col-xl-4">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label>House Number</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="houseNumber"
+                  name="houseNumber"
+                  required
+                  placeholder="House Number"
+                />
+              </mat-form-field>
+            </div>
+            <!-- Street -->
+            <div class="col-xl-4">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label>Street</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="street"
+                  name="street"
+                  required
+                  placeholder="Street"
+                />
+              </mat-form-field>
+            </div>
+            <!-- City -->
+            <div class="col-xl-4">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label>City</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="city"
+                  name="city"
+                  required
+                  placeholder="City"
+                />
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="row">
+            <!-- State or Province -->
+            <div class="col-xl-4">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label>State or Province</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="stateOrProvince"
+                  name="stateOrProvince"
+                  required
+                  placeholder="State or Province"
+                />
+              </mat-form-field>
+            </div>
+            <!-- ZIP code -->
+            <div class="col-xl-4">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label>ZIP code</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="postcode"
+                  name="postcode"
+                  required
+                  placeholder="ZIP code"
+                />
+              </mat-form-field>
+            </div>
+            <!-- Country -->
+            <div class="col-xl-4">
+              <mat-form-field class="example-full-width w-100">
+                <mat-label>Country</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [formControl]="countryControl"
+                  [matAutocomplete]="auto"
+                  title="Country"
+                  required
+                  placeholder="Enter your country"
+                  (ngModelChange)="onCountryChange($event)"
+                />
+                <mat-autocomplete
+                  #auto="matAutocomplete"
+                  [displayWith]="displayFn"
+                >
+                  <mat-option
+                    *ngFor="let option of filteredCountries | async"
+                    [value]="option"
+                  >
+                    <img
+                      [src]="option.image"
+                      width="24"
+                      height="16"
+                      style="margin-right: 8px"
+                      alt="{{ option.code }}"
+                    />
+                    {{ option.name }}
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+            </div>
+          </div>
+          <!-- Age and date of birth -->
+          <div class="row d-flex justify-content-bitween align-items-center">
+            <div class="col-xl-6">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label [ngClass]="isValidAge ? '' : 'text-danger'">
+                  {{ isValidAge ? "Age" : "Invalid Age" }}</mat-label
+                >
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="age"
+                  (ngModelChange)="checkAge($event)"
+                  name="userage"
+                  inputmode="numeric"
+                  required
+                  placeholder="Age"
+                />
+              </mat-form-field>
+            </div>
+            <div class="col-xl-6">
+              <mat-form-field
+                appearance="fill"
+                class="form-field me-3 w-100 DOB"
+              >
+                <mat-label [ngClass]="isValidAge ? '' : 'text-danger'">
+                  {{
+                    isValidAge ? "Date of Birth" : "Invalid Date of Birth"
+                  }}</mat-label
+                >
+                <input
+                  matInput
+                  [matDatepicker]="picker"
+                  placeholder="Date of Birth"
+                  [(ngModel)]="dateOfBirth"
+                  name="age"
+                  (ngModelChange)="validateDateOfBirth($event)"
+                  required
+                  placeholder="DD/MM/YYYY"
+                />
+                <mat-datepicker-toggle
+                  matIconSuffix
+                  [for]="picker"
+                ></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            </div>
+          </div>
+          <!-- Role if user is admin -->
+          <div class="row">
+            <div class="col-xl-6" *ngIf="isUserCanAssignUserRoles()">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label>User role</mat-label>
+                <mat-select
+                  [(ngModel)]="role"
+                  name="role"
+                  class="text-capitalize"
+                  required
+                >
+                  @for (role of definedRole; track role) {
+                  <mat-option [value]="role"
+                    ><p class="text-capitalize">
+                      {{ role }}
+                    </p></mat-option
+                  >
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div
+              class="col-xl-6"
+              *ngIf="
+                isUserCanMakeUserActivate() && isUserCanMakeUserDeactivate()
+              "
+            >
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label>User Active Status</mat-label>
+                <mat-select [(ngModel)]="isActive" name="isActive" required>
+                  @for (status of userActiveStatus; track status) {
+                  <mat-option [value]="status.isActive">{{
+                    status.typeName
+                  }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- end data entry section -->
+
+      <!-- user bio row -->
+      <div class="row my-5">
+        <div class="col-xl-12">
+          <h3>User Bio:</h3>
+          <div class="my-4">
+            <editor
+              apiKey="azinteymcwk49hq4199jdh7mjyoqb88jqz88upe7gestbrp5"
+              [init]="init"
+              [(ngModel)]="userBio"
+              [ngModelOptions]="{ standalone: true }"
+              name="userBio"
+              aria-placeholder="user bio"
+              aria-autocomplete="none"
+            />
+          </div>
+        </div>
+      </div>
+      <!-- user bio row -->
+
+      <!-- user access row start -->
+      <div class="row my-5" *ngIf="role !== ''">
+        <div class="col-xl-12"><h1>User Access</h1></div>
+        <hr />
+      </div>
+      <!-- end user access row end -->
+      <!-- user access grant -->
+      <div class="row" *ngIf="role !== ''">
+        <div
+          class="col-xl-4 my-4"
+          *ngFor="let mainItem of accessOptions; let i = index"
+        >
+          <mat-checkbox
+            class="example-margin text-default"
+            [checked]="hasModel(mainItem.module)"
+            (change)="toggleModule($event.checked, mainItem.module)"
+          >
+            <h4 class="text-default">{{ mainItem.module }}</h4>
+          </mat-checkbox>
+          <ul class="list-group">
+            <li
+              class="list-group-item"
+              *ngFor="let subItem of mainItem.actions; let j = index"
+            >
+              <mat-checkbox
+                class="example-margin text-default"
+                [checked]="hasAccess(subItem, mainItem.module)"
+                (change)="
+                  toggleAccess($event.checked, mainItem.module, subItem)
+                "
+                ><p class="text-default text-capitalize">
+                  {{ subItem }}
+                </p></mat-checkbox
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+      <!-- end user access grant -->
+
+      <!-- submit button -->
+      <div class="row d-flex justify-content-center align-item-center mt-2">
+        <div class="col-xl-12 d-flex justify-content-end align-item-center">
+          <button type="submit" class="submit-btn btn-custom">
+            <mat-icon
+              aria-hidden="false"
+              aria-label="Example home icon"
+              svgIcon="insert"
+            >
+            </mat-icon>
+            <span>Save</span>
+          </button>
+        </div>
+      </div>
+      <!-- end submit button -->
+    </form>
+  </div>
+</div>

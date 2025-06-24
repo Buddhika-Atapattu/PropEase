@@ -4,6 +4,7 @@ import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
 @Component({
   selector: 'app-progress-bar',
   imports: [CommonModule],
+  standalone: true,
   templateUrl: './progress-bar.component.html',
   styleUrl: './progress-bar.component.scss',
 })

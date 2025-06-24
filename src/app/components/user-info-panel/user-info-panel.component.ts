@@ -19,6 +19,8 @@ import { Router } from '@angular/router';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
+import { APIsService } from '../../../services/APIs/apis.service';
 
 @Component({
   selector: 'app-user-info-panel',
@@ -28,7 +30,7 @@ import { Subscription } from 'rxjs';
   styleUrl: './user-info-panel.component.scss',
 })
 export class UserInfoPanelComponent implements OnInit, OnDestroy {
-  @Output() closePanel = new EventEmitter<void>();
+  @Output() closePanel = new EventEmitter<boolean>();
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
@@ -39,7 +41,9 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object,
     private authService: AuthService,
     private router: Router,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private crypto: CryptoService,
+    private APIsService: APIsService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.authService.getLoggedUser !== null) {
@@ -63,7 +67,7 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
   onDocumentClick(event: Event): void {
     const clickedInside = this.elementRef.nativeElement.contains(event.target);
     if (!clickedInside) {
-      this.close();
+      this.close(false);
     }
   }
 
@@ -75,11 +79,17 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
     this.router.navigate(['/login']);
   }
 
-  protected open() {
-    this.router.navigate(['/dashboard/user-profile']);
+  protected async open() {
+    if (this.isBrowser && this.user && this.crypto) {
+      this.close(false);
+      const username = await this.APIsService.generateToken(
+        this.user?.username
+      );
+      this.router.navigate(['/dashboard/view-user-profile', username.token]);
+    }
   }
 
-  protected close(): void {
-    this.closePanel.emit();
+  protected close(closed: boolean): void {
+    this.closePanel.emit(closed);
   }
 }

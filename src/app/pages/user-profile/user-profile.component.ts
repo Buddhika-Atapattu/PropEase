@@ -176,7 +176,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
     this.iconMaker();
     this.user = this.authService.getLoggedUser;
     if (this.user !== null) {
-      setInterval(() => {
+      setTimeout(() => {
         this.isLoading = false;
       }, 500);
       this.name = this.user.name;

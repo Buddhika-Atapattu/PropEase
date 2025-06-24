@@ -1,13 +1,15 @@
 @use "../../../../styles/global.scss" as *;
 
 .table-responsive {
+  width: 100%;
   margin-top: 2rem;
+  overflow-x: auto;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   ::ng-deep table {
     display: table-caption;
-    width: 100%;
-    min-width: 768px;
+    width: -webkit-fill-available;
+    min-width: 600px;
     table-layout: auto;
     border-collapse: collapse;
 
@@ -70,7 +72,7 @@
 
 .date-picker-btn {
   ::ng-deep mat-icon {
-    margin: 1rem auto !important;
+    // margin: 1rem auto !important;
     &.search {
       ::ng-deep svg {
         ::ng-deep path {
@@ -145,6 +147,7 @@
 
 :host-context(html.light) {
   .table-responsive {
+    border: 1px solid rgba(0, 0, 0, 0.1);
     table {
       background: none;
       color: $dark-primary-color !important;
@@ -181,6 +184,7 @@
 
 :host-context(html.dark) {
   .table-responsive {
+    border: 1px solid rgba(255, 255, 255, 0.1);
     table {
       background: none;
       color: $light-primary-color !important;

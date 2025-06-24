@@ -13,10 +13,18 @@
   transition: all 0.3s ease;
   cursor: pointer;
 
-  mat-icon {
+  ::ng-deep mat-icon {
     width: 2rem;
     height: 2rem;
     color: #fff;
+    ::ng-deep svg {
+      fill: none !important;
+      stroke: #fff !important;
+      ::ng-deep path {
+        fill: none !important;
+        stroke: #fff !important;
+      }
+    }
   }
 
   &:hover {

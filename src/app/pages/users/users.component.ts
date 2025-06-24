@@ -4,6 +4,7 @@ import {
   OnDestroy,
   Inject,
   PLATFORM_ID,
+  ViewChild,
 } from '@angular/core';
 import { WindowsRefService } from '../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
@@ -16,14 +17,24 @@ import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader
 import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { AuthService, BaseUser } from '../../../services/auth/auth.service';
 import { PropertyFilterDialogComponent } from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmationComponent } from '../../components/dialogs/confirmation/confirmation.component';
+import { NotificationComponent } from '../../components/dialogs/notification/notification.component';
 
 @Component({
   selector: 'app-users',
-  imports: [CommonModule, MatIconModule, SkeletonLoaderComponent],
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatIconModule,
+    SkeletonLoaderComponent,
+    NotificationComponent,
+  ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
 })
 export class UsersComponent implements OnInit, OnDestroy {
+  @ViewChild(NotificationComponent) notification!: NotificationComponent;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
@@ -35,6 +46,25 @@ export class UsersComponent implements OnInit, OnDestroy {
   private routeSub: Subscription | null = null;
   private routerSub: Subscription | null = null;
   protected LOGGED_USER: BaseUser | null = null;
+  protected LOGGED_USER_ACCESS_MODULE: string[] = [];
+  protected LOGGED_USER_ACCESS_ACTIONS: string[] = [];
+  protected isColView: boolean = false;
+  protected isListView: boolean = true;
+
+  protected readonly definedMaleDummyImageURL =
+    '/Images/user-images/dummy-user/dummy-user.jpg';
+  protected readonly definedWomanDummyImageURL =
+    '/Images/user-images/dummy-user/dummy_woman.jpg';
+  protected definedImage: string =
+    '/Images/user-images/dummy-user/dummy-user.jpg';
+  protected readonly definedImageExtentionArray: string[] = [
+    'jpg',
+    'webp',
+    'jpeg',
+    'png',
+    'ico',
+    'gif',
+  ];
 
   constructor(
     private windowRef: WindowsRefService,
@@ -45,9 +75,11 @@ export class UsersComponent implements OnInit, OnDestroy {
     private APIsService: APIsService,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
-    private crypto: CryptoService
+    private crypto: CryptoService,
+    private dialog: MatDialog
   ) {
     this.LOGGED_USER = this.authService.getLoggedUser;
+
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.iconMaker();
   }
@@ -85,9 +117,19 @@ export class UsersComponent implements OnInit, OnDestroy {
         }, 500);
       });
     if (usersArray) {
-      this.users = usersArray.data;
-      this.pageCount = Math.round(usersArray.count / 10) + 1;
+      const users = [];
+      for (let user of usersArray.data) {
+        if(user.username !== this.LOGGED_USER?.username){
+          users.push(user);
+        }
+      }
+      this.users = users;
+      this.pageCount = Math.round((usersArray.count - 1) / 12) + 1;
     }
+  }
+
+  protected isThisLoggedUserProfile(username: string): boolean {
+    return this.LOGGED_USER?.username === username;
   }
 
   private iconMaker() {
@@ -98,6 +140,8 @@ export class UsersComponent implements OnInit, OnDestroy {
       { name: 'add-new-user', path: '/Images/Icons/add-new-user.svg' },
       { name: 'search', path: '/Images/Icons/search.svg' },
       { name: 'filter', path: '/Images/Icons/filter.svg' },
+      { name: 'list', path: '/Images/Icons/list.svg' },
+      { name: 'lineColumns', path: '/Images/Icons/line-columns.svg' },
     ];
 
     for (let icon of iconMap) {
@@ -108,11 +152,97 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Logged user actions
+
+  //Create user
+  protected createUserAvailable(): boolean {
+    if (!this.LOGGED_USER) return false;
+    return (
+      this.LOGGED_USER?.access.permissions.some(
+        (permission) =>
+          permission.module === 'User Management' &&
+          permission.actions.includes('create')
+      ) ?? false
+    );
+  }
+
+  // View user
+  protected viewUserAvailable(): boolean {
+    if (!this.LOGGED_USER) return false;
+    return (
+      this.LOGGED_USER?.access.permissions.some(
+        (permission) =>
+          permission.module === 'User Management' &&
+          permission.actions.includes('view')
+      ) ?? false
+    );
+  }
+
+  // View user
+  protected updateUserAvailable(): boolean {
+    if (!this.LOGGED_USER) return false;
+    return (
+      this.LOGGED_USER?.access.permissions.some(
+        (permission) =>
+          permission.module === 'User Management' &&
+          permission.actions.includes('update')
+      ) ?? false
+    );
+  }
+
+  // Delete user
+  protected deleteUserAvailable(): boolean {
+    if (!this.LOGGED_USER) return false;
+    return (
+      this.LOGGED_USER?.access.permissions.some(
+        (permission) =>
+          permission.module === 'User Management' &&
+          permission.actions.includes('delete')
+      ) ?? false
+    );
+  }
+
+  // End logged user actions
+
+  protected convertTheViewStyle(style: string) {
+    if (style === 'grid') {
+      this.isColView = true;
+      this.isListView = false;
+    } else {
+      this.isListView = true;
+      this.isColView = false;
+    }
+  }
+
+  protected detectUserImage(image: string, gender: string): string {
+    if (typeof image === 'string') {
+      const imageArray: string[] = image ? image.split('/') : [];
+      if (imageArray.length > 0) {
+        if (
+          this.definedImageExtentionArray.includes(
+            imageArray[imageArray.length - 1].split('.')[1]
+          )
+        ) {
+          this.definedImage = image;
+        } else {
+          if (gender.toLowerCase() === 'male') {
+            this.definedImage = this.definedMaleDummyImageURL;
+          } else if (gender.toLowerCase() === 'female') {
+            this.definedImage = this.definedWomanDummyImageURL;
+          } else {
+            this.definedImage = this.definedMaleDummyImageURL;
+          }
+        }
+      }
+    }
+    return this.definedImage;
+  }
+
   protected async searchUsers(event: Event) {
     this.search = (event.target as HTMLInputElement).value;
     const usersArray = await this.APIsService.getAllUsersWithPagination(
       0,
-      10,
+      12,
       this.search
     )
       .then((data) => {
@@ -172,12 +302,48 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   protected async viewUser(data: string) {
-    if (this.isBrowser) {
-      if (data !== '' && this.crypto) {
-        const username = await this.APIsService.generateToken(data);
-        this.router.navigate(['/dashboard/view-user-profile', username.token]);
-      }
+    if (this.isBrowser && data !== '') {
+      const username = await this.APIsService.generateToken(data);
+      this.router.navigate(['/dashboard/view-user-profile', username.token]);
     }
+  }
+
+  protected async editUser(data: string) {
+    if (this.isBrowser && data !== '') {
+      const username = await this.APIsService.generateToken(data);
+      this.router.navigate(['/dashboard/edit-user', username.token]);
+    }
+  }
+
+  protected deleteUser(username: string, name: string) {
+    const dialogRef = this.dialog.open(ConfirmationComponent, {
+      width: 'auto',
+      height: 'auto',
+      data: {
+        title: `Delete ${name}`,
+        message: `Are you sure you want to delete ${name}?`,
+        confirmText: true,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe(async (result) => {
+      if (result?.confirmText === true) {
+        await this.APIsService.deleteUserByUsername(username)
+          .then((res) => {
+            if (res) {
+              this.notification.notification(res.status, res.message);
+              setTimeout(() => {
+                this.init();
+              }, 500);
+            }
+          })
+          .catch((res) => {
+            if (res) {
+              this.notification.notification(res.status, res.message);
+            }
+          });
+      }
+    });
   }
 
   ngOnDestroy(): void {

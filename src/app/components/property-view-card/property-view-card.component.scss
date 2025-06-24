@@ -5,38 +5,28 @@
   display: none;
 }
 
-.main-panel {
-  .top-row {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background-color: inherit; // respects dark/light mode
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    // border-bottom: 1px solid #ddd; // optional subtle line
-  }
-  .property-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    border-radius: 0.372rem;
-    padding: 1rem;
+.property-bar,
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-radius: 0.372rem;
+  padding: 1rem;
+  height: 100%;
+  position: relative;
 
-    mat-icon {
-      ::ng-deep svg {
-        fill: currentColor;
-        ::ng-deep rect {
-          fill: transparent;
-        }
-        ::ng-deep path {
-          fill: currentColor;
-        }
-      }
-    }
-    h6 {
-      margin-top: 0.3rem;
-    }
+  .card-body {
+    width: 100%;
+  }
+
+  
+
+  .property-title,.property-location {
+    flex: 1 1 15rem; /* Grow and shrink, base 15rem */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .property-image-container {
@@ -46,10 +36,12 @@
     flex-wrap: wrap;
     overflow: hidden;
     width: 100%;
+    min-height: 25vh;
     height: 100%;
+    max-height: 50vh;
     .property-image {
       width: 100%;
-      height: auto;
+      height: 100%;
       border-radius: 0.5rem;
       object-fit: cover;
       object-position: center;
@@ -57,43 +49,55 @@
     }
   }
 
-  &.dark {
-    background: linear-gradient(
-      145deg,
-      $dark-secondary-color,
-      color.adjust($dark-secondary-color, $lightness: 2%)
-    );
-    color: $dark-text-color;
-    .property-bar {
-      background-color: $dark-primary-color;
-      box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
-      .add-user-btn {
-        background: $dark-btn-bg-color;
-        box-shadow: $dark-btn-box-shadow;
+  mat-icon {
+    ::ng-deep svg {
+      fill: currentColor;
+      ::ng-deep rect {
+        fill: transparent;
       }
+      ::ng-deep path {
+        fill: currentColor;
+      }
+    }
+  }
+  h6 {
+    margin-top: 0.3rem;
+  }
+
+  .card-footer {
+    position: relative;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    .action-btn-row {
+      margin-bottom: 1rem;
+    }
+  }
+
+  &.dark {
+    background-color: $dark-primary-color;
+    box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
+    color: $dark-text-color;
+    .add-user-btn {
+      background: $dark-btn-bg-color;
+      box-shadow: $dark-btn-box-shadow;
     }
   }
 
   &.light {
-    background: linear-gradient(
-      145deg,
-      $light-primary-color,
-      color.adjust($light-primary-color, $lightness: 2%)
-    );
+    background-color: #ffe394;
+    box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
     color: $light-text-color;
-    .property-bar {
-      background-color: #ffe394;
-      box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
-      .add-user-btn {
-        background: $light-btn-bg-color;
-        box-shadow: $light-btn-box-shadow;
-      }
+    .add-user-btn {
+      background: $light-btn-bg-color;
+      box-shadow: $light-btn-box-shadow;
     }
   }
 }
 
-@media (max-width: 768px) {
-  .main-panel {
+@media (max-width: 1024px) {
+  .property-bar {
     display: none;
   }
   .main-panel-mobile {
@@ -123,8 +127,10 @@
         color: #fff;
       }
 
-      .btn-view, .btn-edit, .btn-delete{
-        mat-icon{
+      .btn-view,
+      .btn-edit,
+      .btn-delete {
+        mat-icon {
           ::ng-deep svg {
             fill: currentColor;
             ::ng-deep rect {

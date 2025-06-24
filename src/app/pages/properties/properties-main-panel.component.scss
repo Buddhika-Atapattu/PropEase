@@ -26,13 +26,7 @@
       padding-bottom: 1rem;
       // border-bottom: 1px solid #ddd; // optional subtle line
     }
-    .user-scroll-wrapper {
-      // max-height: calc(100vh - 200px); // Adjust based on header/footer height
-      // overflow-x: hidden;
-      // overflow-y: visible;
-      padding-right: 0.5rem;
-      padding-left: 0.5rem;
-    }
+
     /* Optional: Style scroll bar for elegance */
     .user-scroll-wrapper::-webkit-scrollbar {
       width: 6px;
@@ -191,6 +185,18 @@
           box-shadow: $dark-btn-box-shadow;
         }
       }
+
+      .column-change-icons {
+        ::ng-deep mat-icon {
+          ::ng-deep svg {
+            fill: $dark-text-color;
+            ::ng-deep path {
+              fill: $dark-text-color;
+              stroke: $dark-text-color;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -213,23 +219,38 @@
         }
       }
     }
+
+    .column-change-icons {
+      ::ng-deep mat-icon {
+        ::ng-deep svg {
+          fill: $light-text-color;
+          ::ng-deep path {
+            fill: $light-text-color;
+            stroke: $light-text-color;
+          }
+        }
+      }
+    }
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .main-panel {
     display: none;
   }
   .modile-view-pannel {
     display: block;
     padding: 0.25rem !important;
-    .main-container{
+    .main-container {
       padding: 0.5rem !important;
       border-radius: 0.5rem !important;
       padding: 0.5rem !important;
+      .style-btn-row {
+        display: none !important;
+      }
       .top-row {
         padding: 0.5rem !important;
-        input{
+        input {
           padding: 0.5rem !important;
           border-radius: 100rem !important;
           border: 0.25rem solid #ffb200 !important;
@@ -239,13 +260,13 @@
           width: 100% !important;
         }
 
-        .add-user-btn{
-          mat-icon{
+        .add-user-btn {
+          mat-icon {
             width: 2rem;
             height: 2rem;
-            ::ng-deep svg{
+            ::ng-deep svg {
               fill: none !important;
-              ::ng-deep path{
+              ::ng-deep path {
                 fill: none !important;
                 stroke: #ffffff;
               }
@@ -253,16 +274,16 @@
           }
         }
 
-        .btn-edit{
+        .btn-edit {
           padding: 0.25rem 0.5rem;
           margin: 0;
           width: 100%;
-          mat-icon{
+          mat-icon {
             width: 2rem;
             height: 2rem;
-            ::ng-deep svg{
+            ::ng-deep svg {
               fill: #ffffff;
-              ::ng-deep path{
+              ::ng-deep path {
                 fill: #ffffff;
                 stroke: #ffffff;
               }
@@ -272,7 +293,7 @@
       }
     }
 
-    .pagination-list-group{
+    .pagination-list-group {
       display: inline-flex;
       list-style: none;
       padding: 0;
@@ -289,6 +310,7 @@
       .main-container {
         background-color: $dark-secondary-color;
         box-shadow: inset 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
+
         .property-bar,
         .top-row {
           background-color: $dark-primary-color;
@@ -311,6 +333,7 @@
       .main-container {
         background-color: $light-primary-color;
         box-shadow: inset 0rem 0rem 1rem 0rem $light-dashboard-dark-color;
+
         .property-bar,
         .top-row {
           background-color: #ffe394;

@@ -8,11 +8,20 @@
   padding: 2rem;
   .main-container {
     border-radius: 2rem;
-    // min-height: 50rem;
+    min-height: 50rem;
     overflow: hidden;
     // overflow-y: scroll;
     display: block;
     padding: 2rem;
+
+    .column-change-icons {
+      ::ng-deep mat-icon {
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+      }
+    }
+
     .top-row {
       position: sticky;
       top: 0;
@@ -22,13 +31,11 @@
       padding-bottom: 1rem;
       // border-bottom: 1px solid #ddd; // optional subtle line
     }
-    .user-scroll-wrapper {
-      // max-height: calc(100vh - 200px); // Adjust based on header/footer height
-      // overflow-x: hidden;
-      // overflow-y: visible;
-      padding-right: 0.5rem;
-      padding-left: 0.5rem;
-    }
+    // .user-scroll-wrapper {
+    //   max-height: calc(100vh - 200px); // Adjust based on header/footer height
+    //   overflow-x: hidden;
+    //   overflow-y: visible;
+    // }
     /* Optional: Style scroll bar for elegance */
     .user-scroll-wrapper::-webkit-scrollbar {
       width: 6px;
@@ -114,6 +121,23 @@
         }
       }
     }
+
+    .btn-view,
+    .btn-edit,
+    .btn-delete {
+      ::ng-deep {
+        mat-icon {
+          svg {
+            fill: #fff;
+            stroke: #fff;
+            path {
+              fill: #fff;
+              stroke: #fff;
+            }
+          }
+        }
+      }
+    }
   }
 
   &.dark {
@@ -126,9 +150,22 @@
     .main-container {
       background-color: $dark-secondary-color;
       box-shadow: inset 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
-      .add-user-row {
+      .column-change-icons {
+        ::ng-deep mat-icon {
+          ::ng-deep svg {
+            fill: $dark-text-color;
+            ::ng-deep path {
+              fill: $dark-text-color;
+              stroke: $dark-text-color;
+            }
+          }
+        }
+      }
+      .add-user-row,
+      .card {
         background-color: $dark-primary-color;
         box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
+        color: #fff;
         .add-user-btn {
           background: $dark-btn-bg-color;
           box-shadow: $dark-btn-box-shadow;
@@ -147,13 +184,92 @@
     .main-container {
       background-color: $light-primary-color;
       box-shadow: inset 0rem 0rem 1rem 0rem $light-dashboard-dark-color;
-      .add-user-row {
+      .column-change-icons {
+        ::ng-deep mat-icon {
+          ::ng-deep svg {
+            fill: $light-text-color;
+            ::ng-deep path {
+              fill: $light-text-color;
+              stroke: $light-text-color;
+            }
+          }
+        }
+      }
+      .add-user-row,
+      .card {
         background-color: #ffe394;
         box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
+        color: #000;
         .add-user-btn {
           background: $light-btn-bg-color;
           box-shadow: $light-btn-box-shadow;
         }
+      }
+    }
+  }
+}
+
+.action-btn-container {
+  width: 100% !important;
+}
+
+@media (max-width: 1024px) {
+  .main-panel {
+    padding: 0.25rem !important;
+    .main-container {
+      padding: 0.5rem !important;
+      border-radius: 0.5rem !important;
+      padding: 0.5rem !important;
+      .row {
+        margin: 0rem auto;
+      }
+      .user-scroll-wrapper{
+        display: none !important;
+      }
+      .col-style-view-container{
+        display: flex !important;
+        flex-wrap: wrap;
+      }
+      .style-btn-row {
+        display: none !important;
+      }
+      .search-icon {
+        display: none;
+      }
+      .search-input {
+        padding: 0.5rem !important;
+      }
+      .top-row {
+        padding: 1rem 0rem !important;
+      }
+      .add-user-row {
+        padding: 2rem 0rem;
+      }
+      .add-user-btn-container {
+        position: relative;
+        display: flex;
+        justify-content: start !important;
+        align-items: center;
+        margin-top: 1rem;
+        button {
+          width: 100%;
+        }
+      }
+
+      .user-image-container {
+        width: 100%;
+        display: flex;
+        justify-content: center !important;
+        align-items: center !important;
+        margin-bottom: 3rem;
+      }
+
+      .user-details-container {
+        width: 100%;
+        display: flex;
+        justify-content: center !important;
+        align-items: center !important;
+        margin-bottom: 2rem;
       }
     }
   }

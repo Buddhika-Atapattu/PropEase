@@ -1,0 +1,270 @@
+@use "../../styles/global.scss" as *;
+@use "sass:color";
+@use "../../styles/font/leckerli-one/leckerli-one.scss"; // Main Styles
+@use "@angular/material" as mat;
+
+@keyframes hoverAnimation {
+  0% {
+    top: 10rem;
+  }
+  100% {
+    top: 0rem;
+  }
+}
+
+::ng-deep .tox-statusbar__branding {
+  display: none;
+}
+
+.main-panel {
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  .page-indecator {
+    position: absolute;
+    top: 0%;
+    left: 1%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .page-indicator-btn {
+      background: none;
+      border: none;
+      margin: 0 0.5rem;
+      padding: 0;
+      cursor: pointer;
+      font-weight: 100;
+      text-transform: uppercase;
+      font-size: 10pt;
+    }
+  }
+  .main-image-container {
+    position: relative;
+    overflow: hidden;
+    width: 10rem;
+    height: 10rem;
+    border-radius: 100%;
+    cursor: pointer;
+    &:hover .image-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      width: 10rem;
+      height: 10rem;
+      background: linear-gradient(45deg, #ffffff9c, #e3c5ff4d);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-content: center;
+      border-radius: 100%;
+      // transition: 0.5s all ease-in-out;
+      animation-name: hoverAnimation;
+      animation-duration: 0.7s;
+      animation-timing-function: ease-in-out;
+      button {
+        width: 4.5rem;
+        height: 4.5rem;
+        margin: 0rem 0.2rem;
+        overflow: hidden;
+        background: none;
+        border: none;
+        ::ng-deep mat-icon {
+          width: 3.5rem;
+          height: 3.5rem;
+          ::ng-deep svg {
+            ::ng-deep path {
+              fill: rgb(28 28 49 / 59%);
+            }
+          }
+        }
+      }
+    }
+  }
+  .drop-down-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative;
+    min-height: 5rem;
+    height: 10rem;
+    width: 100%;
+    border-radius: 2rem;
+    font-size: 25pt;
+    text-transform: uppercase;
+    text-align: center;
+    color: currentColor;
+    cursor: pointer;
+  }
+  .button-text {
+    font-size: 12pt;
+    font-style: italic;
+    text-align: center;
+    font-family: "Tagesschrift", system-ui;
+    transition: all 0.3s ease-in-out;
+  }
+
+  // mdc-floating-label mat-mdc-floating-label mdc-floating-label--float-above
+  ::ng-deep mat-label.text-danger ~ span {
+    color: red !important;
+  }
+
+  .submit-btn {
+    width: auto;
+    padding: 0.5rem 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    border-radius: 0.357rem;
+    ::ng-deep mat-icon {
+      margin: 0rem 0.357rem;
+      width: 2rem;
+      height: 2rem;
+      ::ng-deep svg {
+        ::ng-deep path {
+          stroke: #fff;
+        }
+      }
+    }
+    span {
+      display: flex;
+      flex-wrap: wrap;
+      justify-self: center;
+      align-self: baseline;
+      font-size: 15pt;
+      text-transform: uppercase;
+      font-weight: 600;
+      text-indent: 2px;
+    }
+  }
+  code {
+    background: linear-gradient(45deg, #3e3e3e, #3e3e3e) !important;
+    padding: 0.1rem 0.5rem !important;
+    margin: 0rem 0.2rem !important;
+    color: #fff !important;
+    border-radius: 0.352rem !important;
+  }
+  .list-group {
+    background: none;
+    .list-group-item {
+      background: none;
+      border: none;
+      color: currentColor;
+    }
+  }
+
+  .image-cropper {
+    max-width: 20rem;
+    max-height: 20rem;
+  }
+
+  .clickable-image {
+    width: 10rem;
+    height: 10rem;
+    border-radius: 100%;
+    object-fit: cover;
+    object-position: center;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+  }
+
+  &.dark {
+    background: linear-gradient(
+      145deg,
+      $dark-secondary-color,
+      color.adjust($dark-secondary-color, $lightness: 2%)
+    );
+    color: $dark-text-color;
+    .page-indecator {
+      color: #e8bd00;
+      .page-indicator-btn {
+        color: #e8bd00;
+      }
+    }
+    .drop-down-container {
+      background: linear-gradient(
+        144deg,
+        rgb(0 58 168 / 34%),
+        rgb(90 0 166 / 46%),
+        rgb(20 0 145 / 43%)
+      );
+      border: 0.0159rem solid #ffffff8a;
+      &.active {
+        background: linear-gradient(
+          144deg,
+          rgba(101, 125, 170, 0.34),
+          rgba(118, 79, 150, 0.46),
+          rgba(113, 105, 165, 0.43)
+        );
+        border: 0.0159rem solid #83cfff8a;
+      }
+    }
+  }
+
+  &.light {
+    background: linear-gradient(
+      145deg,
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
+    );
+    color: $light-text-color;
+    .page-indecator {
+      color: #100a2b;
+      .page-indicator-btn {
+        color: #100a2b;
+      }
+    }
+    .drop-down-container {
+      background: linear-gradient(
+        144deg,
+        #ffc10757,
+        rgb(255 202 0 / 46%),
+        #ffc1076e
+      );
+      border: 0.0159rem solid #1900ff8a;
+      &.active {
+        background: linear-gradient(
+          144deg,
+          #88784757,
+          rgba(138, 126, 79, 0.46),
+          #9182536e
+        );
+        border: 0.0159rem solid #83cfff8a;
+      }
+    }
+  }
+
+  h2 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  mat-checkbox {
+    display: flex;
+    align-items: center;
+    h4,
+    p {
+      color: currentColor;
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  p {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .main-panel {
+    padding: 4rem 0 0 0;
+    .drop-down-container {
+      padding: 0.5rem 1rem;
+      height: auto;
+      min-height: 5rem;
+    }
+  }
+}

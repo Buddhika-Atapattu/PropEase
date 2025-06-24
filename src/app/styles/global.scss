@@ -1,6 +1,7 @@
 @use "./font/leckerli-one/leckerli-one.scss" as *;
 @use "./font/Tagesschrift-Regular/Tagesschrift-Regular.scss" as *;
-@use "./font/EduVICWANTHand-VariableFont_wght//EduVICWANTHand-VariableFont_wght.scss" as *;
+@use "./font/EduVICWANTHand-VariableFont_wght//EduVICWANTHand-VariableFont_wght.scss"
+  as *;
 
 // Dark Core Colors
 $dark-primary-color: #08122f !default; // Deep Navy background
@@ -12,6 +13,8 @@ $dark-fourth-color: #b48c00 !default; // Muted Accent Gold
 $dark-text-color: #fefefe !default; // Clear White text
 $dark-btn-bg-color: linear-gradient(90deg, #ae8300, #ffc107, #ae8300) !default;
 $dark-btn-box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0) !default;
+$dark-item-hover: rgb(5 5 14 / 31%) !default;
+$dark-item-active: rgb(5 5 14 / 31%) !default;
 
 // Additional Semantic Colors
 $dark-border-color: #2a2e3b !default; // Subtle border tone
@@ -38,6 +41,8 @@ $light-btn-bg-color: linear-gradient(
   rgb(235 151 36)
 ) !default;
 $light-btn-box-shadow: 0rem 0rem 0.5rem 0rem rgb(169, 169, 169);
+$light-item-hover: rgba(255, 204, 0, 0.31) !default;
+$light-item-active: rgba(255, 200, 0, 0.31) !default;
 
 // Additional Semantic Colors
 $light-border-color: #e0e0e0 !default; // Soft gray borders
@@ -61,6 +66,16 @@ $light-error-color: #dc3545 !default; // Error red
   }
 }
 
+.badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.125rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 2px !important;
+}
+
 .text-style {
   font-family: "Leckerli One", cursive;
   color: currentColor;
@@ -77,11 +92,76 @@ code {
   border-radius: 0.352rem !important;
 }
 
-.title{
+.title {
   font-family: "Edu VIC WA NT Hand", cursive;
 }
 
+.refresh {
+  i {
+    animation: refresh 1s infinite;
+    @keyframes refresh {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  }
+}
+
+.table-module_table__l2zfy {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
 :host-context(html.light) {
+  .apartment {
+    background-color: #e8eaf6;
+    color: #3f51b5;
+  } // Indigo
+  .house {
+    background-color: #ede7f6;
+    color: #673ab7;
+  } // Deep Purple
+  .villa {
+    background-color: #ffe0b2;
+    color: #e64a19;
+  } // Deep Orange
+  .commercial {
+    background-color: #b2dfdb;
+    color: #00695c;
+  } // Teal
+  .land {
+    background-color: #c8e6c9;
+    color: #388e3c;
+  } // Green
+  .studio {
+    background-color: #cfd8dc;
+    color: #37474f;
+  } // Blue Grey
+
+  .sale {
+    background-color: #ffcdd2;
+    color: #c62828;
+  } // Red
+  .rent {
+    background-color: #bbdefb;
+    color: #1565c0;
+  } // Blue
+  .sold {
+    background-color: #e0e0e0;
+    color: #424242;
+  } // Grey
+  .rented {
+    background-color: #cfd8dc;
+    color: #263238;
+  } // Dark Blue Grey
+
   .user-image-main {
     width: 5rem;
     height: 5rem;
@@ -104,12 +184,24 @@ code {
     justify-content: center;
     transition: all 0.3s ease;
     cursor: pointer;
-    mat-icon {
-      width: 2rem;
-      height: 2rem;
-      color: #fff;
-      margin: 0rem auto;
+
+    ::ng-deep {
+      mat-icon {
+        width: 25px;
+        height: 25px;
+        color: #fff;
+        margin: 0rem auto;
+        svg {
+          fill: #fff;
+          stroke: #fff;
+          path {
+            fill: #fff;
+            stroke: #fff;
+          }
+        }
+      }
     }
+
     &:hover {
       transform: scale(1.05);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
@@ -127,11 +219,22 @@ code {
     justify-content: center;
     transition: all 0.3s ease;
     cursor: pointer;
-    mat-icon {
-      width: 2rem;
-      height: 2rem;
-      color: #fff;
-      margin: 0rem auto;
+
+    ::ng-deep {
+      mat-icon {
+        width: 25px;
+        height: 25px;
+        color: #fff;
+        margin: 0rem auto;
+        svg {
+          fill: #fff;
+          stroke: #fff;
+          path {
+            fill: #fff;
+            stroke: #fff;
+          }
+        }
+      }
     }
     &:hover {
       transform: scale(1.05);
@@ -150,11 +253,22 @@ code {
     justify-content: center;
     transition: all 0.3s ease;
     cursor: pointer;
-    mat-icon {
-      width: 2rem;
-      height: 2rem;
-      color: #fff;
-      margin: 0rem auto;
+
+    ::ng-deep {
+      mat-icon {
+        width: 25px;
+        height: 25px;
+        color: #fff;
+        margin: 0rem auto;
+        svg {
+          fill: #fff;
+          stroke: #fff;
+          path {
+            fill: #fff;
+            stroke: #fff;
+          }
+        }
+      }
     }
     &:hover {
       transform: scale(1.05);
@@ -173,11 +287,22 @@ code {
     justify-content: center;
     transition: all 0.3s ease;
     cursor: pointer;
-    mat-icon {
-      width: 2rem;
-      height: 2rem;
-      color: #fff;
-      margin: 0rem auto;
+
+    ::ng-deep {
+      mat-icon {
+        width: 25px;
+        height: 25px;
+        color: #fff;
+        margin: 0rem auto;
+        svg {
+          fill: #fff;
+          stroke: #fff;
+          path {
+            fill: #fff;
+            stroke: #fff;
+          }
+        }
+      }
     }
 
     &:hover {
@@ -196,9 +321,72 @@ code {
   .border-bottom-custom {
     border-bottom: 0.157rem solid #ffc107 !important;
   }
+
+  .table-module_table__header__2owi4 {
+    background-color: #f0f0f0;
+    color: #1a1a1a;
+    font-weight: 600;
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .table-module_table__body__9nnrk {
+    background-color: #ffffff;
+    color: #333;
+    padding: 0.75rem;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s ease;
+  }
+
+  .table-module_table__body__9nnrk:hover {
+    background-color: #f9f9f9;
+  }
 }
 
 :host-context(html.dark) {
+  .apartment {
+    background-color: #3f51b5;
+    color: #fff;
+  }
+  .house {
+    background-color: #673ab7;
+    color: #fff;
+  }
+  .villa {
+    background-color: #ff7043;
+    color: #fff;
+  }
+  .commercial {
+    background-color: #00897b;
+    color: #fff;
+  }
+  .land {
+    background-color: #43a047;
+    color: #fff;
+  }
+  .studio {
+    background-color: #607d8b;
+    color: #fff;
+  }
+
+  .sale {
+    background-color: #e53935;
+    color: #fff;
+  }
+  .rent {
+    background-color: #1e88e5;
+    color: #fff;
+  }
+  .sold {
+    background-color: #757575;
+    color: #fff;
+  }
+  .rented {
+    background-color: #455a64;
+    color: #fff;
+  }
+
   .user-image-main {
     width: 5rem;
     height: 5rem;
@@ -221,11 +409,22 @@ code {
     justify-content: center;
     transition: all 0.3s ease;
     cursor: pointer;
-    mat-icon {
-      width: 2rem;
-      height: 2rem;
-      color: #fff;
-      margin: 0rem auto;
+
+    ::ng-deep {
+      mat-icon {
+        width: 25px;
+        height: 25px;
+        color: #fff;
+        margin: 0rem auto;
+        svg {
+          fill: #fff;
+          stroke: #fff;
+          path {
+            fill: #fff;
+            stroke: #fff;
+          }
+        }
+      }
     }
     &:hover {
       transform: scale(1.05);
@@ -244,11 +443,22 @@ code {
     justify-content: center;
     transition: all 0.3s ease;
     cursor: pointer;
-    mat-icon {
-      width: 2rem;
-      height: 2rem;
-      color: #fff;
-      margin: 0rem auto;
+
+    ::ng-deep {
+      mat-icon {
+        width: 25px;
+        height: 25px;
+        color: #fff;
+        margin: 0rem auto;
+        svg {
+          fill: #fff;
+          stroke: #fff;
+          path {
+            fill: #fff;
+            stroke: #fff;
+          }
+        }
+      }
     }
     &:hover {
       transform: scale(1.05);
@@ -267,11 +477,22 @@ code {
     justify-content: center;
     transition: all 0.3s ease;
     cursor: pointer;
-    mat-icon {
-      width: 2rem;
-      height: 2rem;
-      color: #fff;
-      margin: 0rem auto;
+
+    ::ng-deep {
+      mat-icon {
+        width: 25px;
+        height: 25px;
+        color: #fff;
+        margin: 0rem auto;
+        svg {
+          fill: #fff;
+          stroke: #fff;
+          path {
+            fill: #fff;
+            stroke: #fff;
+          }
+        }
+      }
     }
     &:hover {
       transform: scale(1.05);
@@ -291,11 +512,22 @@ code {
     justify-content: center;
     transition: all 0.3s ease;
     cursor: pointer;
-    mat-icon {
-      width: 2rem;
-      height: 2rem;
-      color: #fff;
-      margin: 0rem auto;
+
+    ::ng-deep {
+      mat-icon {
+        width: 25px;
+        height: 25px;
+        color: #fff;
+        margin: 0rem auto;
+        svg {
+          fill: #fff;
+          stroke: #fff;
+          path {
+            fill: #fff;
+            stroke: #fff;
+          }
+        }
+      }
     }
 
     &:hover {
@@ -312,4 +544,46 @@ code {
   .border-bottom-custom {
     border-bottom: 0.157rem solid #ffc107 !important;
   }
+
+  .table-module_table__header__2owi4 {
+    background-color: #1e1e2f;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #333;
+  }
+
+  .table-module_table__body__9nnrk {
+    background-color: #2a2a3d;
+    color: #e0e0e0;
+    padding: 0.75rem;
+    border-bottom: 1px solid #444;
+    transition: background-color 0.2s ease;
+  }
+
+  .table-module_table__body__9nnrk:hover {
+    background-color: #38384d;
+  }
+}
+
+button:focus:not(:focus-visible) {
+  outline: 0;
+  border: none;
+  background: none;
+  box-shadow: none !important;
+}
+
+.btn-check:checked + .btn,
+:not(.btn-check) + .btn:active,
+.btn:first-child:active,
+.btn.active,
+.btn.show {
+  color: var(--bs-btn-active-color);
+  background-color: var(--bs-btn-active-bg);
+  border-color: none;
+}
+
+.table-responsive {
+  display: flex;
 }

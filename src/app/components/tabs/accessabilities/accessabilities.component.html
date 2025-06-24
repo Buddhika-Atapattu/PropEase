@@ -1,6 +1,6 @@
 <div class="container-fluid" *ngIf="accessabilities !== null">
   <div class="row">
-    <div class="col-md-4 my-2" *ngFor="let item of accessabilities.permissions">
+    <div class="col-xl-4 my-2" *ngFor="let item of accessabilities.permissions">
       <app-skeleton-loader
         *ngIf="isLoading"
         [width]="'20rem'"
@@ -8,7 +8,7 @@
         [Mode]="mode"
         [borderRadius]="'0.2rem'"
       ></app-skeleton-loader>
-      <h4 *ngIf="!isLoading">{{ item.module }}</h4>
+      <h4 *ngIf="!isLoading" class="text-capitalize">{{ item.module }}</h4>
       <ul class="list-group">
         <li *ngFor="let permission of item.actions" class="list-group-item">
           <app-skeleton-loader
@@ -18,7 +18,7 @@
             [Mode]="mode"
             [borderRadius]="'0.2rem'"
           ></app-skeleton-loader>
-          <p *ngIf="!isLoading" class="m-0 p-0">{{ permission }}</p>
+          <p *ngIf="!isLoading" class="m-0 p-0 text-capitalize">{{ permission }}</p>
         </li>
       </ul>
     </div>

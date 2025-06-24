@@ -42,7 +42,7 @@ export type Role =
   | 'user';
 
 export interface BaseUser {
-  __id?: string;
+  _id?: string;
   __v?: number;
   name: string;
   username: string;
@@ -65,6 +65,8 @@ export interface BaseUser {
   address: Address;
   isActive: boolean;
   access: ROLE_ACCESS_MAP;
+  creator: string;
+  updator?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -97,6 +99,7 @@ export const ACCESS_OPTIONS: ReadonlyArray<{
       'activate',
       'deactivate',
       'reset password',
+      'change username',
       'assign roles',
     ] as const,
   },
@@ -116,11 +119,14 @@ export const ACCESS_OPTIONS: ReadonlyArray<{
   {
     module: 'Tenant Management',
     actions: [
-      'view',
-      'create',
-      'update',
-      'delete',
-      'assign to property',
+      'add new tenant',
+      'edit tenant details',
+      'upload/view lease documents',
+      'terminate lease',
+      'send notification/email/SMS',
+      'record manual payment',
+      'extend lease',
+      'assign to a unit/property',
       'view lease history',
     ] as const,
   },
@@ -424,6 +430,65 @@ export class AuthService {
     return await this.APIs.verifyUser(this.user);
   }
 
+  public isUsersType(data: any): data is UsersType[] | UsersType {
+    return (
+      Array.isArray(data) &&
+      data.every(
+        (item) =>
+          item &&
+          typeof item.name === 'string' &&
+          typeof item.username === 'string' &&
+          typeof item.email === 'string' &&
+          (item.dateOfBirth === null ||
+            typeof item.dateOfBirth === 'string' ||
+            item.dateOfBirth instanceof Date) &&
+          typeof item.age === 'number' &&
+          (typeof item.image === 'string' || item.image instanceof File) &&
+          (typeof item.phoneNumber === 'string' ||
+            typeof item.phoneNumber === 'undefined') &&
+          typeof item.bio === 'string' &&
+          [
+            'admin',
+            'agent',
+            'tenant',
+            'owner',
+            'operator',
+            'manager',
+            'developer',
+            'user',
+          ].includes(item.role) &&
+          typeof item.gender === 'string' &&
+          typeof item.address === 'object' &&
+          item.address !== null &&
+          typeof item.address.street === 'string' &&
+          typeof item.address.houseNumber === 'string' &&
+          typeof item.address.city === 'string' &&
+          typeof item.address.postcode === 'string' &&
+          (typeof item.address.country === 'string' ||
+            typeof item.address.country === 'undefined') &&
+          (typeof item.address.stateOrProvince === 'string' ||
+            typeof item.address.stateOrProvince === 'undefined') &&
+          typeof item.isActive === 'boolean' &&
+          typeof item.access === 'object' &&
+          item.access !== null &&
+          typeof item.access.role === 'string' &&
+          Array.isArray(item.access.permissions) &&
+          item.access.permissions.every(
+            (perm: any) =>
+              typeof perm === 'object' &&
+              typeof perm.module === 'string' &&
+              Array.isArray(perm.actions) &&
+              perm.actions.every((action: any) => typeof action === 'string')
+          ) &&
+          typeof item.creator === 'string' &&
+          (typeof item.updator === 'string' ||
+            typeof item.updator === 'undefined') &&
+          (typeof item.createdAt === 'string' ||
+            item.createdAt instanceof Date) &&
+          (typeof item.updatedAt === 'string' || item.updatedAt instanceof Date)
+      )
+    );
+  }
   // Main user verification logic
   public async sendUserCredentialsAndGetUserData(
     role: string

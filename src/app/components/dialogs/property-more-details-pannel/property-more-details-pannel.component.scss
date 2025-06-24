@@ -4,14 +4,14 @@
   background: $dark-primary-color !important;
   padding: 2rem;
   border-radius: 1rem;
-  color: white;
+  color: $dark-text-color;
 }
 
 ::ng-deep html.light .mat-mdc-dialog-surface {
   background: $light-primary-color !important;
   padding: 2rem;
   border-radius: 1rem;
-  color: black;
+  color: $light-text-color;
 }
 
 .pannel-close-btn {
@@ -144,7 +144,7 @@
 }
 
 // Mobile view
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   ::ng-deep html.dark .mat-mdc-dialog-surface {
     padding-left: 0.25rem;
     padding-right: 0.25rem;

@@ -91,6 +91,7 @@ interface propertyImagePreview {
 
 @Component({
   selector: 'app-edit-property-listing',
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -325,6 +326,7 @@ export class EditPropertyListingComponent
   protected AddedByRole: AddedBy['role'] = '';
   protected AddedByContactNumber: AddedBy['contactNumber'] = '';
   protected AddedByAddedAt: AddedBy['addedAt'] = new Date();
+  protected AddesByAddedAtOld: AddedBy['addedAt'] = new Date();
   private AddedBy: Property['addedBy'] = {
     username: this.AddedByUsername,
     name: this.AddedByName,
@@ -456,7 +458,7 @@ export class EditPropertyListingComponent
     'Listing',
     'Admin',
   ];
-  
+
   protected tabIndicatorsActive: boolean = false;
   @ViewChildren('tabElement', { read: ElementRef })
   tabElements!: QueryList<ElementRef>;
@@ -524,13 +526,54 @@ export class EditPropertyListingComponent
     this.modeSub?.unsubscribe();
   }
 
-   //<==================== Mobile Tab Open Button ====================>
-  protected tabOpenButtonOperation(){
+  //<==================== VALIDATION OF LOGGED USER ACTIVITIES ====================>
+  protected isUserCanAssignAgentToTheProperty(): boolean {
+    return (
+      this.loggedUser?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('assign agent')
+      ) ?? false
+    );
+  }
+
+  protected isUserCanUploadDocumentsToTheProperty(): boolean {
+    return (
+      this.loggedUser?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('upload documents')
+      ) ?? false
+    );
+  }
+
+  protected isUserCanManageAmenitiesToTheProperty(): boolean {
+    return (
+      this.loggedUser?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('manage amenities')
+      ) ?? false
+    );
+  }
+
+  protected isUserCanChangeListingStatusOfTheProperty(): boolean {
+    return (
+      this.loggedUser?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('change status')
+      ) ?? false
+    );
+  }
+
+  //<==================== END VALIDATION OF LOGGED USER ACTIVITIES ====================>
+
+  //<==================== Mobile Tab Open Button ====================>
+  protected tabOpenButtonOperation() {
     this.istabOpenButtonActive = !this.istabOpenButtonActive;
   }
   //<==================== End Mobile Tab Open Button ====================>
-
-
 
   //<==================== Tab Make ====================>
   protected tabMaker(index: number, tabName: string) {
@@ -592,7 +635,7 @@ export class EditPropertyListingComponent
   //<==================== Call the API to collect the data ====================>
   private async callTheAPI() {
     if (this.id) {
-      await this.propertyService.getPropertyById(this.id).then((response) => {
+      await this.propertyService.getPropertyById(this.id).then(async (response) => {
         // Basic Property Details
         this.title = response.data.title;
         this.type = this.capitalize(response.data.type);
@@ -609,7 +652,7 @@ export class EditPropertyListingComponent
         this.AddressCity = response.data.address.city;
         this.AddressStateOrProvince = response.data.address.stateOrProvince;
         this.AddressPostcode = response.data.address.postcode;
-        this.addressMainFilterCountries(response.data.address.country);
+        await this.addressMainFilterCountries(response.data.address.country);
         this.AddressCountry = response.data.address.country;
         this.typeAddressCountry = response.data.address.country;
         this.location = response.data.location;
@@ -641,12 +684,30 @@ export class EditPropertyListingComponent
         this.developerName = response.data.developerName;
         this.projectName = response.data.projectName;
         this.ownerShipType = this.capitalize(response.data.ownerShipType);
-        this.filterOwnerThroughAllUsers(response.data.owner);
+
+        await this.filterOwnerThroughAllUsers(response.data.owner);
+
+        if (this.filterOwners.length === 1) {
+          this.isOwnerNotSelected = false;
+          this.selectedOwner = this.filterOwners[0];
+          this.ownerUsername = this.selectedOwner.username;
+          this.ownerName = this.selectedOwner.name;
+        } else {
+          this.isOwnerNotSelected = true;
+          this.selectedOwner = null;
+          this.ownerUsername = '';
+          this.ownerName = '';
+        }
         // End Construction & Age
 
         // Financial Details
         this.price = response.data.price;
         this.countryActualCurrency = response.data.currency.toUpperCase();
+        await this.selectCountriesWithCurrencies(
+          response.data.countryDetails.name.common
+        );
+        this.selectedCountryWithCurrency =
+          response.data.countryDetails.name.common;
         this.isCurrencySelected = true;
         this.country = response.data.countryDetails;
         this.pricePerSqurFeet = response.data.pricePerSqurFeet;
@@ -685,6 +746,7 @@ export class EditPropertyListingComponent
           response.data.listingExpiryDate
         );
         if (response.data.addedBy) {
+          await this.filterAgentThroughAllUsers(response.data.addedBy.name);
           this.AddedBy = response.data.addedBy;
           this.AddedByUsername = response.data.addedBy.username;
           this.AddedByName = response.data.addedBy.name;
@@ -692,11 +754,13 @@ export class EditPropertyListingComponent
           this.AddedByRole = response.data.addedBy.role;
           this.AddedByContactNumber = response.data.addedBy.contactNumber;
           this.AddedByAddedAt = new Date(response.data.addedBy.addedAt);
+          this.AddesByAddedAtOld = new Date(response.data.addedBy.addedAt);
           this.agentName = response.data.addedBy.name;
         }
 
         this.rentedDate = this.toValidDate(response.data.rentedDate);
         this.soldDate = this.toValidDate(response.data.soldDate);
+
         // End Listing Management
 
         // Administrative & Internal Use
@@ -1032,8 +1096,6 @@ export class EditPropertyListingComponent
     event.preventDefault();
     this.isPropertyImageDragOver = false;
 
-    console.log('event.dataTransfer?.files: ', event.dataTransfer?.files);
-
     const files = event.dataTransfer?.files;
     if (files) {
       this.propertyImagePreviewMaker(files);
@@ -1109,7 +1171,6 @@ export class EditPropertyListingComponent
       reader.readAsDataURL(file);
     }
 
-    console.log(this.propertyImagePreview.length);
   }
 
   //Remove image from arrays
@@ -1261,7 +1322,6 @@ export class EditPropertyListingComponent
   }
 
   protected removeDocsFromUploaded(index: number) {
-    console.log('Index: ', index);
     this.uploadedDucumentsPreview.splice(index, 1);
     const removeDocument = this.uploadedDocuments.splice(index, 1)[0];
     this.removeDocuments.push(removeDocument);
@@ -1462,12 +1522,31 @@ export class EditPropertyListingComponent
   //<==================== Agent Infor ====================>
   protected async filterAgentThroughAllUsers(input: string): Promise<void> {
     this.isAgentNotSelected = true;
+
     const users = await this.APIs.getAllUsers();
     if (users) {
       this.allUsers = users;
       this.filterAgents = users.filter((user) =>
         user.name.toLowerCase().includes(input.toLowerCase())
       );
+    }
+
+    if (this.filterAgents.length === 1) {
+      this.AddedByName = this.filterAgents[0].name;
+      this.AddedByEmail = this.filterAgents[0].email;
+      this.AddedByUsername = this.filterAgents[0].username;
+      this.AddedByRole = this.filterAgents[0].role;
+      this.AddedByContactNumber = this.filterAgents[0].phoneNumber;
+      this.AddedByAddedAt = new Date();
+      this.isAgentNotSelected = false;
+      this.AddedBy = {
+        name: this.AddedByName,
+        email: this.AddedByEmail,
+        username: this.AddedByUsername,
+        role: this.AddedByRole,
+        contactNumber: this.AddedByContactNumber,
+        addedAt: this.AddedByAddedAt,
+      };
     }
   }
 
@@ -1484,16 +1563,6 @@ export class EditPropertyListingComponent
     } else {
       this.isAgentNotSelected = true;
     }
-    if (this.selectedAgent) {
-      this.AddedBy.name = this.selectedAgent.name;
-      this.AddedBy.username = this.selectedAgent.username;
-      this.AddedBy.email = this.selectedAgent.email;
-      this.AddedBy.role = this.selectedAgent.role;
-      this.AddedBy.contactNumber = this.selectedAgent.phoneNumber;
-      this.AddedBy.addedAt = new Date().toISOString();
-    }
-
-    console.log(this.AddedBy);
   }
   //<==================== End Agent Infor ====================>
 
@@ -1503,21 +1572,23 @@ export class EditPropertyListingComponent
     const users = await this.APIs.getAllUsers();
     if (users) {
       this.allUsers = users;
-      this.filterOwners = users.filter((user) =>
-        user.name.toLowerCase().includes(input.toLowerCase())
+      this.filterOwners = users.filter(
+        (user) =>
+          user.name.toLowerCase().includes(input.toLowerCase()) ||
+          user.username.toLowerCase().includes(input.toLowerCase())
       );
-    }
 
-    if (this.filterOwners.length === 1) {
-      this.isOwnerNotSelected = false;
-      this.selectedOwner = this.filterOwners[0];
-      this.ownerUsername = this.selectedOwner.username;
-      this.ownerName = this.selectedOwner.name;
+      if (this.filterOwners.length === 1) {
+        this.isOwnerNotSelected = false;
+        this.selectedOwner = this.filterOwners[0];
+        this.ownerUsername = this.selectedOwner.username;
+      }
     }
   }
 
   protected getTheSelectedOwner(input: MatAutocompleteSelectedEvent): void {
     const selectedOwner = input.option.value;
+
     if (selectedOwner) {
       this.isOwnerNotSelected = false;
       this.selectedOwner =
@@ -1529,6 +1600,7 @@ export class EditPropertyListingComponent
     } else {
       this.isOwnerNotSelected = true;
     }
+
     if (this.selectedOwner) this.ownerUsername = this.selectedOwner.username;
   }
   //<==================== End Property owner infor ====================>
@@ -1622,6 +1694,14 @@ export class EditPropertyListingComponent
       const formData = new FormData();
 
       // Error validation
+      if (
+        !this.isUserCanAssignAgentToTheProperty() &&
+        !this.isUserCanUploadDocumentsToTheProperty() &&
+        !this.isUserCanManageAmenitiesToTheProperty() &&
+        !this.isUserCanChangeListingStatusOfTheProperty()
+      ) {
+        throw new Error('User does not have permission to perform the action.');
+      }
 
       // Basic Property Details
       if (!this.title) {
@@ -1733,7 +1813,7 @@ export class EditPropertyListingComponent
         throw new Error('Owner ship type is required!');
       }
 
-      if (!this.ownerName) {
+      if (!this.selectedOwner) {
         throw new Error('Owner is required!');
       }
       // End Construction & Age
@@ -1791,7 +1871,7 @@ export class EditPropertyListingComponent
       }
 
       if (!this.AddedBy) {
-        throw new Error('Select the owner of the property!');
+        throw new Error('Select the agent of the property!');
       }
       // End Listing Management
 
@@ -1990,6 +2070,7 @@ export class EditPropertyListingComponent
         'owner',
         this.selectedOwner?.username ? this.selectedOwner?.username : ''
       );
+
       // End Listing Management
 
       // Administrative & Internal Use
@@ -2015,12 +2096,10 @@ export class EditPropertyListingComponent
       await this.propertyService
         .updateProperty(formData, this.id)
         .then((res) => {
-          console.log(res);
           this.notification.notification(res.status, res.message);
         })
         .catch((error) => {
           if (error) {
-            console.log('Error: ', error.error);
             this.notification.notification(
               error.error.status,
               error.error.message
@@ -2036,7 +2115,6 @@ export class EditPropertyListingComponent
         });
     } catch (error) {
       if (error) {
-        console.log('Error: ', error);
         this.notification.notification('error', error as string);
       }
     }

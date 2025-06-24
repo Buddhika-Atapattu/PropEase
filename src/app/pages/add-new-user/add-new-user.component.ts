@@ -64,6 +64,7 @@ import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { CameraBoxComponent } from '../../components/dialogs/camera-box/camera-box.component';
 import { EditorComponent } from '@tinymce/tinymce-angular';
 import { AuthService } from '../../../services/auth/auth.service';
+import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
 
 interface userAccessType {
   access: string[];
@@ -106,7 +107,9 @@ interface MODEL_CHECK {
     ImageCropperComponent,
     EditorComponent,
     CameraBoxComponent,
+    SkeletonLoaderComponent,
   ],
+  standalone: true,
   templateUrl: './add-new-user.component.html',
   styleUrl: './add-new-user.component.scss',
 })
@@ -117,7 +120,7 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(NotificationComponent) notification!: NotificationComponent;
   @ViewChild(ImageCropperComponent) imageCropper!: ImageCropperComponent;
   @ViewChild(CameraBoxComponent) cameraBox!: CameraBoxComponent;
-  @HostListener('document:paste', ['$event'])
+
   protected readonly definedMaleDummyImageURL =
     '/Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL =
@@ -153,7 +156,7 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly phonePattern: RegExp = /^\+?[0-9\s\-()]{10,15}$/;
   protected phoneMatchPattern: boolean = true;
   protected isPhoneExist: boolean = false;
-  protected readonly definedGender: string[] = ['male', 'female', 'other'];
+  protected readonly definedGender: string[] = ['Male', 'Female', 'Other'];
   protected accessOptions = ACCESS_OPTIONS;
   protected selectedPermissions: {
     [module: string]: { [action: string]: boolean };
@@ -256,16 +259,46 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
         passive: false,
       });
       window.addEventListener('drop', this.preventDefault, { passive: false });
-      
+
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
     }
   }
 
-  ngAfterViewInit() {
-    this.notification.notification('', '');
+  ngAfterViewInit() {}
+
+  //<==================== User Validation Operations ====================>
+  protected isUserCanMakeUserActivate(): boolean {
+    return (
+      this.loogedUser?.access.permissions.some(
+        (permission) =>
+          permission.module === 'User Management' &&
+          permission.actions.includes('activate')
+      ) ?? false
+    );
   }
+
+  protected isUserCanMakeUserDeactivate(): boolean {
+    return (
+      this.loogedUser?.access.permissions.some(
+        (permission) =>
+          permission.module === 'User Management' &&
+          permission.actions.includes('deactivate')
+      ) ?? false
+    );
+  }
+
+  protected isUserCanAssignUserRoles(): boolean {
+    return (
+      this.loogedUser?.access.permissions.some(
+        (permission) =>
+          permission.module === 'User Management' &&
+          permission.actions.includes('assign roles')
+      ) ?? false
+    );
+  }
+  //<==================== End User Validation Operations ====================>
 
   private iconCreator() {
     const icons = [
@@ -302,6 +335,24 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isCameraOpen = false;
   }
 
+  protected handleImage(imageData: string) {
+    this.userUploadedImage = imageData;
+    this.userimage = this.convertToTheBlob(imageData);
+    this.isCameraOpen = false;
+
+    const file = this.convertToTheBlob(imageData);
+    const dt = new DataTransfer();
+    dt.items.add(file);
+
+    const simulatedEvent = {
+      target: {
+        files: dt.files,
+      },
+    };
+
+    this.onFileSelected(simulatedEvent);
+  }
+
   protected convertToTheBlob(data: string): File {
     const byteString = atob(data.split(',')[1]); // decode base64
     const byteArray = new Uint8Array(byteString.length);
@@ -312,19 +363,27 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
     return new File([blob], 'image.png', { type: 'image/png' });
   }
 
-  protected handleImage(imageData: string) {
-    this.userUploadedImage = imageData;
-    this.userimage = this.convertToTheBlob(imageData);
-    this.isCameraOpen = false;
-  }
-
   //<=========== End Capture the image and upload the image ============>
 
   //<=========== Image Past On File Input ============>
 
+  @HostListener('document:paste', ['$event'])
   protected handlePaste(event: ClipboardEvent): void {
+    const target = event.target as HTMLElement;
+
+    // Allow default behavior for text inputs and editable fields
+    if (
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.hasAttribute('contenteditable')
+    ) {
+      return; // Don't block default paste
+    }
+
+    // Now prevent default only for custom paste handling (images, etc.)
     event.preventDefault();
 
+    // Custom paste handling for image files
     const items = event.clipboardData?.items;
     if (!items) return;
 
@@ -632,6 +691,11 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
       if (index !== -1) {
         accessMap[module].splice(index, 1);
       }
+
+      // If the module has no more actions, remove the module key itself
+      if (accessMap[module]?.length === 0) {
+        delete accessMap[module];
+      }
     }
   }
 
@@ -693,42 +757,129 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   //<=======End  Role Access autocomplete =======>
 
-  protected async insertNewUser(): Promise<boolean> {
-    if (
-      this.isActive &&
-      !this.isEmailExist &&
-      !this.isPhoneExist &&
-      !this.isUsernameExist &&
-      this.passwordMatchPattern &&
-      this.emailMatchPattern &&
-      this.usernameMatchPattern &&
-      this.phoneMatchPattern &&
-      this.isValidAge
-    ) {
+  protected async insertNewUser() {
+    try {
+      if (
+        !this.isUserCanMakeUserActivate() &&
+        !this.isUserCanMakeUserDeactivate() &&
+        !this.isUserCanAssignUserRoles()
+      ) {
+        throw new Error('User does not have permission to perform the action.');
+      }
+
+      if (!this.fullname) {
+        throw new Error('User full name is required');
+      }
+      if (!this.userGender) {
+        throw new Error('User gender is required');
+      }
+      if (!this.email) {
+        throw new Error('User email is required');
+      }
+      if (!this.phone) {
+        throw new Error('User phone is required');
+      }
+      if (!this.houseNumber) {
+        throw new Error('User house number is required');
+      }
+      if (!this.street) {
+        throw new Error('User street is required');
+      }
+      if (!this.city) {
+        throw new Error('User city is required');
+      }
+      if (!this.postcode) {
+        throw new Error('User postcode is required');
+      }
+      if (!this.countryControl.value) {
+        throw new Error('User country is required');
+      }
+      if (!this.dateOfBirth) {
+        throw new Error('User date of birth is required');
+      }
+      if (!this.age) {
+        throw new Error('User age is required');
+      }
+      if (!this.isValidAge) {
+        throw new Error('User age is not valid');
+      }
+      if (!this.isActive) {
+        throw new Error('User active status is required');
+      }
+      if (!this.userBio) {
+        throw new Error('User bio is required');
+      }
+      if (!this.role) {
+        throw new Error('User role is required');
+      }
+      if (!this.getRoleAccessPayload()) {
+        throw new Error('User access is required');
+      }
+
+      if (!this.password) {
+        throw new Error('User password is required');
+      }
+
+      if (this.isEmailExist) {
+        throw new Error('Email already exist');
+      }
+
+      if (this.isPhoneExist) {
+        throw new Error('Phone already exist');
+      }
+
+      if (this.isUsernameExist) {
+        throw new Error('Username already exist');
+      }
+
+      if (!this.passwordMatchPattern) {
+        throw new Error('Password does not match the pattern');
+      }
+
+      if (!this.emailMatchPattern) {
+        throw new Error('Email does not match the pattern');
+      }
+
+      if (!this.usernameMatchPattern) {
+        throw new Error('Username does not match the pattern');
+      }
+
+      if (!this.phoneMatchPattern) {
+        throw new Error('Contact number does not match the pattern');
+      }
+
+      if (!this.isValidAge) {
+        throw new Error('User does not fit the age criteria');
+      }
+
       const formData: FormData = new FormData();
       this.progress.start();
-      formData.append('name', this.fullname);
-      formData.append('username', this.username);
-      formData.append('email', this.email);
-      formData.append('userPassword', this.password);
-      formData.append('phoneNumber', this.phone);
-      formData.append('role', this.role);
-      formData.append('access', JSON.stringify(this.getRoleAccessPayload()));
-      formData.append('isActive', this.isActive.toString());
-      formData.append('dateOfBirth', this.dateOfBirth.toString());
-      formData.append('age', this.age);
-      formData.append('gender', this.userGender);
-      formData.append('houseNumber', this.houseNumber);
-      formData.append('street', this.street);
-      formData.append('city', this.city);
-      formData.append('postcode', this.postcode);
-      formData.append('bio', this.userBio);
+
+      formData.append('name', this.fullname.trim());
+      formData.append('username', this.username.trim());
+      formData.append('email', this.email.trim());
+      formData.append('userPassword', this.password.trim());
+      formData.append('phoneNumber', this.phone.trim());
+      formData.append('role', this.role.trim());
+      formData.append(
+        'access',
+        JSON.stringify(this.getRoleAccessPayload()).trim()
+      );
+      formData.append('isActive', this.isActive.toString().trim());
+      formData.append('dateOfBirth', this.dateOfBirth.toString().trim());
+      formData.append('age', this.age.trim());
+      formData.append('gender', this.userGender.toLowerCase().trim());
+      formData.append('houseNumber', this.houseNumber.trim());
+      formData.append('street', this.street.trim());
+      formData.append('city', this.city.trim());
+      formData.append('postcode', this.postcode.trim());
+      formData.append('bio', this.userBio.trim());
       if (typeof this.typedCountry === 'string') {
-        formData.append('country', this.typedCountry);
+        formData.append('country', this.typedCountry.trim());
       } else {
-        formData.append('country', this.typedCountry?.name as string);
+        formData.append('country', this.typedCountry?.name.trim() as string);
       }
-      formData.append('stateOrProvince', this.stateOrProvince);
+      formData.append('stateOrProvince', this.stateOrProvince.trim());
 
       if (this.userimage !== null) {
         formData.append(
@@ -743,7 +894,7 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
       const verifyEmail: object =
         await this.crypto.generateEmailVerificationToken();
-      formData.append('verifyEmail', JSON.stringify(verifyEmail));
+      formData.append('verifyEmail', JSON.stringify(verifyEmail).trim());
       const now = new Date();
       const oneMonth = new Date(
         new Date(now.setMonth(now.getMonth() + 1)).getTime()
@@ -771,11 +922,13 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
           stop();
           this.progress.complete();
         });
-      setInterval(() => {
+      setTimeout(() => {
         this.router.navigate(['/dashboard/users']);
       }, 1000);
       return true;
-    } else {
+    } catch (error) {
+      console.log(error);
+      this.notification.notification('error', error as string);
       return false;
     }
   }

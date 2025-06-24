@@ -84,6 +84,7 @@ interface propertyImagePreview {
 
 @Component({
   selector: 'app-property-listing',
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -504,12 +505,54 @@ export class PropertyListingComponent
     this.modeSub?.unsubscribe();
   }
 
+  //<==================== VALIDATION OF LOGGED USER ACTIVITIES ====================>
+  protected isUserCanAssignAgentToTheProperty(): boolean {
+    return (
+      this.loggedUser?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('assign agent')
+      ) ?? false
+    );
+  }
+
+  protected isUserCanUploadDocumentsToTheProperty(): boolean {
+    return (
+      this.loggedUser?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('upload documents')
+      ) ?? false
+    );
+  }
+
+  protected isUserCanManageAmenitiesToTheProperty(): boolean {
+    return (
+      this.loggedUser?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('manage amenities')
+      ) ?? false
+    );
+  }
+
+  protected isUserCanChangeListingStatusOfTheProperty(): boolean {
+    return (
+      this.loggedUser?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('change status')
+      ) ?? false
+    );
+  }
+
+  //<==================== END VALIDATION OF LOGGED USER ACTIVITIES ====================>
+
   //<==================== Mobile Tab Open Button ====================>
-  protected tabOpenButtonOperation(){
+  protected tabOpenButtonOperation() {
     this.istabOpenButtonActive = !this.istabOpenButtonActive;
   }
   //<==================== End Mobile Tab Open Button ====================>
-
 
   //<==================== Tab Make ====================>
   protected tabMaker(index: number, tabName: string) {
@@ -1385,6 +1428,15 @@ export class PropertyListingComponent
 
       // Error validation
 
+      if (
+        !this.isUserCanAssignAgentToTheProperty() &&
+        !this.isUserCanUploadDocumentsToTheProperty() &&
+        !this.isUserCanManageAmenitiesToTheProperty() &&
+        !this.isUserCanChangeListingStatusOfTheProperty()
+      ) {
+        throw new Error('User does not have permission to perform the action.');
+      }
+
       // Basic Property Details
       if (!this.title) {
         throw new Error('Title is required!');
@@ -1642,10 +1694,7 @@ export class PropertyListingComponent
         'projectName',
         this.projectName ? this.projectName.toString().trim() : ''
       );
-      formData.append(
-        'ownerShipType',
-        this.ownerShipType.toString().trim()
-      );
+      formData.append('ownerShipType', this.ownerShipType.toString().trim());
       // End Construction & Age
 
       // Financial Details
@@ -1741,15 +1790,9 @@ export class PropertyListingComponent
         'verificationStatus',
         this.verificationStatus.toString().trim()
       );
-      formData.append(
-        'priority',
-        this.priority.toString().trim()
-      );
+      formData.append('priority', this.priority.toString().trim());
       formData.append('status', this.status.toString().trim());
-      formData.append(
-        'internalNote',
-        this.internalNote.toString().trim()
-      );
+      formData.append('internalNote', this.internalNote.toString().trim());
       // End Administrative & Internal Use
 
       // API calling

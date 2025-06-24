@@ -12,18 +12,18 @@ export default defineConfig({
         const middleware = history({
           disableDotRule: true, // Important for Angular routing with dots in paths
           htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
-          rewrites: [
-            {
-              from: /^\/public\/.*$/,
-              to: (context) => {
-                return context.parsedUrl.pathname || '/';
-              },
-            },
-            {
-              from: /^(?!\/public\/).*$/, // For anything else
-              to: '/index.html',
-            },
-          ],
+          // rewrites: [
+          //   {
+          //     from: /^\/public\/.*$/,
+          //     to: (context) => {
+          //       return context.parsedUrl.pathname || '/';
+          //     },
+          //   },
+          //   {
+          //     from: /^(?!\/public\/).*$/, // For anything else
+          //     to: '/index.html',
+          //   },
+          // ],
         }) as Connect.NextHandleFunction;
 
         server.middlewares.use(middleware);

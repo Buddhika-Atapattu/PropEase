@@ -1,187 +1,405 @@
+<app-notification />
+
 <div
   *ngIf="mode !== null"
   class="main-panel"
   [ngClass]="mode ? 'dark' : 'light'"
 >
   <!-- top means hear -->
-  <div class="container-fluid main-container">
-    <!-- I need to make this top row appire in top when the page scroll down -->
-    <div
-      class="row add-user-row top-row d-flex justify-content-between align-items-center"
-    >
-      <div
-        [ngClass]="
-          LOGGED_USER?.role === 'admin'
-            ? 'col-md-10 position-relative'
-            : 'col-md-12'
-        "
-      >
-        <input
-          type="text"
-          placeholder="Search user by name, email, or username"
-          class="search-input"
-          (input)="searchUsers($event)"
-        />
-        <mat-icon
-          class="mat-icon-rtl-mirror search-icon"
-          svgIcon="search"
-        ></mat-icon>
-      </div>
-      <div
-        *ngIf="LOGGED_USER?.role === 'admin'"
-        [ngClass]="
-          LOGGED_USER?.role === 'admin'
-            ? 'col-md-2 d-flex justify-content-end align-items-center'
-            : 'd-none'
-        "
-      >
-        <button class="add-user-btn" type="button" (click)="addUser()">
-          <mat-icon
-            class="mat-icon-rtl-mirror"
-            svgIcon="add-new-user"
-          ></mat-icon>
-          <h6 class="mb-0 p-0">Add user</h6>
-        </button>
-      </div>
-    </div>
-    <!-- top bar ended -->
-    <!-- This user container should scrollable -->
-    <div class="user-scroll-wrapper">
-      <div class="user-container">
-        <div class="row add-user-row" *ngFor="let user of users; let i = index">
-          <div class="col-md-4">
-            <app-skeleton-loader
-              *ngIf="loading"
-              [width]="'100px'"
-              [height]="'100px'"
-              borderRadius="100px"
-              [Mode]="mode"
-            />
-            <img
-              *ngIf="!loading"
-              class="user-image-main"
-              [src]="user.image"
-              alt="user image"
-            />
-          </div>
+  <div class="container-fluid">
+    <div class="main-container">
+      <!-- I need to make this top row appire in top when the page scroll down -->
+      <div class="row mt-2">
+        <div class="col-12">
           <div
-            class="col-md-4 d-flex flex-column justify-content-center overflow-hidden"
+            class="row add-user-row top-row d-flex justify-content-between align-items-center"
           >
-            <app-skeleton-loader
-              *ngIf="loading"
-              [width]="'25rem'"
-              [height]="'1.5rem'"
-              borderRadius="0.357rem"
-              [Mode]="mode"
-            />
-            <h5 *ngIf="!loading">
-              {{ user.name }}
-            </h5>
-            <app-skeleton-loader
-              *ngIf="loading"
-              [width]="'25rem'"
-              [height]="'0.75rem'"
-              borderRadius="0.357rem"
-              [Mode]="mode"
-            />
-            <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
-              {{ user.email }}
-            </p>
-            <app-skeleton-loader
-              *ngIf="loading"
-              [width]="'25rem'"
-              [height]="'0.75rem'"
-              borderRadius="0.357rem"
-              [Mode]="mode"
-            />
-            <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
-              {{ user.phoneNumber }}
-            </p>
-            <app-skeleton-loader
-              *ngIf="loading"
-              [width]="'25rem'"
-              [height]="'0.75rem'"
-              borderRadius="0.357rem"
-              [Mode]="mode"
-            />
-            <p
-              *ngIf="!loading"
-              class="text-muted-custom pb-1 mb-1 text-capitalize"
+            <div
+              [ngClass]="
+                createUserAvailable()
+                  ? 'col-xl-10 col-12 position-relative'
+                  : 'col-xl-12 col-12 position-relative'
+              "
             >
-              {{ user.role }}
-              <i
-                [ngClass]="user.isActive ? 'text-success' : 'text-danger'"
-                class="fa-solid fa-circle"
-              ></i>
-            </p>
-          </div>
-          <div class="col-md-4 d-flex justify-content-end align-items-center">
-            <button
-              class="btn btn-success bg-success me-2 btn-view"
-              type="button"
-              (click)="viewUser(user.username)"
+              <input
+                type="text"
+                placeholder="Search user by name, email, or username"
+                class="search-input"
+                (input)="searchUsers($event)"
+              />
+              <mat-icon
+                class="mat-icon-rtl-mirror search-icon"
+                svgIcon="search"
+              ></mat-icon>
+            </div>
+            <div
+              *ngIf="createUserAvailable()"
+              [ngClass]="
+                createUserAvailable()
+                  ? 'col-12 col-xl-2 d-flex justify-content-end align-items-center add-user-btn-container'
+                  : 'd-none'
+              "
             >
-              <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon>
-            </button>
-            <button
-              *ngIf="LOGGED_USER?.role === 'admin'"
-              class="btn btn-warning bg-warning mx-2 btn-edit"
-              type="button"
-            >
-              <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon>
-            </button>
-            <button
-              *ngIf="LOGGED_USER?.role === 'admin'"
-              class="btn btn-danger bg-danger ms-2 btn-delete"
-              type="button"
-            >
-              <mat-icon class="mat-icon-rtl-mirror" svgIcon="delete"></mat-icon>
-            </button>
+              <button class="add-user-btn" type="button" (click)="addUser()">
+                <mat-icon
+                  class="mat-icon-rtl-mirror"
+                  svgIcon="add-new-user"
+                ></mat-icon>
+                <h6 class="mb-0 p-0">Add user</h6>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- user container ended -->
- 
-    <div class="row d-flex justify-content-center align-items-center mt-4">
-      <div class="col-md-6 d-flex justify-content-center align-items-center">
-        <ul
-          class="pagination-list-group"
-          *ngIf="pageCount !== null && pageCount > 1"
-        >
-          <li class="pagination-list-group-item">
-            <button
-              class="pagination-btn btn-custom"
-              type="button"
-              (click)="previousPage()"
-            >
-              &laquo;
-            </button>
-          </li>
-          <li
-            *ngFor="let i of [].constructor(pageCount); let index = index"
-            class="pagination-list-group-item"
+      <!-- top bar ended -->
+
+      <!-- View Style -->
+      <div
+        class="row d-flex justify-content-end align-items-center style-btn-row"
+      >
+        <div class="col-2 d-flex justify-content-end align-items-center">
+          <button
+            type="button"
+            class="btn bg-none column-change-icons mx-2 my-0 p-0"
+            (click)="convertTheViewStyle('list')"
           >
-            <button
-              class="pagination-btn btn-custom"
-              type="button"
-              (click)="changePage(index)"
+            <mat-icon class="mat-icon-rtl-mirror" svgIcon="list"></mat-icon>
+          </button>
+          <button
+            type="button"
+            class="btn bg-none column-change-icons mx-2 my-0 p-0"
+            (click)="convertTheViewStyle('grid')"
+          >
+            <mat-icon
+              class="mat-icon-rtl-mirror"
+              svgIcon="lineColumns"
+            ></mat-icon>
+          </button>
+        </div>
+      </div>
+      <!-- End View Style -->
+
+      <!-- This user container should scrollable -->
+      <div class="user-scroll-wrapper" *ngIf="isListView">
+        <div class="user-container">
+          <div
+            class="row add-user-row"
+            *ngFor="let user of users; let i = index"
+          >
+            <div class="col-12 col-xl-3 user-image-container">
+              <app-skeleton-loader
+                *ngIf="loading"
+                [width]="'100px'"
+                [height]="'100px'"
+                borderRadius="100px"
+                [Mode]="mode"
+              />
+              <img
+                *ngIf="!loading"
+                class="user-image-main"
+                [src]="detectUserImage((typeof user.image === 'string' ? user.image : ''), user.gender)"
+                alt="user image"
+              />
+            </div>
+            <div
+              class="col-12 col-xl-6 d-flex flex-column justify-content-center overflow-hidden user-details-container"
             >
-              {{ index + 1 }}
-            </button>
-          </li>
-          <li class="pagination-list-group-item">
-            <button
-              class="pagination-btn btn-custom"
-              type="button"
-              (click)="nextPage()"
+              <app-skeleton-loader
+                *ngIf="loading"
+                [width]="'25rem'"
+                [height]="'1.5rem'"
+                borderRadius="0.357rem"
+                [Mode]="mode"
+              />
+              <h5 *ngIf="!loading">
+                {{ user.name }}
+              </h5>
+              <app-skeleton-loader
+                *ngIf="loading"
+                [width]="'25rem'"
+                [height]="'0.75rem'"
+                borderRadius="0.357rem"
+                [Mode]="mode"
+              />
+              <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+                {{ user.email }}
+              </p>
+              <app-skeleton-loader
+                *ngIf="loading"
+                [width]="'25rem'"
+                [height]="'0.75rem'"
+                borderRadius="0.357rem"
+                [Mode]="mode"
+              />
+              <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+                {{ user.phoneNumber }}
+              </p>
+              <app-skeleton-loader
+                *ngIf="loading"
+                [width]="'25rem'"
+                [height]="'0.75rem'"
+                borderRadius="0.357rem"
+                [Mode]="mode"
+              />
+              <p
+                *ngIf="!loading"
+                class="text-muted-custom pb-1 mb-1 text-capitalize"
+              >
+                {{ user.role }}
+                <i
+                  [ngClass]="user.isActive ? 'text-success' : 'text-danger'"
+                  class="fa-solid fa-circle"
+                ></i>
+              </p>
+            </div>
+            <div
+              class="col-xl-3 col-12 d-flex justify-content-center align-items-center"
             >
-              &raquo;
-            </button>
-          </li>
-        </ul>
+              <div
+                class="row d-flex justify-content-end align-items-center action-btn-container"
+              >
+                <div
+                  class="col-4 d-flex justify-content-center align-items-center"
+                >
+                  <button
+                    *ngIf="viewUserAvailable()"
+                    class="btn btn-success bg-success me-2 btn-view"
+                    type="button"
+                    (click)="viewUser(user.username)"
+                  >
+                    <mat-icon
+                      class="mat-icon-rtl-mirror"
+                      svgIcon="view"
+                    ></mat-icon>
+                  </button>
+                </div>
+                <div
+                  class="col-4 d-flex justify-content-center align-items-center"
+                >
+                  <button
+                    *ngIf="updateUserAvailable()"
+                    class="btn btn-warning bg-warning mx-2 btn-edit"
+                    type="button"
+                    (click)="editUser(user.username)"
+                  >
+                    <mat-icon
+                      class="mat-icon-rtl-mirror"
+                      svgIcon="edit"
+                    ></mat-icon>
+                  </button>
+                </div>
+                <div
+                  class="col-4 d-flex justify-content-center align-items-center"
+                >
+                  <button
+                    *ngIf="deleteUserAvailable()"
+                    class="btn btn-danger bg-danger ms-2 btn-delete"
+                    type="button"
+                    [disabled]="isThisLoggedUserProfile(user.username)"
+                    (click)="deleteUser(user.username, user.name)"
+                  >
+                    <mat-icon
+                      class="mat-icon-rtl-mirror"
+                      svgIcon="delete"
+                    ></mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid view -->
+      <div
+        class="row col-style-view-container"
+        [ngClass]="isColView ? 'd-block' : 'd-none'"
+      >
+        <div
+          class="col-xl-4 my-2 col-md-6 col-sm-12 col-12"
+          *ngFor="let user of users; let i = index"
+        >
+          <div class="card">
+            <div class="card-body">
+              <div
+                class="row my-3 d-flex justify-content-center align-items-center"
+              >
+                <div
+                  class="col-4 d-flex justify-content-center align-items-center user-image-container"
+                >
+                  <app-skeleton-loader
+                    *ngIf="loading"
+                    [width]="'100px'"
+                    [height]="'100px'"
+                    borderRadius="100px"
+                    [Mode]="mode"
+                  />
+                  <img
+                    *ngIf="!loading"
+                    class="user-image-main"
+                    [src]="detectUserImage((typeof user.image === 'string' ? user.image : ''), user.gender)"
+                    alt="user image"
+                  />
+                </div>
+              </div>
+              <div
+                class="row d-flex flex-column justify-content-center overflow-hidden user-details-container"
+              >
+                <div class="col-12 text-center">
+                  <app-skeleton-loader
+                    *ngIf="loading"
+                    [width]="'25rem'"
+                    [height]="'1.5rem'"
+                    borderRadius="0.357rem"
+                    [Mode]="mode"
+                  />
+                  <h5 *ngIf="!loading">
+                    {{ user.name }}
+                  </h5>
+                  <app-skeleton-loader
+                    *ngIf="loading"
+                    [width]="'25rem'"
+                    [height]="'0.75rem'"
+                    borderRadius="0.357rem"
+                    [Mode]="mode"
+                  />
+                  <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+                    {{ user.email }}
+                  </p>
+                  <app-skeleton-loader
+                    *ngIf="loading"
+                    [width]="'25rem'"
+                    [height]="'0.75rem'"
+                    borderRadius="0.357rem"
+                    [Mode]="mode"
+                  />
+                  <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+                    {{ user.phoneNumber }}
+                  </p>
+                  <app-skeleton-loader
+                    *ngIf="loading"
+                    [width]="'25rem'"
+                    [height]="'0.75rem'"
+                    borderRadius="0.357rem"
+                    [Mode]="mode"
+                  />
+                  <p
+                    *ngIf="!loading"
+                    class="text-muted-custom pb-1 mb-1 text-capitalize"
+                  >
+                    {{ user.role }}
+                    <i
+                      [ngClass]="user.isActive ? 'text-success' : 'text-danger'"
+                      class="fa-solid fa-circle"
+                    ></i>
+                  </p>
+                </div>
+              </div>
+              <div
+                class="row mt-5 mb-2 d-flex justify-content-end align-items-center action-btn-container"
+              >
+                <div
+                  class="col-4 d-flex justify-content-center align-items-center"
+                >
+                  <button
+                    *ngIf="viewUserAvailable()"
+                    class="me-2 btn-view"
+                    type="button"
+                    (click)="viewUser(user.username)"
+                  >
+                    <mat-icon
+                      class="mat-icon-rtl-mirror"
+                      svgIcon="view"
+                    ></mat-icon>
+                  </button>
+                </div>
+                <div
+                  class="col-4 d-flex justify-content-center align-items-center"
+                >
+                  <button
+                    *ngIf="updateUserAvailable()"
+                    class="mx-2 btn-edit"
+                    type="button"
+                    (click)="editUser(user.username)"
+                  >
+                    <mat-icon
+                      class="mat-icon-rtl-mirror"
+                      svgIcon="edit"
+                    ></mat-icon>
+                  </button>
+                </div>
+                <div
+                  class="col-4 d-flex justify-content-center align-items-center"
+                >
+                  <button
+                    *ngIf="deleteUserAvailable()"
+                    class="ms-2 btn-delete"
+                    type="button"
+                    [disabled]="isThisLoggedUserProfile(user.username)"
+                    (click)="deleteUser(user.username, user.name)"
+                  >
+                    <mat-icon
+                      class="mat-icon-rtl-mirror"
+                      svgIcon="delete"
+                    ></mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- End grid view -->
+
+      <!-- user container ended -->
+
+      <div class="row d-flex justify-content-center align-items-center mt-4">
+        <div class="col-xl-6 d-flex justify-content-center align-items-center">
+          <ul
+            class="pagination-list-group"
+            *ngIf="pageCount !== null && users.length > 10"
+          >
+            <li class="pagination-list-group-item">
+              <button
+                class="pagination-btn btn-custom"
+                type="button"
+                (click)="previousPage()"
+              >
+                &laquo;
+              </button>
+            </li>
+            <li
+              *ngFor="let i of [].constructor(pageCount); let index = index"
+              class="pagination-list-group-item"
+            >
+              <button
+                class="pagination-btn btn-custom"
+                type="button"
+                (click)="changePage(index)"
+              >
+                {{ index + 1 }}
+              </button>
+            </li>
+            <li class="pagination-list-group-item">
+              <button
+                class="pagination-btn btn-custom"
+                type="button"
+                (click)="nextPage()"
+              >
+                &raquo;
+              </button>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- Mobile view -->
+<div
+  *ngIf="mode !== null"
+  class="main-panel-mobile"
+  [ngClass]="mode ? 'dark' : 'light'"
+></div>

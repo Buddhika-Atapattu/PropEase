@@ -1,0 +1,250 @@
+@use "../../../../styles/global.scss" as *;
+mat-paginator {
+  background: none;
+  color: currentColor;
+  ::ng-deep mat-select {
+    color: currentColor;
+  }
+  ::ng-deep button {
+    ::ng-deep svg {
+      fill: currentColor;
+    }
+  }
+}
+.table-responsive {
+  width: 100%;
+  //   margin-top: 2rem;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  ::ng-deep table {
+    display: table-caption;
+    width: -webkit-fill-available;
+    min-width: 600px;
+    table-layout: auto;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 1rem;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: break-word;
+    }
+  }
+
+  .mat-header-row,
+  .mat-row {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .table-image {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center;
+    margin: 1rem auto;
+  }
+  .visit {
+    ::ng-deep mat-icon {
+      ::ng-deep svg {
+        fill: transparent !important;
+        stroke: #fff !important;
+        ::ng-deep path {
+          fill: transparent !important;
+          stroke: #fff !important;
+        }
+        ::ng-deep circle {
+          fill: transparent !important;
+          stroke: #fff !important;
+        }
+      }
+    }
+  }
+
+  .table-text-with-icon {
+    mat-icon {
+      margin-right: 1rem;
+    }
+    .table-text {
+      margin: 0;
+      max-width: 10rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+.date-picker-btn {
+  ::ng-deep mat-icon {
+    // margin: 1rem auto !important;
+    &.search {
+      ::ng-deep svg {
+        ::ng-deep path {
+          stroke: #fff !important;
+          fill: transparent !important;
+        }
+      }
+    }
+    ::ng-deep svg {
+      ::ng-deep path {
+        stroke: #fff !important;
+        fill: #fff !important;
+      }
+    }
+  }
+}
+
+.table-responsive {
+  table {
+    background: none;
+    color: currentColor;
+  }
+}
+
+::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  height: 0 !important;
+}
+
+.chart-wrapper {
+  ::ng-deep svg {
+    width: 100%;
+    height: 100%;
+    ::ng-deep rect {
+      fill: #0000 !important;
+    }
+    ::ng-deep g {
+      ::ng-deep text {
+        fill: currentColor !important;
+      }
+    }
+    ::ng-deep .google-visualization-tooltip {
+      ::ng-deep g {
+        ::ng-deep text {
+          fill: #000 !important;
+        }
+      }
+      color: currentColor !important;
+    }
+  }
+}
+
+//No data
+.image-container {
+  width: 50%;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  flex-direction: column;
+  height: auto;
+  overflow: hidden;
+  border-radius: 2rem;
+  margin-top: 4rem;
+  margin-left: auto;
+  margin-right: auto;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+:host-context(html.light) {
+  .table-responsive {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    table {
+      background: none;
+      color: $dark-primary-color !important;
+      ::ng-deep th {
+        color: currentColor;
+      }
+      ::ng-deep td {
+        color: $dark-primary-color !important;
+      }
+    }
+  }
+  ::ng-deep .mat-sort-header-arrow {
+    ::ng-deep svg {
+      fill: $dark-primary-color !important;
+    }
+  }
+
+  button {
+    &.active {
+      background: linear-gradient(
+        145deg,
+        #ffd51b 0%,
+        #ffd000 30%,
+        #ffd51b 100%
+      );
+    }
+  }
+  .chart-wrapper {
+    border-radius: 3rem;
+    padding: 2rem;
+    // background: linear-gradient(145deg, #fff29c, #ffdf77, #fff29c);
+  }
+}
+
+:host-context(html.dark) {
+  .table-responsive {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    table {
+      background: none;
+      color: $light-primary-color !important;
+      ::ng-deep th {
+        color: currentColor;
+      }
+      ::ng-deep td {
+        color: $light-primary-color !important;
+      }
+    }
+  }
+  ::ng-deep .mat-sort-header-arrow {
+    ::ng-deep svg {
+      fill: $light-primary-color !important;
+    }
+  }
+
+  button {
+    &.active {
+      background: linear-gradient(
+        145deg,
+        #ffd000 0%,
+        #b99700 30%,
+        #ffd000 100%
+      );
+    }
+  }
+  .chart-wrapper {
+    border-radius: 3rem;
+    padding: 2rem;
+    // background: linear-gradient(145deg, #0c1957 0%, #4400d0 30%, #43007a 100%);
+  }
+}
+
+.no-data-image-container {
+  width: 100%;
+  height: auto;
+  max-height: 75vh;
+  overflow: hidden;
+  margin: 2rem 0rem;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  img{
+    width: 20rem;
+    height: auto;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 2rem;
+  }
+}

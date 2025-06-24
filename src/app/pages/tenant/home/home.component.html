@@ -1,0 +1,80 @@
+<app-notification />
+<app-progress-bar />
+
+<div
+  *ngIf="mode !== null && loggedUser"
+  class="main-panel"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <div class="container-fluid">
+    <!-- Tenant Section -->
+    <div class="row mb-4">
+      <div class="col-xl-12">
+        <h1 class="title">Tenant</h1>
+      </div>
+    </div>
+    <!-- End Tenant Section -->
+    <hr class="my-5" />
+    <!-- Admin Section -->
+    <ng-container *ngIf="isAdmin()">
+      <!-- Title Row -->
+      <div class="row mb-4">
+        <div class="col-xl-12">
+          <h1 class="title">Admin</h1>
+        </div>
+      </div>
+      <!-- End Title Row -->
+
+      <app-tenant-table
+        [(isReload)]="isReloading"
+        [(pageSize)]="noneTenantPageSize"
+        [(pageSizeOptions)]="noneTenantPageSizeOptions"
+        [(pageIndex)]="noneTenantPageIndex"
+        [(pageCount)]="noneTenantPageCount"
+        [(tableType)]="noneTenantTableType"
+        [(name)]="noneTenantName"
+        [(buttonAction)]="noneTenantButtonAction"
+        [(buttonOperation)]="noneTenantButtonOperation"
+        [(totalDataCount)]="noneTenantTotalDataCount"
+        [(buttonActionTrigger)]="noneTenantsButtonActionTrigger"
+        [(buttonOperationTrigger)]="noneTenantsButtonOperationTrigger"
+        [(notification)]="noneTenantsNotification"
+        [data]="noneTenants"
+        [columns]="columns"
+        [loggedUser]="loggedUser"
+        [isLoading]="isLoading"
+        [mode]="mode"
+        [isBrowser]="isBrowser"
+        [modeSub]="modeSub"
+        [isTenants]="false"
+        [fullDataCount]="noneTenantsFull.length"
+      ></app-tenant-table>
+      <hr class="my-5" />
+      <app-tenant-table
+        [(isReload)]="isReloading"
+        [(pageSize)]="tenantPageSize"
+        [(pageSizeOptions)]="tenantPageSizeOptions"
+        [(pageIndex)]="tenantPageIndex"
+        [(pageCount)]="tenantPageCount"
+        [(tableType)]="tenantTableType"
+        [(name)]="tenantName"
+        [(buttonAction)]="tenantButtonAction"
+        [(buttonOperation)]="tenantButtonOperation"
+        [(totalDataCount)]="tenantTotalDataCount"
+        [(buttonActionTrigger)]="tenantsButtonActionTrigger"
+        [(buttonOperationTrigger)]="tenantsButtonOperationTrigger"
+        [(notification)]="tenantsNotification"
+        [data]="tenants"
+        [columns]="columns"
+        [loggedUser]="loggedUser"
+        [isLoading]="isLoading"
+        [mode]="mode"
+        [isBrowser]="isBrowser"
+        [modeSub]="modeSub"
+        [isTenants]="true"
+        [fullDataCount]="tenantsFull.length"
+      ></app-tenant-table>
+    </ng-container>
+    <!-- End Admin Section -->
+  </div>
+</div>

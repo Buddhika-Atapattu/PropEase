@@ -1,0 +1,414 @@
+<app-notification />
+<app-progress-bar />
+<div class="row mt-5">
+  <div class="col-xl-12">
+    <h5 class="title">{{ userTableType + ":" }}</h5>
+  </div>
+</div>
+<div class="row" *ngIf="fullDataCount > 0; else NoDataTemplate">
+  <div class="col-xl-12">
+    <app-paginator
+      [(pageCount)]="userPageCount"
+      [(pageIndex)]="userPageIndex"
+      [(pageSize)]="userPageSize"
+      [(tenantName)]="userName"
+      [(isReload)]="isReloading"
+      [totalDataCount]="userTotalDataCount"
+      [tableType]="userTableType"
+      [pageSizeOptions]="userPageSizeOptions"
+      [isPaginationEnabled]="userIsPaginationEnabled"
+    ></app-paginator>
+    <div class="table-responsive mat-elevation-z8">
+      <table
+        mat-table
+        [dataSource]="dataSource"
+        matSort
+        (matSortChange)="sortData($event)"
+      >
+        <ng-container
+          *ngFor="let column of columns"
+          [matColumnDef]="column.key"
+        >
+          <th
+            mat-header-cell
+            *matHeaderCellDef
+            mat-sort-header="{{ column.key }}"
+            class="w-50 text-default text-center"
+          >
+            <div *ngIf="isLoading">
+              <app-skeleton-loader
+                [Mode]="mode"
+                [width]="'5rem'"
+                [height]="'1.5rem'"
+                [borderRadius]="'0.159rem'"
+              ></app-skeleton-loader>
+            </div>
+            <div *ngIf="!isLoading">
+              {{ column.label }}
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let element; let i = index">
+            <ng-container [ngSwitch]="column.key.toLocaleLowerCase()">
+              <!-- User Image -->
+              <ng-container *ngSwitchCase="'image'">
+                <div *ngIf="isLoading">
+                  <app-skeleton-loader
+                    [Mode]="mode"
+                    [width]="'5rem'"
+                    [height]="'5rem'"
+                    [borderRadius]="'10rem'"
+                  ></app-skeleton-loader>
+                </div>
+                <div *ngIf="!isLoading">
+                  <img
+                    [src]="imageGenerator(element.image)"
+                    alt="User image"
+                    class="table-image"
+                  />
+                </div>
+              </ng-container>
+              <!-- End User Image -->
+
+              <!-- User Name -->
+              <div *ngIf="loggedUser !== null">
+                <ng-container *ngSwitchCase="'name'" class="text-center">
+                  <div *ngIf="isLoading">
+                    <app-skeleton-loader
+                      [Mode]="mode"
+                      [width]="'5rem'"
+                      [height]="'1.5rem'"
+                      [borderRadius]="'0.159rem'"
+                    ></app-skeleton-loader>
+                  </div>
+                  <div *ngIf="!isLoading">
+                    <p
+                      class="m-0 p-0"
+                      matTooltip="{{
+                        loggedUser.name.toLocaleLowerCase() ===
+                        element.name.toLocaleLowerCase()
+                          ? 'You'
+                          : element.name
+                      }}"
+                      matTooltipPosition="above"
+                      matTooltipPositionAtOrigin="left"
+                    >
+                      {{
+                        loggedUser.name.toLocaleLowerCase() ===
+                        element.name.toLocaleLowerCase()
+                          ? "You"
+                          : element.name
+                      }}
+                    </p>
+                  </div>
+                </ng-container>
+              </div>
+              <!-- End User Name -->
+
+              <!-- User Contact Number -->
+              <ng-container *ngSwitchCase="'contact number'">
+                <div *ngIf="isLoading">
+                  <app-skeleton-loader
+                    [Mode]="mode"
+                    [width]="'5rem'"
+                    [height]="'1.5rem'"
+                    [borderRadius]="'0.159rem'"
+                  ></app-skeleton-loader>
+                </div>
+                <div *ngIf="!isLoading">
+                  {{ element.contactNumber }}
+                </div>
+              </ng-container>
+              <!-- End User Contact Number -->
+
+              <!-- User Email -->
+              <ng-container *ngSwitchCase="'email'">
+                <div *ngIf="isLoading">
+                  <app-skeleton-loader
+                    [Mode]="mode"
+                    [width]="'5rem'"
+                    [height]="'1.5rem'"
+                    [borderRadius]="'0.159rem'"
+                  ></app-skeleton-loader>
+                </div>
+                <div *ngIf="!isLoading">
+                  {{ element.email }}
+                </div>
+              </ng-container>
+              <!-- End User Email -->
+
+              <!-- User Email -->
+              <ng-container *ngSwitchCase="'gender'">
+                <div *ngIf="isLoading">
+                  <app-skeleton-loader
+                    [Mode]="mode"
+                    [width]="'5rem'"
+                    [height]="'2.5rem'"
+                    [borderRadius]="'0.159rem'"
+                  ></app-skeleton-loader>
+                </div>
+                <div *ngIf="!isLoading" class="text-capitalize">
+                  {{ element.gender }}
+                </div>
+              </ng-container>
+              <!-- End User Email -->
+
+              <!-- Operation Button Of The Tenant Or User -->
+              <ng-container *ngIf="tableButtonOperation">
+                <ng-container *ngSwitchCase="'operation'">
+                  <div *ngIf="isLoading">
+                    <app-skeleton-loader
+                      [Mode]="mode"
+                      [width]="'5rem'"
+                      [height]="'1.5rem'"
+                      [borderRadius]="'0.159rem'"
+                    ></app-skeleton-loader>
+                  </div>
+
+                  <div *ngIf="!isLoading">
+                    <ng-container [ngSwitch]="tableButtonOperation">
+                      <ng-container *ngSwitchCase="'add'">
+                        <button
+                          type="button"
+                          class="btn-edit"
+                          (click)="
+                            handleOperationButtonTrigger({
+                              type: 'add',
+                              name: element.name,
+                              image: element.image,
+                              contactNumber: element.contactNumber,
+                              email: element.email,
+                              gender: element.gender
+                            })
+                          "
+                        >
+                          <i class="fa-solid fa-plus"></i>
+                        </button>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'view'">
+                        <button
+                          type="button"
+                          class="btn-view"
+                          (click)="
+                            handleOperationButtonTrigger({
+                              type: 'view',
+                              name: element.name,
+                              image: element.image,
+                              contactNumber: element.contactNumber,
+                              email: element.email,
+                              gender: element.gender
+                            })
+                          "
+                        >
+                          <i class="fa-solid fa-eye"></i>
+                        </button>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'remove'">
+                        <button
+                          type="button"
+                          class="btn-delete"
+                          (click)="
+                            handleOperationButtonTrigger({
+                              type: 'remove',
+                              name: element.name,
+                              image: element.image,
+                              contactNumber: element.contactNumber,
+                              email: element.email,
+                              gender: element.gender
+                            })
+                          "
+                        >
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'delete'">
+                        <button
+                          type="button"
+                          class="btn-delete"
+                          (click)="
+                            handleOperationButtonTrigger({
+                              type: 'delete',
+                              name: element.name,
+                              image: element.image,
+                              contactNumber: element.contactNumber,
+                              email: element.email,
+                              gender: element.gender
+                            })
+                          "
+                        >
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </ng-container>
+                      <ng-container *ngSwitchDefault>
+                        <button
+                          type="button"
+                          class="btn-custom"
+                          (click)="
+                            handleOperationButtonTrigger({
+                              type: 'default',
+                              name: element.name,
+                              image: element.image,
+                              contactNumber: element.contactNumber,
+                              email: element.email,
+                              gender: element.gender
+                            })
+                          "
+                        >
+                          <i class="fa-solid fa-bolt"></i>
+                        </button>
+                      </ng-container>
+                    </ng-container>
+                  </div>
+                </ng-container>
+              </ng-container>
+              <!-- End Operation Button Of The Tenant Or User -->
+
+              <!-- Add To The Tenant -->
+              <ng-container *ngIf="tableButtonAction">
+                <ng-container *ngSwitchCase="'actions'">
+                  <div *ngIf="isLoading">
+                    <app-skeleton-loader
+                      [Mode]="mode"
+                      [width]="'5rem'"
+                      [height]="'1.5rem'"
+                      [borderRadius]="'0.159rem'"
+                    ></app-skeleton-loader>
+                  </div>
+
+                  <div *ngIf="!isLoading">
+                    <ng-container [ngSwitch]="tableButtonAction">
+                      <ng-container *ngSwitchCase="'add'">
+                        <button
+                          type="button"
+                          class="btn-edit"
+                          (click)="
+                            handleActionButtonTrigger({
+                              type: 'add',
+                              name: element.name,
+                              image: element.image,
+                              contactNumber: element.contactNumber,
+                              email: element.email,
+                              gender: element.gender
+                            })
+                          "
+                        >
+                          <i class="fa-solid fa-plus"></i>
+                        </button>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'view'">
+                        <button
+                          type="button"
+                          class="btn-view"
+                          (click)="
+                            handleActionButtonTrigger({
+                              type: 'view',
+                              name: element.name,
+                              image: element.image,
+                              contactNumber: element.contactNumber,
+                              email: element.email,
+                              gender: element.gender
+                            })
+                          "
+                        >
+                          <i class="fa-solid fa-eye"></i>
+                        </button>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'remove'">
+                        <button
+                          type="button"
+                          class="btn-delete"
+                          (click)="
+                            handleActionButtonTrigger({
+                              type: 'remove',
+                              name: element.name,
+                              image: element.image,
+                              contactNumber: element.contactNumber,
+                              email: element.email,
+                              gender: element.gender
+                            })
+                          "
+                        >
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'delete'">
+                        <button
+                          type="button"
+                          class="btn-delete"
+                          (click)="
+                            handleActionButtonTrigger({
+                              type: 'delete',
+                              name: element.name,
+                              image: element.image,
+                              contactNumber: element.contactNumber,
+                              email: element.email,
+                              gender: element.gender
+                            })
+                          "
+                        >
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      </ng-container>
+                      <ng-container *ngSwitchDefault>
+                        <button
+                          type="button"
+                          class="btn-custom"
+                          (click)="
+                            handleActionButtonTrigger({
+                              type: 'default',
+                              name: element.name,
+                              image: element.image,
+                              contactNumber: element.contactNumber,
+                              email: element.email,
+                              gender: element.gender
+                            })
+                          "
+                        >
+                          <i class="fa-solid fa-bolt"></i>
+                        </button>
+                      </ng-container>
+                    </ng-container>
+                  </div>
+                </ng-container>
+              </ng-container>
+
+              <ng-container *ngSwitchDefault>
+                {{ element[column.key] }}
+              </ng-container>
+              <!-- End Add To The Tenant -->
+            </ng-container>
+          </td>
+        </ng-container>
+
+        <!-- Rows -->
+        <tr
+          mat-header-row
+          *matHeaderRowDef="displayedColumnKeys"
+          class="text-default border-bottom-custom"
+        ></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumnKeys"
+          class="text-default border-bottom-custom"
+        ></tr>
+        <!-- End Rows -->
+      </table>
+    </div>
+  </div>
+</div>
+
+<ng-template #NoDataTemplate>
+  <!-- No data available message or content goes here -->
+  <div class="row">
+    <div class="col-xl-12 text-center py-5">
+      <span class="text-center text-style my-3 h3 text-capitalize"
+        >No {{ userTableType }} data available.</span
+      >
+      <div class="no-data-image-container">
+        <img
+          src="/Images/System-images/noActivities.jpg"
+          alt="no activities image"
+        />
+      </div>
+    </div>
+  </div>
+</ng-template>

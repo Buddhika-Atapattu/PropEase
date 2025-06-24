@@ -4,6 +4,9 @@ import {
   OnDestroy,
   Inject,
   PLATFORM_ID,
+  AfterViewInit,
+  ChangeDetectorRef,
+  NgZone,
 } from '@angular/core';
 import { ListMainPanelComponent } from '../../components/list-main-panel/list-main-panel.component';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -37,7 +40,7 @@ import { ActivityTrackerService } from '../../../services/activityTacker/activit
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   protected menuOpen: boolean = false;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -46,6 +49,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private expandSub: Subscription | null = null;
   protected user: LoggedUserType | null = null;
   protected isLoading: boolean = true;
+  protected isMobile: boolean = false;
 
   //Mobile
   protected isMobileMenuOpen: boolean = false;
@@ -56,7 +60,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private expandableService: ExpandableService,
     private router: Router,
     private activityTrackerService: ActivityTrackerService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private cd: ChangeDetectorRef,
+    private zone: NgZone
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.authService.getLoggedUser !== null) {
@@ -93,8 +99,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
       await this.authService.afterUserLoggedInOperatios();
     }
 
+    if (this.windowRef) {
+      this.windowRef.windowWidth$.subscribe((width) => {
+        this.zone.run(() => {
+          this.isMobile = width < 1025;
+          this.cd.detectChanges(); // ensure Angular acknowledges the change
+        });
+      });
+    }
+
     // await this.insertLoggedUserTracks();
   }
+
+  ngAfterViewInit(): void {}
 
   protected openMenu(): void {
     this.menuOpen = !this.menuOpen;
@@ -120,15 +137,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   //     });
   // }
 
+  protected onProfilePanelClosed(closed: boolean) {
+    this.menuOpen = false;
+    this.isMobileMenuOpen = false;
+  }
+
   protected mobileMenuOpen(): void {
-    console.log('Before:', this.isMobileMenuOpen);
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
-    console.log('After:', this.isMobileMenuOpen);
   }
 
   protected mobileMenuOpenFromLink(input: boolean): void {
-    console.log('From child:', input); // ✅ Should log "true"
-    this.isMobileMenuOpen = !input; // or however you want to use it
+    this.isMobileMenuOpen = !input;
   }
 
   ngOnDestroy(): void {

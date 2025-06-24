@@ -10,8 +10,8 @@
       <div
         [ngClass]="
           LOGGED_USER?.role === 'admin'
-            ? 'col-md-10 position-relative'
-            : 'col-md-12'
+            ? 'col-xl-10 position-relative'
+            : 'col-xl-12'
         "
       >
         <input
@@ -47,10 +47,10 @@
         </button>
       </div>
       <div
-        *ngIf="LOGGED_USER?.role === 'admin'"
+        *ngIf="isUserCanCreateProperty()"
         [ngClass]="
-          LOGGED_USER?.role === 'admin'
-            ? 'col-md-2 d-flex justify-content-end align-items-center'
+          isUserCanCreateProperty()
+            ? 'col-xl-2 d-flex justify-content-end align-items-center'
             : 'd-none'
         "
       >
@@ -65,18 +65,67 @@
       </div>
     </div>
 
-    <div class="user-scroll-wrapper" *ngIf="properties.length > 0">
+    <!-- View Style -->
+    <div
+      class="row d-flex justify-content-end align-items-center style-btn-row"
+    >
+      <div class="col-2 d-flex justify-content-end align-items-center">
+        <button
+          type="button"
+          class="btn bg-none column-change-icons mx-2 my-0 p-0"
+          (click)="convertTheViewStyle('list')"
+        >
+          <mat-icon class="mat-icon-rtl-mirror" svgIcon="list"></mat-icon>
+        </button>
+        <button
+          type="button"
+          class="btn bg-none column-change-icons mx-2 my-0 p-0"
+          (click)="convertTheViewStyle('grid')"
+        >
+          <mat-icon
+            class="mat-icon-rtl-mirror"
+            svgIcon="lineColumns"
+          ></mat-icon>
+        </button>
+      </div>
+    </div>
+    <!-- End View Style -->
+
+    <!-- Property View Card -->
+    <div
+      class="user-scroll-wrapper"
+      *ngIf="properties.length > 0 && isListView"
+    >
       <div class="user-container">
         <app-property-view-card
           *ngFor="let property of properties"
+          [ngClass]="isColView ? 'col-xl-4' : 'col-xl-12'"
           [property]="property"
+          [isColView]="isColView"
+          [isListView]="isListView"
           (propertyDeleted)="onPropertyDeleted($event)"
         ></app-property-view-card>
       </div>
     </div>
+    <!-- End Property View Card -->
+
+    <div class="user-scroll-wrapper" *ngIf="properties.length > 0 && isColView">
+      <div class="user-container">
+        <div class="row">
+          <app-property-view-card
+            *ngFor="let property of properties"
+            [ngClass]="isColView ? 'col-xl-4' : 'col-xl-12'"
+            [property]="property"
+            [isColView]="isColView"
+            [isListView]="isListView"
+            (propertyDeleted)="onPropertyDeleted($event)"
+          ></app-property-view-card>
+        </div>
+      </div>
+    </div>
 
     <div class="row d-flex justify-content-center align-items-center mt-4">
-      <div class="col-md-6 d-flex justify-content-center align-items-center">
+      <div class="col-xl-6 d-flex justify-content-center align-items-center">
         <ul class="pagination-list-group" *ngIf="pageCount > 1">
           <li class="pagination-list-group-item">
             <button
@@ -178,18 +227,25 @@
     </div>
     <!-- End top search section -->
 
+    <!-- Property View Card -->
     <div class="user-scroll-wrapper" *ngIf="properties.length > 0">
       <div class="user-container">
-        <app-property-view-card
-          *ngFor="let property of properties"
-          [property]="property"
-          (propertyDeleted)="onPropertyDeleted($event)"
-        ></app-property-view-card>
+        <div class="row">
+          <div class="col-md-6 col-12" *ngFor="let property of properties">
+            <app-property-view-card
+              [property]="property"
+              [isColView]="isColView"
+              [isListView]="isListView"
+              (propertyDeleted)="onPropertyDeleted($event)"
+            ></app-property-view-card>
+          </div>
+        </div>
       </div>
     </div>
+    <!-- End Property View Card -->
 
     <div class="row d-flex justify-content-center align-items-center mt-4">
-      <div class="col-md-6 d-flex justify-content-center align-items-center">
+      <div class="col-xl-6 d-flex justify-content-center align-items-center">
         <ul class="pagination-list-group" *ngIf="pageCount > 1">
           <li class="pagination-list-group-item">
             <button

@@ -23,7 +23,11 @@
       light: !mode
     }"
   >
-    <app-list-main-panel></app-list-main-panel>
+    <!-- Rendering 01 -->
+    <app-list-main-panel
+      *ngIf="!isMobile"
+      [isMobile]="isMobile"
+    ></app-list-main-panel>
   </aside>
 
   <!-- Navbar -->
@@ -79,7 +83,7 @@
           <button
             class="user-image-btn"
             title="User Profile"
-            (click)="menuOpen = !menuOpen"
+            (click)="openMenu()"
           >
             <app-skeleton-loader
               *ngIf="isLoading; else userImage"
@@ -98,7 +102,7 @@
           </button>
           <app-user-info-panel
             *ngIf="menuOpen"
-            (closePanel)="menuOpen = false"
+            (closePanel)="onProfilePanelClosed($event)"
           />
         </div>
         <div class="d-flex align-items-center">
@@ -111,8 +115,11 @@
         </div>
       </div>
     </div>
+    <!-- Rendering 02 -->
     <app-list-main-panel
+      *ngIf="isMobile"
       (closeMobileMenu)="mobileMenuOpenFromLink($event)"
+      [isMobile]="isMobile"
     ></app-list-main-panel>
   </div>
 </div>

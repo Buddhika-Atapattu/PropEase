@@ -17,13 +17,13 @@
 
     <!-- type and status -->
     <div class="row mt-3">
-      <div class="col-md-12">
+      <div class="col-xl-12">
         <p class="p-0"><i class="fa-solid fa-house"></i> Type and status:</p>
       </div>
     </div>
     <div class="row">
       <!-- Type -->
-      <div class="col-md-6">
+      <div class="col-xl-6">
         <mat-form-field class="w-100">
           <input
             matInput
@@ -48,7 +48,7 @@
       </div>
 
       <!-- status -->
-      <div class="col-md-6">
+      <div class="col-xl-6">
         <mat-form-field class="w-100">
           <input
             matInput
@@ -74,7 +74,7 @@
     </div>
     <!-- price range by number -->
     <div class="row mt-3">
-      <div class="col-md-12">
+      <div class="col-xl-12">
         <p class="p-0 m-0">
           <i class="fa-solid fa-money-bills"></i> Price range:
         </p>
@@ -82,7 +82,7 @@
     </div>
 
     <div class="row mt-3">
-      <div class="col-md-6">
+      <div class="col-xl-6">
         <mat-form-field class="w-100">
           <input
             type="number"
@@ -95,7 +95,7 @@
           />
         </mat-form-field>
       </div>
-      <div class="col-md-6">
+      <div class="col-xl-6">
         <mat-form-field class="w-100">
           <input
             type="number"
@@ -112,7 +112,7 @@
 
     <!-- price range by bar -->
     <div class="row mt-5">
-      <div class="col-md-12">
+      <div class="col-xl-12">
         <app-custom-range-slider
           [(value)]="minPriceInput"
           [(highValue)]="maxPriceInput"
@@ -125,12 +125,12 @@
 
     <!-- beds -->
     <div class="row mt-3">
-      <div class="col-md-12">
+      <div class="col-xl-12">
         <p class="p-0 m-0"><i class="fa-solid fa-bed"></i> Bads:</p>
       </div>
     </div>
     <div class="row mt-3">
-      <div class="col-md-12 overflow-hidden">
+      <div class="col-xl-12 overflow-hidden">
         <mat-button-toggle-group
           [(ngModel)]="beds"
           [name]="'beds' + beds"
@@ -154,12 +154,12 @@
 
     <!-- bathrooms -->
     <div class="row mt-3">
-      <div class="col-md-12">
+      <div class="col-xl-12">
         <p class="p-0 m-0"><i class="fa-solid fa-bath"></i> Bathrooms:</p>
       </div>
     </div>
     <div class="row mt-3">
-      <div class="col-md-12 overflow-hidden">
+      <div class="col-xl-12 overflow-hidden">
         <mat-button-toggle-group
           [(ngModel)]="bathrooms"
           [name]="'beds' + bathrooms"
@@ -183,7 +183,7 @@
 
     <!-- Amenities -->
     <div class="row mt-3">
-      <div class="col-md-12">
+      <div class="col-xl-12">
         <p class="p-0"><i class="fa-solid fa-gem"></i> Amenities:</p>
         <mat-form-field class="w-100">
           <input
@@ -224,7 +224,7 @@
     <!-- amenities preview -->
     <div class="row">
       <div
-        class="col-md-6"
+        class="col-xl-6"
         *ngFor="let selectedAmenity of selectedAmenities; let i = index"
       >
         <button
@@ -243,7 +243,7 @@
 
     <!-- submit button ans cancel button -->
     <div class="row d-flex justify-content-end align-item-center mt-3">
-      <div class="col-md-5 d-flex justify-content-between align-item-center">
+      <div class="col-xl-5 d-flex justify-content-between align-item-center">
         <div class="col-xs-6">
           <button
             type="button"

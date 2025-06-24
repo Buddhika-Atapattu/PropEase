@@ -12,6 +12,7 @@ import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-access-control',
+  standalone: true,
   imports: [CommonModule],
   templateUrl: './access-control.component.html',
   styleUrl: './access-control.component.scss',

@@ -19,6 +19,7 @@ export const routes: Routes = [
         (m) => m.DashboardComponent
       ),
     canActivate: [AuthGuard],
+    canActivateChild: [AuthGuard],
     children: [
       {
         path: 'home',
@@ -37,19 +38,19 @@ export const routes: Routes = [
         data: { roles: ['admin'] },
       },
       {
-        path: 'user-profile',
-        loadComponent: () =>
-          import('./pages/user-profile/user-profile.component').then(
-            (m) => m.UserProfileComponent
-          ),
-        data: {
-          roles: ['admin', 'agent', 'tenant', 'operator', 'developer', 'user'],
-        },
-      },
-      {
         path: 'users',
         loadComponent: () =>
           import('./pages/users/users.component').then((m) => m.UsersComponent),
+        data: {
+          roles: ['admin', 'operator'],
+        },
+      },
+      {
+        path: 'edit-user/:username',
+        loadComponent: () =>
+          import('./pages/edit-user/edit-user.component').then(
+            (m) => m.EditUserComponent
+          ),
         data: {
           roles: ['admin', 'operator'],
         },
@@ -114,6 +115,99 @@ export const routes: Routes = [
           roles: ['admin'],
         },
       },
+      {
+        path: 'tenant',
+        loadComponent: () =>
+          import('./pages/tenant/tenant/tenant.component').then(
+            (m) => m.TenantComponent
+          ),
+        data: {
+          roles: ['admin'],
+        },
+        children: [
+          {
+            path: 'tenant-home',
+            loadComponent: () =>
+              import('./pages/tenant/home/home.component').then(
+                (m) => m.HomeComponent
+              ),
+            data: {
+              roles: ['admin'],
+            },
+          },
+          {
+            path: 'payments-list',
+            loadComponent: () =>
+              import('./pages/tenant/payments/list/list.component').then(
+                (m) => m.ListComponent
+              ),
+            data: {
+              roles: ['admin'],
+            },
+          },
+          {
+            path: 'payments-upload-proof',
+            loadComponent: () =>
+              import(
+                './pages/tenant/payments/upload-proof/upload-proof.component'
+              ).then((m) => m.UploadProofComponent),
+            data: {
+              roles: ['admin'],
+            },
+          },
+          {
+            path: 'complaints-create',
+            loadComponent: () =>
+              import('./pages/tenant/complaints/create/create.component').then(
+                (m) => m.CreateComponent
+              ),
+            data: {
+              roles: ['admin'],
+            },
+          },
+          {
+            path: 'complaints-status-view',
+            loadComponent: () =>
+              import(
+                './pages/tenant/complaints/status-view/status-view.component'
+              ).then((m) => m.StatusViewComponent),
+            data: {
+              roles: ['admin'],
+            },
+          },
+          {
+            path: 'documents',
+            loadComponent: () =>
+              import('./pages/tenant/documents/documents.component').then(
+                (m) => m.DocumentsComponent
+              ),
+            data: {
+              roles: ['admin'],
+            },
+          },
+          {
+            path: 'notifications',
+            loadComponent: () =>
+              import(
+                './pages/tenant/notifications/notifications.component'
+              ).then((m) => m.NotificationsComponent),
+            data: {
+              roles: ['admin'],
+            },
+          },
+          {
+            path: 'activity-log',
+            loadComponent: () =>
+              import('./pages/tenant/activity-log/activity-log.component').then(
+                (m) => m.ActivityLogComponent
+              ),
+            data: {
+              roles: ['admin'],
+            },
+          },
+        ],
+      },
+
       {
         path: 'unauthorized',
         loadComponent: () =>

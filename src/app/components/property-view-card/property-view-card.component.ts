@@ -22,7 +22,10 @@ import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader
 import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { AuthService, BaseUser } from '../../../services/auth/auth.service';
 import { PropertyFilterDialogComponent } from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
-import { BackEndPropertyData, Property } from '../../../services/property/property.service';
+import {
+  BackEndPropertyData,
+  Property,
+} from '../../../services/property/property.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationComponent } from '../../components/dialogs/confirmation/confirmation.component';
 import { PropertyService } from '../../../services/property/property.service';
@@ -36,6 +39,7 @@ import { NotificationComponent } from '../dialogs/notification/notification.comp
     SkeletonLoaderComponent,
     NotificationComponent,
   ],
+  standalone: true,
   templateUrl: './property-view-card.component.html',
   styleUrl: './property-view-card.component.scss',
 })
@@ -43,6 +47,8 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
   @Output() propertyDeleted = new EventEmitter<boolean>();
   @ViewChild(NotificationComponent) notification!: NotificationComponent;
   @Input() property: BackEndPropertyData | null = null;
+  @Input() isColView: boolean = false;
+  @Input() isListView: boolean = true;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   protected LOGGED_USER: BaseUser | null = null;
@@ -67,10 +73,6 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
   ) {
     this.LOGGED_USER = this.authService.getLoggedUser;
     this.isBrowser = isPlatformBrowser(this.platformId);
-    setInterval(() => {
-      this.loading = false;
-    }, 500);
-    this.iconMaker();
   }
 
   ngOnInit() {
@@ -86,7 +88,26 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    // Logic to execute after the view has been initialized
+    if (this.isBrowser) {
+      if (this.isListView === true) {
+        this.loading = true;
+        setInterval(() => {
+          this.loading = false;
+        }, 500);
+      } else {
+        this.loading = true;
+        setInterval(() => {
+          this.loading = false;
+        }, 500);
+      }
+    }
+
+    this.iconMaker();
+  }
+
+  protected triggerOnRender(style: string) {
+    console.log(style, ': ', this.loading);
+    this.cdr.detectChanges();
   }
 
   private iconMaker() {
@@ -105,6 +126,36 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
         this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path.toString())
       );
     }
+  }
+
+  protected isUserCanDeleteTheProperty(): boolean {
+    return (
+      this.LOGGED_USER?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('delete')
+      ) ?? false
+    );
+  }
+
+  protected isUserCanEditTheProperty(): boolean {
+    return (
+      this.LOGGED_USER?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('update')
+      ) ?? false
+    );
+  }
+
+  protected isUserCanViewTheProperty(): boolean {
+    return (
+      this.LOGGED_USER?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('view')
+      ) ?? false
+    );
   }
 
   protected gotoTheProperty(propertyID: string) {
@@ -137,8 +188,7 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
         } catch (error: any) {
           this.notification.notification('error', error.message);
         }
-      }
-      else{
+      } else {
         this.propertyDeleted.emit(false);
       }
     });

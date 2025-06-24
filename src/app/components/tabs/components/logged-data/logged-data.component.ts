@@ -56,6 +56,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
+import { GoogleChartsModule, ChartType } from 'angular-google-charts';
 
 interface allUsersLoginCounts {
   id: string;
@@ -208,8 +209,19 @@ export interface ChartFill {
   strokeWidth?: number;
 }
 
+export interface GoogleChartConfig {
+  title?: string;
+  type: ChartType;
+  data: any[][];
+  columns?: string[];
+  options?: GoogleChartOptions;
+  width?: number | string;
+  height?: number | string;
+}
+
 @Component({
   selector: 'app-logged-data',
+  standalone: true,
   imports: [
     CommonModule,
     MatIconModule,
@@ -231,6 +243,7 @@ export interface ChartFill {
     MatDialogModule,
     MatDatepickerModule,
     MatTooltipModule,
+    GoogleChartsModule,
   ],
   templateUrl: './logged-data.component.html',
   styleUrl: './logged-data.component.scss',
@@ -253,7 +266,7 @@ export class LoggedDataComponent {
   protected username: string = '';
 
   //<========= Logged user table and pie chart variables =========>
-  protected isLoggedTableEmpty: boolean = false;
+  protected isTableEmpty: boolean = false;
   protected userLoggedData: UserLoggedData | null = null;
   protected displayedColumns: string[] = ['IP Address', 'Date'];
   protected dataSource = new MatTableDataSource<userTrackingLoggedData>();
@@ -268,6 +281,8 @@ export class LoggedDataComponent {
   protected tableAllUsersLogingTimes: number = 0;
   protected tableUserLoggedTimes: number = 0;
 
+  protected tablePieChart: GoogleChartConfig | null = null;
+
   constructor(
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -277,7 +292,8 @@ export class LoggedDataComponent {
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
-      
+      google.charts.load('current', { packages: ['corechart'] });
+      google.charts.setOnLoadCallback(() => {});
     }
     this.iconMaker();
   }
@@ -314,8 +330,6 @@ export class LoggedDataComponent {
       );
     }
   }
-
-
 
   public async refresh(username: string): Promise<void> {
     this.username = username;
@@ -452,6 +466,7 @@ export class LoggedDataComponent {
         const chartUserPercentage =
           (this.tableUserLoggedTimes / this.tableAllUsersLogingTimes) * 100;
         const otherPercentage = 100 - chartUserPercentage;
+
         this.drawChart(chartUserPercentage, otherPercentage);
         this.userLoggedData = response;
         const trackingData = response.data.userTrackingData;
@@ -463,13 +478,13 @@ export class LoggedDataComponent {
         );
         this.dataSource.sort = this.sort;
 
-        this.isLoggedTableEmpty = trackingData.data.length === 0;
+        this.isTableEmpty = trackingData.data.length === 0;
       } else {
-        this.isLoggedTableEmpty = true;
+        this.isTableEmpty = true;
       }
     } catch (error) {
       console.error('Error retrieving login tracking data:', error);
-      this.isLoggedTableEmpty = true;
+      this.isTableEmpty = true;
     } finally {
       this.isLoading = false;
     }
@@ -479,7 +494,42 @@ export class LoggedDataComponent {
     chartUserPercentage: number,
     otherPercentage: number
   ): void {
-    
+    this.tablePieChart = <GoogleChartConfig>{
+      title: 'User Login Activity',
+      type: ChartType.PieChart,
+      columns: ['Username', 'Login Count'],
+      data: [
+        [this.username, chartUserPercentage],
+        ['Other Users', otherPercentage],
+      ],
+      options: {
+        is3D: true,
+        pieSliceText: 'percentage',
+        backgroundColor: '#00000000',
+        fontName: 'Roboto',
+        fontSize: 14,
+        legend: {
+          position: 'right',
+          textStyle: { color: '#333', fontSize: 12 },
+        },
+        chartArea: {
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+        },
+        slices: {
+          0: { color: '#ff00dd' },
+          1: { color: '#22ff00' },
+        },
+        tooltip: {
+          textStyle: { color: '#000' },
+          showColorCode: true,
+        },
+      },
+      // width: 500,
+      // height: 500,
+    };
   }
 
   protected sortData(sort: Sort): void {
@@ -523,10 +573,9 @@ export class LoggedDataComponent {
     this.startDate = null;
     this.endDate = null;
     await this.getLoggedUserLoginTracking(1);
-  }
+  } 
 
   protected exportToExcel() {
-
     const exportData = this.userLoggedData?.data.userTrackingData.data.map(
       (row) => ({
         Username: row.username,

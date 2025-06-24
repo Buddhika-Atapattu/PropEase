@@ -13,6 +13,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-skeleton-loader',
   imports: [CommonModule],
+  standalone: true,
   templateUrl: './skeleton-loader.component.html',
   styleUrl: './skeleton-loader.component.scss',
 })
@@ -30,6 +31,10 @@ export class SkeletonLoaderComponent {
   @Input() borderRadius: string = '100%';
   @Input() Mode: boolean | null = null;
   @Input() key!: number;
+
+  ngAfterViewInit(){
+    
+  }
 
   ngOnInit(): void {}
 }

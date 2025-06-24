@@ -77,6 +77,7 @@ interface Data {
     MatDatepickerModule,
     MatTooltipModule,
   ],
+  standalone: true,
   templateUrl: './user-file-management.component.html',
   styleUrl: './user-file-management.component.scss',
 })

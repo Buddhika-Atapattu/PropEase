@@ -1,0 +1,104 @@
+<form>
+  <div class="row">
+    <div class="col-xl-3 my-2 d-flex justify-content-start align-items-center">
+      <p class="text-style text-capitalize">
+        Total {{ tableType }} data count: {{ totalDataCount }}
+      </p>
+    </div>
+    <div class="col-xl-3 my-2">
+      <mat-form-field class="w-100">
+        <mat-label>Search Name</mat-label>
+        <input
+          matInput
+          type="text"
+          [(ngModel)]="name"
+          name="tenantName"
+          placeholder="Search Name..."
+          (ngModelChange)="onTenantNameChanged($event)"
+        />
+      </mat-form-field>
+    </div>
+    <div class="col-xl-2 my-2 d-flex justify-content-center align-items-center">
+      <mat-form-field class="w-100">
+        <mat-label>Page Size</mat-label>
+        <input
+          type="number"
+          placeholder="Page Size..."
+          aria-label="pageSize"
+          name="pageSize"
+          matInput
+          (ngModelChange)="onPageSizeChanged($event)"
+          [(ngModel)]="selectedPageSize"
+          [matAutocomplete]="typeAuto"
+          class="text-capitalize"
+        />
+        <mat-autocomplete #typeAuto="matAutocomplete">
+          <mat-option
+            *ngFor="let option of pageSizeOptions"
+            [value]="option"
+            class="text-capitalize"
+          >
+            {{ option }}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+    <div class="col-xl-4 my-2 d-flex justify-content-around align-items-center">
+      <div class="row w-100">
+        <div class="col-10 d-flex justify-content-around align-items-center">
+          <!-- Double Backward -->
+          <button
+            *ngIf="totalDataCount > pageSize"
+            type="button"
+            class="btn-edit"
+            (click)="onPageIndexChanged('doubleBackword')"
+          >
+            <i class="fa-solid fa-chevron-left"></i>
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+
+          <!-- Backward -->
+          <button
+            *ngIf="totalDataCount > pageSize"
+            type="button"
+            class="btn-edit"
+            (click)="onPageIndexChanged('backward')"
+          >
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+
+          <!-- Forward -->
+          <button
+            *ngIf="totalDataCount > pageSize"
+            type="button"
+            class="btn-edit"
+            (click)="onPageIndexChanged('forward')"
+          >
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+
+          <!-- Double Forward -->
+          <button
+            *ngIf="totalDataCount > pageSize"
+            type="button"
+            class="btn-edit"
+            (click)="onPageIndexChanged('doubleForward')"
+          >
+            <i class="fa-solid fa-chevron-right"></i>
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="col-2 d-flex justify-content-end align-items-center">
+          <button
+            type="button"
+            class="btn-custom"
+            [ngClass]="isRefreshFinished ? 'refresh' : ''"
+            (click)="refreshPage()"
+          >
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

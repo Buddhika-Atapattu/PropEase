@@ -43,7 +43,7 @@
         <!-- tab indicators -->
         <div class="row tab-indicator-row">
           <div
-            class="col-md-12 w-100 d-flex justify-content-center align-items-center"
+            class="col-xl-12 w-100 d-flex justify-content-center align-items-center"
           >
             <button
               type="button"
@@ -84,13 +84,13 @@
           <!-- Basic Property Details -->
           <div class="tab-content" *ngIf="currentIndex === 0">
             <div class="row my-4">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <h1 class="title">Basic Property Details:</h1>
               </div>
             </div>
             <!-- Property Title -->
             <div class="row">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Property Title</mat-label>
                   <input
@@ -110,7 +110,7 @@
             <!-- Property type and listing type -->
             <div class="row">
               <!-- Property Type -->
-              <div class="col-md-6">
+              <div class="col-xl-6">
                 <mat-form-field
                   class="example-full-width w-100"
                   appearance="fill"
@@ -142,7 +142,7 @@
               <!-- End Property Type -->
 
               <!-- Listing Type -->
-              <div class="col-md-6">
+              <div class="col-xl-6" *ngIf="isUserCanChangeListingStatusOfTheProperty()">
                 <mat-form-field
                   class="example-full-width w-100"
                   appearance="fill"
@@ -177,7 +177,7 @@
 
             <!-- Property description -->
             <div class="row mt-3">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <h3 class="title">Discription:</h3>
                 <div>
                   <editor
@@ -200,14 +200,14 @@
           <!-- Location Details -->
           <div class="tab-content" *ngIf="currentIndex === 1">
             <div class="row my-4">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <h1 class="title">Location Details:</h1>
               </div>
             </div>
             <!-- property address -> houser number, streat, city -->
             <div class="row">
               <!-- House number -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>House number</mat-label>
                   <input
@@ -224,7 +224,7 @@
               <!-- End House number -->
 
               <!-- AddressStreet -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Streat</mat-label>
                   <input
@@ -241,7 +241,7 @@
               <!-- End AddressStreet -->
 
               <!-- AddressCity -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>City</mat-label>
                   <input
@@ -261,7 +261,7 @@
 
             <!-- property address -> State/ Province, streat, city -->
             <div class="row">
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>State/ Province</mat-label>
                   <input
@@ -275,7 +275,7 @@
                   />
                 </mat-form-field>
               </div>
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Postal Code</mat-label>
                   <input
@@ -289,7 +289,7 @@
                   />
                 </mat-form-field>
               </div>
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="example-full-width w-100">
                   <mat-label>Country</mat-label>
                   <input
@@ -330,7 +330,7 @@
             <!-- google map -->
             <div class="row mt-4">
               <h3 class="title">Map:</h3>
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <app-map
                   [mode]="mode"
                   (locationSelected)="onLocationPicked($event)"
@@ -344,14 +344,14 @@
           <!-- Property Specifications -->
           <div class="tab-content" *ngIf="currentIndex === 2">
             <div class="row my-4">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <h1 class="title">Property Specifications:</h1>
               </div>
             </div>
             <!-- Total area, Built-In Area, Total Floors -->
             <div class="row">
               <!-- Total Area -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field
                   appearance="fill"
                   class="form-field me-3 w-100 d-flex"
@@ -378,7 +378,7 @@
               <!-- End Total Area -->
 
               <!-- Built In Area -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field
                   appearance="fill"
                   class="form-field me-3 w-100 d-flex"
@@ -405,7 +405,7 @@
               <!-- End Build In Area -->
 
               <!-- Total Floors -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field
                   appearance="fill"
                   class="form-field me-3 w-100 d-flex"
@@ -428,7 +428,7 @@
             <!-- Bedrooms, Bathrooms, Maidrooms -->
             <div class="row">
               <!-- Bedrooms -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Bedrooms</mat-label>
                   <input
@@ -445,7 +445,7 @@
               <!-- End Bedrooms -->
 
               <!-- Bathrooms -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Bathrooms</mat-label>
                   <input
@@ -462,7 +462,7 @@
               <!-- End Bathrooms -->
 
               <!-- Maidrooms -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Maidrooms</mat-label>
                   <input
@@ -483,7 +483,7 @@
             <!-- Living rooms, Balconies, Kitchens -->
             <div class="row">
               <!-- Living Rooms -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Living Rooms</mat-label>
                   <input
@@ -500,7 +500,7 @@
               <!-- End Living Rooms -->
 
               <!-- Balconies -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Balconies</mat-label>
                   <input
@@ -517,7 +517,7 @@
               <!-- End Balconies -->
 
               <!-- Kitchens -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Kitchens</mat-label>
                   <input
@@ -538,7 +538,7 @@
             <!-- Driver rooms, Furnishing Status, Parking  -->
             <div class="row">
               <!-- Driver rooms -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Driver rooms</mat-label>
                   <input
@@ -555,22 +555,15 @@
               <!-- End Driver rooms -->
 
               <!-- Furnishing Status -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Furnishing Status</mat-label>
-                  <input
-                    matInput
-                    type="text"
+                  <mat-select
                     [(ngModel)]="furnishingStatus"
                     name="furnishingStatus"
                     title="furnishingStatus"
-                    required
-                    placeholder="Furnishing Status"
-                    [matAutocomplete]="furnishingStatusAutoComplete"
                     class="text-capitalize"
-                  />
-                  <mat-autocomplete
-                    #furnishingStatusAutoComplete="matAutocomplete"
+                    required
                   >
                     <mat-option
                       *ngFor="
@@ -581,13 +574,13 @@
                     >
                       {{ option }}
                     </mat-option>
-                  </mat-autocomplete>
+                  </mat-select>
                 </mat-form-field>
               </div>
               <!-- End Furnishing Status -->
 
               <!-- Parking -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Parking</mat-label>
                   <input
@@ -611,7 +604,7 @@
           <!-- Construction & Age -->
           <div class="tab-content" *ngIf="currentIndex === 3">
             <div class="row my-4">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <h1 class="title">Construction & Age:</h1>
               </div>
             </div>
@@ -619,7 +612,7 @@
             <!-- Built Year, Property Condition, Developer Name -->
             <div class="row">
               <!-- Built Year -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Built Year</mat-label>
                   <input
@@ -637,7 +630,7 @@
               <!-- End Built Year -->
 
               <!-- Property Condition -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Property Condition</mat-label>
                   <input
@@ -667,7 +660,7 @@
               <!-- End Property Condition -->
 
               <!-- Property Condition -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Developer Name</mat-label>
                   <input
@@ -689,7 +682,7 @@
             <!-- Project Name, Owner Ship -->
             <div class="row">
               <!-- Project Name -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Project Name</mat-label>
                   <input
@@ -705,7 +698,7 @@
               </div>
               <!-- End Project Name -->
 
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field class="w-100">
                   <mat-label>Owner Ship Type</mat-label>
                   <input
@@ -734,7 +727,7 @@
               </div>
 
               <!-- Owner Ship -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="w-100">
                   <mat-label
                     [ngClass]="isOwnerNotSelected ? 'text-danger' : ''"
@@ -791,7 +784,7 @@
           <!-- Financial Details -->
           <div class="tab-content" *ngIf="currentIndex === 4">
             <div class="row my-4">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <h1 class="title">Financial Details:</h1>
               </div>
             </div>
@@ -799,7 +792,7 @@
             <!-- Price, Currency, Price per Sqft, Maintenance Fees -->
             <div class="row">
               <!-- Price -->
-              <div class="col-md-4 position-relative">
+              <div class="col-xl-3 position-relative">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Price</mat-label>
                   <input
@@ -810,86 +803,59 @@
                     required
                     placeholder="Price"
                   />
-                  <button
-                    type="button"
-                    class="btn mx-2"
-                    mat-icon
-                    matSuffix
-                    (click)="openCurrency()"
-                  >
+                  <div mat-icon matSuffix class="mx-2 text-muted fw-bold">
                     {{
-                      isCurrencySelected
-                        ? countryActualCurrency
-                        : "Choose Currency"
+                      isCurrencySelected ? countryActualCurrency : "Currency"
                     }}
-                  </button>
+                  </div>
                 </mat-form-field>
-
-                <div
-                  *ngIf="isPriceCurrencyPanelOpen"
-                  [ngClass]="isPriceCurrencyPanelOpen ? 'd-flex' : 'd-none'"
-                  class="currency-container"
-                >
-                  <mat-form-field appearance="fill" class="w-100">
-                    <mat-label
-                      [ngClass]="
-                        countryOfCurrencySelectedError ? 'text-danger' : ''
-                      "
-                      >{{
-                        countryOfCurrencySelectedError
-                          ? "Please select the country!"
-                          : "Select the country by type"
-                      }}</mat-label
-                    >
-                    <input
-                      matInput
-                      [(ngModel)]="selectedCountryWithCurrency"
-                      [matAutocomplete]="auto"
-                      placeholder="Type the country name and select"
-                      (ngModelChange)="selectCountriesWithCurrencies($event)"
-                      name="selectedCurrencyWithCurrency"
-                      [ngClass]="
-                        countryOfCurrencySelectedError ? 'text-danger' : ''
-                      "
-                      required
-                    />
-                    <mat-autocomplete
-                      #auto="matAutocomplete"
-                      [displayWith]="displayCountryWithCurrencyFlag"
-                      (optionSelected)="selectCountryWithCurrency($event)"
-                    >
-                      <mat-option
-                        *ngFor="
-                          let option of filteredCountriesWithCurrency | async
-                        "
-                        [value]="option"
-                      >
-                        <img
-                          [src]="option.flags.svg"
-                          alt="{{ option.flags.alt }}"
-                          width="20"
-                          height="12"
-                          style="margin-right: 8px"
-                        />
-                        {{ option.name.common }}
-                      </mat-option>
-                    </mat-autocomplete>
-                    <button
-                      type="button"
-                      class="btn mx-2"
-                      mat-icon
-                      matSuffix
-                      (click)="closeCurrency()"
-                    >
-                      <i class="fa-solid fa-square-xmark"></i>
-                    </button>
-                  </mat-form-field>
-                </div>
               </div>
               <!-- End Price -->
 
+              <!-- Currency -->
+              <div class="col-xl-3">
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-label>Please select the currency!</mat-label>
+                  <input
+                    matInput
+                    [(ngModel)]="selectedCountryWithCurrency"
+                    [matAutocomplete]="auto"
+                    placeholder="To Select The Currency Type The Country"
+                    (ngModelChange)="selectCountriesWithCurrencies($event)"
+                    name="selectedCurrencyWithCurrency"
+                    required
+                    [ngClass]="
+                      countryOfCurrencySelectedError ? 'text-danger' : ''
+                    "
+                    required
+                  />
+                  <mat-autocomplete
+                    #auto="matAutocomplete"
+                    [displayWith]="displayCountryWithCurrencyFlag"
+                    (optionSelected)="selectCountryWithCurrency($event)"
+                  >
+                    <mat-option
+                      *ngFor="
+                        let option of filteredCountriesWithCurrency | async
+                      "
+                      [value]="option"
+                    >
+                      <img
+                        [src]="option.flags.svg"
+                        alt="{{ option.flags.alt }}"
+                        width="20"
+                        height="12"
+                        style="margin-right: 8px"
+                      />
+                      {{ option.name.common }}
+                    </mat-option>
+                  </mat-autocomplete>
+                </mat-form-field>
+              </div>
+              <!-- End Currency -->
+
               <!-- Price per Sqft -->
-              <div class="col-md-4">
+              <div class="col-xl-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Price per Sqft</mat-label>
                   <input
@@ -905,7 +871,7 @@
               <!-- End Price per Sqft -->
 
               <!-- Maintenance Fees -->
-              <div class="col-md-4">
+              <div class="col-xl-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Maintenance Fees</mat-label>
                   <input
@@ -925,7 +891,7 @@
             <!-- Service Charges / Association Fees, Govt. Reg. / Transfer Fees, Availability Status  -->
             <div class="row">
               <!-- Service Charges / Association Fees -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Service Charges / Association Fees</mat-label>
                   <input
@@ -941,7 +907,7 @@
               <!-- End Service Charges / Association Fees -->
 
               <!-- Availability Status -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Availability Status</mat-label>
                   <input
@@ -973,7 +939,7 @@
               <!-- End Availability Status -->
 
               <!-- Govt. Reg. / Transfer Fees -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Govt. Reg. / Transfer Fees</mat-label>
                   <input
@@ -992,7 +958,7 @@
             <!-- Rent for daily, monthly, quarter, yearly -->
             <div class="row">
               <!-- Expected Rent Yearly -->
-              <div class="col-md-3">
+              <div class="col-xl-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Expected Rent Yearly</mat-label>
                   <input
@@ -1007,7 +973,7 @@
               <!-- End Expected Rent Yearly -->
 
               <!-- Expected Rent Quartaly -->
-              <div class="col-md-3">
+              <div class="col-xl-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Expected Rent Quartaly</mat-label>
                   <input
@@ -1022,7 +988,7 @@
               <!-- End Expected Rent Quartaly -->
 
               <!-- Expected Rent Monthly -->
-              <div class="col-md-3">
+              <div class="col-xl-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Expected Rent Monthly</mat-label>
                   <input
@@ -1037,7 +1003,7 @@
               <!-- End Expected Rent Monthly -->
 
               <!-- Expected Rent Daily -->
-              <div class="col-md-3">
+              <div class="col-xl-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Expected Rent Daily</mat-label>
                   <input
@@ -1058,13 +1024,13 @@
           <!-- Features & Amenities -->
           <div class="tab-content" *ngIf="currentIndex === 5">
             <div class="row my-4">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <h1 class="title">Features & Amenities:</h1>
               </div>
             </div>
             <!-- Features Amenity -->
-            <div class="row">
-              <div class="col-md-4">
+            <div class="row" *ngIf="isUserCanManageAmenitiesToTheProperty()">
+              <div class="col-xl-4">
                 <mat-form-field class="example-full-width w-100">
                   <mat-label>Features Amenity</mat-label>
                   <input
@@ -1103,7 +1069,7 @@
                   </mat-autocomplete>
                 </mat-form-field>
               </div>
-              <div class="col-md-8">
+              <div class="col-xl-8">
                 <p class="text-style">
                   To select amenities, choose from the existing list by type, or
                   click the plus button to add new one.
@@ -1119,7 +1085,7 @@
             >
               <div
                 *ngFor="let item of featureAmenities; let i = index"
-                class="col-md-4 m-2"
+                class="col-xl-4 m-2"
               >
                 <div
                   class="row btn-edit d-flex justify-content-between align-items-center"
@@ -1157,7 +1123,7 @@
           <!-- Media -->
           <div class="tab-content" *ngIf="currentIndex === 6">
             <div class="row my-4">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <h1 class="title">Media:</h1>
               </div>
             </div>
@@ -1165,7 +1131,7 @@
             <div class="row my-5">
               <h4 class="title">Property Images:</h4>
               <div class="d-flex justify-content-center align-items-center">
-                <div class="col-md-8 mt-2">
+                <div class="col-xl-8 mt-2">
                   <div
                     class="drop-down-container"
                     (click)="triggerPropertyImages()"
@@ -1199,7 +1165,7 @@
               </h4>
               <div class="row mt-5 image-preview">
                 <div
-                  class="col-md-3 my-4 d-flex justify-content-center align-items-center"
+                  class="col-xl-3 my-4 d-flex justify-content-center align-items-center"
                   *ngFor="let image of propertyImagePreview; let i = index"
                 >
                   <div class="image-preview-container">
@@ -1243,7 +1209,7 @@
               >
                 <div
                   *ngFor="let image of uploadedImages; let i = index"
-                  class="col-md-3 my-4 d-flex justify-content-center align-items-center"
+                  class="col-xl-3 my-4 d-flex justify-content-center align-items-center"
                   cdkDrag
                 >
                   <div class="image-preview-container">
@@ -1266,10 +1232,10 @@
             <!-- End Preview Uploaded Images Preview -->
 
             <!-- Property Documents -->
-            <div class="row my-5">
+            <div class="row my-5" *ngIf="isUserCanUploadDocumentsToTheProperty()">
               <h4 class="title">Property Documents:</h4>
               <div class="d-flex justify-content-center align-items-center">
-                <div class="col-md-8 mt-2">
+                <div class="col-xl-8 mt-2">
                   <div
                     class="drop-down-container"
                     (click)="triggerPropertyDocs()"
@@ -1297,13 +1263,13 @@
             <!-- End Property Documents -->
 
             <!-- Property Documents Preview -->
-            <div *ngIf="propertyDocsPreview && propertyDocsPreview.length > 0">
+            <div *ngIf="propertyDocsPreview && propertyDocsPreview.length > 0 && isUserCanUploadDocumentsToTheProperty()">
               <h4 class="title my-3 text-capitalize">
                 Preview selected documents:
               </h4>
               <div class="row mt-5 document-preview">
                 <div
-                  class="col-md-4 my-4 d-flex justify-content-center align-items-center"
+                  class="col-xl-4 my-4 d-flex justify-content-center align-items-center"
                   *ngFor="let doc of propertyDocsPreview; let i = index"
                 >
                   <div class="row doc-preview-container">
@@ -1335,7 +1301,7 @@
               </h4>
               <div class="row mt-5 document-preview">
                 <div
-                  class="col-md-4 my-4 d-flex justify-content-center align-items-center"
+                  class="col-xl-4 my-4 d-flex justify-content-center align-items-center"
                   *ngFor="let doc of uploadedDucumentsPreview; let i = index"
                 >
                   <div class="row doc-preview-container">
@@ -1362,7 +1328,7 @@
             <!-- Property Video, 360° Virtual Tour -->
             <div class="row mt-5">
               <!-- Property Video -->
-              <div class="col-md-6">
+              <div class="col-xl-6">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Property Video URL</mat-label>
                   <input
@@ -1402,7 +1368,7 @@
               <!-- End Property Video -->
 
               <!-- 360° Virtual Tour -->
-              <div class="col-md-6">
+              <div class="col-xl-6">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>360° Virtual Tour URL</mat-label>
                   <input
@@ -1436,7 +1402,7 @@
           <!-- Listing Management -->
           <div class="tab-content" *ngIf="currentIndex === 7">
             <div class="row my-4">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <h1 class="title">Listing Management:</h1>
               </div>
             </div>
@@ -1444,7 +1410,7 @@
             <!-- Listing Date, Availability Date, Listing Expiry Date -->
             <div class="row">
               <!-- Listing Date -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Listing Date</mat-label>
                   <input
@@ -1465,7 +1431,7 @@
               <!-- End Listing Date -->
 
               <!-- Availability Date -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Availability Date</mat-label>
                   <input
@@ -1485,7 +1451,7 @@
               <!-- End Availability Date -->
 
               <!-- Listing Expiry Date -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Listing Expiry Date</mat-label>
                   <input
@@ -1509,7 +1475,7 @@
             <!-- Rented Date, Sold Date, Change Agent -->
             <div class="row my-3">
               <!-- Rented Date -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Rented Date</mat-label>
                   <input
@@ -1530,7 +1496,7 @@
 
               <!-- End Sold Date -->
               <!-- Sold Date -->
-              <div class="col-md-4">
+              <div class="col-xl-4">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Sold Date</mat-label>
                   <input
@@ -1550,7 +1516,7 @@
               <!-- End Sold Date -->
 
               <!-- Change Agent -->
-              <div class="col-md-4">
+              <div class="col-xl-4" *ngIf="isUserCanAssignAgentToTheProperty()">
                 <mat-form-field appearance="fill" class="w-100">
                   <mat-label
                     [ngClass]="isAgentNotSelected ? 'text-danger' : ''"
@@ -1607,7 +1573,7 @@
           <!-- Administrative & Internal Use -->
           <div class="tab-content" *ngIf="currentIndex === 8">
             <div class="row my-4">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <h1 class="title">Administrative & Internal Use:</h1>
               </div>
             </div>
@@ -1615,7 +1581,7 @@
             <!-- Listing ID / Reference Code, Verification Status, Priority / Featured Listing Flag, Property Status -->
             <div class="row">
               <!-- Listing ID / Reference Code -->
-              <div class="col-md-3">
+              <div class="col-xl-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Listing ID / Reference Code</mat-label>
                   <input
@@ -1631,20 +1597,13 @@
               <!-- End Listing ID / Reference Code -->
 
               <!-- Verification Status -->
-              <div class="col-md-3">
+              <div class="col-xl-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Verification Status</mat-label>
-                  <input
-                    matInput
-                    type="text"
+                  <mat-select
                     [(ngModel)]="verificationStatus"
                     name="verificationStatus"
                     required
-                    placeholder="Verification Status"
-                    [matAutocomplete]="verificationStatusAutoComplete"
-                  />
-                  <mat-autocomplete
-                    #verificationStatusAutoComplete="matAutocomplete"
                   >
                     <mat-option
                       *ngFor="
@@ -1654,38 +1613,29 @@
                     >
                       {{ option }}
                     </mat-option>
-                  </mat-autocomplete>
+                  </mat-select>
                 </mat-form-field>
               </div>
               <!-- End Verification Status -->
 
               <!-- Priority / Featured Listing Flag -->
-              <div class="col-md-3">
+              <div class="col-xl-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Priority / Featured Listing Flag</mat-label>
-                  <input
-                    matInput
-                    type="text"
-                    [(ngModel)]="priority"
-                    name="priority"
-                    required
-                    placeholder="Priority / Featured Listing Flag"
-                    [matAutocomplete]="priorityAutoComplete"
-                  />
-                  <mat-autocomplete #priorityAutoComplete="matAutocomplete">
+                  <mat-select [(ngModel)]="priority" name="priority" required>
                     <mat-option
                       *ngFor="let option of propertyPriorityOptionsSort()"
                       [value]="option"
                     >
                       {{ option }}
                     </mat-option>
-                  </mat-autocomplete>
+                  </mat-select>
                 </mat-form-field>
               </div>
               <!-- End Priority / Featured Listing Flag -->
 
               <!-- Property Status -->
-              <div class="col-md-3">
+              <div class="col-xl-3">
                 <mat-form-field appearance="fill" class="form-field me-3 w-100">
                   <mat-label>Property Status</mat-label>
                   <mat-select [(ngModel)]="status" name="status" required>
@@ -1706,7 +1656,7 @@
 
             <!-- Internal Note -->
             <div class="row">
-              <div class="col-md-12">
+              <div class="col-xl-12">
                 <h4 class="title mt-5 mb-1">Internal Note:</h4>
                 <div>
                   <editor
@@ -1727,7 +1677,7 @@
             <!-- submit btn -->
             <!-- <div class="row mt-5 d-flex justify-content-end align-item-center">
               <div
-                class="col-md-2 d-flex justify-content-end align-item-center"
+                class="col-xl-2 d-flex justify-content-end align-item-center"
               >
                 <button type="submit" class="btn-custom fw-bold submit-btn">
                   <mat-icon svgIcon="upload" class="me-1"></mat-icon> Save

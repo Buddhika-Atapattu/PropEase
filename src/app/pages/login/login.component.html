@@ -4,9 +4,9 @@
 <div
   class="container-fluid min-vh-100 d-flex align-items-center justify-content-center p-0"
 >
-  <div class="row w-100 min-vh-100 p-0">
+  <div class="row w-100 min-vh-100 p-0 main-row">
     <!-- Left Panel: Company Logo -->
-    <div class="col-md-6 d-flex justify-content-center align-items-center p-0 logo-col">
+    <div class="col-md-6 d-flex justify-content-center align-items-center p-0 image-col">
       <div class="main-container">
         <div class="image-container">
           <img
@@ -28,7 +28,7 @@
           autocomplete="off"
           #loginForm="ngForm"
         >
-          <h2 class="login-title text-center">Welcome to propease-fontend</h2>
+          <h2 class="login-title text-center">Welcome to PropEase</h2>
           <p class="login-subtitle text-center">Your property, our priority</p>
 
           <mat-form-field appearance="fill" class="form-field">
@@ -76,6 +76,7 @@
               [(ngModel)]="rememberMe"
               name="rememberMe"
               class="remember-me-checkbox"
+              
             >
               Remember me
             </mat-checkbox>

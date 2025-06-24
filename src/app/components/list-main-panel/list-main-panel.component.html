@@ -1,4 +1,5 @@
-<div class="main-container-of-side-panel">
+<!-- Desktop View -->
+<div *ngIf="!isMobile" class="main-container-of-side-panel">
   <div
     [ngClass]="isExpanded() ? 'side-panel' : 'side-panel side-panel-collapsed'"
   >
@@ -12,15 +13,279 @@
 
     <!-- <h3 *ngIf="isExpanded()">Quick Actions</h3> -->
     <ul class="">
-      <li class="m-0" *ngFor="let link of linkLists">
+      <!-- Parent Link -->
+      <li class="m-0" *ngFor="let link of linkLists; let i = index">
+        @if(link.sub){
         <button
+          class="parent-btn"
           mat-button
-          (click)="navigateTo(link.url)"
-          class="{{ currecntURL === link.url ? 'active' : '' }}"
+          (click)="
+            link.sub ? toggleDropdown(i) : navigateTo(link.url, null, null)
+          "
+          class="position-relative"
           [ngClass]="
-            isExpanded()
-              ? 'd-flex justify-content-start align-items-center'
-              : 'd-flex justify-content-center align-items-center btn-cllapse'
+            [
+              link.sub ? 'dropdown-item' : '',
+              currecntURL === link.url && link.url !== '' ? 'active' : '',
+              activeParentRoute === link.url ? 'active' : '',
+              isExpanded()
+                ? 'd-flex justify-content-start align-items-center '
+                : 'd-flex justify-content-center align-items-center btn-cllapse'
+            ].join(' ')
+          "
+        >
+          <mat-icon
+            matTooltip="{{ isExpanded() ? '' : link.toolTip }}"
+            [svgIcon]="link.mat_icon"
+            [ngClass]="link.mat_icon"
+            [ngClass]="isExpanded() ? '' : 'cllapse'"
+          ></mat-icon>
+          <span class="delay-expand">{{ link.icon_text }}</span>
+          <span class="delay-expand dropdown-icon"
+            ><i class="fa-solid fa-chevron-down"></i
+          ></span>
+        </button>
+        } @else {
+        <button
+          class="parent-btn"
+          mat-button
+          (click)="
+            link.sub ? toggleDropdown(i) : navigateTo(link.url, null, null)
+          "
+          [ngClass]="
+            [
+              link.sub ? 'dropdown-item' : '',
+              currecntURL === link.url && link.url !== '' ? 'active' : '',
+              isExpanded()
+                ? 'd-flex justify-content-start align-items-center'
+                : 'd-flex justify-content-center align-items-center btn-cllapse'
+            ].join(' ')
+          "
+        >
+          <mat-icon
+            matTooltip="{{ isExpanded() ? '' : link.toolTip }}"
+            [svgIcon]="link.mat_icon"
+            [ngClass]="link.mat_icon"
+            [ngClass]="isExpanded() ? '' : 'cllapse'"
+          ></mat-icon>
+          <span class="delay-expand">{{ link.icon_text }}</span>
+        </button>
+        }
+
+        <div [ngClass]="link.sub ? 'dropdown' : 'd-none'">
+          <ul>
+            <!-- Sub Link -->
+            <li *ngFor="let subLink of link.sub; let j = index">
+              @if(subLink.sub){
+              <button
+                mat-button
+                class="sub-btn"
+                (click)="
+                  subLink.sub
+                    ? toggleDropdownByElement($event)
+                    : navigateTo(link.url, subLink.url, null)
+                "
+                [ngClass]="
+                  [
+                    subLink.sub ? 'dropdown-item' : '',
+                    currecntURL === subLink.url && subLink.url !== ''
+                      ? 'active'
+                      : '',
+                    isSubItemActive(link.url, subLink.url, null)
+                      ? 'active'
+                      : '',
+                    isExpanded()
+                      ? 'd-flex justify-content-start align-items-center'
+                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                  ].join(' ')
+                "
+              >
+                <mat-icon
+                  matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
+                  [svgIcon]="subLink.mat_icon"
+                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                ></mat-icon>
+                <span class="delay-expand">{{ subLink.icon_text }}</span>
+                <span class="delay-expand dropdown-icon"
+                  ><i class="fa-solid fa-chevron-down"></i
+                ></span>
+              </button>
+              } @else { @if(loggedUser !== null &&
+              loggedUser.role.toLocaleLowerCase() === 'admin' &&
+              subLink.icon_text.toLocaleLowerCase() === 'log'){
+              <button
+                mat-button
+                class="sub-btn"
+                (click)="
+                  subLink.sub
+                    ? toggleDropdownByElement($event)
+                    : navigateTo(link.url, subLink.url, null)
+                "
+                [ngClass]="
+                  [
+                    subLink.sub ? 'dropdown-item' : '',
+                    currecntURL === subLink.url && subLink.url !== ''
+                      ? 'active'
+                      : '',
+                    isSubItemActive(link.url, subLink.url, null)
+                      ? 'active'
+                      : '',
+                    isExpanded()
+                      ? 'd-flex justify-content-start align-items-center'
+                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                  ].join(' ')
+                "
+              >
+                <mat-icon
+                  matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
+                  [svgIcon]="subLink.mat_icon"
+                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                ></mat-icon>
+                <span class="delay-expand">{{ subLink.icon_text }}</span>
+              </button>
+              } @else{
+              <button
+                mat-button
+                class="sub-btn"
+                (click)="
+                  subLink.sub
+                    ? toggleDropdownByElement($event)
+                    : navigateTo(link.url, subLink.url, null)
+                "
+                [ngClass]="
+                  [
+                    subLink.sub ? 'dropdown-item' : '',
+                    currecntURL === subLink.url && subLink.url !== ''
+                      ? 'active'
+                      : '',
+                    isSubItemActive(link.url, subLink.url, null)
+                      ? 'active'
+                      : '',
+                    isExpanded()
+                      ? 'd-flex justify-content-start align-items-center'
+                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                  ].join(' ')
+                "
+              >
+                <mat-icon
+                  matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
+                  [svgIcon]="subLink.mat_icon"
+                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                ></mat-icon>
+                <span class="delay-expand">{{ subLink.icon_text }}</span>
+              </button>
+              } }
+
+              <div [ngClass]="subLink.sub ? 'dropdown' : 'd-none'">
+                <ul>
+                  <!-- Child Link -->
+                  <li *ngFor="let childLink of subLink.sub; let k = index">
+                    <button
+                      class="child-btn"
+                      mat-button
+                      (click)="
+                        childLink.sub
+                          ? toggleDropdownByElement($event)
+                          : navigateTo(link.url, subLink.url, childLink.url)
+                      "
+                      [ngClass]="
+                        [
+                          childLink.sub ? 'dropdown-item' : '',
+                          currecntURL === childLink.url && childLink.url !== ''
+                            ? 'active'
+                            : '',
+                          isSubItemActive(link.url, subLink.url, childLink.url)
+                            ? 'active'
+                            : '',
+                          isExpanded()
+                            ? 'd-flex justify-content-start align-items-center'
+                            : 'd-flex justify-content-center align-items-center btn-cllapse'
+                        ].join(' ')
+                      "
+                    >
+                      <mat-icon
+                        matTooltip="{{ isExpanded() ? '' : childLink.toolTip }}"
+                        [svgIcon]="childLink.mat_icon"
+                        [ngClass]="isExpanded() ? '' : 'cllapse'"
+                      ></mat-icon>
+                      <span class="delay-expand">{{
+                        childLink.icon_text
+                      }}</span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+<!-- End Desktop View -->
+
+<!-- Mobile View -->
+<div *ngIf="isMobile" class="main-container-of-side-panel">
+  <div
+    [ngClass]="isExpanded() ? 'side-panel' : 'side-panel side-panel-collapsed'"
+  >
+    <button
+      mat-icon-button
+      [ngClass]="isExpanded() ? 'expand-btn' : 'expand-btn expand-cllapse-btn'"
+      (click)="togglePanel()"
+    >
+      <mat-icon>{{ isExpanded() ? "chevron_left" : "chevron_right" }}</mat-icon>
+    </button>
+
+    <!-- <h3 *ngIf="isExpanded()">Quick Actions</h3> -->
+    <ul class="">
+      <!-- Parent Link -->
+      <li class="m-0" *ngFor="let link of linkLists; let i = index">
+        @if(link.sub){
+        <button
+          class="parent-btn"
+          mat-button
+          (click)="
+            link.sub ? toggleDropdown(i) : navigateTo(link.url, null, null)
+          "
+          class="position-relative"
+          [ngClass]="
+            [
+              link.sub ? 'dropdown-item' : '',
+              currecntURL === link.url && link.url !== '' ? 'active' : '',
+              activeParentRoute === link.url ? 'active' : '',
+              isExpanded()
+                ? 'd-flex justify-content-start align-items-center '
+                : 'd-flex justify-content-center align-items-center btn-cllapse'
+            ].join(' ')
+          "
+        >
+          <mat-icon
+            matTooltip="{{ isExpanded() ? '' : link.toolTip }}"
+            [svgIcon]="link.mat_icon"
+            [class]="link.mat_icon"
+            [ngClass]="isExpanded() ? '' : 'cllapse'"
+          ></mat-icon>
+          <span class="delay-expand">{{ link.icon_text }}</span>
+          <span class="delay-expand dropdown-icon"
+            ><i class="fa-solid fa-chevron-down"></i
+          ></span>
+        </button>
+        } @else {
+        <button
+          class="parent-btn"
+          mat-button
+          (click)="
+            link.sub ? toggleDropdown(i) : navigateTo(link.url, null, null)
+          "
+          [ngClass]="
+            [
+              link.sub ? 'dropdown-item' : '',
+              currecntURL === link.url && link.url !== '' ? 'active' : '',
+              isExpanded()
+                ? 'd-flex justify-content-start align-items-center'
+                : 'd-flex justify-content-center align-items-center btn-cllapse'
+            ].join(' ')
           "
         >
           <mat-icon
@@ -30,7 +295,156 @@
           ></mat-icon>
           <span class="delay-expand">{{ link.icon_text }}</span>
         </button>
+        }
+
+        <div [ngClass]="link.sub ? 'dropdown' : 'd-none'">
+          <ul>
+            <!-- Sub Link -->
+            <li *ngFor="let subLink of link.sub; let j = index">
+              @if(subLink.sub){
+              <button
+                mat-button
+                class="sub-btn"
+                (click)="
+                  subLink.sub
+                    ? toggleDropdownByElement($event)
+                    : navigateTo(link.url, subLink.url, null)
+                "
+                [ngClass]="
+                  [
+                    subLink.sub ? 'dropdown-item' : '',
+                    currecntURL === subLink.url && subLink.url !== ''
+                      ? 'active'
+                      : '',
+                    isSubItemActive(link.url, subLink.url, null)
+                      ? 'active'
+                      : '',
+                    isExpanded()
+                      ? 'd-flex justify-content-start align-items-center'
+                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                  ].join(' ')
+                "
+              >
+                <mat-icon
+                  matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
+                  [svgIcon]="subLink.mat_icon"
+                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                ></mat-icon>
+                <span class="delay-expand">{{ subLink.icon_text }}</span>
+                <span class="delay-expand dropdown-icon"
+                  ><i class="fa-solid fa-chevron-down"></i
+                ></span>
+              </button>
+              } @else { @if(loggedUser !== null &&
+              loggedUser.role.toLocaleLowerCase() === 'admin' &&
+              subLink.icon_text.toLocaleLowerCase() === 'log'){
+              <button
+                mat-button
+                class="sub-btn"
+                (click)="
+                  subLink.sub
+                    ? toggleDropdownByElement($event)
+                    : navigateTo(link.url, subLink.url, null)
+                "
+                [ngClass]="
+                  [
+                    subLink.sub ? 'dropdown-item' : '',
+                    currecntURL === subLink.url && subLink.url !== ''
+                      ? 'active'
+                      : '',
+                    isSubItemActive(link.url, subLink.url, null)
+                      ? 'active'
+                      : '',
+                    isExpanded()
+                      ? 'd-flex justify-content-start align-items-center'
+                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                  ].join(' ')
+                "
+              >
+                <mat-icon
+                  matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
+                  [svgIcon]="subLink.mat_icon"
+                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                ></mat-icon>
+                <span class="delay-expand">{{ subLink.icon_text }}</span>
+              </button>
+              } @else{
+              <button
+                mat-button
+                class="sub-btn"
+                (click)="
+                  subLink.sub
+                    ? toggleDropdownByElement($event)
+                    : navigateTo(link.url, subLink.url, null)
+                "
+                [ngClass]="
+                  [
+                    subLink.sub ? 'dropdown-item' : '',
+                    currecntURL === subLink.url && subLink.url !== ''
+                      ? 'active'
+                      : '',
+                    isSubItemActive(link.url, subLink.url, null)
+                      ? 'active'
+                      : '',
+                    isExpanded()
+                      ? 'd-flex justify-content-start align-items-center'
+                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                  ].join(' ')
+                "
+              >
+                <mat-icon
+                  matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
+                  [svgIcon]="subLink.mat_icon"
+                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                ></mat-icon>
+                <span class="delay-expand">{{ subLink.icon_text }}</span>
+              </button>
+              } }
+
+              <div [ngClass]="subLink.sub ? 'dropdown' : 'd-none'">
+                <ul>
+                  <!-- Child Link -->
+                  <li *ngFor="let childLink of subLink.sub; let k = index">
+                    <button
+                      class="child-btn"
+                      mat-button
+                      (click)="
+                        childLink.sub
+                          ? toggleDropdownByElement($event)
+                          : navigateTo(link.url, subLink.url, childLink.url)
+                      "
+                      [ngClass]="
+                        [
+                          childLink.sub ? 'dropdown-item' : '',
+                          currecntURL === childLink.url && childLink.url !== ''
+                            ? 'active'
+                            : '',
+                          isSubItemActive(link.url, subLink.url, childLink.url)
+                            ? 'active'
+                            : '',
+                          isExpanded()
+                            ? 'd-flex justify-content-start align-items-center'
+                            : 'd-flex justify-content-center align-items-center btn-cllapse'
+                        ].join(' ')
+                      "
+                    >
+                      <mat-icon
+                        matTooltip="{{ isExpanded() ? '' : childLink.toolTip }}"
+                        [svgIcon]="childLink.mat_icon"
+                        [ngClass]="isExpanded() ? '' : 'cllapse'"
+                      ></mat-icon>
+                      <span class="delay-expand">{{
+                        childLink.icon_text
+                      }}</span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
       </li>
     </ul>
   </div>
 </div>
+<!-- End Mobile View -->

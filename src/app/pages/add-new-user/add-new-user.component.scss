@@ -94,6 +94,7 @@
     border-radius: 2rem;
     font-size: 25pt;
     text-transform: uppercase;
+    text-align: center;
     color: currentColor;
     cursor: pointer;
   }
@@ -254,5 +255,11 @@
 
   p {
     font-size: 16px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .main-panel {
+    padding: 4rem 0 0 0;
   }
 }

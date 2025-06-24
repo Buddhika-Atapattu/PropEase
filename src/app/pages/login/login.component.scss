@@ -25,10 +25,14 @@
 // Light Mode
 :host-context(html.light) {
   height: 100vh;
-  background: linear-gradient(135deg, #fffaf3, #f1e8d9);
+  background: linear-gradient(
+    135deg,
+    $light-secondary-color,
+    $light-primary-color
+  ) !important;
 
   .main-container {
-    @include glassmorphic-bg(rgba(255, 255, 255, 0.15), rgba(31, 38, 135, 0.1));
+    @include glassmorphic-bg(rgb(255 186 0 / 18%), rgba(31, 38, 135, 0.1));
     display: flex;
     justify-content: center;
     align-items: center;
@@ -36,11 +40,11 @@
     height: 100%;
   }
   .image-container {
-    width: 480px;
-    height: 480px;
+    width: 450px;
+    height: 450px;
     border-radius: 50px;
-    background-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 40px #d29e00;
+    background-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 40px #ffd557;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -55,7 +59,7 @@
     width: 500px;
     padding: 40px;
     border-radius: 30px;
-    @include glassmorphic-bg(rgba(255, 255, 255, 0.65), rgba(0, 0, 0, 0.2));
+    @include glassmorphic-bg(rgb(255 204 0 / 14%), rgba(0, 0, 0, 0.2));
 
     .form {
       animation: slideFadeIn 0.7s ease-out;
@@ -70,6 +74,9 @@
         justify-content: space-between;
         align-items: center;
         margin-top: 20px;
+        ::ng-deep .mdc-button__label {
+          color: $light-text-color !important;
+        }
       }
 
       .login-title {
@@ -103,11 +110,11 @@
     height: 100%;
   }
   .image-container {
-    width: 480px;
-    height: 480px;
+    width: 450px;
+    height: 450px;
     border-radius: 50px;
-    background-color: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 0 40px #d29e00;
+    background-color: rgb(8 18 47);
+    box-shadow: 0 0 40px #ffbf0080;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -122,7 +129,7 @@
     width: 500px;
     padding: 40px;
     border-radius: 30px;
-    @include glassmorphic-bg(rgba(0, 0, 0, 0.4), rgba(255, 255, 255, 0.1));
+    @include glassmorphic-bg(rgb(8 25 76), rgba(255, 204, 0, 0.1));
 
     .form {
       animation: slideFadeIn 0.7s ease-out;
@@ -145,6 +152,9 @@
         justify-content: space-between;
         align-items: center;
         margin-top: 20px;
+        ::ng-deep .mdc-button__label {
+          color: $dark-text-color !important;
+        }
       }
 
       .login-title {
@@ -188,10 +198,26 @@
   }
 }
 
+::ng-deep mat-checkbox.mat-checkbox-checked .mat-checkbox-background,
+::ng-deep mat-checkbox.mat-accent .mat-checkbox-background {
+  background-color: #ffcc00 !important; // your custom color
+}
 
 //Mobile view
-@media (max-width: 768px){
-  .logo-col{
+@media (max-width: 1025px) {
+  .main-row {
+    display: flex 1 1 auto;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .image-col {
     display: none !important;
+  }
+}
+
+@media (max-width: 350px) {
+  .login-form-container {
+    padding: 1rem !important;
   }
 }

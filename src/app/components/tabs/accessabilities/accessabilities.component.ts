@@ -19,6 +19,7 @@ import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-l
 
 @Component({
   selector: 'app-accessabilities',
+  standalone: true,
   imports: [CommonModule, MatIconModule, SkeletonLoaderComponent],
   templateUrl: './accessabilities.component.html',
   styleUrl: './accessabilities.component.scss',

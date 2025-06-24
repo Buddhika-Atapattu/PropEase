@@ -40,6 +40,10 @@
     margin-top: 3rem;
     min-height: 50vh;
 
+    .mobile-menu-open-btn {
+      display: none;
+    }
+
     .tab-indicator-row {
       div {
         position: relative;
@@ -214,16 +218,32 @@
     }
   }
 
-  .currency-container {
-    position: absolute;
-    top: 0;
-    right: 0;
+  .container-for-absolute{
+    position: relative;
     width: 100%;
-    height: 100%;
+    height: auto;
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .currency-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    justify-content: center;
+    align-items: center;
     box-shadow: 0rem 0rem 1rem 0rem #000000b0;
+    z-index: 1;
+
+    ::ng-deep {
+      mat-form-field {
+      }
+    }
 
     ::ng-deep .mat-mdc-form-field-subscript-wrapper {
       height: 0rem;
@@ -318,11 +338,11 @@
         stroke: #fff;
         fill: none;
       }
-      ::ng-deep rect{
+      ::ng-deep rect {
         fill: #fff;
         stroke: #fff;
       }
-      ::ng-deep polygon{
+      ::ng-deep polygon {
         fill: #fff;
         stroke: #fff;
       }
@@ -489,7 +509,7 @@
 }
 
 // Mobile view
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .main-panel {
     padding: 0.25rem;
     .tab-container {
@@ -614,4 +634,3 @@
     }
   }
 }
-

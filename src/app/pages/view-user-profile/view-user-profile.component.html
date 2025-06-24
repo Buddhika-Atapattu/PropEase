@@ -2,7 +2,7 @@
   *ngIf="mode !== null && user !== null && LOGGED_USER !== null"
   class="main-panel"
   [ngClass]="mode ? 'dark' : 'light'"
->
+> 
   <div class="container-fluid">
     <!-- page indicator -->
     <div class="row page-indecator">
@@ -19,8 +19,11 @@
     <!-- end page indicator -->
     <!-- user-image row -->
     <div class="row user-image-row">
+      <button type="button" class="btn-edit" *ngIf="isUserCanEdit" (click)="editUser()">
+        <i class="fa-solid fa-pen-to-square"></i>
+      </button>
       <div
-        class="col-md-12 d-flex justify-content-center align-items-center mt-5"
+        class="col-xl-12 d-flex justify-content-center align-items-center mt-5"
       >
         <div class="image-container">
           <app-skeleton-loader
@@ -41,11 +44,14 @@
     </div>
     <!-- end user-image row -->
     <!-- tabs -->
-    <div class="row mt-4 tab-row">
+    <div class="row mt-4 tab-row" [ngClass]="isListPanelOpen ? 'tab-row-active' : ''">
       <div
-        class="col-md-12 overflow-hidden d-flex flex-wrap justify-content-start align-items-center p-0"
+        class="col-xl-12 overflow-hidden d-flex flex-wrap justify-content-start align-items-center p-0"
       >
-        <ul class="tab-list">
+      <button type="button" class="list-btn" (click)="toggleListPanel()">
+        <i [ngClass]="isListPanelOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars'"></i>
+      </button>
+        <ul  class="tab-list" [ngClass]="isListPanelOpen ? 'active' : ''">
           <li class="tab-list-item" [class.active]="isInfoPanelOpen">
             <button
               class="tab-list-item-btn"
@@ -99,31 +105,13 @@
               Activities
             </button>
           </li>
-          <li
-            *ngIf="
-              LOGGED_USER.role === 'admin' ||
-              LOGGED_USER.role === 'agent' ||
-              LOGGED_USER.role === 'operator' ||
-              LOGGED_USER.role === 'manager'
-            "
-            class="tab-list-item"
-            [class.active]="isPropertiesPanelOpen"
-          >
-            <button
-              class="tab-list-item-btn"
-              (click)="goToProperties()"
-              #tabButton
-            >
-              Properties
-            </button>
-          </li>
         </ul>
       </div>
     </div>
 
     <!-- Data row -->
     <div class="row mt-5">
-      <div class="col-md-12">
+      <div class="col-xl-12">
         <app-user-informations
           *ngIf="isInfoPanelOpen"
           [user]="user"

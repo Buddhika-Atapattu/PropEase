@@ -160,6 +160,7 @@ export class DocumentsComponent
         .then((data) => {
           if (data) {
             this.documents = data.data as UDER_DOC_TYPES[];
+            
           }
         })
         .catch((error) => {

@@ -12,7 +12,7 @@
       <!-- tab indicators -->
       <div class="row tab-indicator-row">
         <div
-          class="col-md-12 w-100 d-flex justify-content-center align-items-center"
+          class="col-xl-12 w-100 d-flex justify-content-center align-items-center"
         >
           <button
             type="button"
@@ -51,13 +51,13 @@
         <!-- Basic Property Details -->
         <div class="tab-content" *ngIf="currentIndex === 0">
           <div class="row my-4">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <h1 class="title">Basic Property Details:</h1>
             </div>
           </div>
           <!-- Property Title -->
           <div class="row">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <h1 class="text-capitalize">{{ property.title }}</h1>
             </div>
           </div>
@@ -65,7 +65,7 @@
 
           <!-- Property Listing and Type -->
           <div class="row">
-            <div class="col-md-12 d-flex">
+            <div class="col-xl-12 d-flex">
               <ul class="lists">
                 <li>{{ property.listing }}</li>
                 <li>{{ property.type }}</li>
@@ -75,7 +75,7 @@
           <!-- End Property Listing and Type -->
 
           <div class="row my-5">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <div [innerHTML]="property.description"></div>
             </div>
           </div>
@@ -85,14 +85,14 @@
         <!-- Location Details -->
         <div class="tab-content" *ngIf="currentIndex === 1">
           <div class="row my-4">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <h1 class="title">Location Details:</h1>
             </div>
           </div>
 
           <!-- Address -->
           <div class="row">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <h1 class="text-capitalize mb-3">Property Address</h1>
               <div class="address-details">
                 <p class="text-capitalize">
@@ -112,7 +112,7 @@
 
           <!-- Map -->
           <div class="row">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <h1 class="text-capitalize mt-3">Property Location</h1>
               <div class="my-5 map-container-main">
                 <app-map
@@ -129,12 +129,12 @@
         <!-- Property Specifications -->
         <div class="tab-content" *ngIf="currentIndex === 2">
           <div class="row my-4">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <h1 class="title">Property Specifications:</h1>
             </div>
           </div>
           <div class="row d-flex justify-content-center align-item-center">
-            <div class="col-md-8">
+            <div class="col-xl-8">
               <div class="list-container">
                 <ul>
                   <li>
@@ -166,12 +166,12 @@
         <!-- Construction & Age -->
         <div class="tab-content" *ngIf="currentIndex === 3">
           <div class="row my-4">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <h1 class="title">Construction & Age:</h1>
             </div>
           </div>
           <div class="row d-flex justify-content-center align-item-center">
-            <div class="col-md-8">
+            <div class="col-xl-8">
               <div class="list-container">
                 <ul>
                   <li>Built Year: {{ property.builtYear }}</li>
@@ -197,12 +197,12 @@
         <!-- Financial Details -->
         <div class="tab-content" *ngIf="currentIndex === 4">
           <div class="row my-4">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <h1 class="title">Financial Details:</h1>
             </div>
           </div>
           <div class="row d-flex justify-content-center align-item-center">
-            <div class="col-md-8">
+            <div class="col-xl-8">
               <div class="list-container">
                 <ul>
                   <li>
@@ -274,12 +274,12 @@
         <!-- Listing Management -->
         <div class="tab-content" *ngIf="currentIndex === 5">
           <div class="row my-4">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <h1 class="title">Listing Management:</h1>
             </div>
           </div>
           <div class="row d-flex justify-content-center align-item-center">
-            <div class="col-md-8">
+            <div class="col-xl-8">
               <div class="list-container">
                 <ul>
                   <li>
@@ -310,12 +310,12 @@
         <!-- Administrative & Internal Use -->
         <div class="tab-content" *ngIf="currentIndex === 6">
           <div class="row my-4">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <h1 class="title">Administrative & Internal Use:</h1>
             </div>
           </div>
           <div class="row d-flex justify-content-center align-item-center">
-            <div class="col-md-8">
+            <div class="col-xl-8">
               <div class="list-container">
                 <ul>
                   <li>Property Reference Code: {{ property.referenceCode }}</li>
@@ -330,7 +330,7 @@
             </div>
           </div>
           <div class="row my-4">
-            <div class="col-md-12">
+            <div class="col-xl-12">
               <div [innerHTML]="property.internalNote"></div>
             </div>
           </div>

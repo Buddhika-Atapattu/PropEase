@@ -58,7 +58,6 @@ import { WindowsRefService } from '../../../../services/windowRef.service';
 import { Subscription } from 'rxjs';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { CustomRangeSliderComponent } from '../../shared/custom-range-slider/custom-range-slider.component';
 import { MapComponent } from '../../shared/map/map.component';
 
 @Component({
@@ -83,9 +82,9 @@ import { MapComponent } from '../../shared/map/map.component';
     MatAutocompleteModule,
     MatButtonToggleModule,
     MatDialogModule,
-    CustomRangeSliderComponent,
     MapComponent,
   ],
+  standalone: true,
   templateUrl: './property-more-details-pannel.component.html',
   styleUrl: './property-more-details-pannel.component.scss',
 })

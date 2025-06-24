@@ -20,12 +20,21 @@ export interface msg {
   message: string;
 }
 
+export interface NotificationType{
+  type: msgTypes | string;
+  message: string;
+}
+
 @Component({
   selector: 'app-notification',
   imports: [CommonModule],
+  standalone: true,
   templateUrl: './notification.component.html',
   styleUrl: './notification.component.scss',
 })
+
+
+
 export class NotificationComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('notification') notificationElement!: ElementRef<HTMLDivElement>;
   private isBrowser: boolean;

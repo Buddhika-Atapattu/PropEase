@@ -29,6 +29,7 @@ import { BackEndPropertyData } from '../../../../services/property/property.serv
 @Component({
   selector: 'app-view-property-images',
   imports: [CommonModule],
+  standalone: true,
   templateUrl: './view-property-images.component.html',
   styleUrl: './view-property-images.component.scss',
 })

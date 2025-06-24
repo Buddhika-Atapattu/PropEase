@@ -11,7 +11,7 @@
     #userForm="ngForm"
   >
     <div class="row d-flex justify-content-center align-item-center">
-      <div class="col-md-6 d-flex justify-content-center align-item-center">
+      <div class="col-xl-6 d-flex justify-content-center align-item-center">
         <div class="d-flex align-items-center gap-3">
           <h2 class="m-0">Select Documents</h2>
           <button
@@ -67,11 +67,11 @@
 
     <div class="row d-flex jsutify-content-center align-item-center my-5">
       <div
-        class="col-md-8 d-flex jsutify-content-center align-item-center mx-auto"
+        class="col-xl-8 d-flex jsutify-content-center align-item-center mx-auto"
       >
         <div
           #dropZone
-          class="drop-down-container"
+          class="drop-down-container text-center"
           [ngClass]="isDragOver ? 'active' : ''"
           (dragover)="onDragOver($event)"
           (drop)="onDrop($event)"
@@ -87,9 +87,9 @@
     </div>
 
     <div class="row file-preview-row" *ngIf="isFileSelected">
-      <div *ngFor="let file of selectedFiles; let i = index" class="col-md-4">
+      <div *ngFor="let file of selectedFiles; let i = index" class="col-xl-4">
         <div class="row d-flex justify-content-center align-item-center my-2">
-          <div class="col-md-12">
+          <div class="col-xl-12">
             <div
               class="row d-flex justify-content-center align-item-center row-card"
             >
@@ -117,7 +117,7 @@
       </div>
     </div>
     <div class="row submit-row" *ngIf="isFileSelected">
-      <div class="col-md-12 d-flex justify-content-end align-item-center">
+      <div class="col-xl-12 d-flex justify-content-end align-item-center">
         <button type="submit" class="document-select btn-custom">
           <mat-icon svgIcon="upload" aria-hidden="false"></mat-icon> Upload
         </button>
@@ -130,9 +130,9 @@
   <br />
 
   <div class="row file-preview-row" *ngIf="!isNoData && documents.length > 0">
-    <div class="col-md-4" *ngFor="let document of documents">
+    <div class="col-xl-4" *ngFor="let document of documents">
       <div class="row d-flex justify-content-center align-item-center my-2">
-        <div class="col-md-12">
+        <div class="col-xl-12">
           <app-skeleton-loader
             *ngIf="isLoading"
             [width]="'20rem'"
@@ -145,7 +145,7 @@
             class="row d-flex justify-content-center align-item-center row-card"
           >
             <div class="date">
-              {{ document.uploadDate | date : "dd/MM/YYYY HH:mm:ss" }}
+              {{ document.uploadDate | date : "dd/MM/yyyy HH:mm:ss" }}
             </div>
             <div class="col-sm-2">
               <mat-icon
@@ -175,7 +175,7 @@
     *ngIf="isNoData"
     class="row mt-5 d-flex justify-content-center align-item-center"
   >
-    <div class="col-md-6">
+    <div class="col-xl-6">
       <h1 class="text-center">No Documents Found</h1>
       <div
         class="image-container d-flex justify-content-center align-item-center"

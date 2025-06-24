@@ -1,6 +1,6 @@
 <app-notification></app-notification>
 <app-progress-bar></app-progress-bar>
-<div class="container-fluid" *ngIf="mode !== null">
+<div class="container-fluid mt-5" *ngIf="mode !== null">
   <!-- table date picker row -->
   <form
     action=""
@@ -11,16 +11,20 @@
     autocomplete="off"
     #userForm="ngForm"
   >
-    <div class="row mt-5 mb-1" *ngIf="loggedUser && user !== null">
-      <h2 class="text-center my-2">User File Records</h2>
-      <h6 class="my-2 text-style">
-        Search by dates | total records: {{ totalRecords }}
-      </h6>
+    <div class="row my-1">
+      <div class="col-xl-12">
+        <h2 class="text-center my-2">User File Records</h2>
+        <h6 class="my-2 text-style">
+          Search by dates | total records: {{ totalRecords }}
+        </h6>
+      </div>
+    </div>
+    <div class="row" *ngIf="loggedUser && user !== null">
       <!-- date pickers -->
-      <div class="col-md-9">
+      <div class="col-xl-9 col-lg-9 col-md-8 col-12">
         <div class="row">
           <div
-            class="col-md-6 d-flex justify-content-center align-items-center"
+            class="col-sm-6 col-12 my-2 d-flex justify-content-center align-items-center"
           >
             <mat-form-field appearance="fill" class="form-field w-100">
               <mat-label [ngClass]="isTableEmpty ? 'text-danger' : ''">{{
@@ -43,7 +47,7 @@
             </mat-form-field>
           </div>
           <div
-            class="col-md-6 d-flex justify-content-center align-items-center"
+            class="col-sm-6 col-12 my-2 d-flex justify-content-center align-items-center"
           >
             <mat-form-field appearance="fill" class="form-field w-100">
               <mat-label [ngClass]="isTableEmpty ? 'text-danger' : ''">{{
@@ -69,13 +73,14 @@
       </div>
       <!-- date pickers end -->
       <!-- btns -->
-      <div class="col-md-3">
+      <div
+        class="col-xl-3 col-lg-3 col-md-4 col-sm-12 col-12 d-flex justify-content-center align-items-center"
+      >
         <div class="row">
-          <div class="col-md-4">
+          <div class="col-4 d-flex justify-content-end align-items-center">
             <button
               type="submit"
-              class="btn-custom w-100 date-picker-btn"
-              mat-raised-button
+              class="btn-custom date-picker-btn"
               matTooltip="Search"
               matTooltipPosition="above"
               [disabled]="isTableEmpty"
@@ -88,12 +93,11 @@
               ></mat-icon>
             </button>
           </div>
-          <div class="col-md-4">
+          <div class="col-4 d-flex justify-content-center align-items-center">
             <button
               type="button"
-              class="btn-edit w-100 date-picker-btn"
+              class="btn-edit date-picker-btn"
               (click)="reset()"
-              mat-raised-button
               matTooltip="Reset"
               matTooltipPosition="above"
             >
@@ -104,12 +108,11 @@
               ></mat-icon>
             </button>
           </div>
-          <div class="col-md-4">
+          <div class="col-4 d-flex justify-content-start align-items-center">
             <button
               type="button"
-              class="btn-view w-100 date-picker-btn"
+              class="btn-view date-picker-btn"
               (click)="exportToExcel()"
-              mat-raised-button
               matTooltip="Download to excel"
               matTooltipPosition="above"
             >
@@ -129,11 +132,9 @@
 
   <!-- table data row -->
   <div class="row" *ngIf="loggedUser && user !== null && !isTableEmpty">
-    <div class="col-md-12">
+    <div class="col-xl-12">
       <!-- data -->
-      <div
-        class="table-responsive d-flex justify-content-center align-items-center"
-      >
+      <div class="table-responsive">
         <table
           mat-table
           [dataSource]="dataSource"
@@ -206,14 +207,17 @@
                   </div>
                   <div *ngIf="!isLoading">
                     <button
-                      mat-raised-button
                       class="btn-edit download"
                       (click)="download(element.URL)"
                       matTooltip="{{ element.URL }}"
                       matTooltipPosition="above"
                       matTooltipPositionAtOrigin="left"
                     >
-                      <mat-icon class="download-mat-icon" aria-hidden="false" svgIcon="download"></mat-icon>
+                      <mat-icon
+                        class="download-mat-icon"
+                        aria-hidden="false"
+                        svgIcon="download"
+                      ></mat-icon>
                     </button>
                   </div>
                 </ng-container>
@@ -324,9 +328,9 @@
       loggedUser && user !== null && !isTableEmpty && !isPaginationDisabled
     "
   >
-    <div class="col-md-12">
+    <div class="col-xl-12">
       <div class="row mt-4">
-        <div class="col-md-12">
+        <div class="col-xl-12">
           <ul class="pagination justify-content-center d-flex">
             <!-- << Button -->
             <li class="d-flex justify-content-center align-items-center">
@@ -380,7 +384,7 @@
     *ngIf="isTableEmpty"
     class="row mt-5 d-flex justify-content-center align-item-center"
   >
-    <div class="col-md-8 d-flex justify-content-center align-item-center">
+    <div class="col-xl-8 d-flex justify-content-center align-item-center">
       <div class="">
         <h5 class="text-center text-uppercase" *ngIf="startDate && endDate">
           File Data Not Found between {{ startDate | date : "MMMM d, y" }} -

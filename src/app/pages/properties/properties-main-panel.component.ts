@@ -45,6 +45,7 @@ interface apiDataTypeForProperties {
 
 @Component({
   selector: 'app-properties-main-panel',
+  standalone: true,
   imports: [
     CommonModule,
     MatIconModule,
@@ -74,13 +75,16 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   protected properties: BackEndPropertyData[] = [];
 
   //PAGINATION VARIABLES
-  protected readonly itemsPerPage: number = 10; // Number of items per page
+  protected readonly itemsPerPage: number = 12; // Number of items per page
   protected pageSize: number = 10; // Default page size
   protected pageStartIndex: number = 0; // Start index for the current page
   protected pageEndIndex: number = 0; // End index for the current page
   protected totalItems: number = 0; // Total number of items
   protected totalPages: number = 0; // Total number of pages
   protected currentPageNumber: number = 1; // Current page number
+
+  protected isColView: boolean = false;
+  protected isListView: boolean = true;
 
   constructor(
     private windowRef: WindowsRefService,
@@ -108,11 +112,23 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
         this.mode = val;
       });
     }
+
   }
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
   }
+
+  protected isUserCanCreateProperty(): boolean {
+    return (
+      this.LOGGED_USER?.access.permissions.some(
+        (permission) =>
+          permission.module === 'Property Management' &&
+          permission.actions.includes('create')
+      ) ?? false
+    );
+  }
+
 
   private iconMaker() {
     const iconMap = [
@@ -124,6 +140,8 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
       { name: 'search', path: '/Images/Icons/search.svg' },
       { name: 'filter', path: '/Images/Icons/filter.svg' },
       { name: 'reset', path: '/Images/Icons/reset.svg' },
+      { name: 'list', path: '/Images/Icons/list.svg' },
+      { name: 'lineColumns', path: '/Images/Icons/line-columns.svg' },
     ];
 
     for (let icon of iconMap) {
@@ -131,6 +149,17 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
         icon.name.toString(),
         this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path.toString())
       );
+    }
+  }
+
+  // View style
+  protected convertTheViewStyle(style: string){
+    if (style === 'grid') {
+      this.isColView = true;
+      this.isListView = false;
+    } else {
+      this.isListView = true;
+      this.isColView = false;
     }
   }
 
@@ -147,10 +176,12 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   // Opens the property filter dialog and handles the result
   protected openFilter() {
     const dialogRef = this.dialog.open(PropertyFilterDialogComponent, {
-      width: '100%',
+      width: 'auto',
       height: 'auto',
       maxWidth: '100vw',
       maxHeight: '100vh',
+      minWidth: '25vw',
+      minHeight: '25vh',
       autoFocus: false,
       data: {},
     });

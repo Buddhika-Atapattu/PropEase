@@ -30,7 +30,7 @@
   z-index: 1;
 
   &.collapsed {
-    width: 80px;
+    width: 7rem;
   }
 
   &.dark {
@@ -140,7 +140,7 @@
 }
 
 :host-context(html.dark) {
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     .dashboard-container {
       .menu-icon {
         button {
@@ -159,7 +159,7 @@
 }
 
 :host-context(html.light) {
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     .dashboard-container {
       .menu-icon {
         button {
@@ -178,7 +178,7 @@
 }
 
 // Mobile version
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .main-content {
     padding: 0.25rem;
   }
@@ -264,6 +264,7 @@
     z-index: 100000;
     top: 0;
     left: -1000vh;
+    overflow-y: auto;
     transition: all 0.3s ease;
     &.menu-open {
       left: 0;

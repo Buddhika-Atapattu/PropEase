@@ -5,6 +5,10 @@ import {
   OnDestroy,
   Inject,
   PLATFORM_ID,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  AfterViewChecked,
 } from '@angular/core';
 import { WindowsRefService } from '../../../../services/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
@@ -39,7 +43,9 @@ import { PropertyMoreDetailsPannelComponent } from '../../../components/dialogs/
   templateUrl: './view.component.html',
   styleUrl: './view.component.scss',
 })
-export class ViewComponent implements OnInit, OnDestroy {
+export class ViewComponent implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy {
+  @ViewChild('sliderContainer', { static: false })
+  sliderContainer!: ElementRef<HTMLElement>;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
@@ -61,6 +67,10 @@ export class ViewComponent implements OnInit, OnDestroy {
 
   protected virtualPreviewURL: string = '';
 
+  private sliderInterval: any = null;
+
+  private sliderInitDone = false;
+
   constructor(
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -81,9 +91,8 @@ export class ViewComponent implements OnInit, OnDestroy {
     });
     this.iconMaker();
     this.propertyService.amenityIconMaker();
-    
   }
- 
+
   async ngOnInit(): Promise<void> {
     if (this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
@@ -94,6 +103,17 @@ export class ViewComponent implements OnInit, OnDestroy {
       await this.getAgentDetails();
       this.createImageTiles();
       this.setInitialImage();
+    }
+  }
+
+  ngAfterViewInit(): void {
+    
+  }
+
+  ngAfterViewChecked(): void {
+    if (!this.sliderInitDone && this.sliderContainer?.nativeElement) {
+      this.sliderInitDone = true;
+      this.animetTheImageSilder();
     }
   }
 
@@ -144,8 +164,8 @@ export class ViewComponent implements OnInit, OnDestroy {
       .then((response: MSG) => {
         this.property = response.data as BackEndPropertyData;
         this.propertyImages = this.property.images;
-        this.propertyVideoUrl(this.property?.videoTour ?? '')
-        this.updateVirtualTourUrl(this.property?.virtualTour ?? '')
+        this.propertyVideoUrl(this.property?.videoTour ?? '');
+        this.updateVirtualTourUrl(this.property?.virtualTour ?? '');
       })
       .catch((error: MSG) => {
         console.error(error);
@@ -193,7 +213,7 @@ export class ViewComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           const element = tile as HTMLElement;
           element.style.backgroundImage = `url(${newImageUrl})`;
-          element.style.transform = 'scale(0) rotateY(90deg)';
+          element.style.transform = 'scale(0) rotateY(90deg) rotateX(90deg) rotateZ(90deg)';
           element.style.opacity = '0';
 
           setTimeout(() => {
@@ -237,6 +257,36 @@ export class ViewComponent implements OnInit, OnDestroy {
   protected nextImage() {
     const nextIndex = (this.currentImageIndex + 1) % this.propertyImages.length;
     this.animateTheImage(nextIndex);
+  }
+
+  private animetTheImageSilder() {
+    if (this.isBrowser) {
+      
+      const startSlider = () => {
+        this.sliderInterval = setInterval(() => {
+          this.nextImage();
+        }, 10000);
+      };
+
+      // Stop animation interval
+      const stopSlider = () => {
+        if (this.sliderInterval) {
+          clearInterval(this.sliderInterval);
+          this.sliderInterval = null;
+        }
+      };
+
+      // Listen for mouse enter and leave
+      this.sliderContainer?.nativeElement.addEventListener('mouseenter', () =>
+        stopSlider()
+      );
+      this.sliderContainer?.nativeElement.addEventListener('mouseleave', () =>
+        startSlider()
+      );
+
+      // Start animation initially
+      startSlider();
+    }
   }
   //<==================== End Image slider ====================>
 

@@ -29,7 +29,7 @@
 
     <!-- property tile and country -->
     <div class="row my-5">
-      <div class="col-md-12">
+      <div class="col-xl-12">
         <h1 class="display-5 fw-bold text-capitalize title my-5">
           {{ property.title }}
         </h1>
@@ -50,8 +50,8 @@
 
     <!-- image slider -->
     <div class="row mt-4">
-      <div class="col-md-12 d-flex justify-content-center align-item-center">
-        <div class="slider-container">
+      <div class="col-xl-12 d-flex justify-content-center align-item-center">
+        <div class="slider-container" #sliderContainer>
           <div class="slider">
             <div
               class="tile"
@@ -90,7 +90,7 @@
 
     <!-- property images preview button -->
     <div class="row mt-4 d-flex justify-content-center align-item-center">
-      <div class="col-md-4 d-flex justify-content-center align-item-center">
+      <div class="col-xl-4 d-flex justify-content-center align-item-center">
         <button
           type="button"
           class="bg-none btn view-images-btn"
@@ -108,7 +108,7 @@
 
     <!-- property price, currency, type, and status -->
     <div class="row mt-2">
-      <div class="col-md-12">
+      <div class="col-xl-12">
         <h4 class="text-capitalize">
           {{ property.price }} {{ property.currency }}
         </h4>
@@ -125,7 +125,7 @@
 
     <!-- property specific details  -->
     <div class="row mt-1">
-      <div class="col-md-12">
+      <div class="col-xl-12">
         <ul class="p-0 porperty-specific-details">
           <li>
             <span></span>
@@ -163,7 +163,7 @@
     <div class="row mt-4">
       <h1 class="display-6 my-2">Amenities of the property</h1>
       <div
-        class="col-md-4"
+        class="col-xl-4"
         *ngFor="let amenity of property.featuresAndAmenities"
       >
         <div class="row d-flex justify-content-between align-item-center my-3">
@@ -186,7 +186,7 @@
     <hr />
 
     <div class="row">
-      <div class="col-md-12">
+      <div class="col-xl-12">
         <h1 class="display-6 my-2">Location of the property</h1>
         <iframe
           name="location"
@@ -204,7 +204,7 @@
     <hr />
 
     <div class="row d-flex justify-content-between align-item-center mt-4">
-      <div class="col-md-6">
+      <div class="col-xl-6">
         <h4 class="title">Property Video Tour</h4>
         <div class="video-container">
           <div *ngIf="videoPreviewURL" class="video-preview mt-3">
@@ -232,7 +232,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-6">
+      <div class="col-xl-6">
         <h4 class="title">Property 360° Virtual Tour</h4>
         <div *ngIf="virtualPreviewURL" class="video-preview mt-3">
           <iframe
@@ -251,7 +251,7 @@
     <hr />
 
     <div class="row mt-4 d-flex justify-content-between align-item-center">
-      <div class="col-md-5 my-5">
+      <div class="col-xl-5 my-5">
         <div class="user-card">
           <div class="user-image">
             <img src="{{ owner?.image }}" alt="owner details" />
@@ -264,7 +264,7 @@
           </div>
         </div>
       </div>
-      <div class="col-md-5 my-5">
+      <div class="col-xl-5 my-5">
         <div class="user-card">
           <div class="user-image">
             <img src="{{ agent?.image }}" alt="owner details" />
@@ -280,7 +280,7 @@
     </div>
 
     <div class="row d-flex justify-content-end align-item-center my-4">
-      <div class="col-md-2 d-flex justify-content-center align-item-center">
+      <div class="col-xl-2 d-flex justify-content-center align-item-center">
         <button
           type="button"
           class="btn-custom w-100"

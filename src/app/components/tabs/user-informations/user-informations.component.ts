@@ -20,6 +20,7 @@ import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-l
 @Component({
   selector: 'app-user-informations',
   imports: [CommonModule, MatIconModule, SkeletonLoaderComponent],
+  standalone: true,
   templateUrl: './user-informations.component.html',
   styleUrl: './user-informations.component.scss',
 })

@@ -87,7 +87,7 @@ export class ActivitiesComponent implements OnInit, OnChanges, AfterViewInit {
     }
   }
 
-  // 🔁 Called when parent changes user or manually needs refresh
+  // Called when parent changes user or manually needs refresh
   public refresh(username: string): void {
     this.username = username;
 

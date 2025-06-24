@@ -6,6 +6,7 @@
   (closeEvent)="closeCamera()"
 >
 </app-camera-box>
+<app-skeleton-loader></app-skeleton-loader>
 <div
   *ngIf="mode !== null"
   class="main-panel"
@@ -34,7 +35,7 @@
     >
       <!-- user image -->
       <div class="row">
-        <div class="col-md-12 d-flex justify-content-center align-items-center">
+        <div class="col-xl-12 d-flex justify-content-center align-items-center">
           <div class="main-image-container" *ngIf="!showCropper">
             <img
               [src]="
@@ -84,7 +85,7 @@
       <!-- Drop and down row -->
       <div class="row d-flex jsutify-content-center align-item-center my-5">
         <div
-          class="col-md-8 d-flex jsutify-content-center align-item-center mx-auto"
+          class="col-xl-8 d-flex jsutify-content-center align-item-center mx-auto"
         >
           <div
             *ngIf="!showCropper"
@@ -108,30 +109,34 @@
         *ngIf="showCropper"
         class="row d-flex justify-content-center align-item-center text-center my-4"
       >
-        <div class="col-md-2">
+        <div class="col-xl-6">
           <image-cropper
-            class="image-cropper"
+            class="image-cropper mx-auto"
             [imageChangedEvent]="selectedImageChangedEvent"
             [maintainAspectRatio]="true"
             [aspectRatio]="1 / 1"
             format="png"
             (imageCropped)="imageCropped($event)"
           ></image-cropper>
-          <div class="mt-3 d-flex justify-content-center align-item-center">
-            <button
-              type="button"
-              class="btn btn-view me-2 text-default"
-              (click)="saveCroppedImage()"
-            >
-              Save
-            </button>
-            <button
-              type="button"
-              class="btn btn-delete text-default"
-              (click)="cancelCrop()"
-            >
-              Cancel
-            </button>
+          <div class="row mt-3 d-flex justify-content-center align-item-center">
+            <div class="col-6 d-flex justify-content-end align-item-center">
+              <button
+                type="button"
+                class="btn btn-view me-2 text-default"
+                (click)="saveCroppedImage()"
+              >
+                Save
+              </button>
+            </div>
+            <div class="col-6 d-flex justify-content-start align-item-center">
+              <button
+                type="button"
+                class="btn btn-delete text-default"
+                (click)="cancelCrop()"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -139,7 +144,7 @@
       <!-- end user image -->
       <!-- user guidline -->
       <div class="row d-flex justify-content-center align-item-center mt-2">
-        <div class="col-md-6 d-flex justify-content-center align-item-center">
+        <div class="col-xl-6 d-flex justify-content-center align-item-center">
           <blockquote class="blockquote">
             <span class="button-text h5">
               Upload or Capture an Image You may select a user image in one of
@@ -168,7 +173,7 @@
 
       <!-- username and password -->
       <div class="row mt-4">
-        <div class="col-md-6">
+        <div class="col-xl-6">
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
             <mat-label [ngClass]="isUsernameExist ? 'text-danger' : ''"
               >Username {{ isUsernameExist ? "already exist" : "" }}</mat-label
@@ -194,7 +199,7 @@
             </li>
           </ul>
         </div>
-        <div class="col-md-6">
+        <div class="col-xl-6">
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
             <mat-label [ngClass]="passwordMatchPattern ? '' : 'text-danger'"
               >Password
@@ -239,17 +244,17 @@
 
       <!-- user details row start -->
       <div class="row mt-5">
-        <div class="col-md-12"><h1>User Details</h1></div>
+        <div class="col-xl-12"><h1>User Details</h1></div>
         <hr />
       </div>
       <!-- end user details row end -->
 
       <!-- data entry section -->
       <div class="row d-flex justify-content-center align-items-center mt-4">
-        <div class="col-md-12">
+        <div class="col-xl-12">
           <!-- Name -->
           <div class="row d-flex justify-content-bitween align-items-center">
-            <div class="col-md-8">
+            <div class="col-xl-8">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>Full name</mat-label>
                 <input
@@ -262,7 +267,7 @@
                 />
               </mat-form-field>
             </div>
-            <div class="col-md-4">
+            <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>User gender</mat-label>
                 <mat-select
@@ -283,7 +288,7 @@
           <!-- Email and Contact -->
           <div class="row d-flex justify-content-start align-items-center">
             <!-- Email -->
-            <div class="col-md-6">
+            <div class="col-xl-6">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label
                   [ngClass]="isEmailExist ? 'text-danger' : ''"
@@ -305,7 +310,7 @@
               </mat-form-field>
             </div>
             <!-- Contact Number -->
-            <div class="col-md-6">
+            <div class="col-xl-6">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label
                   [ngClass]="
@@ -332,7 +337,7 @@
           <!-- Address -->
           <div class="row">
             <!-- House Number -->
-            <div class="col-md-4">
+            <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>House Number</mat-label>
                 <input
@@ -346,7 +351,7 @@
               </mat-form-field>
             </div>
             <!-- Street -->
-            <div class="col-md-4">
+            <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>Street</mat-label>
                 <input
@@ -360,7 +365,7 @@
               </mat-form-field>
             </div>
             <!-- City -->
-            <div class="col-md-4">
+            <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>City</mat-label>
                 <input
@@ -376,7 +381,7 @@
           </div>
           <div class="row">
             <!-- State or Province -->
-            <div class="col-md-4">
+            <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>State or Province</mat-label>
                 <input
@@ -390,7 +395,7 @@
               </mat-form-field>
             </div>
             <!-- ZIP code -->
-            <div class="col-md-4">
+            <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>ZIP code</mat-label>
                 <input
@@ -404,7 +409,7 @@
               </mat-form-field>
             </div>
             <!-- Country -->
-            <div class="col-md-4">
+            <div class="col-xl-4">
               <mat-form-field class="example-full-width w-100">
                 <mat-label>Country</mat-label>
                 <input
@@ -440,7 +445,7 @@
           </div>
           <!-- Age and date of birth -->
           <div class="row d-flex justify-content-bitween align-items-center">
-            <div class="col-md-6">
+            <div class="col-xl-6">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label [ngClass]="isValidAge ? '' : 'text-danger'">
                   {{ isValidAge ? "Age" : "Invalid Age" }}</mat-label
@@ -457,7 +462,7 @@
                 />
               </mat-form-field>
             </div>
-            <div class="col-md-6">
+            <div class="col-xl-6">
               <mat-form-field
                 appearance="fill"
                 class="form-field me-3 w-100 DOB"
@@ -487,10 +492,15 @@
           </div>
           <!-- Role if user is admin -->
           <div class="row">
-            <div class="col-md-6">
+            <div class="col-xl-6" *ngIf="isUserCanAssignUserRoles()">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>User role</mat-label>
-                <mat-select [(value)]="role" class="text-capitalize" required>
+                <mat-select
+                  [(ngModel)]="role"
+                  name="role"
+                  class="text-capitalize"
+                  required
+                >
                   @for (role of definedRole; track role) {
                   <mat-option [value]="role"
                     ><p class="text-capitalize">
@@ -501,10 +511,15 @@
                 </mat-select>
               </mat-form-field>
             </div>
-            <div class="col-md-6">
+            <div
+              class="col-xl-6"
+              *ngIf="
+                isUserCanMakeUserActivate() && isUserCanMakeUserDeactivate()
+              "
+            >
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>User Active Status</mat-label>
-                <mat-select [(value)]="isActive" required>
+                <mat-select [(ngModel)]="isActive" name="isActive" required>
                   @for (status of userActiveStatus; track status) {
                   <mat-option [value]="status.isActive">{{
                     status.typeName
@@ -520,7 +535,7 @@
 
       <!-- user bio row -->
       <div class="row my-5">
-        <div class="col-md-12">
+        <div class="col-xl-12">
           <h3>User Bio:</h3>
           <div class="my-4">
             <editor
@@ -539,14 +554,14 @@
 
       <!-- user access row start -->
       <div class="row my-5" *ngIf="role !== ''">
-        <div class="col-md-12"><h1>User Access</h1></div>
+        <div class="col-xl-12"><h1>User Access</h1></div>
         <hr />
       </div>
       <!-- end user access row end -->
       <!-- user access grant -->
       <div class="row" *ngIf="role !== ''">
         <div
-          class="col-md-4 my-4"
+          class="col-xl-4 my-4"
           *ngFor="let mainItem of accessOptions; let i = index"
         >
           <mat-checkbox
@@ -579,7 +594,7 @@
 
       <!-- submit button -->
       <div class="row d-flex justify-content-center align-item-center mt-2">
-        <div class="col-md-12 d-flex justify-content-end align-item-center">
+        <div class="col-xl-12 d-flex justify-content-end align-item-center">
           <button type="submit" class="submit-btn btn-custom">
             <mat-icon
               aria-hidden="false"
