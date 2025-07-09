@@ -1,0 +1,1911 @@
+<app-notification></app-notification>
+<app-progress-bar></app-progress-bar>
+<form action="">
+  <div
+    *ngIf="mode !== null && tenant !== null"
+    class="main-panel"
+    [ngClass]="mode ? 'dark' : 'light'"
+  >
+    <div class="container-fluid">
+      <!-- page indicator -->
+      <div class="row page-indecator">
+        <span
+          ><button
+            type="button"
+            class="page-indicator-btn"
+            (click)="goToTenants()"
+          >
+            TENANT DASHBOARD
+          </button>
+          <i class="fa-solid fa-angle-right my-2"></i
+          ><button
+            type="button"
+            class="page-indicator-btn"
+            (click)="goToTenant()"
+          >
+            {{ tenant.name }}
+          </button>
+        </span>
+      </div>
+      <!-- end page indicator -->
+
+      <!-- user-image row -->
+      <div class="row user-image-row">
+        <div
+          class="col-xl-12 d-flex justify-content-center align-items-center mt-5"
+        >
+          <div class="image-container">
+            <app-skeleton-loader
+              *ngIf="isLoading"
+              [width]="'10rem'"
+              [height]="'10rem'"
+              [Mode]="mode"
+              [borderRadius]="'50%'"
+            ></app-skeleton-loader>
+            <img
+              *ngIf="!isLoading"
+              [src]="generateTenantImage((typeof tenant.image === 'string' ? tenant.image : '') || '', tenant.gender)"
+              class="user-image"
+              alt="user image"
+            />
+          </div>
+        </div>
+      </div>
+      <!-- end user-image row -->
+
+      <!-- tenant details title -->
+      <div class="row mt-4">
+        <div class="col-xl-12">
+          <h4 class="title">Tenant Details</h4>
+          <hr />
+        </div>
+      </div>
+      <!-- end tenant details title -->
+
+      <div class="row my-3">
+        <div class="col-12">
+          <h5 class="title">Basic Information</h5>
+        </div>
+      </div>
+
+      <!-- Tenant Informations Full Name And Email -->
+      <div class="row mt-4">
+        <div class="col-xl-6 col-md-6 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Full Name</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="tenantFullName"
+              name="fullName"
+              required
+              placeholder="Full Name..."
+            />
+          </mat-form-field>
+        </div>
+        <div class="col-xl-6 col-md-6 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Email</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="tenantEmail"
+              name="email"
+              required
+              placeholder="Email..."
+            />
+          </mat-form-field>
+        </div>
+      </div>
+      <!-- End Tenant Informations Full Name And Email -->
+
+      <!-- Nationality, Date of Birth, And Phone Number -->
+      <div class="row mt-4">
+        <!-- Nationality -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Nationality</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="tenantNationality"
+              name="nationality"
+              required
+              placeholder="Nationality.."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Nationality -->
+
+        <!-- Date of Birth -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Date of Birth</mat-label>
+            <input
+              matInput
+              [matDatepicker]="picker"
+              [(ngModel)]="tenantDateOfBirth"
+              name="dateOfBirth"
+              required
+              placeholder="Date of Birth..."
+            />
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="picker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker #picker [touchUi]="true"></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <!-- Date of Birth -->
+
+        <!-- Phone Number -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12 position-relative">
+          <span
+            *ngIf="!isPhoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)"
+            class="span-text-danger"
+            >Phone Number Is Not Valid</span
+          >
+          <div class="row">
+            <div class="col-3 pe-0-2-5">
+              <mat-form-field
+                appearance="fill"
+                class="form-field me-3 w-100"
+                floatLabel="auto"
+              >
+                <mat-label
+                  [ngClass]="
+                    isPhoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
+                      ? ''
+                      : 'text-danger'
+                  "
+                  >Code</mat-label
+                >
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="tenantPhoneCodeId"
+                  class="example-right-align"
+                  name="tenantPhoneCodeId"
+                  required
+                  placeholder="+1"
+                  [matAutocomplete]="phoneCodeAutoComplete"
+                  (ngModelChange)="onTenantPhoneCodeChange($event)"
+                  [ngClass]="
+                    isPhoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
+                      ? ''
+                      : 'text-danger'
+                  "
+                />
+
+                <mat-autocomplete
+                  #phoneCodeAutoComplete="matAutocomplete"
+                  (optionSelected)="onTenantPhoneCodeSelectionChange($event)"
+                  [displayWith]="displayPhoneCode"
+                >
+                  <mat-option
+                    *ngFor="let option of filterTenantPhoneCodes | async"
+                    [value]="option"
+                    class="d-flex justify-content-start align-items-center"
+                  >
+                    <img
+                      [src]="option.flags.png"
+                      width="22"
+                      height="14"
+                      style="margin-right: 8px"
+                      alt="{{ option.flags.alt }}"
+                    />
+                    {{ option.code }}
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+            </div>
+            <div class="col-9 ps-0-2-5">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label
+                  [ngClass]="
+                    isPhoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
+                      ? ''
+                      : 'text-danger'
+                  "
+                  >Phone Number</mat-label
+                >
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="tenantPhoneNumber"
+                  name="tenantPhoneNumber"
+                  required
+                  placeholder="Phone Number..."
+                  [ngClass]="
+                    isPhoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
+                      ? ''
+                      : 'text-danger'
+                  "
+                />
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+        <!-- Phone Number -->
+      </div>
+      <!-- End Nationality, Date of Birth, And Phone Number -->
+
+      <!-- Gender, NIC/ Passport Number, And Identification File Selection Option -->
+      <div class="row mt-4">
+        <!-- Gender -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Gender</mat-label>
+            <mat-select [(ngModel)]="tenantGender" name="tenantGender" required>
+              <mat-option [value]="'male'">Male</mat-option>
+              <mat-option [value]="'female'">Female</mat-option>
+              <mat-option [value]="'other'">Other</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <!-- Gender -->
+        <!-- NIC/ Passport Number -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>NIC/ Passport Number</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="tenantNicOrPassport"
+              name="tenantNicOrPassport"
+              required
+              placeholder="NIC/ Passport..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End NIC/ Passport Number -->
+
+        <!-- Slelect The File Upload -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Slelect The File Upload</mat-label>
+            <mat-select
+              [(ngModel)]="identificationFileSelectionOption"
+              name="identificationFileSelectionOption"
+              required
+              (ngModelChange)="onIdentificationFileSelection()"
+            >
+              <mat-option [value]="'file-selection'">File Select</mat-option>
+              <mat-option [value]="'drag-and-drop'">Drag And Drop</mat-option>
+              <mat-option [value]="'file-scan'">File Scan</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <!-- Slelect The File Upload -->
+      </div>
+      <!-- End Gender, NIC/ Passport Number, And Identification File Selection Option -->
+
+      <!-- Tenant Informations Identification File Selection Areas -->
+      <div class="row mt-4">
+        <div
+          *ngIf="identificationFileSelectionOption === 'file-selection'"
+          class="col-xl-8 col-md-8 col-sm-12 col-12 d-flex jsutify-content-center align-item-center mx-auto"
+        >
+          <div
+            class="drop-down-container"
+            (click)="triggerTenantIdentificationFileInput()"
+          >
+            Click To Select The File
+          </div>
+        </div>
+        <div
+          *ngIf="identificationFileSelectionOption === 'drag-and-drop'"
+          class="col-xl-8 col-md-8 col-sm-12 col-12 d-flex jsutify-content-center align-item-center mx-auto"
+        >
+          <div
+            #dropZone
+            class="drop-down-container"
+            [ngClass]="isDragOver ? 'active' : ''"
+            (dragover)="onIdentificationFileDragOver($event)"
+            (drop)="onIdentificationFileDrop($event)"
+            (dragleave)="onIdentificationFileDragLeave($event)"
+            [class.drag-over]="isDragOver"
+            (paste)="identificationFileHandlePaste($event)"
+          >
+            Drag and Drop / Copy and Paste
+          </div>
+        </div>
+        <div
+          *ngIf="identificationFileSelectionOption === 'file-scan'"
+          class="col-xl-8 col-md-8 col-sm-12 col-12 d-flex jsutify-content-center align-item-center mx-auto"
+        >
+          <div class="drop-down-container" (click)="triggerScanner()">
+            Click To Scan The File
+          </div>
+        </div>
+      </div>
+      <!-- End Tenant Informations Identification File Selection Areas -->
+
+      <!-- Tenant Informations Identification File Selection Input -->
+      <div class="row d-none mt-4">
+        <div class="col-xl-12">
+          <input
+            type="file"
+            id="fileInput"
+            #fileInput
+            (change)="onIdentificationFileSelectionChange($event)"
+            [accept]="tenantIdentificationAcceptFileTypes"
+            hidden
+            multiple
+          />
+        </div>
+      </div>
+      <!-- End Tenant Informations Identification File Selection Input -->
+
+      <!-- Tenants Scanned File Document Preview -->
+      <div *ngIf="tenantScaannedDocumentPreview.length > 0" class="row mt-4">
+        <div
+          class="col-xl-4 col-md-6 col-sm-12 col-12 d-flex justify-content-center align-items-center"
+          *ngFor="let document of tenantScaannedDocumentPreview"
+        >
+          <div
+            class="row document-preview-row"
+            (click)="processFileToView(document)"
+          >
+            <div class="col-2 d-flex justify-content-center align-items-center">
+              <mat-icon
+                [svgIcon]="document.icon"
+                aria-hidden="false"
+              ></mat-icon>
+            </div>
+            <div class="col-7 d-flex justify-content-center align-items-center">
+              <span>{{ document.name }}</span>
+            </div>
+            <div class="col-3 d-flex justify-content-center align-items-center">
+              <button
+                type="button"
+                class="btn-delete"
+                (click)="removeScannedDocument(document)"
+              >
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- End Tenants Scanned File Document Preview -->
+
+      <div class="row my-3">
+        <div class="col-12">
+          <h5 class="title">Address</h5>
+        </div>
+      </div>
+
+      <!-- Tenant Permanent Address House Number, Street, City, State Or Province, Postalcode, Country -->
+      <div class="row mt-4">
+        <!-- House Number -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>House Number</mat-label>
+            <input
+              matInput
+              type="text"
+              name="tenantHouseNumber"
+              [(ngModel)]="tenantHouseNumber"
+              required
+              placeholder="House Number..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End House Number -->
+
+        <!-- Street -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Street</mat-label>
+            <input
+              matInput
+              type="text"
+              name="tenantStreet"
+              [(ngModel)]="tenantStreet"
+              required
+              placeholder="Street..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Street -->
+
+        <!-- City -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>City</mat-label>
+            <input
+              matInput
+              type="text"
+              name="tenantCity"
+              [(ngModel)]="tenantCity"
+              required
+              placeholder="City..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End City -->
+      </div>
+
+      <div class="row mt-4">
+        <!-- State Or Province -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>State Or Province</mat-label>
+            <input
+              matInput
+              type="text"
+              name="tenantStateOrProvince"
+              [(ngModel)]="tenantStateOrProvince"
+              required
+              placeholder="State Or Province..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End State Or Province -->
+
+        <!-- Postalcode -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Postalcode</mat-label>
+            <input
+              matInput
+              type="text"
+              name="tenantPostalCode"
+              [(ngModel)]="tenantPostalCode"
+              required
+              placeholder="Postalcode..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Postalcode -->
+
+        <!-- Country -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Country</mat-label>
+            <input
+              matInput
+              type="text"
+              name="tenantCountry"
+              [(ngModel)]="tenantCountry"
+              required
+              placeholder="Country..."
+              (ngModelChange)="onTenantCountryChange($event)"
+              [matAutocomplete]="addressCountryAutoComplete"
+            />
+
+            <mat-autocomplete
+              #addressCountryAutoComplete="matAutocomplete"
+              [displayWith]="displayFn"
+            >
+              <mat-option
+                *ngFor="let option of filterTenantCounties | async"
+                [value]="option"
+              >
+                <img
+                  [src]="option.image"
+                  width="24"
+                  height="16"
+                  style="margin-right: 8px"
+                  alt="{{ option.code }}"
+                />
+                {{ option.name }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <!-- End Country -->
+      </div>
+      <!-- End Tenant Permanent Address House Number, Street, City, State Or Province, Postalcode, Country -->
+
+      <div class="row my-3">
+        <div class="col-12">
+          <h5 class="title">Emergency Contact</h5>
+        </div>
+      </div>
+
+      <!-- Emergency Contact Name, Relationship, And Number -->
+      <div class="row mt-4">
+        <!-- Emergency Contact Name -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Emergency Contact Name</mat-label>
+            <input
+              matInput
+              type="text"
+              name="emergencyContactName"
+              [(ngModel)]="emergencyContactName"
+              required
+              placeholder="Emergency Contact Name..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Emergency Contact Name -->
+
+        <!-- Emergency Contact Relationship -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Emergency Contact Relationship</mat-label>
+            <input
+              matInput
+              type="text"
+              name="emergencyContactRelationship"
+              required
+              [(ngModel)]="emergencyContactRelationship"
+              placeholder="Emergency Contact Relationship..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Emergency Contact Relationship -->
+
+        <!-- Emergency Contact Number -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Emergency Contact Number</mat-label>
+            <input
+              matInput
+              type="text"
+              required
+              name="emergencyContactContact"
+              [(ngModel)]="emergencyContactContact"
+              placeholder="Emergency Contact Number Or Email..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Emergency Contact Number -->
+      </div>
+      <!-- End Emergency Contact Name, Relationship, And Number -->
+
+      <div class="row my-3">
+        <div class="col-12">
+          <h5 class="title">Co-Tenant Information</h5>
+        </div>
+      </div>
+
+      <!-- Co-Tenant Fullname, Email, And Phone Number -->
+      <div class="row mt-4">
+        <!-- Full Name -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Full Name</mat-label>
+            <input
+              matInput
+              type="text"
+              name="coTenantFullName"
+              [(ngModel)]="coTenantFullName"
+              placeholder="Full Name..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Full Name -->
+
+        <!-- Email -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Email</mat-label>
+            <input
+              matInput
+              type="text"
+              name="coTenantEmail"
+              [(ngModel)]="coTenantEmail"
+              placeholder="Email..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Email -->
+
+        <!-- Phone Number -->
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12 position-relative">
+          {{ coTenantPhoneCodeId + coTenantPhoneNumber }}
+          <span
+            *ngIf="
+              !isPhoneNumberValid(coTenantPhoneCodeId + coTenantPhoneNumber)
+            "
+            class="span-text-danger"
+            >Phone Number Is Not Valid</span
+          >
+          <div class="row">
+            <div class="col-3 pe-0-2-5">
+              <mat-form-field
+                appearance="fill"
+                class="form-field me-3 w-100"
+                floatLabel="auto"
+              >
+                <mat-label>Code</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="coTenantPhoneCodeId"
+                  class="example-right-align"
+                  name="coTenantPhoneCodeId"
+                  placeholder="+1"
+                  [matAutocomplete]="phoneCodeAutoCompleteCoTenant"
+                  (ngModelChange)="onCoTenantPhoneCodeChange($event)"
+                />
+
+                <mat-autocomplete
+                  #phoneCodeAutoCompleteCoTenant="matAutocomplete"
+                  [displayWith]="displayPhoneCode"
+                  (optionSelected)="onCoTenantPhoneCodeSelectionChange($event)"
+                >
+                  <mat-option
+                    *ngFor="let option of filterCoTenantPhoneCodes | async"
+                    [value]="option"
+                    class="d-flex justify-content-start align-items-center"
+                  >
+                    <img
+                      [src]="option.flags.png"
+                      width="22"
+                      height="14"
+                      style="margin-right: 8px"
+                      alt="{{ option.flags.alt }}"
+                    />
+                    {{ option.code }}
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+            </div>
+            <div class="col-9 ps-0-2-5">
+              <mat-form-field
+                appearance="fill"
+                class="form-field me-3 w-100"
+                floatLabel="auto"
+              >
+                <mat-label>Phone Number</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  [(ngModel)]="coTenantPhoneNumber"
+                  class="example-right-align"
+                  name="coTenantPhoneNumber"
+                  placeholder="Phone Number..."
+                />
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+        <!-- End Phone Number -->
+      </div>
+      <!-- End Co-Tenant Fullname, Email, And Phone Number -->
+
+      <!-- Gender, NIC/ Passport Number, Age, And Co-Tenant Relationship -->
+      <div class="row mt-4">
+        <!-- Gender -->
+        <div class="col-xl-3 col-md-3 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Gender</mat-label>
+            <mat-select
+              [(ngModel)]="coTenantGender"
+              name="coTenantGender"
+              required
+            >
+              <mat-option [value]="'male'">Male</mat-option>
+              <mat-option [value]="'female'">Female</mat-option>
+              <mat-option [value]="'other'">Other</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <!-- End Gender -->
+
+        <!-- NIC/ Passport Number -->
+        <div class="col-xl-3 col-md-3 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>NIC/ Passport Number</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="coTenantNicOrPassport"
+              class="example-right-align"
+              name="coTenantNicOrPassport"
+              placeholder="NIC/ Passport Number..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End NIC/ Passport Number -->
+
+        <!-- Age -->
+        <div class="col-xl-3 col-md-3 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Age</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="coTenantAge"
+              class="example-right-align"
+              name="coTenantAge"
+              placeholder="Age..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Age -->
+
+        <!-- Co-Tenant Relationship -->
+        <div class="col-xl-3 col-md-3 col-sm-12 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Co-Tenant Relationship</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="coTenantRelationship"
+              class="example-right-align"
+              name="coTenantRelationship"
+              placeholder="Age..."
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Co-Tenant Relationship -->
+      </div>
+      <!-- End Gender, NIC/ Passport Number, Age, And Co-Tenant Relationship -->
+
+      <!-- Property Information -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <h4 class="title">Property Information</h4>
+          <hr />
+        </div>
+      </div>
+      <!-- End Property Information -->
+
+      <!-- Property Table Row -->
+      <div class="row d-flex justify-content-center align-items-center">
+        <div class="col-12">
+          <app-custom-table
+            [(isReload)]="propertyTableIsReloading"
+            [(pageSize)]="propertyTablePageSize"
+            [(pageSizeOptions)]="propertyTablePageSizeOptions"
+            [(pageIndex)]="propertyTablePageIndex"
+            [(pageCount)]="propertyTablePageCount"
+            [(tableType)]="propertyTableType"
+            [(search)]="propertyTabletSearchText"
+            [(buttonAction)]="propertyTableButtonAction"
+            [(buttonOperation)]="propertyTableButtonOperation"
+            [(totalDataCount)]="propertyTableTotalDataCount"
+            [(buttonActionTrigger)]="propertyTableButtonActionTrigger"
+            [(buttonOperationTrigger)]="propertyTableButtonOperationTrigger"
+            [(notification)]="propertyTableNotification"
+            [data]="propertyTableData"
+            [columns]="propertyTableColumns"
+            [loggedUser]="loggedUser"
+            [isLoading]="isLoading"
+            [mode]="mode"
+            [isBrowser]="isBrowser"
+            [modeSub]="modeSub"
+            [fullDataCount]="propertyLength"
+          ></app-custom-table>
+        </div>
+      </div>
+      <!-- End Property Table Row -->
+
+      <!-- Property Details Display -->
+      <ng-container *ngIf="isPropertySelected">
+        <div class="row mt-4">
+          <div class="col-12">
+            <h5 class="title">Basic Information:</h5>
+          </div>
+        </div>
+
+        <!-- Property Details Display Property Title Row -->
+        <div class="row mt-4">
+          <!-- Property Title -->
+          <div class="col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>Property Title</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyTitle"
+                class="example-right-align"
+                name="propertyTitle"
+                readonly
+                placeholder="Title..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End Property Title -->
+        </div>
+        <!-- End Property Details Display Property Title Row -->
+
+        <!-- Property Details Display Property ID, Property Type, And Furnished Status -->
+        <div class="row mt-4">
+          <!-- Property ID -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>Property ID</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyId"
+                class="example-right-align"
+                name="propertyId"
+                readonly
+                placeholder="ID..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End Property ID -->
+
+          <!-- Property Type -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>Property Type</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyType"
+                class="example-right-align"
+                name="propertyType"
+                readonly
+                placeholder="Property Type..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End Property Type -->
+
+          <!-- Furnished Status -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>Furnished Status</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="furnishingStatus"
+                class="example-right-align"
+                name="furnishingStatus"
+                readonly
+                placeholder="ID..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End Furnished Status -->
+        </div>
+        <!-- End Property Details Display Property ID, Property Type, And Furnished Status -->
+
+        <!-- Property Details Display Developer, Project, And Built Year -->
+        <div class="row mt-4">
+          <!-- Property ID -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>Developer</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyDeveloperName"
+                class="example-right-align"
+                name="propertyDeveloperName"
+                readonly
+                placeholder="Developer..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End Developer -->
+
+          <!-- Project -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>Project</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyProjectName"
+                class="example-right-align"
+                name="propertyProjectName"
+                readonly
+                placeholder="Property Type..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End Project -->
+
+          <!-- Built Year -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>Built Year</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyBuiltYear"
+                class="example-right-align"
+                name="propertyBuiltYear"
+                readonly
+                placeholder="ID..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End Built Year -->
+        </div>
+        <!-- End Property Details Display Developer, Project, And Built Year -->
+
+        <!-- Property Details Display Location Row -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <h5 class="title">Location:</h5>
+          </div>
+        </div>
+
+        <div class="row my-4">
+          <div class="col-12">
+            <iframe
+              [src]="propertyGeoLocation | safeUrl"
+              width="100%"
+              height="452"
+              frameborder="0"
+              allowfullscreen
+              title="Property video preview"
+            ></iframe>
+          </div>
+        </div>
+        <!-- End Property Details Display Location Row -->
+
+        <!-- Property Details Display Address Row -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <h5 class="title">Address:</h5>
+          </div>
+        </div>
+
+        <!-- House Number, Street, And City -->
+        <div class="row mt-4">
+          <!-- House Number -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>Build Year</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyHouserNumber"
+                class="example-right-align"
+                name="propertyHouserNumber"
+                readonly
+                placeholder="Year..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End House Number -->
+
+          <!-- Street -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>Street</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyStreet"
+                class="example-right-align"
+                name="propertyStreet"
+                readonly
+                placeholder="Streer..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End Street -->
+
+          <!-- City -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>City</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyCity"
+                class="example-right-align"
+                name="propertyCity"
+                readonly
+                placeholder="City..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End City -->
+        </div>
+        <!-- End House Number, Street, And City -->
+
+        <!-- State Or Province, Country, And Postcode -->
+        <div class="row mt-4">
+          <!-- State Or Province -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>State Or Province</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyStateOrProvince"
+                class="example-right-align"
+                name="propertyStateOrProvince"
+                readonly
+                placeholder="State Or Province..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End State Or Province -->
+
+          <!-- Country -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>Country</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyCountry"
+                class="example-right-align"
+                name="propertyCountry"
+                readonly
+                placeholder="Country..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End Country -->
+
+          <!-- Postcode -->
+          <div class="col-xl-4 col-md-4 col-12">
+            <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-label>Postcode</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="propertyPostalCode"
+                class="example-right-align"
+                name="propertyPostalCode"
+                readonly
+                placeholder="Postcode..."
+              />
+            </mat-form-field>
+          </div>
+          <!-- End Postcode -->
+        </div>
+        <!-- End State Or Province, Country, And Postcode -->
+
+        <div class="row mt-4">
+          <div class="col-12">
+            <h5 class="title">Amenities:</h5>
+          </div>
+        </div>
+
+        <div class="row mt-4">
+          <div
+            class="col-xl-3 col-md-4 col-12"
+            *ngFor="let item of includedAmenities; let i = index"
+          >
+            <div class="row">
+              <div class="col-3">
+                <mat-icon
+                  aria-hidden="false"
+                  aria-label="Example home icon"
+                  class="amenities-icon"
+                  [ngClass]="item.toLocaleLowerCase()"
+                  [svgIcon]="makeIcon(item)"
+                >
+                </mat-icon>
+              </div>
+              <div class="col-9">
+                <div>{{ item }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End Property Details Display Address Row -->
+      </ng-container>
+      <!-- End Property Details Display -->
+
+      <!-- Lease Agreement -->
+      <div class="row my-4">
+        <div class="col-12">
+          <h4 class="title">Lease Agreement</h4>
+          <hr />
+        </div>
+      </div>
+
+      <!-- Starting Date, End Date, Duration In Months -->
+      <div class="row mt-4">
+        <!-- Starting Date -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Starting Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="startDatePicker"
+              placeholder="DD/MM/YYYY"
+              [(ngModel)]="startDate"
+              name="startDate"
+              aria-label="Starting Date"
+              required
+            />
+            <mat-datepicker-toggle
+              matSuffix
+              [for]="startDatePicker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker
+              #startDatePicker
+              [startAt]="today"
+              [touchUi]="true"
+            ></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <!-- End Starting Date -->
+
+        <!-- Ending Date -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Ending Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="endDatePicker"
+              placeholder="DD/MM/YYYY"
+              [(ngModel)]="endDate"
+              name="endDate"
+              aria-label="Ending Date"
+              required
+            />
+            <mat-datepicker-toggle
+              matSuffix
+              [for]="endDatePicker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker
+              #endDatePicker
+              [startAt]="today"
+              [touchUi]="true"
+            ></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <!-- End Ending Date -->
+
+        <!-- Duration In Months -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Duration In Months</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="durationMonths"
+              name="durationMonths"
+              aria-label="Duration Inn Months"
+              required
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Duration In Months -->
+      </div>
+      <!-- End Starting Date, End Date, Duration In Months -->
+
+      <!-- Monthly Rent, Currency, And Payment Frequency -->
+      <div class="row mt-4">
+        <!-- Monthly Rent -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Monthly Rent</mat-label>
+            <input
+              matInput
+              type="number"
+              [(ngModel)]="monthlyRent"
+              name="monthlyRent"
+              aria-label="Monthly Rent"
+              required
+            />
+          </mat-form-field>
+        </div>
+        <!-- End Monthly Rent -->
+
+        <!-- Currency -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Currency</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="currencyLeaseAgreement"
+              name="currencyLeaseAgreement"
+              aria-label="Currency"
+              [matAutocomplete]="currencyChangeAuto"
+              (ngModelChange)="handleCurrencyFilterChange($event)"
+              required
+            />
+            <mat-autocomplete
+              #currencyChangeAuto="matAutocomplete"
+              [displayWith]="displayCurrency"
+            >
+              <mat-option
+                *ngFor="let option of filterCurrencies$ | async"
+                [value]="option"
+                class="d-flex justify-content-start align-items-center"
+              >
+                <img
+                  [src]="option.flags.png"
+                  width="22"
+                  height="14"
+                  style="margin-right: 8px"
+                  alt="{{ option.flags.alt }}"
+                />
+                {{ option.currency }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <!-- End Currency -->
+
+        <!-- Payment Frequenct -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Payment Frequenct</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="paymentFrequencyLeaseAgreement"
+              name="paymentFrequencyLeaseAgreement"
+              aria-label="Payment Frequenct"
+              [matAutocomplete]="paymentFrequencyChangeAuto"
+              (ngModelChange)="handlePaymentFrequencyFilterChange($event)"
+              required
+            />
+            <mat-autocomplete
+              #paymentFrequencyChangeAuto="matAutocomplete"
+              [displayWith]="displayPaymentFrequency"
+            >
+              <mat-option
+                *ngFor="let option of filterPaymentFrequencies$ | async"
+                [value]="option"
+                class="d-flex justify-content-start align-items-center"
+              >
+                {{ makeCapitalize(option.name) }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <!-- End Payment Frequenct -->
+      </div>
+      <!-- End Monthly Rent, Currency, And Payment Frequency -->
+
+      <!-- Payment Method, Security Deposit, And Rent Due Date -->
+      <div class="row mt-3">
+        <!-- Payment Method -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Payment Method</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="paymentMethodLeaseAgreement"
+              name="paymentMethodLeaseAgreement"
+              aria-label="Payment Method"
+              [matAutocomplete]="paymentMethodChangeAuto"
+              (ngModelChange)="handlePaymentMethodFilterChange($event)"
+              required
+            />
+            <mat-autocomplete
+              #paymentMethodChangeAuto="matAutocomplete"
+              [displayWith]="displayPaymentMethod"
+            >
+              <mat-option
+                *ngFor="let option of filterPaymentMethods$ | async"
+                [value]="option"
+                class="d-flex justify-content-start align-items-center"
+              >
+                {{ makeCapitalize(option.name) }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <!-- End Payment Method -->
+
+        <!-- Security Deposit -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Security Deposit</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="securityDepositLeaseAgreement"
+              name="securityDepositLeaseAgreement"
+              aria-label="Security Deposit"
+              [matAutocomplete]="securityDepositChangeAuto"
+              (ngModelChange)="handleSecurityDepositFilterChange($event)"
+              required
+            />
+            <mat-autocomplete
+              #securityDepositChangeAuto="matAutocomplete"
+              [displayWith]="displaySecurityDeposit"
+            >
+              <mat-option
+                *ngFor="let option of filterSecurityDeposits$ | async"
+                [value]="option"
+                class="d-flex justify-content-start align-items-center"
+              >
+                {{ makeCapitalize(option.type) }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <!-- End Security Deposit -->
+
+        <!-- Rent Due Date -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Rent Due Date</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="rentDueDateLeaseAgreement"
+              name="rentDueDateLeaseAgreement"
+              aria-label="Rent Due Date"
+              [matAutocomplete]="rentDueDateChangeAuto"
+              (ngModelChange)="handleRentDueDateFilterChange($event)"
+              required
+            />
+            <mat-autocomplete
+              #rentDueDateChangeAuto="matAutocomplete"
+              [displayWith]="displayRentDueDate"
+            >
+              <mat-option
+                *ngFor="let option of filterRentDueDates$ | async"
+                [value]="option"
+                class="d-flex justify-content-start align-items-center"
+              >
+                {{ makeCapitalize(option.label) }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <!-- End Rent Due Date -->
+      </div>
+      <!-- End Payment Method, Security Deposit, And Rent Due Date -->
+
+      <!-- Late Payment Penalty, Utility Responsibilities, And Notice Period Days -->
+      <div class="row mt-4">
+        <!-- Late Payment Penalty -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Late Payment Penalty</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="latePaymentPenaltyLeaseAgreement"
+              name="latePaymentPenaltyLeaseAgreement"
+              aria-label="Late Payment Penalty"
+              (ngModelChange)="handleLatePaymentPenaltyFilterChange($event)"
+              required />
+            <button
+              mat-icon-button
+              matSuffix
+              matTooltip="Add Late Payment Penalties"
+              matTooltipPosition="above"
+              type="button"
+              (click)="addULatePaymentPenalties()"
+              aria-label="Add Utility Responsibility"
+            >
+              <i class="fa-solid fa-plus"></i></button
+          ></mat-form-field>
+          <span class="hint">
+            <div [innerHTML]="displayHint()"></div>
+          </span>
+
+          <div *ngIf="selectedLatePaymentPenalties.length > 0" class="row mt-3">
+            <div class="col-12">
+              <mat-accordion>
+                <mat-expansion-panel
+                  *ngFor="
+                    let item of selectedLatePaymentPenalties;
+                    let i = index
+                  "
+                  class="expansion-panel"
+                >
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>{{ item.label }}</mat-panel-title>
+                  </mat-expansion-panel-header>
+
+                  <p *ngIf="!item.isEditable; else itemEditDescription">
+                    {{ item.description }}
+                  </p>
+
+                  <ng-template #itemEditDescription>
+                    <div class="row w-100">
+                      <div class="col-12">
+                        <mat-form-field
+                          appearance="fill"
+                          class="form-field me-3 w-100"
+                        >
+                          <mat-label>Description</mat-label>
+                          <textarea
+                            matInput
+                            placeholder="Description..."
+                            [(ngModel)]="item.description"
+                            name="description-{{ i }}"
+                            rows="10"
+                            required
+                          ></textarea>
+                        </mat-form-field>
+                      </div>
+                    </div>
+                  </ng-template>
+
+                  <mat-action-row
+                    class="d-flex justify-content-end align-items-center py-0-2-5"
+                  >
+                    <!-- Edit button -->
+                    <button
+                      *ngIf="!item.isEditable"
+                      matIconButton
+                      matTooltip="Edit Description"
+                      matTooltipPosition="above"
+                      type="button"
+                      class="btn-edit btn-expanssion-action"
+                      (click)="item.isEditable = true"
+                      aria-label="Edit Rule Description"
+                    >
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+
+                    <!-- Save button -->
+                    <button
+                      *ngIf="item.isEditable"
+                      matIconButton
+                      matTooltip="Save Description"
+                      matTooltipPosition="above"
+                      type="button"
+                      class="btn-edit btn-expanssion-action"
+                      (click)="item.isEditable = false"
+                      aria-label="Save Rule Description"
+                    >
+                      <i class="fa-solid fa-check"></i>
+                    </button>
+
+                    <!-- Delete button -->
+                    <button
+                      type="button"
+                      matIconButton
+                      matTooltip="Remove Rule"
+                      matTooltipPosition="above"
+                      class="btn-delete btn-expanssion-action"
+                      (click)="removePaymentPenalty(item, i)"
+                      aria-label="Remove Rule And Regulation"
+                    >
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </mat-action-row>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+          </div>
+        </div>
+        <!-- End Late Payment Penalty -->
+
+        <!-- Utility Responsibilities -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Utility Responsibilities</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="utilityResponsibilitiesLeaseAgreement"
+              name="utilityResponsibilitiesLeaseAgreement"
+              aria-label="Utility Responsibilities"
+              (ngModelChange)="
+                handleUtilityResponsibilitiesFilterChange($event)
+              "
+              required
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              matTooltip="Add Utility Responsibility"
+              matTooltipPosition="above"
+              type="button"
+              (click)="addUtilities()"
+              aria-label="Add Utility Responsibility"
+            >
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </mat-form-field>
+          <span class="hint">
+            <div [innerHTML]="hintUtilityResponsibilities()"></div>
+          </span>
+
+          <div
+            class="row mt-3"
+            *ngIf="selectedUtilityResponsibilities.length > 0"
+          >
+            <div class="col-12">
+              <mat-accordion>
+                <mat-expansion-panel
+                  *ngFor="
+                    let item of selectedUtilityResponsibilities;
+                    let i = index
+                  "
+                  class="expansion-panel"
+                >
+                  <mat-expansion-panel-header>
+                    <mat-panel-title
+                      >{{ makeCapitalize(item.utility) }} -
+                      {{ makeCapitalize(item.paidBy) }}</mat-panel-title
+                    >
+                  </mat-expansion-panel-header>
+
+                  <p *ngIf="!item.isEditable; else itemEditDescription">
+                    {{ item.description }}
+                  </p>
+
+                  <ng-template #itemEditDescription>
+                    <div class="row w-100">
+                      <div class="col-12">
+                        <mat-form-field
+                          appearance="fill"
+                          class="form-field me-3 w-100"
+                        >
+                          <mat-label>Description</mat-label>
+                          <textarea
+                            matInput
+                            placeholder="Description..."
+                            [(ngModel)]="item.description"
+                            name="description-{{ i }}"
+                            rows="10"
+                            required
+                          ></textarea>
+                        </mat-form-field>
+                      </div>
+                    </div>
+                  </ng-template>
+
+                  <mat-action-row
+                    class="d-flex justify-content-end align-items-center py-0-2-5"
+                  >
+                    <!-- Edit button -->
+                    <button
+                      *ngIf="!item.isEditable"
+                      matIconButton
+                      matTooltip="Edit Description"
+                      matTooltipPosition="above"
+                      type="button"
+                      class="btn-edit btn-expanssion-action"
+                      (click)="item.isEditable = true"
+                      aria-label="Edit Rule Description"
+                    >
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+
+                    <!-- Save button -->
+                    <button
+                      *ngIf="item.isEditable"
+                      matIconButton
+                      matTooltip="Save Description"
+                      matTooltipPosition="above"
+                      type="button"
+                      class="btn-edit btn-expanssion-action"
+                      (click)="item.isEditable = false"
+                      aria-label="Save Rule Description"
+                    >
+                      <i class="fa-solid fa-check"></i>
+                    </button>
+
+                    <!-- Delete button -->
+                    <button
+                      type="button"
+                      matIconButton
+                      matTooltip="Remove Rule"
+                      matTooltipPosition="above"
+                      class="btn-delete btn-expanssion-action"
+                      (click)="removeUtility(item, i)"
+                      aria-label="Remove Rule And Regulation"
+                    >
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </mat-action-row>
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+          </div>
+        </div>
+        <!-- End Utility Responsibilities -->
+
+        <!-- Notice Period Days -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Notice Period Days</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="noticePeriodDaysLeaseAgreement"
+              name="noticePeriodDaysLeaseAgreement"
+              aria-label="Notice Period Days"
+              (ngModelChange)="handleNoticePeriodDaysFilterChange($event)"
+              [matAutocomplete]="notificationPeriodDaysChangeAuto"
+              required
+            />
+            <mat-autocomplete
+              #notificationPeriodDaysChangeAuto="matAutocomplete"
+              [displayWith]="displayNotificationPeriodDays"
+            >
+              <mat-option
+                *ngFor="let option of filterNoticePeriodOptions$ | async"
+                [value]="option"
+                class="d-flex justify-content-start align-items-center"
+              >
+                {{ makeCapitalize(option.label) }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+          <!-- <span class="hint">
+            <div [innerHTML]="hintUtilityResponsibilities()"></div>
+          </span> -->
+        </div>
+        <!-- End Notice Period Days -->
+      </div>
+      <!-- End Late Payment Penalty, Utility Responsibilities, And Notice Period Days -->
+      <!-- End Lease Agreement -->
+
+      <!-- Rules And Regulations -->
+      <div class="row my-4">
+        <div class="col-12">
+          <h4 class="title">Rules And Regulations</h4>
+          <hr />
+        </div>
+      </div>
+
+      <!-- Rules And Regulations Row -->
+      <div class="row mt-4 d-flex justify-content-center align-items-center">
+        <!-- Rules And Regulations Input -->
+        <div class="col-xl-4 col-md-4 col-12">
+          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+            <mat-label>Rules And Regulations</mat-label>
+            <input
+              matInput
+              type="text"
+              [(ngModel)]="rulesAndRegulation"
+              name="rulesAndRegulation"
+              aria-label="Rules And Regulations"
+              (ngModelChange)="handleRulesAndRegulationsFilterChange($event)"
+              [matAutocomplete]="rulesAndRegulationsChangeAuto"
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              matTooltip="Rule Add Button"
+              matTooltipPosition="above"
+              type="button"
+              aria-label="Add Rule And Regulations"
+              (click)="handleRulesAndRegulationsAdd()"
+            >
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <mat-autocomplete
+              #rulesAndRegulationsChangeAuto="matAutocomplete"
+              [displayWith]="displayRulesAndRegulations"
+            >
+              <mat-option
+                *ngFor="let option of filterRulesAndRegulations$ | async"
+                [value]="option"
+                class="d-flex justify-content-start align-items-center"
+              >
+                {{ makeCapitalize(option.rule) }}
+              </mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+        </div>
+        <!-- Rules And Regulations Input -->
+
+        <!-- Rules And Regulations Hint -->
+        <div
+          class="col-xl-8 col-md-8 col-12 d-flex justify-content-center align-items-center"
+        >
+          <p class="text-style">
+            Tip: After typing the rule, click the Add button to include it in
+            the list. If the default description doesn't match your needs, you
+            can customize it by clicking the Edit button.
+          </p>
+        </div>
+        <!-- End Rules And Regulations Hint -->
+      </div>
+      <!-- End Rules And Regulations Row -->
+
+      <!-- Preview Rules And Regulations -->
+      <div class="row mt-3">
+        <div class="col-xl-12">
+          <mat-accordion>
+            <mat-expansion-panel
+              *ngFor="let item of selectedRuleAndRegulations; let i = index"
+              class="expansion-panel"
+            >
+              <mat-expansion-panel-header>
+                <div class="row w-100">
+                  <div
+                    class="col-xl-4 col-md-4 col-12 d-flex justify-content-start align-items-center"
+                  >
+                    <mat-panel-title>{{ item.rule }}</mat-panel-title>
+                  </div>
+                  <div
+                    class="col-xl-8 col-md-8 col-12 d-flex justify-content-end align-items-center"
+                  >
+                    <!-- Optional header controls -->
+                  </div>
+                </div>
+              </mat-expansion-panel-header>
+
+              <!-- Description View/Edit Toggle -->
+              <p *ngIf="!item.isEditable; else itemEditDescription">
+                {{ item.description }}
+              </p>
+
+              <ng-template #itemEditDescription>
+                <div class="row w-100">
+                  <div class="col-12">
+                    <mat-form-field
+                      appearance="fill"
+                      class="form-field me-3 w-100"
+                    >
+                      <mat-label>Description</mat-label>
+                      <textarea
+                        matInput
+                        placeholder="Description..."
+                        [(ngModel)]="item.description"
+                        name="description-{{ i }}"
+                        rows="10"
+                        required
+                      ></textarea>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </ng-template>
+
+              <!-- Action Buttons -->
+              <mat-action-row
+                class="d-flex justify-content-end align-items-center py-0-2-5"
+              >
+                <!-- Edit button -->
+                <button
+                  *ngIf="!item.isEditable"
+                  matTooltip="Edit Description"
+                  matTooltipPosition="above"
+                  type="button"
+                  class="btn-edit btn-expanssion-action"
+                  (click)="item.isEditable = true"
+                  aria-label="Edit Rule Description"
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+
+                <!-- Save button -->
+                <button
+                  *ngIf="item.isEditable"
+                  matIconButton
+                  matTooltip="Save Description"
+                  matTooltipPosition="above"
+                  type="button"
+                  class="btn-edit btn-expanssion-action"
+                  (click)="item.isEditable = false"
+                  aria-label="Save Rule Description"
+                >
+                  <i class="fa-solid fa-check"></i>
+                </button>
+
+                <!-- Delete button -->
+                <button
+                  type="button"
+                  matIconButton
+                  matTooltip="Remove Rule"
+                  matTooltipPosition="above"
+                  class="btn-delete btn-expanssion-action"
+                  (click)="handleRulesAndRegulationsRemove(item, i)"
+                  aria-label="Remove Rule And Regulation"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </mat-action-row>
+            </mat-expansion-panel>
+          </mat-accordion>
+        </div>
+      </div>
+      <!-- End Preview Rules And Regulations -->
+      <!-- End Rules And Regulations -->
+
+      <!-- Company Policy -->
+      <div class="row my-4">
+        <div class="col-12">
+          <h4 class="title">Company Policy</h4>
+          <hr />
+        </div>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-12">
+          <mat-accordion>
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>Company Policy</mat-panel-title>
+              </mat-expansion-panel-header>
+              <div [innerHTML]="companyPolicy"></div>
+            </mat-expansion-panel>
+          </mat-accordion>
+        </div>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-xl-12 col-12">
+          <mat-checkbox
+            [(ngModel)]="isReadTheCompanyPolicy"
+            name="isReadTheCompanyPolicy"
+            class="example-margin"
+            required
+          >
+            I have read the company policy
+          </mat-checkbox>
+        </div>
+      </div>
+      <!-- End Company Policy -->
+
+      <!-- Signatures -->
+      <div class="row my-4">
+        <div class="col-12">
+          <h4 class="title">Signatures</h4>
+          <hr />
+        </div>
+      </div>
+
+      <!-- Tenant Signature, And Landlord Signature -->
+      <div class="row mt-4">
+        <!-- Tenant Signature -->
+        <div class="col-xl-6 col-md-6 col-sm-12 col-12">
+          <div class="d-flex justify-content-start align-items-center">
+            <button
+              type="button"
+              class="btn-edit"
+              (click)="handleAddTenantSignature()"
+              aria-label="Add Tenant Signature"
+            >
+              Add Tenant Signature
+            </button>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div
+                *ngIf="tenantPreviewImageData"
+                class="signature-image-container"
+              >
+                <img [src]="tenantPreviewImageData" alt="Tenant Signature" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End Tenant Signature -->
+
+        <!-- Landlord Signature -->
+        <div class="col-xl-6 col-md-6 col-sm-12 col-12">
+          <div class="d-flex justify-content-end align-items-center">
+            <button
+              type="button"
+              class="btn-edit"
+              (click)="handleAddLandlordSignature()"
+              aria-label="Add Tenant Signature"
+            >
+              Add Landlord Signature
+            </button>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div
+                *ngIf="landloadPreviewImageData"
+                class="signature-image-container"
+              >
+                <img [src]="landloadPreviewImageData" alt="Tenant Signature" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End Landlord Signature -->
+      </div>
+      <!-- End Tenant Signature, And Landlord Signature -->
+
+      <!-- End Signatures -->
+
+      <!-- Submit -->
+      <div class="row my-5">
+        <div class="col-12 d-flex justify-content-end align-items-center">
+          <button
+            type="button"
+            class="btn-custom"
+            (click)="submitLeaseAgreement()"
+            aria-label="Submit Lease Agreement"
+          >
+            <i class="fa-solid fa-download me-2"></i> Save
+          </button>
+        </div>
+      </div>
+      <!-- End Submit -->
+    </div>
+  </div>
+</form>

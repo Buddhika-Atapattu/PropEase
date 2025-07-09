@@ -13,10 +13,10 @@ import {
   APIsService,
   BaseUser,
   UDER_DOC_TYPES,
-} from '../../../../../services/APIs/apis.service';
-import { WindowsRefService } from '../../../../../services/windowRef.service';
+} from '../../../../services/APIs/apis.service';
+import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CryptoService } from '../../../../../services/cryptoService/crypto.service';
+import { CryptoService } from '../../../../services/cryptoService/crypto.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
@@ -35,7 +35,7 @@ import { ProgressBarComponent } from '../../../dialogs/progress-bar/progress-bar
 import {
   ActivityTrackerService,
   MSG,
-} from '../../../../../services/activityTacker/activity-tracker.service';
+} from '../../../../services/activityTacker/activity-tracker.service';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { Sort, MatSortModule, MatSort } from '@angular/material/sort';

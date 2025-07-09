@@ -33,6 +33,8 @@ export default defineConfig({
   server: {
     port: 4200,
     open: true, // Optional: Automatically open browser
-    strictPort: true, // Optional: Avoid random fallback ports
+    strictPort: true,
+    host: true,
+    allowedHosts: ['.ngrok-free.app'], // Optional: Avoid random fallback ports
   },
 });

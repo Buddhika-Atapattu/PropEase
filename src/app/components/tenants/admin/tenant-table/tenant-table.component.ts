@@ -19,7 +19,7 @@ import {
 } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { Sort, MatSortModule, MatSort } from '@angular/material/sort';
-import { WindowsRefService } from '../../../../../services/windowRef.service';
+import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
@@ -27,9 +27,9 @@ import {
   APIsService,
   LoggedUserType,
   UsersType,
-} from '../../../../../services/APIs/apis.service';
+} from '../../../../services/APIs/apis.service';
 import { SkeletonLoaderComponent } from '../../../shared/skeleton-loader/skeleton-loader.component';
-import { AuthService } from '../../../../../services/auth/auth.service';
+import { AuthService } from '../../../../services/auth/auth.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { PaginatorComponent } from '../../../shared/paginator/paginator.component';
 import {
@@ -39,10 +39,18 @@ import {
 import { ProgressBarComponent } from '../../../dialogs/progress-bar/progress-bar.component';
 import {
   TenantService,
-  TenantTableElement,
-  CustomTableColumn,
-  ActionButtonType,
-} from '../../../../../services/tenant/tenant.service';
+} from '../../../../services/tenant/tenant.service';
+
+
+export interface TenantTableElement {
+  username?: string;
+  name: string;
+  image: string | File | undefined;
+  contactNumber: string | undefined;
+  email: string;
+  gender: string;
+  addedBy?: string;
+}
 
 export interface ButtonDataType {
   type: string;
@@ -53,6 +61,15 @@ export interface ButtonDataType {
   email: string;
   gender: string;
   addedBy?: string;
+}
+
+export interface ActionButtonType {
+  type: 'add' | 'delete' | 'remove' | 'view';
+}
+
+export interface CustomTableColumn {
+  key: string;
+  label: string;
 }
 
 @Component({

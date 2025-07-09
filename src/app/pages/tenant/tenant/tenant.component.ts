@@ -5,15 +5,15 @@ import {
   Inject,
   PLATFORM_ID,
 } from '@angular/core';
-import { WindowsRefService } from '../../../../services/windowRef.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import {
   AuthService,
   LoggedUserType,
-} from '../../../../services/auth/auth.service';
-import { APIsService, UsersType } from '../../../../services/APIs/apis.service';
+} from '../../../services/auth/auth.service';
+import { APIsService, UsersType } from '../../../services/APIs/apis.service';
 
 @Component({
   selector: 'app-tenant',

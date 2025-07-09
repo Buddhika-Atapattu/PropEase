@@ -172,7 +172,8 @@
               [svgIcon]="amenityIconMaker(amenity)"
               aria-hidden="false"
               aria-label="Amenity Icon"
-              class="amenity-icon"
+              class="amenities-icon"
+              [ngClass]="amenity.toLocaleLowerCase()"
             ></mat-icon>
           </div>
           <div class="col-10 d-flex align-item-center text-capitalize">
@@ -185,9 +186,23 @@
 
     <hr />
 
+    <div class="row d-flex justify-content-between align-item-center">
+      <div class="col-xl-10 d-flex justify-content-start align-item-center">
+        <h1 class="display-6 my-2">Location of the property</h1>
+      </div>
+      <div class="col-xl-2 d-flex justify-content-end align-item-center">
+        <button
+          type="button"
+          class="btn-edit my-auto"
+          (click)="shareGoogleLoacation()"
+        >
+          <span class="fw-bold me-2">Share</span
+          ><i class="fa-solid fa-share-from-square"></i>
+        </button>
+      </div>
+    </div>
     <div class="row">
       <div class="col-xl-12">
-        <h1 class="display-6 my-2">Location of the property</h1>
         <iframe
           name="location"
           title="location"
@@ -200,7 +215,14 @@
         ></iframe>
       </div>
     </div>
-
+    <!-- [src]="property.location?.embeddedUrl | safeUrl" -->
+    <!-- [src]="
+            'https://www.google.com/maps?q=' +
+              property.location?.lat +
+              ',' +
+              property.location?.lng +
+              '&hl=en&z=14&output=embed' | safeUrl
+          " -->
     <hr />
 
     <div class="row d-flex justify-content-between align-item-center mt-4">

@@ -11,24 +11,24 @@ import {
   EventEmitter,
   ChangeDetectorRef,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { filter, Subscription } from 'rxjs';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { APIsService, UsersType } from '../../../services/APIs/apis.service';
+import { APIsService, UsersType } from '../../services/APIs/apis.service';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { AuthService, BaseUser } from '../../../services/auth/auth.service';
+import { CryptoService } from '../../services/cryptoService/crypto.service';
+import { AuthService, BaseUser } from '../../services/auth/auth.service';
 import { PropertyFilterDialogComponent } from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
 import {
   BackEndPropertyData,
   Property,
-} from '../../../services/property/property.service';
+} from '../../services/property/property.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationComponent } from '../../components/dialogs/confirmation/confirmation.component';
-import { PropertyService } from '../../../services/property/property.service';
+import { PropertyService } from '../../services/property/property.service';
 import { NotificationComponent } from '../dialogs/notification/notification.component';
 
 @Component({

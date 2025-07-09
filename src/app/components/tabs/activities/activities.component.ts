@@ -12,8 +12,8 @@ import {
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 
-import { AuthService, BaseUser } from '../../../../services/auth/auth.service';
-import { WindowsRefService } from '../../../../services/windowRef.service';
+import { AuthService, BaseUser } from '../../../services/auth/auth.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 
 import { LoggedDataComponent } from '../components/logged-data/logged-data.component';
 import { UserFileManagementComponent } from '../components/user-file-management/user-file-management.component';

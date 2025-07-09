@@ -7,10 +7,10 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import { APIsService, BaseUser } from '../../../../services/APIs/apis.service';
-import { WindowsRefService } from '../../../../services/windowRef.service';
+import { APIsService, BaseUser } from '../../../services/APIs/apis.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CryptoService } from '../../../../services/cryptoService/crypto.service';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';

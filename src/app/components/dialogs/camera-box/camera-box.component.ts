@@ -17,7 +17,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { WindowsRefService } from '../../../../services/windowRef.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { Subscription } from 'rxjs';
 import { DomSanitizer } from '@angular/platform-browser';
 

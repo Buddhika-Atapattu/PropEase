@@ -5,7 +5,7 @@ import {
   Inject,
   PLATFORM_ID,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';

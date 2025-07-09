@@ -10,7 +10,7 @@ import {
   ElementRef,
   AfterViewChecked,
 } from '@angular/core';
-import { WindowsRefService } from '../../../../services/windowRef.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
@@ -18,7 +18,7 @@ import {
   BackEndPropertyData,
   MSG,
   PropertyService,
-} from '../../../../services/property/property.service';
+} from '../../../services/property/property.service';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import {
@@ -32,9 +32,10 @@ import {
   MatDialogModule,
 } from '@angular/material/dialog';
 import { ViewPropertyImagesComponent } from '../../../components/dialogs/view-property-images/view-property-images.component';
-import { APIsService, UsersType } from '../../../../services/APIs/apis.service';
+import { APIsService, UsersType } from '../../../services/APIs/apis.service';
 import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 import { PropertyMoreDetailsPannelComponent } from '../../../components/dialogs/property-more-details-pannel/property-more-details-pannel.component';
+import { ShareComponent } from '../../../components/dialogs/share/share.component';
 
 @Component({
   selector: 'app-view',
@@ -43,7 +44,9 @@ import { PropertyMoreDetailsPannelComponent } from '../../../components/dialogs/
   templateUrl: './view.component.html',
   styleUrl: './view.component.scss',
 })
-export class ViewComponent implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy {
+export class ViewComponent
+  implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy
+{
   @ViewChild('sliderContainer', { static: false })
   sliderContainer!: ElementRef<HTMLElement>;
   protected mode: boolean | null = null;
@@ -90,7 +93,7 @@ export class ViewComponent implements OnInit, AfterViewInit, AfterViewChecked, O
       this.propertyID = params['propertyID'];
     });
     this.iconMaker();
-    this.propertyService.amenityIconMaker();
+    // this.propertyService.amenityIconMaker();
   }
 
   async ngOnInit(): Promise<void> {
@@ -106,9 +109,7 @@ export class ViewComponent implements OnInit, AfterViewInit, AfterViewChecked, O
     }
   }
 
-  ngAfterViewInit(): void {
-    
-  }
+  ngAfterViewInit(): void {}
 
   ngAfterViewChecked(): void {
     if (!this.sliderInitDone && this.sliderContainer?.nativeElement) {
@@ -213,7 +214,8 @@ export class ViewComponent implements OnInit, AfterViewInit, AfterViewChecked, O
         setTimeout(() => {
           const element = tile as HTMLElement;
           element.style.backgroundImage = `url(${newImageUrl})`;
-          element.style.transform = 'scale(0) rotateY(90deg) rotateX(90deg) rotateZ(90deg)';
+          element.style.transform =
+            'scale(0) rotateY(90deg) rotateX(90deg) rotateZ(90deg)';
           element.style.opacity = '0';
 
           setTimeout(() => {
@@ -261,7 +263,6 @@ export class ViewComponent implements OnInit, AfterViewInit, AfterViewChecked, O
 
   private animetTheImageSilder() {
     if (this.isBrowser) {
-      
       const startSlider = () => {
         this.sliderInterval = setInterval(() => {
           this.nextImage();
@@ -305,6 +306,29 @@ export class ViewComponent implements OnInit, AfterViewInit, AfterViewChecked, O
   }
 
   //<==================== End Open the dialod for the image preview ====================>
+
+  //<==================== Open Share dialog ====================>
+  protected shareGoogleLoacation() {
+    const dialogRef = this.dialog.open(ShareComponent, {
+      width: 'auto',
+      minWidth: '20vw',
+      maxWidth: '50vw',
+      height: 'auto',
+      maxHeight: '80vh',
+      minHeight: '5vh',
+      autoFocus: false,
+      enterAnimationDuration: '100ms',
+      exitAnimationDuration: '100ms',
+      data: {
+        property: this.property ?? '',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      // console.log(`Dialog result: ${result}`);
+    });
+  }
+  //<==================== End Open Share dialog ====================>
 
   //<==================== Get the owner details by calling the api ====================>
   private async getOwnerDetails() {

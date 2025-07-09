@@ -33,7 +33,7 @@ import {
   propertyDocPreview,
   MSG,
   BackEndPropertyData,
-} from '../../../../services/property/property.service';
+} from '../../../services/property/property.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -54,14 +54,17 @@ import {
   FormControl,
 } from '@angular/forms';
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
-import { WindowsRefService } from '../../../../services/windowRef.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { Subscription } from 'rxjs';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MapComponent } from '../../shared/map/map.component';
+import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 
+// MapComponent,
 @Component({
   selector: 'app-property-more-details-pannel',
+  standalone: true,
   imports: [
     CommonModule,
     MatDialogModule,
@@ -82,9 +85,9 @@ import { MapComponent } from '../../shared/map/map.component';
     MatAutocompleteModule,
     MatButtonToggleModule,
     MatDialogModule,
-    MapComponent,
+    
+    SafeUrlPipe,
   ],
-  standalone: true,
   templateUrl: './property-more-details-pannel.component.html',
   styleUrl: './property-more-details-pannel.component.scss',
 })
@@ -167,8 +170,8 @@ export class PropertyMoreDetailsPannelComponent
 
   ngOnDestroy(): void {}
 
-   //<==================== Mobile Tab Open Button ====================>
-  protected tabOpenButtonOperation(){
+  //<==================== Mobile Tab Open Button ====================>
+  protected tabOpenButtonOperation() {
     this.istabOpenButtonActive = !this.istabOpenButtonActive;
   }
   //<==================== End Mobile Tab Open Button ====================>

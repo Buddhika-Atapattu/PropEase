@@ -1,0 +1,53 @@
+<app-notification />
+<div class="container-fluid position-relative">
+  <button type="button" class="pannel-close-btn" (click)="pannelClose()">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+
+  <div class="row mt-4">
+    <mat-form-field appearance="fill" class="form-field me-3 w-100">
+      <mat-label>Slelect The File Upload</mat-label>
+      <mat-select
+        [(ngModel)]="selectionMedia"
+        name="selectionMedia"
+        (ngModelChange)="onSelectionMedia()"
+      >
+        <mat-option *ngIf="isElectron" [value]="'Scanner'">Scanner</mat-option>
+        <mat-option [value]="'Mobile'">Mobile</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div
+    class="row"
+    *ngIf="selectionMedia === 'Scanner' && scanners.length > 0 && isElectron"
+  >
+    <div class="col-xl-12">
+      <mat-form-field appearance="fill" class="form-field me-3 w-100">
+        <mat-label>Slelect The Scanner</mat-label>
+        <mat-select
+          [(ngModel)]="selectedScanner"
+          name="selectedScanner"
+          (ngModelChange)="onSelectingScanner()"
+        >
+          <mat-option *ngFor="let scanner of scanners" [value]="scanner"
+            >{{scanner}}</mat-option
+          >
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <div
+    *ngIf="qrDataUrl && selectionMedia === 'Mobile'"
+    class="row d-flex justify-content-center align-item-center my-5"
+  >
+    <div
+      class="col-xl-8 col-md-12 col-sm-12 col-12 d-flex justify-content-center align-item-center"
+    >
+      <div class="image-container">
+        <img [src]="qrDataUrl" alt="QR Code" class="qr-code" />
+      </div>
+    </div>
+  </div>
+</div>

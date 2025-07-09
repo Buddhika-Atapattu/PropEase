@@ -4,11 +4,12 @@ import {
   OnDestroy,
   Inject,
   PLATFORM_ID,
+  AfterViewInit,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-main',
@@ -17,7 +18,7 @@ import { ActivatedRoute } from '@angular/router';
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
 })
-export class MainComponent implements OnInit, OnDestroy {
+export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
@@ -25,7 +26,8 @@ export class MainComponent implements OnInit, OnDestroy {
   constructor(
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.route.url.subscribe((segments) => {
@@ -40,6 +42,8 @@ export class MainComponent implements OnInit, OnDestroy {
       });
     }
   }
+
+  ngAfterViewInit(): void {}
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();

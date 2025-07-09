@@ -1,0 +1,339 @@
+@use "../../../styles/global.scss" as *;
+@use "sass:color";
+
+.main-panel {
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  min-height: 25vh;
+  padding: 2rem;
+
+  .page-indecator {
+    position: absolute;
+    top: 0%;
+    left: 1%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .page-indicator-btn {
+      background: none;
+      border: none;
+      margin: 0 0.5rem;
+      padding: 0;
+      cursor: pointer;
+      font-weight: 100;
+      text-transform: uppercase;
+      font-size: 10pt;
+    }
+  }
+
+  .user-image-row {
+    position: relative;
+    border-radius: 1rem;
+    height: 10rem;
+    margin-top: 2rem;
+    margin-bottom: 10rem;
+    .btn-edit {
+      position: absolute;
+      width: 2rem;
+      height: 2rem;
+      top: 0;
+      right: 0px;
+      box-shadow: none;
+      background: none;
+      z-index: 10;
+    }
+    .image-container {
+      position: absolute;
+      bottom: -50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      .user-image {
+        width: 10rem;
+        height: 10rem;
+        border-radius: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+    }
+  }
+
+  .tenant-details {
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none;
+    li {
+      margin: 0 !important;
+      padding: 0.25rem 0rem !important;
+    }
+  }
+
+  .drop-down-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative;
+    min-height: 5rem;
+    height: 10rem;
+    width: 100%;
+    border-radius: 2rem;
+    font-size: 25pt;
+    text-transform: uppercase;
+    text-align: center;
+    color: currentColor;
+    cursor: pointer;
+  }
+
+  .scanned-document {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 1.25rem;
+  }
+
+  .document-button-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(-20%, 20%);
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .document-preview-row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: center;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0rem;
+    width: 100%;
+    height: 100%;
+    span {
+      width: 100%;
+      height: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  mat-icon {
+    width: auto;
+    height: auto;
+    cursor: pointer;
+  }
+
+  .company-policy {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 1rem;
+    font-family: "Segoe UI", sans-serif;
+    line-height: 1.6;
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    ol {
+      padding-left: 1.2rem;
+
+      li {
+        margin-bottom: 1.2rem;
+
+        strong {
+          display: block;
+          font-size: 1.05rem;
+          margin-bottom: 0.25rem;
+          color: #333;
+        }
+
+        p {
+          margin: 0;
+          color: #555;
+        }
+      }
+    }
+  }
+
+  .upload-sign-area {
+    border: 2px dashed #c0c0c0;
+    padding: 1rem;
+    text-align: center;
+    border-radius: 10px;
+    background: #ffe9a5;
+    position: relative;
+
+    h4 {
+      margin-bottom: 1rem;
+    }
+
+    .signature-pad {
+      width: 100%;
+      height: 200px;
+      border: 1px solid #aaa;
+      background: #fff;
+      touch-action: none;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      border: 2px solid #a4a4a4;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      background: #ffffff;
+      color: #000;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+  }
+
+  .signature-image-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #fff;
+    margin-top: 1rem;
+    border-radius: 1rem;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+  }
+
+  &.dark {
+    background: linear-gradient(
+      145deg,
+      $dark-secondary-color,
+      color.adjust($dark-secondary-color, $lightness: 2%)
+    );
+    color: $dark-text-color;
+
+    .page-indecator {
+      color: #e8bd00;
+      .page-indicator-btn {
+        color: #e8bd00;
+      }
+    }
+    .user-image-row {
+      background: linear-gradient(
+        45deg,
+        color.adjust($dark-third-color, $lightness: -20%),
+        $dark-third-color,
+        color.adjust($dark-third-color, $lightness: -20%)
+      );
+      .image-container {
+        .user-image {
+          box-shadow: 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
+        }
+      }
+    }
+
+    .tenant-details {
+      color: #fff;
+      li {
+        color: #fff;
+      }
+    }
+
+    .drop-down-container {
+      background: linear-gradient(
+        144deg,
+        rgb(0 58 168 / 34%),
+        rgb(90 0 166 / 46%),
+        rgb(20 0 145 / 43%)
+      );
+      border: 0.0159rem solid #ffffff8a;
+      &.active {
+        background: linear-gradient(
+          144deg,
+          rgba(101, 125, 170, 0.34),
+          rgba(118, 79, 150, 0.46),
+          rgba(113, 105, 165, 0.43)
+        );
+        border: 0.0159rem solid #83cfff8a;
+      }
+    }
+    .document-preview-row {
+      background: $dark-btn-bg-color;
+      color: $dark-text-color;
+    }
+    ::ng-deep .mat-mdc-checkbox {
+      .mdc-label {
+        color: #ffffff !important;
+      }
+    }
+  }
+
+  &.light {
+    background: linear-gradient(
+      145deg,
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
+    );
+    color: $light-text-color;
+
+    .page-indecator {
+      color: #100a2b;
+      .page-indicator-btn {
+        color: #100a2b;
+      }
+    }
+    .user-image-row {
+      background: linear-gradient(
+        45deg,
+        color.adjust($dark-primary-color, $lightness: 15%),
+        color.adjust($dark-primary-color, $lightness: 10%),
+        color.adjust($dark-primary-color, $lightness: 15%)
+      );
+      .image-container {
+        .user-image {
+          box-shadow: 0rem 0rem 1rem 0rem #100a2b;
+        }
+      }
+    }
+    .tenant-details {
+      color: #000;
+      li {
+        color: #000;
+      }
+    }
+
+    .drop-down-container {
+      background: linear-gradient(
+        144deg,
+        #ffc10757,
+        rgb(255 202 0 / 46%),
+        #ffc1076e
+      );
+      border: 0.0159rem solid #1900ff8a;
+      &.active {
+        background: linear-gradient(
+          144deg,
+          #88784757,
+          rgba(138, 126, 79, 0.46),
+          #9182536e
+        );
+        border: 0.0159rem solid #83cfff8a;
+      }
+    }
+    .document-preview-row {
+      background: $light-btn-bg-color;
+      color: $light-text-color;
+    }
+
+    ::ng-deep .mat-mdc-checkbox {
+      .mdc-label {
+        color: #000000 !important;
+      }
+    }
+  }
+}

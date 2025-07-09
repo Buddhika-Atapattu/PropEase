@@ -9,14 +9,14 @@ import {
   ViewChild,
   ElementRef,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { AuthService, BaseUser } from '../../../services/auth/auth.service';
+import { AuthService, BaseUser } from '../../services/auth/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { PropertyFilterDialogComponent } from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
 import {
@@ -24,7 +24,7 @@ import {
   Property,
   PropertyFilter,
   BackEndPropertyData,
-} from '../../../services/property/property.service';
+} from '../../services/property/property.service';
 import { ProgressBarComponent } from '../../components/dialogs/progress-bar/progress-bar.component';
 import { NotificationComponent } from '../../components/dialogs/notification/notification.component';
 import { PropertyViewCardComponent } from '../../components/property-view-card/property-view-card.component';
@@ -112,7 +112,6 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
         this.mode = val;
       });
     }
-
   }
 
   ngOnDestroy(): void {
@@ -128,7 +127,6 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
       ) ?? false
     );
   }
-
 
   private iconMaker() {
     const iconMap = [
@@ -153,7 +151,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   }
 
   // View style
-  protected convertTheViewStyle(style: string){
+  protected convertTheViewStyle(style: string) {
     if (style === 'grid') {
       this.isColView = true;
       this.isListView = false;
@@ -161,11 +159,6 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
       this.isListView = true;
       this.isColView = false;
     }
-  }
-
-  // Handles the user search input event, updates the search string
-  protected async searchUsers(event: Event) {
-    this.search = (event.target as HTMLInputElement).value;
   }
 
   // Navigates to the property listing page

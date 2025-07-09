@@ -1,6 +1,5 @@
 @use "../../../styles/global.scss" as *;
 
-
 .refresh {
   i {
     animation: refresh 1s infinite;
@@ -12,5 +11,24 @@
         transform: rotate(360deg);
       }
     }
+  }
+}
+
+mat-icon {
+  width: 20px !important;
+  height: 20px !important;
+  ::ng-deep svg{
+    fill: #fff !important;
+    stroke: none !important;
+    path{
+      fill: #fff !important;
+      stroke: none !important;
+    }
+  }
+}
+
+@media (max-width: 500px){
+  .button-container{
+    justify-content: center !important;
   }
 }

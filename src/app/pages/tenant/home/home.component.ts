@@ -6,29 +6,47 @@ import {
   PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
-import { WindowsRefService } from '../../../../services/windowRef.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import {
   AuthService,
   LoggedUserType,
-} from '../../../../services/auth/auth.service';
-import { TenantTableComponent } from '../../../components/tenants/admin/tenant-table/tenant-table.component';
-import { APIsService, UsersType } from '../../../../services/APIs/apis.service';
-import {
-  TenantService,
-  CustomTableColumn,
-  TenantTableElement,
-  ActionButtonType,
-} from '../../../../services/tenant/tenant.service';
+} from '../../../services/auth/auth.service';
+import { APIsService, UsersType } from '../../../services/APIs/apis.service';
+import { TenantService } from '../../../services/tenant/tenant.service';
 import {
   NotificationComponent,
   NotificationType,
 } from '../../../components/dialogs/notification/notification.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
+import {
+  CustomTableComponent,
+  ButtonDataType,
+  ButtonType,
+  CustomTableColumnType,
+  FileExportWithDataAndExtentionType,
+} from '../../../components/shared/custom-table/custom-table.component';
+import { FileExportButtonTypeByExtension } from '../../../components/shared/paginator/paginator.component';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { MatButtonModule } from '@angular/material/button';
+import { MatBadgeModule } from '@angular/material/badge';
 
-export interface ButtonDataType {
+export interface TenantTableElement {
+  username?: string;
+  name: string;
+  image: string | File | undefined;
+  contactNumber: string | undefined;
+  email: string;
+  gender: string;
+  addedBy?: string;
+}
+
+export interface TenantHomeButtonDataType {
   type: string;
   username?: string;
   name: string;
@@ -45,9 +63,11 @@ export interface ButtonDataType {
   imports: [
     CommonModule,
     RouterModule,
-    TenantTableComponent,
     NotificationComponent,
     ProgressBarComponent,
+    CustomTableComponent,
+    MatBadgeModule,
+    MatButtonModule,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
@@ -60,6 +80,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   notificationComponent!: NotificationComponent;
   //<======================= End Foreign Components =======================>
 
+  //Test
+  hidden = false;
+
   //<======================= Common Variables =======================>
   protected isLoading: boolean = false;
   protected mode: boolean | null = null;
@@ -70,8 +93,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   private _isReloading: boolean = false;
 
   // Table Data for all users
-  protected columns: CustomTableColumn[] = [
-    { label: 'Image', key: 'image' },
+  protected columns: CustomTableColumnType[] = [
+    { label: 'Image', key: 'userimage' },
     { label: 'Name', key: 'name' },
     { label: 'Email', key: 'email' },
     { label: 'Contact Number', key: 'contactNumber' },
@@ -82,10 +105,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   //<======================= End Common Variables =======================>
 
   //<======================= None Tenants Variables =======================>
-  private _noneTenantButtonAction: ActionButtonType = {
+  private _noneTenantButtonAction: ButtonType = {
     type: 'add',
   };
-  private _noneTenantButtonOperation: ActionButtonType = {
+  private _noneTenantButtonOperation: ButtonType = {
     type: 'view',
   };
   private _noneTenantPageSize: number = 2;
@@ -105,13 +128,17 @@ export class HomeComponent implements OnInit, OnDestroy {
     message: '',
   };
   protected noneTenantsFull: TenantTableElement[] = [];
+  public noneTenantFileExportButtonTypeByExtension: FileExportButtonTypeByExtension =
+    {
+      type: 'xlsx',
+    };
   //<======================= End None Tenants Variables =======================>
 
   //<======================= Tenants Variables =======================>
-  private _tenantButtonAction: ActionButtonType = {
+  private _tenantButtonAction: ButtonType = {
     type: 'remove',
   };
-  private _tenantButtonOperation: ActionButtonType = {
+  private _tenantButtonOperation: ButtonType = {
     type: 'view',
   };
   private _tenantPageSize: number = 2;
@@ -131,6 +158,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     message: '',
   };
   protected tenantsFull: TenantTableElement[] = [];
+  protected tenantFileExportButtonTypeByExtension: FileExportButtonTypeByExtension =
+    {
+      type: 'xlsx',
+    };
   //<======================= End Tenants Variables =======================>
 
   constructor(
@@ -248,19 +279,19 @@ export class HomeComponent implements OnInit, OnDestroy {
     this._noneTenantTotalDataCount = value;
   }
 
-  get noneTenantButtonAction(): ActionButtonType {
+  get noneTenantButtonAction(): ButtonType {
     return this._noneTenantButtonAction;
   }
 
-  set noneTenantButtonAction(value: ActionButtonType) {
+  set noneTenantButtonAction(value: ButtonType) {
     this._noneTenantButtonAction = value;
   }
 
-  get noneTenantButtonOperation(): ActionButtonType {
+  get noneTenantButtonOperation(): ButtonType {
     return this._noneTenantButtonOperation;
   }
 
-  set noneTenantButtonOperation(value: ActionButtonType) {
+  set noneTenantButtonOperation(value: ButtonType) {
     this._noneTenantButtonOperation = value;
   }
 
@@ -270,7 +301,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   set noneTenantsButtonActionTrigger(value: ButtonDataType | null) {
     this._noneTenantsButtonActionTrigger = value;
-    console.log();
     this.handleNoneTenantActionButtonTigger();
   }
 
@@ -378,19 +408,19 @@ export class HomeComponent implements OnInit, OnDestroy {
     this._tenantTotalDataCount = value;
   }
 
-  get tenantButtonAction(): ActionButtonType {
+  get tenantButtonAction(): ButtonType {
     return this._tenantButtonAction;
   }
 
-  set tenantButtonAction(value: ActionButtonType) {
+  set tenantButtonAction(value: ButtonType) {
     this._tenantButtonAction = value;
   }
 
-  get tenantButtonOperation(): ActionButtonType {
+  get tenantButtonOperation(): ButtonType {
     return this._tenantButtonOperation;
   }
 
-  set tenantButtonOperation(value: ActionButtonType) {
+  set tenantButtonOperation(value: ButtonType) {
     this._tenantButtonOperation = value;
   }
 
@@ -452,27 +482,145 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   }
 
+  private async handleTenantView(username: string) {
+    if (this.isBrowser && username !== '') {
+      const tokenResult = await this.apiService.generateToken(username);
+      this.router.navigate(['/dashboard/tenant/tenant-view', tokenResult.token]);
+    }
+  }
+
+  private exportTableData(
+    data: FileExportWithDataAndExtentionType,
+    typeOfTenant: string
+  ): void {
+    const fileExtention = data.extention.type;
+    const fileData = data.data;
+
+    if (!Array.isArray(fileData) || fileData.length === 0) {
+      console.warn('No data to export.');
+      return;
+    }
+
+    // Get unique keys from the data
+    const rawColumns = Array.from(
+      new Set(fileData.flatMap((item) => Object.keys(item)))
+    );
+
+    // Map raw keys to display labels (capitalized)
+    const keyMap: Record<string, string> = {};
+    rawColumns.forEach((key) => {
+      keyMap[key] = key.charAt(0).toUpperCase() + key.slice(1);
+    });
+    // Use display labels for columns
+    const columns = Object.values(keyMap);
+
+    // Map each row
+    const exportData: Record<string, any>[] = fileData.map((item) => {
+      const normalizedRow: Record<string, any> = {};
+      for (const rawKey in keyMap) {
+        const displayKey = keyMap[rawKey];
+        normalizedRow[displayKey] = item[rawKey] ?? '';
+      }
+      return normalizedRow;
+    });
+
+    // Optionally sort exportData by name if needed
+    // this.sort(exportData as TenantTableElement[]);
+
+    if (this.isExcel(fileExtention)) {
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+      // Define column widths
+      worksheet['!cols'] = columns.map((col) => ({ wch: col.length + 10 }));
+      const workbook: XLSX.WorkBook = {
+        Sheets: { Export: worksheet },
+        SheetNames: ['Export'],
+      };
+
+      // Map file extension to valid XLSX BookType
+      const bookTypeMap: { [key: string]: XLSX.BookType } = {
+        xls: 'xls',
+        xlsx: 'xlsx',
+        xlsm: 'xlsm',
+        xltx: 'xlsx',
+        ods: 'ods',
+        csv: 'csv',
+        tsv: 'csv',
+      };
+      const bookType =
+        bookTypeMap[fileExtention.toLowerCase().trim()] || 'xlsx';
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: bookType,
+        type: 'array',
+      });
+
+      const mimeMap: { [key: string]: string } = {
+        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        xls: 'application/vnd.ms-excel',
+        csv: 'text/csv',
+        ods: 'application/vnd.oasis.opendocument.spreadsheet',
+      };
+
+      const mimeType = mimeMap[fileExtention.toLowerCase()] || mimeMap['xlsx'];
+
+      const blob = new Blob([excelBuffer], { type: mimeType });
+      FileSaver.saveAs(
+        blob,
+        `${typeOfTenant}_Export_${new Date().toISOString()}.${fileExtention}`
+      );
+    }
+  }
+
+  private isExcel(type: string): boolean {
+    switch (type.toLowerCase().trim()) {
+      case 'xls':
+        return true;
+      case 'xlsx':
+        return true;
+      case 'xlsm':
+        return true;
+      case 'xlt':
+        return true;
+      case 'xltx':
+        return true;
+      case 'ods':
+        return true;
+      case 'csv':
+        return true;
+      case 'tsv':
+        return true;
+      default:
+        return false;
+    }
+  }
+
   //<======================= End All Users Handle Methods =======================>
 
   //<======================= None Tenant Handle Methods =======================>
+
+  protected handleNoneTenantsFileExport(
+    data: FileExportWithDataAndExtentionType
+  ) {
+    if (data) {
+      this.exportTableData(data, 'None_Tenant');
+    } else {
+      console.warn('No data to export');
+    }
+  }
 
   private async handleNoneTenantActionButtonTigger() {
     if (
       this._noneTenantsButtonActionTrigger &&
       this._noneTenantsButtonActionTrigger.type === 'add'
     ) {
-      await this.addTenant(
-        this._noneTenantsButtonActionTrigger as {
-          type: string;
-          username?: string;
-          name: string;
-          image: string;
-          contactNumber: string;
-          email: string;
-          gender: string;
-          addedBy?: string;
-        }
+      const users = this.noneTenantsFull.filter(
+        (data) =>
+          data.name.toLowerCase() ===
+          this._noneTenantsButtonActionTrigger?.data.element.name.toLowerCase()
       );
+      if (users.length === 1) {
+        await this.addTenant(users[0] as TenantHomeButtonDataType);
+      }
     }
   }
 
@@ -481,9 +629,16 @@ export class HomeComponent implements OnInit, OnDestroy {
       this._noneTenantsButtonOperationTrigger &&
       this._noneTenantsButtonOperationTrigger.type === 'view'
     ) {
-      this.handleUserView(
-        this._noneTenantsButtonOperationTrigger.username as string
+      const users = this.noneTenantsFull.filter(
+        (data) =>
+          data.name.toLowerCase() ===
+          this._noneTenantsButtonOperationTrigger?.data.element.name.toLowerCase()
       );
+      if (users.length === 1) {
+        this.handleUserView(
+          (users[0] as TenantTableElement).username as string
+        );
+      }
     }
   }
 
@@ -511,26 +666,24 @@ export class HomeComponent implements OnInit, OnDestroy {
         user.name.toLowerCase().includes(this._noneTenantName.toLowerCase())
       );
 
-      console.log(searchedUsers);
-
       const start = this.noneTenantPageIndex * this.noneTenantPageSize;
       const end = start + this.noneTenantPageSize;
 
       const data = searchedUsers.slice(start, end);
-
-      this.noneTenants = this.sort(data);
 
       this.noneTenantTotalDataCount = searchedUsers.length;
       this.noneTenantPageIndex = 0;
       this.noneTenantPageCount = Math.ceil(
         this.noneTenantTotalDataCount / this.noneTenantPageSize
       );
+
+      this.noneTenants = this.sort(data);
+
+      this.isReloading = false;
+      this.isLoading = false;
     } else {
       this.handleNoneTenantForStart();
     }
-
-    this.isReloading = false;
-    this.isLoading = false;
   }
 
   private handleNoneTenantForStart() {
@@ -569,23 +722,27 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   //<======================= Tenant Handle Methods =======================>
 
+  protected handleTenantsFileExport(data: FileExportWithDataAndExtentionType) {
+    if (data) {
+      this.exportTableData(data, 'Tenant');
+    } else {
+      console.warn('No data to export');
+    }
+  }
+
   private async handleTenantActionButtonTigger() {
     if (
       this._tenantsButtonActionTrigger &&
       this._tenantsButtonActionTrigger.type === 'remove'
     ) {
-      await this.removeTenant(
-        this._tenantsButtonActionTrigger as {
-          type: string;
-          username?: string;
-          name: string;
-          image: string;
-          contactNumber: string;
-          email: string;
-          gender: string;
-          addedBy?: string;
-        }
+      const users = this.tenantsFull.filter(
+        (data) =>
+          data.name.toLowerCase() ===
+          this._tenantsButtonActionTrigger?.data.element.name.toLowerCase()
       );
+      if (users.length === 1) {
+        await this.removeTenant(users[0] as TenantHomeButtonDataType);
+      }
     }
   }
 
@@ -594,9 +751,16 @@ export class HomeComponent implements OnInit, OnDestroy {
       this._tenantsButtonOperationTrigger &&
       this._tenantsButtonOperationTrigger.type === 'view'
     ) {
-      this.handleUserView(
-        this._tenantsButtonOperationTrigger.username as string
+      const users = this.tenantsFull.filter(
+        (data) =>
+          data.name.toLowerCase() ===
+          this._tenantsButtonOperationTrigger?.data.element.name.toLowerCase()
       );
+      if (users.length === 1) {
+        this.handleTenantView(
+          (users[0] as TenantTableElement).username as string
+        );
+      }
     }
   }
 
@@ -629,19 +793,18 @@ export class HomeComponent implements OnInit, OnDestroy {
 
       const data = searchedUsers.slice(start, end);
 
-      this.tenants = this.sort(data);
-
       this.tenantTotalDataCount = searchedUsers.length;
       this.tenantPageIndex = 0;
       this.tenantPageCount = Math.ceil(
         this.tenantTotalDataCount / this.tenantPageSize
       );
+
+      this.tenants = this.sort(data);
+      this.isReloading = false;
+      this.isLoading = false;
     } else {
       this.handleTenantForStart();
     }
-
-    this.isReloading = false;
-    this.isLoading = false;
   }
 
   private handleTenantForStart() {
@@ -652,6 +815,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.tenantPageSizeOptions.push(i);
       }
     }
+
     if (this.tenantPageSizeOptions.length === 0)
       this.tenantPageSizeOptions.push(this.tenantsFull.length);
     this.tenantPageSize = this.tenantPageSizeOptions[0];
@@ -720,7 +884,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
           const tenants: TenantTableElement[] =
             res.data as TenantTableElement[];
-            
+
           tenants.forEach((item) => {
             this.tenantsFull.push({
               username: item.username,
@@ -784,17 +948,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   // Add Tenant
-  protected async addTenant(data: {
-    type: string;
-    username?: string;
-    name: string;
-    image: string;
-    contactNumber: string;
-    email: string;
-    gender: string;
-    addedBy?: string;
-  }) {
-    if (data.type !== 'add') return;
+  protected async addTenant(data: TenantHomeButtonDataType) {
     this.isLoading = true;
     this.progress.start();
     const formData: FormData = new FormData();
@@ -836,16 +990,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   // Remove tenant
-  protected async removeTenant(data: {
-    type: string;
-    username?: string;
-    name: string;
-    image: string;
-    contactNumber: string;
-    email: string;
-    gender: string;
-    addedBy?: string;
-  }) {
+  protected async removeTenant(data: TenantHomeButtonDataType) {
     const user: TenantTableElement | undefined = this.tenants.find(
       (item) => item.name.toLowerCase() === data.name.toLowerCase()
     );
@@ -896,6 +1041,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     return list.sort((a, b) =>
       a.name.toLowerCase().localeCompare(b.name.toLowerCase())
     );
+  }
+
+  private sortString(list: string[]) {
+    return list.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   }
 
   // Check Is Admin

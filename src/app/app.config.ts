@@ -44,6 +44,8 @@ export const MY_DATE_FORMATS: MatDateFormats = {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideGoogleCharts(),
+    provideClientHydration(),
+    provideHttpClient(),
     provideAnimations(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),

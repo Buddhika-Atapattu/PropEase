@@ -30,7 +30,7 @@ import {
   Address,
   propertyDocPreview,
   MSG,
-} from '../../../../services/property/property.service';
+} from '../../../services/property/property.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -51,7 +51,7 @@ import {
   FormControl,
 } from '@angular/forms';
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
-import { WindowsRefService } from '../../../../services/windowRef.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { Subscription } from 'rxjs';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';

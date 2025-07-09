@@ -11,15 +11,9 @@ import {
   ElementRef,
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { PlacesService } from '../../../../services/places/places.service';
+import { PlacesService } from '../../../services/places/places.service';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
-
-declare global {
-  interface Window {
-    google: any;
-  }
-}
 
 declare const google: any;
 

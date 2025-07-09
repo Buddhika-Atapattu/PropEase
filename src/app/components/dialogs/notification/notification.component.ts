@@ -10,17 +10,30 @@ import {
   AfterViewInit,
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
-import { WindowsRefService } from '../../../../services/windowRef.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { ChangeDetectorRef } from '@angular/core';
 
-export type msgTypes = 'success' | 'error' | 'warning' | 'info';
+export type msgTypes =
+  | 'success'
+  | 'error'
+  | 'warning'
+  | 'info'
+  | 'primary'
+  | 'secondary'
+  | 'light'
+  | 'dark'
+  | 'neutral'
+  | 'active'
+  | 'inactive'
+  | 'processing'
+  | 'pending';
 
 export interface msg {
   type: msgTypes | string;
   message: string;
 }
 
-export interface NotificationType{
+export interface NotificationType {
   type: msgTypes | string;
   message: string;
 }
@@ -32,9 +45,6 @@ export interface NotificationType{
   templateUrl: './notification.component.html',
   styleUrl: './notification.component.scss',
 })
-
-
-
 export class NotificationComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('notification') notificationElement!: ElementRef<HTMLDivElement>;
   private isBrowser: boolean;

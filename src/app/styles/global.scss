@@ -11,10 +11,14 @@ $dark-dashboard-dark-color: #0b0b14 !default; // Dark deep Navy background
 $dark-third-color: #d29e00 !default; // Bright Brand Gold
 $dark-fourth-color: #b48c00 !default; // Muted Accent Gold
 $dark-text-color: #fefefe !default; // Clear White text
-$dark-btn-bg-color: linear-gradient(90deg, #ae8300, #ffc107, #ae8300) !default;
 $dark-btn-box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0) !default;
 $dark-item-hover: rgb(5 5 14 / 31%) !default;
 $dark-item-active: rgb(5 5 14 / 31%) !default;
+
+$dark-btn-bg-color: #ffc107 !default; // Amber
+$dark-btn-view-color: #4caf50 !default; // Green
+$dark-btn-delete-color: #f44336 !default; // Red
+$dark-btn-custom-color: #3f51b5 !default; // Indigo
 
 // Additional Semantic Colors
 $dark-border-color: #2a2e3b !default; // Subtle border tone
@@ -34,15 +38,14 @@ $light-dashboard-dark-color: #dbcba2 !default; // Golden Cream
 $light-third-color: #d29e00 !default; // Brand Gold
 $light-fourth-color: #08122f !default; // Brand Navy
 $light-text-color: #1f1f1f !default; // Ink Gray
-$light-btn-bg-color: linear-gradient(
-  90deg,
-  rgb(235 151 36),
-  #ffba00,
-  rgb(235 151 36)
-) !default;
 $light-btn-box-shadow: 0rem 0rem 0.5rem 0rem rgb(169, 169, 169);
 $light-item-hover: rgba(255, 204, 0, 0.31) !default;
 $light-item-active: rgba(255, 200, 0, 0.31) !default;
+
+$light-btn-bg-color: #ffc107 !default; // Amber
+$light-btn-view-color: #4caf50 !default; // Green
+$light-btn-delete-color: #f44336 !default; // Red
+$light-btn-custom-color: #3f51b5 !default; // Indigo
 
 // Additional Semantic Colors
 $light-border-color: #e0e0e0 !default; // Soft gray borders
@@ -53,70 +56,46 @@ $light-success-color: #198754 !default; // Success green
 $light-warning-color: #f0ad4e !default; // Alert yellow
 $light-error-color: #dc3545 !default; // Error red
 
-.submit-btn {
-  width: 7rem;
-  padding: 0.5rem 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-content: center;
-  border-radius: 0.357rem;
-  mat-icon {
-    margin: 0rem 0.357rem;
+
+// ===================================================================
+// Button Themes
+// ===================================================================
+
+:host-context(html.light),
+:host-context(html.dark) {
+  .btn-edit {
+    background: $light-btn-bg-color;
+  }
+
+  .btn-view {
+    background: $light-btn-view-color;
+  }
+
+  .btn-delete {
+    background: $light-btn-delete-color;
+  }
+
+  .btn-custom {
+    background: $light-btn-custom-color;
   }
 }
 
-.badge {
-  padding: 0.2rem 0.6rem;
-  border-radius: 0.125rem;
-  font-weight: 600;
-  font-size: 0.75rem;
-  display: inline-block;
-  text-transform: uppercase;
-  letter-spacing: 2px !important;
-}
-
-.text-style {
-  font-family: "Leckerli One", cursive;
-  color: currentColor;
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-code {
-  background: linear-gradient(45deg, #3e3e3e, #3e3e3e) !important;
-  padding: 0.1rem 0.5rem !important;
-  margin: 0rem 0.2rem !important;
-  color: #fff !important;
-  border-radius: 0.352rem !important;
-}
-
-.title {
-  font-family: "Edu VIC WA NT Hand", cursive;
-}
-
-.refresh {
-  i {
-    animation: refresh 1s infinite;
-    @keyframes refresh {
-      0% {
-        transform: rotate(0deg);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
-    }
+:host-context(html.dark) {
+  .btn-edit {
+    background: $dark-btn-bg-color;
   }
-}
 
-.table-module_table__l2zfy {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: "Segoe UI", sans-serif;
-  font-size: 0.875rem;
-  border-radius: 0.5rem;
-  overflow: hidden;
+  .btn-view {
+    background: $dark-btn-view-color;
+  }
+
+  .btn-delete {
+    background: $dark-btn-delete-color;
+  }
+
+  .btn-custom {
+    background: $dark-btn-custom-color;
+  }
 }
 
 :host-context(html.light) {
@@ -173,8 +152,6 @@ code {
 
   .btn-edit {
     border: none !important;
-    background: $light-btn-bg-color;
-    box-shadow: $light-btn-box-shadow;
     color: #fff !important;
     margin: 0.25rem;
     padding: 0.5rem 1rem;
@@ -210,7 +187,7 @@ code {
 
   .btn-view {
     border: none !important;
-    background: linear-gradient(134deg, #00c416, #6fe600, #53d10a);
+    color: #fff !important;
     margin: 0.25rem;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
@@ -244,8 +221,8 @@ code {
 
   .btn-delete {
     border: none !important;
-    background: linear-gradient(90deg, #ae0000, #ff0707, #ae0000);
     margin: 0.25rem;
+    color: #fff !important;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     display: flex;
@@ -281,7 +258,6 @@ code {
     margin: 0.25rem;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
-    background: linear-gradient(90deg, #08122f, #10192f, #222b44);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -398,8 +374,6 @@ code {
 
   .btn-edit {
     border: none !important;
-    background: $dark-btn-bg-color;
-    box-shadow: $dark-btn-box-shadow;
     color: #fff !important;
     margin: 0.25rem;
     padding: 0.5rem 1rem;
@@ -434,7 +408,7 @@ code {
 
   .btn-view {
     border: none !important;
-    background: linear-gradient(134deg, #00c416, #6fe600, #53d10a);
+    color: #fff !important;
     margin: 0.25rem;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
@@ -468,7 +442,7 @@ code {
 
   .btn-delete {
     border: none !important;
-    background: linear-gradient(90deg, #ae0000, #ff0707, #ae0000);
+    color: #fff !important;
     margin: 0.25rem;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
@@ -502,8 +476,6 @@ code {
 
   .btn-custom {
     border: none;
-    background: linear-gradient(134deg, #0c1957 0%, #4400d0 30%, #43007a 100%);
-    box-shadow: 0rem 0rem 0.5rem 0rem $dark-dashboard-dark-color;
     margin: 0.25rem;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
@@ -567,6 +539,318 @@ code {
   }
 }
 
+button{
+  z-index: 9999;
+}
+
+.main-panel {
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  min-height: 25vh;
+  padding: 2rem;
+  &.dark {
+    .page-indecator {
+      color: #e8bd00;
+      .page-indicator-btn {
+        color: #e8bd00;
+      }
+    }
+
+    .drop-down-container {
+      background: linear-gradient(
+        144deg,
+        rgb(0 58 168 / 34%),
+        rgb(90 0 166 / 46%),
+        rgb(20 0 145 / 43%)
+      );
+      border: 0.0159rem solid #ffffff8a;
+      &.active {
+        background: linear-gradient(
+          144deg,
+          rgba(101, 125, 170, 0.34),
+          rgba(118, 79, 150, 0.46),
+          rgba(113, 105, 165, 0.43)
+        );
+        border: 0.0159rem solid #83cfff8a;
+      }
+    }
+  }
+  &.light {
+    .page-indecator {
+      color: #100a2b;
+      .page-indicator-btn {
+        color: #100a2b;
+      }
+    }
+
+    .drop-down-container {
+      background: linear-gradient(
+        144deg,
+        #ffc10757,
+        rgb(255 202 0 / 46%),
+        #ffc1076e
+      );
+      border: 0.0159rem solid #1900ff8a;
+      &.active {
+        background: linear-gradient(
+          144deg,
+          #88784757,
+          rgba(138, 126, 79, 0.46),
+          #9182536e
+        );
+        border: 0.0159rem solid #83cfff8a;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .main-panel {
+    padding: 0.5rem !important;
+  }
+}
+
+.submit-btn {
+  width: 7rem;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  border-radius: 0.357rem;
+  mat-icon {
+    margin: 0rem 0.357rem;
+  }
+}
+
+.badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.125rem;
+  font-weight: 600;
+  font-size: 0.75rem;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 2px !important;
+}
+
+.ps-0-5 {
+  padding-left: 0.5rem;
+}
+
+.pe-0-5 {
+  padding-right: 0.5rem;
+}
+
+.pt-0-5 {
+  padding-top: 0.5rem;
+}
+
+.pb-0-5 {
+  padding-bottom: 0.5rem;
+}
+
+.ps-0-2-5 {
+  padding-left: 0.25rem;
+}
+
+.pe-0-2-5 {
+  padding-right: 0.25rem;
+}
+
+.pt-0-2-5 {
+  padding-top: 0.25rem;
+}
+
+.pb-0-2-5 {
+  padding-bottom: 0.25rem;
+}
+
+.px-0-5 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.px-0-2-5 {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.py-0-5 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.py-0-2-5 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.text-style {
+  font-family: "Leckerli One", cursive;
+  color: currentColor;
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.span-text-danger {
+  position: absolute;
+  top: 0;
+  z-index: 10;
+  transform: translateY(-100%);
+  color: red;
+  ::ng-deep .mat-mdc-form-field-required-marker .mdc-floating-label--required {
+    color: red;
+  }
+}
+
+::ng-deep html.dark .amenities-icon {
+  width: 30px !important;
+  height: 30px !important;
+  &.balcony {
+    svg {
+      path {
+        fill: none !important;
+      }
+    }
+  }
+  svg {
+    path {
+      fill: #fff;
+    }
+    line {
+      fill: #fff;
+      stroke: #fff;
+    }
+    circle {
+      stroke: #fff;
+    }
+    .cls-1 {
+      stroke: #fff;
+    }
+  }
+}
+
+.hint {
+  font-size: 8pt;
+  margin-top: 0.25rem;
+}
+
+::ng-deep html.light .amenities-icon {
+  width: 30px !important;
+  height: 30px !important;
+  &.balcony {
+    svg {
+      path {
+        fill: none !important;
+      }
+    }
+  }
+  svg {
+    path {
+      fill: #000;
+    }
+    line {
+      fill: #000;
+      stroke: #000;
+    }
+    circle {
+      stroke: #000;
+    }
+    .cls-1 {
+      stroke: #000;
+    }
+  }
+}
+
+// mat-mdc-form-field-required-marker mdc-floating-label--required
+
+.text-danger ~ ::ng-deep.mat-mdc-form-field-required-marker {
+  color: red;
+}
+.text-success ~ ::ng-deep.mat-mdc-form-field-required-marker {
+  color: green;
+}
+.text-primary ~ ::ng-deep.mat-mdc-form-field-required-marker {
+  color: royalblue;
+}
+.text-warning ~ ::ng-deep.mat-mdc-form-field-required-marker {
+  color: orange;
+}
+
+.search-input {
+  width: 100%;
+  background: #fff;
+  color: #000;
+  border: 0.25rem solid #ffb500;
+  border-radius: 50rem;
+  padding: 1rem;
+  box-shadow: inset 0 0 5px 0px #00000066;
+}
+
+@media (max-width: 768px) {
+  .search-input {
+    border: 5px solid #ffb500;
+    padding: 0.5rem;
+  }
+}
+code {
+  background: linear-gradient(45deg, #3e3e3e, #3e3e3e) !important;
+  padding: 0.1rem 0.5rem !important;
+  margin: 0rem 0.2rem !important;
+  color: #fff !important;
+  border-radius: 0.352rem !important;
+}
+
+.title {
+  font-family: "Edu VIC WA NT Hand", cursive;
+}
+
+.refresh {
+  i {
+    animation: refresh 1s infinite;
+    @keyframes refresh {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  }
+}
+
+.btn-link {
+  border: none;
+  background: none;
+  box-shadow: none !important;
+  margin: 0;
+  padding: 0;
+  border-radius: 0.25rem;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+}
+
+.table-module_table__l2zfy {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
 button:focus:not(:focus-visible) {
   outline: 0;
   border: none;
@@ -586,4 +870,11 @@ button:focus:not(:focus-visible) {
 
 .table-responsive {
   display: flex;
+}
+
+.btn-expanssion-action {
+  width: auto !important;
+  height: auto !important;
+  padding: 0.5rem !important;
+  font-size: 12pt !important;
 }

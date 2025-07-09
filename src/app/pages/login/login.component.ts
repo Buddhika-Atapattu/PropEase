@@ -10,29 +10,29 @@ import {
   ViewChild,
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { filter, firstValueFrom, Subscription, take } from 'rxjs';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
+import { CryptoService } from '../../services/cryptoService/crypto.service';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import {
   AuthService,
   UserCredentials,
-} from '../../../services/auth/auth.service';
+} from '../../services/auth/auth.service';
 import {
   APIsService,
   LoggedUserType,
-} from '../../../services/APIs/apis.service';
+} from '../../services/APIs/apis.service';
 import {
   MatCheckboxChange,
   MatCheckboxModule,
 } from '@angular/material/checkbox';
-import { ActivityTrackerService } from '../../../services/activityTacker/activity-tracker.service';
+import { ActivityTrackerService } from '../../services/activityTacker/activity-tracker.service';
 import {
   msgTypes,
   NotificationComponent,

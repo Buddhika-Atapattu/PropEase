@@ -8,20 +8,20 @@ import {
   QueryList,
   ElementRef,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { Router, ActivatedRoute } from '@angular/router';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { APIsService, BaseUser } from '../../../services/APIs/apis.service';
+import { CryptoService } from '../../services/cryptoService/crypto.service';
+import { APIsService, BaseUser } from '../../services/APIs/apis.service';
 import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
 import { UserInformationsComponent } from '../../components/tabs/user-informations/user-informations.component';
 import { AccessabilitiesComponent } from '../../components/tabs/accessabilities/accessabilities.component';
 import { DocumentsComponent } from '../../components/tabs/documents/documents.component';
 import { ActivitiesComponent } from '../../components/tabs/activities/activities.component';
 import { MatTabsModule } from '@angular/material/tabs';
-import { AuthService } from '../../../services/auth/auth.service';
-import { RefreshService } from '../../../services/refresh/refresh.service';
+import { AuthService } from '../../services/auth/auth.service';
+import { RefreshService } from '../../services/refresh/refresh.service';
 
 @Component({
   selector: 'app-view-user-profile',

@@ -43,7 +43,7 @@ import {
 import { Subscription, of, pipe } from 'rxjs';
 import { Observable } from 'rxjs';
 import { EditorComponent } from '@tinymce/tinymce-angular';
-import { AuthService, BaseUser } from '../../../../services/auth/auth.service';
+import { AuthService, BaseUser } from '../../../services/auth/auth.service';
 import {
   PropertyService,
   Property,
@@ -55,9 +55,9 @@ import {
   MSG,
   propertyImages,
   propertyDocBackend,
-} from '../../../../services/property/property.service';
-import { WindowsRefService } from '../../../../services/windowRef.service';
-import { CryptoService } from '../../../../services/cryptoService/crypto.service';
+} from '../../../services/property/property.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {
   msgTypes,
@@ -71,8 +71,9 @@ import {
   APIsService,
   Country,
   CountryDetails,
+  CountryDetailsCustomType,
   UsersType,
-} from '../../../../services/APIs/apis.service';
+} from '../../../services/APIs/apis.service';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MapComponent } from '../../../components/shared/map/map.component';
 import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
@@ -222,9 +223,11 @@ export class EditPropertyListingComponent
     */
   protected isPriceCurrencyPanelOpen: boolean = false;
   protected countryControlWithCurrency: FormControl = new FormControl('');
-  protected filteredCountriesWithCurrency!: Observable<CountryDetails[]>;
+  protected filteredCountriesWithCurrency!: Observable<
+    CountryDetailsCustomType[]
+  >;
   protected selectedCountryWithCurrency: CountryDetails | null = null; // this will store the selected currency
-  protected allCountriesWithCurrency: CountryDetails[] = [];
+  protected allCountriesWithCurrency: CountryDetailsCustomType[] = [];
   protected isCurrencySelected: boolean = false;
   private isCountryOfCurrencySelected: boolean = false;
   protected countryOfCurrencySelectedError: boolean = false;
@@ -488,7 +491,7 @@ export class EditPropertyListingComponent
 
     this.registerCustomIcons();
     // this.id = this.propertyService.generatePropertyId();
-    this.propertyService.amenityIconMaker();
+    // this.propertyService.amenityIconMaker();
     this.route.params.subscribe((params) => {
       this.id = params['propertyID'];
     });
@@ -635,148 +638,153 @@ export class EditPropertyListingComponent
   //<==================== Call the API to collect the data ====================>
   private async callTheAPI() {
     if (this.id) {
-      await this.propertyService.getPropertyById(this.id).then(async (response) => {
-        // Basic Property Details
-        this.title = response.data.title;
-        this.type = this.capitalize(response.data.type);
-        this.filterTypeOperation(this.type);
-        this.listing = this.capitalize(response.data.listing);
-        this.filterListingOperation(this.listing);
-        this.description = response.data.description;
-        // End Basic Property Details
+      await this.propertyService
+        .getPropertyById(this.id)
+        .then(async (response) => {
+          // Basic Property Details
+          this.title = response.data.title;
+          this.type = this.capitalize(response.data.type);
+          this.filterTypeOperation(this.type);
+          this.listing = this.capitalize(response.data.listing);
+          this.filterListingOperation(this.listing);
+          this.description = response.data.description;
+          // End Basic Property Details
 
-        // Location Details
-        this.country = response.data.countryDetails;
-        this.AddressHouseNumber = response.data.address.houseNumber;
-        this.AddressStreet = response.data.address.street;
-        this.AddressCity = response.data.address.city;
-        this.AddressStateOrProvince = response.data.address.stateOrProvince;
-        this.AddressPostcode = response.data.address.postcode;
-        await this.addressMainFilterCountries(response.data.address.country);
-        this.AddressCountry = response.data.address.country;
-        this.typeAddressCountry = response.data.address.country;
-        this.location = response.data.location;
-        this.mapLocationLat = response.data.location.lat;
-        this.mapLocationLng = response.data.location.lng;
-        this.GoogleMapLocationEmbeddedUrl = response.data.location.embeddedUrl;
-        // End Location Details
+          // Location Details
+          this.country = response.data.countryDetails;
+          this.AddressHouseNumber = response.data.address.houseNumber;
+          this.AddressStreet = response.data.address.street;
+          this.AddressCity = response.data.address.city;
+          this.AddressStateOrProvince = response.data.address.stateOrProvince;
+          this.AddressPostcode = response.data.address.postcode;
+          await this.addressMainFilterCountries(response.data.address.country);
+          this.AddressCountry = response.data.address.country;
+          this.typeAddressCountry = response.data.address.country;
+          this.location = response.data.location;
+          this.mapLocationLat = response.data.location.lat;
+          this.mapLocationLng = response.data.location.lng;
+          this.GoogleMapLocationEmbeddedUrl =
+            response.data.location.embeddedUrl;
+          // End Location Details
 
-        // Property Specifications
-        this.totalArea = response.data.totalArea;
-        this.builtInArea = response.data.builtInArea;
-        this.livingRooms = response.data.livingRooms;
-        this.balconies = response.data.balconies;
-        this.kitchen = response.data.kitchen;
-        this.bedrooms = response.data.bedrooms;
-        this.bathrooms = response.data.bathrooms;
-        this.maidrooms = response.data.maidrooms;
-        this.driverRooms = response.data.driverRooms;
-        this.furnishingStatus = this.capitalize(response.data.furnishingStatus);
-        this.totalFloors = response.data.totalFloors;
-        this.numberOfParking = response.data.numberOfParking;
-        // End Property Specifications
+          // Property Specifications
+          this.totalArea = response.data.totalArea;
+          this.builtInArea = response.data.builtInArea;
+          this.livingRooms = response.data.livingRooms;
+          this.balconies = response.data.balconies;
+          this.kitchen = response.data.kitchen;
+          this.bedrooms = response.data.bedrooms;
+          this.bathrooms = response.data.bathrooms;
+          this.maidrooms = response.data.maidrooms;
+          this.driverRooms = response.data.driverRooms;
+          this.furnishingStatus = this.capitalize(
+            response.data.furnishingStatus
+          );
+          this.totalFloors = response.data.totalFloors;
+          this.numberOfParking = response.data.numberOfParking;
+          // End Property Specifications
 
-        // Construction & Age
-        this.builtYear = response.data.builtYear;
-        this.propertyCondition = this.capitalize(
-          response.data.propertyCondition
-        );
-        this.developerName = response.data.developerName;
-        this.projectName = response.data.projectName;
-        this.ownerShipType = this.capitalize(response.data.ownerShipType);
+          // Construction & Age
+          this.builtYear = response.data.builtYear;
+          this.propertyCondition = this.capitalize(
+            response.data.propertyCondition
+          );
+          this.developerName = response.data.developerName;
+          this.projectName = response.data.projectName;
+          this.ownerShipType = this.capitalize(response.data.ownerShipType);
 
-        await this.filterOwnerThroughAllUsers(response.data.owner);
+          await this.filterOwnerThroughAllUsers(response.data.owner);
 
-        if (this.filterOwners.length === 1) {
-          this.isOwnerNotSelected = false;
-          this.selectedOwner = this.filterOwners[0];
-          this.ownerUsername = this.selectedOwner.username;
-          this.ownerName = this.selectedOwner.name;
-        } else {
-          this.isOwnerNotSelected = true;
-          this.selectedOwner = null;
-          this.ownerUsername = '';
-          this.ownerName = '';
-        }
-        // End Construction & Age
+          if (this.filterOwners.length === 1) {
+            this.isOwnerNotSelected = false;
+            this.selectedOwner = this.filterOwners[0];
+            this.ownerUsername = this.selectedOwner.username;
+            this.ownerName = this.selectedOwner.name;
+          } else {
+            this.isOwnerNotSelected = true;
+            this.selectedOwner = null;
+            this.ownerUsername = '';
+            this.ownerName = '';
+          }
+          // End Construction & Age
 
-        // Financial Details
-        this.price = response.data.price;
-        this.countryActualCurrency = response.data.currency.toUpperCase();
-        await this.selectCountriesWithCurrencies(
-          response.data.countryDetails.name.common
-        );
-        this.selectedCountryWithCurrency =
-          response.data.countryDetails.name.common;
-        this.isCurrencySelected = true;
-        this.country = response.data.countryDetails;
-        this.pricePerSqurFeet = response.data.pricePerSqurFeet;
-        this.expectedRentYearly = response.data.expectedRentYearly;
-        this.expectedRentQuartely = response.data.expectedRentQuartely;
-        this.expectedRentMonthly = response.data.expectedRentMonthly;
-        this.expectedRentDaily = response.data.expectedRentDaily;
-        this.maintenanceFees = response.data.maintenanceFees;
-        this.serviceCharges = response.data.serviceCharges;
-        this.transferFees = response.data.transferFees;
-        this.availabilityStatus = this.capitalize(
-          response.data.availabilityStatus
-        );
-        // End Financial Details
+          // Financial Details
+          this.price = response.data.price;
+          this.countryActualCurrency = response.data.currency.toUpperCase();
+          await this.selectCountriesWithCurrencies(
+            response.data.countryDetails.name.common
+          );
+          this.selectedCountryWithCurrency =
+            response.data.countryDetails.name.common;
+          this.isCurrencySelected = true;
+          this.country = response.data.countryDetails;
+          this.pricePerSqurFeet = response.data.pricePerSqurFeet;
+          this.expectedRentYearly = response.data.expectedRentYearly;
+          this.expectedRentQuartely = response.data.expectedRentQuartely;
+          this.expectedRentMonthly = response.data.expectedRentMonthly;
+          this.expectedRentDaily = response.data.expectedRentDaily;
+          this.maintenanceFees = response.data.maintenanceFees;
+          this.serviceCharges = response.data.serviceCharges;
+          this.transferFees = response.data.transferFees;
+          this.availabilityStatus = this.capitalize(
+            response.data.availabilityStatus
+          );
+          // End Financial Details
 
-        // Features & Amenities
-        this.featureAmenities = response.data.featuresAndAmenities;
-        // End Features & Amenities
+          // Features & Amenities
+          this.featureAmenities = response.data.featuresAndAmenities;
+          // End Features & Amenities
 
-        // Media
-        this.uploadedImages = response.data.images;
-        this.uploadedDocuments = response.data.documents;
-        this.uploadImageReorganizingOperation();
-        this.videoTour = response.data.videoTour;
-        this.propertyVideoUrl(this.videoTour ?? '');
-        this.virtualTour = response.data.virtualTour;
-        this.updateVirtualTourUrl(this.virtualTour ?? '');
-        // End Media
+          // Media
+          this.uploadedImages = response.data.images;
+          this.uploadedDocuments = response.data.documents;
+          this.uploadImageReorganizingOperation();
+          this.videoTour = response.data.videoTour;
+          this.propertyVideoUrl(this.videoTour ?? '');
+          this.virtualTour = response.data.virtualTour;
+          this.updateVirtualTourUrl(this.virtualTour ?? '');
+          // End Media
 
-        // Listing Management
-        this.listingDate = this.toValidDate(response.data.listingDate);
-        this.availabilityDate = this.toValidDate(
-          response.data.availabilityDate
-        );
-        this.listingExpiryDate = this.toValidDate(
-          response.data.listingExpiryDate
-        );
-        if (response.data.addedBy) {
-          await this.filterAgentThroughAllUsers(response.data.addedBy.name);
-          this.AddedBy = response.data.addedBy;
-          this.AddedByUsername = response.data.addedBy.username;
-          this.AddedByName = response.data.addedBy.name;
-          this.AddedByEmail = response.data.addedBy.email;
-          this.AddedByRole = response.data.addedBy.role;
-          this.AddedByContactNumber = response.data.addedBy.contactNumber;
-          this.AddedByAddedAt = new Date(response.data.addedBy.addedAt);
-          this.AddesByAddedAtOld = new Date(response.data.addedBy.addedAt);
-          this.agentName = response.data.addedBy.name;
-        }
+          // Listing Management
+          this.listingDate = this.toValidDate(response.data.listingDate);
+          this.availabilityDate = this.toValidDate(
+            response.data.availabilityDate
+          );
+          this.listingExpiryDate = this.toValidDate(
+            response.data.listingExpiryDate
+          );
+          if (response.data.addedBy) {
+            await this.filterAgentThroughAllUsers(response.data.addedBy.name);
+            this.AddedBy = response.data.addedBy;
+            this.AddedByUsername = response.data.addedBy.username;
+            this.AddedByName = response.data.addedBy.name;
+            this.AddedByEmail = response.data.addedBy.email;
+            this.AddedByRole = response.data.addedBy.role;
+            this.AddedByContactNumber = response.data.addedBy.contactNumber;
+            this.AddedByAddedAt = new Date(response.data.addedBy.addedAt);
+            this.AddesByAddedAtOld = new Date(response.data.addedBy.addedAt);
+            this.agentName = response.data.addedBy.name;
+          }
 
-        this.rentedDate = this.toValidDate(response.data.rentedDate);
-        this.soldDate = this.toValidDate(response.data.soldDate);
+          this.rentedDate = this.toValidDate(response.data.rentedDate);
+          this.soldDate = this.toValidDate(response.data.soldDate);
 
-        // End Listing Management
+          // End Listing Management
 
-        // Administrative & Internal Use
-        this.referenceCode = response.data.referenceCode;
-        this.verificationStatus = this.capitalize(
-          response.data.verificationStatus
-        ) as Property['verificationStatus'];
-        this.priority = this.capitalize(
-          response.data.priority
-        ) as Property['priority'];
-        this.status = this.capitalize(
-          response.data.status
-        ) as Property['status'];
-        this.internalNote = response.data.internalNote;
-        // End Administrative & Internal Use
-      });
+          // Administrative & Internal Use
+          this.referenceCode = response.data.referenceCode;
+          this.verificationStatus = this.capitalize(
+            response.data.verificationStatus
+          ) as Property['verificationStatus'];
+          this.priority = this.capitalize(
+            response.data.priority
+          ) as Property['priority'];
+          this.status = this.capitalize(
+            response.data.status
+          ) as Property['status'];
+          this.internalNote = response.data.internalNote;
+          // End Administrative & Internal Use
+        });
     }
   }
   //<==================== End Call the API to collect the data ====================>
@@ -1170,7 +1178,6 @@ export class EditPropertyListingComponent
 
       reader.readAsDataURL(file);
     }
-
   }
 
   //Remove image from arrays
@@ -1421,7 +1428,6 @@ export class EditPropertyListingComponent
 
   protected addressFilterCountries(name: string): Country[] {
     const filterValue = name.toLowerCase();
-    this.countryMacher();
     return this.AddressCountries.filter((c) =>
       c.name.toLowerCase().includes(filterValue)
     );
@@ -1429,17 +1435,6 @@ export class EditPropertyListingComponent
 
   protected addressDisplayFlag(country: Country): string {
     return typeof country === 'string' ? country : country?.name ?? '';
-  }
-
-  protected countryMacher() {
-    if (
-      typeof this.AddressCountry !== 'string' &&
-      this.selectedCountryWithCurrency?.name.common === this.AddressCountry.name
-    ) {
-      this.countryMissMatch = false;
-    } else {
-      this.countryMissMatch = true;
-    }
   }
 
   //<==================== End filter address section country ====================>
@@ -1466,7 +1461,7 @@ export class EditPropertyListingComponent
   }
 
   protected async selectCountriesWithCurrencies(input: string): Promise<void> {
-    const countries = await this.APIs.getAllCountryWithCurrency();
+    const countries = await this.APIs.getCustomCountryDetails();
 
     if (!Array.isArray(countries)) return;
 
@@ -1487,29 +1482,34 @@ export class EditPropertyListingComponent
       );
   }
 
-  protected selectCountryWithCurrency(
+  protected async selectCountryWithCurrency(
     event: MatAutocompleteSelectedEvent
-  ): void {
-    const country = event.option.value as CountryDetails;
-    this.country = country;
+  ): Promise<void> {
+    const data = event.option.value as CountryDetailsCustomType;
+    const countryName = data.name.common;
+    // Ensure region is always a string
+    const country: CountryDetails[] = await this.APIs.getCountryByName(
+      countryName
+    );
 
-    this.selectedCountryWithCurrency = country;
+    if (!Array.isArray(country) || country.length === 0) {
+      console.error('Country did not find!');
+      return;
+    }
 
-    // const currencySymbol = this.selectedCountryWithCurrency?.currencies
-    //   ? Object.values(this.selectedCountryWithCurrency.currencies)[0].symbol
-    //   : '';
+    this.country = country[0];
 
-    const currencySymbol = this.selectedCountryWithCurrency?.currencies
+    const currencySymbol = this.country?.currencies
       ? Object.keys(this.country?.currencies ?? {})[0]
       : '';
 
     this.isCurrencySelected = true;
     this.countryActualCurrency = currencySymbol;
+
     if (this.countryActualCurrency) {
       this.isCountryOfCurrencySelected = true;
       this.countryOfCurrencySelectedError = false;
     }
-    this.countryMacher();
   }
 
   protected displayCountryWithCurrencyFlag(
@@ -1631,7 +1631,8 @@ export class EditPropertyListingComponent
   protected onLocationPicked(event: { lat: number; lng: number }) {
     this.mapLocationLat = event.lat;
     this.mapLocationLng = event.lng;
-    this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps/embed/v1/view?key=AIzaSyDtyUEKZAgXCBiuteyZVvaAaV0OVm-Wydc&center=${this.mapLocationLat},${this.mapLocationLng}&zoom=14`;
+    this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps?q=${this.mapLocationLat},${this.mapLocationLng}&hl=en&z=14&output=embed`;
+    // this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps/embed/v1/view?key=AIzaSyDtyUEKZAgXCBiuteyZVvaAaV0OVm-Wydc&center=${this.mapLocationLat},${this.mapLocationLng}&zoom=14`;
     // this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps?q=${this.mapLocationLat},${this.mapLocationLng}&hl=es;z=14&output=embed`;
     this.location = {
       lat: this.mapLocationLat,

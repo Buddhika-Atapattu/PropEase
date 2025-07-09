@@ -7,6 +7,21 @@
   [ngClass]="mode ? 'dark' : 'light'"
 >
   <div class="container-fluid">
+    <div class="row">
+      <div
+        class="col-xl-12 col-12 d-flex justify-content-end align-items-center"
+      >
+        <button
+          type="button"
+          class="btn-edit"
+          matButton="elevated"
+          matBadge="7"
+          [matBadgeHidden]="hidden"
+        >
+          <i class="fa-solid fa-bell h5 m-0 p-0"></i>
+        </button>
+      </div>
+    </div>
     <!-- Tenant Section -->
     <div class="row mb-4">
       <div class="col-xl-12">
@@ -20,25 +35,28 @@
       <!-- Title Row -->
       <div class="row mb-4">
         <div class="col-xl-12">
-          <h1 class="title">Admin</h1>
+          <h1 class="title">Admin Operation</h1>
         </div>
       </div>
       <!-- End Title Row -->
 
-      <app-tenant-table
+      <app-custom-table
         [(isReload)]="isReloading"
         [(pageSize)]="noneTenantPageSize"
         [(pageSizeOptions)]="noneTenantPageSizeOptions"
         [(pageIndex)]="noneTenantPageIndex"
         [(pageCount)]="noneTenantPageCount"
         [(tableType)]="noneTenantTableType"
-        [(name)]="noneTenantName"
+        [(search)]="noneTenantName"
         [(buttonAction)]="noneTenantButtonAction"
         [(buttonOperation)]="noneTenantButtonOperation"
         [(totalDataCount)]="noneTenantTotalDataCount"
         [(buttonActionTrigger)]="noneTenantsButtonActionTrigger"
         [(buttonOperationTrigger)]="noneTenantsButtonOperationTrigger"
         [(notification)]="noneTenantsNotification"
+        [fileExportButtonTypeByExtension]="
+          noneTenantFileExportButtonTypeByExtension
+        "
         [data]="noneTenants"
         [columns]="columns"
         [loggedUser]="loggedUser"
@@ -46,24 +64,27 @@
         [mode]="mode"
         [isBrowser]="isBrowser"
         [modeSub]="modeSub"
-        [isTenants]="false"
         [fullDataCount]="noneTenantsFull.length"
-      ></app-tenant-table>
+        (fileExport)="handleNoneTenantsFileExport($event)"
+      ></app-custom-table>
       <hr class="my-5" />
-      <app-tenant-table
+      <app-custom-table
         [(isReload)]="isReloading"
         [(pageSize)]="tenantPageSize"
         [(pageSizeOptions)]="tenantPageSizeOptions"
         [(pageIndex)]="tenantPageIndex"
         [(pageCount)]="tenantPageCount"
         [(tableType)]="tenantTableType"
-        [(name)]="tenantName"
+        [(search)]="tenantName"
         [(buttonAction)]="tenantButtonAction"
         [(buttonOperation)]="tenantButtonOperation"
         [(totalDataCount)]="tenantTotalDataCount"
         [(buttonActionTrigger)]="tenantsButtonActionTrigger"
         [(buttonOperationTrigger)]="tenantsButtonOperationTrigger"
         [(notification)]="tenantsNotification"
+        [fileExportButtonTypeByExtension]="
+          tenantFileExportButtonTypeByExtension
+        "
         [data]="tenants"
         [columns]="columns"
         [loggedUser]="loggedUser"
@@ -71,9 +92,9 @@
         [mode]="mode"
         [isBrowser]="isBrowser"
         [modeSub]="modeSub"
-        [isTenants]="true"
         [fullDataCount]="tenantsFull.length"
-      ></app-tenant-table>
+        (fileExport)="handleTenantsFileExport($event)"
+      ></app-custom-table>
     </ng-container>
     <!-- End Admin Section -->
   </div>

@@ -1,11 +1,11 @@
 import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import {
   AuthService,
   UserCredentials,
-} from '../../../services/auth/auth.service';
+} from '../../services/auth/auth.service';
 
 @Component({
   selector: 'app-error-page',

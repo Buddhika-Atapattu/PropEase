@@ -1,0 +1,50 @@
+<div class="container-fluid">
+  <button type="button" class="pannel-close-btn" (click)="pannelClose()">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+
+  <div class="row">
+    <div class="col-12">
+      <div
+        class="upload-sign-area"
+        (drop)="handleDrop($event)"
+        (dragover)="preventDefault($event)"
+        (paste)="handlePaste($event)"
+      >
+        <canvas
+          #signaturePadCanvas
+          (mousedown)="startSigning($event)"
+          (mousemove)="drawSignature($event)"
+          (mouseup)="endSigning()"
+          (touchstart)="startSigning($event)"
+          (touchmove)="drawSignature($event)"
+          (touchend)="endSigning()"
+        >
+        </canvas>
+        <input
+          hidden
+          #fileInput
+          type="file"
+          (change)="handleFileInput($event)"
+          aria-label="Upload Signature"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-3 action-btn-row">
+    <div class="col-6 d-flex justify-content-start align-items-center">
+      <button type="button" class="btn-custom" (click)="triggerInput()">
+        <i class="fa-solid fa-image me-2"></i> Select
+      </button>
+    </div>
+    <div class="col-6 d-flex justify-content-end align-items-center">
+      <button type="button" class="btn-edit" (click)="clearSignature()">
+        <i class="fa-solid fa-eraser me-2"></i> Clear
+      </button>
+      <button type="button" class="btn-custom" (click)="saveSignature()">
+        <i class="fa-solid fa-signature me-2"></i> Save
+      </button>
+    </div>
+  </div>
+</div>

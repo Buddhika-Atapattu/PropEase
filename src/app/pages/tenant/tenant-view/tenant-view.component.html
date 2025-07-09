@@ -1,0 +1,89 @@
+<div
+  *ngIf="mode !== null && tenant !== null"
+  class="main-panel"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <div class="container-fluid">
+    <!-- page indicator -->
+    <div class="row page-indecator">
+      <span
+        ><button
+          type="button"
+          class="page-indicator-btn"
+          (click)="goToTenants()"
+        >
+          TENANT DASHBOARD
+        </button>
+        <i class="fa-solid fa-angle-right my-2"></i
+        ><button
+          type="button"
+          class="page-indicator-btn"
+          (click)="goToTenant()"
+        >
+          {{ tenant.name }}
+        </button>
+      </span>
+    </div>
+    <!-- end page indicator -->
+
+    <!-- user-image row -->
+    <div class="row user-image-row">
+      <div
+        class="col-xl-12 d-flex justify-content-center align-items-center mt-5"
+      >
+        <div class="image-container">
+          <app-skeleton-loader
+            *ngIf="isLoading"
+            [width]="'10rem'"
+            [height]="'10rem'"
+            [Mode]="mode"
+            [borderRadius]="'50%'"
+          ></app-skeleton-loader>
+          <img
+            *ngIf="!isLoading"
+            [src]="generateTenantImage((typeof tenant.image === 'string' ? tenant.image : '') || '', tenant.gender)"
+            class="user-image"
+            alt="user image"
+          />
+        </div>
+      </div>
+    </div>
+    <!-- end user-image row -->
+<!-- makeTenantLease(tenant.username) -->
+    <div class="row d-flex justify-content-end align-items-center mt-5">
+      <div class="col-xl-2 col-md-4 col-sm-12 col-12 d-flex justify-content-end align-items-center">
+        <button (click)="makeTenantLease(tenant.username)" type="button" class="btn-edit fw-bold text-uppercase" >
+          Lease<i class="fa-solid fa-pen-to-square ms-2"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- tenant details -->
+    <div class="row">
+      <div class="col-xl-12">
+        <h4 class="title">Tenant Details</h4>
+        <hr />
+      </div>
+    </div>
+    <!-- end tenant details -->
+
+    <div class="row">
+      <div class="col-xl-6 col-md-6 col-sm-12 col-12">
+        <ul class="list-group list-group-flush bg-transparent tenant-details">
+          <li class="list-group-item border-0 bg-transparent text-capitalize">
+            Name: {{ tenant.name }}
+          </li>
+          <li class="list-group-item border-0 bg-transparent">
+            Email: {{ tenant.email }}
+          </li>
+          <li class="list-group-item border-0 bg-transparent">
+            Contact Number: {{ tenant.phoneNumber }}
+          </li>
+          <li class="list-group-item border-0 bg-transparent text-capitalize">
+            Gender: {{ tenant.gender }}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

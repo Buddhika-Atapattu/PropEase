@@ -142,7 +142,10 @@
               <!-- End Property Type -->
 
               <!-- Listing Type -->
-              <div class="col-xl-6" *ngIf="isUserCanChangeListingStatusOfTheProperty()">
+              <div
+                class="col-xl-6"
+                *ngIf="isUserCanChangeListingStatusOfTheProperty()"
+              >
                 <mat-form-field
                   class="example-full-width w-100"
                   appearance="fill"
@@ -1092,8 +1095,11 @@
                 >
                   <div class="col-3">
                     <mat-icon
-                      class="amenity-icon"
+                      aria-hidden="false"
+                      aria-label="Example home icon"
                       [svgIcon]="amenityIconMaker(item)"
+                      class="amenities-icon"
+                      [ngClass]="item.toLocaleLowerCase()"
                     ></mat-icon>
                   </div>
                   <div class="col-7">
@@ -1232,7 +1238,10 @@
             <!-- End Preview Uploaded Images Preview -->
 
             <!-- Property Documents -->
-            <div class="row my-5" *ngIf="isUserCanUploadDocumentsToTheProperty()">
+            <div
+              class="row my-5"
+              *ngIf="isUserCanUploadDocumentsToTheProperty()"
+            >
               <h4 class="title">Property Documents:</h4>
               <div class="d-flex justify-content-center align-items-center">
                 <div class="col-xl-8 mt-2">
@@ -1263,7 +1272,13 @@
             <!-- End Property Documents -->
 
             <!-- Property Documents Preview -->
-            <div *ngIf="propertyDocsPreview && propertyDocsPreview.length > 0 && isUserCanUploadDocumentsToTheProperty()">
+            <div
+              *ngIf="
+                propertyDocsPreview &&
+                propertyDocsPreview.length > 0 &&
+                isUserCanUploadDocumentsToTheProperty()
+              "
+            >
               <h4 class="title my-3 text-capitalize">
                 Preview selected documents:
               </h4>
@@ -1425,7 +1440,10 @@
                     matIconSuffix
                     [for]="listingDatePicker"
                   ></mat-datepicker-toggle>
-                  <mat-datepicker #listingDatePicker></mat-datepicker>
+                  <mat-datepicker
+                    #listingDatePicker
+                    [touchUi]="true"
+                  ></mat-datepicker>
                 </mat-form-field>
               </div>
               <!-- End Listing Date -->
@@ -1445,7 +1463,10 @@
                     matIconSuffix
                     [for]="availabilityDatePicker"
                   ></mat-datepicker-toggle>
-                  <mat-datepicker #availabilityDatePicker></mat-datepicker>
+                  <mat-datepicker
+                    #availabilityDatePicker
+                    [touchUi]="true"
+                  ></mat-datepicker>
                 </mat-form-field>
               </div>
               <!-- End Availability Date -->
@@ -1465,7 +1486,10 @@
                     matIconSuffix
                     [for]="listingExpiryDatePicker"
                   ></mat-datepicker-toggle>
-                  <mat-datepicker #listingExpiryDatePicker></mat-datepicker>
+                  <mat-datepicker
+                    #listingExpiryDatePicker
+                    [touchUi]="true"
+                  ></mat-datepicker>
                 </mat-form-field>
               </div>
               <!-- End Listing Expiry Date -->
@@ -1489,7 +1513,10 @@
                     matIconSuffix
                     [for]="rentedDateDatePicker"
                   ></mat-datepicker-toggle>
-                  <mat-datepicker #rentedDateDatePicker></mat-datepicker>
+                  <mat-datepicker
+                    #rentedDateDatePicker
+                    [touchUi]="true"
+                  ></mat-datepicker>
                 </mat-form-field>
               </div>
               <!-- End Rented Date -->
@@ -1510,7 +1537,10 @@
                     matIconSuffix
                     [for]="soldDateDatePicker"
                   ></mat-datepicker-toggle>
-                  <mat-datepicker #soldDateDatePicker></mat-datepicker>
+                  <mat-datepicker
+                    #soldDateDatePicker
+                    [touchUi]="true"
+                  ></mat-datepicker>
                 </mat-form-field>
               </div>
               <!-- End Sold Date -->

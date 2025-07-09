@@ -140,7 +140,7 @@
 }
 
 :host-context(html.dark) {
-  @media (max-width: 1024px) {
+  @media (max-width: 768px) {
     .dashboard-container {
       .menu-icon {
         button {
@@ -159,7 +159,7 @@
 }
 
 :host-context(html.light) {
-  @media (max-width: 1024px) {
+  @media (max-width: 768px) {
     .dashboard-container {
       .menu-icon {
         button {
@@ -178,9 +178,10 @@
 }
 
 // Mobile version
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .main-content {
     padding: 0.25rem;
+    overflow-x: hidden;
   }
   .dashboard-main-container {
     margin-top: 3rem;

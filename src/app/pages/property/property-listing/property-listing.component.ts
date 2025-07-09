@@ -43,7 +43,7 @@ import {
 import { Subscription, of, pipe } from 'rxjs';
 import { Observable } from 'rxjs';
 import { EditorComponent } from '@tinymce/tinymce-angular';
-import { AuthService, BaseUser } from '../../../../services/auth/auth.service';
+import { AuthService, BaseUser } from '../../../services/auth/auth.service';
 import {
   PropertyService,
   Property,
@@ -53,9 +53,9 @@ import {
   Address,
   propertyDocPreview,
   MSG,
-} from '../../../../services/property/property.service';
-import { WindowsRefService } from '../../../../services/windowRef.service';
-import { CryptoService } from '../../../../services/cryptoService/crypto.service';
+} from '../../../services/property/property.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {
   msgTypes,
@@ -69,11 +69,13 @@ import {
   APIsService,
   Country,
   CountryDetails,
+  CountryDetailsCustomType,
   UsersType,
-} from '../../../../services/APIs/apis.service';
+} from '../../../services/APIs/apis.service';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MapComponent } from '../../../components/shared/map/map.component';
 import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
+import { getCountries } from '@yusifaliyevpro/countries';
 
 interface propertyImagePreview {
   URL: string;
@@ -214,9 +216,11 @@ export class PropertyListingComponent
   */
   protected isPriceCurrencyPanelOpen: boolean = false;
   protected countryControlWithCurrency: FormControl = new FormControl('');
-  protected filteredCountriesWithCurrency!: Observable<CountryDetails[]>;
+  protected filteredCountriesWithCurrency!: Observable<
+    CountryDetailsCustomType[]
+  >;
+  protected allCountriesWithCurrency: CountryDetailsCustomType[] = [];
   protected selectedCountryWithCurrency: CountryDetails | null = null; // this will store the selected currency
-  protected allCountriesWithCurrency: CountryDetails[] = [];
   protected isCurrencySelected: boolean = false;
   private isCountryOfCurrencySelected: boolean = false;
   protected countryOfCurrencySelectedError: boolean = false;
@@ -471,7 +475,7 @@ export class PropertyListingComponent
 
     this.registerCustomIcons();
     this.id = this.propertyService.generatePropertyId();
-    this.propertyService.amenityIconMaker();
+    // this.propertyService.amenityIconMaker();
   }
 
   async ngOnInit(): Promise<void> {
@@ -1198,7 +1202,6 @@ export class PropertyListingComponent
 
   protected addressFilterCountries(name: string): Country[] {
     const filterValue = name.toLowerCase();
-    this.countryMacher();
     return this.AddressCountries.filter((c) =>
       c.name.toLowerCase().includes(filterValue)
     );
@@ -1207,18 +1210,6 @@ export class PropertyListingComponent
   protected addressDisplayFlag(country: Country): string {
     return typeof country === 'string' ? country : country?.name ?? '';
   }
-
-  protected countryMacher() {
-    if (
-      typeof this.AddressCountry !== 'string' &&
-      this.selectedCountryWithCurrency?.name.common === this.AddressCountry.name
-    ) {
-      this.countryMissMatch = false;
-    } else {
-      this.countryMissMatch = true;
-    }
-  }
-
   //<==================== End filter address section country ====================>
 
   //<==================== Currency Controller ====================>
@@ -1243,14 +1234,14 @@ export class PropertyListingComponent
   }
 
   protected async selectCountriesWithCurrencies(input: string): Promise<void> {
-    const countries = await this.APIs.getAllCountryWithCurrency();
+    const countries = await this.APIs.getCustomCountryDetails();
 
     if (!Array.isArray(countries)) return;
 
     this.filteredCountriesWithCurrency =
       this.countryControlWithCurrency.valueChanges.pipe(
         startWith(input),
-        map((value: string | CountryDetails) => {
+        map((value: string | CountryDetailsCustomType) => {
           const name =
             typeof value === 'string'
               ? value.toLowerCase()
@@ -1264,33 +1255,38 @@ export class PropertyListingComponent
       );
   }
 
-  protected selectCountryWithCurrency(
+  protected async selectCountryWithCurrency(
     event: MatAutocompleteSelectedEvent
-  ): void {
-    const country = event.option.value as CountryDetails;
-    this.country = country;
+  ): Promise<void> {
+    const data = event.option.value as CountryDetailsCustomType;
+    const countryName = data.name.common;
+    // Ensure region is always a string
+    const country: CountryDetails[] = await this.APIs.getCountryByName(
+      countryName
+    );
 
-    this.selectedCountryWithCurrency = country;
+    if (!Array.isArray(country) || country.length === 0) {
+      console.error('Country did not find!');
+      return;
+    }
 
-    // const currencySymbol = this.selectedCountryWithCurrency?.currencies
-    //   ? Object.values(this.selectedCountryWithCurrency.currencies)[0].symbol
-    //   : '';
+    this.country = country[0];
 
-    const currencySymbol = this.selectedCountryWithCurrency?.currencies
+    const currencySymbol = this.country?.currencies
       ? Object.keys(this.country?.currencies ?? {})[0]
       : '';
 
     this.isCurrencySelected = true;
     this.countryActualCurrency = currencySymbol;
+
     if (this.countryActualCurrency) {
       this.isCountryOfCurrencySelected = true;
       this.countryOfCurrencySelectedError = false;
     }
-    this.countryMacher();
   }
 
   protected displayCountryWithCurrencyFlag(
-    country: CountryDetails | string
+    country: CountryDetailsCustomType | string
   ): string {
     return typeof country === 'string' ? country : country?.name?.common ?? '';
   }
@@ -1351,8 +1347,8 @@ export class PropertyListingComponent
   protected onLocationPicked(event: { lat: number; lng: number }) {
     this.mapLocationLat = event.lat;
     this.mapLocationLng = event.lng;
-    this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps/embed/v1/view?key=AIzaSyDtyUEKZAgXCBiuteyZVvaAaV0OVm-Wydc&center=${this.mapLocationLat},${this.mapLocationLng}&zoom=14`;
-    // this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps?q=${this.mapLocationLat},${this.mapLocationLng}&hl=es;z=14&output=embed`;
+    this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps?q=${this.mapLocationLat},${this.mapLocationLng}&hl=en&z=14&output=embed`;
+    // this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps/embed/v1/view?key=AIzaSyDtyUEKZAgXCBiuteyZVvaAaV0OVm-Wydc&center=${this.mapLocationLat},${this.mapLocationLng}&zoom=14`;
     this.location = {
       lat: this.mapLocationLat,
       lng: this.mapLocationLng,

@@ -15,9 +15,9 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { ProgressBarComponent } from '../../../dialogs/progress-bar/progress-bar.component';
 import { NotificationComponent } from '../../../dialogs/notification/notification.component';
-import { BaseUser } from '../../../../../services/auth/auth.service';
-import { WindowsRefService } from '../../../../../services/windowRef.service';
-import { ActivityTrackerService } from '../../../../../services/activityTacker/activity-tracker.service';
+import { BaseUser } from '../../../../services/auth/auth.service';
+import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
+import { ActivityTrackerService } from '../../../../services/activityTacker/activity-tracker.service';
 
 import { MatSelectModule } from '@angular/material/select';
 import { MatDividerModule } from '@angular/material/divider';
@@ -38,11 +38,11 @@ import { MatInputModule } from '@angular/material/input';
 import { SkeletonLoaderComponent } from '../../../shared/skeleton-loader/skeleton-loader.component';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
-import { CryptoService } from '../../../../../services/cryptoService/crypto.service';
+import { CryptoService } from '../../../../services/cryptoService/crypto.service';
 import {
   APIsService,
   UsersType,
-} from '../../../../../services/APIs/apis.service';
+} from '../../../../services/APIs/apis.service';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 
 interface Data {

@@ -15,9 +15,9 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { ProgressBarComponent } from '../../../dialogs/progress-bar/progress-bar.component';
 import { NotificationComponent } from '../../../dialogs/notification/notification.component';
-import { BaseUser } from '../../../../../services/auth/auth.service';
-import { WindowsRefService } from '../../../../../services/windowRef.service';
-import { ActivityTrackerService } from '../../../../../services/activityTacker/activity-tracker.service';
+import { BaseUser } from '../../../../services/auth/auth.service';
+import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
+import { ActivityTrackerService } from '../../../../services/activityTacker/activity-tracker.service';
 
 import { MatSelectModule } from '@angular/material/select';
 import { MatDividerModule } from '@angular/material/divider';

@@ -139,7 +139,10 @@
               <!-- End Property Type -->
 
               <!-- Listing Type -->
-              <div class="col-xl-6" *ngIf="isUserCanChangeListingStatusOfTheProperty()">
+              <div
+                class="col-xl-6"
+                *ngIf="isUserCanChangeListingStatusOfTheProperty()"
+              >
                 <mat-form-field
                   class="example-full-width w-100"
                   appearance="fill"
@@ -827,10 +830,11 @@
                       [value]="option"
                     >
                       <img
-                        [src]="option.flags.svg"
-                        alt="{{ option.flags.alt }}"
+                        [src]="option?.flags?.svg || ''"
+                        [alt]="option?.flags?.alt || 'Country flag'"
                         width="20"
                         height="12"
+                        title="Image"
                         style="margin-right: 8px"
                       />
                       {{ option.name.common }}
@@ -1063,7 +1067,10 @@
             <!-- Features Amenity Preview -->
             <div
               class="row my-3 d-flex justify-content-start align-item-center amenties-container"
-              *ngIf="featureAmenities.length > 0 && isUserCanManageAmenitiesToTheProperty()"
+              *ngIf="
+                featureAmenities.length > 0 &&
+                isUserCanManageAmenitiesToTheProperty()
+              "
             >
               <div
                 *ngFor="let item of featureAmenities; let i = index"
@@ -1074,8 +1081,11 @@
                 >
                   <div class="col-3">
                     <mat-icon
-                      class="amenity-icon"
+                      aria-hidden="false"
+                      aria-label="Example home icon"
                       [svgIcon]="amenityIconMaker(item)"
+                      class="amenities-icon"
+                      [ngClass]="item.toLocaleLowerCase()"
                     ></mat-icon>
                   </div>
                   <div class="col-7">
@@ -1175,7 +1185,10 @@
             <!-- End Property Images Preview -->
 
             <!-- Property Documents -->
-            <div class="row mt-5" *ngIf="isUserCanUploadDocumentsToTheProperty()">
+            <div
+              class="row mt-5"
+              *ngIf="isUserCanUploadDocumentsToTheProperty()"
+            >
               <h4 class="title">Property Documents:</h4>
               <div class="d-flex justify-content-center align-items-center">
                 <div class="col-xl-8 mt-2">
@@ -1331,7 +1344,10 @@
                     matIconSuffix
                     [for]="listingDatePicker"
                   ></mat-datepicker-toggle>
-                  <mat-datepicker #listingDatePicker></mat-datepicker>
+                  <mat-datepicker
+                    #listingDatePicker
+                    [touchUi]="true"
+                  ></mat-datepicker>
                 </mat-form-field>
               </div>
               <!-- End Listing Date -->
@@ -1351,7 +1367,10 @@
                     matIconSuffix
                     [for]="availabilityDatePicker"
                   ></mat-datepicker-toggle>
-                  <mat-datepicker #availabilityDatePicker></mat-datepicker>
+                  <mat-datepicker
+                    #availabilityDatePicker
+                    [touchUi]="true"
+                  ></mat-datepicker>
                 </mat-form-field>
               </div>
               <!-- End Availability Date -->
@@ -1371,7 +1390,10 @@
                     matIconSuffix
                     [for]="listingExpiryDatePicker"
                   ></mat-datepicker-toggle>
-                  <mat-datepicker #listingExpiryDatePicker></mat-datepicker>
+                  <mat-datepicker
+                    #listingExpiryDatePicker
+                    [touchUi]="true"
+                  ></mat-datepicker>
                 </mat-form-field>
               </div>
               <!-- End Listing Expiry Date -->

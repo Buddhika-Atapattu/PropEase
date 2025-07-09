@@ -6,7 +6,7 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformBrowser, NgIf } from '@angular/common';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { Subscription } from 'rxjs';
 
 import { MatIconModule } from '@angular/material/icon';

@@ -1,0 +1,45 @@
+<app-notification />
+<div class="container-fluid position-relative">
+  <button type="button" class="pannel-close-btn" (click)="pannelClose()">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+  <div class="row mb-4">
+    <div class="col-xl-12">
+      <div class="social-medial-btn-container">
+        <div
+          *ngFor="let item of socialMediaLinks"
+          class="col-xl-2 col-md-2 col-sm-3 col-3 d-flex justify-content-center align-item-center"
+        >
+          <button
+            type="button"
+            class="btn-link"
+            (click)="shareSocialMedia(item.type)"
+          >
+            <img [src]="item.image" alt="social media icon" />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="row d-flex justify-content-center align-item-center position-relative"
+  >
+    <div
+      class="col-xl-12 d-flex justify-content-center align-item-center position-relative"
+    >
+      <div class="input-col">
+        <input
+          type="text"
+          name="link"
+          placeholder="Link..."
+          [value]="link"
+          class="link-input form-control"
+          readonly
+          #linkInput
+        />
+        <button (click)="copyToClipboard(linkInput)">Copy</button>
+        <span [ngClass]="isCopied ? 'show' : ''">Link Copied..</span>
+      </div>
+    </div>
+  </div>
+</div>

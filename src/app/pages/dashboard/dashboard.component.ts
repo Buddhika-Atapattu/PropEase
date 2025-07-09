@@ -14,16 +14,16 @@ import { RouterModule, Router } from '@angular/router';
 import { TopProgressBarComponent } from '../../components/top-progress-bar/top-progress-bar.component';
 import { ModeChangerComponent } from '../../components/mode-changer/mode-changer.component';
 import { UserInfoPanelComponent } from '../../components/user-info-panel/user-info-panel.component';
-import { WindowsRefService } from '../../../services/windowRef.service';
-import { ExpandableService } from '../../../services/expandable/expandable.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
+import { ExpandableService } from '../../services/expandable/expandable.service';
 import {
   AuthService,
   NewUser,
   LoggedUserType,
-} from '../../../services/auth/auth.service';
+} from '../../services/auth/auth.service';
 import { Subscription } from 'rxjs';
 import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
-import { ActivityTrackerService } from '../../../services/activityTacker/activity-tracker.service';
+import { ActivityTrackerService } from '../../services/activityTacker/activity-tracker.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -102,7 +102,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.windowRef) {
       this.windowRef.windowWidth$.subscribe((width) => {
         this.zone.run(() => {
-          this.isMobile = width < 1025;
+          this.isMobile = width < 768;
           this.cd.detectChanges(); // ensure Angular acknowledges the change
         });
       });

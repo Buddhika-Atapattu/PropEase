@@ -9,7 +9,7 @@ import {
   ChangeDetectionStrategy,
   AfterViewInit,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
@@ -37,8 +37,8 @@ import {
   LoggedUserType,
   BaseUser,
   UpdateUserType,
-} from '../../../services/auth/auth.service';
-import { APIsService, Country } from '../../../services/APIs/apis.service';
+} from '../../services/auth/auth.service';
+import { APIsService, Country } from '../../services/APIs/apis.service';
 import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
 import { Observable, of, firstValueFrom } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';

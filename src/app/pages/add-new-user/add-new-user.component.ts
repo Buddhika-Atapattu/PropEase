@@ -9,7 +9,7 @@ import {
   HostListener,
   AfterViewInit,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -40,7 +40,7 @@ import {
   DEFAULT_ROLE_ACCESS,
   AccessMap,
   LoggedUserType,
-} from '../../../services/auth/auth.service';
+} from '../../services/auth/auth.service';
 import {
   APIsService,
   Country,
@@ -48,7 +48,7 @@ import {
   PermissionEntry,
   ROLE_ACCESS_MAP,
   validateType,
-} from '../../../services/APIs/apis.service';
+} from '../../services/APIs/apis.service';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -60,10 +60,10 @@ import {
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ProgressBarComponent } from '../../components/dialogs/progress-bar/progress-bar.component';
 import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
+import { CryptoService } from '../../services/cryptoService/crypto.service';
 import { CameraBoxComponent } from '../../components/dialogs/camera-box/camera-box.component';
 import { EditorComponent } from '@tinymce/tinymce-angular';
-import { AuthService } from '../../../services/auth/auth.service';
+import { AuthService } from '../../services/auth/auth.service';
 import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
 
 interface userAccessType {

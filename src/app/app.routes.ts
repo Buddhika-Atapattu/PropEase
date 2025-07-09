@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { AuthGuard } from '../services/guardAuth/guard-auth.guard';
+import { AuthGuard } from './services/guardAuth/guard-auth.guard';
 
 export const routes: Routes = [
   {
@@ -11,6 +11,11 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () =>
       import('./pages/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'mobile-upload/:token',
+    loadComponent: () =>
+      import('./pages/mobile-support-file-upload/mobile-support-file-upload').then((m) => m.MobileSupportFileUpload),
   },
   {
     path: 'dashboard',
@@ -200,6 +205,26 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./pages/tenant/activity-log/activity-log.component').then(
                 (m) => m.ActivityLogComponent
+              ),
+            data: {
+              roles: ['admin'],
+            },
+          },
+          {
+            path: 'tenant-lease/:tenantID',
+            loadComponent: () =>
+              import('./pages/tenant/tenant-edit/tenant-edit.component').then(
+                (m) => m.TenantEditComponent
+              ),
+            data: {
+              roles: ['admin'],
+            },
+          },
+          {
+            path: 'tenant-view/:tenantID',
+            loadComponent: () =>
+              import('./pages/tenant/tenant-view/tenant-view.component').then(
+                (m) => m.TenantViewComponent
               ),
             data: {
               roles: ['admin'],

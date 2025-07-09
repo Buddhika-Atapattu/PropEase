@@ -1,24 +1,49 @@
 <form>
   <div class="row">
-    <div class="col-xl-3 my-2 d-flex justify-content-start align-items-center">
+    <!-- Table Title -->
+    <div
+      [ngClass]="
+        fileExportButtonTypeByExtension
+          ? 'col-xl-2 col-md-12 col-sm-12 col-12 my-2 d-flex justify-content-start align-items-center'
+          : 'col-xl-3 col-md-12 col-sm-12 col-12 my-2 d-flex justify-content-start align-items-center'
+      "
+    >
       <p class="text-style text-capitalize">
-        Total {{ tableType }} data count: {{ totalDataCount }}
+        Table data count: {{ totalDataCount }}
       </p>
     </div>
-    <div class="col-xl-3 my-2">
+    <!-- End Table Title -->
+
+    <!-- User Search -->
+    <div
+      [ngClass]="
+        fileExportButtonTypeByExtension
+          ? 'col-xl-3 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-center align-items-center'
+          : 'col-xl-3 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-center align-items-center'
+      "
+    >
       <mat-form-field class="w-100">
-        <mat-label>Search Name</mat-label>
+        <mat-label>Search</mat-label>
         <input
           matInput
           type="text"
-          [(ngModel)]="name"
-          name="tenantName"
-          placeholder="Search Name..."
+          [(ngModel)]="search"
+          name="search"
+          placeholder="Search..."
           (ngModelChange)="onTenantNameChanged($event)"
         />
       </mat-form-field>
     </div>
-    <div class="col-xl-2 my-2 d-flex justify-content-center align-items-center">
+    <!-- End User Search -->
+
+    <!-- Page Size Options -->
+    <div
+      [ngClass]="
+        fileExportButtonTypeByExtension
+          ? 'col-xl-2 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-center align-items-center'
+          : 'col-xl-2 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-center align-items-center'
+      "
+    >
       <mat-form-field class="w-100">
         <mat-label>Page Size</mat-label>
         <input
@@ -43,9 +68,25 @@
         </mat-autocomplete>
       </mat-form-field>
     </div>
-    <div class="col-xl-4 my-2 d-flex justify-content-around align-items-center">
+    <!-- End Page Size Options -->
+
+    <!-- Pagination Button -->
+    <div
+      [ngClass]="
+        fileExportButtonTypeByExtension
+          ? 'col-xl-3 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-start align-items-center button-container'
+          : 'col-xl-3 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-start align-items-center button-container'
+      "
+    >
       <div class="row w-100">
-        <div class="col-10 d-flex justify-content-around align-items-center">
+        <div
+          class=""
+          [ngClass]="
+            fileExportButtonTypeByExtension
+              ? 'col-12 d-flex justify-content-start align-items-center button-container'
+              : 'col-12 d-flex justify-content-start align-items-center button-container'
+          "
+        >
           <!-- Double Backward -->
           <button
             *ngIf="totalDataCount > pageSize"
@@ -88,17 +129,49 @@
             <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
-        <div class="col-2 d-flex justify-content-end align-items-center">
-          <button
-            type="button"
-            class="btn-custom"
-            [ngClass]="isRefreshFinished ? 'refresh' : ''"
-            (click)="refreshPage()"
-          >
-            <i class="fa-solid fa-arrows-rotate"></i>
-          </button>
-        </div>
       </div>
     </div>
+    <!-- End Pagination Button -->
+
+    <!-- Refresh And Export Button -->
+    <div
+      class=""
+      [ngClass]="
+        fileExportButtonTypeByExtension
+          ? 'col-xl-2 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-end align-items-center button-container'
+          : 'col-xl-1 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-end align-items-center button-container'
+      "
+    >
+      <div
+        class="d-flex justify-content-between align-items-center button-container"
+      >
+        <button
+          type="button"
+          class="btn-custom"
+          [ngClass]="isRefreshFinished ? 'refresh' : ''"
+          (click)="refreshPage()"
+        >
+          <i class="fa-solid fa-arrows-spin"></i>
+        </button>
+
+        <button
+          *ngIf="fileExportButtonTypeByExtension"
+          type="button"
+          class="btn-edit"
+          matTooltip="Export"
+          matTooltipPosition="above"
+          matTooltipPositionAtOrigin="left"
+          (click)="onFileExport(fileExportButtonTypeByExtension)"
+        >
+          <mat-icon
+            aria-hidden="false"
+            aria-label="Example home icon"
+            class="excel"
+            svgIcon="fileExcel"
+          ></mat-icon>
+        </button>
+      </div>
+    </div>
+    <!-- End Refresh And Export Button -->
   </div>
 </form>

@@ -14,13 +14,13 @@ import {
   AuthService,
   NewUser,
   LoggedUserType,
-} from '../../../services/auth/auth.service';
+} from '../../services/auth/auth.service';
 import { Router } from '@angular/router';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { APIsService } from '../../../services/APIs/apis.service';
+import { CryptoService } from '../../services/cryptoService/crypto.service';
+import { APIsService } from '../../services/APIs/apis.service';
 
 @Component({
   selector: 'app-user-info-panel',

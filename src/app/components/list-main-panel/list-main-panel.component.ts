@@ -10,19 +10,19 @@ import {
   ElementRef,
   Input,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { Router, NavigationEnd } from '@angular/router';
-import { ExpandableService } from '../../../services/expandable/expandable.service';
+import { ExpandableService } from '../../services/expandable/expandable.service';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { filter } from 'rxjs/operators';
-import { AuthService } from '../../../services/auth/auth.service';
-import { LoggedUserType } from '../../../services/APIs/apis.service';
+import { AuthService } from '../../services/auth/auth.service';
+import { LoggedUserType } from '../../services/APIs/apis.service';
 
 interface PageLinkLists {
   url: string | null;

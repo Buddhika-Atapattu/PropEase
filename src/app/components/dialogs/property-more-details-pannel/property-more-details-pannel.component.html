@@ -115,10 +115,26 @@
             <div class="col-xl-12">
               <h1 class="text-capitalize mt-3">Property Location</h1>
               <div class="my-5 map-container-main">
-                <app-map
+                <iframe
+          name="location"
+          title="location"
+          [src]="
+            'https://www.google.com/maps?q=' +
+              property.location?.lat +
+              ',' +
+              property.location?.lng +
+              '&hl=en&z=14&output=embed' | safeUrl
+          "
+          width="100%"
+          height="500"
+          style="border: 0"
+          allowfullscreen="true"
+          loading="lazy"
+        ></iframe>
+                <!-- <app-map
                   [mode]="mode"
                   (locationSelected)="onLocationPicked($event)"
-                ></app-map>
+                ></app-map> -->
               </div>
             </div>
           </div>

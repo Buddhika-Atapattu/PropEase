@@ -15,10 +15,10 @@ import {
   APIsService,
   BaseUser,
   UDER_DOC_TYPES,
-} from '../../../../services/APIs/apis.service';
-import { WindowsRefService } from '../../../../services/windowRef.service';
+} from '../../../services/APIs/apis.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CryptoService } from '../../../../services/cryptoService/crypto.service';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
@@ -34,7 +34,7 @@ import {
   NotificationComponent,
 } from '../../dialogs/notification/notification.component';
 import { ProgressBarComponent } from '../../dialogs/progress-bar/progress-bar.component';
-import { AuthService } from '../../../../services/auth/auth.service';
+import { AuthService } from '../../../services/auth/auth.service';
 
 interface selectedFiles {
   name: string;

@@ -7,7 +7,7 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { WindowsRefService } from '../services/windowRef.service';
+import { WindowsRefService } from './services/windowRef/windowRef.service';
 import { Subscription, filter } from 'rxjs';
 import { Router, NavigationEnd } from '@angular/router';
 import {
@@ -15,14 +15,14 @@ import {
   NewUser,
   LoggedUserType,
   UserCredentials,
-} from '../services/auth/auth.service';
+} from './services/auth/auth.service';
 
 import { ModeChangerComponent } from './components/mode-changer/mode-changer.component';
 import { TopProgressBarComponent } from './components/top-progress-bar/top-progress-bar.component';
 import { RouterModule } from '@angular/router';
-import { UrlControllerService } from '../services/userController/user-controller.service';
-// import { CheckInternetStatusComponent } from "./components/check-internet-status/check-internet-status.component";
-// CheckInternetStatusComponent
+import { UrlControllerService } from './services/userController/user-controller.service';
+import { CheckInternetStatusComponent } from './components/check-internet-status/check-internet-status.component';
+//
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -31,6 +31,7 @@ import { UrlControllerService } from '../services/userController/user-controller
     ModeChangerComponent,
     TopProgressBarComponent,
     RouterModule,
+    CheckInternetStatusComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',

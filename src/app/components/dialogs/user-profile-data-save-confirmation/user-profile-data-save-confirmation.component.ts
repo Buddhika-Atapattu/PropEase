@@ -19,7 +19,7 @@ import {
   MatDialogModule,
 } from '@angular/material/dialog';
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
-import { WindowsRefService } from '../../../../services/windowRef.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { Subscription } from 'rxjs';
 
 @Component({

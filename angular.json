@@ -5,14 +5,14 @@
   "projects": {
     "propease-fontend": {
       "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss"
         }
       },
-      "root": "",
-      "sourceRoot": "src",
-      "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
@@ -20,11 +20,8 @@
             "outputPath": "dist/propease-fontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "polyfills": [
-              "zone.js",
-              "@angular/localize/init"
-            ],
             "tsConfig": "tsconfig.app.json",
+            "polyfills": ["zone.js", "@angular/localize/init"],
             "inlineStyleLanguage": "scss",
             "assets": [
               {
@@ -48,15 +45,12 @@
               "node_modules/leaflet/dist/leaflet.css",
               "node_modules/leaflet-geosearch/dist/geosearch.css"
             ],
-            "scripts": [],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
-            "ssr": {
-              "entry": "src/server.ts"
-            }
+            "scripts": []
           },
           "configurations": {
             "production": {
+              "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json",
               "budgets": [
                 {
                   "type": "initial",
@@ -68,9 +62,7 @@
                   "maximumWarning": "4kB",
                   "maximumError": "8kB"
                 }
-              ],
-              "outputHashing": "all",
-              "serviceWorker": "ngsw-config.json"
+              ]
             },
             "development": {
               "optimization": false,
@@ -82,6 +74,11 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "buildTarget": "propease-fontend:build:development",
+            "host": "0.0.0.0",
+            "port": 4200
+          },
           "configurations": {
             "production": {
               "buildTarget": "propease-fontend:build:production"
@@ -90,14 +87,7 @@
               "buildTarget": "propease-fontend:build:development"
             }
           },
-          "defaultConfiguration": "development",
-          "options": {
-            "ssl": false,
-            "sslKey": "ssl/localhost.key",
-            "sslCert": "ssl/localhost.crt",
-            "host": "localhost",
-            "port": 4200
-          }
+          "defaultConfiguration": "development"
         },
         "extract-i18n": {
           "builder": "@angular/build:extract-i18n"
@@ -111,7 +101,7 @@
               "@angular/localize/init"
             ],
             "tsConfig": "tsconfig.spec.json",
-            "inlineStyleLanguage": "scss",
+            "karmaConfig": "karma.conf.js",
             "assets": [
               {
                 "glob": "**/*",
@@ -131,32 +121,6 @@
     }
   },
   "cli": {
-    "analytics": "6309849d-dd69-4144-abfc-1abe55bd79a8"
-  },
-  "schematics": {
-    "@schematics/angular:component": {
-      "type": "component"
-    },
-    "@schematics/angular:directive": {
-      "type": "directive"
-    },
-    "@schematics/angular:service": {
-      "type": "service"
-    },
-    "@schematics/angular:guard": {
-      "typeSeparator": "."
-    },
-    "@schematics/angular:interceptor": {
-      "typeSeparator": "."
-    },
-    "@schematics/angular:module": {
-      "typeSeparator": "."
-    },
-    "@schematics/angular:pipe": {
-      "typeSeparator": "."
-    },
-    "@schematics/angular:resolver": {
-      "typeSeparator": "."
-    }
+    "analytics": false
   }
 }
