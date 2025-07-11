@@ -1,8 +1,8 @@
 // network.service.ts
 import { Injectable, inject, PLATFORM_ID, Inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { BehaviorSubject, fromEvent, merge, of, timer } from 'rxjs';
-import { mapTo, startWith, switchMap, catchError } from 'rxjs/operators';
+import { BehaviorSubject, from, fromEvent, merge, of, timer } from 'rxjs';
+import { map, startWith, switchMap, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 
 @Injectable({ providedIn: 'root' })
@@ -25,9 +25,17 @@ export class NetworkService {
 
     const googlePingUrl = 'https://www.google.com/generate_204';
 
+    // const pingGoogle$ = () =>
+    //   this.http.get(googlePingUrl, { responseType: 'text' }).pipe(
+    //     mapTo(true),
+    //     catchError(() => of(false))
+    //   );
+
     const pingGoogle$ = () =>
-      this.http.get(googlePingUrl, { responseType: 'text' }).pipe(
-        mapTo(true),
+      from(
+        fetch(googlePingUrl, { mode: 'no-cors' }) // <--- This avoids CORS error
+      ).pipe(
+        map(() => true),
         catchError(() => of(false))
       );
 

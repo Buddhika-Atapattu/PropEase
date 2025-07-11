@@ -53,6 +53,21 @@
       </div>
       <!-- end user-image row -->
 
+      <div class="row my-3">
+        <div class="col-12 d-flex justify-content-end align-items-center">
+          <button
+            type="button"
+            class="btn-custom"
+            (click)="onReload()"
+            matTooltip="Page reload"
+            matTooltipPosition="above"
+            aria-label="Button for page reload"
+          >
+            <i class="fa-solid fa-rotate"></i>
+          </button>
+        </div>
+      </div>
+
       <!-- tenant details title -->
       <div class="row mt-4">
         <div class="col-xl-12">
@@ -83,9 +98,16 @@
             />
           </mat-form-field>
         </div>
-        <div class="col-xl-6 col-md-6 col-sm-12 col-12">
+        <div class="col-xl-6 col-md-6 col-sm-12 col-12 position-relative">
+          <span
+            *ngIf="!isTenantEmailValid"
+            [ngClass]="isTenantEmailValid ? '' : 'span-text-danger'"
+            >Email is not valid</span
+          >
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
-            <mat-label>Email</mat-label>
+            <mat-label [ngClass]="isTenantEmailValid ? '' : 'text-danger'"
+              >Email</mat-label
+            >
             <input
               matInput
               type="text"
@@ -93,6 +115,8 @@
               name="email"
               required
               placeholder="Email..."
+              (ngModelChange)="onTenantEmailChange($event)"
+              [ngClass]="isTenantEmailValid ? '' : 'text-danger'"
             />
           </mat-form-field>
         </div>
@@ -141,9 +165,9 @@
         <!-- Phone Number -->
         <div class="col-xl-4 col-md-4 col-sm-12 col-12 position-relative">
           <span
-            *ngIf="!isPhoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)"
+            *ngIf="!phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)"
             class="span-text-danger"
-            >Phone Number Is Not Valid</span
+            >Phone number is not valid</span
           >
           <div class="row">
             <div class="col-3 pe-0-2-5">
@@ -154,7 +178,7 @@
               >
                 <mat-label
                   [ngClass]="
-                    isPhoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
+                    phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
                       ? ''
                       : 'text-danger'
                   "
@@ -171,7 +195,7 @@
                   [matAutocomplete]="phoneCodeAutoComplete"
                   (ngModelChange)="onTenantPhoneCodeChange($event)"
                   [ngClass]="
-                    isPhoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
+                    phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
                       ? ''
                       : 'text-danger'
                   "
@@ -203,7 +227,7 @@
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label
                   [ngClass]="
-                    isPhoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
+                    phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
                       ? ''
                       : 'text-danger'
                   "
@@ -217,7 +241,7 @@
                   required
                   placeholder="Phone Number..."
                   [ngClass]="
-                    isPhoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
+                    phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
                       ? ''
                       : 'text-danger'
                   "
@@ -263,7 +287,7 @@
         <!-- Slelect The File Upload -->
         <div class="col-xl-4 col-md-4 col-sm-12 col-12">
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
-            <mat-label>Slelect The File Upload</mat-label>
+            <mat-label>Select The File Upload</mat-label>
             <mat-select
               [(ngModel)]="identificationFileSelectionOption"
               name="identificationFileSelectionOption"
@@ -274,6 +298,7 @@
               <mat-option [value]="'drag-and-drop'">Drag And Drop</mat-option>
               <mat-option [value]="'file-scan'">File Scan</mat-option>
             </mat-select>
+            <mat-hint>Proof the identification file of the tenant</mat-hint>
           </mat-form-field>
         </div>
         <!-- Slelect The File Upload -->
@@ -478,9 +503,10 @@
             <mat-autocomplete
               #addressCountryAutoComplete="matAutocomplete"
               [displayWith]="displayFn"
+              (optionSelected)="onTenantCountrySelectionChange($event)"
             >
               <mat-option
-                *ngFor="let option of filterTenantCounties | async"
+                *ngFor="let option of filterTenantCountries | async"
                 [value]="option"
               >
                 <img
@@ -540,16 +566,23 @@
         <!-- End Emergency Contact Relationship -->
 
         <!-- Emergency Contact Number -->
-        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12 position-relative">
+          <span *ngIf="!isEmergencyContactValid" class="span-text-danger">{{
+            emergencyContactSpanMessage
+          }}</span>
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
-            <mat-label>Emergency Contact Number</mat-label>
+            <mat-label [ngClass]="isEmergencyContactValid ? '' : 'text-danger'"
+              >Emergency Contact</mat-label
+            >
             <input
               matInput
               type="text"
               required
               name="emergencyContactContact"
               [(ngModel)]="emergencyContactContact"
+              (ngModelChange)="emergencyContactChange($event)"
               placeholder="Emergency Contact Number Or Email..."
+              [ngClass]="isEmergencyContactValid ? '' : 'text-danger'"
             />
           </mat-form-field>
         </div>
@@ -581,15 +614,24 @@
         <!-- End Full Name -->
 
         <!-- Email -->
-        <div class="col-xl-4 col-md-4 col-sm-12 col-12">
+        <div class="col-xl-4 col-md-4 col-sm-12 col-12 position-relative">
+          <span
+            *ngIf="!isCoTenantEmailValid"
+            [ngClass]="isCoTenantEmailValid ? '' : 'span-text-danger'"
+            >Email is not valid</span
+          >
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
-            <mat-label>Email</mat-label>
+            <mat-label [ngClass]="isCoTenantEmailValid ? '' : 'text-danger'"
+              >Email</mat-label
+            >
             <input
               matInput
               type="text"
               name="coTenantEmail"
               [(ngModel)]="coTenantEmail"
+              (ngModelChange)="onCoTenantEmailChange($event)"
               placeholder="Email..."
+              [ngClass]="isCoTenantEmailValid ? '' : 'text-danger'"
             />
           </mat-form-field>
         </div>
@@ -597,13 +639,10 @@
 
         <!-- Phone Number -->
         <div class="col-xl-4 col-md-4 col-sm-12 col-12 position-relative">
-          {{ coTenantPhoneCodeId + coTenantPhoneNumber }}
           <span
-            *ngIf="
-              !isPhoneNumberValid(coTenantPhoneCodeId + coTenantPhoneNumber)
-            "
+            *ngIf="!phoneNumberValid(coTenantPhoneCodeId + coTenantPhoneNumber)"
             class="span-text-danger"
-            >Phone Number Is Not Valid</span
+            >Phone number is not valid</span
           >
           <div class="row">
             <div class="col-3 pe-0-2-5">
@@ -612,12 +651,24 @@
                 class="form-field me-3 w-100"
                 floatLabel="auto"
               >
-                <mat-label>Code</mat-label>
+                <mat-label
+                  [ngClass]="
+                    phoneNumberValid(coTenantPhoneCodeId + coTenantPhoneNumber)
+                      ? ''
+                      : 'text-danger'
+                  "
+                  >Code</mat-label
+                >
                 <input
                   matInput
                   type="text"
                   [(ngModel)]="coTenantPhoneCodeId"
                   class="example-right-align"
+                  [ngClass]="
+                    phoneNumberValid(coTenantPhoneCodeId + coTenantPhoneNumber)
+                      ? ''
+                      : 'text-danger'
+                  "
                   name="coTenantPhoneCodeId"
                   placeholder="+1"
                   [matAutocomplete]="phoneCodeAutoCompleteCoTenant"
@@ -657,6 +708,11 @@
                   matInput
                   type="text"
                   [(ngModel)]="coTenantPhoneNumber"
+                  [ngClass]="
+                    phoneNumberValid(coTenantPhoneCodeId + coTenantPhoneNumber)
+                      ? ''
+                      : 'text-danger'
+                  "
                   class="example-right-align"
                   name="coTenantPhoneNumber"
                   placeholder="Phone Number..."
@@ -1201,6 +1257,7 @@
             <mat-autocomplete
               #currencyChangeAuto="matAutocomplete"
               [displayWith]="displayCurrency"
+              (optionSelected)="onCurrencySelectionChange($event)"
             >
               <mat-option
                 *ngFor="let option of filterCurrencies$ | async"
@@ -1223,6 +1280,7 @@
 
         <!-- Payment Frequenct -->
         <div class="col-xl-4 col-md-4 col-12">
+          <!-- Payment Frequenct Input Section -->
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
             <mat-label>Payment Frequenct</mat-label>
             <input
@@ -1238,6 +1296,7 @@
             <mat-autocomplete
               #paymentFrequencyChangeAuto="matAutocomplete"
               [displayWith]="displayPaymentFrequency"
+              (optionSelected)="onPaymentFrequencySelectionChange($event)"
             >
               <mat-option
                 *ngFor="let option of filterPaymentFrequencies$ | async"
@@ -1248,6 +1307,27 @@
               </mat-option>
             </mat-autocomplete>
           </mat-form-field>
+          <!-- End Payment Frequenct Input Section -->
+
+          <!-- Payment Frequenct Details Section -->
+          <div *ngIf="paymentFrequency" class="row mt-3">
+            <mat-accordion>
+              <mat-expansion-panel class="expansion-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>{{ paymentFrequency.name }}</mat-panel-title>
+                </mat-expansion-panel-header>
+                <ul class="list-group-flush p-0 mx-0 mt-1">
+                  <li class="list-group-item">
+                    Unit: {{ paymentFrequency.unit }}
+                  </li>
+                  <li class="list-group-item">
+                    Duration: {{ paymentFrequency.duration }}
+                  </li>
+                </ul>
+              </mat-expansion-panel>
+            </mat-accordion>
+          </div>
+          <!-- End Payment Frequenct Details Section -->
         </div>
         <!-- End Payment Frequenct -->
       </div>
@@ -1257,6 +1337,7 @@
       <div class="row mt-3">
         <!-- Payment Method -->
         <div class="col-xl-4 col-md-4 col-12">
+          <!-- Payment Method Input Section -->
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
             <mat-label>Payment Method</mat-label>
             <input
@@ -1272,6 +1353,7 @@
             <mat-autocomplete
               #paymentMethodChangeAuto="matAutocomplete"
               [displayWith]="displayPaymentMethod"
+              (optionSelected)="onPaymentMethodSelectionChange($event)"
             >
               <mat-option
                 *ngFor="let option of filterPaymentMethods$ | async"
@@ -1282,11 +1364,106 @@
               </mat-option>
             </mat-autocomplete>
           </mat-form-field>
+          <!-- End Payment Method Input Section -->
+
+          <!-- Payment Method Details Section -->
+          <div *ngIf="paymentMethod" class="row mt-3">
+            <div class="col-12">
+              <mat-accordion>
+                <mat-expansion-panel class="expansion-panel">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>{{ paymentMethod.name }}</mat-panel-title>
+                  </mat-expansion-panel-header>
+
+                  <!-- Payment Method Details -->
+                  <div
+                    *ngIf="
+                      !paymentMethod.isEditable;
+                      else itemEditPaymentMethod
+                    "
+                  >
+                    <ul class="list-group-flush p-0 m-0">
+                      <li class="list-group-item">
+                        Category: {{ paymentMethod.category }}
+                      </li>
+                      <li class="list-group-item">
+                        Region: {{ paymentMethod.region }}
+                      </li>
+                      <li class="list-group-item">
+                        Supported: {{ paymentMethod.supported ? "Yes" : "No" }}
+                      </li>
+                    </ul>
+                    <p class="mt-2" *ngIf="paymentMethod.description">
+                      <strong>Description:</strong>
+                      {{ paymentMethod.description }}
+                    </p>
+                  </div>
+                  <!-- End Payment Method Details -->
+
+                  <!-- Payment Method Edit Section -->
+                  <ng-template #itemEditPaymentMethod>
+                    <div>
+                      <mat-form-field
+                        appearance="fill"
+                        class="form-field me-3 w-100"
+                      >
+                        <mat-label>Description</mat-label>
+                        <textarea
+                          matInput
+                          [(ngModel)]="paymentMethod.description"
+                          name="paymentMethodDescription"
+                          aria-label="Description"
+                          required
+                        ></textarea>
+                      </mat-form-field>
+                    </div>
+                  </ng-template>
+                  <!-- End Payment Method Edit Section -->
+
+                  <!-- Payment Method Action Row -->
+                  <mat-action-row *ngIf="paymentMethod.description">
+                    <!-- Edit button -->
+                    <button
+                      *ngIf="!paymentMethod.isEditable"
+                      matIconButton
+                      matTooltip="Edit"
+                      matTooltipPosition="above"
+                      type="button"
+                      class="btn-edit btn-expanssion-action"
+                      (click)="paymentMethod.isEditable = true"
+                      aria-label="Edit Payment Method Description"
+                    >
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <!-- End Edit button -->
+
+                    <!-- Save button -->
+                    <button
+                      *ngIf="paymentMethod.isEditable"
+                      mat-icon-button
+                      matTooltip="Save"
+                      matTooltipPosition="above"
+                      type="button"
+                      class="btn-save btn-expanssion-action"
+                      (click)="paymentMethod.isEditable = false"
+                      aria-label="Save Payment Method Description"
+                    >
+                      <i class="fa-solid fa-check"></i>
+                    </button>
+                    <!-- End Save button -->
+                  </mat-action-row>
+                  <!-- End Payment Method Action Row -->
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+          </div>
+          <!-- End Payment Method Details Section -->
         </div>
         <!-- End Payment Method -->
 
         <!-- Security Deposit -->
         <div class="col-xl-4 col-md-4 col-12">
+          <!-- Security Deposit Input Section -->
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
             <mat-label>Security Deposit</mat-label>
             <input
@@ -1302,21 +1479,127 @@
             <mat-autocomplete
               #securityDepositChangeAuto="matAutocomplete"
               [displayWith]="displaySecurityDeposit"
+              (optionSelected)="onSecurityDepositSelectionChange($event)"
             >
               <mat-option
                 *ngFor="let option of filterSecurityDeposits$ | async"
                 [value]="option"
                 class="d-flex justify-content-start align-items-center"
               >
-                {{ makeCapitalize(option.type) }}
+                {{ makeCapitalize(option.name) }}
               </mat-option>
             </mat-autocomplete>
           </mat-form-field>
+          <!-- End Security Deposit Input Section -->
+
+          <!-- Security Deposit Details Section -->
+          <div *ngIf="securityDeposit" class="row mt-3">
+            <mat-accordion>
+              <mat-expansion-panel class="expansion-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>{{ securityDeposit.name }}</mat-panel-title>
+                </mat-expansion-panel-header>
+                <!-- Security Deposit Details -->
+                <div
+                  *ngIf="
+                    !securityDeposit.isEditable;
+                    else itemEditSecurityDeposit
+                  "
+                >
+                  <ul class="list-group-flush p-0 m-0">
+                    <li class="list-group-item">
+                      <strong>Refundable: </strong
+                      >{{ securityDeposit.refundable ? "Yes" : "No" }}
+                    </li>
+                  </ul>
+                  <p *ngIf="securityDeposit.description">
+                    <strong>Description:</strong>
+                    {{ securityDeposit.description }}
+                  </p>
+                </div>
+                <!-- End Security Deposit Details -->
+
+                <!-- Security Deposit Edit Section -->
+                <ng-template #itemEditSecurityDeposit>
+                  <div>
+                    <mat-form-field
+                      appearance="fill"
+                      class="form-field me-3 w-100"
+                    >
+                      <mat-label>Description</mat-label>
+                      <textarea
+                        matInput
+                        [(ngModel)]="securityDeposit.description"
+                        name="securityDepositDescription"
+                        aria-label="Security Deposit Description"
+                      ></textarea>
+                    </mat-form-field>
+                  </div>
+                </ng-template>
+                <!-- End Security Deposit Edit Section -->
+
+                <!-- Security Deposit Action Row -->
+                <mat-action-row>
+                  <!-- Edit button -->
+                  <div class="row">
+                    <div
+                      class="col-12 d-flex justify-content-end align-items-center"
+                    >
+                      <!-- Switch Button for Refundable -->
+                      <switch-button
+                        class="me-2"
+                        matButton
+                        matTooltip="Is Refundable"
+                        matTooltipPosition="above"
+                        [(checked)]="securityDeposit.refundable"
+                        [labelOn]="'Yes'"
+                        [labelOff]="'No'"
+                      ></switch-button>
+                      <!-- End Switch Button for Refundable -->
+
+                      <!-- Edit button -->
+                      <button
+                        *ngIf="!securityDeposit.isEditable"
+                        matIconButton
+                        matTooltip="Edit"
+                        matTooltipPosition="above"
+                        type="button"
+                        class="btn-edit btn-expanssion-action"
+                        (click)="securityDeposit.isEditable = true"
+                        aria-label="Edit Payment Method Description"
+                      >
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </button>
+                      <!-- End Edit button -->
+
+                      <!-- Save button -->
+                      <button
+                        *ngIf="securityDeposit.isEditable"
+                        mat-icon-button
+                        matTooltip="Save"
+                        matTooltipPosition="above"
+                        type="button"
+                        class="btn-save btn-expanssion-action"
+                        (click)="securityDeposit.isEditable = false"
+                        aria-label="Save Payment Method Description"
+                      >
+                        <i class="fa-solid fa-check"></i>
+                      </button>
+                      <!-- End Save button -->
+                    </div>
+                  </div>
+                </mat-action-row>
+                <!-- End Security Deposit Action Row -->
+              </mat-expansion-panel>
+            </mat-accordion>
+          </div>
+          <!-- End Security Deposit Details Section -->
         </div>
         <!-- End Security Deposit -->
 
         <!-- Rent Due Date -->
         <div class="col-xl-4 col-md-4 col-12">
+          <!-- Rent Due Date Input Section -->
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
             <mat-label>Rent Due Date</mat-label>
             <input
@@ -1332,6 +1615,7 @@
             <mat-autocomplete
               #rentDueDateChangeAuto="matAutocomplete"
               [displayWith]="displayRentDueDate"
+              (optionSelected)="onRentDueDateSelectionChange($event)"
             >
               <mat-option
                 *ngFor="let option of filterRentDueDates$ | async"
@@ -1342,6 +1626,139 @@
               </mat-option>
             </mat-autocomplete>
           </mat-form-field>
+          <!-- End Rent Due Date Input Section -->
+
+          <!-- Rent Due Date Details Section -->
+          <div *ngIf="rentDueDate" class="row mt-3">
+            <mat-accordion>
+              <mat-expansion-panel class="expansion-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>{{ rentDueDate.label }}</mat-panel-title>
+                </mat-expansion-panel-header>
+                <!-- Rent Due Date Details -->
+                <div *ngIf="!rentDueDate.isEditable; else itemEditRentDueDate">
+                  <ul class="list-group-flush p-0 m-0">
+                    <li class="list-group-item" *ngIf="rentDueDate.day">
+                      <strong>Days: </strong>{{ rentDueDate.day }} day{{
+                        rentDueDate.day !== 1 ? "s" : ""
+                      }}
+                    </li>
+                    <li class="list-group-item" *ngIf="rentDueDate.offsetDays">
+                      <strong>Off set Days from the end of the month: </strong
+                      >{{ rentDueDate.offsetDays }} day{{
+                        rentDueDate.offsetDays !== 1 ? "s" : ""
+                      }}
+                    </li>
+                  </ul>
+                  <p *ngIf="rentDueDate.description">
+                    <strong>Description:</strong>
+                    {{ rentDueDate.description }}
+                  </p>
+                </div>
+                <!-- End Rent Due Date Details -->
+
+                <!-- Rent Due Date Edit Section -->
+                <ng-template #itemEditRentDueDate>
+                  <div class="row w-100 mt-3">
+                    <div class="col-12">
+                      <mat-form-field
+                        appearance="fill"
+                        class="form-field me-3 w-100"
+                      >
+                        <mat-label>Days</mat-label>
+                        <input
+                          matInput
+                          type="number"
+                          [(ngModel)]="rentDueDate.day"
+                          name="rentDueDateDay"
+                          aria-label="Rent Due Date Day"
+                        />
+                      </mat-form-field>
+                    </div>
+                  </div>
+                  <div class="row w-100 mt-3">
+                    <div class="col-12">
+                      <mat-form-field
+                        appearance="fill"
+                        class="form-field me-3 w-100"
+                      >
+                        <mat-label
+                          >Off set Days from the end of the month:</mat-label
+                        >
+                        <input
+                          matInput
+                          type="number"
+                          [(ngModel)]="rentDueDate.offsetDays"
+                          name="rentDueDateOffsetDays"
+                          aria-label="Rent Due Date Offset Days"
+                        />
+                      </mat-form-field>
+                    </div>
+                  </div>
+                  <div class="row w-100 mt-3">
+                    <div class="col-12">
+                      <mat-form-field
+                        appearance="fill"
+                        class="form-field me-3 w-100"
+                      >
+                        <mat-label>Description</mat-label>
+                        <textarea
+                          matInput
+                          [(ngModel)]="rentDueDate.description"
+                          name="rentDueDateDescription"
+                          aria-label="Rent Due Date Description"
+                          rows="5"
+                        ></textarea>
+                      </mat-form-field>
+                    </div>
+                  </div>
+                </ng-template>
+                <!-- End Rent Due Date Edit Section -->
+
+                <!-- Rent Due Date Action Row -->
+                <mat-action-row>
+                  <!-- Edit button -->
+                  <div class="row">
+                    <div
+                      class="col-12 d-flex justify-content-end align-items-center"
+                    >
+                      <!-- Edit button -->
+                      <button
+                        *ngIf="!rentDueDate.isEditable"
+                        matIconButton
+                        matTooltip="Edit"
+                        matTooltipPosition="above"
+                        type="button"
+                        class="btn-edit btn-expanssion-action"
+                        (click)="rentDueDate.isEditable = true"
+                        aria-label="Edit Payment Method Description"
+                      >
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </button>
+                      <!-- End Edit button -->
+
+                      <!-- Save button -->
+                      <button
+                        *ngIf="rentDueDate.isEditable"
+                        mat-icon-button
+                        matTooltip="Save"
+                        matTooltipPosition="above"
+                        type="button"
+                        class="btn-save btn-expanssion-action"
+                        (click)="rentDueDate.isEditable = false"
+                        aria-label="Save Payment Method Description"
+                      >
+                        <i class="fa-solid fa-check"></i>
+                      </button>
+                      <!-- End Save button -->
+                    </div>
+                  </div>
+                </mat-action-row>
+                <!-- End Rent Due Date Action Row -->
+              </mat-expansion-panel>
+            </mat-accordion>
+          </div>
+          <!-- End Rent Due Date Details Section -->
         </div>
         <!-- End Rent Due Date -->
       </div>
@@ -1351,6 +1768,7 @@
       <div class="row mt-4">
         <!-- Late Payment Penalty -->
         <div class="col-xl-4 col-md-4 col-12">
+          <!-- Late Payment Penalty Input Section -->
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
             <mat-label>Late Payment Penalty</mat-label>
             <input
@@ -1360,7 +1778,7 @@
               name="latePaymentPenaltyLeaseAgreement"
               aria-label="Late Payment Penalty"
               (ngModelChange)="handleLatePaymentPenaltyFilterChange($event)"
-              required />
+            />
             <button
               mat-icon-button
               matSuffix
@@ -1370,12 +1788,18 @@
               (click)="addULatePaymentPenalties()"
               aria-label="Add Utility Responsibility"
             >
-              <i class="fa-solid fa-plus"></i></button
-          ></mat-form-field>
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </mat-form-field>
+          <!-- End Late Payment Penalty Input Section -->
+
+          <!-- Late Payment Penalty Hint -->
           <span class="hint">
             <div [innerHTML]="displayHint()"></div>
           </span>
+          <!-- End Late Payment Penalty Hint -->
 
+          <!-- Display Late Payment Penalty List -->
           <div *ngIf="selectedLatePaymentPenalties.length > 0" class="row mt-3">
             <div class="col-12">
               <mat-accordion>
@@ -1389,11 +1813,13 @@
                   <mat-expansion-panel-header>
                     <mat-panel-title>{{ item.label }}</mat-panel-title>
                   </mat-expansion-panel-header>
-
+                  <!-- Display the description of the late payment penalty -->
                   <p *ngIf="!item.isEditable; else itemEditDescription">
                     {{ item.description }}
                   </p>
+                  <!-- Edit the description of the late payment penalty -->
 
+                  <!-- DescriptionEdit Section -->
                   <ng-template #itemEditDescription>
                     <div class="row w-100">
                       <div class="col-12">
@@ -1407,14 +1833,16 @@
                             placeholder="Description..."
                             [(ngModel)]="item.description"
                             name="description-{{ i }}"
-                            rows="10"
+                            rows="5"
                             required
                           ></textarea>
                         </mat-form-field>
                       </div>
                     </div>
                   </ng-template>
+                  <!-- End DescriptionEdit Section -->
 
+                  <!-- Action Row -->
                   <mat-action-row
                     class="d-flex justify-content-end align-items-center py-0-2-5"
                   >
@@ -1422,7 +1850,7 @@
                     <button
                       *ngIf="!item.isEditable"
                       matIconButton
-                      matTooltip="Edit Description"
+                      matTooltip="Edit"
                       matTooltipPosition="above"
                       type="button"
                       class="btn-edit btn-expanssion-action"
@@ -1431,26 +1859,28 @@
                     >
                       <i class="fa-solid fa-pen-to-square"></i>
                     </button>
+                    <!-- End Edit button -->
 
                     <!-- Save button -->
                     <button
                       *ngIf="item.isEditable"
                       matIconButton
-                      matTooltip="Save Description"
+                      matTooltip="Save"
                       matTooltipPosition="above"
                       type="button"
-                      class="btn-edit btn-expanssion-action"
+                      class="btn-save btn-expanssion-action"
                       (click)="item.isEditable = false"
                       aria-label="Save Rule Description"
                     >
                       <i class="fa-solid fa-check"></i>
                     </button>
+                    <!-- End Save button -->
 
                     <!-- Delete button -->
                     <button
                       type="button"
                       matIconButton
-                      matTooltip="Remove Rule"
+                      matTooltip="Remove"
                       matTooltipPosition="above"
                       class="btn-delete btn-expanssion-action"
                       (click)="removePaymentPenalty(item, i)"
@@ -1458,16 +1888,20 @@
                     >
                       <i class="fa-solid fa-trash"></i>
                     </button>
+                    <!-- End Delete button -->
                   </mat-action-row>
+                  <!-- End Action Row -->
                 </mat-expansion-panel>
               </mat-accordion>
             </div>
           </div>
+          <!-- End Display Late Payment Penalty List -->
         </div>
         <!-- End Late Payment Penalty -->
 
         <!-- Utility Responsibilities -->
         <div class="col-xl-4 col-md-4 col-12">
+          <!-- Utility Responsibilities Input Section -->
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
             <mat-label>Utility Responsibilities</mat-label>
             <input
@@ -1479,7 +1913,6 @@
               (ngModelChange)="
                 handleUtilityResponsibilitiesFilterChange($event)
               "
-              required
             />
             <button
               mat-icon-button
@@ -1493,10 +1926,15 @@
               <i class="fa-solid fa-plus"></i>
             </button>
           </mat-form-field>
+          <!-- End Utility Responsibilities Input Section -->
+
+          <!-- Utility Responsibilities Hint -->
           <span class="hint">
             <div [innerHTML]="hintUtilityResponsibilities()"></div>
           </span>
+          <!-- End Utility Responsibilities Hint -->
 
+          <!-- Utility Responsibilities List -->
           <div
             class="row mt-3"
             *ngIf="selectedUtilityResponsibilities.length > 0"
@@ -1517,10 +1955,13 @@
                     >
                   </mat-expansion-panel-header>
 
+                  <!-- Display the description of the utility responsibility -->
                   <p *ngIf="!item.isEditable; else itemEditDescription">
                     {{ item.description }}
                   </p>
+                  <!-- End display the description of the utility responsibility -->
 
+                  <!-- Edit the description of the utility responsibility -->
                   <ng-template #itemEditDescription>
                     <div class="row w-100">
                       <div class="col-12">
@@ -1534,14 +1975,16 @@
                             placeholder="Description..."
                             [(ngModel)]="item.description"
                             name="description-{{ i }}"
-                            rows="10"
+                            rows="5"
                             required
                           ></textarea>
                         </mat-form-field>
                       </div>
                     </div>
                   </ng-template>
+                  <!-- End edit the description of the utility responsibility -->
 
+                  <!-- Action Row -->
                   <mat-action-row
                     class="d-flex justify-content-end align-items-center py-0-2-5"
                   >
@@ -1549,7 +1992,7 @@
                     <button
                       *ngIf="!item.isEditable"
                       matIconButton
-                      matTooltip="Edit Description"
+                      matTooltip="Edit"
                       matTooltipPosition="above"
                       type="button"
                       class="btn-edit btn-expanssion-action"
@@ -1558,26 +2001,28 @@
                     >
                       <i class="fa-solid fa-pen-to-square"></i>
                     </button>
+                    <!-- End Edit button -->
 
                     <!-- Save button -->
                     <button
                       *ngIf="item.isEditable"
                       matIconButton
-                      matTooltip="Save Description"
+                      matTooltip="Save"
                       matTooltipPosition="above"
                       type="button"
-                      class="btn-edit btn-expanssion-action"
+                      class="btn-save btn-expanssion-action"
                       (click)="item.isEditable = false"
                       aria-label="Save Rule Description"
                     >
                       <i class="fa-solid fa-check"></i>
                     </button>
+                    <!-- End Save button -->
 
                     <!-- Delete button -->
                     <button
                       type="button"
                       matIconButton
-                      matTooltip="Remove Rule"
+                      matTooltip="Remove"
                       matTooltipPosition="above"
                       class="btn-delete btn-expanssion-action"
                       (click)="removeUtility(item, i)"
@@ -1585,16 +2030,20 @@
                     >
                       <i class="fa-solid fa-trash"></i>
                     </button>
+                    <!-- End Delete button -->
                   </mat-action-row>
+                  <!-- End Action Row -->
                 </mat-expansion-panel>
               </mat-accordion>
             </div>
           </div>
+          <!-- End Utility Responsibilities List -->
         </div>
         <!-- End Utility Responsibilities -->
 
         <!-- Notice Period Days -->
         <div class="col-xl-4 col-md-4 col-12">
+          <!-- Notice Period Days Input Section -->
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
             <mat-label>Notice Period Days</mat-label>
             <input
@@ -1610,6 +2059,7 @@
             <mat-autocomplete
               #notificationPeriodDaysChangeAuto="matAutocomplete"
               [displayWith]="displayNotificationPeriodDays"
+              (optionSelected)="onNotificationPeriodDaysSelectionChange($event)"
             >
               <mat-option
                 *ngFor="let option of filterNoticePeriodOptions$ | async"
@@ -1620,9 +2070,7 @@
               </mat-option>
             </mat-autocomplete>
           </mat-form-field>
-          <!-- <span class="hint">
-            <div [innerHTML]="hintUtilityResponsibilities()"></div>
-          </span> -->
+          <!-- End Notice Period Days Input Section -->
         </div>
         <!-- End Notice Period Days -->
       </div>
@@ -1666,6 +2114,7 @@
             <mat-autocomplete
               #rulesAndRegulationsChangeAuto="matAutocomplete"
               [displayWith]="displayRulesAndRegulations"
+              (optionSelected)="onRulesAndRegulationsSelectionChange($event)"
             >
               <mat-option
                 *ngFor="let option of filterRulesAndRegulations$ | async"
@@ -1734,7 +2183,7 @@
                         placeholder="Description..."
                         [(ngModel)]="item.description"
                         name="description-{{ i }}"
-                        rows="10"
+                        rows="5"
                         required
                       ></textarea>
                     </mat-form-field>
@@ -1749,7 +2198,7 @@
                 <!-- Edit button -->
                 <button
                   *ngIf="!item.isEditable"
-                  matTooltip="Edit Description"
+                  matTooltip="Edit"
                   matTooltipPosition="above"
                   type="button"
                   class="btn-edit btn-expanssion-action"
@@ -1763,10 +2212,10 @@
                 <button
                   *ngIf="item.isEditable"
                   matIconButton
-                  matTooltip="Save Description"
+                  matTooltip="Save"
                   matTooltipPosition="above"
                   type="button"
-                  class="btn-edit btn-expanssion-action"
+                  class="btn-save btn-expanssion-action"
                   (click)="item.isEditable = false"
                   aria-label="Save Rule Description"
                 >
@@ -1777,7 +2226,7 @@
                 <button
                   type="button"
                   matIconButton
-                  matTooltip="Remove Rule"
+                  matTooltip="Remove"
                   matTooltipPosition="above"
                   class="btn-delete btn-expanssion-action"
                   (click)="handleRulesAndRegulationsRemove(item, i)"

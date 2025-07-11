@@ -581,9 +581,4 @@ export class AuthService {
     this.user = {} as UserCredentials;
     this.isLoggedIn = false;
   }
-
-  public isPhoneNumberValid(number: string): boolean {
-    const phoneNumber = parsePhoneNumberFromString(number.trim());
-    return phoneNumber?.isValid() ?? false;
-  }
 }

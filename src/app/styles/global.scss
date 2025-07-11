@@ -2,73 +2,104 @@
 @use "./font/Tagesschrift-Regular/Tagesschrift-Regular.scss" as *;
 @use "./font/EduVICWANTHand-VariableFont_wght//EduVICWANTHand-VariableFont_wght.scss"
   as *;
+// ===================================================================
+// Common Core Colors
+// ===================================================================
 
+$gold-color: #f7c948 !default; // Rich gold for highlights, buttons, icons
+$blue-color: #4a90e2 !default; // Vivid blue for links
+
+// ===================================================================
+// Dark Theme Core Colors
+// ===================================================================
 // Dark Core Colors
-$dark-primary-color: #08122f !default; // Deep Navy background
-$dark-secondary-color: #1a1a2e !default; // Shadow Indigo for sections
-$dark-dashboard-color: #101325 !default; // Dark deep Navy background
-$dark-dashboard-dark-color: #0b0b14 !default; // Dark deep Navy background
-$dark-third-color: #d29e00 !default; // Bright Brand Gold
-$dark-fourth-color: #b48c00 !default; // Muted Accent Gold
-$dark-text-color: #fefefe !default; // Clear White text
-$dark-btn-box-shadow: 0rem 0rem 0.5rem 0rem rgb(0 0 0) !default;
-$dark-item-hover: rgb(5 5 14 / 31%) !default;
-$dark-item-active: rgb(5 5 14 / 31%) !default;
+$dark-primary-color: #0a132e !default; // Slightly richer navy (better contrast)
+$dark-secondary-color: #151a30 !default; // Deep indigo for sections
+$dark-dashboard-color: #101325 !default; // Keep - matches dark mode UI well
+$dark-dashboard-dark-color: #0b0e18 !default; // Deeper navy for panels
+$dark-third-color: #e3b505 !default; // Bright gold for brand impact
+$dark-fourth-color: #c79a00 !default; // Muted accent gold
+$dark-text-color: #f0f0f0 !default; // Softer white = less eye strain
+$dark-btn-box-shadow: 0rem 0rem 0.6rem 0rem rgba(0, 0, 0, 0.8) !default;
 
-$dark-btn-bg-color: #ffc107 !default; // Amber
-$dark-btn-view-color: #4caf50 !default; // Green
-$dark-btn-delete-color: #f44336 !default; // Red
-$dark-btn-custom-color: #3f51b5 !default; // Indigo
+// Accent Colors
+$dark-accent-gold: #f7c948 !default; // Same rich gold – highlights, icons, borders
+$dark-accent-blue: #4a90e2 !default; // Vivid blue – buttons, links, active items
+$dark-divider-color: #2a2e3b !default; // Subtle borders
+$dark-text-color: #f0f0f0 !default; // Soft white – easy on eyes
 
-// Additional Semantic Colors
-$dark-border-color: #2a2e3b !default; // Subtle border tone
-$dark-card-color: #10192f !default; // Elevated card containers
-$dark-hover-color: #222b44 !default; // Hover highlight
-$dark-shadow-color: rgba(0, 0, 0, 0.6) !default; // Card & modal shadows
-$dark-success-color: #28a745 !default; // Success feedback
-$dark-warning-color: #ffc107 !default; // Warning color
-$dark-error-color: #dc3545 !default; // Error/validation
-$dark-expand-hover-color: rgba(255, 140, 0, 0.1) !default; // Dark expand hover
+$dark-item-hover: rgba(255, 255, 255, 0.04) !default;
+$dark-item-active: rgba(255, 255, 255, 0.08) !default;
+
+$dark-border-color: #2a2e3b !default;
+$dark-card-color: #11182b !default;
+$dark-hover-color: #273043 !default;
+$dark-shadow-color: rgba(0, 0, 0, 0.6) !default;
+$dark-success-color: #28a745 !default;
+$dark-warning-color: #ffc107 !default;
+$dark-error-color: #dc3545 !default;
+$dark-expand-hover-color: rgba(255, 193, 7, 0.08) !default;
+
+// Dark Theme - Also Deep Enough for White Text
+$dark-btn-save-color: #008aa6; // Dark Green
+$dark-btn-view-color: #009a69; // Dark Blue
+$dark-btn-edit-color: #ffb307; // Deep Orange
+$dark-btn-delete-color: #c62828; // Deep Red
+$dark-btn-custom-color: #003caa; // Deep Purple
+
+// ===================================================================
+// Light Theme Core Colors
+// ===================================================================
 
 // Light Core Colors
-$light-primary-color: #fdf6e3 !default; // Soft neutral background
-$light-secondary-color: #ffe18d !default; // Golden Cream highlight
-$light-dashboard-color: #ffedbd !default; // Golden Cream
-$light-dashboard-dark-color: #dbcba2 !default; // Golden Cream
-$light-third-color: #d29e00 !default; // Brand Gold
-$light-fourth-color: #08122f !default; // Brand Navy
-$light-text-color: #1f1f1f !default; // Ink Gray
-$light-btn-box-shadow: 0rem 0rem 0.5rem 0rem rgb(169, 169, 169);
-$light-item-hover: rgba(255, 204, 0, 0.31) !default;
-$light-item-active: rgba(255, 200, 0, 0.31) !default;
+$light-primary-color: #ffffff !default; // Clean paper white
+$light-secondary-color: #ffe8a3 !default; // Soft pastel gold (better readability than #ffe29a)
+$light-dashboard-color: #f2f7ff !default; // Gentle sky blue — fresh and clean
+$light-dashboard-dark-color: #c7d7f5 !default; // Dusty light blue — contrast, good for header/sidebar
+$light-third-color: #d29e00 !default;
+$light-fourth-color: #2c3e50 !default; // Rich navy contrast
+$light-text-color: #212529 !default; // High contrast dark gray
+$light-btn-box-shadow: 0rem 0rem 0.5rem 0rem rgba(0, 0, 0, 0.1);
 
-$light-btn-bg-color: #ffc107 !default; // Amber
-$light-btn-view-color: #4caf50 !default; // Green
-$light-btn-delete-color: #f44336 !default; // Red
-$light-btn-custom-color: #3f51b5 !default; // Indigo
+// Accent Colors
+$light-accent-gold: #f7c948 !default; // Rich gold (hover, badge, emphasis)
+$light-accent-blue: #4a90e2 !default; // Vivid blue (links, actions)
+$light-divider-color: #e0e0e0 !default; // Borders/separators
+$light-text-color: #1f1f1f !default; // Dark gray, clean on white
 
-// Additional Semantic Colors
-$light-border-color: #e0e0e0 !default; // Soft gray borders
-$light-card-color: #ffffff !default; // Cards & containers
-$light-hover-color: #f0f0f0 !default; // Hover effect bg
-$light-shadow-color: rgba(0, 0, 0, 0.15) !default; // Box shadows
-$light-success-color: #198754 !default; // Success green
-$light-warning-color: #f0ad4e !default; // Alert yellow
-$light-error-color: #dc3545 !default; // Error red
+$light-item-hover: rgba(0, 0, 0, 0.04) !default;
+$light-item-active: rgba(0, 0, 0, 0.08) !default;
 
+$light-border-color: #dee2e6 !default;
+$light-card-color: #ffffff !default;
+$light-hover-color: #f8f9fa !default;
+$light-shadow-color: rgba(0, 0, 0, 0.15) !default;
+$light-success-color: #198754 !default;
+$light-warning-color: #f0ad4e !default;
+$light-error-color: #dc3545 !default;
+
+// Light Theme - Stronger Backgrounds for White Text
+$light-btn-save-color: #008aa6; // Darker Green
+$light-btn-view-color: #009a69; // Darker Blue
+$light-btn-edit-color: #ffb307; // Deeper Amber
+$light-btn-delete-color: #d32f2f; // Deeper Red
+$light-btn-custom-color: #0043c0; // Darker Purple
 
 // ===================================================================
 // Button Themes
 // ===================================================================
 
-:host-context(html.light),
-:host-context(html.dark) {
-  .btn-edit {
-    background: $light-btn-bg-color;
+:host-context(html.light) {
+  .btn-save {
+    background: $light-btn-save-color;
   }
 
   .btn-view {
     background: $light-btn-view-color;
+  }
+
+  .btn-edit {
+    background: $light-btn-edit-color;
   }
 
   .btn-delete {
@@ -81,8 +112,12 @@ $light-error-color: #dc3545 !default; // Error red
 }
 
 :host-context(html.dark) {
+  .btn-save {
+    background: $dark-btn-save-color;
+  }
+
   .btn-edit {
-    background: $dark-btn-bg-color;
+    background: $dark-btn-edit-color;
   }
 
   .btn-view {
@@ -98,7 +133,24 @@ $light-error-color: #dc3545 !default; // Error red
   }
 }
 
+.panel-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+  border-radius: 0.372rem;
+  padding: 1rem;
+  height: 100%;
+  position: relative;
+}
+
 :host-context(html.light) {
+  .panel-card {
+    background: $light-card-color !important;
+    box-shadow: 0rem 0rem 1rem 0rem $light-shadow-color !important;
+    color: $light-text-color !important;
+  }
   .apartment {
     background-color: #e8eaf6;
     color: #3f51b5;
@@ -147,114 +199,16 @@ $light-error-color: #dc3545 !default; // Error red
     object-fit: cover;
     object-position: center;
     border-radius: 100rem;
-    box-shadow: 0rem 0rem 1rem 0rem #6b6b6b;
+    box-shadow: 0rem 0rem 1rem 0rem #6b6b6b70;
   }
 
-  .btn-edit {
-    border: none !important;
-    color: #fff !important;
-    margin: 0.25rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-
-    ::ng-deep {
-      mat-icon {
-        width: 25px;
-        height: 25px;
-        color: #fff;
-        margin: 0rem auto;
-        svg {
-          fill: #fff;
-          stroke: #fff;
-          path {
-            fill: #fff;
-            stroke: #fff;
-          }
-        }
-      }
-    }
-
-    &:hover {
-      transform: scale(1.05);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  .btn-view {
-    border: none !important;
-    color: #fff !important;
-    margin: 0.25rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-
-    ::ng-deep {
-      mat-icon {
-        width: 25px;
-        height: 25px;
-        color: #fff;
-        margin: 0rem auto;
-        svg {
-          fill: #fff;
-          stroke: #fff;
-          path {
-            fill: #fff;
-            stroke: #fff;
-          }
-        }
-      }
-    }
-    &:hover {
-      transform: scale(1.05);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  .btn-delete {
-    border: none !important;
-    margin: 0.25rem;
-    color: #fff !important;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-
-    ::ng-deep {
-      mat-icon {
-        width: 25px;
-        height: 25px;
-        color: #fff;
-        margin: 0rem auto;
-        svg {
-          fill: #fff;
-          stroke: #fff;
-          path {
-            fill: #fff;
-            stroke: #fff;
-          }
-        }
-      }
-    }
-    &:hover {
-      transform: scale(1.05);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-  }
-
+  .btn-save,
+  .btn-view,
+  .btn-edit,
+  .btn-delete,
   .btn-custom {
-    border: none;
+    border: none !important;
+    color: #fff !important;
     margin: 0.25rem;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
@@ -266,8 +220,8 @@ $light-error-color: #dc3545 !default; // Error red
 
     ::ng-deep {
       mat-icon {
-        width: 25px;
-        height: 25px;
+        width: 12pt !important;
+        height: auto !important;
         color: #fff;
         margin: 0rem auto;
         svg {
@@ -285,7 +239,31 @@ $light-error-color: #dc3545 !default; // Error red
       transform: scale(1.05);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     }
+
+    &.icon-rect-none {
+      ::ng-deep {
+        mat-icon {
+          width: 25px !important;
+          height: 25px !important;
+          color: #fff;
+          margin: 0rem auto;
+          svg {
+            fill: #fff;
+            stroke: #fff;
+            path {
+              fill: #fff;
+              stroke: #fff;
+            }
+            rect {
+              fill: transparent;
+              stroke: transparent;
+            }
+          }
+        }
+      }
+    }
   }
+
   .text-muted-custom {
     color: #4e4e4e !important;
   }
@@ -321,6 +299,11 @@ $light-error-color: #dc3545 !default; // Error red
 }
 
 :host-context(html.dark) {
+  .panel-card {
+    background: $dark-card-color !important;
+    box-shadow: 0rem 0rem 1rem 0rem $dark-shadow-color !important;
+    color: $dark-text-color !important;
+  }
   .apartment {
     background-color: #3f51b5;
     color: #fff;
@@ -369,113 +352,16 @@ $light-error-color: #dc3545 !default; // Error red
     object-fit: cover;
     object-position: center;
     border-radius: 100rem;
-    box-shadow: 0rem 0rem 1rem 0rem #0f0f0f;
+    box-shadow: 0rem 0rem 1rem 0rem #00000070;
   }
 
-  .btn-edit {
-    border: none !important;
-    color: #fff !important;
-    margin: 0.25rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-
-    ::ng-deep {
-      mat-icon {
-        width: 25px;
-        height: 25px;
-        color: #fff;
-        margin: 0rem auto;
-        svg {
-          fill: #fff;
-          stroke: #fff;
-          path {
-            fill: #fff;
-            stroke: #fff;
-          }
-        }
-      }
-    }
-    &:hover {
-      transform: scale(1.05);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  .btn-view {
-    border: none !important;
-    color: #fff !important;
-    margin: 0.25rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-
-    ::ng-deep {
-      mat-icon {
-        width: 25px;
-        height: 25px;
-        color: #fff;
-        margin: 0rem auto;
-        svg {
-          fill: #fff;
-          stroke: #fff;
-          path {
-            fill: #fff;
-            stroke: #fff;
-          }
-        }
-      }
-    }
-    &:hover {
-      transform: scale(1.05);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  .btn-delete {
-    border: none !important;
-    color: #fff !important;
-    margin: 0.25rem;
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-
-    ::ng-deep {
-      mat-icon {
-        width: 25px;
-        height: 25px;
-        color: #fff;
-        margin: 0rem auto;
-        svg {
-          fill: #fff;
-          stroke: #fff;
-          path {
-            fill: #fff;
-            stroke: #fff;
-          }
-        }
-      }
-    }
-    &:hover {
-      transform: scale(1.05);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-  }
-
+  .btn-view,
+  .btn-save,
+  .btn-edit,
+  .btn-delete,
   .btn-custom {
-    border: none;
+    border: none !important;
+    color: #fff !important;
     margin: 0.25rem;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
@@ -487,8 +373,8 @@ $light-error-color: #dc3545 !default; // Error red
 
     ::ng-deep {
       mat-icon {
-        width: 25px;
-        height: 25px;
+        width: 12pt !important;
+        height: auto !important;
         color: #fff;
         margin: 0rem auto;
         svg {
@@ -498,15 +384,41 @@ $light-error-color: #dc3545 !default; // Error red
             fill: #fff;
             stroke: #fff;
           }
+          rect {
+            fill: transparent;
+            stroke: transparent;
+          }
         }
       }
     }
-
     &:hover {
       transform: scale(1.05);
-      box-shadow: 0rem 0rem 0.5rem 0rem $dark-dashboard-dark-color;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+    &.icon-rect-none {
+      ::ng-deep {
+        mat-icon {
+          width: 25px !important;
+          height: 25px !important;
+          color: #fff;
+          margin: 0rem auto;
+          svg {
+            fill: #fff;
+            stroke: #fff;
+            path {
+              fill: #fff;
+              stroke: #fff;
+            }
+            rect {
+              fill: transparent;
+              stroke: transparent;
+            }
+          }
+        }
+      }
     }
   }
+
   .text-muted-custom {
     color: #a6a6a6 !important;
   }
@@ -539,8 +451,8 @@ $light-error-color: #dc3545 !default; // Error red
   }
 }
 
-button{
-  z-index: 9999;
+button {
+  z-index: 1;
 }
 
 .main-panel {
@@ -733,6 +645,9 @@ button{
 }
 
 .hint {
+  position: relative;
+  padding-left: 1rem;
+  display: block;
   font-size: 8pt;
   margin-top: 0.25rem;
 }

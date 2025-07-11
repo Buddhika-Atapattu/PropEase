@@ -191,115 +191,6 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.loggedUser = this.authService.getLoggedUser;
 
-    // home icon
-    this.matIconRegistry.addSvgIcon(
-      'home-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl('/Images/Icons/home.svg')
-    );
-    // property icon
-    this.matIconRegistry.addSvgIcon(
-      'property-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/property.svg'
-      )
-    );
-    // users icon
-    this.matIconRegistry.addSvgIcon(
-      'users-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/users.svg'
-      )
-    );
-    // tenant icon
-    this.matIconRegistry.addSvgIcon(
-      'tenant-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/tenant.svg'
-      )
-    );
-    // agent icon
-    this.matIconRegistry.addSvgIcon(
-      'agent-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/agents.svg'
-      )
-    );
-    // report icon
-    this.matIconRegistry.addSvgIcon(
-      'report-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/report.svg'
-      )
-    );
-    // owner icon
-    this.matIconRegistry.addSvgIcon(
-      'owner-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/owner.svg'
-      )
-    );
-    // payment icon
-    this.matIconRegistry.addSvgIcon(
-      'payment-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/payments.svg'
-      )
-    );
-    // access icon
-    this.matIconRegistry.addSvgIcon(
-      'access-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/access-control.svg'
-      )
-    );
-    // bill list icon
-    this.matIconRegistry.addSvgIcon(
-      'bill-list-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/bill-list.svg'
-      )
-    );
-    // certification icon
-    this.matIconRegistry.addSvgIcon(
-      'certification-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/certification.svg'
-      )
-    );
-    // create icon
-    this.matIconRegistry.addSvgIcon(
-      'create-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/create.svg'
-      )
-    );
-    // documents icon
-    this.matIconRegistry.addSvgIcon(
-      'documents-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/documents.svg'
-      )
-    );
-    // notification icon
-    this.matIconRegistry.addSvgIcon(
-      'notifications-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/notification.svg'
-      )
-    );
-    // log icon
-    this.matIconRegistry.addSvgIcon(
-      'log-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl('/Images/Icons/log.svg')
-    );
-    // complaints icon
-    this.matIconRegistry.addSvgIcon(
-      'complaints-icon',
-      this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/complaints.svg'
-      )
-    );
-
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event: NavigationEnd) => {
@@ -313,6 +204,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
             : '';
         this.currecntURL = url;
       });
+    this.makeIcons();
   }
 
   ngOnInit(): void {
@@ -335,12 +227,36 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     this.expandSub?.unsubscribe();
   }
 
-  // togglePanel(): void {
-  //   const expanded = !this.isExpanded();
-  //   this.expandableService.setExpanded(expanded);
-  //   this.isExpanded.set(expanded);
-  //   this.applyPanelState(expanded);
-  // }
+  private makeIcons() {
+
+    const icons: {
+      name: string;
+      icon: string;
+    }[] = [
+        { name: 'home-icon', icon: '/Images/Icons/home.svg' },
+        { name: 'property-icon', icon: '/Images/Icons/property.svg' },
+        { name: 'users-icon', icon: '/Images/Icons/users.svg' },
+        { name: 'tenant-icon', icon: '/Images/Icons/tenant.svg' },
+        { name: 'agent-icon', icon: '/Images/Icons/agents.svg' },
+        { name: 'report-icon', icon: '/Images/Icons/report.svg' },
+        { name: 'owner-icon', icon: '/Images/Icons/owner.svg' },
+        { name: 'payment-icon', icon: '/Images/Icons/payments.svg' },
+        { name: 'access-icon', icon: '/Images/Icons/access-control.svg' },
+        { name: 'bill-list-icon', icon: '/Images/Icons/bill-list.svg' },
+        { name: 'certification-icon', icon: '/Images/Icons/certification.svg' },
+        { name: 'create-icon', icon: '/Images/Icons/create.svg' },
+        { name: 'documents-icon', icon: '/Images/Icons/documents.svg' },
+        { name: 'notifications-icon', icon: '/Images/Icons/notification.svg' },
+        { name: 'log-icon', icon: '/Images/Icons/log.svg' },
+        { name: 'complaints-icon', icon: '/Images/Icons/complaints.svg' },
+      ]
+    icons.forEach((icon) => {
+      this.matIconRegistry.addSvgIcon(
+        icon.name,
+        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.icon)
+      );
+    });
+  }
 
   protected togglePanel(): void {
     const expanded = !this.isExpanded();

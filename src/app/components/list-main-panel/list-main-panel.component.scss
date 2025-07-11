@@ -53,7 +53,7 @@
 }
 
 // Fix spacing and layout in collapsed mode
-.btn-cllapse span {
+.btn-collapse span {
   display: none;
   opacity: 0;
 }
@@ -100,7 +100,7 @@
     padding: 2rem 1rem;
     min-height: 85vh;
     overflow-x: hidden;
-    background-color: $light-secondary-color;
+    background-color: $light-dashboard-color;
     color: $light-text-color !important;
     &.side-panel-collapsed {
       display: flex;
@@ -134,7 +134,7 @@
           border-radius: 12px;
           transition: background-color 0.3s ease, color 0.3s ease;
           color: $light-text-color !important;
-          &.btn-cllapse {
+          &.btn-collapse {
             width: 40px;
             height: 40px;
             justify-content: center;
@@ -158,7 +158,7 @@
             font-size: 0px;
             margin-right: 12px;
             color: $light-text-color !important;
-            &.cllapse {
+            &.collapse {
               font-size: 0px;
               height: 20px;
               width: 20px;
@@ -168,7 +168,7 @@
               fill: currentColor;
               ::ng-deep path {
                 fill: currentColor;
-                stroke: #ffe18d;
+                stroke: none;
               }
             }
           }
@@ -221,9 +221,9 @@
       border-radius: 50%;
       width: 40px;
       height: 40px;
-      background-color: rgb(255 255 255 / 50%);
-      &.expand-cllapse-btn {
-        // right: auto !important;
+      background-color: rgba(255, 255, 255, 0.349);
+      &.expand-collapse-btn {
+        right: auto !important;
       }
 
       mat-icon {
@@ -247,7 +247,7 @@
     padding: 2rem 1rem;
     min-height: 85vh;
     overflow-x: hidden;
-    background-color: $dark-secondary-color;
+    background-color: $dark-dashboard-color;
     color: $dark-text-color !important;
     &.side-panel-collapsed {
       display: flex;
@@ -281,7 +281,7 @@
           border-radius: 12px;
           transition: background-color 0.3s ease, color 0.3s ease;
           color: $dark-text-color !important;
-          &.btn-cllapse {
+          &.btn-collapse {
             width: 40px;
             height: 40px;
             justify-content: center;
@@ -305,7 +305,7 @@
             font-size: 0px;
             margin-right: 12px;
             color: $dark-text-color !important;
-            &.cllapse {
+            &.collapse {
               font-size: 0px;
               height: 20px;
               width: 20px;
@@ -315,7 +315,7 @@
               fill: currentColor;
               ::ng-deep path {
                 fill: currentColor;
-                stroke: #1a1a2e;
+                stroke: none;
               }
             }
           }
@@ -369,7 +369,7 @@
       width: 40px;
       height: 40px;
       background-color: rgba(255, 255, 255, 0.15);
-      &.expand-cllapse-btn {
+      &.expand-collapse-btn {
         right: auto !important;
       }
 
@@ -381,7 +381,7 @@
       }
 
       &:hover {
-        background-color: rgba(255, 140, 0, 0.2);
+        background-color: $dark-item-hover;
       }
     }
   }

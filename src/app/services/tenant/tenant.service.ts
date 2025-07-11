@@ -77,10 +77,16 @@ export interface PropertyInformation {
   parkingSpots: number;
 }
 
-export interface SecurityDeposit {
-  amount: number;
+
+export interface CurrencyFormat {
+  country: string;
+  symbol: any;
+  flags: {
+    png: string; // PNG flag image URL
+    svg: string; // SVG flag image URL
+    alt?: string; // Description of the flag
+  };
   currency: string;
-  status: 'Paid' | 'Pending' | 'Waived' | string;
 }
 
 export interface LeaseAgreement {
@@ -88,14 +94,14 @@ export interface LeaseAgreement {
   endDate: Date;
   durationMonths: number;
   monthlyRent: number;
-  currency: string;
-  paymentFrequency: 'Monthly' | 'Quarterly' | 'Annually' | string;
-  paymentMethod: 'Cash' | 'Bank Transfer' | 'Online' | string;
-  securityDeposit: SecurityDeposit;
-  rentDueDate: number; // e.g., 5th of each month
-  latePaymentPenalty: string; // e.g., "LKR 500 per day"
-  utilityResponsibilities: string;
-  noticePeriodDays: number;
+  currency: CurrencyFormat;
+  paymentFrequency: PaymentMethodFormat;
+  paymentMethod: PaymentMethodFormat;
+  securityDeposit: SecurityDepositFormat;
+  rentDueDate: RentDueDateFormat; // e.g., 5th of each month
+  latePaymentPenalty: LatePaymentPenaltyFormat; // e.g., "LKR 500 per day"
+  utilityResponsibilities: UtilityResponsibilityFormat;
+  noticePeriodDays: NoticePeriodFormat;
 }
 
 export interface RulesAndRegulations {
@@ -157,16 +163,6 @@ export const DEFAULT_RULES_AND_REGULATIONS: RulesAndRegulations[] = [
   },
 ];
 
-export interface CompanyPolicy {
-  refundPolicy: string;
-  cancellationPolicy: string;
-  breakLeaseConditions: string;
-  maintenanceRequests: string;
-  rentIncreaseClause: string;
-  inspectionSchedule: string;
-  renewalProcess: string;
-  disputeResolution: string;
-}
 
 export const DEFAULT_COMPANY_POLICY: string = `
 <div class="company-policy">
@@ -254,15 +250,17 @@ export interface SystemMetadata {
   lastUpdated: string; // ISO timestamp
 }
 
-export interface PaymentMethod {
+export interface PaymentMethodFormat {
   id: string; // Unique identifier
   name: string; // Display name
   category: 'card' | 'wallet' | 'bank' | 'gateway' | 'cash' | 'crypto' | 'bnpl';
   region?: string; // Optional region or origin (e.g., EU, US, Asia)
   supported?: boolean; // Can be used to toggle availability
+  isEditable?: boolean; // Optional flag to indicate if this method can be edited
+  description?: string; // Optional description for additional context
 }
 
-export const PAYMENT_METHODS: PaymentMethod[] = [
+export const PAYMENT_METHODS: PaymentMethodFormat[] = [
   // Credit & Debit Cards
   { id: 'visa', name: 'Visa', category: 'card' },
   { id: 'mastercard', name: 'MasterCard', category: 'card' },
@@ -281,19 +279,17 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   { id: 'alipay', name: 'Alipay', category: 'wallet', region: 'China' },
   { id: 'wechatpay', name: 'WeChat Pay', category: 'wallet', region: 'China' },
   { id: 'paytm', name: 'Paytm', category: 'wallet', region: 'India' },
-  {
-    id: 'grabpay',
-    name: 'GrabPay',
-    category: 'wallet',
-    region: 'Southeast Asia',
-  },
-  {
-    id: 'linepay',
-    name: 'LINE Pay',
-    category: 'wallet',
-    region: 'Japan/Taiwan',
-  },
+  { id: 'grabpay', name: 'GrabPay', category: 'wallet', region: 'Southeast Asia' },
+  { id: 'linepay', name: 'LINE Pay', category: 'wallet', region: 'Japan/Taiwan' },
   { id: 'momo', name: 'MoMo', category: 'wallet', region: 'Vietnam' },
+  { id: 'blik', name: 'BLIK', category: 'wallet', region: 'Poland' },
+  { id: 'gcash', name: 'GCash', category: 'wallet', region: 'Philippines' },
+  { id: 'tngwallet', name: 'TNG Wallet', category: 'wallet', region: 'Hong Kong' },
+  { id: 'touchngo', name: 'Touch ‘n Go eWallet', category: 'wallet', region: 'Malaysia' },
+  { id: 'kakaopay', name: 'KakaoPay', category: 'wallet', region: 'South Korea' },
+  { id: 'mpesa', name: 'M-Pesa', category: 'wallet', region: 'Africa/India' },
+  { id: 'yandexmoney', name: 'YooMoney (Yandex Money)', category: 'wallet', region: 'Russia' },
+  { id: 'qiwi', name: 'QIWI Wallet', category: 'wallet', region: 'Russia' },
 
   // Bank Transfers
   { id: 'swift', name: 'SWIFT / IBAN Transfer', category: 'bank' },
@@ -301,13 +297,9 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   { id: 'ach', name: 'ACH Transfer', category: 'bank', region: 'US' },
   { id: 'fps', name: 'Faster Payments (FPS)', category: 'bank', region: 'UK' },
   { id: 'neft', name: 'NEFT / RTGS', category: 'bank', region: 'India' },
-  {
-    id: 'interac',
-    name: 'Interac e-Transfer',
-    category: 'bank',
-    region: 'Canada',
-  },
+  { id: 'interac', name: 'Interac e-Transfer', category: 'bank', region: 'Canada' },
   { id: 'bacs', name: 'BACS Transfer', category: 'bank', region: 'UK' },
+  { id: 'bank', name: 'Bank Transfer', category: 'bank', region: 'International' },
 
   // International Payment Gateways
   { id: 'stripe', name: 'Stripe', category: 'gateway' },
@@ -319,6 +311,12 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   { id: 'remitly', name: 'Remitly', category: 'gateway' },
   { id: 'skrill', name: 'Skrill', category: 'gateway' },
   { id: 'neteller', name: 'Neteller', category: 'gateway' },
+  { id: 'adyen', name: 'Adyen', category: 'gateway' },
+  { id: 'checkout', name: 'Checkout.com', category: 'gateway' },
+  { id: '2checkout', name: '2Checkout', category: 'gateway' },
+  { id: 'authorize', name: 'Authorize.Net', category: 'gateway', region: 'US' },
+  { id: 'razorpay', name: 'Razorpay', category: 'gateway', region: 'India' },
+  { id: 'flutterwave', name: 'Flutterwave', category: 'gateway', region: 'Africa' },
 
   // Cash-Based / Vouchers
   { id: 'westernunion', name: 'Western Union', category: 'cash' },
@@ -333,6 +331,9 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   { id: 'usdt', name: 'Tether (USDT)', category: 'crypto' },
   { id: 'bnb', name: 'Binance Coin (BNB)', category: 'crypto' },
   { id: 'litecoin', name: 'Litecoin (LTC)', category: 'crypto' },
+  { id: 'xrp', name: 'Ripple (XRP)', category: 'crypto' },
+  { id: 'dogecoin', name: 'Dogecoin (DOGE)', category: 'crypto' },
+  { id: 'cardano', name: 'Cardano (ADA)', category: 'crypto' },
 
   // Buy Now, Pay Later (BNPL)
   { id: 'klarna', name: 'Klarna', category: 'bnpl' },
@@ -340,148 +341,211 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   { id: 'affirm', name: 'Affirm', category: 'bnpl' },
   { id: 'zippay', name: 'Zip Pay', category: 'bnpl' },
   { id: 'tabby', name: 'Tabby', category: 'bnpl', region: 'Middle East' },
+  { id: 'tamara', name: 'Tamara', category: 'bnpl', region: 'Middle East' },
+  { id: 'hoolah', name: 'Hoolah', category: 'bnpl', region: 'Southeast Asia' },
+
+  // Other
+  { id: 'boleto', name: 'Boleto Bancário', category: 'bank', region: 'Brazil' },
+  { id: 'konbini', name: 'Konbini', category: 'cash', region: 'Japan' },
+
+  // Local / Manual Methods
+  { id: 'handcash', name: 'Cash (In Person)', category: 'cash', region: 'Local', isEditable: false, description: 'Direct cash payment to landlord or office' },
+  { id: 'cheque', name: 'Cheque Payment', category: 'cash', region: 'Local/Bank', isEditable: false, description: 'Paper cheque issued to payee' },
+  { id: 'bankdeposit', name: 'Manual Bank Deposit', category: 'cash', region: 'Local', isEditable: false, description: 'Deposit cash at a local bank branch' },
+  { id: 'mobilebanking', name: 'Local Mobile Banking', category: 'bank', region: 'Domestic', isEditable: false, description: 'Bank-owned mobile app transaction' },
+  { id: 'localwallet', name: 'Local Digital Wallet', category: 'wallet', region: 'Domestic', isEditable: false, description: 'Region-specific digital wallet for transfers' },
+  { id: 'moneyorder', name: 'Money Order', category: 'cash', region: 'International Postal', isEditable: false, description: 'Prepaid paper instrument for sending money' }
 ];
 
-export interface PaymentFrequency {
+export interface PaymentFrequencyFormat {
   id: string; // Unique identifier
   name: string; // Human-readable label
   duration: string; // ISO-like duration string (e.g., "P1M" = 1 month)
-  unit: 'day' | 'week' | 'month' | 'year' | 'one-time';
+  unit: string;
+  isEditable?: boolean; // Optional flag to indicate if this frequency can be edited
 }
 
-export const PAYMENT_FREQUENCIES: PaymentFrequency[] = [
+export const PAYMENT_FREQUENCIES: PaymentFrequencyFormat[] = [
   {
     id: 'one-time',
     name: 'One-Time',
     duration: 'P0D',
     unit: 'one-time',
+    isEditable: false,
   },
   {
     id: 'daily',
     name: 'Daily',
     duration: 'P1D',
     unit: 'day',
+    isEditable: false,
   },
   {
     id: 'weekly',
     name: 'Weekly',
     duration: 'P1W',
     unit: 'week',
+    isEditable: false,
   },
   {
     id: 'biweekly',
     name: 'Bi-Weekly',
     duration: 'P2W',
     unit: 'week',
+    isEditable: false,
   },
   {
     id: 'monthly',
     name: 'Monthly',
     duration: 'P1M',
     unit: 'month',
+    isEditable: false,
   },
   {
     id: 'bimonthly',
     name: 'Bi-Monthly',
     duration: 'P2M',
     unit: 'month',
+    isEditable: false,
   },
   {
     id: 'quarterly',
     name: 'Quarterly',
     duration: 'P3M',
     unit: 'month',
+    isEditable: false,
   },
   {
     id: 'semiannually',
     name: 'Semi-Annually',
     duration: 'P6M',
     unit: 'month',
+    isEditable: false,
   },
   {
     id: 'annually',
     name: 'Annually',
     duration: 'P1Y',
     unit: 'year',
+    isEditable: false,
   },
 ];
 
-export interface SecurityDepositOption {
-  id: string;
-  type: 'fixed' | 'percentage' | 'duration';
-  value: number;
-  refundable: boolean;
-}
 
-export interface SecurityDepositReturnFormat {
+export interface SecurityDepositFormat {
   id: string;
   name: string;
   description: string;
   refundable: boolean;
+  isEditable?: boolean;
 }
 
-export const BASE_SECURITY_DEPOSIT_OPTIONS: SecurityDepositOption[] = [
-  { id: 'one-month', type: 'duration', value: 1, refundable: true },
-  { id: 'two-months', type: 'duration', value: 2, refundable: true },
-  { id: 'percentage-10', type: 'percentage', value: 10, refundable: true },
-  { id: 'fixed-1000', type: 'fixed', value: 1000, refundable: true },
+export const BASE_SECURITY_DEPOSIT_OPTIONS: SecurityDepositFormat[] = [
+  {
+    id: 'one-month',
+    name: 'One Month Deposit',
+    description: 'Equivalent to one month of rent, refundable upon lease end.',
+    refundable: true,
+    isEditable: false,
+  },
+  {
+    id: 'two-months',
+    name: 'Two Months Deposit',
+    description: 'Equivalent to two months of rent, refundable upon lease end.',
+    refundable: true,
+    isEditable: false,
+  },
+  {
+    id: 'percentage-10',
+    name: '10% of Total Lease Amount',
+    description: '10% of the lease total as a refundable deposit.',
+    refundable: true,
+    isEditable: false,
+  },
+  {
+    id: 'fixed-1000',
+    name: 'Fixed Amount: 1000',
+    description: 'A fixed refundable deposit of 1000.',
+    refundable: true,
+    isEditable: false,
+  },
   {
     id: 'fixed-500-nonrefundable',
-    type: 'fixed',
-    value: 500,
+    name: 'Fixed Non-Refundable: 500',
+    description: 'A fixed non-refundable deposit of 500.',
     refundable: false,
+    isEditable: false,
   },
-  { id: 'no-deposit', type: 'fixed', value: 0, refundable: false },
+  {
+    id: 'no-deposit',
+    name: 'No Deposit',
+    description: 'No security deposit required.',
+    refundable: false,
+    isEditable: false,
+  },
 ];
 
-export interface RentDueDateOption {
+export interface RentDueDateFormat {
   id: string;
   label: string;
   day?: number; // e.g., 1 for 1st of the month
   offsetDays?: number; // e.g., 5 for "5 days after invoice"
   description?: string;
+  isEditable?: boolean; // Optional flag to indicate if this due date can be edited
 }
 
-export const RENT_DUE_DATE_OPTIONS: RentDueDateOption[] = [
+export const RENT_DUE_DATE_OPTIONS: RentDueDateFormat[] = [
   {
     id: 'first-of-month',
     label: '1st of Every Month',
     day: 1,
     description: 'Rent is due on the 1st day of each month.',
+    offsetDays: 0,
+    isEditable: false,
   },
   {
     id: 'fifth-of-month',
     label: '5th of Every Month',
     day: 5,
     description: 'Rent is due on the 5th day of each month.',
+    offsetDays: 0,
+    isEditable: false,
   },
   {
     id: 'mid-month',
     label: '15th of Every Month',
     day: 15,
     description: 'Rent is due on the 15th of each month.',
+    offsetDays: 0,
+    isEditable: false,
   },
   {
     id: 'end-of-month',
     label: 'End of Month',
     day: 31,
     description: 'Rent is due on the last day of each month.',
+    offsetDays: 0,
+    isEditable: false,
   },
   {
     id: 'after-invoice-5',
     label: '5 Days After Invoice',
+    day: 0,
     offsetDays: 5,
     description: 'Rent is due 5 days after the invoice is generated.',
+    isEditable: false,
   },
   {
     id: 'after-invoice-10',
     label: '10 Days After Invoice',
     offsetDays: 10,
     description: 'Rent is due 10 days after the invoice is generated.',
+    day: 0,
+    isEditable: false,
   },
 ];
 
-export interface LatePaymentPenaltyOption {
+export interface LatePaymentPenaltyFormat {
   label: string; // Displayed label in UI
   type: 'fixed' | 'percentage' | 'per-day'; // Type of penalty calculation
   value: number; // Amount, %, or per-day fee
@@ -489,7 +553,7 @@ export interface LatePaymentPenaltyOption {
   isEditable?: boolean;
 }
 
-export const LATE_PAYMENT_PENALTY_OPTIONS: LatePaymentPenaltyOption[] = [
+export const LATE_PAYMENT_PENALTY_OPTIONS: LatePaymentPenaltyFormat[] = [
   {
     label: 'Fixed Fee - LKR 1,000',
     type: 'fixed',
@@ -534,7 +598,7 @@ export const LATE_PAYMENT_PENALTY_OPTIONS: LatePaymentPenaltyOption[] = [
   },
 ];
 
-export interface UtilityResponsibilityOption {
+export interface UtilityResponsibilityFormat {
   id: string;
   utility: string; // e.g., "Electricity", "Water"
   paidBy: 'landlord' | 'tenant' | 'shared' | 'real estate company';
@@ -542,14 +606,14 @@ export interface UtilityResponsibilityOption {
   isEditable?: boolean;
 }
 
-export interface NoticePeriodOption {
+export interface NoticePeriodFormat {
   id: string;
   label: string;
   days: number; // Number of days required to give notice
   description: string;
 }
 
-export const NOTICE_PERIOD_OPTIONS: NoticePeriodOption[] = [
+export const NOTICE_PERIOD_OPTIONS: NoticePeriodFormat[] = [
   {
     id: '7-days',
     label: '7 Days Notice',
@@ -636,59 +700,9 @@ export class TenantService {
     );
   }
 
-  public getSecurityDepositOptionsWithCurrency(
-    currencySymbol: string,
-    monthlyRent: number
-  ): { id: string; name: string; description: string; refundable: boolean }[] {
-    return BASE_SECURITY_DEPOSIT_OPTIONS.map((option) => {
-      let name = '';
-      let description = '';
 
-      switch (option.type) {
-        case 'duration':
-          name = `${option.value} Month${option.value > 1 ? 's' : ''} Rent`;
-          description = `Equivalent to ${option.value} month${
-            option.value > 1 ? 's' : ''
-          } of rent (${currencySymbol}${(monthlyRent * option.value).toFixed(
-            2
-          )}); ${option.refundable ? 'refundable' : 'non-refundable'}.`;
-          break;
 
-        case 'percentage':
-          const annualRent = monthlyRent * 12;
-          const amount = (annualRent * option.value) / 100;
-          name = `${option.value}% of Annual Rent`;
-          description = `Calculated as ${
-            option.value
-          }% of total annual rent: ${currencySymbol}${amount.toFixed(2)}; ${
-            option.refundable ? 'refundable' : 'non-refundable'
-          }.`;
-          break;
-
-        case 'fixed':
-          name =
-            option.value === 0
-              ? 'No Deposit Required'
-              : `Fixed Amount - ${currencySymbol}${option.value}`;
-          description =
-            option.value === 0
-              ? `No deposit required.`
-              : `${
-                  option.refundable ? 'Refundable' : 'Non-refundable'
-                } fixed deposit of ${currencySymbol}${option.value}.`;
-          break;
-      }
-
-      return {
-        id: option.id,
-        name,
-        description,
-        refundable: option.refundable,
-      };
-    });
-  }
-
-  public formatRentDueDateOption(option: RentDueDateOption): string {
+  public formatRentDueDateFormat(option: RentDueDateFormat): string {
     if (option.day) {
       return `Due on the ${option.day}${this.ordinalSuffix(
         option.day

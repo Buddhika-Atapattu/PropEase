@@ -37,16 +37,7 @@
     //   overflow-y: visible;
     // }
     /* Optional: Style scroll bar for elegance */
-    .user-scroll-wrapper::-webkit-scrollbar {
-      width: 6px;
-    }
-    .user-scroll-wrapper::-webkit-scrollbar-thumb {
-      background: #d0a600;
-      border-radius: 4px;
-    }
-    .user-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-      background: #9c7d00;
-    }
+
     .add-user-row {
       display: flex;
       justify-content: space-between;
@@ -98,7 +89,7 @@
       }
     }
     .search-input {
-      border: 0.25rem solid #ffb200;
+      border: 0.25rem solid $gold-color;
       width: 100%;
       padding: 1rem;
       border-radius: 2rem;
@@ -167,7 +158,7 @@
         box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
         color: #fff;
         .add-user-btn {
-          background: $dark-btn-bg-color;
+          background: $dark-btn-edit-color;
           box-shadow: $dark-btn-box-shadow;
         }
       }
@@ -197,11 +188,11 @@
       }
       .add-user-row,
       .card {
-        background-color: #ffe394;
-        box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
-        color: #000;
+        background-color: $light-primary-color;
+        box-shadow: 0rem 0rem 1rem 0rem $light-dashboard-dark-color;
+        color: $light-text-color;
         .add-user-btn {
-          background: $light-btn-bg-color;
+          background: $light-btn-edit-color;
           box-shadow: $light-btn-box-shadow;
         }
       }
@@ -223,10 +214,10 @@
       .row {
         margin: 0rem auto;
       }
-      .user-scroll-wrapper{
+      .user-scroll-wrapper {
         display: none !important;
       }
-      .col-style-view-container{
+      .col-style-view-container {
         display: flex !important;
         flex-wrap: wrap;
       }

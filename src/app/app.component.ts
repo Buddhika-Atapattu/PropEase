@@ -20,7 +20,6 @@ import {
 import { ModeChangerComponent } from './components/mode-changer/mode-changer.component';
 import { TopProgressBarComponent } from './components/top-progress-bar/top-progress-bar.component';
 import { RouterModule } from '@angular/router';
-import { UrlControllerService } from './services/userController/user-controller.service';
 import { CheckInternetStatusComponent } from './components/check-internet-status/check-internet-status.component';
 //
 @Component({
@@ -51,8 +50,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private cdRef: ChangeDetectorRef,
-    private urlController: UrlControllerService
+    private cdRef: ChangeDetectorRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {

@@ -19,7 +19,6 @@ import {
   BaseUser,
   Country,
   CountryCodes,
-  CurrencyFormat,
   MSG_DATA_TYPE,
   PermissionEntry,
   ROLE_ACCESS_MAP,
@@ -89,22 +88,21 @@ import {
   DEFAULT_COMPANY_POLICY,
   DEFAULT_RULES_AND_REGULATIONS,
   LATE_PAYMENT_PENALTY_OPTIONS,
-  LatePaymentPenaltyOption,
+  LatePaymentPenaltyFormat,
   LeaseAgreement,
   NOTICE_PERIOD_OPTIONS,
-  NoticePeriodOption,
+  NoticePeriodFormat,
   PAYMENT_FREQUENCIES,
   PAYMENT_METHODS,
-  PaymentFrequency,
-  PaymentMethod,
+  PaymentFrequencyFormat,
+  PaymentMethodFormat,
   RENT_DUE_DATE_OPTIONS,
-  RentDueDateOption,
-  SecurityDeposit,
-  SecurityDepositOption,
-  SecurityDepositReturnFormat,
+  RentDueDateFormat,
+  SecurityDepositFormat,
   Signatures,
   SystemMetadata,
   TenantService,
+  CurrencyFormat,
 } from '../../../services/tenant/tenant.service';
 import {
   AddedBy,
@@ -122,10 +120,14 @@ import {
 } from '../../../components/shared/custom-table/custom-table.component';
 import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 import {
-  UtilityResponsibilityOption,
+  UtilityResponsibilityFormat,
   RulesAndRegulations,
 } from '../../../services/tenant/tenant.service';
 import { SignSignature } from '../../../components/dialogs/sign-signature/sign-signature.component';
+import { UserControllerService } from '../../../services/userController/user-controller.service';
+import { serverRoutes } from '../../../app.routes.server';
+import { HttpErrorResponse } from '@angular/common/http';
+import { SwitchButton } from '../../../components/shared/buttons/switch-button/switch-button.component';
 
 // EditorComponent,CameraBoxComponent,
 
@@ -155,7 +157,7 @@ interface TokenViceData {
   folder: string;
 }
 
-export interface ScannedFileRecordJSON {
+interface ScannedFileRecordJSON {
   date: string; // ISO date string
   tenant: string;
   token: string;
@@ -163,7 +165,7 @@ export interface ScannedFileRecordJSON {
   folder: string;
 }
 
-export interface TenantScannedFilesDataJSON {
+interface TenantScannedFilesDataJSON {
   [tenantUsername: string]: ScannedFileRecordJSON[];
 }
 
@@ -205,6 +207,7 @@ interface PropertyCustomTableDataType {
     SafeUrlPipe,
     MatTooltipModule,
     MatExpansionModule,
+    SwitchButton
   ],
   templateUrl: './tenant-edit.component.html',
   styleUrl: './tenant-edit.component.scss',
@@ -320,6 +323,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   // 01 row
   protected tenantFullName: string = '';
   protected tenantEmail: string = '';
+  protected isTenantEmailValid: boolean = true;
 
   // 02 row
   protected tenantNationality: string = '';
@@ -359,14 +363,17 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   protected tenantStateOrProvince: string = '';
   protected tenantPostalCode: string = '';
   protected tenantCountry: string = '';
-  protected tenantCounties: Country[] = [];
-  protected filterTenantCounties!: Observable<Country[]>;
+  protected tenantCountries: Country[] = [];
+  private _tenantCountry: Country | null = null;
+  protected filterTenantCountries!: Observable<Country[]>;
   // <=============================== End Tenant Address ===============================>
 
   // <=============================== Tenant Emergengy Contact ===============================>
   // 05 row
   protected emergencyContactName: string = '';
   protected emergencyContactRelationship: string = '';
+  protected isEmergencyContactValid: boolean = true;
+  protected emergencyContactSpanMessage: string = '';
   protected emergencyContactContact: string = '';
   // <=============================== End Tenant Emergengy Contact ===============================>
 
@@ -375,6 +382,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   // <=============================== Co-Tenant Information ===============================>
   protected coTenantFullName: string = '';
   protected coTenantEmail: string = '';
+  protected isCoTenantEmailValid: boolean = true;
   protected coTenantPhoneNumber: string = '';
   protected coTenantPhoneCodeDetails: CountryCodes | null = null;
   protected coTenantPhoneCodeId: string = '';
@@ -455,69 +463,65 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   protected monthlyRent: LeaseAgreement['monthlyRent'] = 0;
 
   // currency
-  protected currencyLeaseAgreement: LeaseAgreement['currency'] = 'USD';
+  protected currencyLeaseAgreement: string = '';
   private _currency: CurrencyFormat | null = null;
   protected currencies: CurrencyFormat[] = [];
   protected filterCurrencies$!: Observable<CurrencyFormat[]>;
 
   // paymentFrequency
-  protected paymentFrequencyLeaseAgreement: LeaseAgreement['paymentFrequency'] =
-    '';
-  private _paymentFrequency: PaymentFrequency | null = null;
-  protected readonly paymentFrequencies: PaymentFrequency[] =
+  protected paymentFrequencyLeaseAgreement: string = '';
+  protected paymentFrequency: PaymentFrequencyFormat | null = null;
+  protected readonly paymentFrequencies: PaymentFrequencyFormat[] =
     PAYMENT_FREQUENCIES;
-  protected filterPaymentFrequencies$!: Observable<PaymentFrequency[]>;
+  protected filterPaymentFrequencies$!: Observable<PaymentFrequencyFormat[]>;
+
 
   // paymentMethod
-  protected paymentMethodLeaseAgreement: LeaseAgreement['paymentMethod'] = '';
-  private _paymentMethod: PaymentMethod | null = null;
-  protected readonly paymentMethods: PaymentMethod[] = PAYMENT_METHODS;
-  protected filterPaymentMethods$!: Observable<PaymentMethod[]>;
+  protected paymentMethodLeaseAgreement: string = '';
+  protected paymentMethod: PaymentMethodFormat | null = null;
+  protected readonly paymentMethods: PaymentMethodFormat[] = PAYMENT_METHODS;
+  protected filterPaymentMethods$!: Observable<PaymentMethodFormat[]>;
 
   // securityDeposit
-  protected securityDepositLeaseAgreement:
-    | LeaseAgreement['securityDeposit']
-    | null = null;
-  private _securityDeposit: SecurityDepositReturnFormat | null = null;
-  protected readonly securityDeposits: SecurityDepositOption[] =
+  protected securityDepositLeaseAgreement: string = '';
+  protected securityDeposit: SecurityDepositFormat | null = null;
+  protected readonly securityDeposits: SecurityDepositFormat[] =
     BASE_SECURITY_DEPOSIT_OPTIONS;
-  protected filterSecurityDeposits$!: Observable<SecurityDepositOption[]>;
+  protected filterSecurityDeposits$!: Observable<SecurityDepositFormat[]>;
 
   // rentDueDate
-  protected rentDueDateLeaseAgreement: LeaseAgreement['rentDueDate'] = 0;
-  private _rentDueDate: RentDueDateOption | null = null;
-  protected readonly rentDueDates: RentDueDateOption[] = RENT_DUE_DATE_OPTIONS;
-  protected filterRentDueDates$!: Observable<RentDueDateOption[]>;
+  protected rentDueDateLeaseAgreement: string = '';
+  protected rentDueDate: RentDueDateFormat | null = null;
+  protected readonly rentDueDates: RentDueDateFormat[] = RENT_DUE_DATE_OPTIONS;
+  protected filterRentDueDates$!: Observable<RentDueDateFormat[]>;
 
   // latePaymentPenalty
-  protected latePaymentPenaltyLeaseAgreement: LeaseAgreement['latePaymentPenalty'] =
-    '';
-  private _latePaymentPenalty: LatePaymentPenaltyOption | null = null;
-  protected selectedLatePaymentPenalties: LatePaymentPenaltyOption[] = [];
-  protected readonly latePaymentPenalties: LatePaymentPenaltyOption[] =
+  protected latePaymentPenaltyLeaseAgreement: string = '';
+  private _latePaymentPenalty: LatePaymentPenaltyFormat | null = null;
+  protected selectedLatePaymentPenalties: LatePaymentPenaltyFormat[] = [];
+  protected readonly latePaymentPenalties: LatePaymentPenaltyFormat[] =
     LATE_PAYMENT_PENALTY_OPTIONS;
   protected filterLatePaymentPenalties$!: Observable<
-    LatePaymentPenaltyOption[]
+    LatePaymentPenaltyFormat[]
   >;
   protected latePaymentPenaltyLabelHint: string = '';
 
   // utilityResponsibilities
-  protected utilityResponsibilitiesLeaseAgreement: LeaseAgreement['utilityResponsibilities'] =
-    '';
-  protected selectedUtilityResponsibilities: UtilityResponsibilityOption[] = [];
-  private _utilityResponsibility: UtilityResponsibilityOption | null = null;
-  protected readonly utilityResponsibilitiesOptions: UtilityResponsibilityOption[] =
+  protected utilityResponsibilitiesLeaseAgreement: string = '';
+  protected selectedUtilityResponsibilities: UtilityResponsibilityFormat[] = [];
+  private _utilityResponsibility: UtilityResponsibilityFormat | null = null;
+  protected readonly utilityResponsibilitiesOptions: UtilityResponsibilityFormat[] =
     [];
   protected filterUtilityResponsibilities$!: Observable<
-    UtilityResponsibilityOption[]
+    UtilityResponsibilityFormat[]
   >;
 
   // noticePeriodDays
-  protected noticePeriodDaysLeaseAgreement: LeaseAgreement['noticePeriodDays'] = 30;
-  protected _noticePeriodDays: NoticePeriodOption | null = null;
-  protected readonly noticePeriodOptions: NoticePeriodOption[] =
+  protected noticePeriodDaysLeaseAgreement: string = '';
+  protected _noticePeriodDays: NoticePeriodFormat | null = null;
+  protected readonly NoticePeriodFormats: NoticePeriodFormat[] =
     NOTICE_PERIOD_OPTIONS;
-  protected filterNoticePeriodOptions$!: Observable<NoticePeriodOption[]>;
+  protected filterNoticePeriodOptions$!: Observable<NoticePeriodFormat[]>;
 
   // Today
   protected today: Date = new Date();
@@ -577,7 +581,8 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     private tokenService: TokenService,
     private cdr: ChangeDetectorRef,
     private propertyService: PropertyService,
-    private tenantService: TenantService
+    private tenantService: TenantService,
+    private userControllerService: UserControllerService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.loggedUser = this.authService.getLoggedUser;
@@ -618,10 +623,17 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  async ngAfterViewInit(): Promise<void> {}
+  async ngAfterViewInit(): Promise<void> { }
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
+  }
+
+  protected onReload(): void {
+    const currentUrl = this.router.url;
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate([currentUrl]);
+    });
   }
 
   //<=========================== Check The Logged User Privileges ===========================>
@@ -769,6 +781,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
         this.tenantUsername = this.tenant.username;
         this.tenantFullName = this.tenant.name;
         this.tenantEmail = this.tenant.email;
+        this.onTenantEmailChange(this.tenantEmail);
         this.tenantDateOfBirth = this.tenant.dateOfBirth
           ? new Date(this.tenant.dateOfBirth)
           : new Date();
@@ -784,20 +797,58 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.cdr.detectChanges();
       })
-      .catch((err) => {
-        console.error(err);
+      .catch((error: HttpErrorResponse) => {
+        console.error(error);
+        this.isLoading = true;
+        if (error.status === 404) {
+          this.notification.notification(
+            error.error.status,
+            error.error.message
+          );
+        } else if (error.status === 500) {
+          this.notification.notification(
+            'error', 'Internal server error!'
+          );
+        }
+        else {
+          this.notification.notification(
+            'error',
+            'An unexpected error occurred while loading tenant data.'
+          );
+        }
+        setTimeout(() => {
+          this.router.navigate(['/dashboard/tenant/tenant-home/']);
+        }, 1000)
       });
   }
   //<=========================== End Load Initial Tenant Data ===========================>
 
   //<=========================== Is Phone Number Valid Number ===========================>
-  protected isPhoneNumberValid(phoneNumber: string): boolean {
+  protected phoneNumberValid(phoneNumber: string): boolean {
     return phoneNumber.trim().length > 0
-      ? this.authService.isPhoneNumberValid(phoneNumber)
+      ? this.userControllerService.isPhoneNumberValid(phoneNumber)
       : true;
   }
+  //<=========================== End Is Phone Number Valid Number ===========================>
 
-  //<=========================== End Load Initial Tenant Data ===========================>
+  //<=========================== Tenant Email Verification ===========================>
+  protected async onTenantEmailChange(email: string) {
+    await this.userControllerService
+      .emailValidator(email)
+      .then((res) => {
+        if (res.status === 'success') {
+          this.isTenantEmailValid = res.data.validation;
+        } else {
+          this.isTenantEmailValid = false;
+        }
+      })
+      .catch((error: HttpErrorResponse) => {
+        if (error.status === 400 || error.status === 500) {
+          this.isTenantEmailValid = false;
+        }
+      });
+  }
+  //<=========================== Tenant Email Verification ===========================>
 
   //<=========================== Auto Assigning The Phone Code If It Is Empty ===========================>
   private autoAssigningThePhoneCodeIfItIsEmpty(country: string): CountryCodes {
@@ -1094,9 +1145,9 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
             throw new Error(res.message);
           }
         })
-        .catch((error) => {
+        .catch((error: HttpErrorResponse) => {
           console.error(error);
-          throw new Error(error);
+          throw new Error(error.error.message || 'Failed to fetch uploaded files');
         });
 
       this.isLoading = false;
@@ -1152,7 +1203,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== Address Country Detection ===========================>
   private async getAllCountries() {
     await this.apiService.getCountries().then((res: Country[]) => {
-      this.tenantCounties = res;
+      this.tenantCountries = res;
     });
   }
 
@@ -1169,16 +1220,32 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (
       filterValue &&
-      this.tenantCounties &&
-      Array.isArray(this.tenantCounties)
+      this.tenantCountries &&
+      Array.isArray(this.tenantCountries)
     ) {
-      this.filterTenantCounties = of(
-        this.tenantCounties.filter((option) => {
+      this.filterTenantCountries = of(
+        this.tenantCountries.filter((option) => {
           return option.name.toLowerCase().includes(filterValue);
         })
       );
+
+      this.filterTenantCountries.subscribe((countries: Country[]) => {
+        if (countries.length === 1) {
+          const country = countries[0];
+          this.tenantCountry = country.name;
+          this._tenantCountry = country;
+        }
+      })
     }
-    return this.tenantCounties;
+    return this.tenantCountries;
+  }
+
+  protected onTenantCountrySelectionChange(
+    input: MatAutocompleteSelectedEvent
+  ) {
+    const value = input.option.value as Country;
+    this.tenantCountry = value.name;
+    this._tenantCountry = value;
   }
 
   protected displayFn(country: Country): string {
@@ -1197,8 +1264,14 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
       .then((res) => {
         this.phoneCodes = res;
       })
-      .catch((err) => {
-        console.error(err);
+      .catch((error: HttpErrorResponse) => {
+        console.error(error);
+        if (error.status === 404) {
+          this.notification.notification('error', 'Country codes not found.');
+        }
+        else {
+          this.notification.notification('error', 'Failed to load country codes.');
+        }
       });
   }
   //<=========================== End Get Country Code ===========================>
@@ -1231,6 +1304,27 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   //<=========================== End Tenant Phone Code Change ===========================>
 
+  //<=========================== Co-Tenant Email Change ===========================>
+  protected async onCoTenantEmailChange(email: string) {
+    await this.userControllerService
+      .emailValidator(email)
+      .then((res) => {
+        console.log(res);
+        if (res.status === 'success') {
+          this.isCoTenantEmailValid = res.data.validation;
+        } else {
+          this.isCoTenantEmailValid = false;
+        }
+      })
+      .catch((error: HttpErrorResponse) => {
+        if (error.status === 400 || error.status === 500) {
+          this.isCoTenantEmailValid = false;
+        }
+
+      });
+  }
+  //<=========================== End Co-Tenant Email Change ===========================>
+
   //<=========================== Co-Tenant Phone Code Change ===========================>
   protected onCoTenantPhoneCodeChange(input: any): void {
     let filterValue = '';
@@ -1248,23 +1342,57 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
         return item.code.toLowerCase().includes(filterValue.toLowerCase());
       })
     );
-
-    this.filterCoTenantPhoneCodes.subscribe((res) => {
-      if (res.length === 1) {
-        this.coTenantPhoneCodeId = res[0].code;
-        this.coTenantPhoneCodeDetails = res[0];
-      }
-    });
   }
 
   protected onCoTenantPhoneCodeSelectionChange(
     input: MatAutocompleteSelectedEvent
   ) {
     const value = input.option.value as CountryCodes;
-    this.tenantPhoneCodeId = value.code;
-    this.tenantPhoneCodeDetails = value;
+    this.coTenantPhoneCodeId = value.code;
+    this.coTenantPhoneCodeDetails = value;
   }
   //<=========================== End Co-Tenant Phone Code Change ===========================>
+
+  //<=========================== Eemergency Contact ===========================>
+  protected async emergencyContactChange(input: string) {
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isMatched = emailRegex.test(input.trim());
+    if (isMatched) {
+      await this.userControllerService.emailValidator(input.trim()).then((res) => {
+        if (res.status === 'success') {
+          this.isEmergencyContactValid = res.data.validation;
+          this.emergencyContactSpanMessage = res.data.message;
+        } else {
+          this.isEmergencyContactValid = false;
+        }
+      }).catch((error: HttpErrorResponse) => {
+        if (error.status >= 400 && error.status < 500) {
+          this.isEmergencyContactValid = false;
+          this.emergencyContactSpanMessage = error.error.message || 'Invalid email format.';
+        }
+        else if (error.status === 500) {
+          this.isEmergencyContactValid = false;
+          this.emergencyContactSpanMessage = 'Internal server error. Please try again later.';
+        } else {
+          this.isEmergencyContactValid = false;
+          this.emergencyContactSpanMessage = 'An unexpected error occurred.';
+        }
+      });
+
+    } else {
+      const isPhoneValid = await this.phoneNumberValid(input.trim());
+      if (isPhoneValid) {
+        this.isEmergencyContactValid = true;
+        this.emergencyContactSpanMessage = 'Valid phone number.';
+      } else {
+        this.isEmergencyContactValid = false;
+        this.emergencyContactSpanMessage = 'Invalid phone number.';
+      }
+    }
+    this.cdr.detectChanges();
+  }
+  //<=========================== End Eemergency Contact ===========================>
 
   //<=========================== Property Infomations ===========================>
   //<=========================== Get All Properties From API ===========================>
@@ -1275,11 +1403,19 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
       .then((res) => {
         this.properties = res.data as BackEndPropertyData[];
       })
-      .catch((err) => {
-        console.error(err);
+      .catch((error: HttpErrorResponse) => {
+        console.error(error);
+        if (error.status === 500) {
+          this.notification.notification(error.error.status, error.error.message);
+        }
+        else if (error.status === 404) {
+          this.notification.notification(error.error.status, error.error.message);
+        } else {
+          this.notification.notification('error', 'Failed to load properties.');
+        }
         this.propertyTableNotification = {
           type: 'error',
-          message: err.message || (err as string),
+          message: error.message || (error.error.message as string),
         };
       });
     this.isLoading = false;
@@ -1520,8 +1656,8 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
           address: `No.${item.address.houseNumber},<br/>
             ${item.address.street},<br/>
             ${item.address.city},<br/>
-            ${item.address.stateOrProvince},<br/> 
-            ${item.address.country},<br/> 
+            ${item.address.stateOrProvince},<br/>
+            ${item.address.country},<br/>
             ${item.address.postcode}`,
         };
         data.push(property);
@@ -1623,8 +1759,8 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
         address: `No.${item.address.houseNumber},<br/>
         ${item.address.street},<br/>
         ${item.address.city},<br/>
-        ${item.address.stateOrProvince},<br/> 
-        ${item.address.country},<br/> 
+        ${item.address.stateOrProvince},<br/>
+        ${item.address.country},<br/>
         ${item.address.postcode}`,
       };
       organizedData.push(property);
@@ -1862,6 +1998,12 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  protected onCurrencySelectionChange(input: MatAutocompleteSelectedEvent): void {
+    const value = input.option.value as CurrencyFormat;
+    this.currencyLeaseAgreement = value.currency;
+    this._currency = value;
+  }
+
   protected displayCurrency(currency: CurrencyFormat): string {
     if (!currency) return '';
     return typeof currency === 'string' ? currency : currency?.currency ?? '';
@@ -1874,13 +2016,13 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     if (typeof input === 'string') {
       filterValue = input.toLowerCase().trim();
     } else if (input && typeof input === 'object' && 'name' in input) {
-      filterValue = (input as PaymentFrequency).name.toLowerCase();
+      filterValue = (input as PaymentFrequencyFormat).name.toLowerCase();
     } else {
       filterValue = '';
     }
 
     this.filterPaymentFrequencies$ = of(this.paymentFrequencies).pipe(
-      map((items: PaymentFrequency[]) =>
+      map((items: PaymentFrequencyFormat[]) =>
         items.filter(
           (item) =>
             item.name.toLowerCase().includes(filterValue) ||
@@ -1891,13 +2033,19 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.filterPaymentFrequencies$.subscribe((paymentFrequencies) => {
       if (paymentFrequencies.length === 1)
-        this._paymentFrequency = paymentFrequencies[0];
-      else this._paymentFrequency = null;
+        this.paymentFrequency = paymentFrequencies[0];
+      else this.paymentFrequency = null;
     });
   }
 
+  protected onPaymentFrequencySelectionChange(input: MatAutocompleteSelectedEvent): void {
+    const value = input.option.value as PaymentFrequencyFormat;
+    this.paymentFrequencyLeaseAgreement = value.name;
+    this.paymentFrequency = value;
+  }
+
   protected displayPaymentFrequency(
-    paymentFrequency: PaymentFrequency
+    paymentFrequency: PaymentFrequencyFormat
   ): string {
     if (!paymentFrequency) return '';
     return typeof paymentFrequency === 'string'
@@ -1912,13 +2060,13 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     if (typeof input === 'string') {
       filterValue = input.toLowerCase().trim();
     } else if (input && typeof input === 'object' && 'name' in input) {
-      filterValue = (input as PaymentMethod).name.toLowerCase();
+      filterValue = (input as PaymentMethodFormat).name.toLowerCase();
     } else {
       filterValue = '';
     }
 
     this.filterPaymentMethods$ = of(this.paymentMethods).pipe(
-      map((items: PaymentMethod[]) =>
+      map((items: PaymentMethodFormat[]) =>
         items.filter(
           (item) =>
             item.name.toLowerCase().includes(filterValue) ||
@@ -1928,12 +2076,21 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     );
 
     this.filterPaymentMethods$.subscribe((paymentMethods) => {
-      if (paymentMethods.length === 1) this._paymentMethod = paymentMethods[0];
-      else this._paymentMethod = null;
+      if (paymentMethods.length === 1) {
+        this.paymentMethodLeaseAgreement = paymentMethods[0].name;
+        this.paymentMethod = paymentMethods[0]
+      }
+      else { this.paymentMethod = null };
     });
   }
 
-  protected displayPaymentMethod(paymentMethod: PaymentMethod): string {
+  protected onPaymentMethodSelectionChange(input: MatAutocompleteSelectedEvent): void {
+    const value = input.option.value as PaymentMethodFormat;
+    this.paymentMethodLeaseAgreement = value.name;
+    this.paymentMethod = value;
+  }
+
+  protected displayPaymentMethod(paymentMethod: PaymentMethodFormat): string {
     if (!paymentMethod) return '';
     return typeof paymentMethod === 'string'
       ? paymentMethod
@@ -1947,42 +2104,58 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     if (typeof input === 'string') {
       filterValue = input.toLowerCase().trim();
     } else if (input && typeof input === 'object' && 'type' in input) {
-      filterValue = (input as SecurityDepositOption).type.toLowerCase();
+      filterValue = (input as SecurityDepositFormat).name.toLowerCase();
     } else {
       filterValue = '';
     }
 
     this.filterSecurityDeposits$ = of(this.securityDeposits).pipe(
-      map((items: SecurityDepositOption[]) =>
-        items.filter((item) => item.type.toLowerCase().includes(filterValue))
+      map((items: SecurityDepositFormat[]) =>
+        items.filter((item) => item.name.toLowerCase().includes(filterValue))
       )
     );
 
     this.filterSecurityDeposits$.subscribe((securityDeposits) => {
       if (securityDeposits.length === 1) {
         const selected = securityDeposits[0];
-        const data: SecurityDepositReturnFormat = {
+        const data: SecurityDepositFormat = {
           id: selected.id,
-          name: selected.type,
-          description: `${selected.type} deposit (${
-            selected.refundable ? 'refundable' : 'non-refundable'
-          }).`,
+          name: selected.name,
+          description: `${selected.name} deposit (${selected.refundable ? 'refundable' : 'non-refundable'
+            }).`,
           refundable: selected.refundable,
+          isEditable: false
         };
-        this._securityDeposit = data;
+        this.securityDepositLeaseAgreement = selected.name;
+        this.securityDeposit = data;
       } else {
-        this._securityDeposit = null;
+        this.securityDeposit = null;
       }
     });
   }
 
+  protected onSecurityDepositSelectionChange(
+    input: MatAutocompleteSelectedEvent
+  ): void {
+    const value = input.option.value as SecurityDepositFormat;
+    this.securityDepositLeaseAgreement = value.name;
+    const data: SecurityDepositFormat = {
+      id: value.id,
+      name: value.name,
+      description: `${value.name} deposit (${value.refundable ? 'refundable' : 'non-refundable'
+        }).`,
+      refundable: value.refundable,
+    };
+    this.securityDeposit = data;
+  }
+
   protected displaySecurityDeposit(
-    securityDeposit: SecurityDepositOption
+    securityDeposit: SecurityDepositFormat
   ): string {
     if (!securityDeposit) return '';
     return typeof securityDeposit === 'string'
       ? securityDeposit
-      : securityDeposit.type;
+      : securityDeposit.name;
   }
 
   //<=========================== End Handle Security Deposit Change Operation ===========================>
@@ -1993,24 +2166,32 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     if (typeof input === 'string') {
       filterValue = input.toLowerCase().trim();
     } else if (input && typeof input === 'object' && 'label' in input) {
-      filterValue = (input as RentDueDateOption).label.toLowerCase();
+      filterValue = (input as RentDueDateFormat).label.toLowerCase();
     } else {
       filterValue = '';
     }
 
     this.filterRentDueDates$ = of(this.rentDueDates).pipe(
-      map((items: RentDueDateOption[]) =>
+      map((items: RentDueDateFormat[]) =>
         items.filter((item) => item.label.toLowerCase().includes(filterValue))
       )
     );
 
     this.filterRentDueDates$.subscribe((rentDueDates) => {
-      if (rentDueDates.length === 1) this._rentDueDate = rentDueDates[0];
-      else this._rentDueDate = null;
+      if (rentDueDates.length === 1) this.rentDueDate = rentDueDates[0];
+      else this.rentDueDate = null;
     });
   }
 
-  protected displayRentDueDate(rentDueDate: RentDueDateOption): string {
+  protected onRentDueDateSelectionChange(
+    input: MatAutocompleteSelectedEvent
+  ): void {
+    const value = input.option.value as RentDueDateFormat;
+    this.rentDueDateLeaseAgreement = value.label;
+    this.rentDueDate = value;
+  }
+
+  protected displayRentDueDate(rentDueDate: RentDueDateFormat): string {
     if (!rentDueDate) return '';
     return typeof rentDueDate === 'string' ? rentDueDate : rentDueDate.label;
   }
@@ -2021,17 +2202,17 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       const text = input.trim();
       if (this.isValidPenaltyFormat(text)) {
-        const label: LatePaymentPenaltyOption['label'] = text;
-        const type: LatePaymentPenaltyOption['type'] = text
+        const label: LatePaymentPenaltyFormat['label'] = text;
+        const type: LatePaymentPenaltyFormat['type'] = text
           .split('-')[0]
-          .trim() as LatePaymentPenaltyOption['type'];
+          .trim() as LatePaymentPenaltyFormat['type'];
         const afterType: string = text.split('-')[1].trim();
         if (!this.containsNumber(afterType)) {
           throw new Error('Add the number as percentage or fixed fee!');
         }
         const numbers = this.extractAllNumbers(afterType);
-        const value: LatePaymentPenaltyOption['value'] = numbers[0];
-        let description: LatePaymentPenaltyOption['description'] = ``;
+        const value: LatePaymentPenaltyFormat['value'] = numbers[0];
+        let description: LatePaymentPenaltyFormat['description'] = ``;
 
         const contrastType = type.split(' ');
 
@@ -2049,7 +2230,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
             description = 'A penalty will be applied for late payments.';
         }
 
-        const data: LatePaymentPenaltyOption = {
+        const data: LatePaymentPenaltyFormat = {
           label,
           type,
           value,
@@ -2057,6 +2238,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
           isEditable: false,
         };
 
+        this.latePaymentPenaltyLeaseAgreement = data.label
         this._latePaymentPenalty = data;
       } else {
         throw new Error('Follow the format!');
@@ -2087,7 +2269,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected removePaymentPenalty(
-    item: LatePaymentPenaltyOption,
+    item: LatePaymentPenaltyFormat,
     index: number
   ) {
     this.selectedLatePaymentPenalties.splice(index, 1);
@@ -2095,8 +2277,8 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private checkLatePaymentPenaltiesExist(
-    array: LatePaymentPenaltyOption[],
-    data: LatePaymentPenaltyOption
+    array: LatePaymentPenaltyFormat[],
+    data: LatePaymentPenaltyFormat
   ): boolean {
     return array.some((item) => {
       item.label.toLowerCase() === data.label.toLowerCase() ||
@@ -2196,9 +2378,9 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
         const paidByValue = responsibleParty
           .toLowerCase()
-          .trim() as UtilityResponsibilityOption['paidBy'];
+          .trim() as UtilityResponsibilityFormat['paidBy'];
 
-        const data: UtilityResponsibilityOption = {
+        const data: UtilityResponsibilityFormat = {
           id,
           utility: this.makeCapitalize(utility),
           paidBy: paidByValue,
@@ -2209,6 +2391,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
         if (
           !this.checkIsUtilityExist(this.selectedUtilityResponsibilities, data)
         ) {
+          this.utilityResponsibilitiesLeaseAgreement = text
           this._utilityResponsibility = data;
         }
       } else {
@@ -2232,14 +2415,14 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  protected removeUtility(item: UtilityResponsibilityOption, index: number) {
+  protected removeUtility(item: UtilityResponsibilityFormat, index: number) {
     this.selectedUtilityResponsibilities.splice(index, 1);
     this.notification.notification('info', 'Utility removed!');
   }
 
   private checkIsUtilityExist(
-    utilities: UtilityResponsibilityOption[],
-    utility: UtilityResponsibilityOption
+    utilities: UtilityResponsibilityFormat[],
+    utility: UtilityResponsibilityFormat
   ): boolean {
     return utilities.some(
       (item) =>
@@ -2265,27 +2448,40 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     if (typeof input === 'string') {
       filterValue = input.toLowerCase().trim();
     } else if (input && typeof input === 'object' && 'label' in input) {
-      filterValue = (input as NoticePeriodOption).label.toLowerCase();
+      filterValue = (input as NoticePeriodFormat).label.toLowerCase();
     } else {
       filterValue = '';
     }
 
-    this.filterNoticePeriodOptions$ = of(this.noticePeriodOptions).pipe(
-      map((noticePeriodOptions) =>
-        noticePeriodOptions.filter((option) => {
+    this.filterNoticePeriodOptions$ = of(this.NoticePeriodFormats).pipe(
+      map((NoticePeriodFormats) =>
+        NoticePeriodFormats.filter((option) => {
           return option.label.toLowerCase().includes(filterValue);
         })
       )
     );
 
     this.filterNoticePeriodOptions$.subscribe((noticePeriodOptions) => {
-      if (noticePeriodOptions.length === 1)
+      if (noticePeriodOptions.length === 1) {
         this._noticePeriodDays = noticePeriodOptions[0];
-      else this._noticePeriodDays = null;
+        this.noticePeriodDaysLeaseAgreement = noticePeriodOptions[0].label;
+      }
+      else { this._noticePeriodDays = null; }
     });
   }
 
-  protected displayNotificationPeriodDays(input: NoticePeriodOption): string {
+  protected onNotificationPeriodDaysSelectionChange(
+    input: MatAutocompleteSelectedEvent
+  ): void {
+    if (input.option.value) {
+      const data = input.option.value as NoticePeriodFormat;
+      this.noticePeriodDaysLeaseAgreement = data.label;
+      this._noticePeriodDays = data;
+    }
+  }
+
+
+  protected displayNotificationPeriodDays(input: NoticePeriodFormat): string {
     if (!input) return '';
     return typeof input === 'string' ? input : input.label;
   }
@@ -2347,7 +2543,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
         (item) =>
           this._rulesAndRegulation &&
           item.rule.toLowerCase() ===
-            this._rulesAndRegulation.rule.toLowerCase()
+          this._rulesAndRegulation.rule.toLowerCase()
       );
 
       if (!isInTheArray) {
@@ -2367,6 +2563,14 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
         error instanceof Error ? error.message : String(error)
       );
     }
+  }
+
+  protected onRulesAndRegulationsSelectionChange(
+    input: MatAutocompleteSelectedEvent
+  ): void {
+    const data = input.option.value as RulesAndRegulations;
+    this.rulesAndRegulation = data.rule;
+    this._rulesAndRegulation = data;
   }
 
   protected displayRulesAndRegulations(input: RulesAndRegulations): string {
@@ -2511,8 +2715,19 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
           this.currencies = data;
           this.sortCurrency();
         })
-        .catch((error) => {
-          if (error) throw new Error(error);
+        .catch((error: HttpErrorResponse) => {
+          if (error.status >= 400 && error.status < 500) {
+            this.notification.notification("error", "Failed to fetch currency data. Please check your network connection or try again later.");
+          }
+          else if (error.status === 404) {
+            this.notification.notification("error", "Currency data not found, please try again later.");
+          }
+          else if (error.status === 500) {
+            this.notification.notification("error", "Internal server error, please try again later.");
+          }
+          else {
+            this.notification.notification("error", "An unexpected error occurred, please try again later.");
+          }
         });
     } catch (error) {
       console.error(error);
@@ -2533,9 +2748,14 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private makeLeaseID(): string {
     const tenant = this.tenant?.username.trim() ?? '';
-    const date = new Date();
+    const now = new Date();
+    const safeDate = now
+      .toISOString()
+      .replace(/[:.]/g, '-') // Replace `:` and `.` with `-`
+      .replace('T', '_') // Optional: make it look nicer
+      .replace('Z', ''); // Remove trailing Z
     const random = Math.random().toString(36).substring(2, 8);
-    return `${tenant}-${date.toISOString()}-${random}`;
+    return `${tenant}-${safeDate}-${random}`;
   }
   //<=========================== End Utility ===========================>
 
@@ -2543,7 +2763,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== Making The Lease Agreement By Submitting ===========================>
   protected async submitLeaseAgreement(): Promise<void> {
     try {
-      console.log(this.makeLeaseID());
+      const scannedDocuments = [...this.tenantScanedDocuments, ...this.tenantUploadedScanedDocuments];
       // Is user privilege to make lease agreement
       if (!this.hasFullLeaseManagementPrivileges())
         throw new Error("You don't have full lease management privileges!");
@@ -2554,6 +2774,8 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!this.tenantFullName) throw new Error('Tenant fullname is required!');
 
       if (!this.tenantEmail) throw new Error('Tenant email is required!');
+
+      if (!this.isTenantEmailValid) throw new Error('Invalid tenant email!');
 
       if (!this.tenantPhoneCodeDetails)
         throw new Error('Tenant phone code is required!');
@@ -2569,10 +2791,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!this.tenantNationality)
         throw new Error('Tenant nationality is required!');
 
-      if (
-        this.tenantScanedDocuments.length === 0 ||
-        this.tenantUploadedScanedDocuments.length === 0
-      )
+      if (scannedDocuments.length === 0)
         throw new Error('Tenant scanned documents is required!');
 
       if (!this.tenantNicOrPassport)
@@ -2590,7 +2809,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!this.tenantStateOrProvince)
         throw new Error('Tenant address state or privince is required!');
 
-      if (!this.tenantCounties)
+      if (!this._tenantCountry)
         throw new Error('Tenant address country is required!');
 
       if (!this.tenantPostalCode)
@@ -2608,6 +2827,8 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
       if (!this.emergencyContactContact)
         throw new Error('Emergency contact is required!');
+
+      if (!this.isEmergencyContactValid) throw new Error('Provide valid contact email or phone number!');
 
       // Property information
       if (!this.selectedProperty)
@@ -2704,7 +2925,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
         street: this.tenantStreet,
         city: this.tenantCity,
         stateOrProvince: this.tenantStateOrProvince,
-        country: this.tenantCounties,
+        country: this._tenantCountry,
         postalCode: this.tenantPostalCode,
       };
 
@@ -2803,11 +3024,11 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
       formData.append('currency', JSON.stringify(this._currency));
       formData.append(
         'paymentFrequency',
-        JSON.stringify(this._paymentFrequency)
+        JSON.stringify(this.paymentFrequency)
       );
-      formData.append('paymentMethod', JSON.stringify(this._paymentMethod));
-      formData.append('securityDeposit', JSON.stringify(this._securityDeposit));
-      formData.append('rentDueDate', JSON.stringify(this._rentDueDate));
+      formData.append('paymentMethod', JSON.stringify(this.paymentMethod));
+      formData.append('securityDeposit', JSON.stringify(this.securityDeposit));
+      formData.append('rentDueDate', JSON.stringify(this.rentDueDate));
       formData.append(
         'selectedLatePaymentPenalties',
         JSON.stringify(this.selectedLatePaymentPenalties)
@@ -2846,19 +3067,42 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
       formData.append('systemMetaData', JSON.stringify(systemMetaData));
 
       // Call the api
-      const res = await this.tenantService.registerLeaseAgreement(
-        formData,
-        leaseID
-      );
-      if (res.status === 'success') {
-        this.notification.notification(res.status, res.message);
-        console.log(res);
-      } else {
-        // If the API responds with success = false
-        throw new Error(
-          res.message || 'Something went wrong during registration'
-        );
-      }
+      await this.tenantService
+        .registerLeaseAgreement(formData, leaseID)
+        .then((res) => {
+          if (res.status === 'success') {
+            this.notification.notification(
+              res.status,
+              res.message
+            );
+          } else {
+            this.notification.notification(
+              res.status,
+              res.message
+            );
+          }
+          setTimeout(() => {
+            this.goToTenants();
+          }, 1000);
+        })
+        .catch((error: HttpErrorResponse) => {
+          console.error(error);
+          if (error.status >= 400 && error.status < 500) {
+            this.notification.notification("error", "Failed to submit lease agreement. Please check your input and try again.");
+          }
+          else if (error.status === 404) {
+            this.notification.notification("error", "Lease agreement not found, please try again later.");
+          }
+          else if (error.status === 500) {
+            this.notification.notification("error", "Internal server error, please try again later.");
+          }
+          else {
+            this.notification.notification("error", "An unexpected error occurred, please try again later.");
+          }
+        })
+        .finally(() => {
+          this.progress.complete();
+        });
     } catch (error) {
       console.error(error);
       const status = 'error';

@@ -27,17 +27,6 @@
       // border-bottom: 1px solid #ddd; // optional subtle line
     }
 
-    /* Optional: Style scroll bar for elegance */
-    .user-scroll-wrapper::-webkit-scrollbar {
-      width: 6px;
-    }
-    .user-scroll-wrapper::-webkit-scrollbar-thumb {
-      background: #d0a600;
-      border-radius: 4px;
-    }
-    .user-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-      background: #9c7d00;
-    }
     .property-bar {
       display: flex;
       justify-content: space-between;
@@ -177,15 +166,6 @@
     .main-container {
       background-color: $dark-secondary-color;
       box-shadow: inset 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
-      .property-bar {
-        background-color: $dark-primary-color;
-        box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
-        .add-user-btn {
-          background: $dark-btn-bg-color;
-          box-shadow: $dark-btn-box-shadow;
-        }
-      }
-
       .column-change-icons {
         ::ng-deep mat-icon {
           ::ng-deep svg {
@@ -210,23 +190,14 @@
     .main-container {
       background-color: $light-primary-color;
       box-shadow: inset 0rem 0rem 1rem 0rem $light-dashboard-dark-color;
-      .property-bar {
-        background-color: #ffe394;
-        box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
-        .add-user-btn {
-          background: $light-btn-bg-color;
-          box-shadow: $light-btn-box-shadow;
-        }
-      }
-    }
-
-    .column-change-icons {
-      ::ng-deep mat-icon {
-        ::ng-deep svg {
-          fill: $light-text-color;
-          ::ng-deep path {
+      .column-change-icons {
+        ::ng-deep mat-icon {
+          ::ng-deep svg {
             fill: $light-text-color;
-            stroke: $light-text-color;
+            ::ng-deep path {
+              fill: $light-text-color;
+              stroke: $light-text-color;
+            }
           }
         }
       }
@@ -316,7 +287,7 @@
           background-color: $dark-primary-color;
           box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
           .add-user-btn {
-            background: $dark-btn-bg-color;
+            background: $dark-btn-edit-color;
             box-shadow: $dark-btn-box-shadow;
           }
         }
@@ -339,7 +310,7 @@
           background-color: #ffe394;
           box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
           .add-user-btn {
-            background: $light-btn-bg-color;
+            background: $light-btn-edit-color;
             box-shadow: $light-btn-box-shadow;
           }
         }

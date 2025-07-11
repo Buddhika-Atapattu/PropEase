@@ -80,16 +80,12 @@
     width: -webkit-fill-available;
   }
   &.dark {
-    background: linear-gradient(145deg, #101325, #1f1f2e);
+    background: $dark-dashboard-color;
     color: $dark-text-color;
   }
 
   &.light {
-    background: linear-gradient(
-      145deg,
-      $light-dashboard-color,
-      $light-secondary-color
-    );
+    background: $light-dashboard-color;
     color: $light-text-color;
   }
 }

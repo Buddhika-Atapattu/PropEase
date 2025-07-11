@@ -5,6 +5,49 @@
   display: none;
 }
 
+.card-body {
+  width: 100%;
+}
+
+.property-title,
+.property-location {
+  flex: 1 1 15rem; /* Grow and shrink, base 15rem */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.property-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  overflow: hidden;
+  width: 100%;
+  min-height: 25vh;
+  height: 100%;
+  max-height: 50vh;
+  .property-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 0.5rem;
+    object-fit: cover;
+    object-position: center;
+    box-shadow: 0rem 0rem 1rem 0rem rgba(0, 0, 0, 0.1);
+  }
+}
+
+.card-footer {
+  position: relative;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  .action-btn-row {
+    margin-bottom: 1rem;
+  }
+}
+
 .property-bar,
 .card {
   display: flex;
@@ -15,39 +58,6 @@
   padding: 1rem;
   height: 100%;
   position: relative;
-
-  .card-body {
-    width: 100%;
-  }
-
-  
-
-  .property-title,.property-location {
-    flex: 1 1 15rem; /* Grow and shrink, base 15rem */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .property-image-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    overflow: hidden;
-    width: 100%;
-    min-height: 25vh;
-    height: 100%;
-    max-height: 50vh;
-    .property-image {
-      width: 100%;
-      height: 100%;
-      border-radius: 0.5rem;
-      object-fit: cover;
-      object-position: center;
-      box-shadow: 0rem 0rem 1rem 0rem rgba(0, 0, 0, 0.1);
-    }
-  }
 
   mat-icon {
     ::ng-deep svg {
@@ -64,24 +74,13 @@
     margin-top: 0.3rem;
   }
 
-  .card-footer {
-    position: relative;
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-    .action-btn-row {
-      margin-bottom: 1rem;
-    }
-  }
-
   &.dark {
     background-color: $dark-primary-color;
     box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
     color: $dark-text-color;
     .add-user-btn {
-      background: $dark-btn-bg-color;
-      box-shadow: $dark-btn-box-shadow;
+      background: $dark-primary-color;
+      box-shadow: $dark-dashboard-dark-color;
     }
   }
 
@@ -90,8 +89,8 @@
     box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
     color: $light-text-color;
     .add-user-btn {
-      background: $light-btn-bg-color;
-      box-shadow: $light-btn-box-shadow;
+      background: $light-primary-color;
+      box-shadow: $light-dashboard-dark-color;
     }
   }
 }

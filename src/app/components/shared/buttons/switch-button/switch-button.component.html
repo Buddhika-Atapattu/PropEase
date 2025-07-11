@@ -1,0 +1,13 @@
+<app-notification></app-notification>
+<label class="toggle-switch">
+  <input
+    type="checkbox"
+    [checked]="checked"
+    (change)="onToggle($event)"
+    name="switch"
+  />
+  <span class="slider">
+    <span class="label-text on">{{ labelOn }}</span>
+    <span class="label-text off">{{ labelOff }}</span>
+  </span>
+</label>

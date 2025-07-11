@@ -40,18 +40,19 @@ export const MY_DATE_FORMATS: MatDateFormats = {
     monthYearA11yLabel: 'MMMM YYYY',
   },
 };
-
+// provideClientHydration(withEventReplay()),
 export const appConfig: ApplicationConfig = {
   providers: [
     provideGoogleCharts(),
-    provideClientHydration(),
     provideHttpClient(),
+    provideHttpClient(withFetch()),
     provideAnimations(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     { provide: LocationStrategy, useClass: PathLocationStrategy },
+
     provideClientHydration(withEventReplay()),
-    provideHttpClient(withFetch()),
+
     { provide: MAT_DATE_LOCALE, useValue: 'en-GB' },
     {
       provide: DateAdapter,
@@ -62,7 +63,6 @@ export const appConfig: ApplicationConfig = {
       provide: MAT_DATE_FORMATS,
       useValue: MY_DATE_FORMATS,
     },
-
     {
       provide: MAT_DIALOG_DEFAULT_OPTIONS,
       useValue: {

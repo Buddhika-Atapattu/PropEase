@@ -91,7 +91,7 @@
     background: linear-gradient(45deg, #ffbe56, #ffd258);
     mat-form-field {
       color: #fff;
-      background: $light-btn-bg-color;
+      background: $light-btn-edit-color;
       margin-bottom: 0.5rem;
       border-radius: 0.7rem;
       ::ng-deep mat-label {
@@ -115,7 +115,7 @@
         }
       }
       ::ng-deep .mat-mdc-text-field-wrapper {
-        background: $light-btn-bg-color;
+        background: $light-btn-edit-color;
         color: #fff;
       }
       ::ng-deep .mat-mdc-form-field-bottom-align {
@@ -123,7 +123,7 @@
       }
     }
     .capture-btn {
-      background: $light-btn-bg-color;
+      background: $light-btn-edit-color;
     }
   }
 }
@@ -133,7 +133,7 @@
     background: linear-gradient(45deg, #29005b, #15006c);
     mat-form-field {
       color: #fff;
-      background: $dark-btn-bg-color;
+      background: $dark-btn-edit-color;
       margin-bottom: 0.5rem;
       border-radius: 0.7rem;
       ::ng-deep mat-label {
@@ -157,7 +157,7 @@
         }
       }
       ::ng-deep .mat-mdc-text-field-wrapper {
-        background: $dark-btn-bg-color;
+        background: $dark-btn-edit-color;
         color: #fff;
       }
       ::ng-deep .mat-mdc-form-field-bottom-align {
@@ -165,14 +165,13 @@
       }
     }
     .capture-btn {
-      background: $dark-btn-bg-color;
+      background: $dark-btn-edit-color;
     }
   }
 }
 
-
-@media (max-width: 1024px){
-  .video-frame{
+@media (max-width: 1024px) {
+  .video-frame {
     width: 100% !important;
     height: 100% !important;
     min-height: 20rem !important;

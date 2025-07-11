@@ -5,7 +5,7 @@
   >
     <button
       mat-icon-button
-      [ngClass]="isExpanded() ? 'expand-btn' : 'expand-btn expand-cllapse-btn'"
+      [ngClass]="isExpanded() ? 'expand-btn' : 'expand-btn expand-collapse-btn'"
       (click)="togglePanel()"
     >
       <mat-icon>{{ isExpanded() ? "chevron_left" : "chevron_right" }}</mat-icon>
@@ -30,7 +30,7 @@
               activeParentRoute === link.url ? 'active' : '',
               isExpanded()
                 ? 'd-flex justify-content-start align-items-center '
-                : 'd-flex justify-content-center align-items-center btn-cllapse'
+                : 'd-flex justify-content-center align-items-center btn-collapse'
             ].join(' ')
           "
         >
@@ -38,7 +38,7 @@
             matTooltip="{{ isExpanded() ? '' : link.toolTip }}"
             [svgIcon]="link.mat_icon"
             [ngClass]="link.mat_icon"
-            [ngClass]="isExpanded() ? '' : 'cllapse'"
+            [ngClass]="isExpanded() ? '' : 'collapse'"
           ></mat-icon>
           <span class="delay-expand">{{ link.icon_text }}</span>
           <span class="delay-expand dropdown-icon"
@@ -58,7 +58,7 @@
               currecntURL === link.url && link.url !== '' ? 'active' : '',
               isExpanded()
                 ? 'd-flex justify-content-start align-items-center'
-                : 'd-flex justify-content-center align-items-center btn-cllapse'
+                : 'd-flex justify-content-center align-items-center btn-collapse'
             ].join(' ')
           "
         >
@@ -66,7 +66,7 @@
             matTooltip="{{ isExpanded() ? '' : link.toolTip }}"
             [svgIcon]="link.mat_icon"
             [ngClass]="link.mat_icon"
-            [ngClass]="isExpanded() ? '' : 'cllapse'"
+            [ngClass]="isExpanded() ? '' : 'collapse'"
           ></mat-icon>
           <span class="delay-expand">{{ link.icon_text }}</span>
         </button>
@@ -96,14 +96,14 @@
                       : '',
                     isExpanded()
                       ? 'd-flex justify-content-start align-items-center'
-                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                      : 'd-flex justify-content-center align-items-center btn-collapse'
                   ].join(' ')
                 "
               >
                 <mat-icon
                   matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
                   [svgIcon]="subLink.mat_icon"
-                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                  [ngClass]="isExpanded() ? '' : 'collapse'"
                 ></mat-icon>
                 <span class="delay-expand">{{ subLink.icon_text }}</span>
                 <span class="delay-expand dropdown-icon"
@@ -132,14 +132,14 @@
                       : '',
                     isExpanded()
                       ? 'd-flex justify-content-start align-items-center'
-                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                      : 'd-flex justify-content-center align-items-center btn-collapse'
                   ].join(' ')
                 "
               >
                 <mat-icon
                   matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
                   [svgIcon]="subLink.mat_icon"
-                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                  [ngClass]="isExpanded() ? '' : 'collapse'"
                 ></mat-icon>
                 <span class="delay-expand">{{ subLink.icon_text }}</span>
               </button>
@@ -163,14 +163,14 @@
                       : '',
                     isExpanded()
                       ? 'd-flex justify-content-start align-items-center'
-                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                      : 'd-flex justify-content-center align-items-center btn-collapse'
                   ].join(' ')
                 "
               >
                 <mat-icon
                   matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
                   [svgIcon]="subLink.mat_icon"
-                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                  [ngClass]="isExpanded() ? '' : 'collapse'"
                 ></mat-icon>
                 <span class="delay-expand">{{ subLink.icon_text }}</span>
               </button>
@@ -199,14 +199,14 @@
                             : '',
                           isExpanded()
                             ? 'd-flex justify-content-start align-items-center'
-                            : 'd-flex justify-content-center align-items-center btn-cllapse'
+                            : 'd-flex justify-content-center align-items-center btn-collapse'
                         ].join(' ')
                       "
                     >
                       <mat-icon
                         matTooltip="{{ isExpanded() ? '' : childLink.toolTip }}"
                         [svgIcon]="childLink.mat_icon"
-                        [ngClass]="isExpanded() ? '' : 'cllapse'"
+                        [ngClass]="isExpanded() ? '' : 'collapse'"
                       ></mat-icon>
                       <span class="delay-expand">{{
                         childLink.icon_text
@@ -231,7 +231,7 @@
   >
     <button
       mat-icon-button
-      [ngClass]="isExpanded() ? 'expand-btn' : 'expand-btn expand-cllapse-btn'"
+      [ngClass]="isExpanded() ? 'expand-btn' : 'expand-btn expand-collapse-btn'"
       (click)="togglePanel()"
     >
       <mat-icon>{{ isExpanded() ? "chevron_left" : "chevron_right" }}</mat-icon>
@@ -256,7 +256,7 @@
               activeParentRoute === link.url ? 'active' : '',
               isExpanded()
                 ? 'd-flex justify-content-start align-items-center '
-                : 'd-flex justify-content-center align-items-center btn-cllapse'
+                : 'd-flex justify-content-center align-items-center btn-collapse'
             ].join(' ')
           "
         >
@@ -264,7 +264,7 @@
             matTooltip="{{ isExpanded() ? '' : link.toolTip }}"
             [svgIcon]="link.mat_icon"
             [class]="link.mat_icon"
-            [ngClass]="isExpanded() ? '' : 'cllapse'"
+            [ngClass]="isExpanded() ? '' : 'collapse'"
           ></mat-icon>
           <span class="delay-expand">{{ link.icon_text }}</span>
           <span class="delay-expand dropdown-icon"
@@ -284,14 +284,15 @@
               currecntURL === link.url && link.url !== '' ? 'active' : '',
               isExpanded()
                 ? 'd-flex justify-content-start align-items-center'
-                : 'd-flex justify-content-center align-items-center btn-cllapse'
+                : 'd-flex justify-content-center align-items-center btn-collapse'
             ].join(' ')
           "
         >
           <mat-icon
             matTooltip="{{ isExpanded() ? '' : link.toolTip }}"
             [svgIcon]="link.mat_icon"
-            [ngClass]="isExpanded() ? '' : 'cllapse'"
+            [class]="link.mat_icon"
+            [ngClass]="isExpanded() ? '' : 'collapse'"
           ></mat-icon>
           <span class="delay-expand">{{ link.icon_text }}</span>
         </button>
@@ -321,14 +322,15 @@
                       : '',
                     isExpanded()
                       ? 'd-flex justify-content-start align-items-center'
-                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                      : 'd-flex justify-content-center align-items-center btn-collapse'
                   ].join(' ')
                 "
               >
                 <mat-icon
                   matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
                   [svgIcon]="subLink.mat_icon"
-                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                  [class]="subLink.mat_icon"
+                  [ngClass]="isExpanded() ? '' : 'collapse'"
                 ></mat-icon>
                 <span class="delay-expand">{{ subLink.icon_text }}</span>
                 <span class="delay-expand dropdown-icon"
@@ -357,14 +359,15 @@
                       : '',
                     isExpanded()
                       ? 'd-flex justify-content-start align-items-center'
-                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                      : 'd-flex justify-content-center align-items-center btn-collapse'
                   ].join(' ')
                 "
               >
                 <mat-icon
                   matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
                   [svgIcon]="subLink.mat_icon"
-                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                  [class]="subLink.mat_icon"
+                  [ngClass]="isExpanded() ? '' : 'collapse'"
                 ></mat-icon>
                 <span class="delay-expand">{{ subLink.icon_text }}</span>
               </button>
@@ -388,14 +391,15 @@
                       : '',
                     isExpanded()
                       ? 'd-flex justify-content-start align-items-center'
-                      : 'd-flex justify-content-center align-items-center btn-cllapse'
+                      : 'd-flex justify-content-center align-items-center btn-collapse'
                   ].join(' ')
                 "
               >
                 <mat-icon
                   matTooltip="{{ isExpanded() ? '' : subLink.toolTip }}"
                   [svgIcon]="subLink.mat_icon"
-                  [ngClass]="isExpanded() ? '' : 'cllapse'"
+                  [class]="subLink.mat_icon"
+                  [ngClass]="isExpanded() ? '' : 'collapse'"
                 ></mat-icon>
                 <span class="delay-expand">{{ subLink.icon_text }}</span>
               </button>
@@ -424,14 +428,15 @@
                             : '',
                           isExpanded()
                             ? 'd-flex justify-content-start align-items-center'
-                            : 'd-flex justify-content-center align-items-center btn-cllapse'
+                            : 'd-flex justify-content-center align-items-center btn-collapse'
                         ].join(' ')
                       "
                     >
                       <mat-icon
                         matTooltip="{{ isExpanded() ? '' : childLink.toolTip }}"
                         [svgIcon]="childLink.mat_icon"
-                        [ngClass]="isExpanded() ? '' : 'cllapse'"
+                        [class]="childLink.mat_icon"
+                        [ngClass]="isExpanded() ? '' : 'collapse'"
                       ></mat-icon>
                       <span class="delay-expand">{{
                         childLink.icon_text
