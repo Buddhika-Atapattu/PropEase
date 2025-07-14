@@ -131,7 +131,7 @@
             <div class="col-6 d-flex justify-content-start align-item-center">
               <button
                 type="button"
-                class="btn btn-delete text-default"
+                class="btn btn-danger text-default"
                 (click)="cancelCrop()"
               >
                 Cancel
@@ -290,20 +290,15 @@
             <!-- Email -->
             <div class="col-xl-6">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
-                <mat-label
-                  [ngClass]="isEmailExist ? 'text-danger' : ''"
-                  [ngClass]="emailMatchPattern ? '' : 'text-danger'"
-                  >Email {{ isEmailExist ? "already exist" : "" }}
-                  {{
-                    emailMatchPattern ? "" : "does not match pattern"
-                  }}</mat-label
-                >
+                <mat-label [ngClass]="isEmailError ? 'text-danger' : ''">{{
+                  isEmailError ? emailErrorMessage : "Email"
+                }}</mat-label>
                 <input
                   matInput
                   type="text"
                   [(ngModel)]="email"
                   name="email"
-                  (input)="checkEmail($event)"
+                  (ngModelChange)="checkEmail($event)"
                   required
                   placeholder="Email"
                 />
@@ -312,22 +307,15 @@
             <!-- Contact Number -->
             <div class="col-xl-6">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
-                <mat-label
-                  [ngClass]="
-                    isPhoneExist || phoneMatchPattern ? 'text-danger' : ''
-                  "
-                  [ngClass]="phoneMatchPattern ? '' : 'text-danger'"
-                  >Contact Number {{ isPhoneExist ? "already exist" : "" }}
-                  {{
-                    phoneMatchPattern ? "" : "does not match pattern"
-                  }}</mat-label
-                >
+                <mat-label [ngClass]="isPhoneError ? 'text-danger' : ''">{{
+                  isPhoneError ? phoneErrorMessage : "Contact Number"
+                }}</mat-label>
                 <input
                   matInput
                   type="text"
                   [(ngModel)]="phone"
                   name="phone"
-                  (input)="checkPhone($event)"
+                  (ngModelChange)="checkPhone($event)"
                   required
                   placeholder="Contact Number"
                 />
@@ -595,7 +583,7 @@
       <!-- submit button -->
       <div class="row d-flex justify-content-center align-item-center mt-2">
         <div class="col-xl-12 d-flex justify-content-end align-item-center">
-          <button type="submit" class="submit-btn btn-custom">
+          <button type="submit" class="btn-custom text-uppercase fw-bold">
             <mat-icon
               aria-hidden="false"
               aria-label="Example home icon"

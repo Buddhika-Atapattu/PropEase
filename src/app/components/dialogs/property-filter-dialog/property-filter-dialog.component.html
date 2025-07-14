@@ -116,8 +116,8 @@
         <app-custom-range-slider
           [(value)]="minPriceInput"
           [(highValue)]="maxPriceInput"
-          [min]="0"
-          [max]="100000000"
+          [min]="defaultMin"
+          [max]="defaultMax"
           [step]="10000"
         ></app-custom-range-slider>
       </div>
@@ -247,7 +247,7 @@
         <div class="col-xs-6">
           <button
             type="button"
-            class="btn-delete w-100"
+            class="btn-danger w-100"
             (click)="closeFilter()"
           >
             Cancel

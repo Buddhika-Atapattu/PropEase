@@ -14,6 +14,12 @@
   color: $light-text-color;
 }
 
+.main-panel {
+  border: none;
+  background: none;
+  box-shadow: 0 0 0 0 #0000;
+}
+
 .pannel-close-btn {
   position: absolute;
   top: -3rem;
@@ -34,7 +40,7 @@
   min-height: 50vh;
 
   .tab-indicator-row {
-    .mobile-menu-open-btn{
+    .mobile-menu-open-btn {
       display: none;
     }
     div {
@@ -109,21 +115,6 @@
     margin-right: 0.5rem;
     text-transform: capitalize;
     font-size: 16pt;
-  }
-}
-
-.list-container {
-  border: 2px solid #ae8300;
-  border-radius: 2rem;
-  padding: 2rem;
-  ul {
-    list-style: none;
-    padding-left: 0;
-    margin: 0;
-    li {
-      font-size: 16pt;
-      margin-bottom: 0.5rem;
-    }
   }
 }
 
@@ -285,6 +276,55 @@
           }
         }
       }
+    }
+  }
+}
+
+::ng-deep .internal-use {
+  p:first-child::first-letter,
+  h1:first-child::first-letter,
+  h2:first-child::first-letter,
+  h3:first-child::first-letter,
+  h4:first-child::first-letter,
+  h5:first-child::first-letter,
+  h6:first-child::first-letter,
+  span:first-child::first-letter {
+    text-transform: uppercase;
+  }
+
+  table {
+    width: 100%;
+    background-color: #fff;
+    color: #000;
+    border-collapse: collapse;
+    border: 1px solid #ced1d3;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    overflow: hidden;
+    font-size: 0.9rem;
+    text-transform: capitalize;
+    box-shadow: 0 0 0.125rem rgba(0, 0, 0, 0.075);
+
+    thead {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+
+    th,
+    td {
+      padding: 0.75rem;
+      border: 1px solid #dee2e6;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    tbody tr:nth-child(odd) {
+      background-color: #f2f2f2;
+    }
+
+    tbody tr:hover {
+      background-color: #e9ecef;
+      cursor: pointer;
     }
   }
 }

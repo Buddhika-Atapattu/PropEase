@@ -1,0 +1,68 @@
+@use "../../../styles/global.scss" as *;
+@use "sass:color";
+
+.user-image-row {
+  position: relative;
+  border-radius: 1rem;
+  height: 10rem;
+  margin-top: 2rem;
+  margin-bottom: 10rem;
+  .btn-warning {
+    position: absolute;
+    width: 2rem;
+    height: 2rem;
+    top: 0;
+    right: 0px;
+    box-shadow: none;
+    background: none;
+    z-index: 10;
+  }
+  .image-container {
+    position: absolute;
+    bottom: -50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .user-image {
+      width: 10rem;
+      height: 10rem;
+      border-radius: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+  }
+}
+
+// Dark style
+:host-context(html.dark) {
+  .user-image-row {
+    background: linear-gradient(
+      45deg,
+      color.adjust($dark-third-color, $lightness: -20%),
+      $dark-third-color,
+      color.adjust($dark-third-color, $lightness: -20%)
+    );
+    .image-container {
+      .user-image {
+        box-shadow: 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
+      }
+    }
+  }
+}
+
+// Light style
+:host-context(html.light) {
+  .user-image-row {
+    background: linear-gradient(
+      45deg,
+      color.adjust($dark-primary-color, $lightness: 15%),
+      color.adjust($dark-primary-color, $lightness: 10%),
+      color.adjust($dark-primary-color, $lightness: 15%)
+    );
+    .image-container {
+      .user-image {
+        box-shadow: 0rem 0rem 1rem 0rem #100a2b;
+      }
+    }
+  }
+}

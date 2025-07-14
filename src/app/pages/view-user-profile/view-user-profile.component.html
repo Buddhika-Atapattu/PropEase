@@ -2,7 +2,7 @@
   *ngIf="mode !== null && user !== null && LOGGED_USER !== null"
   class="main-panel"
   [ngClass]="mode ? 'dark' : 'light'"
-> 
+>
   <div class="container-fluid">
     <!-- page indicator -->
     <div class="row page-indecator">
@@ -19,7 +19,12 @@
     <!-- end page indicator -->
     <!-- user-image row -->
     <div class="row user-image-row">
-      <button type="button" class="btn-edit" *ngIf="isUserCanEdit" (click)="editUser()">
+      <button
+        type="button"
+        class="btn-warning"
+        *ngIf="isUserCanEdit"
+        (click)="editUser()"
+      >
         <i class="fa-solid fa-pen-to-square"></i>
       </button>
       <div
@@ -44,14 +49,21 @@
     </div>
     <!-- end user-image row -->
     <!-- tabs -->
-    <div class="row mt-4 tab-row" [ngClass]="isListPanelOpen ? 'tab-row-active' : ''">
+    <div
+      class="row mt-4 tab-row"
+      [ngClass]="isListPanelOpen ? 'tab-row-active' : ''"
+    >
       <div
         class="col-xl-12 overflow-hidden d-flex flex-wrap justify-content-start align-items-center p-0"
       >
-      <button type="button" class="list-btn" (click)="toggleListPanel()">
-        <i [ngClass]="isListPanelOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars'"></i>
-      </button>
-        <ul  class="tab-list" [ngClass]="isListPanelOpen ? 'active' : ''">
+        <button type="button" class="list-btn" (click)="toggleListPanel()">
+          <i
+            [ngClass]="
+              isListPanelOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars'
+            "
+          ></i>
+        </button>
+        <ul class="tab-list" [ngClass]="isListPanelOpen ? 'active' : ''">
           <li class="tab-list-item" [class.active]="isInfoPanelOpen">
             <button
               class="tab-list-item-btn"

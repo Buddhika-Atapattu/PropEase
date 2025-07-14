@@ -23,7 +23,8 @@
             type="text"
             placeholder="Search user by name, email, or username"
             class="search-input"
-            (input)="searchUsers($event)"
+            [(ngModel)]="search"
+            (ngModelChange)="searchUsers($event)"
           />
           <mat-icon
             class="mat-icon-rtl-mirror search-icon"
@@ -38,13 +39,10 @@
               : 'd-none'
           "
         >
-          <button
-            class="btn-edit icon-rect-none"
-            type="button"
-            (click)="addUser()"
-          >
-            <mat-icon svgIcon="add-new-user"></mat-icon>
-            <h6 class="mb-0 p-0">Add user</h6>
+          <button class="btn-warning" type="button" (click)="addUser()">
+            <!-- <mat-icon svgIcon="add-new-user"></mat-icon> -->
+            <i class="fa-solid fa-user-plus"></i>
+            <h6 class="mb-0 p-0 ms-1">Add user</h6>
           </button>
         </div>
       </div>
@@ -76,231 +74,88 @@
         </div>
       </div>
       <!-- End View Style -->
-
-      <!-- This user container should scrollable -->
-      <div *ngIf="isListView">
-        <div
-          class="row add-user-row panel-card"
-          *ngFor="let user of users; let i = index"
-        >
-          <div class="col-12 col-xl-3 user-image-container">
-            <app-skeleton-loader
-              *ngIf="loading"
-              [width]="'100px'"
-              [height]="'100px'"
-              borderRadius="100px"
-              [Mode]="mode"
-            />
-            <img
-              *ngIf="!loading"
-              class="user-image-main"
-              [src]="detectUserImage((typeof user.image === 'string' ? user.image : ''), user.gender)"
-              alt="user image"
-            />
-          </div>
+      <div *ngIf="!isNoData">
+        <div *ngIf="isListView">
           <div
-            class="col-12 col-xl-6 d-flex flex-column justify-content-center overflow-hidden user-details-container"
+            class="row add-user-row panel-card"
+            *ngFor="let user of dispalyingUsers; let i = index"
           >
-            <app-skeleton-loader
-              *ngIf="loading"
-              [width]="'25rem'"
-              [height]="'1.5rem'"
-              borderRadius="0.357rem"
-              [Mode]="mode"
-            />
-            <h5 *ngIf="!loading">
-              {{ user.name }}
-            </h5>
-            <app-skeleton-loader
-              *ngIf="loading"
-              [width]="'25rem'"
-              [height]="'0.75rem'"
-              borderRadius="0.357rem"
-              [Mode]="mode"
-            />
-            <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
-              {{ user.email }}
-            </p>
-            <app-skeleton-loader
-              *ngIf="loading"
-              [width]="'25rem'"
-              [height]="'0.75rem'"
-              borderRadius="0.357rem"
-              [Mode]="mode"
-            />
-            <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
-              {{ user.phoneNumber }}
-            </p>
-            <app-skeleton-loader
-              *ngIf="loading"
-              [width]="'25rem'"
-              [height]="'0.75rem'"
-              borderRadius="0.357rem"
-              [Mode]="mode"
-            />
-            <p
-              *ngIf="!loading"
-              class="text-muted-custom pb-1 mb-1 text-capitalize"
-            >
-              {{ user.role }}
-              <i
-                [ngClass]="user.isActive ? 'text-success' : 'text-danger'"
-                class="fa-solid fa-circle"
-              ></i>
-            </p>
-          </div>
-          <div
-            class="col-xl-3 col-12 d-flex justify-content-center align-items-center"
-          >
-            <div class="row action-btn-container">
-              <div
-                class="col-4 d-flex justify-content-center align-items-center"
-              >
-                <button
-                  *ngIf="viewUserAvailable()"
-                  class="btn-view"
-                  type="button"
-                  (click)="viewUser(user.username)"
-                >
-                  <!-- <mat-icon
-                      class="mat-icon-rtl-mirror"
-                      svgIcon="view"
-                    ></mat-icon> -->
-                  <i class="fa-solid fa-eye"></i>
-                </button>
-              </div>
-              <div
-                class="col-4 d-flex justify-content-center align-items-center"
-              >
-                <button
-                  *ngIf="updateUserAvailable()"
-                  class="btn-edit"
-                  type="button"
-                  (click)="editUser(user.username)"
-                >
-                  <!-- <mat-icon
-                      class="mat-icon-rtl-mirror"
-                      svgIcon="edit"
-                    ></mat-icon> -->
-                  <i class="fa-solid fa-user-pen"></i>
-                </button>
-              </div>
-              <div
-                class="col-4 d-flex justify-content-center align-items-center"
-              >
-                <button
-                  *ngIf="deleteUserAvailable()"
-                  class="btn-delete"
-                  type="button"
-                  [disabled]="isThisLoggedUserProfile(user.username)"
-                  (click)="deleteUser(user.username, user.name)"
-                >
-                  <!-- <mat-icon
-                      class="mat-icon-rtl-mirror"
-                      svgIcon="delete"
-                    ></mat-icon> -->
-                  <i class="fa-solid fa-user-minus"></i>
-                </button>
-              </div>
+            <div class="col-12 col-xl-3 user-image-container">
+              <app-skeleton-loader
+                *ngIf="loading"
+                [width]="'100px'"
+                [height]="'100px'"
+                borderRadius="100px"
+                [Mode]="mode"
+              />
+              <img
+                *ngIf="!loading"
+                class="user-image-main"
+                [src]="detectUserImage((typeof user.image === 'string' ? user.image : ''), user.gender)"
+                alt="user image"
+              />
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Grid view -->
-      <div
-        class="row col-style-view-container"
-        [ngClass]="isColView ? 'd-flex' : 'd-none'"
-      >
-        <div
-          class="col-xl-4 my-2 col-md-6 col-sm-12 col-12"
-          *ngFor="let user of users; let i = index"
-        >
-          <div class="card panel-card">
-            <div class="card-body">
-              <div
-                class="row my-3 d-flex justify-content-center align-items-center"
+            <div
+              class="col-12 col-xl-6 d-flex flex-column justify-content-center overflow-hidden user-details-container"
+            >
+              <app-skeleton-loader
+                *ngIf="loading"
+                [width]="'25rem'"
+                [height]="'1.5rem'"
+                borderRadius="0.125rem"
+                [Mode]="mode"
+              />
+              <h5 *ngIf="!loading">
+                {{ user.name }}
+              </h5>
+              <app-skeleton-loader
+                *ngIf="loading"
+                [width]="'25rem'"
+                [height]="'0.75rem'"
+                borderRadius="0.125rem"
+                [Mode]="mode"
+              />
+              <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+                {{ user.email }}
+              </p>
+              <app-skeleton-loader
+                *ngIf="loading"
+                [width]="'25rem'"
+                [height]="'0.75rem'"
+                borderRadius="0.125rem"
+                [Mode]="mode"
+              />
+              <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+                {{ user.phoneNumber }}
+              </p>
+              <app-skeleton-loader
+                *ngIf="loading"
+                [width]="'25rem'"
+                [height]="'0.75rem'"
+                borderRadius="0.125rem"
+                [Mode]="mode"
+              />
+              <p
+                *ngIf="!loading"
+                class="text-muted-custom pb-1 mb-1 text-capitalize"
               >
-                <div
-                  class="col-4 d-flex justify-content-center align-items-center user-image-container"
-                >
-                  <app-skeleton-loader
-                    *ngIf="loading"
-                    [width]="'100px'"
-                    [height]="'100px'"
-                    borderRadius="100px"
-                    [Mode]="mode"
-                  />
-                  <img
-                    *ngIf="!loading"
-                    class="user-image-main"
-                    [src]="detectUserImage((typeof user.image === 'string' ? user.image : ''), user.gender)"
-                    alt="user image"
-                  />
-                </div>
-              </div>
-              <div
-                class="row d-flex flex-column justify-content-center overflow-hidden user-details-container"
-              >
-                <div class="col-12 text-center">
-                  <app-skeleton-loader
-                    *ngIf="loading"
-                    [width]="'25rem'"
-                    [height]="'1.5rem'"
-                    borderRadius="0.357rem"
-                    [Mode]="mode"
-                  />
-                  <h5 *ngIf="!loading">
-                    {{ user.name }}
-                  </h5>
-                  <app-skeleton-loader
-                    *ngIf="loading"
-                    [width]="'25rem'"
-                    [height]="'0.75rem'"
-                    borderRadius="0.357rem"
-                    [Mode]="mode"
-                  />
-                  <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
-                    {{ user.email }}
-                  </p>
-                  <app-skeleton-loader
-                    *ngIf="loading"
-                    [width]="'25rem'"
-                    [height]="'0.75rem'"
-                    borderRadius="0.357rem"
-                    [Mode]="mode"
-                  />
-                  <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
-                    {{ user.phoneNumber }}
-                  </p>
-                  <app-skeleton-loader
-                    *ngIf="loading"
-                    [width]="'25rem'"
-                    [height]="'0.75rem'"
-                    borderRadius="0.357rem"
-                    [Mode]="mode"
-                  />
-                  <p
-                    *ngIf="!loading"
-                    class="text-muted-custom pb-1 mb-1 text-capitalize"
-                  >
-                    {{ user.role }}
-                    <i
-                      [ngClass]="user.isActive ? 'text-success' : 'text-danger'"
-                      class="fa-solid fa-circle"
-                    ></i>
-                  </p>
-                </div>
-              </div>
-              <div
-                class="row mt-5 mb-2 d-flex justify-content-center align-items-center"
-              >
+                {{ user.role }}
+                <i
+                  [ngClass]="user.isActive ? 'text-success' : 'text-danger'"
+                  class="fa-solid fa-circle"
+                ></i>
+              </p>
+            </div>
+            <div
+              class="col-xl-3 col-12 d-flex justify-content-center align-items-center"
+            >
+              <div class="row action-btn-container">
                 <div
                   class="col-4 d-flex justify-content-center align-items-center"
                 >
                   <button
                     *ngIf="viewUserAvailable()"
-                    class="me-2 btn-view"
+                    class="btn-view"
                     type="button"
                     (click)="viewUser(user.username)"
                   >
@@ -316,7 +171,7 @@
                 >
                   <button
                     *ngIf="updateUserAvailable()"
-                    class="mx-2 btn-edit"
+                    class="btn-warning"
                     type="button"
                     (click)="editUser(user.username)"
                   >
@@ -332,7 +187,7 @@
                 >
                   <button
                     *ngIf="deleteUserAvailable()"
-                    class="ms-2 btn-delete"
+                    class="btn-danger"
                     type="button"
                     [disabled]="isThisLoggedUserProfile(user.username)"
                     (click)="deleteUser(user.username, user.name)"
@@ -348,50 +203,231 @@
             </div>
           </div>
         </div>
-      </div>
-      <!-- End grid view -->
 
-      <!-- user container ended -->
-
-      <div class="row d-flex justify-content-center align-items-center mt-4">
-        <div class="col-xl-6 d-flex justify-content-center align-items-center">
-          <ul
-            class="pagination-list-group"
-            *ngIf="pageCount !== null && users.length > 10"
+        <!-- Grid view -->
+        <div
+          class="row col-style-view-container"
+          [ngClass]="isColView ? 'd-flex' : 'd-none'"
+        >
+          <div
+            class="col-xl-4 my-2 col-md-6 col-sm-12 col-12"
+            *ngFor="let user of dispalyingUsers; let i = index"
           >
-            <li class="pagination-list-group-item">
-              <button
-                class="pagination-btn btn-custom"
-                type="button"
-                (click)="previousPage()"
+            <div class="card panel-card">
+              <div class="card-body">
+                <div
+                  class="row my-3 d-flex justify-content-center align-items-center"
+                >
+                  <div
+                    class="col-4 d-flex justify-content-center align-items-center user-image-container"
+                  >
+                    <app-skeleton-loader
+                      *ngIf="loading"
+                      [width]="'100px'"
+                      [height]="'100px'"
+                      borderRadius="100px"
+                      [Mode]="mode"
+                    />
+                    <img
+                      *ngIf="!loading"
+                      class="user-image-main"
+                      [src]="detectUserImage((typeof user.image === 'string' ? user.image : ''), user.gender)"
+                      alt="user image"
+                    />
+                  </div>
+                </div>
+                <div
+                  class="row d-flex flex-column justify-content-center overflow-hidden user-details-container"
+                >
+                  <div class="col-12 text-center">
+                    <app-skeleton-loader
+                      *ngIf="loading"
+                      [width]="'10rem'"
+                      [height]="'1.5rem'"
+                      borderRadius="0.125rem"
+                      [Mode]="mode"
+                    />
+                    <h5 *ngIf="!loading">
+                      {{ user.name }}
+                    </h5>
+                  </div>
+                </div>
+                <div
+                  class="row d-flex flex-column justify-content-center overflow-hidden user-details-container"
+                >
+                  <div class="col-12 text-center">
+                    <app-skeleton-loader
+                      *ngIf="loading"
+                      [width]="'10rem'"
+                      [height]="'0.75rem'"
+                      borderRadius="0.125rem"
+                      [Mode]="mode"
+                    />
+                    <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+                      {{ user.email }}
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="row d-flex flex-column justify-content-center overflow-hidden user-details-container"
+                >
+                  <div class="col-12 text-center">
+                    <app-skeleton-loader
+                      *ngIf="loading"
+                      [width]="'10rem'"
+                      [height]="'0.75rem'"
+                      borderRadius="0.125rem"
+                      [Mode]="mode"
+                    />
+                    <p *ngIf="!loading" class="text-muted-custom pb-1 mb-1">
+                      {{ user.phoneNumber }}
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="row d-flex flex-column justify-content-center overflow-hidden user-details-container"
+                >
+                  <div class="col-12 text-center">
+                    <app-skeleton-loader
+                      *ngIf="loading"
+                      [width]="'10rem'"
+                      [height]="'0.75rem'"
+                      borderRadius="0.125rem"
+                      [Mode]="mode"
+                    />
+                    <p
+                      *ngIf="!loading"
+                      class="text-muted-custom pb-1 mb-1 text-capitalize"
+                    >
+                      {{ user.role }}
+                      <i
+                        [ngClass]="
+                          user.isActive ? 'text-success' : 'text-danger'
+                        "
+                        class="fa-solid fa-circle"
+                      ></i>
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="row mt-5 mb-2 d-flex justify-content-center align-items-center"
+                >
+                  <div
+                    class="col-4 d-flex justify-content-center align-items-center"
+                  >
+                    <button
+                      *ngIf="viewUserAvailable()"
+                      class="me-2 btn-view"
+                      type="button"
+                      (click)="viewUser(user.username)"
+                    >
+                      <!-- <mat-icon
+                      class="mat-icon-rtl-mirror"
+                      svgIcon="view"
+                    ></mat-icon> -->
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  </div>
+                  <div
+                    class="col-4 d-flex justify-content-center align-items-center"
+                  >
+                    <button
+                      *ngIf="updateUserAvailable()"
+                      class="mx-2 btn-warning"
+                      type="button"
+                      (click)="editUser(user.username)"
+                    >
+                      <!-- <mat-icon
+                      class="mat-icon-rtl-mirror"
+                      svgIcon="edit"
+                    ></mat-icon> -->
+                      <i class="fa-solid fa-user-pen"></i>
+                    </button>
+                  </div>
+                  <div
+                    class="col-4 d-flex justify-content-center align-items-center"
+                  >
+                    <button
+                      *ngIf="deleteUserAvailable()"
+                      class="ms-2 btn-danger"
+                      type="button"
+                      [disabled]="isThisLoggedUserProfile(user.username)"
+                      (click)="deleteUser(user.username, user.name)"
+                    >
+                      <!-- <mat-icon
+                      class="mat-icon-rtl-mirror"
+                      svgIcon="delete"
+                    ></mat-icon> -->
+                      <i class="fa-solid fa-user-minus"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- End grid view -->
+
+        <div
+          *ngIf="displayPaginationNumberArray.length > 0"
+          class="row d-flex justify-content-center align-items-center mt-4"
+        >
+          <div
+            class="col-xl-6 d-flex justify-content-center align-items-center"
+          >
+            <ul class="pagination-list-group">
+              <li class="pagination-list-group-item">
+                <button
+                  class="btn-custom"
+                  type="button"
+                  (click)="previousPage()"
+                >
+                  &laquo;
+                </button>
+              </li>
+
+              <li
+                *ngFor="let i of displayPaginationNumberArray"
+                class="pagination-list-group-item"
               >
-                &laquo;
-              </button>
-            </li>
-            <li
-              *ngFor="let i of [].constructor(pageCount); let index = index"
-              class="pagination-list-group-item"
-            >
-              <button
-                class="pagination-btn btn-custom"
-                type="button"
-                (click)="changePage(index)"
-              >
-                {{ index + 1 }}
-              </button>
-            </li>
-            <li class="pagination-list-group-item">
-              <button
-                class="pagination-btn btn-custom"
-                type="button"
-                (click)="nextPage()"
-              >
-                &raquo;
-              </button>
-            </li>
-          </ul>
+                <button
+                  type="button"
+                  [ngClass]="{
+                    'btn-custom': currentPageIndex !== i - 1,
+                    'btn-warning': currentPageIndex === i - 1
+                  }"
+                  (click)="changePage(i)"
+                >
+                  {{ i }}
+                </button>
+              </li>
+
+              <li class="pagination-list-group-item">
+                <button class="btn-custom" type="button" (click)="nextPage()">
+                  &raquo;
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
+      <div *ngIf="isNoData">
+        <div class="row my-3">
+          <div
+            class="col-xl-12 d-flex justify-content-center align-items-center"
+          >
+            <h1 class="title bg-danger text-center">No Data Found !</h1>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12 d-flex justify-content-center align-items-center">
+            <div class="image-container">
+              <img src="/Images/System-images/noData.jpg" alt="" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- user container ended -->
     </div>
   </div>
 </div>

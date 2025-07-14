@@ -64,8 +64,7 @@ interface selectedFiles {
   styleUrl: './documents.component.scss',
 })
 export class DocumentsComponent
-  implements OnInit, OnChanges, AfterViewInit, OnDestroy
-{
+  implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild(NotificationComponent, { static: true })
   notification!: NotificationComponent;
@@ -160,7 +159,7 @@ export class DocumentsComponent
         .then((data) => {
           if (data) {
             this.documents = data.data as UDER_DOC_TYPES[];
-            
+
           }
         })
         .catch((error) => {
@@ -463,7 +462,7 @@ export class DocumentsComponent
         formData.append(
           'uploader',
           this.authService.getLoggedUser?.username ||
-            'Error By taking logged user'
+          'Error By taking logged user'
         );
         for (let item of this.selectedFiles) {
           formData.append('files', item.file as File);

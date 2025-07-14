@@ -12,6 +12,7 @@ import {
   CUSTOM_ELEMENTS_SCHEMA,
   ViewChildren,
   QueryList,
+  OnChanges,
 } from '@angular/core';
 import {
   MAT_DIALOG_DATA,
@@ -85,15 +86,14 @@ import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
     MatAutocompleteModule,
     MatButtonToggleModule,
     MatDialogModule,
-    
+
     SafeUrlPipe,
   ],
   templateUrl: './property-more-details-pannel.component.html',
   styleUrl: './property-more-details-pannel.component.scss',
 })
 export class PropertyMoreDetailsPannelComponent
-  implements OnInit, OnDestroy, AfterViewInit
-{
+  implements OnInit, OnDestroy, AfterViewInit, OnChanges {
   // Dialog data
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -108,6 +108,12 @@ export class PropertyMoreDetailsPannelComponent
   protected mapLocationLat: GoogleMapLocation['lat'] = 0;
   protected mapLocationLng: GoogleMapLocation['lng'] = 0;
   protected GoogleMapLocationEmbeddedUrl: GoogleMapLocation['embeddedUrl'] = '';
+
+  protected propertySpecs: { [key: string]: string }[] = [];
+  protected financeSpecs: { [key: string]: string }[] = [];
+  protected constructionSpecs: { [key: string]: string }[] = [];
+  protected listingSpecs: { [key: string]: string }[] = [];
+  protected statusSpecs: { [key: string]: string }[] = [];
 
   private location: Property['location'] = {
     lat: this.mapLocationLat,
@@ -138,8 +144,8 @@ export class PropertyMoreDetailsPannelComponent
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(MAT_DIALOG_DATA)
-    public data: any = {},
-    public dialogRef: MatDialogRef<PropertyMoreDetailsPannelComponent>,
+    protected data: any = {},
+    protected dialogRef: MatDialogRef<PropertyMoreDetailsPannelComponent>,
     private cdr: ChangeDetectorRef,
     private propertyService: PropertyService
   ) {
@@ -166,9 +172,26 @@ export class PropertyMoreDetailsPannelComponent
     if (this.isBrowser) {
       setTimeout(() => this.updateIndicatorPosition(this.currentIndex));
     }
+    this.initializePropertyData();
   }
 
-  ngOnDestroy(): void {}
+  ngOnChanges(): void {
+
+  }
+
+  ngOnDestroy(): void { }
+
+  private initializePropertyData(): void {
+    if (!this.property) return;
+
+    this.propertySpecs = this.propertySpecifications();
+    this.financeSpecs = this.financialDetails();
+    this.constructionSpecs = this.constructionAndAge();
+    this.listingSpecs = this.propertyDateDetails();
+    this.statusSpecs = this.propertyStatusDetails();
+
+    this.cdr.detectChanges();
+  }
 
   //<==================== Mobile Tab Open Button ====================>
   protected tabOpenButtonOperation() {
@@ -243,6 +266,195 @@ export class PropertyMoreDetailsPannelComponent
       lng: this.mapLocationLng,
       embeddedUrl: this.GoogleMapLocationEmbeddedUrl,
     };
+  }
+
+  protected propertySpecifications(): { [key: string]: string }[] {
+    if (!this.property) return [];
+
+    const addSqFt = (value: number) =>
+      `${value} <span>ft<sup>2</sup></span>`;
+
+    const safe = (value: number | string | null | undefined, fallback: string) =>
+      value === 0 || value === null || value === undefined || value === '' ? fallback : String(value);
+
+    return [
+      {
+        "Total Area": safe(this.property.totalArea, "No total area").includes("No")
+          ? "No total area"
+          : addSqFt(Number(this.property.totalArea)),
+      },
+      {
+        "Built In Area": safe(this.property.builtInArea, "No built-in area").includes("No")
+          ? "No built-in area"
+          : addSqFt(Number(this.property.builtInArea)),
+      },
+      {
+        "Living Rooms": safe(this.property.livingRooms, "No living room"),
+      },
+      {
+        "Kitchens": safe(this.property.kitchen, "No kitchen"),
+      },
+      {
+        "Bedrooms": safe(this.property.bedrooms, "No bedrooms"),
+      },
+      {
+        "Bathrooms": safe(this.property.bathrooms, "No bathrooms"),
+      },
+      {
+        "Maidrooms": safe(this.property.maidrooms, "No maidroom"),
+      },
+      {
+        "Driver Rooms": safe(this.property.driverRooms, "No driver room"),
+      },
+      {
+        "Total Floors": safe(this.property.totalFloors, "Only base floor"),
+      },
+      {
+        "Parkings": safe(this.property.numberOfParking, "No parking"),
+      },
+      {
+        "Furnished Status": this.property.furnishingStatus ?? "Not specified",
+      },
+    ];
+  }
+
+  protected constructionAndAge(): { [key: string]: string }[] {
+    if (!this.property) return [];
+
+    const addSqFt = (value: number) =>
+      `${value} <span>ft<sup>2</sup></span>`;
+
+    const safe = (value: number | string | null | undefined, fallback: string) =>
+      value === 0 || value === null || value === undefined || value === '' ? fallback : String(value);
+
+    return (
+      [
+        {
+          "Built Year": safe(this.property.builtYear, "No built year mentioned"),
+        },
+        {
+          "Property Condition": safe(this.property.propertyCondition, "No property condition mentioned"),
+        },
+        {
+          "Developer Name": safe(this.property.developerName, "No developer name mentioned"),
+        },
+        {
+          "Project Name": safe(this.property.projectName, "No project name mentioned"),
+        },
+        {
+          "Owner Ship Type": safe(this.property.ownerShipType, "No owner ship type mentioned"),
+        },
+      ]
+    )
+  }
+
+  protected financialDetails(): { [key: string]: string }[] {
+    if (!this.property) return [];
+
+    const currency = this.property.currency ?? '';
+
+    const formatCurrency = (value: number | null | undefined): string =>
+      value && value > 0
+        ? `${value.toLocaleString()} ${currency}`
+        : "Not specified";
+
+    const formatText = (
+      value: string | null | undefined,
+      fallback: string
+    ): string =>
+      value && value.trim() !== "" ? value : fallback;
+
+    return [
+      {
+        "Price of the Property": formatCurrency(this.property.price),
+      },
+      {
+        "Price per Square Feet": formatCurrency(this.property.pricePerSqurFeet),
+      },
+      {
+        "Expected Rent per Year": formatCurrency(this.property.expectedRentYearly),
+      },
+      {
+        "Expected Rent per Quarter": formatCurrency(this.property.expectedRentQuartely),
+      },
+      {
+        "Expected Rent per Month": formatCurrency(this.property.expectedRentMonthly),
+      },
+      {
+        "Expected Rent per Day": formatCurrency(this.property.expectedRentDaily),
+      },
+      {
+        "Maintenance Fee": formatCurrency(this.property.maintenanceFees),
+      },
+      {
+        "Service Charge": formatCurrency(this.property.serviceCharges),
+      },
+      {
+        "Transfer Fee": formatCurrency(this.property.transferFees),
+      },
+      {
+        "Availability Status": formatText(this.property.availabilityStatus, "Not specified"),
+      },
+      {
+        "Ownership Type": formatText(this.property.ownerShipType, "Not specified"),
+      },
+    ];
+  }
+
+  protected propertyDateDetails(): { [key: string]: string }[] {
+    if (!this.property) return [];
+
+    const formatDate = (date: string | Date | null | undefined): string =>
+      date ? new Date(date).toLocaleDateString('en-GB') : "Not specified";
+
+    const addIfExists = (
+      label: string,
+      dateValue: Date | string | null | undefined
+    ): { [key: string]: string } | null => {
+      if (!dateValue) return null;
+      return { [label]: formatDate(dateValue) };
+    };
+
+    const details: ({ [key: string]: string } | null)[] = [
+      addIfExists("Listing Date", this.property.listingDate),
+      addIfExists("Availability Date", this.property.availabilityDate),
+      addIfExists("Listing Expiring Date", this.property.listingExpiryDate),
+      addIfExists("Rented Date", this.property.rentedDate),
+      addIfExists("Sold Date", this.property.soldDate),
+    ];
+
+    // Filter out nulls
+    return details.filter((item): item is { [key: string]: string } => !!item);
+  }
+
+  protected propertyStatusDetails(): { [key: string]: string }[] {
+    if (!this.property) return [];
+
+    const safe = (value: string | number | null | undefined, fallback: string): string =>
+      value === null || value === undefined || value === '' ? fallback : String(value);
+
+    return [
+      {
+        "Property Reference Code": safe(this.property.referenceCode, "No reference code"),
+      },
+      {
+        "Property Verification Status": safe(this.property.verificationStatus, "Not verified"),
+      },
+      {
+        "Property Priority Status": safe(this.property.priority, "Not specified"),
+      },
+      {
+        "Property Status": safe(this.property.status, "Not specified"),
+      },
+    ];
+  }
+
+  protected trackByKey(index: number, item: { [key: string]: string }): string {
+    return Object.keys(item)[0];
+  }
+
+  protected getKey(obj: { [key: string]: string }): string {
+    return Object.keys(obj)[0];
   }
 
   protected pannelClose() {

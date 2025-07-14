@@ -32,9 +32,9 @@ export class SkeletonLoaderComponent {
   @Input() Mode: boolean | null = null;
   @Input() key!: number;
 
-  ngAfterViewInit(){
-    
+  ngAfterViewInit() {
+
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 }

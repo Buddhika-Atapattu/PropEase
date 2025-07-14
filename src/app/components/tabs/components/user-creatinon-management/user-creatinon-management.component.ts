@@ -90,8 +90,7 @@ interface Data {
   styleUrl: './user-creatinon-management.component.scss',
 })
 export class UserCreatinonManagementComponent
-  implements OnInit, OnChanges, AfterViewInit, OnDestroy
-{
+  implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @ViewChild(ProgressBarComponent, { static: true })
   progress!: ProgressBarComponent;
   @ViewChild(NotificationComponent, { static: true })
@@ -165,11 +164,11 @@ export class UserCreatinonManagementComponent
     this.apiCall(this.start, this.limit);
   }
 
-  ngOnChanges(): void {}
+  ngOnChanges(): void { }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void { }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 
   public async refresh(username: string): Promise<void> {
     this.username = username;
@@ -435,7 +434,7 @@ export class UserCreatinonManagementComponent
 
     return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
   }
-  
+
   // Called when user triggers a search (e.g., clicks "Search" button)
   protected async search(): Promise<void> {
     this.currentPage = 1; // Reset to first page

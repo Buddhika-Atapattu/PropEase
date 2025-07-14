@@ -20,6 +20,8 @@ import { PropertyFilterDialogComponent } from '../../components/dialogs/property
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationComponent } from '../../components/dialogs/confirmation/confirmation.component';
 import { NotificationComponent } from '../../components/dialogs/notification/notification.component';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-users',
@@ -29,6 +31,7 @@ import { NotificationComponent } from '../../components/dialogs/notification/not
     MatIconModule,
     SkeletonLoaderComponent,
     NotificationComponent,
+    FormsModule
   ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
@@ -38,11 +41,8 @@ export class UsersComponent implements OnInit, OnDestroy {
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
-  protected users: UsersType[] = [];
-  protected pageCount: number = 0;
-  protected currentPage: number = 0;
-  protected search: string = '';
   protected loading: boolean = true;
+
   private routeSub: Subscription | null = null;
   private routerSub: Subscription | null = null;
   protected LOGGED_USER: BaseUser | null = null;
@@ -50,6 +50,16 @@ export class UsersComponent implements OnInit, OnDestroy {
   protected LOGGED_USER_ACCESS_ACTIONS: string[] = [];
   protected isColView: boolean = false;
   protected isListView: boolean = true;
+
+  private users: UsersType[] = [];
+  private readonly limit: number = 12;
+  protected dispalyingUsers: UsersType[] = [];
+  protected displayPaginationNumberArray: number[] = [];
+  protected search: string = '';
+  protected isNoData: boolean = false;
+  protected currentPageIndex: number = 0;
+
+
 
   protected readonly definedMaleDummyImageURL =
     '/Images/user-images/dummy-user/dummy-user.jpg';
@@ -92,44 +102,13 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
     this.routerSub = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => this.init());
+      .subscribe(() => this.usersDataInit());
 
     this.routeSub = this.route.url.subscribe((segments) => {
       const path = segments.map((s) => s.path).join('/');
     });
-    await this.init();
+    await this.usersDataInit();
     Promise.resolve();
-  }
-
-  protected async init() {
-    const usersArray = await this.APIsService.getAllUsersWithPagination(
-      0,
-      10,
-      this.search
-    )
-      .then((data) => {
-        this.loading = true;
-        return data;
-      })
-      .finally(() => {
-        setInterval(() => {
-          this.loading = false;
-        }, 500);
-      });
-    if (usersArray) {
-      const users = [];
-      for (let user of usersArray.data) {
-        if(user.username !== this.LOGGED_USER?.username){
-          users.push(user);
-        }
-      }
-      this.users = users;
-      this.pageCount = Math.round((usersArray.count - 1) / 12) + 1;
-    }
-  }
-
-  protected isThisLoggedUserProfile(username: string): boolean {
-    return this.LOGGED_USER?.username === username;
   }
 
   private iconMaker() {
@@ -151,6 +130,184 @@ export class UsersComponent implements OnInit, OnDestroy {
       );
     }
   }
+
+  //<============================================================ USERS ORGANIZATION AND PAGINATION ============================================================>
+  //<============================================================ INITIAL DATA LOADING ============================================================>
+  protected async usersDataInit() {
+    try {
+      this.loading = true;
+      this.resetData();
+      const users = await this.APIsService.getAllUsers();
+      if (!users) throw new Error("Users not found!");
+      const usersWithoutLoggedUser = users.filter(
+        (user) => user.username !== this.LOGGED_USER?.username
+      );
+      this.users = usersWithoutLoggedUser;
+      this.makePagination(usersWithoutLoggedUser, 0)
+    }
+    catch (error) {
+      console.log(error);
+      if (error instanceof HttpErrorResponse) {
+        if (error.status >= 400 && error.status <= 500) {
+          this.notification.notification("error", error.error.message);
+        }
+        else {
+          this.notification.notification("error", "Something went wrong");
+        }
+      }
+    }
+    finally {
+      setTimeout(() => {
+        this.loading = false;
+      }, 500);
+    }
+  }
+  //<============================================================ END INITIAL DATA LOADING ============================================================>
+
+
+  //<============================================================ USER SEARCH ============================================================>
+  protected async searchUsers(input: string) {
+    try {
+      this.loading = true;
+      const safeInput = input.trim().toLowerCase();
+      if (!safeInput) {
+        this.usersDataInit();
+        return;
+      }
+      if (!this.users) throw new Error("Users not found!");
+      const usersWithoutLoggedUser = this.users.filter(
+        (user) => user.username !== this.LOGGED_USER?.username
+      );
+      const filteredUsers = usersWithoutLoggedUser.filter((user) =>
+        user.name.toLowerCase().includes(safeInput.toLowerCase()) ||
+        user.username.toLowerCase().includes(safeInput.toLowerCase()) ||
+        user.email.toLowerCase().includes(safeInput.toLowerCase())
+      )
+      this.makePagination(filteredUsers, 0)
+    }
+    catch (error) {
+      console.log(error);
+      if (error instanceof HttpErrorResponse) {
+        if (error.status >= 400 && error.status <= 500) {
+          this.notification.notification("error", error.error.message);
+        }
+        else {
+          this.notification.notification("error", "Something went wrong");
+        }
+      }
+    }
+    finally {
+      setTimeout(() => {
+        this.loading = false;
+      }, 500);
+    }
+  }
+  //<============================================================ END USER SEARCH ============================================================>
+
+  //<============================================================ PAGE INDEX OPERATION ============================================================>
+  protected async changePage(number: number): Promise<void> {
+    try {
+      this.loading = true;
+
+      if (!this.users) throw new Error("Users not found!");
+
+      const usersWithoutLoggedUser = this.users.filter(
+        user => user.username !== this.LOGGED_USER?.username
+      );
+
+      const safeIndex = number - 1;
+      console.log(safeIndex)
+
+      this.makePagination(usersWithoutLoggedUser, safeIndex)
+
+    } catch (error) {
+      console.log(error);
+      if (error instanceof HttpErrorResponse) {
+        if (error.status >= 400 && error.status <= 500) {
+          this.notification.notification("error", error.error.message);
+        } else {
+          this.notification.notification("error", "Something went wrong");
+        }
+      }
+    } finally {
+      setTimeout(() => {
+        this.loading = false;
+      }, 500);
+    }
+  }
+  //<============================================================ END PAGE INDEX OPERATION ============================================================>
+
+  //<============================================================ PAGE INDEX THREE PAGES BACKWORD ============================================================>
+  protected async previousPage(): Promise<void> {
+    if (this.currentPageIndex > 0) {
+      this.currentPageIndex = Math.max(0, this.currentPageIndex - 3);
+      this.makePagination(this.users.filter(u => u.username !== this.LOGGED_USER?.username), this.currentPageIndex);
+    }
+  }
+  //<============================================================ END PAGE INDEX THREE PAGES BACKWORD ============================================================>
+
+  //<============================================================ PAGE INDEX THREE PAGES FORWARD ============================================================>
+  protected async nextPage(): Promise<void> {
+    const usersWithoutLoggedUser = this.users.filter(u => u.username !== this.LOGGED_USER?.username);
+    const totalPages = Math.ceil(usersWithoutLoggedUser.length / this.limit);
+
+    if (this.currentPageIndex < totalPages - 1) {
+      this.currentPageIndex = Math.min(totalPages - 1, this.currentPageIndex + 3);
+      this.makePagination(usersWithoutLoggedUser, this.currentPageIndex);
+    }
+  }
+  //<============================================================ END PAGE INDEX THREE PAGES FORWARD ============================================================>
+
+
+  //<============================================================ RESET USERS VALUES ============================================================>
+  private resetData() {
+    this.displayPaginationNumberArray = [];
+    this.users = [];
+    this.dispalyingUsers = [];
+    this.isNoData = false;
+  }
+  //<============================================================ END RESET USERS VALUES ============================================================>
+
+  //<============================================================ MAKE PAGINATION ============================================================>
+  private makePagination(dataArray: UsersType[], index: number): void {
+    const totalDataCount = dataArray.length;
+    const totalPageCount = Math.ceil(totalDataCount / this.limit);
+
+    this.currentPageIndex = index;
+
+    this.isNoData = totalDataCount === 0;
+
+    // Calculate actual data slice range
+    const startIndex = index * this.limit;
+    const endIndex = startIndex + this.limit;
+
+    // Slice data for current page
+    this.dispalyingUsers = dataArray.slice(startIndex, endIndex);
+
+    // Create pagination page number array (1-based)
+    this.displayPaginationNumberArray = this.makeNumberArray(index, totalPageCount);
+  }
+  //<============================================================ END MAKE PAGINATION ============================================================>
+
+  //<============================================================ PREPAIRE PAGINATION NUMBER ARRAY ============================================================>
+  private makeNumberArray(currentPage: number, totalPages: number): number[] {
+    const current = currentPage + 1; // Convert to 1-based
+    const start = Math.max(1, current - 2);
+    const end = Math.min(totalPages, current + 2);
+
+    return Array.from({ length: end - start + 1 }, (_, i) => i + start);
+  }
+  //<============================================================ END PREPAIRE PAGINATION NUMBER ARRAY ============================================================>
+
+  //<============================================================ END USERS ORGANIZATION AND PAGINATION ============================================================>
+
+
+
+  protected isThisLoggedUserProfile(username: string): boolean {
+    return this.LOGGED_USER?.username === username;
+  }
+
+
 
   // Logged user actions
 
@@ -238,65 +395,6 @@ export class UsersComponent implements OnInit, OnDestroy {
     return this.definedImage;
   }
 
-  protected async searchUsers(event: Event) {
-    this.search = (event.target as HTMLInputElement).value;
-    const usersArray = await this.APIsService.getAllUsersWithPagination(
-      0,
-      12,
-      this.search
-    )
-      .then((data) => {
-        this.loading = true;
-        return data;
-      })
-      .finally(() => {
-        setInterval(() => {
-          this.loading = false;
-        }, 500);
-      });
-    if (usersArray) {
-      this.users = usersArray.data;
-      this.pageCount = Math.round(usersArray.count / 10) + 1;
-      this.currentPage = 0;
-    }
-  }
-
-  protected async changePage(number: number) {
-    const usersArray = await this.APIsService.getAllUsersWithPagination(
-      number,
-      10,
-      this.search
-    )
-      .then((data) => {
-        this.loading = true;
-        return data;
-      })
-      .finally(() => {
-        setTimeout(() => {
-          this.loading = false;
-        }, 500);
-      });
-    if (usersArray) {
-      this.users = usersArray.data;
-      this.pageCount = Math.round(usersArray.count / 10) + 1;
-      this.currentPage = number;
-    }
-  }
-
-  protected async previousPage() {
-    if (this.currentPage > 0) {
-      this.currentPage--;
-      await this.changePage(this.currentPage);
-    }
-  }
-
-  protected async nextPage() {
-    if (this.currentPage < this.pageCount - 1) {
-      this.currentPage++;
-      await this.changePage(this.currentPage);
-    }
-  }
-
   protected addUser() {
     this.router.navigate(['/dashboard/add-new-user']);
   }
@@ -322,18 +420,18 @@ export class UsersComponent implements OnInit, OnDestroy {
       data: {
         title: `Delete ${name}`,
         message: `Are you sure you want to delete ${name}?`,
-        confirmText: true,
+        isConfirm: true,
       },
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
-      if (result?.confirmText === true) {
+      if (result?.isConfirm === true) {
         await this.APIsService.deleteUserByUsername(username)
           .then((res) => {
             if (res) {
               this.notification.notification(res.status, res.message);
               setTimeout(() => {
-                this.init();
+                this.usersDataInit();
               }, 500);
             }
           })

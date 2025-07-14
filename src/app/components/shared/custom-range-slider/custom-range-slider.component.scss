@@ -1,7 +1,8 @@
+@use "../../../styles/global.scss" as *;
+
 .slider-track {
   position: relative;
   height: 8px;
-  background: #ccc;
   border-radius: 4px;
   cursor: pointer;
 }
@@ -9,7 +10,6 @@
 .slider-range {
   position: absolute;
   height: 100%;
-  background: gold;
   border-radius: 4px;
 }
 
@@ -19,13 +19,8 @@
   transform: translateY(-50%);
   width: 32px;
   height: 32px;
-  background: gold;
   border-radius: 50%;
   cursor: pointer;
-  border: 10px solid #fff;
-  &:hover {
-    background: orange;
-  }
 }
 .high {
   transform: translate(-100%, -50%);
@@ -36,4 +31,38 @@
   justify-content: space-between;
   font-weight: 500;
   margin-top: 10px;
+}
+
+:host-context(html.dark) {
+  /* dark mode styles */
+  .slider-track {
+    background: $dark-text-color;
+  }
+  .slider-range {
+    background: $dark-accent-gold;
+  }
+  .slider-thumb {
+    background: $dark-accent-gold;
+    border: 10px solid $dark-text-color;
+    &:hover {
+      background: $dark-fourth-color;
+    }
+  }
+}
+
+:host-context(html.light) {
+  /* dark mode styles */
+  .slider-track {
+    background: $light-text-color;
+  }
+  .slider-range {
+    background: $light-accent-gold;
+  }
+  .slider-thumb {
+    background: $light-accent-gold;
+    border: 10px solid $light-text-color;
+    &:hover {
+      background: $light-fourth-color;
+    }
+  }
 }

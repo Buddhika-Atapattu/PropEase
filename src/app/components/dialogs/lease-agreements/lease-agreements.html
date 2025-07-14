@@ -1,0 +1,32 @@
+<app-notification></app-notification>
+<div class="container-fluid" *ngIf="tenant && lease">
+  <div class="panel-close-btn-container">
+    <button type="button" class="pannel-close-btn" (click)="pannelClose()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- user-image row -->
+  <div class="row user-image-row">
+    <div
+      class="col-xl-12 d-flex justify-content-center align-items-center mt-5"
+    >
+      <div class="image-container">
+        <app-skeleton-loader
+          *ngIf="isLoading"
+          [width]="'10rem'"
+          [height]="'10rem'"
+          [Mode]="mode"
+          [borderRadius]="'50%'"
+        ></app-skeleton-loader>
+        <img
+          *ngIf="!isLoading"
+          [src]="generateTenantImage((typeof tenant.image === 'string' ? tenant.image : '') || '', tenant.gender)"
+          class="user-image"
+          alt="user image"
+        />
+      </div>
+    </div>
+  </div>
+  <!-- end user-image row -->
+</div>

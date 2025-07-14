@@ -1,4 +1,4 @@
-@use "../../styles/global.scss" as *;
+@use "../../../styles/global.scss" as *;
 @use "sass:color";
 
 .modile-view-pannel {
@@ -35,15 +35,20 @@
       border-radius: 0.372rem;
       padding: 1rem;
       .add-user-btn {
-        border: none;
-        border-radius: 0.372rem;
-        padding: 0.5rem 1.5rem;
+        width: 100%;
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;
-        font-weight: 700;
+        span {
+          width: auto;
+          text-align: center;
+          font-weight: 700;
+          text-transform: uppercase;
+          font-size: 12pt;
+        }
         mat-icon {
-          margin-right: 0.5rem;
+          width: 2rem !important;
+          height: 2rem !important;
           ::ng-deep svg {
             fill: transparent;
             ::ng-deep rect {
@@ -92,29 +97,6 @@
         }
       }
 
-      .reset-btn {
-        position: absolute;
-        top: 50%;
-        left: 100%;
-        transform: translate(-400%, -50%);
-        width: auto;
-        height: auto;
-        padding: 0;
-        z-index: 10000;
-        .reset-icon {
-          width: 25px;
-          height: 25px;
-          cursor: pointer;
-          ::ng-deep svg {
-            fill: #ffb200;
-            ::ng-deep path {
-              fill: #ffb200;
-              stroke: #ffb200;
-            }
-          }
-        }
-      }
-
       mat-icon {
         ::ng-deep svg {
           fill: currentColor;
@@ -130,14 +112,115 @@
         margin-top: 0.3rem;
       }
     }
-    .search-input {
+    .search-input-row {
+      position: relative;
       border: 0.25rem solid #ffb200;
       width: 100%;
-      padding: 1rem;
       border-radius: 2rem;
       background: #fff;
       color: #000000;
-      box-shadow: 0rem 0rem 0.5rem 0rem #4e4d4d;
+
+      .search-button-row {
+        position: absolute;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        top: 0;
+        left: 85%;
+        right: 0;
+        bottom: 0;
+        button {
+          position: relative;
+          margin: 0 1rem;
+          width: 25px;
+          height: 25px;
+          cursor: pointer;
+          padding: 0;
+          z-index: 10;
+          background: none;
+          border: none;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          overflow: auto;
+          color: #ffb200;
+          ::ng-deep mat-icon,
+          i {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            ::ng-deep svg {
+              fill: #ffb200;
+              ::ng-deep path {
+                fill: #ffb200;
+                stroke: #ffb200;
+              }
+            }
+          }
+        }
+        .search-button-rotate {
+          animation-name: RotateButton;
+          animation-duration: 0.5s;
+          animation-iteration-count: infinite;
+          animation-timing-function: linear;
+        }
+        .search-button-reset {
+          font-size: 24px !important;
+        }
+      }
+
+      input,
+      .search-input {
+        background: none;
+        border: none;
+        padding: 1rem;
+        box-shadow: inset 0rem 0rem 0.25rem 0rem #4e4d4d;
+        margin: 0;
+        &:visited {
+          outline: none !important;
+          border: none !important;
+        }
+        &:focus {
+          outline: none !important;
+          border: none !important;
+        }
+        &:hover {
+          outline: none !important;
+          border: none !important;
+        }
+        &:active {
+          outline: none !important;
+          border: none !important;
+        }
+        &:disabled {
+          outline: none !important;
+          border: none !important;
+        }
+        &:invalid {
+          outline: none !important;
+          border: none !important;
+        }
+        &:required {
+          outline: none !important;
+          border: none !important;
+        }
+        &:focus-visible {
+          outline: none !important;
+          border: none !important;
+        }
+        &:focus-within {
+          outline: none !important;
+          border: none !important;
+        }
+        &:not(:placeholder-shown) {
+          outline: none !important;
+          border: none !important;
+        }
+      }
     }
     .pagination-list-group {
       display: inline-flex;
@@ -205,6 +288,24 @@
   }
 }
 
+@keyframes RotateButton {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.image-container {
+  img {
+    width: 30rem;
+    border-radius: 1rem;
+    object-fit: cover;
+    object-position: center;
+  }
+}
+
 @media (max-width: 1024px) {
   .main-panel {
     display: none;
@@ -233,8 +334,8 @@
 
         .add-user-btn {
           mat-icon {
-            width: 2rem;
-            height: 2rem;
+            width: 2rem !important;
+            height: 2rem !important;
             ::ng-deep svg {
               fill: none !important;
               ::ng-deep path {
@@ -245,7 +346,7 @@
           }
         }
 
-        .btn-edit {
+        .btn-warning {
           padding: 0.25rem 0.5rem;
           margin: 0;
           width: 100%;
@@ -286,10 +387,6 @@
         .top-row {
           background-color: $dark-primary-color;
           box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
-          .add-user-btn {
-            background: $dark-btn-edit-color;
-            box-shadow: $dark-btn-box-shadow;
-          }
         }
       }
     }
@@ -309,10 +406,6 @@
         .top-row {
           background-color: #ffe394;
           box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
-          .add-user-btn {
-            background: $light-btn-edit-color;
-            box-shadow: $light-btn-box-shadow;
-          }
         }
       }
     }

@@ -45,8 +45,7 @@ import { ShareComponent } from '../../../components/dialogs/share/share.componen
   styleUrl: './view.component.scss',
 })
 export class ViewComponent
-  implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy
-{
+  implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy {
   @ViewChild('sliderContainer', { static: false })
   sliderContainer!: ElementRef<HTMLElement>;
   protected mode: boolean | null = null;
@@ -109,7 +108,7 @@ export class ViewComponent
     }
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void { }
 
   ngAfterViewChecked(): void {
     if (!this.sliderInitDone && this.sliderContainer?.nativeElement) {
@@ -236,9 +235,8 @@ export class ViewComponent
     const tiles: string[] = [];
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
-        const backgroundPosition = `-${col * (600 / this.cols)}px -${
-          row * (400 / this.rows)
-        }px`;
+        const backgroundPosition = `-${col * (600 / this.cols)}px -${row * (400 / this.rows)
+          }px`;
         tiles.push(backgroundPosition);
       }
     }
@@ -302,7 +300,7 @@ export class ViewComponent
       height: 'auto',
     });
 
-    dialogRef.afterClosed().subscribe((result) => {});
+    dialogRef.afterClosed().subscribe((result) => { });
   }
 
   //<==================== End Open the dialod for the image preview ====================>

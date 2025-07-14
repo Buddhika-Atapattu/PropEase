@@ -14,13 +14,7 @@ import {
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
 import {
   MAT_DIALOG_DATA,
-  MatDialog,
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
   MatDialogRef,
-  MatDialogTitle,
-  MatDialogModule,
 } from '@angular/material/dialog';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { Subscription } from 'rxjs';
@@ -54,30 +48,30 @@ export class ConfirmationComponent implements OnInit, OnDestroy, AfterViewInit {
       });
     }
 
-    this.isDelete = this.data.confirmText;
+    this.isDelete = this.data.isConfirm;
     this.title = this.data.title;
     this.message = this.data.message;
   }
 
-  protected cancel(){
+  protected cancel() {
     this.isDelete = false;
     const data = {
-      confirmText: this.isDelete
+      isConfirm: this.isDelete
     }
     this.dialogRef.close(data)
   }
 
-  protected confirm(){
+  protected confirm() {
     this.isDelete = true;
     const data = {
-      confirmText: this.isDelete
+      isConfirm: this.isDelete
     }
     this.dialogRef.close(data)
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void { }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 }

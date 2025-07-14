@@ -29,8 +29,7 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
   styleUrl: './mobile-support-file-upload.scss',
 })
 export class MobileSupportFileUpload
-  implements OnInit, AfterViewInit, OnDestroy
-{
+  implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('videoRef', { static: false })
   videoRef!: ElementRef<HTMLVideoElement>;
   @ViewChild('canvas', { static: false })
@@ -81,7 +80,7 @@ export class MobileSupportFileUpload
 
     this.isCameraOpen = true;
   }
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   ngAfterViewInit(): void {
     if (this.isBrowser) {

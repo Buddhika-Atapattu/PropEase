@@ -91,12 +91,12 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
     if (this.isBrowser) {
       if (this.isListView === true) {
         this.loading = true;
-        setInterval(() => {
+        setTimeout(() => {
           this.loading = false;
         }, 500);
       } else {
         this.loading = true;
-        setInterval(() => {
+        setTimeout(() => {
           this.loading = false;
         }, 500);
       }
@@ -175,12 +175,12 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
       data: {
         title: 'Delete Property',
         message: 'Are you sure you want to delete this property?',
-        confirmText: true,
+        isConfirm: true,
       },
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
-      if (result?.confirmText === true) {
+      if (result?.isConfirm === true) {
         try {
           const respond = await this.propertService.deleteProperty(id);
           this.notification.notification(respond.status, respond.message);

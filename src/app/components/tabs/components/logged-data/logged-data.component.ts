@@ -293,7 +293,7 @@ export class LoggedDataComponent {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
       google.charts.load('current', { packages: ['corechart'] });
-      google.charts.setOnLoadCallback(() => {});
+      google.charts.setOnLoadCallback(() => { });
     }
     this.iconMaker();
   }
@@ -315,7 +315,7 @@ export class LoggedDataComponent {
     }
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void { }
 
   private iconMaker() {
     const icons = [
@@ -573,7 +573,7 @@ export class LoggedDataComponent {
     this.startDate = null;
     this.endDate = null;
     await this.getLoggedUserLoginTracking(1);
-  } 
+  }
 
   protected exportToExcel() {
     const exportData = this.userLoggedData?.data.userTrackingData.data.map(

@@ -145,7 +145,7 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected toggleListPanel(){
+  protected toggleListPanel() {
     this.isListPanelOpen = !this.isListPanelOpen;
   }
 
@@ -198,7 +198,7 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
     this.isActivitiesPanelOpen = true;
     this.isListPanelOpen = false;
   }
-  
+
 
   protected async editUser() {
     if (this.isBrowser && this.LOGGED_USER) {

@@ -1,7 +1,5 @@
 @use "../../../styles/global.scss" as *;
 
-
-
 .property-filter-dialog {
   position: relative;
   .close-btn-container {
@@ -23,7 +21,6 @@
   overflow: hidden;
   padding: 0rem 0.5rem;
 }
-
 
 .custom-input {
   background: #fff;
@@ -67,7 +64,7 @@
   /* dark mode styles */
   .property-filter-dialog {
     padding: 2rem;
-    background: linear-gradient(135deg, #08122f, #0f0f36, #08122f);
+    background: $dark-primary-color;
   }
 }
 
@@ -75,6 +72,6 @@
   /* light mode styles */
   .property-filter-dialog {
     padding: 2rem;
-    background: linear-gradient(135deg, #fff6b9, #fff0b5, #fff6b9);
+    background: $light-primary-color;
   }
 }

@@ -5,6 +5,7 @@ import {
   Inject,
   PLATFORM_ID,
   ChangeDetectorRef,
+  Renderer2
 } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { WindowsRefService } from './services/windowRef/windowRef.service';
@@ -50,7 +51,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private cdRef: ChangeDetectorRef
+    private cdRef: ChangeDetectorRef,
+    private renderer: Renderer2
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) {
@@ -58,6 +60,24 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadInit();
+    this.globalImageDetector();
+  }
+
+  ngAfterViewInit() {
+    this.cdRef.detectChanges();
+  }
+
+  get isUserLoggedIn(): boolean {
+    return this.authService.isUserLoggedIn;
+  }
+
+  ngOnDestroy(): void {
+    this.modeSub?.unsubscribe();
+    this.navEndSub?.unsubscribe();
+  }
+
+  private loadInit() {
     if (this.isBrowser) {
       this.windowRef.initTheme();
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
@@ -82,16 +102,20 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngAfterViewInit() {
-    this.cdRef.detectChanges();
-  }
+  private globalImageDetector(): void {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      document.addEventListener(
+        'error',
+        (event: Event) => {
+          const target = event.target as HTMLElement;
 
-  get isUserLoggedIn(): boolean {
-    return this.authService.isUserLoggedIn;
-  }
-
-  ngOnDestroy(): void {
-    this.modeSub?.unsubscribe();
-    this.navEndSub?.unsubscribe();
+          if (target.tagName === 'IMG') {
+            console.warn('Global image load error:', (target as HTMLImageElement).src);
+            (target as HTMLImageElement).src = '/Images/System-images/noImage.png';
+          }
+        },
+        true // must be true to catch image load errors
+      );
+    }
   }
 }

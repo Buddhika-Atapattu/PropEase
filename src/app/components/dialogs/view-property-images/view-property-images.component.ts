@@ -34,8 +34,7 @@ import { BackEndPropertyData } from '../../../services/property/property.service
   styleUrl: './view-property-images.component.scss',
 })
 export class ViewPropertyImagesComponent
-  implements OnInit, OnDestroy, AfterViewInit
-{
+  implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('indicatorContainer', { static: false })
   private indicatorContainerRef!: ElementRef<HTMLDivElement>;
   protected mode: boolean | null = null;
@@ -64,9 +63,9 @@ export class ViewPropertyImagesComponent
     this.propertyImages = this.data.images;
     this.currentImageIndex = this.data.currentImageIndex;
   }
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void { }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 
   protected changeImage(index: number) {
     this.currentImageIndex = index;
@@ -74,7 +73,7 @@ export class ViewPropertyImagesComponent
   }
 
   private scrollToCurrentIndicator(): void {
-    
+
     if (!this.isBrowser || !this.indicatorContainerRef) return;
 
     const container = this.indicatorContainerRef.nativeElement;
@@ -109,7 +108,7 @@ export class ViewPropertyImagesComponent
 
     this.scrollToCurrentIndicator();
     this.cdr.detectChanges();
-    
+
   }
 
   protected nextImage() {
@@ -121,11 +120,11 @@ export class ViewPropertyImagesComponent
 
     this.scrollToCurrentIndicator();
     this.cdr.detectChanges();
-    
+
   }
 
-  protected downloadImage(url:string){
-    if(!this.isBrowser)return;
+  protected downloadImage(url: string) {
+    if (!this.isBrowser) return;
     window.open(url, '_blank');
   }
 

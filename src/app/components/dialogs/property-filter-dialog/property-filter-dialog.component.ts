@@ -88,8 +88,7 @@ import { CustomRangeSliderComponent } from '../../shared/custom-range-slider/cus
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class PropertyFilterDialogComponent
-  implements OnInit, OnDestroy, AfterViewInit
-{
+  implements OnInit, OnDestroy, AfterViewInit {
   // Dialog data
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -98,6 +97,10 @@ export class PropertyFilterDialogComponent
   //Price range variables
   protected minPriceInput: number = 0;
   protected maxPriceInput: number = 100000000;
+
+  protected defaultMax: number = 100000000;
+  protected defaultMin: number = 0;
+
 
   //Beds
   protected beds: number = 0;
@@ -145,13 +148,20 @@ export class PropertyFilterDialogComponent
     }
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    if (this.data) {
+      this.maxPriceInput = this.data.maxPrice;
+      this.minPriceInput = this.data.minPrice;
+      this.defaultMax = this.data.maxPrice;
+      this.defaultMin = this.data.minPrice;
+    }
+  }
 
   ngAfterViewInit(): void {
     // Force redraw after DOM
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 
   //<==================== Sort property type ====================>
 
@@ -209,7 +219,7 @@ export class PropertyFilterDialogComponent
     }
   }
 
-  protected removeAmenity(index: number) {}
+  protected removeAmenity(index: number) { }
   //<=========================== End amenities ===========================>
   //<=========================== Close pannel ===========================>
   protected closeFilter() {

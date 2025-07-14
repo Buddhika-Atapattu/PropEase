@@ -1,3 +1,4 @@
+<app-notification></app-notification>
 <div
   *ngIf="mode !== null && tenant !== null"
   class="main-panel"
@@ -49,11 +50,20 @@
       </div>
     </div>
     <!-- end user-image row -->
-<!-- makeTenantLease(tenant.username) -->
+    <!-- makeTenantLease(tenant.username) -->
     <div class="row d-flex justify-content-end align-items-center mt-5">
-      <div class="col-xl-2 col-md-4 col-sm-12 col-12 d-flex justify-content-end align-items-center">
-        <button (click)="makeTenantLease(tenant.username)" type="button" class="btn-edit fw-bold text-uppercase" >
-          Lease<i class="fa-solid fa-pen-to-square ms-2"></i>
+      <div
+        class="col-xl-2 col-md-4 col-sm-12 col-12 d-flex justify-content-end align-items-center"
+      >
+        <button
+          (click)="makeTenantLease()"
+          matButton
+          matTooltip="Create new lease"
+          matTooltipPosition="above"
+          type="button"
+          class="btn-warning fw-bold text-uppercase"
+        >
+          Create<i class="fa-solid fa-pen-to-square ms-2"></i>
         </button>
       </div>
     </div>
@@ -85,5 +95,42 @@
         </ul>
       </div>
     </div>
+
+    <div class="row mt-4" *ngIf="leases.length > 0">
+      <div class="col-12">
+        <h3 class="title">Lease Agreements</h3>
+        <hr />
+      </div>
+    </div>
+
+    <app-custom-table
+      *ngIf="leases.length > 0"
+      [(isReload)]="leaseTableIsReloading"
+      [(pageSize)]="leaseTablePageSize"
+      [(pageSizeOptions)]="leaseTablePageSizeOptions"
+      [(pageIndex)]="leaseTablePageIndex"
+      [(pageCount)]="leaseTablePageCount"
+      [(tableType)]="leaseTableType"
+      [(search)]="leaseTabletSearch"
+      [(buttonAction)]="leaseTableButtonAction"
+      [(buttonOperation)]="leaseTableButtonOperation"
+      [(totalDataCount)]="leaseTableTotalDataCount"
+      [(buttonActionTrigger)]="leaseTableButtonActionTrigger"
+      [(buttonOperationTrigger)]="leaseTableButtonOperationTrigger"
+      [(notification)]="leaseTableNotification"
+      [fileExportButtonTypeByExtension]="
+        leaseTableFileExportButtonTypeByExtension
+      "
+      [(switchButton)]="leaseSwitchButton"
+      [data]="leaseTableData"
+      [columns]="leaseTableColumns"
+      [loggedUser]="loggedUser"
+      [isLoading]="isLoading"
+      [mode]="mode"
+      [isBrowser]="isBrowser"
+      [modeSub]="modeSub"
+      [fullDataCount]="leaseLength"
+      (fileExport)="exportLeaseTableData($event)"
+    ></app-custom-table>
   </div>
 </div>

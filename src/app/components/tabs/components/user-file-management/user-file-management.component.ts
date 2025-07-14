@@ -82,8 +82,7 @@ interface Data {
   styleUrl: './user-file-management.component.scss',
 })
 export class UserFileManagementComponent
-  implements OnInit, OnChanges, AfterViewInit, OnDestroy
-{
+  implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @ViewChild(ProgressBarComponent, { static: true })
   progress!: ProgressBarComponent;
   @ViewChild(NotificationComponent, { static: true })
@@ -137,11 +136,11 @@ export class UserFileManagementComponent
     this.apiCall(this.start, this.limit);
   }
 
-  ngOnChanges(): void {}
+  ngOnChanges(): void { }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void { }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 
   public async refresh(username: string): Promise<void> {
     this.username = username;

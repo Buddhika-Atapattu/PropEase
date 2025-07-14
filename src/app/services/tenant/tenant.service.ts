@@ -2,6 +2,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { BackEndPropertyData, Property } from '../property/property.service';
 
 export interface MSG {
   status: string;
@@ -9,6 +10,7 @@ export interface MSG {
   data: any;
 }
 
+//<================================================= Table Data For Property Display =================================================>
 export interface TenantTableElement {
   username?: string;
   name: string;
@@ -27,47 +29,6 @@ export interface CustomTableColumn {
   key: string;
   label: string;
 }
-
-export interface Address {
-  houseNumber: string;
-  street?: string;
-  city: string;
-  stateOrProvince?: string;
-  postalCode: string;
-  country: string;
-}
-
-export interface EmergencyContact {
-  name: string;
-  relationship?: string;
-  contact: string;
-}
-
-export interface CoTenant {
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  gender: string;
-  nicOrPassport: string;
-  age: number;
-  relationship: string;
-  idDocumentUrl: string;
-}
-
-export interface TenantInformation {
-  fullName: string;
-  nicOrPassport: string;
-  gender: string;
-  nationality: string;
-  dateOfBirth: string; // ISO format: YYYY-MM-DD
-  phoneNumber: string;
-  email: string;
-  permanentAddress: Address;
-  emergencyContact: EmergencyContact;
-  idDocumentUrl?: string;
-  uploadedIdDocumentUrl?: string;
-}
-
 export interface PropertyInformation {
   propertyId: string;
   address: Address;
@@ -77,10 +38,164 @@ export interface PropertyInformation {
   parkingSpots: number;
 }
 
+//<================================================= End Table Data For Property Display =================================================>
+//<================================================= DEFAULT INTERFACES =================================================>
+// FILE UPLOAD INTERFACES
+export interface FILE {
+  fieldname: string;
+  originalname: string;
+  mimetype: string;
+  size: number;
+  filename: string;
+  URL: string;
+}
 
+export interface TokenViceData {
+  ageInMinutes: number;
+  date: string;
+  file: FILE;
+  token: string;
+  folder: string;
+}
+
+export interface ScannedFileRecordJSON {
+  date: string; // ISO date string
+  tenant: string;
+  token: string;
+  files: TokenViceData[];
+  folder: string;
+}
+
+export interface TenantScannedFilesDataJSON {
+  [tenantUsername: string]: ScannedFileRecordJSON[];
+}
+
+// SYSTEM INTERFACE
+export interface SystemMetadata {
+  ocrAutoFillStatus: boolean;
+  validationStatus:
+  'pending'
+  | 'approved'
+  | 'rejected'
+  | 'active'
+  | 'inactive'
+  | 'deactivated'
+  | 'deactive'
+  | 'cancelled'
+  | 'cancel'
+  | 'draft'
+  | 'waiting'
+  | 'hold'
+  | 'expired'
+  | 'completed'
+  | 'processing'
+  | 'under review'
+  | 'flagged'
+  | 'suspended'
+  | 'archived'
+  | 'reviewed';
+  language: string;
+  leaseTemplateVersion: string;
+  pdfDownloadUrl?: string;
+  lastUpdated: string; // ISO timestamp
+}
+
+// ADDED BY FORMAT
+export interface AddedBy {
+  username: string;
+  name: string;
+  email: string;
+  role: "admin" | "agent" | "owner" | string | string;
+  contactNumber?: string;
+  addedAt: Date | string | null;
+}
+
+// SIGNATURE INTERFACE
+export interface Signatures {
+  tenantSignature: FILE | File;
+  landlordSignature: FILE | File;
+  signedAt: Date; // ISO timestamp
+  ipAddress: string;
+  userAgent: AddedBy;
+}
+
+// RULE AND REGULATION INTERFACE
+export interface RulesAndRegulations {
+  rule: string;
+  description: string;
+  isEditable?: boolean;
+}
+
+//NOTICE PERIOD
+export interface NoticePeriod {
+  id: string;
+  label: string;
+  days: number; // Number of days required to give notice
+  description: string;
+  isEditable?: boolean
+}
+
+// UTILITY RESPONSIBILITY FORMAT
+export interface UtilityResponsibility {
+  id: string;
+  utility: string; // e.g., "Electricity", "Water"
+  paidBy: "landlord" | "tenant" | "shared" | "real estate company" | string;
+  description: string;
+  isEditable?: boolean;
+}
+
+// LATE PAYMENT PENALTY FORMAT
+export interface LatePaymentPenalty {
+  label: string; // Displayed label in UI
+  type: "fixed" | "percentage" | "per-day" | string; // Type of penalty calculation
+  value: number; // Amount, %, or per-day fee
+  description: string; // Explanation for user/admin
+  isEditable?: boolean;
+}
+
+// RENT DUE DATE FROMAT
+export interface RentDueDate {
+  id: string;
+  label: string;
+  day?: number; // e.g., 1 for 1st of the month
+  offsetDays?: number; // e.g., 5 for "5 days after invoice"
+  description?: string;
+  isEditable?: boolean;
+}
+
+// SECURITY DEPOSIT FORMAT
+export interface SecurityDeposit {
+  id: string;
+  name: string;
+  description: string;
+  refundable: boolean;
+  isEditable?: boolean;
+}
+
+// PAYMENT METHOD FORMAT
+export interface PaymentMethod {
+  id: string; // Unique identifier
+  name: string; // Display name
+  category: string;
+  region?: string; // Optional region or origin (e.g., EU, US, Asia)
+  supported?: boolean; // Can be used to toggle availability
+  isEditable?: boolean;
+  description?: string;
+}
+
+// PAYMENT FREQUENCY FROMAT
+export interface PaymentFrequency {
+  id: string; // Unique identifier
+  name: string; // Human-readable label
+  duration: string; // ISO-like duration string (e.g., "P1M" = 1 month)
+  unit: string;
+  isEditable?: boolean;
+}
+
+// CURRENCY DETAILS FORMAT
 export interface CurrencyFormat {
   country: string;
-  symbol: any;
+  symbol: string;
   flags: {
     png: string; // PNG flag image URL
     svg: string; // SVG flag image URL
@@ -89,26 +204,143 @@ export interface CurrencyFormat {
   currency: string;
 }
 
+// LEASE AGREEMENT INTERFACE
 export interface LeaseAgreement {
   startDate: Date; // ISO format
   endDate: Date;
   durationMonths: number;
   monthlyRent: number;
   currency: CurrencyFormat;
-  paymentFrequency: PaymentMethodFormat;
-  paymentMethod: PaymentMethodFormat;
-  securityDeposit: SecurityDepositFormat;
-  rentDueDate: RentDueDateFormat; // e.g., 5th of each month
-  latePaymentPenalty: LatePaymentPenaltyFormat; // e.g., "LKR 500 per day"
-  utilityResponsibilities: UtilityResponsibilityFormat;
-  noticePeriodDays: NoticePeriodFormat;
+  paymentFrequency: PaymentFrequency;
+  paymentMethod: PaymentMethod;
+  securityDeposit: SecurityDeposit;
+  rentDueDate: RentDueDate; // e.g., 5th of each month
+  latePaymentPenalties: LatePaymentPenalty[]; // e.g., "LKR 500 per day"
+  utilityResponsibilities: UtilityResponsibility[];
+  noticePeriodDays: NoticePeriod;
 }
 
-export interface RulesAndRegulations {
-  rule: string;
-  description: string;
-  isEditable?: boolean;
+// CO-TENANT INFORMATION INTERFACE
+export interface CoTenant {
+  fullName: string;
+  email: string;
+  phoneCode: string;
+  phoneNumber: string;
+  gender: string;
+  nicOrPassport: string;
+  age: number;
+  relationship: string;
 }
+
+
+// EMERGENCY CONTACT INFORMATION INTERFACE
+export interface EmergencyContact {
+  name: string;
+  relationship: string;
+  contact: string;
+}
+
+// ADDRESS COUNTRY DETAILS FORMAT
+export interface CountryDetails {
+  name: string;
+  code: string;
+  emoji: string; // Emoji representation of the flag
+  unicode: string;
+  image: string;
+}
+
+// ADDRESS FORMAT
+export interface Address {
+  houseNumber: string;
+  street: string;
+  city: string;
+  stateOrProvince: string;
+  postalCode: string;
+  country: CountryDetails; // Full country details object
+}
+
+// COUNTRY CODE FORMAT
+export interface CountryCodeFormat {
+  name: string;
+  code: string;
+  flags: {
+    png: string; // PNG flag image URL
+    svg: string; // SVG flag image URL
+    alt?: string; // Description of the flag
+  };
+}
+
+// TENANT INFORMATION INTERFACE
+export interface TenantInformation {
+  tenantUsername: string;
+  fullName: string;
+  nicOrPassport: string;
+  gender: string;
+  nationality: string;
+  dateOfBirth: Date; // ISO format: YYYY-MM-DD
+  phoneCodeDetails: CountryCodeFormat;
+  phoneNumber: string;
+  email: string;
+  permanentAddress: Address;
+  emergencyContact: EmergencyContact;
+  scannedDocuments: ScannedFileRecordJSON[] | File[];
+}
+
+// PARENT INTERFACES
+export interface LeaseWithProperty {
+  leaseID: string;
+  tenantInformation: TenantInformation;
+  coTenant?: CoTenant;
+  property?: BackEndPropertyData;
+  leaseAgreement: LeaseAgreement;
+  rulesAndRegulations: RulesAndRegulations[];
+  isReadTheCompanyPolicy: boolean;
+  signatures: Signatures;
+  systemMetadata: SystemMetadata;
+}
+
+// PARENT INTERFACES
+export interface Lease {
+  leaseID: string;
+  tenantInformation: TenantInformation;
+  coTenant?: CoTenant;
+  propertyID?: Property['id'];
+  leaseAgreement: LeaseAgreement;
+  rulesAndRegulations: RulesAndRegulations[];
+  isReadTheCompanyPolicy: boolean;
+  signatures: Signatures;
+  systemMetadata: SystemMetadata;
+}
+//<================================================= END DEFAULT INTERFACES =================================================>
+
+
+export const SWITCH_ON_ARRAY: string[] = [
+  'approved',
+  'active',
+  'completed',
+  'reviewed'
+];
+
+export const SWITCH_OFF_ARRAY: string[] = [
+  'pending',
+  'rejected',
+  'reject',
+  'cancelled',
+  'cancel',
+  'deactivated',
+  'deactive',
+  'inactive',
+  'flagged',
+  'suspended',
+  'draft',
+  'waiting',
+  'hold',
+  'expired',
+  'processing',
+  'under review',
+  'archived'
+];
+
 
 export const DEFAULT_RULES_AND_REGULATIONS: RulesAndRegulations[] = [
   {
@@ -233,34 +465,7 @@ export const DEFAULT_COMPANY_POLICY: string = `
 </div>
 `;
 
-export interface Signatures {
-  tenantSignature: File;
-  landlordSignature: File;
-  signedAt: Date; // ISO timestamp
-  ipAddress: string;
-  userAgent: string;
-}
-
-export interface SystemMetadata {
-  ocrAutoFillStatus: boolean;
-  validationStatus: 'Pending' | 'Validated' | 'Rejected' | string;
-  language: string;
-  leaseTemplateVersion: string;
-  pdfDownloadUrl?: string;
-  lastUpdated: string; // ISO timestamp
-}
-
-export interface PaymentMethodFormat {
-  id: string; // Unique identifier
-  name: string; // Display name
-  category: 'card' | 'wallet' | 'bank' | 'gateway' | 'cash' | 'crypto' | 'bnpl';
-  region?: string; // Optional region or origin (e.g., EU, US, Asia)
-  supported?: boolean; // Can be used to toggle availability
-  isEditable?: boolean; // Optional flag to indicate if this method can be edited
-  description?: string; // Optional description for additional context
-}
-
-export const PAYMENT_METHODS: PaymentMethodFormat[] = [
+export const PAYMENT_METHODS: PaymentMethod[] = [
   // Credit & Debit Cards
   { id: 'visa', name: 'Visa', category: 'card' },
   { id: 'mastercard', name: 'MasterCard', category: 'card' },
@@ -357,15 +562,7 @@ export const PAYMENT_METHODS: PaymentMethodFormat[] = [
   { id: 'moneyorder', name: 'Money Order', category: 'cash', region: 'International Postal', isEditable: false, description: 'Prepaid paper instrument for sending money' }
 ];
 
-export interface PaymentFrequencyFormat {
-  id: string; // Unique identifier
-  name: string; // Human-readable label
-  duration: string; // ISO-like duration string (e.g., "P1M" = 1 month)
-  unit: string;
-  isEditable?: boolean; // Optional flag to indicate if this frequency can be edited
-}
-
-export const PAYMENT_FREQUENCIES: PaymentFrequencyFormat[] = [
+export const PAYMENT_FREQUENCIES: PaymentFrequency[] = [
   {
     id: 'one-time',
     name: 'One-Time',
@@ -432,15 +629,7 @@ export const PAYMENT_FREQUENCIES: PaymentFrequencyFormat[] = [
 ];
 
 
-export interface SecurityDepositFormat {
-  id: string;
-  name: string;
-  description: string;
-  refundable: boolean;
-  isEditable?: boolean;
-}
-
-export const BASE_SECURITY_DEPOSIT_OPTIONS: SecurityDepositFormat[] = [
+export const BASE_SECURITY_DEPOSIT_OPTIONS: SecurityDeposit[] = [
   {
     id: 'one-month',
     name: 'One Month Deposit',
@@ -485,16 +674,7 @@ export const BASE_SECURITY_DEPOSIT_OPTIONS: SecurityDepositFormat[] = [
   },
 ];
 
-export interface RentDueDateFormat {
-  id: string;
-  label: string;
-  day?: number; // e.g., 1 for 1st of the month
-  offsetDays?: number; // e.g., 5 for "5 days after invoice"
-  description?: string;
-  isEditable?: boolean; // Optional flag to indicate if this due date can be edited
-}
-
-export const RENT_DUE_DATE_OPTIONS: RentDueDateFormat[] = [
+export const RENT_DUE_DATE_OPTIONS: RentDueDate[] = [
   {
     id: 'first-of-month',
     label: '1st of Every Month',
@@ -545,21 +725,14 @@ export const RENT_DUE_DATE_OPTIONS: RentDueDateFormat[] = [
   },
 ];
 
-export interface LatePaymentPenaltyFormat {
-  label: string; // Displayed label in UI
-  type: 'fixed' | 'percentage' | 'per-day'; // Type of penalty calculation
-  value: number; // Amount, %, or per-day fee
-  description: string; // Explanation for user/admin
-  isEditable?: boolean;
-}
-
-export const LATE_PAYMENT_PENALTY_OPTIONS: LatePaymentPenaltyFormat[] = [
+export const LATE_PAYMENT_PENALTY_OPTIONS: LatePaymentPenalty[] = [
   {
     label: 'Fixed Fee - LKR 1,000',
     type: 'fixed',
     value: 1000,
     description:
       'A fixed penalty of LKR 1,000 will be charged for any late payment, regardless of the overdue amount or duration.',
+    isEditable: false,
   },
   {
     label: 'Fixed Fee - LKR 5,000',
@@ -567,6 +740,7 @@ export const LATE_PAYMENT_PENALTY_OPTIONS: LatePaymentPenaltyFormat[] = [
     value: 5000,
     description:
       'A fixed penalty of LKR 5,000 will be applied for each late payment instance.',
+    isEditable: false,
   },
   {
     label: 'Percentage - 5% of Due Amount',
@@ -574,6 +748,7 @@ export const LATE_PAYMENT_PENALTY_OPTIONS: LatePaymentPenaltyFormat[] = [
     value: 5,
     description:
       'A penalty equal to 5% of the overdue payment amount will be charged.',
+    isEditable: false,
   },
   {
     label: 'Percentage - 10% of Due Amount',
@@ -581,6 +756,7 @@ export const LATE_PAYMENT_PENALTY_OPTIONS: LatePaymentPenaltyFormat[] = [
     value: 10,
     description:
       'A penalty of 10% of the outstanding amount will be applied for late payments.',
+    isEditable: false,
   },
   {
     label: 'Per Day - LKR 200/day',
@@ -588,6 +764,7 @@ export const LATE_PAYMENT_PENALTY_OPTIONS: LatePaymentPenaltyFormat[] = [
     value: 200,
     description:
       'A penalty of LKR 200 will be charged for each day the payment remains overdue.',
+    isEditable: false,
   },
   {
     label: 'Per Day - LKR 500/day',
@@ -595,31 +772,18 @@ export const LATE_PAYMENT_PENALTY_OPTIONS: LatePaymentPenaltyFormat[] = [
     value: 500,
     description:
       'A fee of LKR 500 will be applied for every day the payment is late.',
+    isEditable: false,
   },
 ];
 
-export interface UtilityResponsibilityFormat {
-  id: string;
-  utility: string; // e.g., "Electricity", "Water"
-  paidBy: 'landlord' | 'tenant' | 'shared' | 'real estate company';
-  description: string;
-  isEditable?: boolean;
-}
-
-export interface NoticePeriodFormat {
-  id: string;
-  label: string;
-  days: number; // Number of days required to give notice
-  description: string;
-}
-
-export const NOTICE_PERIOD_OPTIONS: NoticePeriodFormat[] = [
+export const NOTICE_PERIOD_OPTIONS: NoticePeriod[] = [
   {
     id: '7-days',
     label: '7 Days Notice',
     days: 7,
     description:
       'Either party must give at least 7 days’ written notice before termination.',
+    isEditable: false,
   },
   {
     id: '14-days',
@@ -627,6 +791,7 @@ export const NOTICE_PERIOD_OPTIONS: NoticePeriodFormat[] = [
     days: 14,
     description:
       'Either party must give at least 14 days’ written notice before ending the lease.',
+    isEditable: false,
   },
   {
     id: '30-days',
@@ -634,6 +799,7 @@ export const NOTICE_PERIOD_OPTIONS: NoticePeriodFormat[] = [
     days: 30,
     description:
       'Standard notice period; required for most monthly rental agreements.',
+    isEditable: false,
   },
   {
     id: '60-days',
@@ -641,6 +807,7 @@ export const NOTICE_PERIOD_OPTIONS: NoticePeriodFormat[] = [
     days: 60,
     description:
       'Typically used for longer-term leases; gives more time to find a new tenant or move out.',
+    isEditable: false,
   },
   {
     id: '90-days',
@@ -648,6 +815,7 @@ export const NOTICE_PERIOD_OPTIONS: NoticePeriodFormat[] = [
     days: 90,
     description:
       'Applies to long-term or commercial leases; offers extended preparation period.',
+    isEditable: false,
   },
   {
     id: 'no-notice',
@@ -655,19 +823,10 @@ export const NOTICE_PERIOD_OPTIONS: NoticePeriodFormat[] = [
     days: 0,
     description:
       'Immediate termination allowed without any advance notice (not recommended for standard leases).',
+    isEditable: false,
   },
 ];
 
-export interface Lease {
-  tenantInformation: TenantInformation;
-  coTenants?: CoTenant[]; // Optional: empty if none
-  propertyInformation: PropertyInformation;
-  leaseAgreement: LeaseAgreement;
-  rulesAndRegulations: RulesAndRegulations[];
-  companyPolicy: string;
-  signatures: Signatures;
-  systemMetadata: SystemMetadata;
-}
 
 @Injectable({
   providedIn: 'root',
@@ -702,7 +861,7 @@ export class TenantService {
 
 
 
-  public formatRentDueDateFormat(option: RentDueDateFormat): string {
+  public formatRentDueDateFormat(option: RentDueDate): string {
     if (option.day) {
       return `Due on the ${option.day}${this.ordinalSuffix(
         option.day
@@ -729,15 +888,37 @@ export class TenantService {
   }
 
   //<================================================= API =================================================>
+  // Register a new lease agreement
   public async registerLeaseAgreement(
     data: FormData,
     leaseID: string
   ): Promise<MSG> {
     return await firstValueFrom(
       this.http.post<MSG>(
-        `http://localhost:3000/api-lease/register/${leaseID}`,
+        `http://localhost:3000/api-lease/register/${leaseID.trim()}`,
         data
       )
+    );
+  }
+
+  // Get all lease agreements by username
+  public async getAllLeaseAgreementsByUsername(username: string): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.get<MSG>(`http://localhost:3000/api-lease/lease-agreements/${username.trim()}`)
+    );
+  }
+
+  // Get lease agreements by leaseID
+  public async getAllLeaseAgreementsByLeaseID(leaseID: string): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.get<MSG>(`http://localhost:3000/api-lease/lease-agreements/${leaseID.trim()}`)
+    );
+  }
+
+  // Update lease validation status
+  public async getLeaseAgreementByIDAndUpdateValidationStatus(formData: FormData, leaseID: string): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.put<MSG>(`http://localhost:3000/api-lease/lease-status-updated/${leaseID.trim()}`, formData)
     );
   }
 }

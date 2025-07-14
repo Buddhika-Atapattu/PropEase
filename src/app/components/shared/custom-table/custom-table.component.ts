@@ -41,6 +41,7 @@ import {
 } from '../../dialogs/notification/notification.component';
 import { ProgressBarComponent } from '../../dialogs/progress-bar/progress-bar.component';
 import { TenantService } from '../../../services/tenant/tenant.service';
+import { SwitchButton } from '../../../components/shared/buttons/switch-button/switch-button.component';
 
 export interface ButtonDataType {
   type: string;
@@ -49,18 +50,18 @@ export interface ButtonDataType {
 
 export interface ButtonType {
   type:
-    | 'add'
-    | 'delete'
-    | 'remove'
-    | 'view'
-    | 'download'
-    | 'approve'
-    | 'reject'
-    | 'activate'
-    | 'deactivate'
-    | 'upload'
-    | 'reset'
-    | 'search';
+  | 'add'
+  | 'delete'
+  | 'remove'
+  | 'view'
+  | 'download'
+  | 'approve'
+  | 'reject'
+  | 'activate'
+  | 'deactivate'
+  | 'upload'
+  | 'reset'
+  | 'search';
 }
 
 export interface CustomTableColumnType {
@@ -71,6 +72,11 @@ export interface CustomTableColumnType {
 export interface FileExportWithDataAndExtentionType {
   data: any[];
   extention: FileExportButtonTypeByExtension;
+}
+
+export interface SwitchButtonDataFormatType {
+  isActive: boolean; // Fixed spelling: was `isAvtive`
+  data: any;
 }
 
 @Component({
@@ -86,13 +92,13 @@ export interface FileExportWithDataAndExtentionType {
     PaginatorComponent,
     NotificationComponent,
     ProgressBarComponent,
+    SwitchButton
   ],
   templateUrl: './custom-table.component.html',
   styleUrl: './custom-table.component.scss',
 })
 export class CustomTableComponent
-  implements OnInit, AfterViewInit, OnDestroy, OnChanges
-{
+  implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @Input() loggedUser: LoggedUserType | null = null;
   @Input() isLoading: boolean = false;
   @Input() isBrowser: boolean = false;
@@ -167,6 +173,9 @@ export class CustomTableComponent
   @Output() fileExport: EventEmitter<FileExportWithDataAndExtentionType> =
     new EventEmitter<FileExportWithDataAndExtentionType>();
 
+  @Input() switchButton: SwitchButtonDataFormatType | null = null;
+  @Output() switchButtonChange = new EventEmitter<SwitchButtonDataFormatType>();
+
   // View child components
   @ViewChild(ProgressBarComponent, { static: true })
   progress!: ProgressBarComponent;
@@ -179,6 +188,7 @@ export class CustomTableComponent
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   protected tableButtonAction: string = '';
   protected tableButtonOperation: string = '';
+  protected tableStatus: string = '';
   protected isTableVisible: boolean = true;
 
   // Defined images
@@ -195,7 +205,7 @@ export class CustomTableComponent
     private apiService: APIsService,
     private authService: AuthService,
     private tenantService: TenantService
-  ) {}
+  ) { }
 
   async ngOnInit() {
     if (this.isBrowser) {
@@ -203,9 +213,10 @@ export class CustomTableComponent
         this.mode = val;
       });
     }
+
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
@@ -225,6 +236,7 @@ export class CustomTableComponent
     }
     if (changes['columns']) {
       this.displayedColumnKeys = this.columns.map((c) => c.key);
+      this.tableStatus = (this.columns.find((c) => c.key.toLowerCase() === 'status')?.key || '').toLowerCase();
     }
   }
 
@@ -354,6 +366,18 @@ export class CustomTableComponent
     this.buttonActionTriggerStarted = true;
     this.buttonActionTriggerStartedChange.emit(this.buttonActionTriggerStarted);
   }
+
+  protected handleSwitchChange(
+    isActive: SwitchButtonDataFormatType['isActive'],
+    input: SwitchButtonDataFormatType['data']
+  ): void {
+    this.switchButton = {
+      isActive, // Fixed spelling
+      data: input
+    };
+
+    this.switchButtonChange.emit(this.switchButton);
+  }
   //<======================= End Handle Actions =======================>
 
   //<======================= Sort Data =======================>
@@ -416,4 +440,66 @@ export class CustomTableComponent
   }
 
   //<======================= End Image Checker =======================>
+
+  //<======================= Format Date Range =======================>
+  protected formatDateRange(start: Date, end: Date): string {
+    const formatWithSuffix = (date: Date): string => {
+      const day = date.getDate();
+      const suffix = this.getOrdinalSuffix(day);
+      const month = date.toLocaleString('default', { month: 'long' });
+      const year = date.getFullYear();
+      return `${day}${suffix} of ${month} ${year}`;
+    };
+
+    return `${formatWithSuffix(start)} to ${formatWithSuffix(end)}`;
+  }
+
+  private getOrdinalSuffix(day: number): string {
+    if (day >= 11 && day <= 13) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  }
+  //<======================= End Format Date Range =======================>
+
+  //<======================= Trim Text =======================>
+  protected trimText(text: any): string {
+    const stringValue = typeof text === 'string' ? text : String(text ?? '');
+    const safeText = stringValue.trim();
+
+    return safeText.length > 30 ? safeText.slice(0, 30) + '...' : safeText;
+  }
+  //<======================= End Trim Text =======================>
+
+  //<======================= Make Capitalize =======================>
+  protected makeCapitalize(text: any): string {
+    const stringValue = typeof text === 'string' ? text : String(text ?? '').trim();
+
+    // Parse the input HTML into a document fragment
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<div>${stringValue}</div>`, 'text/html');
+    const container = doc.body.firstChild as HTMLElement;
+
+    function capitalizeTextNodes(node: Node): void {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const originalText = node.nodeValue || '';
+        const words = originalText.split(' ');
+        const capitalized = words
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        node.nodeValue = capitalized;
+      } else if (node.nodeType === Node.ELEMENT_NODE && node.childNodes) {
+        node.childNodes.forEach(child => capitalizeTextNodes(child));
+      }
+    }
+
+    capitalizeTextNodes(container);
+
+    return container.innerHTML;
+  }
+  //<======================= End Make Capitalize =======================>
+
 }

@@ -24,7 +24,7 @@ export class TopProgressBarComponent implements OnInit, OnDestroy {
   loading = false;
   private routerSub!: Subscription;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   ngOnInit(): void {
     this.routerSub = this.router.events.subscribe((event) => {

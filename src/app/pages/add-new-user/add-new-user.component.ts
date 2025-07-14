@@ -65,6 +65,8 @@ import { CameraBoxComponent } from '../../components/dialogs/camera-box/camera-b
 import { EditorComponent } from '@tinymce/tinymce-angular';
 import { AuthService } from '../../services/auth/auth.service';
 import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
+import { UserControllerService } from '../../services/userController/user-controller.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 interface userAccessType {
   access: string[];
@@ -149,13 +151,13 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly usernamePattern: RegExp = /^[a-zA-Z0-9._-]{4,20}$/;
   protected usernameMatchPattern: boolean = true;
   protected passwordMatchPattern: boolean = true;
-  protected isEmailExist: boolean = false;
-  protected emailMatchPattern: boolean = true;
+  protected isEmailError: boolean = false;
+  protected emailErrorMessage: string = '';
   private readonly emailPattern: RegExp =
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   private readonly phonePattern: RegExp = /^\+?[0-9\s\-()]{10,15}$/;
-  protected phoneMatchPattern: boolean = true;
-  protected isPhoneExist: boolean = false;
+  protected isPhoneError: boolean = false;
+  protected phoneErrorMessage: string = '';
   protected readonly definedGender: string[] = ['Male', 'Female', 'Other'];
   protected accessOptions = ACCESS_OPTIONS;
   protected selectedPermissions: {
@@ -244,10 +246,11 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
     private crypto: CryptoService,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
-    private authService: AuthService
+    private authService: AuthService,
+    private userControlService: UserControllerService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    this.activeRouter.url.subscribe((segments) => {});
+    this.activeRouter.url.subscribe((segments) => { });
     this.iconCreator();
     this.loogedUser = this.authService.getLoggedUser;
   }
@@ -266,7 +269,7 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   //<==================== User Validation Operations ====================>
   protected isUserCanMakeUserActivate(): boolean {
@@ -607,39 +610,81 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
   //<=========== End Checking the password ============>
 
   //<=========== Checking the email ============>
-  protected async checkEmail(event: Event): Promise<void> {
-    this.emailMatchPattern = false;
-    const input = event.target as HTMLInputElement;
-    if (this.emailPattern.test(input.value)) {
-      this.emailMatchPattern = true;
-    } else {
-      this.emailMatchPattern = false;
+  protected async checkEmail(input: string): Promise<void> {
+    try {
+      if (this.emailPattern.test(input)) {
+        const checking = await this.userControlService.emailValidator(input);
+        if (checking.status === 'success') {
+          this.isEmailError = checking.data.validation;
+          this.emailErrorMessage = checking.message;
+          const existEmail = await this.API.getUserByEmail(input);
+          if (existEmail.status === 'true') {
+            this.isEmailError = true;
+            this.emailErrorMessage = 'Email already exist';
+            throw new Error('Email already exist');
+          }
+          else {
+            this.isEmailError = false;
+            this.emailErrorMessage = '';
+          }
+        }
+        else {
+          this.isEmailError = true;
+          this.emailErrorMessage = 'Invalid email';
+          throw new Error('Invalid email');
+        }
+      }
+      else {
+        this.isEmailError = true;
+        this.emailErrorMessage = 'Invalid email format';
+      }
     }
-    if (this.emailMatchPattern) {
-      const checking: validateType = await this.API.getUserByEmail(input.value);
-      if (checking.status === 'true') {
-        this.isEmailExist = true;
-      } else {
-        this.isEmailExist = false;
+    catch (error) {
+      console.error(error);
+      if (error instanceof HttpErrorResponse) {
+        this.isEmailError = true;
+        this.emailErrorMessage = error.error.message;
+        this.notification.notification('error', error.error.message);
+      }
+      else {
+        this.notification.notification('error', error as string);
       }
     }
   }
   //<=========== End Checking the password ============>
 
-  protected async checkPhone(event: Event): Promise<void> {
-    this.phoneMatchPattern = false;
-    const input = event.target as HTMLInputElement;
-    const phone = input.value;
-    if (this.phonePattern.test(phone)) {
-      this.phoneMatchPattern = true;
-      const checking: validateType = await this.API.getUserByPhone(phone);
-      if (checking.status === 'true') {
-        this.isPhoneExist = true;
-      } else {
-        this.isPhoneExist = false;
+  protected async checkPhone(input: string): Promise<void> {
+    try {
+      const safeInput = input.trim();
+      const checking = await this.userControlService.isPhoneNumberValid(safeInput);
+      const isExistChecking = await this.API.getUserByPhone(safeInput);
+      if (isExistChecking.status === 'error') {
+        if (!checking) {
+          this.isPhoneError = true;
+          this.phoneErrorMessage = 'Invalid phone number';
+          throw new Error('Invalid phone number');
+        }
+        else {
+          this.isPhoneError = false;
+          this.phoneErrorMessage = '';
+        }
       }
-    } else {
-      this.phoneMatchPattern = false;
+      else if (isExistChecking.status === 'success') {
+        this.isPhoneError = true;
+        this.phoneErrorMessage = isExistChecking.message;
+        throw new Error(isExistChecking.message);
+      }
+    }
+    catch (error) {
+      console.error(error);
+      if (error instanceof HttpErrorResponse) {
+        this.isPhoneError = true;
+        this.phoneErrorMessage = error.error.message;
+        this.notification.notification('error', error.error.message);
+      }
+      else {
+        this.notification.notification('error', error as string);
+      }
     }
   }
 
@@ -820,12 +865,12 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
         throw new Error('User password is required');
       }
 
-      if (this.isEmailExist) {
-        throw new Error('Email already exist');
+      if (this.isEmailError) {
+        throw new Error(this.emailErrorMessage);
       }
 
-      if (this.isPhoneExist) {
-        throw new Error('Phone already exist');
+      if (this.isPhoneError) {
+        throw new Error(this.phoneErrorMessage);
       }
 
       if (this.isUsernameExist) {
@@ -836,16 +881,8 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
         throw new Error('Password does not match the pattern');
       }
 
-      if (!this.emailMatchPattern) {
-        throw new Error('Email does not match the pattern');
-      }
-
       if (!this.usernameMatchPattern) {
         throw new Error('Username does not match the pattern');
-      }
-
-      if (!this.phoneMatchPattern) {
-        throw new Error('Contact number does not match the pattern');
       }
 
       if (!this.isValidAge) {

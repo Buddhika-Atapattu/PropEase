@@ -33,7 +33,7 @@
     height: 10rem;
     margin-top: 2rem;
     margin-bottom: 10rem;
-    .btn-edit {
+    .btn-warning {
       position: absolute;
       width: 2rem;
       height: 2rem;
@@ -59,13 +59,13 @@
     }
   }
 
-  .tenant-details{
+  .tenant-details {
     margin: 0 !important;
     padding: 0 !important;
     list-style: none;
-    li{
-        margin: 0 !important;
-        padding: 0.25rem 0rem !important;
+    li {
+      margin: 0 !important;
+      padding: 0.25rem 0rem !important;
     }
   }
 
@@ -97,11 +97,11 @@
       }
     }
 
-    .tenant-details{
+    .tenant-details {
+      color: #fff;
+      li {
         color: #fff;
-        li{
-            color: #fff;
-        }
+      }
     }
   }
 
@@ -132,11 +132,11 @@
         }
       }
     }
-    .tenant-details{
+    .tenant-details {
+      color: #000;
+      li {
         color: #000;
-        li{
-            color: #000;
-        }
+      }
     }
   }
 }

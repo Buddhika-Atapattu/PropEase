@@ -34,38 +34,38 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 
 export interface FileExportButtonTypeByExtension {
   type:
-    | 'doc'
-    | 'docx'
-    | 'dot'
-    | 'dotx'
-    | 'rtf'
-    | 'odt'
-    | 'txt'
-    | 'xml'
-    | 'xls'
-    | 'xlsx'
-    | 'xlsm'
-    | 'xlt'
-    | 'xltx'
-    | 'ods'
-    | 'csv'
-    | 'tsv'
-    | 'ppt'
-    | 'pptx'
-    | 'pptm'
-    | 'pot'
-    | 'potx'
-    | 'odp'
-    | 'pdf'
-    | 'zip'
-    | 'png'
-    | 'jpeg'
-    | 'webp'
-    | 'gif'
-    | 'jpg'
-    | 'ico'
-    | 'svg'
-    | 'file';
+  | 'doc'
+  | 'docx'
+  | 'dot'
+  | 'dotx'
+  | 'rtf'
+  | 'odt'
+  | 'txt'
+  | 'xml'
+  | 'xls'
+  | 'xlsx'
+  | 'xlsm'
+  | 'xlt'
+  | 'xltx'
+  | 'ods'
+  | 'csv'
+  | 'tsv'
+  | 'ppt'
+  | 'pptx'
+  | 'pptm'
+  | 'pot'
+  | 'potx'
+  | 'odp'
+  | 'pdf'
+  | 'zip'
+  | 'png'
+  | 'jpeg'
+  | 'webp'
+  | 'gif'
+  | 'jpg'
+  | 'ico'
+  | 'svg'
+  | 'file';
 }
 
 @Component({
@@ -93,8 +93,7 @@ export interface FileExportButtonTypeByExtension {
   styleUrl: './paginator.component.scss',
 })
 export class PaginatorComponent
-  implements OnInit, OnDestroy, AfterViewInit, OnChanges
-{
+  implements OnInit, OnDestroy, AfterViewInit, OnChanges {
   @Input() pageCount: number = 0;
   @Input() pageIndex: number = 0;
   @Input() pageSize: number = 0;
@@ -136,16 +135,23 @@ export class PaginatorComponent
   }
 
   ngOnInit() {
-    if (this.pageSizeOptions.length > 0) {
+  }
+
+  ngAfterViewInit(): void { }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['pageSizeOptions'] && this.pageSizeOptions?.length > 0) {
       this.selectedPageSize = this.pageSizeOptions[0];
+      this.pageIndex = 0;
+      this.pageIndexChange.emit(this.pageIndex);
+    }
+
+    if (changes['pageSize']) {
+      this.pageSize = changes['pageSize'].currentValue || 0;
     }
   }
 
-  ngAfterViewInit(): void {}
-
-  ngOnChanges(changes: SimpleChanges): void {}
-
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 
   private registerCustomIcons(): void {
     const iconMap = {

@@ -76,7 +76,7 @@ export class SignSignature implements OnInit, AfterViewInit, OnDestroy {
     this.ctx.strokeStyle = '#000';
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 
   protected triggerInput() {
     this.fileInput.nativeElement.click();

@@ -40,8 +40,8 @@ export interface NotificationType {
 
 @Component({
   selector: 'app-notification',
-  imports: [CommonModule],
   standalone: true,
+  imports: [CommonModule],
   templateUrl: './notification.component.html',
   styleUrl: './notification.component.scss',
 })
@@ -61,11 +61,11 @@ export class NotificationComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 
   public async notification(status: msg['type'], message: string) {
     this.status = status;

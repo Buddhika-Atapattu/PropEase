@@ -9,25 +9,25 @@ import {
   ViewChild,
   ElementRef,
 } from '@angular/core';
-import { WindowsRefService } from '../../services/windowRef/windowRef.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { AuthService, BaseUser } from '../../services/auth/auth.service';
+import { AuthService, BaseUser } from '../../../services/auth/auth.service';
 import { MatDialog } from '@angular/material/dialog';
-import { PropertyFilterDialogComponent } from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
+import { PropertyFilterDialogComponent } from '../../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
 import {
   PropertyService,
   Property,
   PropertyFilter,
   BackEndPropertyData,
-} from '../../services/property/property.service';
-import { ProgressBarComponent } from '../../components/dialogs/progress-bar/progress-bar.component';
-import { NotificationComponent } from '../../components/dialogs/notification/notification.component';
-import { PropertyViewCardComponent } from '../../components/property-view-card/property-view-card.component';
+} from '../../../services/property/property.service';
+import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
+import { NotificationComponent } from '../../../components/dialogs/notification/notification.component';
+import { PropertyViewCardComponent } from '../../../components/property-view-card/property-view-card.component';
 interface filterDialogData {
   minPrice: number;
   maxPrice: number;
@@ -37,6 +37,7 @@ interface filterDialogData {
   type: string;
   status: string;
 }
+import { FormsModule } from '@angular/forms';
 
 interface apiDataTypeForProperties {
   properties: Property[];
@@ -52,6 +53,7 @@ interface apiDataTypeForProperties {
     NotificationComponent,
     ProgressBarComponent,
     PropertyViewCardComponent,
+    FormsModule
   ],
   templateUrl: './properties-main-panel.component.html',
   styleUrl: './properties-main-panel.component.scss',
@@ -66,13 +68,14 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   private modeSub: Subscription | null = null;
   protected LOGGED_USER: BaseUser | null = null;
   protected pageCount: number = 0;
-  protected currentPage: number = 1;
+
   protected search: string = '';
-  protected loading: boolean = true;
+  protected isLoading: boolean = true;
   private routeSub: Subscription | null = null;
   private routerSub: Subscription | null = null;
   private filterDialogRefData: filterDialogData | string = '';
   protected properties: BackEndPropertyData[] = [];
+  protected currentPage: number = 1;
 
   //PAGINATION VARIABLES
   protected readonly itemsPerPage: number = 12; // Number of items per page
@@ -82,6 +85,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   protected totalItems: number = 0; // Total number of items
   protected totalPages: number = 0; // Total number of pages
   protected currentPageNumber: number = 1; // Current page number
+  protected noProperties: boolean = false;
 
   protected isColView: boolean = false;
   protected isListView: boolean = true;
@@ -166,8 +170,16 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboard/property-listing']);
   }
 
+  private async getHighestPropertyPrice(): Promise<number> {
+    // properties: Property[]
+    const data = await this.propertyService.getAllProperties();
+    const properties: Property[] = data.data as Property[];
+    if (!properties || properties.length === 0) return 0;
+    return Math.max(...properties.map(prop => prop.price || 0));
+  }
+
   // Opens the property filter dialog and handles the result
-  protected openFilter() {
+  protected async openFilter() {
     const dialogRef = this.dialog.open(PropertyFilterDialogComponent, {
       width: 'auto',
       height: 'auto',
@@ -176,7 +188,10 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
       minWidth: '25vw',
       minHeight: '25vh',
       autoFocus: false,
-      data: {},
+      data: {
+        maxPrice: await this.getHighestPropertyPrice(),
+        minPrice: 0,
+      },
     });
 
     dialogRef.afterClosed().subscribe((result) => {
@@ -190,13 +205,13 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   // Resets the filter dialog data and clears the search input
   protected async resetFilter() {
     this.filterDialogRefData = '';
-    this.searchInput.nativeElement.value = '';
+    this.search = '';
     await this.callTheSearchAPI();
   }
 
   // Handles the property search input event, updates the search string, and triggers the API call
-  protected async searchProperties(input: Event) {
-    this.search = (input.target as HTMLInputElement).value;
+  protected async searchProperties(input: string) {
+    this.search = input.trim();
     await this.callTheSearchAPI();
   }
 
@@ -210,6 +225,11 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   //Calls the property service to fetch properties with pagination, search, and filter options
   protected async callTheSearchAPI() {
     try {
+      this.isLoading = true;
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
       // Prepare the search value and filter data
       const searchValue = this.search.trim().toLowerCase();
       const filterData = JSON.stringify(
@@ -232,11 +252,9 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
             this.properties = response.data.properties;
             this.totalItems = response.data.count;
             this.pageCount = Math.ceil(this.totalItems / this.itemsPerPage);
-            setInterval(() => {
-              this.loading = false;
-            }, 500);
+
           } else {
-            this.loading = true;
+
             console.error('Error fetching properties:', response.message);
             throw new Error(response.message);
           }
@@ -250,10 +268,17 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
         console.error('Error in callTheSearchAPI:', error);
       }
     }
+    finally {
+      this.noProperties = this.properties.length === 0;
+      setTimeout(() => {
+        this.isLoading = false;
+      }, 1000);
+    }
   }
 
   protected changePage(index: number) {
     this.currentPage = index + 1;
+
     this.callTheSearchAPI();
   }
 

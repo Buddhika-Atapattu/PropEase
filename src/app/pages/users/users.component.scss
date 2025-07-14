@@ -114,8 +114,8 @@
     }
 
     .btn-view,
-    .btn-edit,
-    .btn-delete {
+    .btn-warning,
+    .btn-danger {
       ::ng-deep {
         mat-icon {
           svg {
@@ -158,7 +158,7 @@
         box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
         color: #fff;
         .add-user-btn {
-          background: $dark-btn-edit-color;
+          background: $dark-btn-warning-color;
           box-shadow: $dark-btn-box-shadow;
         }
       }
@@ -192,7 +192,7 @@
         box-shadow: 0rem 0rem 1rem 0rem $light-dashboard-dark-color;
         color: $light-text-color;
         .add-user-btn {
-          background: $light-btn-edit-color;
+          background: $light-btn-warning-color;
           box-shadow: $light-btn-box-shadow;
         }
       }
@@ -202,6 +202,13 @@
 
 .action-btn-container {
   width: 100% !important;
+}
+
+.image-container {
+  img {
+    width: 20rem;
+    border-radius: 1rem;
+  }
 }
 
 @media (max-width: 1024px) {

@@ -13,7 +13,7 @@
       >
         <button
           type="button"
-          class="btn-edit"
+          class="btn-warning"
           matButton="elevated"
           matBadge="7"
           [matBadgeHidden]="hidden"
@@ -41,6 +41,7 @@
       <!-- End Title Row -->
 
       <app-custom-table
+        *ngIf="noneTenants.length > 0"
         [(isReload)]="isReloading"
         [(pageSize)]="noneTenantPageSize"
         [(pageSizeOptions)]="noneTenantPageSizeOptions"
@@ -69,6 +70,7 @@
       ></app-custom-table>
       <hr class="my-5" />
       <app-custom-table
+        *ngIf="tenants.length > 0"
         [(isReload)]="isReloading"
         [(pageSize)]="tenantPageSize"
         [(pageSizeOptions)]="tenantPageSizeOptions"

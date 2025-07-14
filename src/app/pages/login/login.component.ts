@@ -77,7 +77,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     rememberMe: false,
   };
 
-  protected isUserSaved:boolean = false;
+  protected isUserSaved: boolean = false;
 
   constructor(
     private windowRef: WindowsRefService,

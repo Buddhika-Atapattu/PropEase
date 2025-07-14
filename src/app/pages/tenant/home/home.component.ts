@@ -35,6 +35,10 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { MatButtonModule } from '@angular/material/button';
 import { MatBadgeModule } from '@angular/material/badge';
+import { HttpErrorResponse } from '@angular/common/http';
+import { MatDialog } from '@angular/material/dialog';
+import { dialog } from 'electron';
+import { ConfirmationComponent } from '../../../components/dialogs/confirmation/confirmation.component';
 
 export interface TenantTableElement {
   username?: string;
@@ -171,7 +175,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private apiService: APIsService,
-    private tenantService: TenantService
+    private tenantService: TenantService,
+    private dialog: MatDialog
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.route.url.subscribe((segments) => {
@@ -735,14 +740,49 @@ export class HomeComponent implements OnInit, OnDestroy {
       this._tenantsButtonActionTrigger &&
       this._tenantsButtonActionTrigger.type === 'remove'
     ) {
-      const users = this.tenantsFull.filter(
-        (data) =>
-          data.name.toLowerCase() ===
-          this._tenantsButtonActionTrigger?.data.element.name.toLowerCase()
-      );
-      if (users.length === 1) {
-        await this.removeTenant(users[0] as TenantHomeButtonDataType);
+      try {
+        let confirmRemove: boolean = false;
+        const users = this.tenantsFull.filter(
+          (data) =>
+            data.name.toLowerCase() ===
+            this._tenantsButtonActionTrigger?.data.element.name.toLowerCase()
+        );
+
+        if (users.length === 1) {
+          const user = users[0] as TenantTableElement;
+          const dialogRef = this.dialog.open(ConfirmationComponent, {
+            width: '400px',
+            height: 'auto',
+            data: {
+              isConfirm: true,
+              title: 'Renant removal',
+              message: 'Do you wish to remove this tenant!'
+            }
+          })
+
+          dialogRef.afterClosed().subscribe(async (result) => {
+            if (result) {
+              confirmRemove = result.isConfirm;
+              if (confirmRemove) {
+                await this.removeTenant(users[0] as TenantHomeButtonDataType);
+              }
+            }
+          })
+        }
       }
+      catch (error) {
+        console.log(error);
+        if (error instanceof HttpErrorResponse) {
+          this.notificationComponent.notification('error', error.error.message);
+        }
+        else if (typeof error === 'string') {
+          this.notificationComponent.notification('error', error);
+        }
+      }
+
+
+
+
     }
   }
 

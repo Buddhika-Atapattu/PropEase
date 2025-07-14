@@ -288,7 +288,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  protected onImageError() {}
+  protected onImageError() { }
 
   get modeTheam(): boolean | null {
     return this.mode;
@@ -387,7 +387,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isEditable = true;
   }
 
-  protected onSubmit() {}
+  protected onSubmit() { }
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();

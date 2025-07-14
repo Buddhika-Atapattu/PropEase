@@ -14,37 +14,37 @@
             : 'col-xl-12'
         "
       >
-        <input
-          type="text"
-          placeholder="Search property title, country, or status..."
-          class="search-input"
-          (input)="searchProperties($event)"
-        />
-        <button
-          type="button"
-          Mat-button
-          class="search-btn"
-          class="btn filter-btn"
-          (click)="openFilter()"
-        >
-          <mat-icon
-            class="mat-icon-rtl-mirror filter-icon"
-            svgIcon="filter"
-          ></mat-icon>
-        </button>
+        <div class="search-input-row">
+          <input
+            type="text"
+            placeholder="Search property title, country, or status..."
+            class="search-input"
+            name="search"
+            [(ngModel)]="search"
+            (ngModelChange)="searchProperties($event)"
+          />
+          <div class="search-button-row">
+            <button
+              type="button"
+              Mat-button
+              [ngClass]="isLoading ? 'search-button-rotate' : ''"
+              class="search-button-reset"
+              (click)="resetFilter()"
+            >
+              <!-- <mat-icon class="" svgIcon="reset"></mat-icon> -->
+              <i class="fa-solid fa-rotate"></i>
+            </button>
 
-        <button
-          type="button"
-          Mat-button
-          class="search-btn"
-          class="btn reset-btn"
-          (click)="resetFilter()"
-        >
-          <mat-icon
-            class="mat-icon-rtl-mirror reset-icon"
-            svgIcon="reset"
-          ></mat-icon>
-        </button>
+            <button
+              type="button"
+              Mat-button
+              class="search-button-filter"
+              (click)="openFilter()"
+            >
+              <mat-icon class="" svgIcon="filter"></mat-icon>
+            </button>
+          </div>
+        </div>
       </div>
       <div
         *ngIf="isUserCanCreateProperty()"
@@ -55,12 +55,12 @@
         "
       >
         <button
-          class="add-user-btn btn-edit"
+          class="add-user-btn btn-warning"
           type="button"
           (click)="propertyListing()"
         >
           <mat-icon class="mat-icon-rtl-mirror" svgIcon="listing"></mat-icon>
-          <h6 class="mb-0 p-0">Listing</h6>
+          <span class="mb-0 p-0">Listing</span>
         </button>
       </div>
     </div>
@@ -94,12 +94,12 @@
     <!-- Property View Card -->
     <div
       class="user-scroll-wrapper"
-      *ngIf="properties.length > 0 && isListView"
+      *ngIf="properties.length > 0 && isListView && !noProperties"
     >
       <div class="user-container">
         <app-property-view-card
           *ngFor="let property of properties"
-          [ngClass]="isColView ? 'col-xl-4' : 'col-xl-12'"
+          [ngClass]="isColView ? 'col-xl-4 my-2' : 'col-xl-12'"
           [property]="property"
           [isColView]="isColView"
           [isListView]="isListView"
@@ -109,12 +109,15 @@
     </div>
     <!-- End Property View Card -->
 
-    <div class="user-scroll-wrapper" *ngIf="properties.length > 0 && isColView">
+    <div
+      class="user-scroll-wrapper"
+      *ngIf="properties.length > 0 && isColView && !noProperties"
+    >
       <div class="user-container">
         <div class="row">
           <app-property-view-card
             *ngFor="let property of properties"
-            [ngClass]="isColView ? 'col-xl-4' : 'col-xl-12'"
+            [ngClass]="isColView ? 'col-xl-4 my-2' : 'col-xl-12'"
             [property]="property"
             [isColView]="isColView"
             [isListView]="isListView"
@@ -124,15 +127,14 @@
       </div>
     </div>
 
-    <div class="row d-flex justify-content-center align-items-center mt-4">
+    <div
+      class="row d-flex justify-content-center align-items-center mt-4"
+      *ngIf="properties.length > 0 && !noProperties"
+    >
       <div class="col-xl-6 d-flex justify-content-center align-items-center">
         <ul class="pagination-list-group" *ngIf="pageCount > 1">
           <li class="pagination-list-group-item">
-            <button
-              class="pagination-btn btn-custom"
-              type="button"
-              (click)="previousPage()"
-            >
+            <button class="btn-custom" type="button" (click)="previousPage()">
               &laquo;
             </button>
           </li>
@@ -141,7 +143,10 @@
             class="pagination-list-group-item"
           >
             <button
-              class="pagination-btn btn-custom"
+              [ngClass]="{
+                'btn-custom': currentPage !== index + 1,
+                'btn-warning': currentPage === index + 1
+              }"
               type="button"
               (click)="changePage(index)"
             >
@@ -149,15 +154,25 @@
             </button>
           </li>
           <li class="pagination-list-group-item">
-            <button
-              class="pagination-btn btn-custom"
-              type="button"
-              (click)="nextPage()"
-            >
+            <button class="btn-custom" type="button" (click)="nextPage()">
               &raquo;
             </button>
           </li>
         </ul>
+      </div>
+    </div>
+
+    <div class="row my-4" *ngIf="noProperties">
+      <div class="col-12 d-flex justify-content-center align-items-center">
+        <h2 class="title bg-danger py-3 px-4">Couldn't find any properties!</h2>
+      </div>
+    </div>
+
+    <div class="row" *ngIf="noProperties">
+      <div class="col-12 d-flex justify-content-center align-items-center">
+        <div class="image-container">
+          <img src="/Images/System-images/noProperties.jpg" alt="" />
+        </div>
       </div>
     </div>
   </div>
@@ -179,7 +194,9 @@
             type="text"
             placeholder="Search property title, country, or status..."
             class="search-input"
-            (input)="searchProperties($event)"
+            name="search"
+            [(ngModel)]="search"
+            (ngModelChange)="searchProperties($event)"
           />
         </div>
       </div>
@@ -191,7 +208,7 @@
           <button
             type="button"
             Mat-button
-            class="btn-edit"
+            class="btn-warning"
             (click)="openFilter()"
           >
             <mat-icon
@@ -204,7 +221,7 @@
           <button
             type="button"
             Mat-button
-            class="btn-edit"
+            class="btn-warning"
             (click)="resetFilter()"
           >
             <mat-icon
@@ -215,7 +232,7 @@
         </div>
         <div *ngIf="LOGGED_USER?.role === 'admin'" class="col-4">
           <button
-            class="add-user-btn btn-edit d-flex justify-content-center align-items-center"
+            class="add-user-btn btn-warning d-flex justify-content-center align-items-center"
             type="button"
             (click)="propertyListing()"
           >
@@ -248,11 +265,7 @@
       <div class="col-xl-6 d-flex justify-content-center align-items-center">
         <ul class="pagination-list-group" *ngIf="pageCount > 1">
           <li class="pagination-list-group-item">
-            <button
-              class="pagination-btn btn-custom"
-              type="button"
-              (click)="previousPage()"
-            >
+            <button class="btn-custom" type="button" (click)="previousPage()">
               &laquo;
             </button>
           </li>
@@ -261,7 +274,10 @@
             class="pagination-list-group-item"
           >
             <button
-              class="pagination-btn btn-custom"
+              [ngClass]="{
+                'btn-custom': currentPage !== index,
+                'btn-warning': currentPage === index
+              }"
               type="button"
               (click)="changePage(index)"
             >
@@ -269,11 +285,7 @@
             </button>
           </li>
           <li class="pagination-list-group-item">
-            <button
-              class="pagination-btn btn-custom"
-              type="button"
-              (click)="nextPage()"
-            >
+            <button class="btn-custom" type="button" (click)="nextPage()">
               &raquo;
             </button>
           </li>

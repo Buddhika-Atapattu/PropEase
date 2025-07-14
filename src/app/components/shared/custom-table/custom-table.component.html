@@ -161,7 +161,7 @@
               </ng-container>
               <!-- End User Email -->
 
-              <!-- User Email -->
+              <!-- User Gender -->
               <ng-container *ngSwitchCase="'gender'">
                 <div *ngIf="isLoading">
                   <app-skeleton-loader
@@ -175,7 +175,207 @@
                   {{ element.gender }}
                 </div>
               </ng-container>
-              <!-- End User Email -->
+              <!-- End User Gender -->
+
+              <!-- Date Range -->
+              <ng-container *ngSwitchCase="'daterange'">
+                <div *ngIf="isLoading">
+                  <app-skeleton-loader
+                    [Mode]="mode"
+                    [width]="'5rem'"
+                    [height]="'1.5rem'"
+                    [borderRadius]="'0.159rem'"
+                  ></app-skeleton-loader>
+                </div>
+                <div
+                  *ngIf="!isLoading"
+                  [ngClass]="element.notify ? 'bg-danger' : ''"
+                >
+                  {{
+                    formatDateRange(
+                      element.dateRange.start,
+                      element.dateRange.end
+                    )
+                  }}
+                </div>
+              </ng-container>
+              <!-- End Date Range -->
+
+              <!-- Date -->
+              <ng-container *ngSwitchCase="'date'">
+                <div *ngIf="isLoading">
+                  <app-skeleton-loader
+                    [Mode]="mode"
+                    [width]="'5rem'"
+                    [height]="'1.5rem'"
+                    [borderRadius]="'0.159rem'"
+                  ></app-skeleton-loader>
+                </div>
+                <div *ngIf="!isLoading">
+                  {{ element.date | date : "dd/MM/yyyy" }}
+                </div>
+              </ng-container>
+              <!-- End Date -->
+
+              <!-- Date -->
+              <ng-container *ngSwitchCase="'switchbutton'">
+                <div *ngIf="isLoading">
+                  <app-skeleton-loader
+                    [Mode]="mode"
+                    [width]="'5rem'"
+                    [height]="'1.5rem'"
+                    [borderRadius]="'0.159rem'"
+                  ></app-skeleton-loader>
+                </div>
+                <div *ngIf="!isLoading">
+                  <switch-button
+                    [checked]="element.switchButton"
+                    (checkedChange)="handleSwitchChange($event, element)"
+                    [labelOn]="'On'"
+                    [labelOff]="'Off'"
+                  ></switch-button>
+                </div>
+              </ng-container>
+              <!-- End Date -->
+
+              <!-- Status -->
+              <ng-container *ngSwitchCase="'status'">
+                <ng-container *ngIf="element.status">
+                  <div *ngIf="isLoading">
+                    <app-skeleton-loader
+                      [Mode]="mode"
+                      [width]="'5rem'"
+                      [height]="'1.5rem'"
+                      [borderRadius]="'0.159rem'"
+                    ></app-skeleton-loader>
+                  </div>
+
+                  <div *ngIf="!isLoading">
+                    <ng-container [ngSwitch]="element.status.toLowerCase()">
+                      <!-- SUCCESS -->
+                      <ng-container *ngSwitchCase="'approved'">
+                        <div class="bg-success">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'active'">
+                        <div class="bg-success">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'completed'">
+                        <div class="bg-success">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'reviewed'">
+                        <div class="bg-success">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+
+                      <!-- WARNING -->
+                      <ng-container *ngSwitchCase="'pending'">
+                        <div class="bg-warning">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+
+                      <!-- DANGER -->
+                      <ng-container *ngSwitchCase="'rejected'">
+                        <div class="bg-danger">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'reject'">
+                        <div class="bg-danger">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'cancelled'">
+                        <div class="bg-danger">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'cancel'">
+                        <div class="bg-danger">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'deactivated'">
+                        <div class="bg-danger">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'deactive'">
+                        <div class="bg-danger">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'inactive'">
+                        <div class="bg-danger">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'flagged'">
+                        <div class="bg-danger">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'suspended'">
+                        <div class="bg-danger">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+
+                      <!-- SECONDARY -->
+                      <ng-container *ngSwitchCase="'draft'">
+                        <div class="bg-secondary">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'waiting'">
+                        <div class="bg-secondary">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'hold'">
+                        <div class="bg-secondary">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'expired'">
+                        <div class="bg-secondary">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'processing'">
+                        <div class="bg-secondary">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'under review'">
+                        <div class="bg-secondary">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                      <ng-container *ngSwitchCase="'archived'">
+                        <div class="bg-secondary">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+
+                      <!-- DEFAULT -->
+                      <ng-container *ngSwitchDefault>
+                        <div class="bg-info">
+                          {{ makeCapitalize(element.status) }}
+                        </div>
+                      </ng-container>
+                    </ng-container>
+                  </div>
+                </ng-container>
+              </ng-container>
+              <!-- End Status -->
 
               <!-- Operation Button Of The Tenant Or User -->
               <ng-container *ngIf="tableButtonOperation">
@@ -194,7 +394,7 @@
                       <ng-container *ngSwitchCase="'add'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleOperationButtonTrigger({
                               type: 'add',
@@ -222,7 +422,7 @@
                       <ng-container *ngSwitchCase="'remove'">
                         <button
                           type="button"
-                          class="btn-delete"
+                          class="btn-danger"
                           (click)="
                             handleOperationButtonTrigger({
                               type: 'remove',
@@ -236,7 +436,7 @@
                       <ng-container *ngSwitchCase="'delete'">
                         <button
                           type="button"
-                          class="btn-delete"
+                          class="btn-danger"
                           (click)="
                             handleOperationButtonTrigger({
                               type: 'delete',
@@ -250,7 +450,7 @@
                       <ng-container *ngSwitchCase="'download'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleOperationButtonTrigger({
                               type: 'download',
@@ -264,7 +464,7 @@
                       <ng-container *ngSwitchCase="'approve'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleOperationButtonTrigger({
                               type: 'approve',
@@ -278,7 +478,7 @@
                       <ng-container *ngSwitchCase="'reject'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleOperationButtonTrigger({
                               type: 'reject',
@@ -292,7 +492,7 @@
                       <ng-container *ngSwitchCase="'activate'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleOperationButtonTrigger({
                               type: 'reject',
@@ -306,7 +506,7 @@
                       <ng-container *ngSwitchCase="'deactivate'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleOperationButtonTrigger({
                               type: 'deactivate',
@@ -320,7 +520,7 @@
                       <ng-container *ngSwitchCase="'upload'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleOperationButtonTrigger({
                               type: 'upload',
@@ -334,7 +534,7 @@
                       <ng-container *ngSwitchCase="'reset'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleOperationButtonTrigger({
                               type: 'reset',
@@ -348,7 +548,7 @@
                       <ng-container *ngSwitchCase="'search'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleOperationButtonTrigger({
                               type: 'search',
@@ -396,7 +596,7 @@
                       <ng-container *ngSwitchCase="'add'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleActionButtonTrigger({
                               type: 'add',
@@ -424,7 +624,7 @@
                       <ng-container *ngSwitchCase="'remove'">
                         <button
                           type="button"
-                          class="btn-delete"
+                          class="btn-danger"
                           (click)="
                             handleActionButtonTrigger({
                               type: 'remove',
@@ -438,7 +638,7 @@
                       <ng-container *ngSwitchCase="'delete'">
                         <button
                           type="button"
-                          class="btn-delete"
+                          class="btn-danger"
                           (click)="
                             handleActionButtonTrigger({
                               type: 'delete',
@@ -452,7 +652,7 @@
                       <ng-container *ngSwitchCase="'download'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleActionButtonTrigger({
                               type: 'download',
@@ -466,7 +666,7 @@
                       <ng-container *ngSwitchCase="'approve'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleActionButtonTrigger({
                               type: 'approve',
@@ -480,7 +680,7 @@
                       <ng-container *ngSwitchCase="'reject'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleActionButtonTrigger({
                               type: 'reject',
@@ -494,7 +694,7 @@
                       <ng-container *ngSwitchCase="'activate'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleActionButtonTrigger({
                               type: 'reject',
@@ -508,7 +708,7 @@
                       <ng-container *ngSwitchCase="'deactivate'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleActionButtonTrigger({
                               type: 'deactivate',
@@ -522,7 +722,7 @@
                       <ng-container *ngSwitchCase="'upload'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleActionButtonTrigger({
                               type: 'upload',
@@ -536,7 +736,7 @@
                       <ng-container *ngSwitchCase="'reset'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleActionButtonTrigger({
                               type: 'reset',
@@ -550,7 +750,7 @@
                       <ng-container *ngSwitchCase="'search'">
                         <button
                           type="button"
-                          class="btn-edit"
+                          class="btn-warning"
                           (click)="
                             handleActionButtonTrigger({
                               type: 'search',
@@ -590,7 +790,7 @@
                   ></app-skeleton-loader>
                 </div>
                 <div *ngIf="!isLoading" class="text-capitalize">
-                  <div [innerHTML]="element[column.key]"></div>
+                  <div [innerHTML]="trimText(element[column.key])"></div>
                 </div>
               </ng-container>
               <!-- End Add To The Tenant -->

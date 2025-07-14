@@ -228,14 +228,14 @@ export interface BaseUser {
   phoneNumber?: string;
   bio: string;
   role:
-    | 'admin'
-    | 'agent'
-    | 'tenant'
-    | 'owner'
-    | 'operator'
-    | 'manager'
-    | 'developer'
-    | 'user';
+  | 'admin'
+  | 'agent'
+  | 'tenant'
+  | 'owner'
+  | 'operator'
+  | 'manager'
+  | 'developer'
+  | 'user';
   gender: string;
   address: Address;
   isActive: boolean;
@@ -252,11 +252,11 @@ export interface NewUser extends BaseUser {
   password: string;
 }
 
-export interface UsersType extends NewUser {}
+export interface UsersType extends NewUser { }
 
-export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> {}
+export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> { }
 
-export interface LoggedUserType extends Omit<NewUser, 'password'> {}
+export interface LoggedUserType extends Omit<NewUser, 'password'> { }
 
 export type AccessMap = {
   [module: string]: string[]; // list of actions allowed
@@ -310,22 +310,22 @@ export class APIsService {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
-  public async getAllUsers(): Promise<UsersType[] | null> {
+  public async getAllUsers(): Promise<UsersType[]> {
     return (
       (await firstValueFrom(
         this.http.get<UsersType[]>('http://localhost:3000/api-user/users')
-      )) || null
+      ))
     );
   }
 
-  public async verifyUser(user: UserCredentials): Promise<any> {
+  public async verifyUser(user: UserCredentials): Promise<MSG> {
     return (
       (await firstValueFrom(
-        this.http.post<LoggedUserType>(
+        this.http.post<MSG>(
           'http://localhost:3000/api-user/verify-user',
           user
         )
-      )) || null
+      ))
     );
   }
 
@@ -396,9 +396,9 @@ export class APIsService {
     );
   }
 
-  public async getUserByPhone(phone: string): Promise<validateType> {
+  public async getUserByPhone(phone: string): Promise<MSG> {
     return await firstValueFrom(
-      this.http.get<validateType>(
+      this.http.get<MSG>(
         `http://localhost:3000/api-user/user-phone/${phone}`
       )
     );

@@ -66,7 +66,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.authService.getLoggedUser !== null) {
-      setInterval(() => {
+      setTimeout(() => {
         this.isLoading = false;
       }, 500);
       this.user = this.authService.getLoggedUser;
@@ -111,7 +111,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     // await this.insertLoggedUserTracks();
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void { }
 
   protected openMenu(): void {
     this.menuOpen = !this.menuOpen;

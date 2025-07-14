@@ -101,13 +101,13 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   ngAfterViewInit(): void {
     // Force redraw after DOM
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void { }
 
   protected copyToClipboard(inputElement: HTMLInputElement): void {
     console.log('Clciked');

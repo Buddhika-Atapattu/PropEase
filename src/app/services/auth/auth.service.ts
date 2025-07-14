@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { CryptoService } from '../cryptoService/crypto.service';
 import { APIsService } from '../APIs/apis.service';
@@ -54,14 +54,14 @@ export interface BaseUser {
   phoneNumber?: string;
   bio: string;
   role:
-    | 'admin'
-    | 'agent'
-    | 'tenant'
-    | 'owner'
-    | 'operator'
-    | 'manager'
-    | 'developer'
-    | 'user';
+  | 'admin'
+  | 'agent'
+  | 'tenant'
+  | 'owner'
+  | 'operator'
+  | 'manager'
+  | 'developer'
+  | 'user';
   gender: string;
   address: Address;
   isActive: boolean;
@@ -76,11 +76,11 @@ export interface NewUser extends BaseUser {
   password: string;
 }
 
-export interface UsersType extends NewUser {}
+export interface UsersType extends NewUser { }
 
-export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> {}
+export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> { }
 
-export interface LoggedUserType extends Omit<NewUser, 'password'> {}
+export interface LoggedUserType extends Omit<NewUser, 'password'> { }
 
 export type AccessMap = {
   [module: string]: string[]; // list of actions allowed
@@ -90,194 +90,194 @@ export const ACCESS_OPTIONS: ReadonlyArray<{
   module: string;
   actions: ReadonlyArray<string>;
 }> = [
-  {
-    module: 'User Management',
-    actions: [
-      'view',
-      'create',
-      'update',
-      'delete',
-      'activate',
-      'deactivate',
-      'reset password',
-      'change username',
-      'assign roles',
-    ] as const,
-  },
-  {
-    module: 'Property Management',
-    actions: [
-      'view',
-      'create',
-      'update',
-      'delete',
-      'assign agent',
-      'upload documents',
-      'manage amenities',
-      'change status',
-    ] as const,
-  },
-  {
-    module: 'Tenant Management',
-    actions: [
-      'add new tenant',
-      'edit tenant details',
-      'upload/view lease documents',
-      'terminate lease',
-      'send notification/email/SMS',
-      'record manual payment',
-      'extend lease',
-      'assign to a unit/property',
-      'view lease history',
-    ] as const,
-  },
-  {
-    module: 'Owner Management',
-    actions: [
-      'view',
-      'create',
-      'update',
-      'delete',
-      'view documents',
-      'assign to property',
-    ] as const,
-  },
-  {
-    module: 'Agent Management',
-    actions: [
-      'view',
-      'create',
-      'update',
-      'delete',
-      'assign properties',
-      'track performance',
-    ] as const,
-  },
-  {
-    module: 'Lease Management',
-    actions: [
-      'view',
-      'create',
-      'update',
-      'terminate',
-      'renew',
-      'upload document',
-      'track expiry',
-    ] as const,
-  },
-  {
-    module: 'Payment & Billing',
-    actions: [
-      'view',
-      'record manual',
-      'generate invoice',
-      'update invoice',
-      'delete invoice',
-      'view balance',
-      'export reports',
-      'configure rates',
-    ] as const,
-  },
-  {
-    module: 'Maintenance Requests',
-    actions: [
-      'view',
-      'create',
-      'assign technician',
-      'update status',
-      'close',
-      'track progress',
-      'upload documents',
-      'add cost',
-      'generate report',
-    ] as const,
-  },
-  {
-    module: 'Compliance Management',
-    actions: [
-      'upload certificates',
-      'view status',
-      'set reminders',
-      'update record',
-      'delete record',
-      'notify parties',
-    ] as const,
-  },
-  {
-    module: 'Document Management',
-    actions: ['upload', 'download', 'delete', 'share', 'categorize'] as const,
-  },
-  {
-    module: 'Communication & Notification',
-    actions: [
-      'send',
-      'view logs',
-      'customize templates',
-      'schedule',
-      'notify',
-    ] as const,
-  },
-  {
-    module: 'Report Management',
-    actions: [
-      'generate financial',
-      'generate occupancy',
-      'export lease',
-      'customize templates',
-      'view audit logs',
-      'download',
-    ] as const,
-  },
-  {
-    module: 'Audit Logs',
-    actions: [
-      'view logs',
-      'filter logs',
-      'export',
-      'monitor login',
-      'track role changes',
-    ] as const,
-  },
-  {
-    module: 'Dashboard & Analytics',
-    actions: [
-      'view analytics',
-      'customize widgets',
-      'download',
-      'view real time',
-    ] as const,
-  },
-  {
-    module: 'System Settings',
-    actions: [
-      'manage roles',
-      'configure preferences',
-      'configure payments',
-      'manage integrations',
-      'backup restore',
-    ] as const,
-  },
-  {
-    module: 'Support & Helpdesk',
-    actions: [
-      'view tickets',
-      'respond',
-      'assign staff',
-      'close ticket',
-      'track history',
-      'send feedback',
-    ] as const,
-  },
-  {
-    module: 'Access Control',
-    actions: [
-      'grant access',
-      'revoke access',
-      'set restrictions',
-      'control sessions',
-    ] as const,
-  },
-];
+    {
+      module: 'User Management',
+      actions: [
+        'view',
+        'create',
+        'update',
+        'delete',
+        'activate',
+        'deactivate',
+        'reset password',
+        'change username',
+        'assign roles',
+      ] as const,
+    },
+    {
+      module: 'Property Management',
+      actions: [
+        'view',
+        'create',
+        'update',
+        'delete',
+        'assign agent',
+        'upload documents',
+        'manage amenities',
+        'change status',
+      ] as const,
+    },
+    {
+      module: 'Tenant Management',
+      actions: [
+        'add new tenant',
+        'edit tenant details',
+        'upload/view lease documents',
+        'terminate lease',
+        'send notification/email/SMS',
+        'record manual payment',
+        'extend lease',
+        'assign to a unit/property',
+        'view lease history',
+      ] as const,
+    },
+    {
+      module: 'Owner Management',
+      actions: [
+        'view',
+        'create',
+        'update',
+        'delete',
+        'view documents',
+        'assign to property',
+      ] as const,
+    },
+    {
+      module: 'Agent Management',
+      actions: [
+        'view',
+        'create',
+        'update',
+        'delete',
+        'assign properties',
+        'track performance',
+      ] as const,
+    },
+    {
+      module: 'Lease Management',
+      actions: [
+        'view',
+        'create',
+        'update',
+        'terminate',
+        'renew',
+        'upload document',
+        'track expiry',
+      ] as const,
+    },
+    {
+      module: 'Payment & Billing',
+      actions: [
+        'view',
+        'record manual',
+        'generate invoice',
+        'update invoice',
+        'delete invoice',
+        'view balance',
+        'export reports',
+        'configure rates',
+      ] as const,
+    },
+    {
+      module: 'Maintenance Requests',
+      actions: [
+        'view',
+        'create',
+        'assign technician',
+        'update status',
+        'close',
+        'track progress',
+        'upload documents',
+        'add cost',
+        'generate report',
+      ] as const,
+    },
+    {
+      module: 'Compliance Management',
+      actions: [
+        'upload certificates',
+        'view status',
+        'set reminders',
+        'update record',
+        'delete record',
+        'notify parties',
+      ] as const,
+    },
+    {
+      module: 'Document Management',
+      actions: ['upload', 'download', 'delete', 'share', 'categorize'] as const,
+    },
+    {
+      module: 'Communication & Notification',
+      actions: [
+        'send',
+        'view logs',
+        'customize templates',
+        'schedule',
+        'notify',
+      ] as const,
+    },
+    {
+      module: 'Report Management',
+      actions: [
+        'generate financial',
+        'generate occupancy',
+        'export lease',
+        'customize templates',
+        'view audit logs',
+        'download',
+      ] as const,
+    },
+    {
+      module: 'Audit Logs',
+      actions: [
+        'view logs',
+        'filter logs',
+        'export',
+        'monitor login',
+        'track role changes',
+      ] as const,
+    },
+    {
+      module: 'Dashboard & Analytics',
+      actions: [
+        'view analytics',
+        'customize widgets',
+        'download',
+        'view real time',
+      ] as const,
+    },
+    {
+      module: 'System Settings',
+      actions: [
+        'manage roles',
+        'configure preferences',
+        'configure payments',
+        'manage integrations',
+        'backup restore',
+      ] as const,
+    },
+    {
+      module: 'Support & Helpdesk',
+      actions: [
+        'view tickets',
+        'respond',
+        'assign staff',
+        'close ticket',
+        'track history',
+        'send feedback',
+      ] as const,
+    },
+    {
+      module: 'Access Control',
+      actions: [
+        'grant access',
+        'revoke access',
+        'set restrictions',
+        'control sessions',
+      ] as const,
+    },
+  ];
 
 export const DEFAULT_ROLE_ACCESS: Record<Role, AccessMap> = {
   admin: Object.fromEntries(
@@ -428,7 +428,19 @@ export class AuthService {
   }
 
   public async sendVerifyUser(): Promise<boolean | undefined> {
-    return await this.APIs.verifyUser(this.user);
+    try {
+      const respose = await this.APIs.verifyUser(this.user);
+      if (respose.status !== 'success') throw new Error('Invalid credentials!');
+      const user: LoggedUserType = respose.data as LoggedUserType;
+      if (!user) throw new Error('User not found!');
+      this.setLoggedUser = user;
+      this.isUserLoggedIn = true;
+      return true;
+    }
+    catch (error) {
+      console.error(error);
+      return false
+    }
   }
 
   public isUsersType(data: any): data is UsersType[] | UsersType {

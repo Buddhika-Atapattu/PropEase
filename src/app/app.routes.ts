@@ -37,7 +37,7 @@ export const routes: Routes = [
       {
         path: 'properties',
         loadComponent: () =>
-          import('./pages/properties/properties-main-panel.component').then(
+          import('./pages/property/properties/properties-main-panel.component').then(
             (m) => m.PropertiesMainPanelComponent
           ),
         data: { roles: ['admin'] },
@@ -211,10 +211,20 @@ export const routes: Routes = [
             },
           },
           {
-            path: 'tenant-lease/:tenantID',
+            path: 'tenant-lease/:leaseID',
             loadComponent: () =>
               import('./pages/tenant/tenant-edit/tenant-edit.component').then(
                 (m) => m.TenantEditComponent
+              ),
+            data: {
+              roles: ['admin'],
+            },
+          },
+          {
+            path: 'create-lease/:tenantID',
+            loadComponent: () =>
+              import('./pages/tenant/add-new-lease/add-new-lease').then(
+                (m) => m.AddNewLease
               ),
             data: {
               roles: ['admin'],

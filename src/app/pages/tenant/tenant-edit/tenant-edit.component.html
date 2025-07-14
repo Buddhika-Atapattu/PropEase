@@ -17,13 +17,17 @@
           >
             TENANT DASHBOARD
           </button>
-          <i class="fa-solid fa-angle-right my-2"></i
-          ><button
+          <i class="fa-solid fa-angle-right my-2"></i>
+          <button
             type="button"
             class="page-indicator-btn"
             (click)="goToTenant()"
           >
             {{ tenant.name }}
+          </button>
+          <i class="fa-solid fa-angle-right my-2"></i>
+          <button type="button" class="page-indicator-btn" (click)="goLease()">
+            New Lease
           </button>
         </span>
       </div>
@@ -58,7 +62,7 @@
           <button
             type="button"
             class="btn-custom"
-            (click)="onReload()"
+            (click)="goLease()"
             matTooltip="Page reload"
             matTooltipPosition="above"
             aria-label="Button for page reload"
@@ -384,7 +388,7 @@
             <div class="col-3 d-flex justify-content-center align-items-center">
               <button
                 type="button"
-                class="btn-delete"
+                class="btn-danger"
                 (click)="removeScannedDocument(document)"
               >
                 <i class="fa-solid fa-trash"></i>
@@ -1429,7 +1433,7 @@
                       matTooltip="Edit"
                       matTooltipPosition="above"
                       type="button"
-                      class="btn-edit btn-expanssion-action"
+                      class="btn-warning btn-expanssion-action"
                       (click)="paymentMethod.isEditable = true"
                       aria-label="Edit Payment Method Description"
                     >
@@ -1564,7 +1568,7 @@
                         matTooltip="Edit"
                         matTooltipPosition="above"
                         type="button"
-                        class="btn-edit btn-expanssion-action"
+                        class="btn-warning btn-expanssion-action"
                         (click)="securityDeposit.isEditable = true"
                         aria-label="Edit Payment Method Description"
                       >
@@ -1729,7 +1733,7 @@
                         matTooltip="Edit"
                         matTooltipPosition="above"
                         type="button"
-                        class="btn-edit btn-expanssion-action"
+                        class="btn-warning btn-expanssion-action"
                         (click)="rentDueDate.isEditable = true"
                         aria-label="Edit Payment Method Description"
                       >
@@ -1853,7 +1857,7 @@
                       matTooltip="Edit"
                       matTooltipPosition="above"
                       type="button"
-                      class="btn-edit btn-expanssion-action"
+                      class="btn-warning btn-expanssion-action"
                       (click)="item.isEditable = true"
                       aria-label="Edit Rule Description"
                     >
@@ -1882,7 +1886,7 @@
                       matIconButton
                       matTooltip="Remove"
                       matTooltipPosition="above"
-                      class="btn-delete btn-expanssion-action"
+                      class="btn-danger btn-expanssion-action"
                       (click)="removePaymentPenalty(item, i)"
                       aria-label="Remove Rule And Regulation"
                     >
@@ -1995,7 +1999,7 @@
                       matTooltip="Edit"
                       matTooltipPosition="above"
                       type="button"
-                      class="btn-edit btn-expanssion-action"
+                      class="btn-warning btn-expanssion-action"
                       (click)="item.isEditable = true"
                       aria-label="Edit Rule Description"
                     >
@@ -2024,7 +2028,7 @@
                       matIconButton
                       matTooltip="Remove"
                       matTooltipPosition="above"
-                      class="btn-delete btn-expanssion-action"
+                      class="btn-danger btn-expanssion-action"
                       (click)="removeUtility(item, i)"
                       aria-label="Remove Rule And Regulation"
                     >
@@ -2201,7 +2205,7 @@
                   matTooltip="Edit"
                   matTooltipPosition="above"
                   type="button"
-                  class="btn-edit btn-expanssion-action"
+                  class="btn-warning btn-expanssion-action"
                   (click)="item.isEditable = true"
                   aria-label="Edit Rule Description"
                 >
@@ -2228,7 +2232,7 @@
                   matIconButton
                   matTooltip="Remove"
                   matTooltipPosition="above"
-                  class="btn-delete btn-expanssion-action"
+                  class="btn-danger btn-expanssion-action"
                   (click)="handleRulesAndRegulationsRemove(item, i)"
                   aria-label="Remove Rule And Regulation"
                 >
@@ -2292,7 +2296,7 @@
           <div class="d-flex justify-content-start align-items-center">
             <button
               type="button"
-              class="btn-edit"
+              class="btn-warning"
               (click)="handleAddTenantSignature()"
               aria-label="Add Tenant Signature"
             >
@@ -2317,7 +2321,7 @@
           <div class="d-flex justify-content-end align-items-center">
             <button
               type="button"
-              class="btn-edit"
+              class="btn-warning"
               (click)="handleAddLandlordSignature()"
               aria-label="Add Tenant Signature"
             >

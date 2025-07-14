@@ -113,8 +113,7 @@ interface USBDevice {
   styleUrl: './file-scanner.scss',
 })
 export class FileScanner
-  implements OnInit, OnDestroy, AfterViewInit, OnChanges
-{
+  implements OnInit, OnDestroy, AfterViewInit, OnChanges {
   @ViewChild(NotificationComponent, { static: true })
   notification!: NotificationComponent;
   // Dialog data
@@ -251,7 +250,7 @@ export class FileScanner
     }
   }
 
-  protected onSelectionMedia() {}
+  protected onSelectionMedia() { }
 
   protected async onSelectingScanner() {
     let selectedDevice: any;
@@ -284,7 +283,7 @@ export class FileScanner
     }
   }
 
-  protected onScannerChange() {}
+  protected onScannerChange() { }
 
   protected pannelClose() {
     this.dialogRef.close({

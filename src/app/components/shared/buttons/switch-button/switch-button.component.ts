@@ -1,4 +1,4 @@
-import { Component, Input, Output, ElementRef, HostListener, EventEmitter, AfterViewInit, OnInit, ViewChild, isDevMode, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, ElementRef, HostListener, EventEmitter, AfterViewInit, OnInit, ViewChild, isDevMode, ChangeDetectorRef, OnChanges, SimpleChanges } from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NotificationComponent } from '../../../dialogs/notification/notification.component';
@@ -11,7 +11,7 @@ import { NotificationComponent } from '../../../dialogs/notification/notificatio
   styleUrls: ['./switch-button.component.scss'],
 
 })
-export class SwitchButton implements AfterViewInit, OnInit {
+export class SwitchButton implements AfterViewInit, OnInit, OnChanges {
   @ViewChild(NotificationComponent) notificationComponent!: NotificationComponent;
   @Input() checked: boolean = false;
   @Input() disabled: boolean = false;
@@ -46,6 +46,12 @@ export class SwitchButton implements AfterViewInit, OnInit {
       const input = event.target as HTMLInputElement;
       this.checked = input.checked;
       this.checkedChange.emit(this.checked);
+
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['checked']) {
 
     }
   }

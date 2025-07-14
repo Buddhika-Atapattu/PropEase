@@ -116,8 +116,7 @@ interface propertyImagePreview {
   styleUrl: './property-listing.component.scss',
 })
 export class PropertyListingComponent
-  implements OnInit, OnDestroy, AfterViewInit
-{
+  implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('propertyImages') propertyImages!: ElementRef<HTMLInputElement>;
   @ViewChild('propertyDocs') propertyDocs!: ElementRef<HTMLInputElement>;
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
@@ -1190,8 +1189,8 @@ export class PropertyListingComponent
             typeof value === 'string'
               ? value.toLowerCase()
               : typeof value?.name === 'string'
-              ? value.name.toLowerCase()
-              : '';
+                ? value.name.toLowerCase()
+                : '';
 
           return name
             ? this.addressFilterCountries(name)
@@ -1248,8 +1247,8 @@ export class PropertyListingComponent
               : value?.name?.common?.toLowerCase() ?? '';
           return name
             ? countries.filter((country) =>
-                country?.name?.common?.toLowerCase().includes(name)
-              )
+              country?.name?.common?.toLowerCase().includes(name)
+            )
             : countries.slice();
         })
       );
@@ -1810,7 +1809,7 @@ export class PropertyListingComponent
         })
         .finally(() => {
           this.progress.complete();
-          setInterval(() => {
+          setTimeout(() => {
             this.router.navigate(['/dashboard/properties']);
           }, 2000);
         });

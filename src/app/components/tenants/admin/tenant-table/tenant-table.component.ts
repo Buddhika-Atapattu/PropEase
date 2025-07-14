@@ -90,8 +90,7 @@ export interface CustomTableColumn {
   styleUrl: './tenant-table.component.scss',
 })
 export class TenantTableComponent
-  implements OnInit, AfterViewInit, OnDestroy, OnChanges
-{
+  implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @Input() loggedUser: LoggedUserType | null = null;
   @Input() isLoading: boolean = false;
   @Input() isBrowser: boolean = false;
@@ -189,7 +188,7 @@ export class TenantTableComponent
     private apiService: APIsService,
     private authService: AuthService,
     private tenantService: TenantService
-  ) {}
+  ) { }
 
   async ngOnInit() {
     if (this.isBrowser) {
@@ -199,7 +198,7 @@ export class TenantTableComponent
     }
   }
 
-  ngAfterViewInit() {}
+  ngAfterViewInit() { }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
@@ -313,7 +312,7 @@ export class TenantTableComponent
 
   protected handleOperationButtonTrigger(data: ButtonDataType | null) {
     if (!data) return;
-    
+
     const userData = this.dataSource.data.filter((item) =>
       item.name.toLowerCase().includes(data.name.toLowerCase())
     );
@@ -329,7 +328,7 @@ export class TenantTableComponent
         gender: userData[0].gender,
         addedBy: this.authService.getLoggedUser?.username,
       } as ButtonDataType;
-      
+
       this.buttonOperationTrigger = user;
       this.buttonOperationTriggerChange.emit(this.buttonOperationTrigger);
 

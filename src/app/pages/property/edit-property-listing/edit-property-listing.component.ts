@@ -123,8 +123,7 @@ interface propertyImagePreview {
   styleUrl: './edit-property-listing.component.scss',
 })
 export class EditPropertyListingComponent
-  implements OnInit, OnDestroy, AfterViewInit
-{
+  implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('propertyImages') propertyImages!: ElementRef<HTMLInputElement>;
   @ViewChild('propertyDocs') propertyDocs!: ElementRef<HTMLInputElement>;
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
@@ -1416,8 +1415,8 @@ export class EditPropertyListingComponent
             typeof value === 'string'
               ? value.toLowerCase()
               : typeof value?.name === 'string'
-              ? value.name.toLowerCase()
-              : '';
+                ? value.name.toLowerCase()
+                : '';
 
           return name
             ? this.addressFilterCountries(name)
@@ -1475,8 +1474,8 @@ export class EditPropertyListingComponent
               : value?.name?.common?.toLowerCase() ?? '';
           return name
             ? countries.filter((country) =>
-                country?.name?.common?.toLowerCase().includes(name)
-              )
+              country?.name?.common?.toLowerCase().includes(name)
+            )
             : countries.slice();
         })
       );

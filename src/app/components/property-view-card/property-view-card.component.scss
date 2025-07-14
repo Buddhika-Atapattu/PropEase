@@ -127,8 +127,8 @@
       }
 
       .btn-view,
-      .btn-edit,
-      .btn-delete {
+      .btn-warning,
+      .btn-danger {
         mat-icon {
           ::ng-deep svg {
             fill: currentColor;
