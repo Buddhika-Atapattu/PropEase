@@ -280,6 +280,48 @@
   }
 }
 
+:host-context(html.light) {
+  .list-container,
+  .list-group,
+  .list-group-flush,
+  .list-group-item {
+    background-color: #fff7cc !important; // Light pastel gold/yellow
+    color: #000000 !important; // Black text
+    border-color: rgba(0, 0, 0, 0.1); // subtle dark border
+    font-size: 12pt;
+
+    li {
+      border-bottom: 1px solid #000000;
+    }
+
+    span {
+      font-size: 12pt;
+      color: #000000 !important;
+    }
+  }
+}
+
+:host-context(html.dark) {
+  .list-container,
+  .list-group,
+  .list-group-flush,
+  .list-group-item {
+    background-color: #d4af37 !important; // Rich gold
+    color: #ffffff !important; // White text
+    border-color: rgba(255, 255, 255, 0.1);
+    font-size: 12pt;
+
+    li {
+      border-bottom: 1px solid #fff;
+    }
+
+    span {
+      font-size: 12pt;
+      color: #ffffff !important;
+    }
+  }
+}
+
 ::ng-deep .internal-use {
   p:first-child::first-letter,
   h1:first-child::first-letter,

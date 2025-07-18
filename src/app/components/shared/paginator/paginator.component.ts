@@ -141,13 +141,22 @@ export class PaginatorComponent
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['pageSizeOptions'] && this.pageSizeOptions?.length > 0) {
-      this.selectedPageSize = this.pageSizeOptions[0];
-      this.pageIndex = 0;
-      this.pageIndexChange.emit(this.pageIndex);
+      const newPageSize = this.pageSizeOptions[0];
+      const shouldResetPageIndex = this.selectedPageSize !== newPageSize;
+
+      this.selectedPageSize = newPageSize;
+
+      if (shouldResetPageIndex && this.pageIndex !== 0) {
+        this.pageIndex = 0;
+        this.pageIndexChange.emit(this.pageIndex);
+      }
     }
 
     if (changes['pageSize']) {
-      this.pageSize = changes['pageSize'].currentValue || 0;
+      const newSize = changes['pageSize'].currentValue || 0;
+      if (this.pageSize !== newSize) {
+        this.pageSize = newSize;
+      }
     }
   }
 

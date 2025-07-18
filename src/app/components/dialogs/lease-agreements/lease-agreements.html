@@ -1,32 +1,39 @@
 <app-notification></app-notification>
-<div class="container-fluid" *ngIf="tenant && lease">
+
+<div class="container-fluid h-100" *ngIf="tenant && lease">
+  <!-- Panel Close Button -->
   <div class="panel-close-btn-container">
     <button type="button" class="pannel-close-btn" (click)="pannelClose()">
       <i class="fa-solid fa-xmark"></i>
     </button>
   </div>
 
-  <!-- user-image row -->
-  <div class="row user-image-row">
-    <div
-      class="col-xl-12 d-flex justify-content-center align-items-center mt-5"
-    >
-      <div class="image-container">
-        <app-skeleton-loader
-          *ngIf="isLoading"
-          [width]="'10rem'"
-          [height]="'10rem'"
-          [Mode]="mode"
-          [borderRadius]="'50%'"
-        ></app-skeleton-loader>
-        <img
-          *ngIf="!isLoading"
-          [src]="generateTenantImage((typeof tenant.image === 'string' ? tenant.image : '') || '', tenant.gender)"
-          class="user-image"
-          alt="user image"
-        />
-      </div>
-    </div>
+  <!-- Edit Button -->
+  <div class="d-flex justify-content-start mb-3">
+    <button class="btn btn-warning" (click)="onEditLease()">
+      <i class="fa-solid fa-pen-to-square me-1"></i>
+      Edit Lease
+    </button>
   </div>
-  <!-- end user-image row -->
+
+  <!-- Lease Agreement PDF Viewer -->
+  <ng-container *ngIf="isLoading; else pdfViewer">
+    <div class="d-flex justify-content-center align-items-center h-100">
+      <mat-spinner></mat-spinner>
+      <p class="ms-3">Loading lease agreement...</p>
+    </div>
+  </ng-container>
+
+  <ng-template #pdfViewer>
+    <ngx-extended-pdf-viewer
+      *ngIf="pdfBlob"
+      [src]="pdfBlob"
+      useBrowserLocale="true"
+      height="100vh"
+      [showSidebarButton]="true"
+      [showDownloadButton]="true"
+      [showPrintButton]="true"
+      [showPresentationModeButton]="true"
+    ></ngx-extended-pdf-viewer>
+  </ng-template>
 </div>

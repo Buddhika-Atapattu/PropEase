@@ -27,7 +27,7 @@
           </button>
           <i class="fa-solid fa-angle-right my-2"></i>
           <button type="button" class="page-indicator-btn" (click)="goLease()">
-            New Lease
+            Edit Lease
           </button>
         </span>
       </div>
@@ -173,85 +173,65 @@
             class="span-text-danger"
             >Phone number is not valid</span
           >
-          <div class="row">
-            <div class="col-3 pe-0-2-5">
-              <mat-form-field
-                appearance="fill"
-                class="form-field me-3 w-100"
-                floatLabel="auto"
-              >
-                <mat-label
-                  [ngClass]="
-                    phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
-                      ? ''
-                      : 'text-danger'
-                  "
-                  >Code</mat-label
-                >
-                <input
-                  matInput
-                  type="text"
-                  [(ngModel)]="tenantPhoneCodeId"
-                  class="example-right-align"
-                  name="tenantPhoneCodeId"
-                  required
-                  placeholder="+1"
-                  [matAutocomplete]="phoneCodeAutoComplete"
-                  (ngModelChange)="onTenantPhoneCodeChange($event)"
-                  [ngClass]="
-                    phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
-                      ? ''
-                      : 'text-danger'
-                  "
-                />
 
-                <mat-autocomplete
-                  #phoneCodeAutoComplete="matAutocomplete"
-                  (optionSelected)="onTenantPhoneCodeSelectionChange($event)"
-                  [displayWith]="displayPhoneCode"
+          <div class="d-flex gap-2 align-items-start">
+            <!-- Country Code Field -->
+            <!-- style="min-width: 50px" -->
+            <mat-form-field appearance="fill" class="flex-grow-0 w-50">
+              <mat-label>Code</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="tenantPhoneCodeId"
+                name="tenantPhoneCodeId"
+                placeholder="+1"
+                required
+                [matAutocomplete]="phoneCodeAutoComplete"
+                (ngModelChange)="onTenantPhoneCodeChange($event)"
+                [ngClass]="
+                  phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
+                    ? ''
+                    : 'text-danger'
+                "
+              />
+              <mat-autocomplete
+                #phoneCodeAutoComplete="matAutocomplete"
+                (optionSelected)="onTenantPhoneCodeSelectionChange($event)"
+                [displayWith]="displayPhoneCode"
+              >
+                <mat-option
+                  *ngFor="let option of filterTenantPhoneCodes | async"
+                  [value]="option"
                 >
-                  <mat-option
-                    *ngFor="let option of filterTenantPhoneCodes | async"
-                    [value]="option"
-                    class="d-flex justify-content-start align-items-center"
-                  >
-                    <img
-                      [src]="option.flags.png"
-                      width="22"
-                      height="14"
-                      style="margin-right: 8px"
-                      alt="{{ option.flags.alt }}"
-                    />
-                    {{ option.code }}
-                  </mat-option>
-                </mat-autocomplete>
-              </mat-form-field>
-            </div>
-            <div class="col-9 ps-0-2-5">
-              <mat-form-field appearance="fill" class="form-field me-3 w-100">
-                <mat-label
-                  [ngClass]="
-                    phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
-                      ? ''
-                      : 'text-danger'
-                  "
-                  >Phone Number</mat-label
-                >
-                <input
-                  matInput
-                  type="text"
-                  [(ngModel)]="tenantPhoneNumber"
-                  name="tenantPhoneNumber"
-                  required
-                  placeholder="Phone Number..."
-                  [ngClass]="
-                    phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
-                      ? ''
-                      : 'text-danger'
-                  "
-                />
-              </mat-form-field>
-            </div>
+                  <img
+                    [src]="option.flags.png"
+                    width="22"
+                    height="14"
+                    style="margin-right: 8px"
+                    alt="{{ option.flags.alt }}"
+                  />
+                  {{ option.code }}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+
+            <!-- Phone Number Field -->
+            <mat-form-field appearance="fill" class="flex-grow-1 w-100">
+              <mat-label>Phone Number</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="tenantPhoneNumber"
+                name="tenantPhoneNumber"
+                placeholder="Phone Number..."
+                required
+                [ngClass]="
+                  phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
+                    ? ''
+                    : 'text-danger'
+                "
+              />
+            </mat-form-field>
           </div>
         </div>
         <!-- Phone Number -->
@@ -264,7 +244,7 @@
         <div class="col-xl-4 col-md-4 col-sm-12 col-12">
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
             <mat-label>Gender</mat-label>
-            <mat-select [(ngModel)]="tenantGender" name="tenantGender" required>
+            <mat-select [(ngModel)]="tenantGender" name="tenantGender">
               <mat-option [value]="'male'">Male</mat-option>
               <mat-option [value]="'female'">Female</mat-option>
               <mat-option [value]="'other'">Other</mat-option>
@@ -790,7 +770,7 @@
               [(ngModel)]="coTenantRelationship"
               class="example-right-align"
               name="coTenantRelationship"
-              placeholder="Age..."
+              placeholder="Relationship..."
             />
           </mat-form-field>
         </div>
@@ -2075,6 +2055,89 @@
             </mat-autocomplete>
           </mat-form-field>
           <!-- End Notice Period Days Input Section -->
+
+          <div *ngIf="noticePeriodDays" class="row mt-3">
+            <div class="col-12">
+              <mat-accordion>
+                <mat-expansion-panel class="expansion-panel">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>{{
+                      noticePeriodDays.label
+                    }}</mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <!-- Display the description of the late payment penalty -->
+                  <p
+                    *ngIf="
+                      !noticePeriodDays.isEditable;
+                      else itemEditDescription
+                    "
+                  >
+                    {{ noticePeriodDays.description }}
+                  </p>
+                  <!-- Edit the description of the late payment penalty -->
+
+                  <!-- DescriptionEdit Section -->
+                  <ng-template #itemEditDescription>
+                    <div class="row w-100">
+                      <div class="col-12">
+                        <mat-form-field
+                          appearance="fill"
+                          class="form-field me-3 w-100"
+                        >
+                          <mat-label>Description</mat-label>
+                          <textarea
+                            matInput
+                            placeholder="Description..."
+                            [(ngModel)]="noticePeriodDays.description"
+                            name="noticePeriodDescription"
+                            rows="5"
+                            required
+                          ></textarea>
+                        </mat-form-field>
+                      </div>
+                    </div>
+                  </ng-template>
+                  <!-- End DescriptionEdit Section -->
+
+                  <!-- Action Row -->
+                  <mat-action-row
+                    class="d-flex justify-content-end align-items-center py-0-2-5"
+                  >
+                    <!-- Edit button -->
+                    <button
+                      *ngIf="!noticePeriodDays.isEditable"
+                      matIconButton
+                      matTooltip="Edit"
+                      matTooltipPosition="above"
+                      type="button"
+                      class="btn-warning btn-expanssion-action"
+                      (click)="noticePeriodDays.isEditable = true"
+                      aria-label="Edit Rule Description"
+                    >
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <!-- End Edit button -->
+
+                    <!-- Save button -->
+                    <button
+                      *ngIf="noticePeriodDays.isEditable"
+                      matIconButton
+                      matTooltip="Save"
+                      matTooltipPosition="above"
+                      type="button"
+                      class="btn-save btn-expanssion-action"
+                      (click)="noticePeriodDays.isEditable = false"
+                      aria-label="Save Rule Description"
+                    >
+                      <i class="fa-solid fa-check"></i>
+                    </button>
+                    <!-- End Save button -->
+                  </mat-action-row>
+                  <!-- End Action Row -->
+                </mat-expansion-panel>
+              </mat-accordion>
+            </div>
+          </div>
         </div>
         <!-- End Notice Period Days -->
       </div>

@@ -1,5 +1,11 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  Inject,
+  PLATFORM_ID,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import {
   Router,
   NavigationStart,
@@ -9,35 +15,45 @@ import {
 } from '@angular/router';
 import { Subscription } from 'rxjs';
 
-@Component({
+@Component( {
   selector: 'app-top-progress-bar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [ CommonModule ],
   template: `
-    <div class="progress-bar-container" *ngIf="loading">
-      <div class="progress-bar"></div>
-    </div>
+    <ng-container *ngIf="isBrowser">
+      <div class="progress-bar-container" *ngIf="loading">
+        <div class="progress-bar"></div>
+      </div>
+    </ng-container>
   `,
   styleUrl: './top-progress-bar.component.scss',
-})
+} )
 export class TopProgressBarComponent implements OnInit, OnDestroy {
   loading = false;
+  isBrowser = false;
   private routerSub!: Subscription;
 
-  constructor(private router: Router) { }
+  constructor (
+    private router: Router,
+    @Inject( PLATFORM_ID ) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser( this.platformId );
+  }
 
   ngOnInit(): void {
-    this.routerSub = this.router.events.subscribe((event) => {
-      if (event instanceof NavigationStart) {
-        this.loading = true;
-      } else if (
-        event instanceof NavigationEnd ||
-        event instanceof NavigationCancel ||
-        event instanceof NavigationError
-      ) {
-        setTimeout(() => (this.loading = false), 300); // smooth exit
-      }
-    });
+    if ( this.isBrowser ) {
+      this.routerSub = this.router.events.subscribe( ( event ) => {
+        if ( event instanceof NavigationStart ) {
+          this.loading = true;
+        } else if (
+          event instanceof NavigationEnd ||
+          event instanceof NavigationCancel ||
+          event instanceof NavigationError
+        ) {
+          setTimeout( () => ( this.loading = false ), 300 );
+        }
+      } );
+    }
   }
 
   ngOnDestroy(): void {

@@ -131,24 +131,6 @@ $light-btn-custom-color: #005dae !default; // Blue
 }
 
 :host-context(html.light) {
-  .list-container,
-  .list-group,
-  .list-group-flush,
-  .list-group-item {
-    background-color: #fff7cc !important; // Light pastel gold/yellow
-    color: #000000 !important; // Black text
-    border-color: rgba(0, 0, 0, 0.1); // subtle dark border
-    font-size: 12pt;
-
-    li {
-      border-bottom: 1px solid #000000;
-    }
-
-    span {
-      font-size: 12pt;
-      color: #000000 !important;
-    }
-  }
   .panel-card {
     background: $light-card-color !important;
     box-shadow: 0rem 0rem 1rem 0rem $light-shadow-color !important;
@@ -313,24 +295,6 @@ $light-btn-custom-color: #005dae !default; // Blue
 }
 
 :host-context(html.dark) {
-  .list-container,
-  .list-group,
-  .list-group-flush,
-  .list-group-item {
-    background-color: #d4af37 !important; // Rich gold
-    color: #ffffff !important; // White text
-    border-color: rgba(255, 255, 255, 0.1);
-    font-size: 12pt;
-
-    li {
-      border-bottom: 1px solid #fff;
-    }
-
-    span {
-      font-size: 12pt;
-      color: #ffffff !important;
-    }
-  }
   .panel-card {
     background: $dark-card-color !important;
     box-shadow: 0rem 0rem 1rem 0rem $dark-shadow-color !important;
@@ -518,8 +482,64 @@ button {
 }
 
 /* -----------------------------------
+   Input Wrapper
+----------------------------------- */
+.combined-input .mat-form-field-infix {
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.combined-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.country-code-input,
+.phone-number-input {
+  border: none;
+  outline: none;
+
+  padding: 0px;
+  font: inherit;
+  background: transparent;
+}
+
+.country-code-input {
+  width: 100%;
+}
+
+.phone-number-input {
+  width: 100%;
+}
+
+.separator {
+  padding: 0 4px;
+  font-weight: bold;
+}
+
+/* -----------------------------------
    Status Background Utilities
 ----------------------------------- */
+
+::ng-deep html.dark {
+  .mat-mdc-progress-spinner {
+    .mdc-circular-progress__determinate-circle,
+    .mdc-circular-progress__indeterminate-circle-graphic {
+      stroke: $dark-accent-gold !important;
+    }
+  }
+}
+
+::ng-deep html.light {
+  .mat-mdc-progress-spinner {
+    .mdc-circular-progress__determinate-circle,
+    .mdc-circular-progress__indeterminate-circle-graphic {
+      stroke: $light-accent-gold !important;
+    }
+  }
+}
 
 .bg-danger {
   background-color: #dc3545 !important;

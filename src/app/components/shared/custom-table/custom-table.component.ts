@@ -43,6 +43,7 @@ import { ProgressBarComponent } from '../../dialogs/progress-bar/progress-bar.co
 import { TenantService } from '../../../services/tenant/tenant.service';
 import { SwitchButton } from '../../../components/shared/buttons/switch-button/switch-button.component';
 
+
 export interface ButtonDataType {
   type: string;
   data: any;

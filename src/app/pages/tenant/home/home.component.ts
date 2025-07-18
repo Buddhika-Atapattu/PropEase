@@ -1,44 +1,41 @@
+import {CommonModule, isPlatformBrowser} from '@angular/common';
+import {HttpErrorResponse} from '@angular/common/http';
 import {
   Component,
-  OnInit,
-  OnDestroy,
   Inject,
+  OnDestroy,
+  OnInit,
   PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import {
-  AuthService,
-  LoggedUserType,
-} from '../../../services/auth/auth.service';
-import { APIsService, UsersType } from '../../../services/APIs/apis.service';
-import { TenantService } from '../../../services/tenant/tenant.service';
+import {MatBadgeModule} from '@angular/material/badge';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDialog} from '@angular/material/dialog';
+import {ActivatedRoute, Router, RouterModule} from '@angular/router';
+import * as FileSaver from 'file-saver';
+import {Subscription} from 'rxjs';
+import * as XLSX from 'xlsx';
+import {ConfirmationComponent} from '../../../components/dialogs/confirmation/confirmation.component';
 import {
   NotificationComponent,
   NotificationType,
 } from '../../../components/dialogs/notification/notification.component';
-import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
+import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {
-  CustomTableComponent,
   ButtonDataType,
   ButtonType,
   CustomTableColumnType,
+  CustomTableComponent,
   FileExportWithDataAndExtentionType,
 } from '../../../components/shared/custom-table/custom-table.component';
-import { FileExportButtonTypeByExtension } from '../../../components/shared/paginator/paginator.component';
-import * as XLSX from 'xlsx';
-import * as FileSaver from 'file-saver';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { MatButtonModule } from '@angular/material/button';
-import { MatBadgeModule } from '@angular/material/badge';
-import { HttpErrorResponse } from '@angular/common/http';
-import { MatDialog } from '@angular/material/dialog';
-import { dialog } from 'electron';
-import { ConfirmationComponent } from '../../../components/dialogs/confirmation/confirmation.component';
+import {FileExportButtonTypeByExtension} from '../../../components/shared/paginator/paginator.component';
+import {APIsService, UsersType} from '../../../services/APIs/apis.service';
+import {
+  AuthService,
+  LoggedUserType,
+} from '../../../services/auth/auth.service';
+import {TenantService} from '../../../services/tenant/tenant.service';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 
 export interface TenantTableElement {
   username?: string;
@@ -78,9 +75,9 @@ export interface TenantHomeButtonDataType {
 })
 export class HomeComponent implements OnInit, OnDestroy {
   //<======================= Foreign Components =======================>
-  @ViewChild(ProgressBarComponent, { static: true })
+  @ViewChild(ProgressBarComponent, {static: true})
   progress!: ProgressBarComponent;
-  @ViewChild(NotificationComponent, { static: true })
+  @ViewChild(NotificationComponent, {static: true})
   notificationComponent!: NotificationComponent;
   //<======================= End Foreign Components =======================>
 
@@ -98,13 +95,13 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   // Table Data for all users
   protected columns: CustomTableColumnType[] = [
-    { label: 'Image', key: 'userimage' },
-    { label: 'Name', key: 'name' },
-    { label: 'Email', key: 'email' },
-    { label: 'Contact Number', key: 'contactNumber' },
-    { label: 'Gender', key: 'gender' },
-    { label: 'View', key: 'operation' },
-    { label: 'Actions', key: 'actions' },
+    {label: 'Image', key: 'userimage'},
+    {label: 'Name', key: 'name'},
+    {label: 'Email', key: 'email'},
+    {label: 'Contact Number', key: 'contactNumber'},
+    {label: 'Gender', key: 'gender'},
+    {label: 'View', key: 'operation'},
+    {label: 'Actions', key: 'actions'},
   ];
   //<======================= End Common Variables =======================>
 
@@ -156,7 +153,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   private _tenantsButtonActionTrigger: ButtonDataType | null = null;
   private _tenantsButtonOperationTrigger: ButtonDataType | null = null;
   private _tenantsButtonActionTriggerStarted: boolean = false;
-  private _tenantsButtonOperationTriggerStarted: boolean = false;
   private _tenantsNotification: NotificationType = {
     type: '',
     message: '',
@@ -168,31 +164,29 @@ export class HomeComponent implements OnInit, OnDestroy {
     };
   //<======================= End Tenants Variables =======================>
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
     private authService: AuthService,
     private router: Router,
     private apiService: APIsService,
-    private tenantService: TenantService,
     private dialog: MatDialog
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.route.url.subscribe((segments) => {
-      const path = segments.map((s) => s.path).join('/');
     });
 
     this.loggedUser = this.authService.getLoggedUser;
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
     }
-    if (this.isAdmin()) {
+    if(this.isAdmin()) {
       await this.getAllUsers();
       await this.getAllTenants();
     }
@@ -201,6 +195,71 @@ export class HomeComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
   }
+  //<======================= Logged User Premission Checker =======================>
+  private permissionCheckerForAdd(): boolean {
+    try {
+      if(!this.loggedUser) {
+        this.router.navigate(['/login']);
+        throw new Error("Please login first!");
+      }
+
+      const tenantModulePermissions = this.loggedUser.access.permissions.find(
+        (item) => item.module === 'Tenant Management'
+      );
+
+      const hasAddTenant = tenantModulePermissions?.actions.includes('add new tenant');
+
+      return !!hasAddTenant;
+    } catch(error) {
+      console.error(error);
+
+      if(typeof error === 'string') {
+        this.notificationComponent.notification('error', error);
+      } else if(error instanceof HttpErrorResponse) {
+        this.notificationComponent.notification('error', error.error.message);
+      } else if(error instanceof Error) {
+        this.notificationComponent.notification('error', error.message);
+      }
+      else {
+        this.notificationComponent.notification('error', 'Something went wrong!');
+      }
+
+      return false;
+    }
+  }
+  private permissionCheckerForRemove(): boolean {
+    try {
+      if(!this.loggedUser) {
+        this.router.navigate(['/login']);
+        throw new Error("Please login first!");
+      }
+
+      const tenantModulePermissions = this.loggedUser.access.permissions.find(
+        (item) => item.module === 'Tenant Management'
+      );
+
+      const hasRemoveTenant = tenantModulePermissions?.actions.includes('remove tenant');
+
+      return !!(hasRemoveTenant);
+    } catch(error) {
+      console.error(error);
+
+      if(typeof error === 'string') {
+        this.notificationComponent.notification('error', error);
+      } else if(error instanceof HttpErrorResponse) {
+        this.notificationComponent.notification('error', error.error.message);
+      } else if(error instanceof Error) {
+        this.notificationComponent.notification('error', error.message);
+      }
+      else {
+        this.notificationComponent.notification('error', 'Something went wrong!');
+      }
+
+      return false;
+    }
+  }
+  //<======================= End Logged User Premission Checker =======================>
+
 
   //<======================= Getters and Settes For All Users =======================>
   get isReloading(): boolean {
@@ -209,7 +268,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   set isReloading(value: boolean) {
     this._isReloading = value;
-    if (this._isReloading) {
+    if(this._isReloading) {
       this.handelLoading();
     }
   }
@@ -468,7 +527,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   //<======================= All Users Handle Methods =======================>
 
   private async handelLoading() {
-    if (this.isReloading) {
+    if(this.isReloading) {
       await this.getAllUsers();
       await this.getAllTenants();
       setTimeout(() => {
@@ -481,14 +540,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private async handleUserView(username: string) {
-    if (this.isBrowser && username !== '') {
+    if(this.isBrowser && username !== '') {
       const tokenResult = await this.apiService.generateToken(username);
       this.router.navigate(['/dashboard/view-user-profile', tokenResult.token]);
     }
   }
 
   private async handleTenantView(username: string) {
-    if (this.isBrowser && username !== '') {
+    if(this.isBrowser && username !== '') {
       const tokenResult = await this.apiService.generateToken(username);
       this.router.navigate(['/dashboard/tenant/tenant-view', tokenResult.token]);
     }
@@ -501,7 +560,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     const fileExtention = data.extention.type;
     const fileData = data.data;
 
-    if (!Array.isArray(fileData) || fileData.length === 0) {
+    if(!Array.isArray(fileData) || fileData.length === 0) {
       console.warn('No data to export.');
       return;
     }
@@ -522,7 +581,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Map each row
     const exportData: Record<string, any>[] = fileData.map((item) => {
       const normalizedRow: Record<string, any> = {};
-      for (const rawKey in keyMap) {
+      for(const rawKey in keyMap) {
         const displayKey = keyMap[rawKey];
         normalizedRow[displayKey] = item[rawKey] ?? '';
       }
@@ -532,18 +591,18 @@ export class HomeComponent implements OnInit, OnDestroy {
     // Optionally sort exportData by name if needed
     // this.sort(exportData as TenantTableElement[]);
 
-    if (this.isExcel(fileExtention)) {
+    if(this.isExcel(fileExtention)) {
       const worksheet = XLSX.utils.json_to_sheet(exportData);
 
       // Define column widths
-      worksheet['!cols'] = columns.map((col) => ({ wch: col.length + 10 }));
+      worksheet['!cols'] = columns.map((col) => ({wch: col.length + 10}));
       const workbook: XLSX.WorkBook = {
-        Sheets: { Export: worksheet },
+        Sheets: {Export: worksheet},
         SheetNames: ['Export'],
       };
 
       // Map file extension to valid XLSX BookType
-      const bookTypeMap: { [key: string]: XLSX.BookType } = {
+      const bookTypeMap: {[key: string]: XLSX.BookType} = {
         xls: 'xls',
         xlsx: 'xlsx',
         xlsm: 'xlsm',
@@ -559,7 +618,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         type: 'array',
       });
 
-      const mimeMap: { [key: string]: string } = {
+      const mimeMap: {[key: string]: string} = {
         xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         xls: 'application/vnd.ms-excel',
         csv: 'text/csv',
@@ -568,7 +627,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
       const mimeType = mimeMap[fileExtention.toLowerCase()] || mimeMap['xlsx'];
 
-      const blob = new Blob([excelBuffer], { type: mimeType });
+      const blob = new Blob([excelBuffer], {type: mimeType});
       FileSaver.saveAs(
         blob,
         `${typeOfTenant}_Export_${new Date().toISOString()}.${fileExtention}`
@@ -577,7 +636,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private isExcel(type: string): boolean {
-    switch (type.toLowerCase().trim()) {
+    switch(type.toLowerCase().trim()) {
       case 'xls':
         return true;
       case 'xlsx':
@@ -606,7 +665,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   protected handleNoneTenantsFileExport(
     data: FileExportWithDataAndExtentionType
   ) {
-    if (data) {
+    if(data) {
       this.exportTableData(data, 'None_Tenant');
     } else {
       console.warn('No data to export');
@@ -614,23 +673,27 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private async handleNoneTenantActionButtonTigger() {
-    if (
+    if(
       this._noneTenantsButtonActionTrigger &&
       this._noneTenantsButtonActionTrigger.type === 'add'
     ) {
+      if(!this.permissionCheckerForAdd()) {
+        this.notificationComponent.notification('warning', 'You don\'t have permission to add tenant!')
+        return
+      }
       const users = this.noneTenantsFull.filter(
         (data) =>
           data.name.toLowerCase() ===
           this._noneTenantsButtonActionTrigger?.data.element.name.toLowerCase()
       );
-      if (users.length === 1) {
+      if(users.length === 1) {
         await this.addTenant(users[0] as TenantHomeButtonDataType);
       }
     }
   }
 
   private async handleNoneTenantOperationButtonTigger() {
-    if (
+    if(
       this._noneTenantsButtonOperationTrigger &&
       this._noneTenantsButtonOperationTrigger.type === 'view'
     ) {
@@ -639,7 +702,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           data.name.toLowerCase() ===
           this._noneTenantsButtonOperationTrigger?.data.element.name.toLowerCase()
       );
-      if (users.length === 1) {
+      if(users.length === 1) {
         this.handleUserView(
           (users[0] as TenantTableElement).username as string
         );
@@ -655,7 +718,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private handelNoneTenantPageSize() {
-    if (this._noneTenantPageSize) {
+    if(this._noneTenantPageSize) {
       const data = this.noneTenantsFull.slice(
         0 * this.noneTenantPageSize,
         this._noneTenantPageSize
@@ -666,7 +729,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private handleNoneTenantNameSearch() {
-    if (this._noneTenantName) {
+    if(this._noneTenantName) {
       const searchedUsers = this.noneTenantsFull.filter((user) =>
         user.name.toLowerCase().includes(this._noneTenantName.toLowerCase())
       );
@@ -695,12 +758,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.noneTenantTotalDataCount = this.noneTenantsFull.length;
 
     this.noneTenantPageSizeOptions = [];
-    for (let i = 1; i <= this.noneTenantsFull.length; i++) {
-      if (i % 2 === 0) {
+    for(let i = 1; i <= this.noneTenantsFull.length; i++) {
+      if(i % 2 === 0) {
         this.noneTenantPageSizeOptions.push(i);
       }
     }
-    if (this.noneTenantPageSizeOptions.length === 0)
+    if(this.noneTenantPageSizeOptions.length === 0)
       this.noneTenantPageSizeOptions.push(this.noneTenantsFull.length);
     this.noneTenantPageSize = this.noneTenantPageSizeOptions[0];
 
@@ -728,7 +791,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   //<======================= Tenant Handle Methods =======================>
 
   protected handleTenantsFileExport(data: FileExportWithDataAndExtentionType) {
-    if (data) {
+    if(data) {
       this.exportTableData(data, 'Tenant');
     } else {
       console.warn('No data to export');
@@ -736,11 +799,15 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private async handleTenantActionButtonTigger() {
-    if (
+    if(
       this._tenantsButtonActionTrigger &&
       this._tenantsButtonActionTrigger.type === 'remove'
     ) {
       try {
+        if(!this.permissionCheckerForRemove()) {
+          this.notificationComponent.notification('warning', 'You don\'t have permission to remove tenant!');
+          return;
+        }
         let confirmRemove: boolean = false;
         const users = this.tenantsFull.filter(
           (data) =>
@@ -748,8 +815,7 @@ export class HomeComponent implements OnInit, OnDestroy {
             this._tenantsButtonActionTrigger?.data.element.name.toLowerCase()
         );
 
-        if (users.length === 1) {
-          const user = users[0] as TenantTableElement;
+        if(users.length === 1) {
           const dialogRef = this.dialog.open(ConfirmationComponent, {
             width: '400px',
             height: 'auto',
@@ -761,33 +827,32 @@ export class HomeComponent implements OnInit, OnDestroy {
           })
 
           dialogRef.afterClosed().subscribe(async (result) => {
-            if (result) {
+            if(result) {
               confirmRemove = result.isConfirm;
-              if (confirmRemove) {
+              if(confirmRemove) {
                 await this.removeTenant(users[0] as TenantHomeButtonDataType);
               }
             }
           })
         }
       }
-      catch (error) {
+      catch(error) {
         console.log(error);
-        if (error instanceof HttpErrorResponse) {
+        if(error instanceof HttpErrorResponse) {
           this.notificationComponent.notification('error', error.error.message);
-        }
-        else if (typeof error === 'string') {
+        }else if(typeof error === 'string') {
           this.notificationComponent.notification('error', error);
+        } else if(error instanceof Error) {
+          this.notificationComponent.notification('error', error.message);
+        }else{
+          this.notificationComponent.notification('error', 'An error occurred');
         }
       }
-
-
-
-
     }
   }
 
   private async handleTenantOperationButtonTigger() {
-    if (
+    if(
       this._tenantsButtonOperationTrigger &&
       this._tenantsButtonOperationTrigger.type === 'view'
     ) {
@@ -796,7 +861,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           data.name.toLowerCase() ===
           this._tenantsButtonOperationTrigger?.data.element.name.toLowerCase()
       );
-      if (users.length === 1) {
+      if(users.length === 1) {
         this.handleTenantView(
           (users[0] as TenantTableElement).username as string
         );
@@ -812,7 +877,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private handelTenantPageSize() {
-    if (this._tenantPageSize) {
+    if(this._tenantPageSize) {
       const data = this.tenantsFull.slice(
         0 * this.tenantPageSize,
         this._tenantPageSize
@@ -823,7 +888,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private handleTenantNameSearch() {
-    if (this._tenantName) {
+    if(this._tenantName) {
       const searchedUsers = this.tenantsFull.filter((user) =>
         user.name.toLowerCase().includes(this._tenantName.toLowerCase())
       );
@@ -850,13 +915,13 @@ export class HomeComponent implements OnInit, OnDestroy {
   private handleTenantForStart() {
     this.tenantTotalDataCount = this.tenantsFull.length;
     this.tenantPageSizeOptions = [];
-    for (let i = 1; i <= this.tenantsFull.length; i++) {
-      if (i % 2 === 0) {
+    for(let i = 1; i <= this.tenantsFull.length; i++) {
+      if(i % 2 === 0) {
         this.tenantPageSizeOptions.push(i);
       }
     }
 
-    if (this.tenantPageSizeOptions.length === 0)
+    if(this.tenantPageSizeOptions.length === 0)
       this.tenantPageSizeOptions.push(this.tenantsFull.length);
     this.tenantPageSize = this.tenantPageSizeOptions[0];
 
@@ -889,7 +954,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     await this.apiService
       .getAllUsers()
       .then((res: UsersType[] | null) => {
-        if (res) {
+        if(res) {
           this.allUsers = res;
           setTimeout(() => {
             this.isLoading = false;
@@ -918,7 +983,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     await this.apiService
       .getAllTenants()
       .then((res) => {
-        if (res.status === 'success') {
+        if(res.status === 'success') {
           this.noneTenantsFull = [];
           this.tenantsFull = [];
 
@@ -1003,7 +1068,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     await this.apiService
       .insertTenant(formData)
       .then(async (data) => {
-        if (data.status === 'success') {
+        if(data.status === 'success') {
           this.isReloading = true;
           this.notificationComponent.notification(data.status, data.message);
           // await this.getAllUsers();
@@ -1011,7 +1076,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         }
       })
       .catch((error) => {
-        if (error) {
+        if(error) {
           console.error('Action Button Error: ', error);
           this.progress.stop();
           this.notificationComponent.notification(
@@ -1035,14 +1100,14 @@ export class HomeComponent implements OnInit, OnDestroy {
       (item) => item.name.toLowerCase() === data.name.toLowerCase()
     );
 
-    if (user) {
+    if(user) {
       this.isLoading = true;
       this.progress.start();
       const username = user.username;
       await this.apiService
         .deleteTenant(username as string)
         .then((res) => {
-          if (res.status === 'success') {
+          if(res.status === 'success') {
             this.isReloading = true;
             this.notificationComponent.notification(res.status, res.message);
             // this.getAllTenants();
@@ -1054,7 +1119,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           }
         })
         .catch((error) => {
-          if (error) {
+          if(error) {
             this.notificationComponent.notification(
               'error',
               error.error.message
@@ -1083,13 +1148,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     );
   }
 
-  private sortString(list: string[]) {
-    return list.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-  }
 
   // Check Is Admin
   protected isAdmin(): boolean {
-    if (this.loggedUser) {
+    if(this.loggedUser) {
       return this.loggedUser.role.toLocaleLowerCase() === 'admin';
     }
     return false;

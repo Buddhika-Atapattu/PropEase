@@ -1,43 +1,55 @@
-import { Component, Inject, PLATFORM_ID, OnInit } from '@angular/core';
+import {
+  Component,
+  Inject,
+  PLATFORM_ID,
+  OnInit,
+  AfterViewInit,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { NetworkService } from '../../services/network/network.service';
 import { MatIconModule } from '@angular/material/icon';
 
-@Component({
+@Component( {
   selector: 'app-check-internet-status',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [ CommonModule, MatIconModule ],
   templateUrl: './check-internet-status.component.html',
   styleUrl: './check-internet-status.component.scss',
-})
-export class CheckInternetStatusComponent implements OnInit {
-  protected isOnline: boolean = true;
+} )
+export class CheckInternetStatusComponent implements OnInit, AfterViewInit {
+  protected isOnline: boolean = true; // default: true for SSR
   protected showOnlineMessage: boolean = false;
   private isBrowser: boolean;
 
-  constructor(
+  constructor (
     private networkService: NetworkService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    private cdRef: ChangeDetectorRef,
+    @Inject( PLATFORM_ID ) private platformId: Object
   ) {
-    this.isBrowser = isPlatformBrowser(platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
   }
 
-  async ngOnInit() {
-    if (this.isBrowser) {
-      this.networkService.hasChecked$.subscribe((status: boolean) => {
-        this.isOnline = status;
+  ngOnInit(): void {
+    // Render a predictable initial DOM structure for SSR
+    this.isOnline = true;
+    this.showOnlineMessage = false;
+  }
 
-        if (status) {
-          // Online: Show message briefly
-          this.showOnlineMessage = true;
-          setTimeout(() => {
-            this.showOnlineMessage = false;
-          }, 5000);
-        } else {
-          // Offline: Keep showing message
-          this.showOnlineMessage = true;
-        }
-      });
-    }
+  ngAfterViewInit(): void {
+    if ( !this.isBrowser ) return;
+
+    this.networkService.hasChecked$.subscribe( ( status: boolean ) => {
+      this.isOnline = status;
+      this.showOnlineMessage = true;
+      this.cdRef.detectChanges();
+
+      if ( status ) {
+        setTimeout( () => {
+          this.showOnlineMessage = false;
+          this.cdRef.detectChanges();
+        }, 5000 );
+      }
+    } );
   }
 }

@@ -1,5 +1,8 @@
 @use "../../styles/global.scss" as *;
 
+// ===========================================
+// Dashboard Layout Grid Structure (Desktop)
+// ===========================================
 .dashboard-container {
   display: grid;
   grid-template-areas:
@@ -11,10 +14,9 @@
   overflow: hidden;
 }
 
-.menu-icon {
-  display: none;
-}
-
+// ===========================================
+// Sidebar Navigation
+// ===========================================
 .sidebar {
   grid-area: sidebar;
   position: fixed;
@@ -24,26 +26,27 @@
   height: 100vh;
   padding: 2rem 1rem;
   overflow-y: auto;
-  // background-color: $light-secondary-color;
   background: none !important;
   transition: all 0.3s ease;
   z-index: 1;
 
+  // Collapsed sidebar (compact view)
   &.collapsed {
-    width: 7rem;
+    width: 6.5rem;
   }
 
+  // Theming support
   &.dark {
-    // background-color: $dark-secondary-color;
     color: $dark-text-color;
   }
-
   &.light {
-    // background-color: $light-secondary-color;
     color: $light-text-color;
   }
 }
 
+// ===========================================
+// Top Navbar
+// ===========================================
 .dashboard-navbar {
   grid-area: navbar;
   position: fixed;
@@ -58,15 +61,18 @@
   transition: all 0.3s ease;
   z-index: 100;
 
+  // Theming support
   &.dark {
     background-color: $dark-dashboard-color;
   }
-
   &.light {
     background-color: $light-dashboard-color;
   }
 }
 
+// ===========================================
+// Main Content Area
+// ===========================================
 .main-content {
   grid-area: main;
   margin-top: 2rem;
@@ -75,30 +81,37 @@
   overflow-y: auto;
   padding: 2rem;
   transition: all 0.3s ease;
+
   .dashboard-main-container {
     position: relative;
     width: -webkit-fill-available;
   }
+
+  // Theming support
   &.dark {
     background: $dark-dashboard-color;
     color: $dark-text-color;
   }
-
   &.light {
     background: $light-dashboard-color;
     color: $light-text-color;
   }
 }
 
-/* When Sidebar Collapses */
+// ===========================================
+// Adjustments When Sidebar Collapses
+// ===========================================
 .sidebar.collapsed + .dashboard-navbar {
   left: 0;
 }
+
 .sidebar.collapsed ~ .main-content {
   margin-left: -9rem;
 }
 
-/* User Image button style */
+// ===========================================
+// User Avatar Button
+// ===========================================
 .user-image-btn {
   background: transparent;
   border: none;
@@ -124,27 +137,38 @@
   }
 }
 
-/* Logo */
+// ===========================================
+// Logo Styling
+// ===========================================
 .logo {
   height: 50px;
   width: auto;
   object-fit: contain;
 }
 
+// ===========================================
+// Mobile Menu Icon (Hamburger)
+// ===========================================
+.menu-icon {
+  display: none;
+}
+
+// ===========================================
+// Mobile Slide-out Menu Panel
+// ===========================================
 .mobile-menu {
   display: none;
 }
 
+// ===========================================
+// Theming Overrides for Mobile Menu Button
+// ===========================================
 :host-context(html.dark) {
   @media (max-width: 768px) {
-    .dashboard-container {
-      .menu-icon {
-        button {
-          border: 1px solid #fff;
-          .menu-bar {
-            background-color: #fff;
-          }
-        }
+    .dashboard-container .menu-icon button {
+      border: 1px solid #fff;
+      .menu-bar {
+        background-color: #fff;
       }
     }
 
@@ -156,14 +180,10 @@
 
 :host-context(html.light) {
   @media (max-width: 768px) {
-    .dashboard-container {
-      .menu-icon {
-        button {
-          border: 1px solid #000;
-          .menu-bar {
-            background-color: #000;
-          }
-        }
+    .dashboard-container .menu-icon button {
+      border: 1px solid #000;
+      .menu-bar {
+        background-color: #000;
       }
     }
 
@@ -173,24 +193,28 @@
   }
 }
 
-// Mobile version
+// ===========================================
+// Responsive Styles (Mobile Devices)
+// ===========================================
 @media (max-width: 768px) {
   .main-content {
     padding: 0.25rem;
     overflow-x: hidden;
   }
+
   .dashboard-main-container {
     margin-top: 3rem;
   }
+
   .menu-icon {
     display: flex;
     position: fixed;
     top: 10px;
     left: 10px;
     z-index: 1000000;
-    overflow: hidden;
     cursor: pointer;
     transition: all 0.3s ease;
+
     button {
       position: relative;
       display: flex;
@@ -201,7 +225,6 @@
       background: transparent;
       border: none;
       padding: 0.4rem;
-      cursor: pointer;
       border-radius: 0.25rem;
       transition: transform 0.3s ease;
 
@@ -237,14 +260,18 @@
       }
     }
   }
+
   .dashboard-container {
     display: block;
+
     .dashboard-navbar {
       display: none;
     }
+
     .sidebar {
       display: none;
     }
+
     .main-content {
       position: relative;
       width: 100vw;
@@ -260,11 +287,12 @@
     height: 100vh;
     z-index: 100000;
     top: 0;
-    left: -1000vh;
+    left: -1000vh; // Hidden off-screen by default
     overflow-y: auto;
     transition: all 0.3s ease;
+
     &.menu-open {
-      left: 0;
+      left: 0; // Slide in from left when open
     }
   }
 }

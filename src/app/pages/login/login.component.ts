@@ -38,7 +38,7 @@ import {
   NotificationComponent,
 } from '../../components/dialogs/notification/notification.component';
 
-@Component({
+@Component( {
   selector: 'app-login',
   standalone: true,
   imports: [
@@ -54,9 +54,9 @@ import {
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
-})
+} )
 export class LoginComponent implements OnInit, OnDestroy {
-  @ViewChild(NotificationComponent, { static: true })
+  @ViewChild( NotificationComponent, { static: true } )
   notification!: NotificationComponent;
   protected username: string | null = '';
   protected password: string | null = '';
@@ -79,7 +79,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   protected isUserSaved: boolean = false;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     protected authService: AuthService,
     private router: Router,
@@ -87,20 +87,20 @@ export class LoginComponent implements OnInit, OnDestroy {
     private cryptoService: CryptoService,
     private http: HttpClient,
     private APIs: APIsService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private appRef: ApplicationRef,
     private activityTrackerService: ActivityTrackerService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
     this.initializeFromCookies();
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.isBrowser) {
-      (window as any).LoginComponent = this;
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+    if ( this.isBrowser ) {
+      ( window as any ).LoginComponent = this;
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
+      } );
     }
     // auto login
     await this.autoLogin();
@@ -112,30 +112,30 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   private async autoLogin() {
-    if (this.isBrowser) {
+    if ( this.isBrowser ) {
       if (
-        this.getCookie('username') !== null &&
-        this.getCookie('password') !== null
+        this.getCookie( 'username' ) !== null &&
+        this.getCookie( 'password' ) !== null
       ) {
         const username: string | null = await this.cryptoService.decrypt(
-          this.getCookie('username') || ''
+          this.getCookie( 'username' ) || ''
         );
         const password: string | null = await this.cryptoService.decrypt(
-          this.getCookie('password') || ''
+          this.getCookie( 'password' ) || ''
         );
 
-        const getLoggedUserData = localStorage.getItem('loggedUser');
+        const getLoggedUserData = localStorage.getItem( 'loggedUser' );
 
         const loggedUser: LoggedUserType | null = JSON.parse(
-          await this.cryptoService.decrypt(getLoggedUserData || '')
+          await this.cryptoService.decrypt( getLoggedUserData || '' )
         );
 
         this.username = username;
         this.password = password;
         this.rememberMe = true;
 
-        if (this.username !== '' && this.password !== '' && this.rememberMe) {
-          if (loggedUser) {
+        if ( this.username !== '' && this.password !== '' && this.rememberMe ) {
+          if ( loggedUser ) {
             this.isUserSaved = true;
             this.authService.logginUser = {
               username: this.username ?? '',
@@ -143,11 +143,11 @@ export class LoginComponent implements OnInit, OnDestroy {
               rememberMe: true,
             };
             this.authService.setLoggedUser = loggedUser;
-            if (this.authService.getLoggedUser !== null) {
+            if ( this.authService.getLoggedUser !== null ) {
               this.activityTrackerService.loggedUser = loggedUser;
               this.authService.getLoggedUser.isActive = true;
               this.authService.isUserLoggedIn = true;
-              this.router.navigate(['/dashboard/home']);
+              this.router.navigate( [ '/dashboard/home' ] );
             }
           } else {
             this.notification.notification(
@@ -166,23 +166,23 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   // Checkbox event handler
-  protected updateRememberMe(event: MatCheckboxChange): void {
+  protected updateRememberMe( event: MatCheckboxChange ): void {
     this.rememberMe = event.checked;
   }
 
   // Login handler
   protected async login(): Promise<void> {
-    if (!this.username || !this.password) {
-      this.notification.notification(
-        'error',
-        'Username and password cannot be empty.'
-      );
+    try {
+      if ( !this.username || !this.password ) {
+        this.notification.notification(
+          'error',
+          'Username and password cannot be empty.'
+        );
+        console.error( 'Username and password cannot be empty.' );
+        this.isEmpty = true;
+        return;
+      }
 
-      console.error('Username and password cannot be empty.');
-      this.isEmpty = true;
-
-      return;
-    } else {
       const user = {
         username: this.username,
         password: this.password,
@@ -190,86 +190,68 @@ export class LoginComponent implements OnInit, OnDestroy {
       };
 
       this.authService.logginUser = user;
-      const verifiedUser = await this.authService
-        .sendVerifyUser()
-        .then(async (data) => {
-          if (data && typeof data === 'object' && 'username' in data) {
-            this.authService.setLoggedUser = data as LoggedUserType;
-          } else {
-            this.authService.setLoggedUser = null;
-          }
-          return data;
-        })
-        .catch((error) => {
-          if (error) {
-            this.notification.notification('error', error.error.error);
-          }
-        });
-      if (
-        this.authService.getLoggedUser !== null &&
-        this.authService.getLoggedUser.isActive
-      ) {
-        if (this.isBrowser) {
-          this.activityTrackerService.loggedUser =
-            this.authService.getLoggedUser;
-          const username = await this.cryptoService.encrypt(
-            this.username || ''
-          );
-          const password = await this.cryptoService.encrypt(
-            this.password || ''
-          );
-          const loggedUser = await this.cryptoService.encrypt(
-            JSON.stringify(this.authService.getLoggedUser)
-          );
 
-          if (username !== null && password !== null && loggedUser !== null) {
-            localStorage.setItem('loggedUser', loggedUser);
-            this.saveToCookies(username, password);
-            this.authService.isUserLoggedIn = true;
-            await this.authService.insertLoggedUserTracks();
-            this.router.navigate(['/dashboard/home']);
-          } else {
-            console.error('Username or password is null');
-            this.authService.clearCredentials();
-            this.username = '';
-            this.password = '';
-            await this.saveToCookies('', ''); // clear cookies if login fails
-            this.router.navigate(['/login']);
-          }
+      const verifiedUser = await this.authService.sendVerifyUser();
+
+      if ( !verifiedUser ) throw new Error( 'Invalid username or password' )
+
+      const loggedUser = this.authService.getLoggedUser;
+
+      if ( loggedUser && loggedUser.isActive ) {
+        this.activityTrackerService.loggedUser = loggedUser;
+
+        const [ encryptedUsername, encryptedPassword, encryptedUser ] = await Promise.all( [
+          this.cryptoService.encrypt( this.username || '' ),
+          this.cryptoService.encrypt( this.password || '' ),
+          this.cryptoService.encrypt( JSON.stringify( loggedUser ) ),
+        ] );
+
+        if ( encryptedUsername && encryptedPassword && encryptedUser ) {
+          localStorage.setItem( 'loggedUser', encryptedUser );
+          this.saveToCookies( encryptedUsername, encryptedPassword );
+          this.authService.isUserLoggedIn = true;
+          await this.authService.insertLoggedUserTracks();
+          this.router.navigate( [ '/dashboard/home' ] );
+        } else {
+          throw new Error( 'Encryption failed for login credentials.' );
         }
       } else {
-        console.error('Username or password is null');
-        this.notification.notification(
-          'error',
-          'Error in logging. Refresh the browser!'
-        );
-        this.authService.clearCredentials();
-        this.username = '';
-        this.password = '';
-        await this.saveToCookies('', ''); // clear cookies if login fails
-        this.router.navigate(['/login']);
+        throw new Error( 'User inactive or login error. Please refresh the browser.' );
       }
+    } catch ( error: any ) {
+      console.error( 'Login Error:', error );
+
+      this.notification.notification(
+        'error',
+        error?.error?.error || error?.message || 'Unknown error during login.'
+      );
+
+      this.authService.clearCredentials();
+      this.username = '';
+      this.password = '';
+      await this.saveToCookies( '', '' ); // Clear cookies
+      this.router.navigate( [ '/login' ] );
     }
   }
 
   // Cookie management
-  private setCookie(name: string, value: string, days: number): void {
-    const expires = new Date(Date.now() + days * 86400000).toUTCString();
-    document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+  private setCookie( name: string, value: string, days: number ): void {
+    const expires = new Date( Date.now() + days * 86400000 ).toUTCString();
+    document.cookie = `${ name }=${ value }; expires=${ expires }; path=/`;
   }
 
-  private getCookie(name: string): string | null {
-    const nameEQ = `${name}=`;
-    const cookies = document.cookie.split(';');
-    for (let c of cookies) {
+  private getCookie( name: string ): string | null {
+    const nameEQ = `${ name }=`;
+    const cookies = document.cookie.split( ';' );
+    for ( let c of cookies ) {
       c = c.trim();
-      if (c.startsWith(nameEQ)) return c.slice(nameEQ.length);
+      if ( c.startsWith( nameEQ ) ) return c.slice( nameEQ.length );
     }
     return null;
   }
 
-  private deleteCookie(name: string): void {
-    document.cookie = `${name}=; Max-Age=0; path=/`;
+  private deleteCookie( name: string ): void {
+    document.cookie = `${ name }=; Max-Age=0; path=/`;
   }
 
   private async saveToCookies(
@@ -282,24 +264,24 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.password &&
       this.authService.getLoggedUser !== null
     ) {
-      this.setCookie('username', username, 30);
-      this.setCookie('password', password, 30);
+      this.setCookie( 'username', username, 30 );
+      this.setCookie( 'password', password, 30 );
     } else {
-      this.deleteCookie('username');
-      this.deleteCookie('password');
+      this.deleteCookie( 'username' );
+      this.deleteCookie( 'password' );
     }
   }
 
   private async initializeFromCookies(): Promise<void> {
-    if (this.isBrowser) {
+    if ( this.isBrowser ) {
       const decryptedUsername = await this.cryptoService.decrypt(
-        this.getCookie('username') || ''
+        this.getCookie( 'username' ) || ''
       );
       const decryptedPassword = await this.cryptoService.decrypt(
-        this.getCookie('password') || ''
+        this.getCookie( 'password' ) || ''
       );
 
-      if (decryptedUsername !== null && decryptedPassword !== null) {
+      if ( decryptedUsername !== null && decryptedPassword !== null ) {
         this.username = decryptedUsername;
         this.password = decryptedPassword;
         this.rememberMe = true;

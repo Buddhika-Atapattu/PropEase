@@ -1,5 +1,5 @@
-import { Routes } from '@angular/router';
-import { AuthGuard } from './services/guardAuth/guard-auth.guard';
+import {Routes} from '@angular/router';
+import {AuthGuard} from './services/guardAuth/guard-auth.guard';
 
 export const routes: Routes = [
   {
@@ -40,7 +40,7 @@ export const routes: Routes = [
           import('./pages/property/properties/properties-main-panel.component').then(
             (m) => m.PropertiesMainPanelComponent
           ),
-        data: { roles: ['admin'] },
+        data: {roles: ['admin']},
       },
       {
         path: 'users',
@@ -225,6 +225,16 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./pages/tenant/add-new-lease/add-new-lease').then(
                 (m) => m.AddNewLease
+              ),
+            data: {
+              roles: ['admin'],
+            },
+          },
+          {
+            path: 'view-lease/:leaseID',
+            loadComponent: () =>
+              import('./pages/tenant/view-lease-agreement/view-lease-agreement').then(
+                (m) => m.ViewLeaseAgreement
               ),
             data: {
               roles: ['admin'],

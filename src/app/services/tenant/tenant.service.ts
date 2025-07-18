@@ -1,8 +1,8 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { firstValueFrom } from 'rxjs';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { BackEndPropertyData, Property } from '../property/property.service';
+import {Injectable, Inject, PLATFORM_ID} from '@angular/core';
+import {isPlatformBrowser} from '@angular/common';
+import {firstValueFrom} from 'rxjs';
+import {HttpClient, HttpParams} from '@angular/common/http';
+import {BackEndPropertyData, Property} from '../property/property.service';
 
 export interface MSG {
   status: string;
@@ -467,99 +467,99 @@ export const DEFAULT_COMPANY_POLICY: string = `
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
   // Credit & Debit Cards
-  { id: 'visa', name: 'Visa', category: 'card' },
-  { id: 'mastercard', name: 'MasterCard', category: 'card' },
-  { id: 'amex', name: 'American Express', category: 'card' },
-  { id: 'discover', name: 'Discover', category: 'card' },
-  { id: 'jcb', name: 'JCB', category: 'card' },
-  { id: 'unionpay', name: 'UnionPay', category: 'card' },
-  { id: 'diners', name: 'Diners Club', category: 'card' },
+  {id: 'visa', name: 'Visa', category: 'card'},
+  {id: 'mastercard', name: 'MasterCard', category: 'card'},
+  {id: 'amex', name: 'American Express', category: 'card'},
+  {id: 'discover', name: 'Discover', category: 'card'},
+  {id: 'jcb', name: 'JCB', category: 'card'},
+  {id: 'unionpay', name: 'UnionPay', category: 'card'},
+  {id: 'diners', name: 'Diners Club', category: 'card'},
 
   // Digital Wallets
-  { id: 'paypal', name: 'PayPal', category: 'wallet' },
-  { id: 'applepay', name: 'Apple Pay', category: 'wallet' },
-  { id: 'googlepay', name: 'Google Pay', category: 'wallet' },
-  { id: 'samsungpay', name: 'Samsung Pay', category: 'wallet' },
-  { id: 'amazonpay', name: 'Amazon Pay', category: 'wallet' },
-  { id: 'alipay', name: 'Alipay', category: 'wallet', region: 'China' },
-  { id: 'wechatpay', name: 'WeChat Pay', category: 'wallet', region: 'China' },
-  { id: 'paytm', name: 'Paytm', category: 'wallet', region: 'India' },
-  { id: 'grabpay', name: 'GrabPay', category: 'wallet', region: 'Southeast Asia' },
-  { id: 'linepay', name: 'LINE Pay', category: 'wallet', region: 'Japan/Taiwan' },
-  { id: 'momo', name: 'MoMo', category: 'wallet', region: 'Vietnam' },
-  { id: 'blik', name: 'BLIK', category: 'wallet', region: 'Poland' },
-  { id: 'gcash', name: 'GCash', category: 'wallet', region: 'Philippines' },
-  { id: 'tngwallet', name: 'TNG Wallet', category: 'wallet', region: 'Hong Kong' },
-  { id: 'touchngo', name: 'Touch ‘n Go eWallet', category: 'wallet', region: 'Malaysia' },
-  { id: 'kakaopay', name: 'KakaoPay', category: 'wallet', region: 'South Korea' },
-  { id: 'mpesa', name: 'M-Pesa', category: 'wallet', region: 'Africa/India' },
-  { id: 'yandexmoney', name: 'YooMoney (Yandex Money)', category: 'wallet', region: 'Russia' },
-  { id: 'qiwi', name: 'QIWI Wallet', category: 'wallet', region: 'Russia' },
+  {id: 'paypal', name: 'PayPal', category: 'wallet'},
+  {id: 'applepay', name: 'Apple Pay', category: 'wallet'},
+  {id: 'googlepay', name: 'Google Pay', category: 'wallet'},
+  {id: 'samsungpay', name: 'Samsung Pay', category: 'wallet'},
+  {id: 'amazonpay', name: 'Amazon Pay', category: 'wallet'},
+  {id: 'alipay', name: 'Alipay', category: 'wallet', region: 'China'},
+  {id: 'wechatpay', name: 'WeChat Pay', category: 'wallet', region: 'China'},
+  {id: 'paytm', name: 'Paytm', category: 'wallet', region: 'India'},
+  {id: 'grabpay', name: 'GrabPay', category: 'wallet', region: 'Southeast Asia'},
+  {id: 'linepay', name: 'LINE Pay', category: 'wallet', region: 'Japan/Taiwan'},
+  {id: 'momo', name: 'MoMo', category: 'wallet', region: 'Vietnam'},
+  {id: 'blik', name: 'BLIK', category: 'wallet', region: 'Poland'},
+  {id: 'gcash', name: 'GCash', category: 'wallet', region: 'Philippines'},
+  {id: 'tngwallet', name: 'TNG Wallet', category: 'wallet', region: 'Hong Kong'},
+  {id: 'touchngo', name: 'Touch ‘n Go eWallet', category: 'wallet', region: 'Malaysia'},
+  {id: 'kakaopay', name: 'KakaoPay', category: 'wallet', region: 'South Korea'},
+  {id: 'mpesa', name: 'M-Pesa', category: 'wallet', region: 'Africa/India'},
+  {id: 'yandexmoney', name: 'YooMoney (Yandex Money)', category: 'wallet', region: 'Russia'},
+  {id: 'qiwi', name: 'QIWI Wallet', category: 'wallet', region: 'Russia'},
 
   // Bank Transfers
-  { id: 'swift', name: 'SWIFT / IBAN Transfer', category: 'bank' },
-  { id: 'sepa', name: 'SEPA Transfer', category: 'bank', region: 'EU' },
-  { id: 'ach', name: 'ACH Transfer', category: 'bank', region: 'US' },
-  { id: 'fps', name: 'Faster Payments (FPS)', category: 'bank', region: 'UK' },
-  { id: 'neft', name: 'NEFT / RTGS', category: 'bank', region: 'India' },
-  { id: 'interac', name: 'Interac e-Transfer', category: 'bank', region: 'Canada' },
-  { id: 'bacs', name: 'BACS Transfer', category: 'bank', region: 'UK' },
-  { id: 'bank', name: 'Bank Transfer', category: 'bank', region: 'International' },
+  {id: 'swift', name: 'SWIFT / IBAN Transfer', category: 'bank'},
+  {id: 'sepa', name: 'SEPA Transfer', category: 'bank', region: 'EU'},
+  {id: 'ach', name: 'ACH Transfer', category: 'bank', region: 'US'},
+  {id: 'fps', name: 'Faster Payments (FPS)', category: 'bank', region: 'UK'},
+  {id: 'neft', name: 'NEFT / RTGS', category: 'bank', region: 'India'},
+  {id: 'interac', name: 'Interac e-Transfer', category: 'bank', region: 'Canada'},
+  {id: 'bacs', name: 'BACS Transfer', category: 'bank', region: 'UK'},
+  {id: 'bank', name: 'Bank Transfer', category: 'bank', region: 'International'},
 
   // International Payment Gateways
-  { id: 'stripe', name: 'Stripe', category: 'gateway' },
-  { id: 'wise', name: 'Wise (TransferWise)', category: 'gateway' },
-  { id: 'payoneer', name: 'Payoneer', category: 'gateway' },
-  { id: 'revolut', name: 'Revolut', category: 'gateway' },
-  { id: 'worldremit', name: 'WorldRemit', category: 'gateway' },
-  { id: 'ofx', name: 'OFX', category: 'gateway' },
-  { id: 'remitly', name: 'Remitly', category: 'gateway' },
-  { id: 'skrill', name: 'Skrill', category: 'gateway' },
-  { id: 'neteller', name: 'Neteller', category: 'gateway' },
-  { id: 'adyen', name: 'Adyen', category: 'gateway' },
-  { id: 'checkout', name: 'Checkout.com', category: 'gateway' },
-  { id: '2checkout', name: '2Checkout', category: 'gateway' },
-  { id: 'authorize', name: 'Authorize.Net', category: 'gateway', region: 'US' },
-  { id: 'razorpay', name: 'Razorpay', category: 'gateway', region: 'India' },
-  { id: 'flutterwave', name: 'Flutterwave', category: 'gateway', region: 'Africa' },
+  {id: 'stripe', name: 'Stripe', category: 'gateway'},
+  {id: 'wise', name: 'Wise (TransferWise)', category: 'gateway'},
+  {id: 'payoneer', name: 'Payoneer', category: 'gateway'},
+  {id: 'revolut', name: 'Revolut', category: 'gateway'},
+  {id: 'worldremit', name: 'WorldRemit', category: 'gateway'},
+  {id: 'ofx', name: 'OFX', category: 'gateway'},
+  {id: 'remitly', name: 'Remitly', category: 'gateway'},
+  {id: 'skrill', name: 'Skrill', category: 'gateway'},
+  {id: 'neteller', name: 'Neteller', category: 'gateway'},
+  {id: 'adyen', name: 'Adyen', category: 'gateway'},
+  {id: 'checkout', name: 'Checkout.com', category: 'gateway'},
+  {id: '2checkout', name: '2Checkout', category: 'gateway'},
+  {id: 'authorize', name: 'Authorize.Net', category: 'gateway', region: 'US'},
+  {id: 'razorpay', name: 'Razorpay', category: 'gateway', region: 'India'},
+  {id: 'flutterwave', name: 'Flutterwave', category: 'gateway', region: 'Africa'},
 
   // Cash-Based / Vouchers
-  { id: 'westernunion', name: 'Western Union', category: 'cash' },
-  { id: 'moneygram', name: 'MoneyGram', category: 'cash' },
-  { id: 'ria', name: 'Ria', category: 'cash' },
-  { id: 'paysafecard', name: 'Paysafecard', category: 'cash' },
-  { id: 'cod', name: 'Cash on Delivery (COD)', category: 'cash' },
+  {id: 'westernunion', name: 'Western Union', category: 'cash'},
+  {id: 'moneygram', name: 'MoneyGram', category: 'cash'},
+  {id: 'ria', name: 'Ria', category: 'cash'},
+  {id: 'paysafecard', name: 'Paysafecard', category: 'cash'},
+  {id: 'cod', name: 'Cash on Delivery (COD)', category: 'cash'},
 
   // Cryptocurrencies
-  { id: 'bitcoin', name: 'Bitcoin (BTC)', category: 'crypto' },
-  { id: 'ethereum', name: 'Ethereum (ETH)', category: 'crypto' },
-  { id: 'usdt', name: 'Tether (USDT)', category: 'crypto' },
-  { id: 'bnb', name: 'Binance Coin (BNB)', category: 'crypto' },
-  { id: 'litecoin', name: 'Litecoin (LTC)', category: 'crypto' },
-  { id: 'xrp', name: 'Ripple (XRP)', category: 'crypto' },
-  { id: 'dogecoin', name: 'Dogecoin (DOGE)', category: 'crypto' },
-  { id: 'cardano', name: 'Cardano (ADA)', category: 'crypto' },
+  {id: 'bitcoin', name: 'Bitcoin (BTC)', category: 'crypto'},
+  {id: 'ethereum', name: 'Ethereum (ETH)', category: 'crypto'},
+  {id: 'usdt', name: 'Tether (USDT)', category: 'crypto'},
+  {id: 'bnb', name: 'Binance Coin (BNB)', category: 'crypto'},
+  {id: 'litecoin', name: 'Litecoin (LTC)', category: 'crypto'},
+  {id: 'xrp', name: 'Ripple (XRP)', category: 'crypto'},
+  {id: 'dogecoin', name: 'Dogecoin (DOGE)', category: 'crypto'},
+  {id: 'cardano', name: 'Cardano (ADA)', category: 'crypto'},
 
   // Buy Now, Pay Later (BNPL)
-  { id: 'klarna', name: 'Klarna', category: 'bnpl' },
-  { id: 'afterpay', name: 'Afterpay', category: 'bnpl' },
-  { id: 'affirm', name: 'Affirm', category: 'bnpl' },
-  { id: 'zippay', name: 'Zip Pay', category: 'bnpl' },
-  { id: 'tabby', name: 'Tabby', category: 'bnpl', region: 'Middle East' },
-  { id: 'tamara', name: 'Tamara', category: 'bnpl', region: 'Middle East' },
-  { id: 'hoolah', name: 'Hoolah', category: 'bnpl', region: 'Southeast Asia' },
+  {id: 'klarna', name: 'Klarna', category: 'bnpl'},
+  {id: 'afterpay', name: 'Afterpay', category: 'bnpl'},
+  {id: 'affirm', name: 'Affirm', category: 'bnpl'},
+  {id: 'zippay', name: 'Zip Pay', category: 'bnpl'},
+  {id: 'tabby', name: 'Tabby', category: 'bnpl', region: 'Middle East'},
+  {id: 'tamara', name: 'Tamara', category: 'bnpl', region: 'Middle East'},
+  {id: 'hoolah', name: 'Hoolah', category: 'bnpl', region: 'Southeast Asia'},
 
   // Other
-  { id: 'boleto', name: 'Boleto Bancário', category: 'bank', region: 'Brazil' },
-  { id: 'konbini', name: 'Konbini', category: 'cash', region: 'Japan' },
+  {id: 'boleto', name: 'Boleto Bancário', category: 'bank', region: 'Brazil'},
+  {id: 'konbini', name: 'Konbini', category: 'cash', region: 'Japan'},
 
   // Local / Manual Methods
-  { id: 'handcash', name: 'Cash (In Person)', category: 'cash', region: 'Local', isEditable: false, description: 'Direct cash payment to landlord or office' },
-  { id: 'cheque', name: 'Cheque Payment', category: 'cash', region: 'Local/Bank', isEditable: false, description: 'Paper cheque issued to payee' },
-  { id: 'bankdeposit', name: 'Manual Bank Deposit', category: 'cash', region: 'Local', isEditable: false, description: 'Deposit cash at a local bank branch' },
-  { id: 'mobilebanking', name: 'Local Mobile Banking', category: 'bank', region: 'Domestic', isEditable: false, description: 'Bank-owned mobile app transaction' },
-  { id: 'localwallet', name: 'Local Digital Wallet', category: 'wallet', region: 'Domestic', isEditable: false, description: 'Region-specific digital wallet for transfers' },
-  { id: 'moneyorder', name: 'Money Order', category: 'cash', region: 'International Postal', isEditable: false, description: 'Prepaid paper instrument for sending money' }
+  {id: 'handcash', name: 'Cash (In Person)', category: 'cash', region: 'Local', isEditable: false, description: 'Direct cash payment to landlord or office'},
+  {id: 'cheque', name: 'Cheque Payment', category: 'cash', region: 'Local/Bank', isEditable: false, description: 'Paper cheque issued to payee'},
+  {id: 'bankdeposit', name: 'Manual Bank Deposit', category: 'cash', region: 'Local', isEditable: false, description: 'Deposit cash at a local bank branch'},
+  {id: 'mobilebanking', name: 'Local Mobile Banking', category: 'bank', region: 'Domestic', isEditable: false, description: 'Bank-owned mobile app transaction'},
+  {id: 'localwallet', name: 'Local Digital Wallet', category: 'wallet', region: 'Domestic', isEditable: false, description: 'Region-specific digital wallet for transfers'},
+  {id: 'moneyorder', name: 'Money Order', category: 'cash', region: 'International Postal', isEditable: false, description: 'Prepaid paper instrument for sending money'}
 ];
 
 export const PAYMENT_FREQUENCIES: PaymentFrequency[] = [
@@ -834,7 +834,7 @@ export const NOTICE_PERIOD_OPTIONS: NoticePeriod[] = [
 export class TenantService {
   private isBrowser: boolean;
 
-  constructor(
+  constructor (
     @Inject(PLATFORM_ID) platformId: Object,
     private http: HttpClient
   ) {
@@ -862,11 +862,11 @@ export class TenantService {
 
 
   public formatRentDueDateFormat(option: RentDueDate): string {
-    if (option.day) {
+    if(option.day) {
       return `Due on the ${option.day}${this.ordinalSuffix(
         option.day
       )} of every month`;
-    } else if (option.offsetDays !== undefined) {
+    } else if(option.offsetDays !== undefined) {
       return `Due ${option.offsetDays} day(s) after invoice`;
     } else {
       return 'Custom due date';
@@ -874,8 +874,8 @@ export class TenantService {
   }
 
   private ordinalSuffix(n: number): string {
-    if (n > 3 && n < 21) return 'th';
-    switch (n % 10) {
+    if(n > 3 && n < 21) return 'th';
+    switch(n % 10) {
       case 1:
         return 'st';
       case 2:
@@ -909,9 +909,9 @@ export class TenantService {
   }
 
   // Get lease agreements by leaseID
-  public async getAllLeaseAgreementsByLeaseID(leaseID: string): Promise<MSG> {
+  public async getLeaseAgreementByLeaseID(leaseID: string): Promise<MSG> {
     return await firstValueFrom(
-      this.http.get<MSG>(`http://localhost:3000/api-lease/lease-agreements/${leaseID.trim()}`)
+      this.http.get<MSG>(`http://localhost:3000/api-lease/lease-agreement/${leaseID.trim()}`)
     );
   }
 
@@ -921,4 +921,42 @@ export class TenantService {
       this.http.put<MSG>(`http://localhost:3000/api-lease/lease-status-updated/${leaseID.trim()}`, formData)
     );
   }
+  // Preview lease agreement
+  public async setupEjsPreview(leaseID: string): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.get<MSG>(`http://localhost:3000/api-lease/preview-lease-agreement/${leaseID.trim()}`)
+    );
+  }
+
+  // Download lease agreement
+  public async downloadLeaseAgreement(leaseID: string, type: 'download' | 'view'): Promise<Blob> {
+    const url = `http://localhost:3000/api-lease/lease-agreement-pdf/${leaseID.trim()}/${type}`;
+    return await firstValueFrom(
+      this.http.get(url, {responseType: 'blob'})
+    );
+  }
+
+  // Get tenant by username
+  public async getTenantByUsername(username: string): Promise<MSG> {
+    const url = `http://localhost:3000/api-lease/get-tenant-by-username/${username.trim()}`;
+    return await firstValueFrom(
+      this.http.get<MSG>(url)
+    );
+  }
+
+  // Get all leases
+  public async getAllLeases(): Promise<MSG> {
+    const url = `http://localhost:3000/api-lease/all-leases`;
+    return await firstValueFrom(
+      this.http.get<MSG>(url)
+    );
+  }
+
+  // Update lease agreement
+  public async updateLeaseAgreement(formData: FormData, leaseID: string): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.put<MSG>(`http://localhost:3000/api-lease/update-lease-agreement/${leaseID.trim()}`, formData)
+    );
+  }
+
 }

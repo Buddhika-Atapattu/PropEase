@@ -139,11 +139,11 @@
         margin-bottom: 20px;
 
         ::ng-deep .mdc-line-ripple {
-          background-color: $dark-third-color;
+          background-color: $dark-primary-color !important;
         }
 
         ::ng-deep .mdc-floating-label--float-above {
-          color: $dark-third-color !important;
+          color: $dark-primary-color !important;
         }
       }
 

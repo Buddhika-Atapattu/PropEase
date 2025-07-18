@@ -23,7 +23,7 @@ import { TopProgressBarComponent } from './components/top-progress-bar/top-progr
 import { RouterModule } from '@angular/router';
 import { CheckInternetStatusComponent } from './components/check-internet-status/check-internet-status.component';
 //
-@Component({
+@Component( {
   selector: 'app-root',
   standalone: true,
   imports: [
@@ -35,7 +35,7 @@ import { CheckInternetStatusComponent } from './components/check-internet-status
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
-})
+} )
 export class AppComponent implements OnInit, OnDestroy {
   title = 'propease-fontend';
   protected mode: boolean | null = null;
@@ -46,25 +46,29 @@ export class AppComponent implements OnInit, OnDestroy {
   private loggedUser: LoggedUserType | null = null;
   private userLoggedIn: boolean = false;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     private authService: AuthService,
     private router: Router,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private cdRef: ChangeDetectorRef,
     private renderer: Renderer2
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    if (this.isBrowser) {
+    this.isBrowser = isPlatformBrowser( this.platformId );
+    if ( this.isBrowser ) {
     }
   }
 
   ngOnInit(): void {
-    this.loadInit();
-    this.globalImageDetector();
+
   }
 
   ngAfterViewInit() {
+    if ( this.isBrowser ) {
+      this.loadInit();
+      this.globalImageDetector();
+    }
+
     this.cdRef.detectChanges();
   }
 
@@ -77,45 +81,82 @@ export class AppComponent implements OnInit, OnDestroy {
     this.navEndSub?.unsubscribe();
   }
 
-  private loadInit() {
-    if (this.isBrowser) {
-      this.windowRef.initTheme();
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
-        this.mode = val;
-      });
-      const isUserLoggedIn = localStorage.getItem('IS_USER_LOGGED_IN');
-      if (
-        (this.authService.getIsValidUser &&
-          this.authService.getLoggedUser !== null &&
-          this.authService.IsActiveUser) ||
-        (isUserLoggedIn && isUserLoggedIn === 'true')
-      ) {
-        window.addEventListener('beforeunload', () => {
-          localStorage.setItem('LAST_URL', this.router.url);
-        });
+  private loadInit(): void {
+    if ( !this.isBrowser ) return;
 
-        this.lastURL = localStorage.getItem('LAST_URL');
-        if (this.lastURL) {
-          this.router.navigateByUrl(this.lastURL);
+    try {
+      this.windowRef.initTheme();
+
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
+        this.mode = val;
+      } );
+
+      const isUserLoggedIn = this.safeGetFromLocalStorage( 'IS_USER_LOGGED_IN' );
+
+      if (
+        ( this.authService.getIsValidUser &&
+          this.authService.getLoggedUser !== null &&
+          this.authService.IsActiveUser ) ||
+        ( isUserLoggedIn && isUserLoggedIn === 'true' )
+      ) {
+        this.safeAddBeforeUnloadListener( () => {
+          const url = this.router.url;
+          if ( url ) {
+            this.safeSetToLocalStorage( 'LAST_URL', url );
+          }
+        } );
+
+        this.lastURL = this.safeGetFromLocalStorage( 'LAST_URL' );
+        if ( this.lastURL ) {
+          this.router.navigateByUrl( this.lastURL ).catch( () => { } );
         }
       }
+    } catch ( error ) {
+      console.warn( 'loadInit error (ignored):', error );
     }
   }
 
   private globalImageDetector(): void {
-    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    if ( typeof window === 'undefined' || typeof document === 'undefined' ) return;
+
+    try {
       document.addEventListener(
         'error',
-        (event: Event) => {
+        ( event: Event ) => {
           const target = event.target as HTMLElement;
-
-          if (target.tagName === 'IMG') {
-            console.warn('Global image load error:', (target as HTMLImageElement).src);
-            (target as HTMLImageElement).src = '/Images/System-images/noImage.png';
+          if ( target?.tagName === 'IMG' ) {
+            console.warn( 'Global image load error:', ( target as HTMLImageElement ).src );
+            ( target as HTMLImageElement ).src = '/Images/System-images/noImage.png';
           }
         },
-        true // must be true to catch image load errors
+        true
       );
+    } catch ( error ) {
+      console.warn( 'globalImageDetector error (ignored):', error );
     }
+  }
+
+  private safeGetFromLocalStorage( key: string ): string | null {
+    try {
+      return typeof localStorage !== 'undefined' ? localStorage.getItem( key ) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private safeSetToLocalStorage( key: string, value: string ): void {
+    try {
+      if ( typeof localStorage !== 'undefined' ) {
+        localStorage.setItem( key, value );
+      }
+    } catch { }
+  }
+
+  private safeAddBeforeUnloadListener( callback: () => void ): void {
+    try {
+      if ( typeof window !== 'undefined' && typeof window.addEventListener === 'function' ) {
+        window.addEventListener( 'beforeunload', callback );
+      }
+    } catch { }
   }
 }
