@@ -27,15 +27,17 @@ import {
   CustomTableColumnType,
   CustomTableComponent,
   FileExportWithDataAndExtentionType,
+  SwitchButtonDataFormatType,
 } from '../../../components/shared/custom-table/custom-table.component';
 import {FileExportButtonTypeByExtension} from '../../../components/shared/paginator/paginator.component';
-import {APIsService, UsersType} from '../../../services/APIs/apis.service';
+import {APIsService, BaseUser, UsersType} from '../../../services/APIs/apis.service';
 import {
   AuthService,
   LoggedUserType,
 } from '../../../services/auth/auth.service';
-import {TenantService} from '../../../services/tenant/tenant.service';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {Lease, LeaseWithProperty, TenantService} from '../../../services/tenant/tenant.service';
+import {BackEndPropertyData, PropertyService} from '../../../services/property/property.service';
 
 export interface TenantTableElement {
   username?: string;
@@ -58,6 +60,25 @@ export interface TenantHomeButtonDataType {
   addedBy?: string;
 }
 
+interface LeaseTableDataType {
+  image: string;
+  leaseid: string;
+  dateRange: {
+    start: Date,
+    end: Date
+  };
+  status: string;
+  monthlyRent: string;
+  remaningDays: number;
+  notify: boolean;
+  view: {
+    type: string
+  },
+  download: {
+    type: string
+  }
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -76,7 +97,7 @@ export interface TenantHomeButtonDataType {
 export class HomeComponent implements OnInit, OnDestroy {
   //<======================= Foreign Components =======================>
   @ViewChild(ProgressBarComponent, {static: true})
-  progress!: ProgressBarComponent;
+  progressBarComponent!: ProgressBarComponent;
   @ViewChild(NotificationComponent, {static: true})
   notificationComponent!: NotificationComponent;
   //<======================= End Foreign Components =======================>
@@ -164,6 +185,54 @@ export class HomeComponent implements OnInit, OnDestroy {
     };
   //<======================= End Tenants Variables =======================>
 
+  //Logged User's Leases
+  protected loggedUserLeases: Lease[] = [];
+
+
+  //<============================================= LEASE TABLE VARIABLES =============================================>
+  private _leaseTableIsReloading: boolean = false;
+  private _leaseTablePageSize: number = 0;
+  private _leaseTablePageSizeOptions: number[] = [];
+  private _leaseTablePageIndex: number = 0;
+  private _leaseTablePageCount: number = 0;
+  private _leaseTableType: string = 'lease';
+  private _leaseTabletSearch: string = '';
+  private _leaseTableButtonAction: ButtonType = {
+    type: 'add',
+  };
+  private _leaseTableButtonOperation: ButtonType = {
+    type: 'add',
+  };
+  private _leaseTableTotalDataCount: number = 0;
+  private _leaseTableButtonActionTrigger: ButtonDataType = {
+    type: 'add',
+    data: null,
+  };
+  private _leaseTableButtonOperationTrigger: ButtonDataType = {
+    type: 'add',
+    data: null,
+  };
+  private _leaseTableNotification: NotificationType = {
+    type: 'success',
+    message: '',
+  };
+  protected leaseTableFileExportButtonTypeByExtension: FileExportButtonTypeByExtension = {
+    type: 'xlsx',
+  };
+  private _leaseTableData: LeaseTableDataType[] = [];
+  private _leaseTableColumns: CustomTableColumnType[] = [];
+  private _leaseSwitchButton: SwitchButtonDataFormatType = {
+    isActive: false,
+    data: null
+  };
+  protected leaseLength: number = 0;
+  private selectedProperties: BackEndPropertyData[] = [];
+  private today: Date = new Date();
+  protected isLoggedUserHaveLeases: boolean = false;
+  //<============================================= END LEASE TABLE VARIABLES =============================================>
+
+
+
   constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -171,7 +240,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private router: Router,
     private apiService: APIsService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private tenantService: TenantService,
+    private propertyService: PropertyService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.route.url.subscribe((segments) => {
@@ -190,11 +261,511 @@ export class HomeComponent implements OnInit, OnDestroy {
       await this.getAllUsers();
       await this.getAllTenants();
     }
+
+    await this.loggeUserLeases();
+    await this.loadeSelectedProperties();
+    this.organizeLeaseTableData();
   }
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
   }
+
+  //<=============================== Logged User Lease View ===============================>
+  protected async loggeUserLeases(): Promise<void> {
+    try {
+      if(!this.loggedUser) throw new Error("Please login first!");
+
+      const response = await this.tenantService.getAllLeaseAgreementsByUsername(this.loggedUser.username);
+
+      if(response.status !== 'success') throw new Error(response.message)
+
+      if(response.data.length === 0) throw new Error("You don't have any leases!");
+
+      const leases: Lease[] = response.data;
+
+      this.loggedUserLeases = leases;
+      this.isLoggedUserHaveLeases = true;
+    }
+    catch(error) {
+      console.error(error);
+      this.isLoggedUserHaveLeases = false
+    }
+  }
+
+  //<========================================================================= SETTER & GETTER ========================================================================>
+  // leaseTableIsReloading
+  get leaseTableIsReloading(): boolean {
+    return this._leaseTableIsReloading;
+  }
+  set leaseTableIsReloading(value: boolean) {
+    this._leaseTableIsReloading = value;
+    if(this._leaseTableIsReloading) {
+      this.organizeLeaseTableData()
+    }
+  }
+
+  // leaseTablePageSize
+  get leaseTablePageSize(): number {
+    return this._leaseTablePageSize;
+  }
+  set leaseTablePageSize(value: number) {
+    this._leaseTablePageSize = value;
+  }
+
+  // leaseTablePageSizeOptions
+  get leaseTablePageSizeOptions(): number[] {
+    return this._leaseTablePageSizeOptions;
+  }
+  set leaseTablePageSizeOptions(value: number[]) {
+    this._leaseTablePageSizeOptions = value;
+  }
+
+  // leaseTablePageIndex
+  get leaseTablePageIndex(): number {
+    return this._leaseTablePageIndex;
+  }
+  set leaseTablePageIndex(value: number) {
+    this._leaseTablePageIndex = value;
+  }
+
+  // leaseTablePageCount
+  get leaseTablePageCount(): number {
+    return this._leaseTablePageCount;
+  }
+  set leaseTablePageCount(value: number) {
+    this._leaseTablePageCount = value;
+  }
+
+  // leaseTableType
+  get leaseTableType(): string {
+    return this._leaseTableType;
+  }
+  set leaseTableType(value: string) {
+    this._leaseTableType = value;
+  }
+
+  // leaseTabletSearch
+  get leaseTabletSearch(): string {
+    return this._leaseTabletSearch;
+  }
+  set leaseTabletSearch(value: string) {
+    this._leaseTabletSearch = value;
+  }
+
+  // leaseTableButtonAction
+  get leaseTableButtonAction(): ButtonType {
+    return this._leaseTableButtonAction;
+  }
+  set leaseTableButtonAction(value: ButtonType) {
+    this._leaseTableButtonAction = value;
+  }
+
+  // leaseTableButtonOperation
+  get leaseTableButtonOperation(): ButtonType {
+    return this._leaseTableButtonOperation;
+  }
+  set leaseTableButtonOperation(value: ButtonType) {
+    this._leaseTableButtonOperation = value;
+  }
+
+  // leaseTableTotalDataCount
+  get leaseTableTotalDataCount(): number {
+    return this._leaseTableTotalDataCount;
+  }
+  set leaseTableTotalDataCount(value: number) {
+    this._leaseTableTotalDataCount = value;
+  }
+
+  // leaseTableButtonActionTrigger
+  get leaseTableButtonActionTrigger(): ButtonDataType {
+    return this._leaseTableButtonActionTrigger;
+  }
+  set leaseTableButtonActionTrigger(value: ButtonDataType) {
+    this._leaseTableButtonActionTrigger = value;
+    // this.handleOpenLeaseAgreement()
+    this.handleLeaseView();
+  }
+
+  // leaseTableButtonOperationTrigger
+  get leaseTableButtonOperationTrigger(): ButtonDataType {
+    return this._leaseTableButtonOperationTrigger;
+  }
+  set leaseTableButtonOperationTrigger(value: ButtonDataType) {
+    this._leaseTableButtonOperationTrigger = value;
+    this.downloadLeaseAgreement();
+  }
+
+  // leaseTableNotification
+  get leaseTableNotification(): NotificationType {
+    return this._leaseTableNotification;
+  }
+  set leaseTableNotification(value: NotificationType) {
+    this._leaseTableNotification = value;
+  }
+
+  // leaseTableData
+  get leaseTableData(): LeaseTableDataType[] {
+    return this._leaseTableData;
+  }
+  set leaseTableData(value: LeaseTableDataType[]) {
+    this._leaseTableData = value;
+  }
+
+  // leaseTableColumns
+  get leaseTableColumns(): CustomTableColumnType[] {
+    return this._leaseTableColumns;
+  }
+  set leaseTableColumns(value: CustomTableColumnType[]) {
+    this._leaseTableColumns = value;
+  }
+
+
+  //<========================================================================= END SETTER & GETTER ========================================================================>
+
+  //<========================================================================= HANGLERS ========================================================================>
+  private async organizeLeaseTableData(): Promise<void> {
+    try {
+      if(!this.loggedUserLeases || this.loggedUserLeases.length === 0) {
+        throw new Error("No lease agreements found!");
+      }
+
+      if(!this.selectedProperties || this.selectedProperties.length === 0) {
+        await this.loadeSelectedProperties();
+        if(!this.selectedProperties || this.selectedProperties.length === 0) {
+          throw new Error("No properties found!");
+        }
+      }
+
+      this.isLoading = true;
+      this.leaseLength = this.loggedUserLeases.length;
+      this.leaseTablePageSize = 2;
+      this.leaseTablePageIndex = 0;
+      this.leaseTablePageSizeOptions = [];
+
+      for(let i = 1; i <= this.leaseLength; i++) {
+        if(i % this.leaseTablePageSize === 0) {
+          this.leaseTablePageSizeOptions.push(i);
+        }
+      }
+
+      if(this.leaseTablePageSizeOptions.length === 0) {
+        this.leaseTablePageSizeOptions.push(this.leaseLength);
+      }
+
+
+      this.leaseTablePageCount = Math.ceil(this.leaseLength / this.leaseTablePageSize);
+      this.leaseTableType = 'Lease';
+
+      this.leaseTableButtonAction = {type: 'view'};
+      this.leaseTableButtonOperation = {type: 'download'};
+      this.leaseTableTotalDataCount = this.leaseLength;
+      this.leaseTableNotification = {type: 'success', message: ''};
+      this.leaseTableFileExportButtonTypeByExtension = {type: 'xlsx'};
+
+      this.leaseTableColumns = [
+        {label: 'Image', key: 'propertyimage'},
+        {label: 'Lease ID', key: 'leaseid'},
+        {label: 'Date Range', key: 'daterange'},
+        {label: 'Lease Status', key: 'status'},
+        {label: 'Monthly Rent', key: 'monthlyRent'},
+        {label: 'Remaining Days', key: 'remaningDays'},
+        {label: 'View', key: 'actions'},
+        {label: 'Download', key: 'operation'}
+      ];
+
+      // Clear previous table data
+      this.leaseTableData = [];
+
+
+      for(const lease of this.loggedUserLeases) {
+        const property = this.selectedProperties.find(p => p.id === lease.propertyID);
+        if(!property) continue;
+
+        const propertyImageURL: LeaseTableDataType['image'] = property.images?.[0]?.imageURL || '';
+        const leaseID: LeaseTableDataType['leaseid'] = lease.leaseID;
+        const dateRange: LeaseTableDataType['dateRange'] = {
+          start: new Date(lease.leaseAgreement.startDate),
+          end: new Date(lease.leaseAgreement.endDate)
+        };
+        const status: LeaseTableDataType['status'] = lease.systemMetadata.validationStatus.toLocaleLowerCase();
+        const monthlyRent: LeaseTableDataType['monthlyRent'] =
+          `${lease.leaseAgreement.monthlyRent} ${lease.leaseAgreement.currency.currency}`;
+        const remaningDays: LeaseTableDataType['remaningDays'] = Math.ceil(
+          (dateRange.end.getTime() - this.today.getTime()) / (1000 * 3600 * 24)
+        );
+        const notify: LeaseTableDataType['notify'] = remaningDays < 30;
+        const view: LeaseTableDataType['view'] = {type: 'view'};
+        const download: LeaseTableDataType['download'] = {type: 'download'};
+
+
+        const rowData: LeaseTableDataType = {
+          image: propertyImageURL,
+          leaseid: leaseID,
+          dateRange,
+          status,
+          monthlyRent,
+          remaningDays,
+          notify,
+          view,
+          download,
+        };
+
+        this.leaseTableData.push(rowData);
+      }
+
+    } catch(error) {
+      console.error('Error organizing lease table data:', error);
+      this.notificationComponent.notification('error', (error as Error).message);
+    } finally {
+      setTimeout(() => {
+        this.isLoading = false;
+      }, 500);
+    }
+  }
+  //<========================================================================= END HANGLERS ========================================================================>
+
+
+  //<========================================================================= LOAD PROPERTY DATA ========================================================================>
+  private async loadeSelectedProperties() {
+    try {
+      if(this.loggedUserLeases.length === 0) {
+        throw new Error("No lease agreements found!");
+      }
+
+      this.isLoading = true;
+      const seen = new Set<string>();
+
+      for(const lease of this.loggedUserLeases) {
+        const propertyID = lease.propertyID;
+        if(!propertyID || seen.has(propertyID)) continue; // Avoid duplicates
+
+        try {
+          const res = await this.propertyService.getPropertyById(propertyID);
+          if(res.status === 'success') {
+            const resData: BackEndPropertyData = res.data as BackEndPropertyData;
+            this.selectedProperties.push(resData);
+
+            seen.add(propertyID);
+          } else {
+            console.error('Failed to fetch property:', res.message);
+          }
+        } catch(error: any) {
+          console.log('Error fetching property:', error);
+          if(error.status === 404) {
+            this.notificationComponent.notification('error', 'No property found for this lease.');
+          } else {
+            this.notificationComponent.notification('error', 'Failed to fetch property.');
+          }
+        }
+      }
+
+    } catch(error) {
+      console.error(error);
+      this.notificationComponent.notification('error', 'Failed to load selected properties.');
+    }
+    finally {
+      setTimeout(() => {
+        this.isLoading = false;
+      }, 500);
+    }
+  }
+  //<========================================================================= END LOAD PROPERTY DATA ========================================================================>
+
+
+  //<========================================================================= VIEW LEASE =========================================================================>
+  private handleLeaseView() {
+    try {
+      const leaseID = this._leaseTableButtonActionTrigger.data.element.leaseid;
+
+      if(!leaseID) throw new Error('No lease ID found!');
+
+      this.router.navigate(['/dashboard/tenant/view-lease', leaseID]);
+
+    }
+    catch(error) {
+      console.error(error)
+    }
+  }
+  //<========================================================================= END VIEW LEASE =========================================================================>
+
+  //<========================================================================= DOWNLOAD LEASE AGREEMENT =========================================================================>
+  private async downloadLeaseAgreement(): Promise<void> {
+    try {
+      this.progressBarComponent.start();
+
+      const leaseID = this._leaseTableButtonOperationTrigger.data.element.leaseID;
+      if(!leaseID) throw new Error("Invalid lease ID");
+
+      // Download PDF blob from backend
+      const blob = await this.tenantService.downloadLeaseAgreement(leaseID, 'download');
+
+      const actualName = `${leaseID}-lease-agreement.pdf`;
+
+      // Create temporary link and trigger download
+      const fileURL = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = fileURL;
+      a.download = actualName;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+
+      // Clean up
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(fileURL);
+
+    } catch(error) {
+      console.error('Failed to download lease agreement PDF:', error);
+      if(error instanceof HttpErrorResponse) {
+        this.notificationComponent.notification('error', error.message);
+      }
+      else if(typeof error === 'string') {
+        this.notificationComponent.notification('error', error);
+      }
+      else if(error instanceof Error) {
+        this.notificationComponent.notification('error', error.message);
+      }
+      else {
+        this.notificationComponent.notification('error', 'Failed to download lease agreement PDF.');
+      }
+    } finally {
+      this.progressBarComponent.complete();
+    }
+  }
+  //<========================================================================= END DOWNLOAD LEASE AGREEMENT =========================================================================>
+
+  //<========================================================================= EXPORT LEASE DATA =========================================================================>
+  protected handleExportLeaseTableData(value: FileExportWithDataAndExtentionType) {
+    try {
+      if(this.loggedUserLeases.length === 0) {
+        throw new Error('No lease agreements found!');
+      }
+
+      if(this.selectedProperties.length === 0) {
+        throw new Error('No properties found!');
+      }
+
+      const leasesWithProperty: LeaseWithProperty[] = [];
+
+      this.loggedUserLeases.forEach((lease) => {
+        const property = this.selectedProperties.find(p => p.id === lease.propertyID);
+        if(!property) throw new Error('Property not found!');
+        const leaseWithProperty: LeaseWithProperty = {
+          ...lease,
+          property
+        };
+        leasesWithProperty.push(leaseWithProperty);
+      });
+
+      if(leasesWithProperty.length === 0) {
+        throw new Error('No leases with property found!');
+      }
+
+      this.exportLeasesDataAsExcel(leasesWithProperty, value.extention.type);
+    }
+    catch(error) {
+      console.error(error);
+      if(error instanceof HttpErrorResponse) this.notificationComponent.notification('error', error.message);
+      else if(typeof error === 'string') this.notificationComponent.notification('error', error);
+      else if(error instanceof Error) this.notificationComponent.notification('error', error.message);
+      else this.notificationComponent.notification('error', 'Failed to load tenant data.');
+    }
+  }
+  //<========================================================================= END EXPORT LEASE DATA =========================================================================>
+
+
+  //<=========================== EXPORT EXCEL FILE ===========================>
+
+  private exportLeasesDataAsExcel(
+    leases: LeaseWithProperty[],
+    fileExtension: FileExportWithDataAndExtentionType['extention']['type'] = 'xlsx'
+  ): void {
+    if(!Array.isArray(leases) || leases.length === 0) {
+      console.warn('No lease data available for export.');
+      return;
+    }
+
+    const exportData: Record<string, any>[] = leases.map((lease) => {
+      const addr = lease.property?.address;
+
+      return {
+        'leaseID': lease.leaseID,
+        'Tenant name': lease.tenantInformation?.fullName ?? '',
+        'Tenant email': lease.tenantInformation?.email ?? '',
+        'Tenant contact': lease.tenantInformation?.phoneNumber ?? '',
+
+        'Co-Tenant name': lease.coTenant?.fullName ?? '',
+        'Co-Tenant relationship': lease.coTenant?.relationship ?? '',
+
+        'Property title': lease.property?.title ?? '',
+        'Property address':
+          (addr?.houseNumber ?? '') + ' ' +
+          (addr?.street ?? '') + ', ' +
+          (addr?.city ?? '') + ', ' +
+          (addr?.stateOrProvince ?? '') + ', ' +
+          (addr?.country ?? ''),
+
+        'Started date': new Date(lease.leaseAgreement.startDate).toISOString(),
+        'End date': new Date(lease.leaseAgreement.endDate).toISOString(),
+        'Monthly rent': lease.leaseAgreement.monthlyRent,
+        'Rent currency': lease.leaseAgreement.currency?.currency ?? '',
+        'Payment frequency': lease.leaseAgreement.paymentFrequency?.name ?? '',
+        'Payment method': lease.leaseAgreement.paymentMethod?.name ?? '',
+        'Deposit': lease.leaseAgreement.securityDeposit?.name ?? '',
+        'Rent due date': lease.leaseAgreement.rentDueDate?.label ?? '',
+        'Notice period': lease.leaseAgreement.noticePeriodDays?.label ?? '',
+
+        'Late penalties': lease.leaseAgreement.latePaymentPenalties?.map(p => p.label).join(',\n') ?? '',
+        'Utility responsibilities': lease.leaseAgreement.utilityResponsibilities?.map(u => u.utility + ': ' + u.paidBy).join(',\n') ?? '',
+
+        'Rules and regulations': lease.rulesAndRegulations?.map(r => r.rule).join(';\n') ?? '',
+
+        'Tenant signature URL': (lease.signatures.tenantSignature as any)?.URL ?? '',
+        'Landlord signature URL': (lease.signatures.landlordSignature as any)?.URL ?? '',
+        'Signed At': new Date(lease.signatures.signedAt).toISOString(),
+        'Signed By': lease.signatures.userAgent?.name ?? '',
+        'ip Address': lease.signatures.ipAddress ?? '',
+
+        'ocrStatus': lease.systemMetadata.ocrAutoFillStatus ? 'Yes' : 'No',
+        'validationStatus': lease.systemMetadata.validationStatus,
+        'leaseTemplateVersion': lease.systemMetadata.leaseTemplateVersion,
+        'lastUpdated': lease.systemMetadata.lastUpdated,
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    worksheet['!cols'] = Object.keys(exportData[0]).map((key) => ({
+      wch: key.length + 10
+    }));
+
+    const workbook: XLSX.WorkBook = {
+      Sheets: {LeaseData: worksheet},
+      SheetNames: ['LeaseData']
+    };
+
+    const mimeMap: Record<string, string> = {
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      xls: 'application/vnd.ms-excel',
+      csv: 'text/csv',
+      ods: 'application/vnd.oasis.opendocument.spreadsheet'
+    };
+
+    const bookType: XLSX.BookType = fileExtension as XLSX.BookType;
+    const mimeType = mimeMap[fileExtension] || mimeMap['xlsx'];
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType,
+      type: 'array'
+    });
+
+    const blob = new Blob([excelBuffer], {type: mimeType});
+    FileSaver.saveAs(blob, `Lease_Batch_Export_${new Date().toISOString()}.${fileExtension}`);
+  }
+  //<=========================== END EXPORT EXCEL FILE ===========================>
+
+  //<=============================== End Logged User Lease View ===============================>
+
   //<======================= Logged User Premission Checker =======================>
   private permissionCheckerForAdd(): boolean {
     try {
@@ -227,6 +798,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       return false;
     }
   }
+
   private permissionCheckerForRemove(): boolean {
     try {
       if(!this.loggedUser) {
@@ -840,11 +1412,11 @@ export class HomeComponent implements OnInit, OnDestroy {
         console.log(error);
         if(error instanceof HttpErrorResponse) {
           this.notificationComponent.notification('error', error.error.message);
-        }else if(typeof error === 'string') {
+        } else if(typeof error === 'string') {
           this.notificationComponent.notification('error', error);
         } else if(error instanceof Error) {
           this.notificationComponent.notification('error', error.message);
-        }else{
+        } else {
           this.notificationComponent.notification('error', 'An error occurred');
         }
       }
@@ -1055,7 +1627,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Add Tenant
   protected async addTenant(data: TenantHomeButtonDataType) {
     this.isLoading = true;
-    this.progress.start();
+    this.progressBarComponent.start();
     const formData: FormData = new FormData();
     formData.append('username', data.username as string);
     formData.append('name', data.name);
@@ -1078,7 +1650,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       .catch((error) => {
         if(error) {
           console.error('Action Button Error: ', error);
-          this.progress.stop();
+          this.progressBarComponent.stop();
           this.notificationComponent.notification(
             'warning',
             error.error.message
@@ -1088,7 +1660,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         }
       })
       .finally(() => {
-        this.progress.complete();
+        this.progressBarComponent.complete();
         this.isLoading = false;
         this.isReloading = false;
       });
@@ -1102,7 +1674,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     if(user) {
       this.isLoading = true;
-      this.progress.start();
+      this.progressBarComponent.start();
       const username = user.username;
       await this.apiService
         .deleteTenant(username as string)
@@ -1113,7 +1685,7 @@ export class HomeComponent implements OnInit, OnDestroy {
             // this.getAllTenants();
           } else {
             this.notificationComponent.notification('warning', res.message);
-            this.progress.stop();
+            this.progressBarComponent.stop();
             this.isLoading = false;
             this.isReloading = false;
           }
@@ -1124,13 +1696,13 @@ export class HomeComponent implements OnInit, OnDestroy {
               'error',
               error.error.message
             );
-            this.progress.stop();
+            this.progressBarComponent.stop();
             this.isLoading = false;
             this.isReloading = false;
           }
         })
         .finally(() => {
-          this.progress.complete();
+          this.progressBarComponent.complete();
           this.isLoading = false;
           this.isReloading = false;
         });

@@ -8,25 +8,6 @@
   min-height: 25vh;
   padding: 2rem;
 
-  .page-indecator {
-    position: absolute;
-    top: 0%;
-    left: 1%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    .page-indicator-btn {
-      background: none;
-      border: none;
-      margin: 0 0.5rem;
-      padding: 0;
-      cursor: pointer;
-      font-weight: 100;
-      text-transform: uppercase;
-      font-size: 10pt;
-    }
-  }
-
   .user-image-row {
     position: relative;
     border-radius: 1rem;
@@ -77,12 +58,6 @@
     );
     color: $dark-text-color;
 
-    .page-indecator {
-      color: #e8bd00;
-      .page-indicator-btn {
-        color: #e8bd00;
-      }
-    }
     .user-image-row {
       background: linear-gradient(
         45deg,
@@ -113,12 +88,6 @@
     );
     color: $light-text-color;
 
-    .page-indecator {
-      color: #100a2b;
-      .page-indicator-btn {
-        color: #100a2b;
-      }
-    }
     .user-image-row {
       background: linear-gradient(
         45deg,

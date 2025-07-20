@@ -14,23 +14,21 @@ import {
 } from '@angular/core';
 import {
   MatPaginator,
-  MatPaginatorModule,
-  PageEvent,
+  MatPaginatorModule
 } from '@angular/material/paginator';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { Sort, MatSortModule, MatSort } from '@angular/material/sort';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
+import {Sort, MatSortModule} from '@angular/material/sort';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {ActivatedRoute} from '@angular/router';
 import {
   APIsService,
-  LoggedUserType,
-  UsersType,
+  LoggedUserType
 } from '../../../services/APIs/apis.service';
-import { SkeletonLoaderComponent } from '../skeleton-loader/skeleton-loader.component';
-import { AuthService } from '../../../services/auth/auth.service';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import {SkeletonLoaderComponent} from '../skeleton-loader/skeleton-loader.component';
+import {AuthService} from '../../../services/auth/auth.service';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {
   FileExportButtonTypeByExtension,
   PaginatorComponent,
@@ -39,9 +37,9 @@ import {
   NotificationComponent,
   NotificationType,
 } from '../../dialogs/notification/notification.component';
-import { ProgressBarComponent } from '../../dialogs/progress-bar/progress-bar.component';
-import { TenantService } from '../../../services/tenant/tenant.service';
-import { SwitchButton } from '../../../components/shared/buttons/switch-button/switch-button.component';
+import {ProgressBarComponent} from '../../dialogs/progress-bar/progress-bar.component';
+import {TenantService} from '../../../services/tenant/tenant.service';
+import {SwitchButton} from '../../../components/shared/buttons/switch-button/switch-button.component';
 
 
 export interface ButtonDataType {

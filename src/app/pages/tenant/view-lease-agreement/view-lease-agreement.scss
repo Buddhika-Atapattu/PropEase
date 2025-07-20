@@ -1,0 +1,257 @@
+@use "../../../styles/global.scss" as *;
+@use "sass:color";
+
+.main-panel {
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  min-height: 85vh;
+  padding: 2rem;
+
+  .user-image-row {
+    position: relative;
+    border-radius: 1rem;
+    height: 10rem;
+    margin-top: 2rem;
+    margin-bottom: 10rem;
+    .btn-warning {
+      position: absolute;
+      width: 2rem;
+      height: 2rem;
+      top: 0;
+      right: 0px;
+      box-shadow: none;
+      background: none;
+      z-index: 10;
+    }
+    .image-container {
+      position: absolute;
+      bottom: -50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      .user-image {
+        width: 10rem;
+        height: 10rem;
+        border-radius: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+    }
+  }
+
+  .card {
+    box-shadow: 0 0 10px 1px rgb(0 0 0 / 17%),
+      inset 0 0 10px 1px rgb(255 255 255 / 25%);
+  }
+
+  .document-preview-row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: center;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0rem;
+    width: 100%;
+    height: 100%;
+    span {
+      width: 100%;
+      height: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  ul {
+    background: none;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    li {
+      margin: 0.5rem 0rem;
+      padding: 0;
+    }
+  }
+
+  .property-image-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+  }
+
+  .porperty-specific-details {
+    list-style: none;
+    display: inline-flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    li {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-right: 0.5rem;
+      i {
+        margin-right: 0.5rem;
+      }
+      mat-icon {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+
+  ::ng-deep .maid-icon {
+    svg {
+      fill: currentColor;
+      stroke: currentColor;
+      path {
+        fill: currentColor;
+        stroke: currentColor;
+        stroke-width: 0.25rem;
+      }
+    }
+  }
+
+  &.dark {
+    background: linear-gradient(
+      145deg,
+      $dark-secondary-color,
+      color.adjust($dark-secondary-color, $lightness: 2%)
+    );
+    color: $dark-text-color;
+
+    .user-image-row {
+      background: linear-gradient(
+        45deg,
+        color.adjust($dark-third-color, $lightness: -20%),
+        $dark-third-color,
+        color.adjust($dark-third-color, $lightness: -20%)
+      );
+      .image-container {
+        .user-image {
+          box-shadow: 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
+        }
+      }
+    }
+
+    .document-preview-row {
+      background: $dark-btn-warning-color;
+      color: $dark-text-color;
+    }
+
+    .card {
+      background: $dark-third-color;
+      .card-body {
+        color: color.adjust($dark-accent-blue, $lightness: -20%) !important;
+      }
+    }
+
+    ::ng-deep .amenity-icon {
+      width: 25px;
+      height: 25px;
+      ::ng-deep svg {
+        width: 100%;
+        height: 100%;
+        ::ng-deep path {
+          fill: #fff;
+          // stroke: #fff;
+        }
+        ::ng-deep line {
+          fill: #fff;
+          stroke: #fff;
+        }
+        ::ng-deep circle {
+          fill: #fff;
+          stroke: #fff;
+        }
+        ::ng-deep .cls-1 {
+          stroke: #fff;
+          fill: none;
+        }
+        ::ng-deep rect {
+          fill: #fff;
+          stroke: #fff;
+        }
+        ::ng-deep polygon {
+          fill: #fff;
+          stroke: #fff;
+        }
+      }
+    }
+  }
+
+  &.light {
+    background: linear-gradient(
+      145deg,
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
+    );
+    color: $light-text-color;
+
+    .user-image-row {
+      background: linear-gradient(
+        45deg,
+        color.adjust($dark-primary-color, $lightness: 15%),
+        color.adjust($dark-primary-color, $lightness: 10%),
+        color.adjust($dark-primary-color, $lightness: 15%)
+      );
+      .image-container {
+        .user-image {
+          box-shadow: 0rem 0rem 1rem 0rem #100a2b;
+        }
+      }
+    }
+
+    .document-preview-row {
+      background: $light-btn-warning-color;
+      color: $light-text-color;
+    }
+
+    .card {
+      background: $light-third-color;
+      .card-body {
+        color: color.adjust($light-accent-blue, $lightness: -50%) !important;
+      }
+    }
+
+    ::ng-deep .amenity-icon {
+      width: 2rem;
+      height: 2rem;
+      ::ng-deep svg {
+        ::ng-deep .cls-1 {
+          stroke: #000000;
+          fill: none !important;
+        }
+        ::ng-deep path {
+          fill: #000000;
+          // stroke: #000000;
+        }
+        ::ng-deep line {
+          fill: #000000;
+          stroke: #000000;
+        }
+        ::ng-deep circle {
+          fill: #000000;
+          stroke: #000000;
+        }
+
+        ::ng-deep rect {
+          fill: #000000;
+          stroke: #000000;
+        }
+        ::ng-deep polygon {
+          fill: #000000;
+          stroke: #000000;
+        }
+      }
+    }
+  }
+}

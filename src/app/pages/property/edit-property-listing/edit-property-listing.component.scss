@@ -16,24 +16,6 @@
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
   padding: 2rem;
 
-  .page-indecator {
-    position: absolute;
-    top: 0%;
-    left: 1%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    .page-indicator-btn {
-      background: none;
-      border: none;
-      margin: 0 0.5rem;
-      padding: 0;
-      cursor: pointer;
-      font-weight: 100;
-      text-transform: uppercase;
-      font-size: 10pt;
-    }
-  }
 
   .tab-container {
     position: relative;
@@ -240,10 +222,6 @@
     box-shadow: 0rem 0rem 1rem 0rem #000000b0;
     z-index: 1;
 
-    ::ng-deep {
-      mat-form-field {
-      }
-    }
 
     ::ng-deep .mat-mdc-form-field-subscript-wrapper {
       height: 0rem;
@@ -357,12 +335,7 @@
       color.adjust($dark-secondary-color, $lightness: 2%)
     );
     color: $dark-text-color;
-    .page-indecator {
-      color: #e8bd00;
-      .page-indicator-btn {
-        color: #e8bd00;
-      }
-    }
+  
 
     .error-container {
       background: linear-gradient(45deg, #be0000, #ff0000, #be0000);
@@ -436,12 +409,7 @@
       color.adjust($light-primary-color, $lightness: 2%)
     );
     color: $light-text-color;
-    .page-indecator {
-      color: #100a2b;
-      .page-indicator-btn {
-        color: #100a2b;
-      }
-    }
+
 
     .image-preview,
     .document-preview {

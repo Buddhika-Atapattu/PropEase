@@ -10,32 +10,25 @@ import {
   ElementRef,
   AfterViewChecked,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {Router, ActivatedRoute} from '@angular/router';
 import {
   BackEndPropertyData,
   MSG,
   PropertyService,
 } from '../../../services/property/property.service';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
 import {
-  MAT_DIALOG_DATA,
-  MatDialog,
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogRef,
-  MatDialogTitle,
-  MatDialogModule,
+  MatDialog, MatDialogModule
 } from '@angular/material/dialog';
-import { ViewPropertyImagesComponent } from '../../../components/dialogs/view-property-images/view-property-images.component';
-import { APIsService, UsersType } from '../../../services/APIs/apis.service';
-import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
-import { PropertyMoreDetailsPannelComponent } from '../../../components/dialogs/property-more-details-pannel/property-more-details-pannel.component';
-import { ShareComponent } from '../../../components/dialogs/share/share.component';
+import {ViewPropertyImagesComponent} from '../../../components/dialogs/view-property-images/view-property-images.component';
+import {APIsService, UsersType} from '../../../services/APIs/apis.service';
+import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
+import {PropertyMoreDetailsPannelComponent} from '../../../components/dialogs/property-more-details-pannel/property-more-details-pannel.component';
+import {ShareComponent} from '../../../components/dialogs/share/share.component';
 
 @Component({
   selector: 'app-view',

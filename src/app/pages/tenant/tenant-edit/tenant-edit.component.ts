@@ -54,13 +54,10 @@ import {
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {ImageCropperComponent} from 'ngx-image-cropper';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
 import {CameraBoxComponent} from '../../../components/dialogs/camera-box/camera-box.component';
 import {EditorComponent} from '@tinymce/tinymce-angular';
-import {FormBuilder} from '@angular/forms';
 import {FileScanner} from '../../../components/dialogs/file-scanner/file-scanner';
 import {ScanService} from '../../../services/scan/scan.service';
-import {TokenService} from '../../../services/token/token.service';
 import {FileViewer} from '../../../components/dialogs/file-viewer/file-viewer';
 import {
   BASE_SECURITY_DEPOSIT_OPTIONS, DEFAULT_COMPANY_POLICY,
@@ -138,9 +135,6 @@ interface ScannedFileRecordJSON {
   folder: string;
 }
 
-interface TenantScannedFilesDataJSON {
-  [tenantUsername: string]: ScannedFileRecordJSON[];
-}
 
 interface PropertyCustomTableDataType {
   image: string;
@@ -506,7 +500,6 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   protected rulesAndRegulation: RulesAndRegulations['rule'] = '';
   protected rulesAndRegulationDescription: RulesAndRegulations['description'] =
     '';
-  private _rulesAndRegulations: RulesAndRegulations[] = [];
   private _rulesAndRegulation: RulesAndRegulations | null = null;
   protected readonly rulesAndRegulationsOptions: RulesAndRegulations[] =
     DEFAULT_RULES_AND_REGULATIONS;
@@ -548,12 +541,9 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     private apiService: APIsService,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
-    private cryptoService: CryptoService,
     private authService: AuthService,
-    private fb: FormBuilder,
     private dialog: MatDialog,
     private scanService: ScanService,
-    private tokenService: TokenService,
     private cdr: ChangeDetectorRef,
     private propertyService: PropertyService,
     private tenantService: TenantService,
@@ -571,7 +561,6 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
       };
 
     this.route.url.subscribe((segments) => {
-      const path = segments.map((s) => s.path).join('/');
     });
 
     this.route.params.subscribe(async (params) => {
@@ -793,8 +782,6 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
           const file = doc.file;
           const filename = file.filename;
           const fileExtension = file.filename.split('.').pop() as string;
-          const fieldname = file.fieldname;
-          const originalname = file.originalname;
           const URL = file.URL;
           const mimetype = file.mimetype;
           const icon = this.chooceIcon(fileExtension);
@@ -942,50 +929,6 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
     return numberArray.join('.');
   }
-  //<=========================== End Load Initial Tenant Data ===========================>
-
-  //<=========================== Extract Country Code ===========================>
-  private extractCountryCodeAndPhone(phoneNumber: string): {
-    code: string;
-    number: string;
-  } {
-    try {
-      if(!phoneNumber || typeof phoneNumber !== 'string') {
-        throw new Error('Invalid input');
-      }
-
-      const regex = /^\+?\d{1,4}[\s\-\.]?\(?\d{1,4}\)?[\s\-\.]?\d{1,4}[\s\-\.]?\d{1,9}$/;
-      if(!regex.test(phoneNumber)) {
-        throw new Error('Invalid phone number format');
-      }
-
-      // Normalize: remove spaces, dashes, parentheses
-      const normalized = phoneNumber.replace(/[\s\-\(\)\.]/g, '');
-
-      // Ensure it starts with +
-      const withPlus = normalized.startsWith('+') ? normalized : '+' + normalized;
-
-      // Sort codes from longest to shortest (e.g., +971 before +94)
-      const sortedCodes = this.phoneCodes.sort((a, b) => b.code.length - a.code.length);
-
-      for(const code of sortedCodes.map(item => item.code)) {
-        if(withPlus.startsWith(code)) {
-          const number = withPlus.slice(code.length);
-          return {code, number};
-        }
-      }
-
-      throw new Error('Country code not found');
-
-    }
-    catch(error) {
-      console.error(error)
-      return {
-        code: '',
-        number: '',
-      };
-    }
-  }
   //<=========================== End Extract Country Code ===========================>
 
   //<=========================== Is Phone Number Valid Number ===========================>
@@ -1012,16 +955,6 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
           this.isTenantEmailValid = false;
         }
       });
-  }
-  //<=========================== Tenant Email Verification ===========================>
-
-  //<=========================== Auto Assigning The Phone Code If It Is Empty ===========================>
-  private autoAssigningThePhoneCodeIfItIsEmpty(country: string): CountryCodes {
-    return (
-      (this.commonCountryCodes.find(
-        (item) => item.name.toLowerCase() === country.toLowerCase()
-      ) as CountryCodes) ?? undefined
-    );
   }
 
   //<=========================== End Auto Assigning The Phone Code If It Is Empty ===========================>
@@ -2480,7 +2413,6 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected removePaymentPenalty(
-    item: LatePaymentPenalty,
     index: number
   ) {
     this.selectedLatePaymentPenalties.splice(index, 1);
@@ -2628,7 +2560,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  protected removeUtility(item: UtilityResponsibility, index: number) {
+  protected removeUtility(index: number) {
     this.selectedUtilityResponsibilities.splice(index, 1);
     this.notification.notification('info', 'Utility removed!');
   }
@@ -2792,7 +2724,6 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected handleRulesAndRegulationsRemove(
-    input: RulesAndRegulations,
     index: number
   ): void {
     this.selectedRuleAndRegulations.splice(index, 1);
@@ -2904,8 +2835,6 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
           const data: CurrencyFormat[] = [];
           responsData.forEach((item) => {
             const country = item.name.common || item.name.official;
-            let currency = '';
-            let symbol = '';
             if(item.currencies && typeof item.currencies === 'object') {
               const currencyKeys = Object.keys(item.currencies);
               if(currencyKeys.length > 0) {

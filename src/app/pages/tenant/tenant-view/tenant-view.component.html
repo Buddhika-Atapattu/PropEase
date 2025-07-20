@@ -122,6 +122,7 @@
       [fileExportButtonTypeByExtension]="
         leaseTableFileExportButtonTypeByExtension
       "
+      (fileExport)="handleExportLeaseTableData($event)"
       [(switchButton)]="leaseSwitchButton"
       [data]="leaseTableData"
       [columns]="leaseTableColumns"
@@ -131,7 +132,6 @@
       [isBrowser]="isBrowser"
       [modeSub]="modeSub"
       [fullDataCount]="leaseLength"
-      (fileExport)="exportLeaseTableData($event)"
     ></app-custom-table>
   </div>
 </div>

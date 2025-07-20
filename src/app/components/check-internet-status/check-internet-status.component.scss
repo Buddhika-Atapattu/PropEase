@@ -1,3 +1,8 @@
+.internet-status-wrapper {
+  // This ensures the wrapper always takes up space (important for hydration safety)
+  min-height: 1px;
+}
+
 .message-container {
   position: fixed;
   display: flex;
@@ -18,12 +23,22 @@
   text-align: center;
   animation: slideDownFadeIn 0.4s ease-out;
 
+  // These are dynamic classes controlled by [class.*] bindings
   &.good {
-    background-color: #28a745; // Green
+    background-color: #28a745; // Green for online
   }
 
   &.bad {
-    background-color: #dc3545; // Red
+    background-color: #dc3545; // Red for offline
+  }
+
+  // Visibility control (replaces *ngIf for hydration safety)
+  &.hidden {
+    display: none !important;
+  }
+
+  &.visible {
+    display: flex !important;
   }
 
   p {
@@ -31,8 +46,13 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
+
+  mat-icon {
+    margin-right: 0.5rem;
+  }
 }
 
+// Entry animation for showing status message
 @keyframes slideDownFadeIn {
   from {
     opacity: 0;

@@ -1,17 +1,14 @@
 <app-notification></app-notification>
+<div class="container-fluid position-relative h-100">
+  <button type="button" class="pannel-close-btn" (click)="pannelClose()">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
 
-<div class="container-fluid h-100" *ngIf="tenant && lease">
-  <!-- Panel Close Button -->
-  <div class="panel-close-btn-container">
-    <button type="button" class="pannel-close-btn" (click)="pannelClose()">
-      <i class="fa-solid fa-xmark"></i>
-    </button>
-  </div>
   <!-- Lease Agreement PDF Viewer -->
   <ng-container *ngIf="isLoading; else pdfViewer">
     <div class="d-flex justify-content-center align-items-center h-100">
       <mat-spinner></mat-spinner>
-      <p class="ms-3">Loading lease agreement...</p>
+      <p class="ms-3">Loading...</p>
     </div>
   </ng-container>
 

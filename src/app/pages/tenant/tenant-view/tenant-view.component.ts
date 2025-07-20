@@ -5,8 +5,7 @@ import {
   AfterViewInit,
   Inject,
   PLATFORM_ID,
-  ViewChild,
-  isDevMode
+  ViewChild
 } from '@angular/core';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {isPlatformBrowser, CommonModule} from '@angular/common';
@@ -14,7 +13,7 @@ import {Subscription} from 'rxjs';
 import {ActivatedRoute, Router} from '@angular/router';
 import {APIsService, BaseUser} from '../../../services/APIs/apis.service';
 import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
-import {Lease, LeaseAgreement, LeaseWithProperty, SWITCH_ON_ARRAY, TenantService} from '../../../services/tenant/tenant.service';
+import {Lease, LeaseWithProperty, SWITCH_ON_ARRAY, TenantService} from '../../../services/tenant/tenant.service';
 import {
   NotificationComponent,
   NotificationType,
@@ -31,15 +30,15 @@ import {
 import {FileExportButtonTypeByExtension} from '../../../components/shared/paginator/paginator.component';
 import {BackEndPropertyData, PropertyService} from '../../../services/property/property.service';
 import {AuthService} from '../../../services/auth/auth.service';
-import {LeaseAgreements} from '../../../components/dialogs/lease-agreements/lease-agreements';
 import {MatDialog} from '@angular/material/dialog';
-import crypto from 'crypto';
 import {CryptoService} from '../../../services/cryptoService/crypto.service';
 import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 
 interface LeaseTableDataType {
   image: string;
-  leaseID: string;
+  leaseid: string;
   dateRange: {
     start: Date,
     end: Date
@@ -266,7 +265,8 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   set leaseTableButtonActionTrigger(value: ButtonDataType) {
     this._leaseTableButtonActionTrigger = value;
-    this.handleOpenLeaseAgreement()
+    // this.handleOpenLeaseAgreement()
+    this.handleLeaseView();
   }
 
   // leaseTableButtonOperationTrigger
@@ -310,13 +310,47 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     this._leaseSwitchButton = value;
     this.handleUpdateLeaseStatus()
   }
+
+
   //<========================================================================= END SETTER & GETTER ========================================================================>
 
   //<========================================================================= HANDLERS & OPERATIONALS ========================================================================>
-  private handelPagination() {
+  protected handleExportLeaseTableData(value: FileExportWithDataAndExtentionType) {
+    try {
+      if(this.leases.length === 0) {
+        throw new Error('No lease agreements found!');
+      }
 
+      if(this.selectedProperties.length === 0) {
+        throw new Error('No properties found!');
+      }
+
+      const leasesWithProperty: LeaseWithProperty[] = [];
+
+      this.leases.forEach((lease) => {
+        const property = this.selectedProperties.find(p => p.id === lease.propertyID);
+        if(!property) throw new Error('Property not found!');
+        const leaseWithProperty: LeaseWithProperty = {
+          ...lease,
+          property
+        };
+        leasesWithProperty.push(leaseWithProperty);
+      });
+
+      if(leasesWithProperty.length === 0) {
+        throw new Error('No leases with property found!');
+      }
+
+      this.exportLeasesDataAsExcel(leasesWithProperty, value.extention.type);
+    }
+    catch(error) {
+      console.error(error);
+      if(error instanceof HttpErrorResponse) this.notificationComponent.notification('error', error.message);
+      else if(typeof error === 'string') this.notificationComponent.notification('error', error);
+      else if(error instanceof Error) this.notificationComponent.notification('error', error.message);
+      else this.notificationComponent.notification('error', 'Failed to load tenant data.');
+    }
   }
-
 
   private async handleUpdateLeaseStatus() {
     try {
@@ -326,7 +360,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
       if(!tableData) throw new Error('No table data found!');
 
-      const leaseId = tableData.leaseID;// get the lease ID from the table data
+      const leaseId = tableData.leaseid;// get the lease ID from the table data
       if(!leaseId) throw new Error('No lease ID found!');
 
       // Update Lease Array
@@ -436,7 +470,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         if(!property) continue;
 
         const propertyImageURL: LeaseTableDataType['image'] = property.images?.[0]?.imageURL || '';
-        const leaseID: LeaseTableDataType['leaseID'] = lease.leaseID;
+        const leaseID: LeaseTableDataType['leaseid'] = lease.leaseID;
         const dateRange: LeaseTableDataType['dateRange'] = {
           start: new Date(lease.leaseAgreement.startDate),
           end: new Date(lease.leaseAgreement.endDate)
@@ -455,7 +489,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
         const rowData: LeaseTableDataType = {
           image: propertyImageURL,
-          leaseID,
+          leaseid: leaseID,
           dateRange,
           status,
           monthlyRent,
@@ -489,10 +523,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
       // Download PDF blob from backend
       const blob = await this.tenantService.downloadLeaseAgreement(leaseID, 'download');
 
-      // Decrypt and parse leaseID for actual filename
-      const decrypted = await this.cryptoService.decrypt(leaseID);
-      const objLeaseID = JSON.parse(decrypted);
-      const actualName = `${objLeaseID.prefix}-${objLeaseID.tenant}-${objLeaseID.date}-${objLeaseID.token}-lease-agreement.pdf`;
+      const actualName = `${leaseID}-lease-agreement.pdf`;
 
       // Create temporary link and trigger download
       const fileURL = window.URL.createObjectURL(blob);
@@ -527,57 +558,18 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
 
-
-  private async handleOpenLeaseAgreement(): Promise<void> {
+  private handleLeaseView() {
     try {
-      if(!this._leaseTableButtonActionTrigger) throw new Error('No table data found!');
+      const leaseID = this._leaseTableButtonActionTrigger.data.element.leaseid;
 
-      const tableData: LeaseTableDataType = this._leaseTableButtonActionTrigger.data.element;
-      const leaseID = tableData.leaseID;
       if(!leaseID) throw new Error('No lease ID found!');
 
+      this.router.navigate(['/dashboard/tenant/view-lease', leaseID]);
 
-
-
-
-      const lease = this.leases.find((lease) => lease.leaseID === leaseID);
-      if(!lease) throw new Error('Lease not found!');
-
-      const property = this.selectedProperties.find((property) => property.id === lease.propertyID);
-      if(!property) throw new Error('Property not found!');
-
-      const tenant = this.tenant;
-      if(!tenant) throw new Error('Tenant not found!');
-
-      const LeaseWithProperty: LeaseWithProperty = {
-        ...lease,
-        property: property,
-      };
-
-      const dialogRef = this.dialog.open(LeaseAgreements, {
-        width: '100%',
-        height: '100%',
-        maxWidth: '90vw',
-        maxHeight: '90vh',
-        panelClass: 'fullscreen-dialog',
-        data: {
-          lease: LeaseWithProperty,
-          tenant: tenant,
-        },
-      });
-
-      dialogRef.afterClosed().subscribe(() => {
-
-      });
-
-    } catch(error) {
-      console.error('Error opening lease agreement:', error);
-      this.notificationComponent.notification('error', error as string);
     }
-  }
-
-  protected exportLeaseTableData(input: FileExportWithDataAndExtentionType) {
-
+    catch(error) {
+      console.error(error)
+    }
   }
   //<========================================================================= END HANDLERS & OPERATIONALS ========================================================================>
   //<========================================================================= END LEASE TABLE ========================================================================>
@@ -793,4 +785,94 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
   //<========================================================================= END GO TO THE TENANT VIEW ========================================================================>
+
+
+  //<=========================== EXPORT EXCEL FILE ===========================>
+
+  private exportLeasesDataAsExcel(
+    leases: LeaseWithProperty[],
+    fileExtension: FileExportWithDataAndExtentionType['extention']['type'] = 'xlsx'
+  ): void {
+    if(!Array.isArray(leases) || leases.length === 0) {
+      console.warn('No lease data available for export.');
+      return;
+    }
+
+    const exportData: Record<string, any>[] = leases.map((lease) => {
+      const addr = lease.property?.address;
+
+      return {
+        'leaseID': lease.leaseID,
+        'Tenant name': lease.tenantInformation?.fullName ?? '',
+        'Tenant email': lease.tenantInformation?.email ?? '',
+        'Tenant contact': lease.tenantInformation?.phoneNumber ?? '',
+
+        'Co-Tenant name': lease.coTenant?.fullName ?? '',
+        'Co-Tenant relationship': lease.coTenant?.relationship ?? '',
+
+        'Property title': lease.property?.title ?? '',
+        'Property address':
+          (addr?.houseNumber ?? '') + ' ' +
+          (addr?.street ?? '') + ', ' +
+          (addr?.city ?? '') + ', ' +
+          (addr?.stateOrProvince ?? '') + ', ' +
+          (addr?.country ?? ''),
+
+        'Started date': new Date(lease.leaseAgreement.startDate).toISOString(),
+        'End date': new Date(lease.leaseAgreement.endDate).toISOString(),
+        'Monthly rent': lease.leaseAgreement.monthlyRent,
+        'Rent currency': lease.leaseAgreement.currency?.currency ?? '',
+        'Payment frequency': lease.leaseAgreement.paymentFrequency?.name ?? '',
+        'Payment method': lease.leaseAgreement.paymentMethod?.name ?? '',
+        'Deposit': lease.leaseAgreement.securityDeposit?.name ?? '',
+        'Rent due date': lease.leaseAgreement.rentDueDate?.label ?? '',
+        'Notice period': lease.leaseAgreement.noticePeriodDays?.label ?? '',
+
+        'Late penalties': lease.leaseAgreement.latePaymentPenalties?.map(p => p.label).join(',\n') ?? '',
+        'Utility responsibilities': lease.leaseAgreement.utilityResponsibilities?.map(u => u.utility + ': ' + u.paidBy).join(',\n') ?? '',
+
+        'Rules and regulations': lease.rulesAndRegulations?.map(r => r.rule).join(';\n') ?? '',
+
+        'Tenant signature URL': (lease.signatures.tenantSignature as any)?.URL ?? '',
+        'Landlord signature URL': (lease.signatures.landlordSignature as any)?.URL ?? '',
+        'Signed At': new Date(lease.signatures.signedAt).toISOString(),
+        'Signed By': lease.signatures.userAgent?.name ?? '',
+        'ip Address': lease.signatures.ipAddress ?? '',
+
+        'ocrStatus': lease.systemMetadata.ocrAutoFillStatus ? 'Yes' : 'No',
+        'validationStatus': lease.systemMetadata.validationStatus,
+        'leaseTemplateVersion': lease.systemMetadata.leaseTemplateVersion,
+        'lastUpdated': lease.systemMetadata.lastUpdated,
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    worksheet['!cols'] = Object.keys(exportData[0]).map((key) => ({
+      wch: key.length + 10
+    }));
+
+    const workbook: XLSX.WorkBook = {
+      Sheets: {LeaseData: worksheet},
+      SheetNames: ['LeaseData']
+    };
+
+    const mimeMap: Record<string, string> = {
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      xls: 'application/vnd.ms-excel',
+      csv: 'text/csv',
+      ods: 'application/vnd.oasis.opendocument.spreadsheet'
+    };
+
+    const bookType: XLSX.BookType = fileExtension as XLSX.BookType;
+    const mimeType = mimeMap[fileExtension] || mimeMap['xlsx'];
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType,
+      type: 'array'
+    });
+
+    const blob = new Blob([excelBuffer], {type: mimeType});
+    FileSaver.saveAs(blob, `Lease_Batch_Export_${new Date().toISOString()}.${fileExtension}`);
+  }
+  //<=========================== END EXPORT EXCEL FILE ===========================>
 }

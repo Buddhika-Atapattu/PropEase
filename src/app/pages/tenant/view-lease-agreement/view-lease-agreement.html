@@ -1,1 +1,582 @@
-<p>view-lease-agreement works!</p>
+<app-notification></app-notification>
+<app-progress-bar></app-progress-bar>
+<div
+  *ngIf="mode !== null"
+  class="main-panel"
+  [ngClass]="mode ? 'dark' : 'light'"
+>
+  <div
+    class="container-fluid"
+    *ngIf="lease && selectedProperty && tenant; else loading"
+  >
+    <!-- Page Indicators -->
+    <div class="row page-indecator">
+      <span
+        ><button
+          type="button"
+          class="page-indicator-btn"
+          (click)="goToTenantsDashboard()"
+        >
+          TENANT DASHBOARD
+        </button>
+        <i class="fa-solid fa-angle-right my-2"></i>
+        <button type="button" class="page-indicator-btn" (click)="goToTenant()">
+          {{ tenant.name }}
+        </button>
+        <i class="fa-solid fa-angle-right my-2"></i>
+        <button type="button" class="page-indicator-btn" (click)="goLease()">
+          View Lease
+        </button>
+      </span>
+    </div>
+    <!-- End Page Indicators -->
+
+    <!-- user-image row -->
+    <div class="row user-image-row">
+      <div
+        class="col-xl-12 d-flex justify-content-center align-items-center mt-5"
+      >
+        <div class="image-container">
+          <app-skeleton-loader
+            *ngIf="isLoading"
+            [width]="'10rem'"
+            [height]="'10rem'"
+            [Mode]="mode"
+            [borderRadius]="'50%'"
+          ></app-skeleton-loader>
+          <img
+            *ngIf="!isLoading"
+            [src]="generateTenantImage((typeof tenant.image === 'string' ? tenant.image : '') || '', tenant.gender)"
+            class="user-image"
+            alt="user image"
+          />
+        </div>
+      </div>
+    </div>
+    <!-- end user-image row -->
+
+    <!-- LeaseID -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <h4 class="title">Lease ID</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <h5>LeaseID: {{lease.leaseID}}</h5>
+      </div>
+    </div>
+    <!-- End LeaseID -->
+
+    <!-- Tenant Information -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <h4 class="title">Tenant Information</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xl-6 col-md-6 col-sm-12 col-12">
+        <ul>
+          <li>Name: {{ lease.tenantInformation.fullName }}</li>
+          <li>Email: {{ lease.tenantInformation.email }}</li>
+          <li>
+            Contact Number: {{
+            makeStringCombineWhenItMightUndefined(lease.tenantInformation.phoneCodeDetails.code,
+            lease.tenantInformation.phoneNumber) }}
+          </li>
+          <li>Gender: {{ lease.tenantInformation.gender }}</li>
+          <li>
+            Date of Birth: {{ lease.tenantInformation.dateOfBirth | date }}
+          </li>
+        </ul>
+      </div>
+      <div class="col-xl-6 col-md-6 col-sm-12 col-12">
+        <ul class="list-group list-group-flush bg-none tenant-details">
+          <li>Nationality: {{ lease.tenantInformation.nationality }}</li>
+          <li>NIC/ Passport: {{ lease.tenantInformation.nicOrPassport }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-12">
+        <h4 class="title">Tenant Scanned Documents</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row">
+      <div
+        class="col-xl-4 col-md-4 col-sm-12 col-12 d-flex justify-content-center align-items-center"
+        *ngFor="let document of scannedFilePreview; let i = index"
+      >
+        <div class="row document-preview-row">
+          <div class="col-2 d-flex justify-content-center align-items-center">
+            <mat-icon [svgIcon]="document.icon" aria-hidden="false"></mat-icon>
+          </div>
+          <div class="col-7 d-flex justify-content-center align-items-center">
+            <span>{{ document.name }}</span>
+          </div>
+          <div class="col-3 d-flex justify-content-center align-items-center">
+            <button
+              type="button"
+              class="btn-view"
+              (click)="viewScannedDocument(document)"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End Tenant Information -->
+
+    <!-- Co-Tenant Information -->
+    <div class="row mt-5" *ngIf="lease.coTenant">
+      <div class="col-12">
+        <h4 class="title">Co-Tenant</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xl-6 col-md-6 col-sm-12 col-12">
+        <ul>
+          <li>Name: {{ lease.coTenant?.fullName }}</li>
+          <li>Email: {{ lease.coTenant?.email }}</li>
+          <li *ngIf="lease.coTenant?.phoneCode && lease.coTenant?.phoneNumber">
+            Contact Number: {{
+            makeStringCombineWhenItMightUndefined(lease.coTenant?.phoneCode,
+            lease.coTenant?.phoneNumber) }}
+          </li>
+          <li>Gender: {{ lease.coTenant?.gender }}</li>
+          <li>Relationship: {{ lease.coTenant?.relationship }}</li>
+        </ul>
+      </div>
+      <div class="col-xl-6 col-md-6 col-sm-12 col-12">
+        <ul>
+          <li>Age: {{ lease.coTenant?.age }}</li>
+          <li>NIC/ Passport: {{ lease.coTenant?.nicOrPassport }}</li>
+        </ul>
+      </div>
+    </div>
+    <!-- End Co-Tenant Information -->
+
+    <!-- Lease Agreement -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <h4 class="title">Lease Agreement</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <ul>
+          <li class="mt-3">
+            Start Date: {{ lease.leaseAgreement.startDate | date }}
+          </li>
+          <li class="mt-3">
+            End Date: {{ lease.leaseAgreement.endDate | date }}
+          </li>
+          <li class="mt-3">
+            Monthly Rent: {{ lease.leaseAgreement.monthlyRent }}
+            {{lease.leaseAgreement.currency.currency}}
+          </li>
+          <li class="mt-3">
+            Payment Frequency: {{ lease.leaseAgreement.paymentFrequency.name }}
+            <div *ngIf="lease.leaseAgreement.paymentFrequency.unit">
+              Unit: {{ lease.leaseAgreement.paymentFrequency.unit }}
+            </div>
+            <div *ngIf="lease.leaseAgreement.paymentFrequency.duration">
+              Duration: {{ lease.leaseAgreement.paymentFrequency.duration }}
+            </div>
+          </li>
+          <li class="mt-3">
+            Payment Method: {{ lease.leaseAgreement.paymentMethod.name }}
+            <div *ngIf="lease.leaseAgreement.paymentMethod.description">
+              Description: <br />
+              {{ lease.leaseAgreement.paymentMethod.description }}
+            </div>
+          </li>
+          <li class="mt-3">
+            Security Deposit: {{ lease.leaseAgreement.securityDeposit.name }}
+            <div *ngIf="lease.leaseAgreement.securityDeposit.description">
+              Description:<br />
+              {{ lease.leaseAgreement.securityDeposit.description }}
+            </div>
+          </li>
+          <li class="mt-3">
+            Rent Due Date: {{ lease.leaseAgreement.rentDueDate.label }}
+            <div *ngIf="lease.leaseAgreement.rentDueDate.description">
+              Description:<br />
+              {{ lease.leaseAgreement.rentDueDate.description }}
+            </div>
+          </li>
+          <li class="mt-3">
+            Notice Period: {{ lease.leaseAgreement.noticePeriodDays.label }}
+            <div *ngIf="lease.leaseAgreement.noticePeriodDays.description">
+              Description:<br />
+              {{ lease.leaseAgreement.noticePeriodDays.description }}
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- End Lease Agreement -->
+
+    <!-- Lease Terms -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <h4 class="title">Late Payment Penalties</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <ul>
+          <li
+            *ngFor="let penalty of lease.leaseAgreement.latePaymentPenalties; let i = index"
+          >
+            <span> {{penalty.label}} </span>
+            <div *ngIf="penalty.description">
+              Description: <br />
+              {{penalty.description}}
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- End Lease Terms -->
+
+    <!-- Rules and Regulations -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <h4 class="title">Rules and Regulations</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <ul>
+          <li *ngFor="let rule of lease.rulesAndRegulations; let i = index">
+            <span> {{rule.rule}} </span>
+            <div *ngIf="rule.description">
+              Description: <br />
+              {{rule.description}}
+            </div>
+            <hr class="mt-3" />
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- End Rules and Regulations -->
+
+    <!-- Emergency Contact -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <h4 class="title">Emergency Contact</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <ul>
+          <li>Name: {{ lease.tenantInformation.emergencyContact.name }}</li>
+          <li>
+            Relationship: {{
+            lease.tenantInformation.emergencyContact.relationship }}
+          </li>
+          <li>
+            Contact: {{ lease.tenantInformation.emergencyContact.contact }}
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- End Emergency Contact -->
+
+    <!-- Property Details -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <h4 class="title">Property Details</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row">
+      <div
+        class="col-xl-2 col-md-2 col-sm-4 col-4 my-2 d-flex justify-content-center align-items-center"
+        *ngFor="let image of selectedProperty.images.slice(0,6)"
+      >
+        <div class="property-image-container">
+          <img [src]="image.imageURL" alt="property image" />
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col-xl-12 d-flex justify-content-start align-items-center">
+        <ul class="p-0 porperty-specific-details">
+          <li>
+            <span></span>
+            <i class="fa-solid fa-bed"></i> {{ selectedProperty.bedrooms }}
+          </li>
+          <li>
+            <i class="fa-solid fa-bath"></i> {{ selectedProperty.bathrooms }}
+          </li>
+          <li>
+            <i class="fa-solid fa-chart-area"></i> {{ selectedProperty.totalArea
+            }}<span class="mx-1 my-0 h6">ft<sup>2</sup></span>
+          </li>
+          <li>
+            <mat-icon
+              svgIcon="maid"
+              aria-hidden="false"
+              aria-label="maid icon"
+              class="maid-icon"
+            ></mat-icon>
+            {{ selectedProperty.maidrooms }}
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col-12">
+        <ul>
+          <li>Title: {{ selectedProperty.title }}</li>
+          <li>Type: {{ selectedProperty.type }}</li>
+          <li>Property ID: {{ selectedProperty.id }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-12">
+        <h5 class="title">Amenities of the property</h5>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row mt-4">
+      <div
+        class="col-xl-4"
+        *ngFor="let amenity of selectedProperty.featuresAndAmenities"
+      >
+        <div class="row d-flex justify-content-between align-item-center my-3">
+          <div class="col-2 d-flex align-item-center">
+            <mat-icon
+              [svgIcon]="amenityIconMaker(amenity)"
+              aria-hidden="false"
+              aria-label="Amenity Icon"
+              class="amenities-icon"
+              [ngClass]="amenity.toLocaleLowerCase()"
+            ></mat-icon>
+          </div>
+          <div class="col-10 d-flex align-item-center text-capitalize">
+            {{ amenity }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col-12">
+        <h5 class="title">Location of the property</h5>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xl-12">
+        <iframe
+          name="location"
+          title="location"
+          [src]="selectedProperty.location?.embeddedUrl | safeUrl"
+          width="100%"
+          height="500"
+          style="border: 0"
+          allowfullscreen="true"
+          loading="lazy"
+        ></iframe>
+      </div>
+    </div>
+
+    <div class="row mt-4">
+      <div class="col-12 d-flex justify-content-end align-items-center">
+        <button
+          type="button"
+          class="btn-warning my-auto"
+          (click)="viewPropertyDetails()"
+        >
+          Visit the property
+        </button>
+      </div>
+    </div>
+    <!-- End Property Details -->
+
+    <!-- Sign Details -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <h4 class="title">Sign Details</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col-12">
+        <ul>
+          <li>Sign At: {{lease.signatures.signedAt | date}}</li>
+          <li>Agent: {{lease.signatures.userAgent.name}}</li>
+          <li *ngIf="loggedUser?.role === 'admin'">
+            Signed Device IP: {{lease.signatures.ipAddress}}
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- End Sign Details -->
+
+    <!-- System Metadata -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <h4 class="title">System Metadata</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col-12">
+        <ul>
+          <li>Last Updated: {{ lease.systemMetadata.lastUpdated| date }}</li>
+          <li>
+            Validation Status: {{ lease.systemMetadata.validationStatus }}
+          </li>
+          <li>Language: {{ lease.systemMetadata.language }}</li>
+          <li>
+            Template Version: {{ lease.systemMetadata.leaseTemplateVersion }}
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- End System Metadata -->
+
+    <div class="row mt-5">
+      <div class="col-12 d-flex justify-content-between align-items-center">
+        <button
+          class="btn btn-warning"
+          *ngIf="loggedUser?.role === 'admin'"
+          (click)="onEditLease()"
+        >
+          <i class="fa-solid fa-pen-to-square me-1"></i>
+          Edit Lease
+        </button>
+
+        <button class="btn btn-view" (click)="viewLeaseAgreement()">
+          <i class="fa-solid fa-eye me-1"></i>
+          View Lease
+        </button>
+      </div>
+    </div>
+  </div>
+  <ng-template #loading>
+    <div class="container-fluid">
+      <div class="row mt-3">
+        <div class="col-12">
+          <app-skeleton-loader
+            [width]="'100%'"
+            [height]="'3rem'"
+            [Mode]="mode"
+            [borderRadius]="'10px'"
+          ></app-skeleton-loader>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <app-skeleton-loader
+            [width]="'100%'"
+            [height]="'3rem'"
+            [Mode]="mode"
+            [borderRadius]="'10px'"
+          ></app-skeleton-loader>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <app-skeleton-loader
+            [width]="'100%'"
+            [height]="'3rem'"
+            [Mode]="mode"
+            [borderRadius]="'10px'"
+          ></app-skeleton-loader>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <app-skeleton-loader
+            [width]="'100%'"
+            [height]="'3rem'"
+            [Mode]="mode"
+            [borderRadius]="'10px'"
+          ></app-skeleton-loader>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <app-skeleton-loader
+            [width]="'100%'"
+            [height]="'3rem'"
+            [Mode]="mode"
+            [borderRadius]="'10px'"
+          ></app-skeleton-loader>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <app-skeleton-loader
+            [width]="'100%'"
+            [height]="'3rem'"
+            [Mode]="mode"
+            [borderRadius]="'10px'"
+          ></app-skeleton-loader>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <app-skeleton-loader
+            [width]="'100%'"
+            [height]="'3rem'"
+            [Mode]="mode"
+            [borderRadius]="'10px'"
+          ></app-skeleton-loader>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <app-skeleton-loader
+            [width]="'100%'"
+            [height]="'3rem'"
+            [Mode]="mode"
+            [borderRadius]="'10px'"
+          ></app-skeleton-loader>
+        </div>
+      </div>
+      <div class="row mt-3">
+        <div class="col-12">
+          <app-skeleton-loader
+            [width]="'100%'"
+            [height]="'3rem'"
+            [Mode]="mode"
+            [borderRadius]="'10px'"
+          ></app-skeleton-loader>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</div>

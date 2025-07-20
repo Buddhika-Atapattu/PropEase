@@ -1,8 +1,10 @@
 <div class="internet-status-wrapper">
   <div
-    *ngIf="showOnlineMessage"
     class="message-container"
-    [ngClass]="isOnline ? 'good' : 'bad'"
+    [class.good]="isOnline"
+    [class.bad]="!isOnline"
+    [class.visible]="showOnlineMessage"
+    [class.hidden]="!showOnlineMessage"
   >
     <mat-icon class="me-1">{{ isOnline ? "wifi" : "wifi_off" }}</mat-icon>
     <p>{{ isOnline ? "You are back online" : "You are offline" }}</p>

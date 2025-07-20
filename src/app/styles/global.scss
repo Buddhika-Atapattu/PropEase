@@ -53,7 +53,7 @@ $dark-btn-custom-color: #005dae !default; // Blue
 // Light Core Colors
 $light-primary-color: #ffffff !default; // Paper white
 $light-secondary-color: #ffe066 !default; // Vibrant pastel yellow
-$light-third-color: #ff6f61 !default; // Bright coral (contrast & warmth)
+$light-third-color: #ffb700 !default; // Bright coral (contrast & warmth)
 $light-fourth-color: #2d3436 !default; // Strong charcoal for text/contrast
 $light-dashboard-color: #f0f9ff !default; // Clean icy blue
 $light-dashboard-dark-color: #a4d4ff !default; // Light electric blue
@@ -974,6 +974,27 @@ button:focus:not(:focus-visible) {
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
   min-height: 25vh;
   padding: 2rem;
+
+  .page-indecator {
+    position: absolute;
+    top: 0%;
+    left: 1%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .page-indicator-btn {
+      background: none;
+      border: none;
+      margin: 0 0.5rem;
+      padding: 0;
+      cursor: pointer;
+      font-weight: 100;
+      text-transform: uppercase;
+      font-size: 10pt;
+      font-weight: 500;
+    }
+  }
+
   &.dark {
     .page-indecator {
       color: $dark-accent-gold !important;

@@ -46,19 +46,19 @@ import {
 } from '@angular/material-moment-adapter';
 
 // Enable Angular animations (required by many Angular Material components)
-import { provideAnimations } from '@angular/platform-browser/animations';
+import {provideAnimations} from '@angular/platform-browser/animations';
 
 // Global default options for Angular Material Dialogs
-import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
+import {MAT_DIALOG_DEFAULT_OPTIONS} from '@angular/material/dialog';
 
 // Application route configuration
-import { routes } from './app.routes';
+import {routes} from './app.routes';
 
 // Google Charts support
-import { provideGoogleCharts } from 'angular-google-charts';
+import {provideGoogleCharts} from 'angular-google-charts';
 
 // Required for Angular Universal Server-Side Rendering (SSR)
-import { provideServerRendering } from '@angular/ssr';
+import {provideServerRendering} from '@angular/ssr';
 
 // Custom date format for DatePicker (DD/MM/YYYY style)
 export const MY_DATE_FORMATS: MatDateFormats = {
@@ -76,32 +76,31 @@ export const MY_DATE_FORMATS: MatDateFormats = {
 // Main Angular standalone application configuration
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideServerRendering(), // Enables SSR support
-    provideClientHydration( withEventReplay() ), // Enables hydration + replays events like clicks that occurred before hydration completes
-    provideGoogleCharts(), // Registers Google Charts globally
-    provideHttpClient( withFetch() ), // HTTP client using Fetch API (for SSR compatibility)
-    provideAnimations(), // Enables browser animations
-    provideZoneChangeDetection( { eventCoalescing: true } ), // Optimizes change detection by reducing event triggers
+    provideClientHydration(withEventReplay()),
+    provideGoogleCharts(),
+    provideHttpClient(withFetch()),
+    provideAnimations(),
+    provideZoneChangeDetection({eventCoalescing: true}),
     provideRouter(
       routes,
-      withPreloading( PreloadAllModules ) // Preload all lazy-loaded routes after app load for better UX
+      withPreloading(PreloadAllModules)
     ),
-    { provide: LocationStrategy, useClass: PathLocationStrategy }, // Use standard path URLs (e.g., /home), can switch to HashLocationStrategy if needed
-    { provide: MAT_DATE_LOCALE, useValue: 'en-GB' }, // Set Material date locale to British format
+    {provide: LocationStrategy, useClass: PathLocationStrategy},
+    {provide: MAT_DATE_LOCALE, useValue: 'en-GB'},
     {
       provide: DateAdapter,
       useClass: MomentDateAdapter,
-      deps: [ MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS ], // Use Moment.js as the date adapter
+      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS],
     },
     {
       provide: MAT_DATE_FORMATS,
-      useValue: MY_DATE_FORMATS, // Custom date format definitions
+      useValue: MY_DATE_FORMATS,
     },
     {
       provide: MAT_DIALOG_DEFAULT_OPTIONS,
       useValue: {
         hasBackdrop: true,
-        autoFocus: true, // Default behavior for Material Dialogs
+        autoFocus: true,
       },
     },
   ],
