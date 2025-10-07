@@ -6,17 +6,17 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
 } from '@angular/core';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { NetworkService } from '../../services/network/network.service';
-import { MatIconModule } from '@angular/material/icon';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {NetworkService} from '../../services/network/network.service';
+import {MatIconModule} from '@angular/material/icon';
 
-@Component( {
+@Component({
   selector: 'app-check-internet-status',
   standalone: true,
-  imports: [ CommonModule, MatIconModule ],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './check-internet-status.component.html',
   styleUrl: './check-internet-status.component.scss',
-} )
+})
 export class CheckInternetStatusComponent implements OnInit, AfterViewInit {
   protected isOnline: boolean = true; // default: true for SSR
   protected showOnlineMessage: boolean = false;
@@ -25,9 +25,9 @@ export class CheckInternetStatusComponent implements OnInit, AfterViewInit {
   constructor (
     private networkService: NetworkService,
     private cdRef: ChangeDetectorRef,
-    @Inject( PLATFORM_ID ) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    this.isBrowser = isPlatformBrowser( this.platformId );
+    this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   ngOnInit(): void {
@@ -37,19 +37,19 @@ export class CheckInternetStatusComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    if ( !this.isBrowser ) return;
+    if(!this.isBrowser) return;
 
-    this.networkService.hasChecked$.subscribe( ( status: boolean ) => {
+    this.networkService.hasChecked$.subscribe((status: boolean) => {
       this.isOnline = status;
       this.showOnlineMessage = true;
       this.cdRef.detectChanges();
 
-      if ( status ) {
-        setTimeout( () => {
+      if(status) {
+        setTimeout(() => {
           this.showOnlineMessage = false;
           this.cdRef.detectChanges();
-        }, 5000 );
+        }, 5000);
       }
-    } );
+    });
   }
 }
