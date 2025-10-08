@@ -296,3 +296,117 @@
     }
   }
 }
+.notification-wrapper {
+  position: relative;
+}
+
+.notification-button {
+  font-size: 1.3rem;
+  margin-right: 0.75rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+
+  // make FA icon inherit
+  i {
+    color: currentColor;
+  }
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: #fff;
+  font-size: 0.7rem;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-item {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+
+  .notification-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .notification-body {
+    font-size: 0.8rem;
+  }
+}
+
+/* =======================
+   LIGHT THEME
+======================= */
+:host-context(html.light) {
+  .notification-button {
+    color: $light-fourth-color; // charcoal text
+    &:hover {
+      color: $light-accent-gold;
+    } // bright gold hover
+  }
+
+  .notification-badge {
+    background: $light-error-color; // strong red
+  }
+
+  // style the Material menu panel via panelClass
+  .notif-menu-panel {
+    background: $light-card-color; // #fff
+    color: $light-text-color; // #1a1a1a
+    border: 1px solid $light-border-color; // #ced4da
+    box-shadow: 0 8px 24px $light-shadow-color;
+    max-width: 300px;
+  }
+
+  .notification-item {
+    border-bottom: 1px solid $light-divider-color;
+    &:hover {
+      background: $light-item-hover;
+    } // subtle blue hover
+  }
+}
+
+/* =======================
+   DARK THEME
+======================= */
+:host-context(html.dark) {
+  .notification-button {
+    color: $dark-text-color; // soft white
+    &:hover {
+      color: $dark-third-color;
+    } // bold neon gold
+  }
+
+  .notification-badge {
+    background: $dark-error-color; // eye-catching red
+  }
+
+  .notif-menu-panel {
+    background: $dark-card-color; // deep slate card
+    color: $dark-text-color; // soft white
+    border: 1px solid $dark-divider-color; // clean border gray
+    box-shadow: 0 8px 24px $dark-shadow-color;
+    max-width: 300px;
+  }
+
+  .notification-item {
+    border-bottom: 1px solid $dark-divider-color;
+    &:hover {
+      background: $dark-item-hover;
+    } // subtle hover
+  }
+}
+
+::ng-deep.cdk-overlay-pane {
+  .mat-mdc-menu-content {
+    background-color: lightgoldenrodyellow !important;
+    color: black !important;
+  }
+}

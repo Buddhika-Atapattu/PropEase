@@ -2,7 +2,6 @@
 import {
   ApplicationConfig,
   provideZoneChangeDetection,
-  isDevMode,
 } from '@angular/core';
 
 // Router setup with module preloading for faster lazy-loaded route access
@@ -14,22 +13,15 @@ import {
 
 // Choose URL strategy: Path-based (default) or Hash-based
 import {
-  HashLocationStrategy,
   LocationStrategy,
   PathLocationStrategy,
 } from '@angular/common';
 
-// HTTP client with Fetch API support (needed for SSR hydration)
+// HTTP client with Fetch API support
 import {
   provideHttpClient,
   withFetch
 } from '@angular/common/http';
-
-// Enables Angular client-side hydration with event replay (for SSR)
-import {
-  provideClientHydration,
-  withEventReplay,
-} from '@angular/platform-browser';
 
 // Material date formats and locale support
 import {
@@ -57,14 +49,9 @@ import {routes} from './app.routes';
 // Google Charts support
 import {provideGoogleCharts} from 'angular-google-charts';
 
-// Required for Angular Universal Server-Side Rendering (SSR)
-import {provideServerRendering} from '@angular/ssr';
-
 // Custom date format for DatePicker (DD/MM/YYYY style)
 export const MY_DATE_FORMATS: MatDateFormats = {
-  parse: {
-    dateInput: 'DD/MM/YYYY',
-  },
+  parse: {dateInput: 'DD/MM/YYYY'},
   display: {
     dateInput: 'DD/MM/YYYY',
     monthYearLabel: 'MMM YYYY',
@@ -76,15 +63,12 @@ export const MY_DATE_FORMATS: MatDateFormats = {
 // Main Angular standalone application configuration
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideClientHydration(withEventReplay()),
+    // ❌ no provideClientHydration here (done conditionally in main.ts)
     provideGoogleCharts(),
     provideHttpClient(withFetch()),
     provideAnimations(),
     provideZoneChangeDetection({eventCoalescing: true}),
-    provideRouter(
-      routes,
-      withPreloading(PreloadAllModules)
-    ),
+    provideRouter(routes, withPreloading(PreloadAllModules)),
     {provide: LocationStrategy, useClass: PathLocationStrategy},
     {provide: MAT_DATE_LOCALE, useValue: 'en-GB'},
     {
@@ -92,16 +76,10 @@ export const appConfig: ApplicationConfig = {
       useClass: MomentDateAdapter,
       deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS],
     },
-    {
-      provide: MAT_DATE_FORMATS,
-      useValue: MY_DATE_FORMATS,
-    },
+    {provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS},
     {
       provide: MAT_DIALOG_DEFAULT_OPTIONS,
-      useValue: {
-        hasBackdrop: true,
-        autoFocus: true,
-      },
+      useValue: {hasBackdrop: true, autoFocus: true},
     },
   ],
 };

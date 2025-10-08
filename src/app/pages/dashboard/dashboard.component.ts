@@ -8,23 +8,27 @@ import {
   ChangeDetectorRef,
   NgZone,
 } from '@angular/core';
-import { ListMainPanelComponent } from '../../components/list-main-panel/list-main-panel.component';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { TopProgressBarComponent } from '../../components/top-progress-bar/top-progress-bar.component';
-import { ModeChangerComponent } from '../../components/mode-changer/mode-changer.component';
-import { UserInfoPanelComponent } from '../../components/user-info-panel/user-info-panel.component';
-import { WindowsRefService } from '../../services/windowRef/windowRef.service';
-import { ExpandableService } from '../../services/expandable/expandable.service';
+import {ListMainPanelComponent} from '../../components/list-main-panel/list-main-panel.component';
+import {CommonModule, isPlatformBrowser} from '@angular/common';
+import {RouterModule, Router} from '@angular/router';
+import {TopProgressBarComponent} from '../../components/top-progress-bar/top-progress-bar.component';
+import {ModeChangerComponent} from '../../components/mode-changer/mode-changer.component';
+import {UserInfoPanelComponent} from '../../components/user-info-panel/user-info-panel.component';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import {ExpandableService} from '../../services/expandable/expandable.service';
 import {
   AuthService,
   NewUser,
   LoggedUserType,
 } from '../../services/auth/auth.service';
-import { Subscription } from 'rxjs';
-import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
-import { ActivityTrackerService } from '../../services/activityTacker/activity-tracker.service';
-
+import {Subscription} from 'rxjs';
+import {SkeletonLoaderComponent} from '../../components/shared/skeleton-loader/skeleton-loader.component';
+import {ActivityTrackerService} from '../../services/activityTacker/activity-tracker.service';
+import {MatIconModule} from '@angular/material/icon';
+import {MatButtonModule} from '@angular/material/button';
+import {MatBadgeModule} from '@angular/material/badge';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {MatMenuModule} from '@angular/material/menu';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -36,6 +40,11 @@ import { ActivityTrackerService } from '../../services/activityTacker/activity-t
     TopProgressBarComponent,
     UserInfoPanelComponent,
     SkeletonLoaderComponent,
+    MatIconModule,
+    MatButtonModule,
+    MatBadgeModule,
+    MatTooltipModule,
+    MatMenuModule
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -54,7 +63,23 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   //Mobile
   protected isMobileMenuOpen: boolean = false;
 
-  constructor(
+
+  notifications = [
+    {id: 1, title: 'Payment received', body: 'Tenant John Doe paid $1200 rent.', isRead: false},
+    {id: 2, title: 'Lease expiring', body: 'Lease #L-2304 expires in 3 days.', isRead: false},
+    {id: 3, title: 'System update', body: 'Scheduled maintenance on Friday 10 PM.', isRead: true},
+  ];
+
+  get unreadCount(): number {
+    return this.notifications.filter(n => !n.isRead).length;
+  }
+
+  markAsRead(n: any) {
+    n.isRead = true;
+    // TODO: call your backend to persist read status
+  }
+
+  constructor (
     private windowRef: WindowsRefService,
     private authService: AuthService,
     private expandableService: ExpandableService,
@@ -65,15 +90,15 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     private zone: NgZone
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    if (this.authService.getLoggedUser !== null) {
+    if(this.authService.getLoggedUser !== null) {
       setTimeout(() => {
         this.isLoading = false;
       }, 500);
       this.user = this.authService.getLoggedUser;
     }
-    if (typeof this.user?.image === 'string') {
+    if(typeof this.user?.image === 'string') {
       const imageURL = this.user.image.split('.');
-      if (imageURL[1] === undefined) {
+      if(imageURL[1] === undefined) {
         this.user.image = '/Images/user-images/dummy-user/dummy-user.jpg';
       } else {
         this.user.image = this.user.image;
@@ -82,7 +107,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async ngOnInit() {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -94,12 +119,12 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       );
     }
     const role = this.authService.getLoggedUser?.role;
-    if (role && this.isBrowser) {
+    if(role && this.isBrowser) {
       await this.authService.sendUserCredentialsAndGetUserData(role);
       await this.authService.afterUserLoggedInOperatios();
     }
 
-    if (this.windowRef) {
+    if(this.windowRef) {
       this.windowRef.windowWidth$.subscribe((width) => {
         this.zone.run(() => {
           this.isMobile = width < 768;
@@ -111,7 +136,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     // await this.insertLoggedUserTracks();
   }
 
-  ngAfterViewInit(): void { }
+  ngAfterViewInit(): void {}
 
   protected openMenu(): void {
     this.menuOpen = !this.menuOpen;

@@ -1,11 +1,11 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { CryptoService } from '../cryptoService/crypto.service';
-import { APIsService } from '../APIs/apis.service';
-import { ActivityTrackerService } from '../activityTacker/activity-tracker.service';
-import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import {Injectable, Inject, PLATFORM_ID} from '@angular/core';
+import {isPlatformBrowser} from '@angular/common';
+import {HttpClient, HttpErrorResponse} from '@angular/common/http';
+import {Router} from '@angular/router';
+import {CryptoService} from '../cryptoService/crypto.service';
+import {APIsService} from '../APIs/apis.service';
+import {ActivityTrackerService} from '../activityTacker/activity-tracker.service';
+import {parsePhoneNumberFromString} from 'libphonenumber-js';
 
 export interface UserCredentials {
   username: string;
@@ -76,14 +76,14 @@ export interface NewUser extends BaseUser {
   password: string;
 }
 
-export interface UsersType extends NewUser { }
+export interface UsersType extends NewUser {}
 
-export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> { }
+export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> {}
 
-export interface LoggedUserType extends Omit<NewUser, 'password'> { }
+export interface LoggedUserType extends Omit<NewUser, 'password'> {}
 
 export type AccessMap = {
-  [ module: string ]: string[]; // list of actions allowed
+  [module: string]: string[]; // list of actions allowed
 };
 
 export const ACCESS_OPTIONS: ReadonlyArray<{
@@ -235,7 +235,7 @@ export const ACCESS_OPTIONS: ReadonlyArray<{
     },
     {
       module: 'Document Management',
-      actions: [ 'upload', 'download', 'delete', 'share', 'categorize' ] as const,
+      actions: ['upload', 'download', 'delete', 'share', 'categorize'] as const,
     },
     {
       module: 'Communication & Notification',
@@ -311,72 +311,72 @@ export const ACCESS_OPTIONS: ReadonlyArray<{
 
 export const DEFAULT_ROLE_ACCESS: Record<Role, AccessMap> = {
   admin: Object.fromEntries(
-    ACCESS_OPTIONS.map( ( mod ) => [ mod.module, [ ...mod.actions ] ] )
+    ACCESS_OPTIONS.map((mod) => [mod.module, [...mod.actions]])
   ),
 
   agent: {
-    'Property Management': [ 'view', 'update', 'upload documents' ],
-    'Tenant Management': [ 'view', 'assign to property' ],
-    'Communication & Notification': [ 'send', 'view logs' ],
-    'Dashboard & Analytics': [ 'view analytics' ],
+    'Property Management': ['view', 'update', 'upload documents'],
+    'Tenant Management': ['view', 'assign to property'],
+    'Communication & Notification': ['send', 'view logs'],
+    'Dashboard & Analytics': ['view analytics'],
   },
 
   tenant: {
-    'Lease Management': [ 'view' ],
-    'Payment & Billing': [ 'view', 'view balance' ],
-    'Maintenance Requests': [ 'view', 'create' ],
-    'Communication & Notification': [ 'view logs' ],
+    'Lease Management': ['view'],
+    'Payment & Billing': ['view', 'view balance'],
+    'Maintenance Requests': ['view', 'create'],
+    'Communication & Notification': ['view logs'],
   },
 
   owner: {
-    'Property Management': [ 'view' ],
-    'Tenant Management': [ 'view' ],
-    'Report Management': [ 'generate financial', 'download' ],
+    'Property Management': ['view'],
+    'Tenant Management': ['view'],
+    'Report Management': ['generate financial', 'download'],
   },
 
   operator: {
-    'User Management': [ 'view', 'update' ],
-    'Maintenance Requests': [ 'view', 'assign technician', 'close' ],
+    'User Management': ['view', 'update'],
+    'Maintenance Requests': ['view', 'assign technician', 'close'],
   },
 
   manager: {
-    'User Management': [ 'view', 'update', 'assign roles' ],
-    'Property Management': [ 'view', 'assign agent' ],
-    'Compliance Management': [ 'view status', 'update record' ],
-    'Report Management': [ 'generate occupancy', 'download' ],
+    'User Management': ['view', 'update', 'assign roles'],
+    'Property Management': ['view', 'assign agent'],
+    'Compliance Management': ['view status', 'update record'],
+    'Report Management': ['generate occupancy', 'download'],
   },
 
   developer: {
-    'System Settings': [ 'configure preferences', 'manage integrations' ],
-    'Dashboard & Analytics': [ 'customize widgets', 'view analytics' ],
-    'Audit Logs': [ 'view logs' ],
+    'System Settings': ['configure preferences', 'manage integrations'],
+    'Dashboard & Analytics': ['customize widgets', 'view analytics'],
+    'Audit Logs': ['view logs'],
   },
 
   user: {
-    'Dashboard & Analytics': [ 'view analytics' ],
-    'Communication & Notification': [ 'view logs' ],
+    'Dashboard & Analytics': ['view analytics'],
+    'Communication & Notification': ['view logs'],
   },
 };
 
-export function getDefaultAccessByRole( role: Role ): {
-  [ module: string ]: { [ action: string ]: boolean };
+export function getDefaultAccessByRole(role: Role): {
+  [module: string]: {[action: string]: boolean};
 } {
-  const allowed = DEFAULT_ROLE_ACCESS[ role ] ?? {};
+  const allowed = DEFAULT_ROLE_ACCESS[role] ?? {};
   const result: Record<string, Record<string, boolean>> = {};
 
-  for ( const { module, actions } of ACCESS_OPTIONS ) {
-    result[ module ] = {};
-    for ( const action of actions ) {
-      result[ module ][ action ] = allowed[ module ]?.includes( action ) ?? false;
+  for(const {module, actions} of ACCESS_OPTIONS) {
+    result[module] = {};
+    for(const action of actions) {
+      result[module][action] = allowed[module]?.includes(action) ?? false;
     }
   }
 
   return result;
 }
 
-@Injectable( {
+@Injectable({
   providedIn: 'root',
-} )
+})
 export class AuthService {
   private isBrowser: boolean;
   private isLoggedIn = false;
@@ -396,14 +396,14 @@ export class AuthService {
   private users: UsersType[] = [];
 
   constructor (
-    @Inject( PLATFORM_ID ) private platformId: Object,
+    @Inject(PLATFORM_ID) private platformId: Object,
     private http: HttpClient,
     private router: Router,
     private cryptoService: CryptoService,
     private APIs: APIsService,
     private activityTrackerService: ActivityTrackerService
   ) {
-    this.isBrowser = isPlatformBrowser( this.platformId );
+    this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
   // Getters
@@ -438,57 +438,57 @@ export class AuthService {
   }
 
   // Setters
-  set loginUserCredentials( user: UserCredentials ) {
+  set loginUserCredentials(user: UserCredentials) {
     this.username = user.username;
     this.password = user.password;
     this.rememberMe = user.rememberMe || false;
   }
 
-  set isUserLoggedIn( value: boolean ) {
+  set isUserLoggedIn(value: boolean) {
     this.isLoggedIn = value;
   }
 
-  set setLoggedUser( user: LoggedUserType | null ) {
+  set setLoggedUser(user: LoggedUserType | null) {
     this.loggedUser = user;
     this.activityTrackerService.loggedUser = user;
   }
 
-  set logginUser( user: UserCredentials ) {
+  set logginUser(user: UserCredentials) {
     this.user = user;
   }
 
   public async sendVerifyUser(): Promise<boolean | undefined> {
     try {
-      const respose = await this.APIs.verifyUser( this.user );
-      if ( respose.status !== 'success' ) throw new Error( 'Invalid credentials!' );
+      const respose = await this.APIs.verifyUser(this.user);
+      if(respose.status !== 'success') throw new Error('Invalid credentials!');
       const user: LoggedUserType = respose.data as LoggedUserType;
-      if ( !user ) throw new Error( 'User not found!' );
+      if(!user) throw new Error('User not found!');
       this.setLoggedUser = user;
       this.isUserLoggedIn = true;
       return true;
     }
-    catch ( error ) {
-      console.error( error );
+    catch(error) {
+      console.error(error);
       return false
     }
   }
 
-  public isUsersType( data: any ): data is UsersType[] | UsersType {
+  public isUsersType(data: any): data is UsersType[] | UsersType {
     return (
-      Array.isArray( data ) &&
+      Array.isArray(data) &&
       data.every(
-        ( item ) =>
+        (item) =>
           item &&
           typeof item.name === 'string' &&
           typeof item.username === 'string' &&
           typeof item.email === 'string' &&
-          ( item.dateOfBirth === null ||
+          (item.dateOfBirth === null ||
             typeof item.dateOfBirth === 'string' ||
-            item.dateOfBirth instanceof Date ) &&
+            item.dateOfBirth instanceof Date) &&
           typeof item.age === 'number' &&
-          ( typeof item.image === 'string' || item.image instanceof File ) &&
-          ( typeof item.phoneNumber === 'string' ||
-            typeof item.phoneNumber === 'undefined' ) &&
+          (typeof item.image === 'string' || item.image instanceof File) &&
+          (typeof item.phoneNumber === 'string' ||
+            typeof item.phoneNumber === 'undefined') &&
           typeof item.bio === 'string' &&
           [
             'admin',
@@ -499,7 +499,7 @@ export class AuthService {
             'manager',
             'developer',
             'user',
-          ].includes( item.role ) &&
+          ].includes(item.role) &&
           typeof item.gender === 'string' &&
           typeof item.address === 'object' &&
           item.address !== null &&
@@ -507,28 +507,28 @@ export class AuthService {
           typeof item.address.houseNumber === 'string' &&
           typeof item.address.city === 'string' &&
           typeof item.address.postcode === 'string' &&
-          ( typeof item.address.country === 'string' ||
-            typeof item.address.country === 'undefined' ) &&
-          ( typeof item.address.stateOrProvince === 'string' ||
-            typeof item.address.stateOrProvince === 'undefined' ) &&
+          (typeof item.address.country === 'string' ||
+            typeof item.address.country === 'undefined') &&
+          (typeof item.address.stateOrProvince === 'string' ||
+            typeof item.address.stateOrProvince === 'undefined') &&
           typeof item.isActive === 'boolean' &&
           typeof item.access === 'object' &&
           item.access !== null &&
           typeof item.access.role === 'string' &&
-          Array.isArray( item.access.permissions ) &&
+          Array.isArray(item.access.permissions) &&
           item.access.permissions.every(
-            ( perm: any ) =>
+            (perm: any) =>
               typeof perm === 'object' &&
               typeof perm.module === 'string' &&
-              Array.isArray( perm.actions ) &&
-              perm.actions.every( ( action: any ) => typeof action === 'string' )
+              Array.isArray(perm.actions) &&
+              perm.actions.every((action: any) => typeof action === 'string')
           ) &&
           typeof item.creator === 'string' &&
-          ( typeof item.updator === 'string' ||
-            typeof item.updator === 'undefined' ) &&
-          ( typeof item.createdAt === 'string' ||
-            item.createdAt instanceof Date ) &&
-          ( typeof item.updatedAt === 'string' || item.updatedAt instanceof Date )
+          (typeof item.updator === 'string' ||
+            typeof item.updator === 'undefined') &&
+          (typeof item.createdAt === 'string' ||
+            item.createdAt instanceof Date) &&
+          (typeof item.updatedAt === 'string' || item.updatedAt instanceof Date)
       )
     );
   }
@@ -537,25 +537,25 @@ export class AuthService {
   public async sendUserCredentialsAndGetUserData(
     role: string
   ): Promise<boolean | undefined> {
-    if ( this.isBrowser ) {
+    if(this.isBrowser) {
       try {
-        const canSaveAllUsers = [ 'admin', 'operator' ].includes( role );
-        if ( canSaveAllUsers ) {
+        const canSaveAllUsers = ['admin', 'operator'].includes(role);
+        if(canSaveAllUsers) {
           const users = await this.APIs.getAllUsers();
-          if ( !users ) {
-            throw new Error( 'Users are not fetched' );
+          if(!users) {
+            throw new Error('Users are not fetched');
           }
-          const encryptedUsers = await this.cryptoService.encrypt( users );
-          if ( encryptedUsers ) {
-            localStorage.setItem( 'USERS', encryptedUsers );
+          const encryptedUsers = await this.cryptoService.encrypt(users);
+          if(encryptedUsers) {
+            localStorage.setItem('USERS', encryptedUsers);
           } else {
-            throw new Error( 'Users are not encrypted' );
+            throw new Error('Users are not encrypted');
           }
         } else {
-          throw new Error( 'User is not admin or operator' );
+          throw new Error('User is not admin or operator');
         }
         return true;
-      } catch ( error ) {
+      } catch(error) {
         // console.error('Error', error);
         return false;
       }
@@ -566,16 +566,16 @@ export class AuthService {
 
   // Post-login steps to run after authentication
   public async afterUserLoggedInOperatios(): Promise<void> {
-    if ( this.isBrowser ) {
-      if ( this.isValidUser ) {
-        const encryptedUser = await this.cryptoService.encrypt( this.localUser! );
+    if(this.isBrowser) {
+      if(this.isValidUser) {
+        const encryptedUser = await this.cryptoService.encrypt(this.localUser!);
         const encryptedPassword = await this.cryptoService.encrypt(
           this.password
         );
-        if ( encryptedUser && encryptedPassword ) {
-          localStorage.setItem( 'ENCRYPED_LOGGED_USER', encryptedUser );
-          localStorage.setItem( 'IS_USER_LOGGED_IN', 'true' );
-          localStorage.setItem( 'PASSWORD', encryptedPassword );
+        if(encryptedUser && encryptedPassword) {
+          localStorage.setItem('ENCRYPED_LOGGED_USER', encryptedUser);
+          localStorage.setItem('IS_USER_LOGGED_IN', 'true');
+          localStorage.setItem('PASSWORD', encryptedPassword);
         }
       }
     }
@@ -583,10 +583,10 @@ export class AuthService {
 
   // Decrypt and return local stored user if available
   public async getLocalLoggedUser(): Promise<LoggedUserType | null> {
-    if ( this.isBrowser ) {
-      const encrypted = localStorage.getItem( 'ENCRYPED_LOGGED_USER' );
-      if ( encrypted ) {
-        const decryptedUser = await this.cryptoService.decrypt( encrypted );
+    if(this.isBrowser) {
+      const encrypted = localStorage.getItem('ENCRYPED_LOGGED_USER');
+      if(encrypted) {
+        const decryptedUser = await this.cryptoService.decrypt(encrypted);
         this.localUser = decryptedUser;
         this.loggedUser = decryptedUser;
         this.isUserActive = decryptedUser.isActive;
@@ -608,15 +608,15 @@ export class AuthService {
       date: date,
     };
     await this.activityTrackerService
-      .saveLoggedUserDataToTracking( data )
-      .then( ( data ) => {
+      .saveLoggedUserDataToTracking(data)
+      .then((data) => {
         // console.log(data);
-      } )
-      .catch( ( error ) => {
-        if ( error ) {
+      })
+      .catch((error) => {
+        if(error) {
           // console.log('Error: ', error);
         }
-      } );
+      });
   }
 
   public clearCredentials(): void {

@@ -1,28 +1,33 @@
 /// <reference types="@angular/localize" />
 
 import {bootstrapApplication} from '@angular/platform-browser';
-import {appConfig} from './app/app.config';
 import {AppComponent} from './app/app.component';
-import {destroyPlatform} from '@angular/core';
+import {appConfig} from './app/app.config';
 
-//  Fix: Destroy previous platform instance if it exists (for Vite HMR safety)
-try {
-  destroyPlatform();
-} catch(err) {
-  console.error(err)
-  // It's okay if no platform exists yet
-}
+import {destroyPlatform, mergeApplicationConfig, ApplicationConfig} from '@angular/core';
+import {provideClientHydration, withEventReplay} from '@angular/platform-browser';
 
-bootstrapApplication(AppComponent, appConfig)
+// HMR safety for Vite/CLI
+try {destroyPlatform();} catch { /* no existing platform, ignore */}
+
+// Detect if SSR markup is present (added by Angular Universal on the server)
+const HAS_SSR =
+  typeof document !== 'undefined' &&
+  document.documentElement.hasAttribute('ng-server-context');
+
+// Only request hydration when SSR data exists
+const hydrationConfig: ApplicationConfig = HAS_SSR
+  ? {providers: [provideClientHydration(withEventReplay())]}
+  : {providers: []};
+
+bootstrapApplication(AppComponent, mergeApplicationConfig(appConfig, hydrationConfig))
   .then(() => {
     // Hide the preloader when the app is ready
     const preloader = document.getElementById('app-preloader');
-    if (preloader) {
+    if(preloader) {
       preloader.style.transition = 'opacity 0.5s ease-out';
       preloader.style.opacity = '0';
-      setTimeout(() => {
-        preloader.remove();
-      }, 500);
+      setTimeout(() => preloader.remove(), 500);
     }
 
     // Register custom service worker

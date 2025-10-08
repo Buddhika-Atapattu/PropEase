@@ -10,19 +10,19 @@ import {
   ElementRef,
   Input,
 } from '@angular/core';
-import { WindowsRefService } from '../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { Router, NavigationEnd } from '@angular/router';
-import { ExpandableService } from '../../services/expandable/expandable.service';
-import { MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { filter } from 'rxjs/operators';
-import { AuthService } from '../../services/auth/auth.service';
-import { LoggedUserType } from '../../services/APIs/apis.service';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {MatIconModule} from '@angular/material/icon';
+import {MatButtonModule} from '@angular/material/button';
+import {Router, NavigationEnd} from '@angular/router';
+import {ExpandableService} from '../../services/expandable/expandable.service';
+import {MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {filter} from 'rxjs/operators';
+import {AuthService} from '../../services/auth/auth.service';
+import {LoggedUserType} from '../../services/APIs/apis.service';
 
 interface PageLinkLists {
   url: string | null;
@@ -79,26 +79,26 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
           icon_text: 'Home',
           toolTip: 'Home',
         },
-        {
-          url: null,
-          mat_icon: 'payment-icon',
-          icon_text: 'Payments',
-          toolTip: 'Payments',
-          sub: [
-            {
-              url: 'payments-list',
-              mat_icon: 'bill-list-icon',
-              icon_text: 'List',
-              toolTip: 'List',
-            },
-            {
-              url: 'payments-upload-proof',
-              mat_icon: 'certification-icon',
-              icon_text: 'Upload',
-              toolTip: 'Upload',
-            },
-          ],
-        },
+        // {
+        //   url: null,
+        //   mat_icon: 'payment-icon',
+        //   icon_text: 'Payments',
+        //   toolTip: 'Payments',
+        //   sub: [
+        //     {
+        //       url: 'payments-list',
+        //       mat_icon: 'bill-list-icon',
+        //       icon_text: 'List',
+        //       toolTip: 'List',
+        //     },
+        //     {
+        //       url: 'payments-upload-proof',
+        //       mat_icon: 'certification-icon',
+        //       icon_text: 'Upload',
+        //       toolTip: 'Upload',
+        //     },
+        //   ],
+        // },
         {
           url: null,
           mat_icon: 'complaints-icon',
@@ -114,8 +114,8 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
             {
               url: 'complaints-status-view',
               mat_icon: 'certification-icon',
-              icon_text: 'Upload',
-              toolTip: 'Upload',
+              icon_text: 'Log',
+              toolTip: 'Log',
             },
           ],
         },
@@ -178,7 +178,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
   protected currentFullURL: string = '';
   private currentOpenIndex: number | null = null;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     private expandableService: ExpandableService,
     private router: Router,
@@ -208,7 +208,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -233,22 +233,22 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
       name: string;
       icon: string;
     }[] = [
-        { name: 'home-icon', icon: '/Images/Icons/home.svg' },
-        { name: 'property-icon', icon: '/Images/Icons/property.svg' },
-        { name: 'users-icon', icon: '/Images/Icons/users.svg' },
-        { name: 'tenant-icon', icon: '/Images/Icons/tenant.svg' },
-        { name: 'agent-icon', icon: '/Images/Icons/agents.svg' },
-        { name: 'report-icon', icon: '/Images/Icons/report.svg' },
-        { name: 'owner-icon', icon: '/Images/Icons/owner.svg' },
-        { name: 'payment-icon', icon: '/Images/Icons/payments.svg' },
-        { name: 'access-icon', icon: '/Images/Icons/access-control.svg' },
-        { name: 'bill-list-icon', icon: '/Images/Icons/bill-list.svg' },
-        { name: 'certification-icon', icon: '/Images/Icons/certification.svg' },
-        { name: 'create-icon', icon: '/Images/Icons/create.svg' },
-        { name: 'documents-icon', icon: '/Images/Icons/documents.svg' },
-        { name: 'notifications-icon', icon: '/Images/Icons/notification.svg' },
-        { name: 'log-icon', icon: '/Images/Icons/log.svg' },
-        { name: 'complaints-icon', icon: '/Images/Icons/complaints.svg' },
+        {name: 'home-icon', icon: '/Images/Icons/home.svg'},
+        {name: 'property-icon', icon: '/Images/Icons/property.svg'},
+        {name: 'users-icon', icon: '/Images/Icons/users.svg'},
+        {name: 'tenant-icon', icon: '/Images/Icons/tenant.svg'},
+        {name: 'agent-icon', icon: '/Images/Icons/agents.svg'},
+        {name: 'report-icon', icon: '/Images/Icons/report.svg'},
+        {name: 'owner-icon', icon: '/Images/Icons/owner.svg'},
+        {name: 'payment-icon', icon: '/Images/Icons/payments.svg'},
+        {name: 'access-icon', icon: '/Images/Icons/access-control.svg'},
+        {name: 'bill-list-icon', icon: '/Images/Icons/bill-list.svg'},
+        {name: 'certification-icon', icon: '/Images/Icons/certification.svg'},
+        {name: 'create-icon', icon: '/Images/Icons/create.svg'},
+        {name: 'documents-icon', icon: '/Images/Icons/documents.svg'},
+        {name: 'notifications-icon', icon: '/Images/Icons/notification.svg'},
+        {name: 'log-icon', icon: '/Images/Icons/log.svg'},
+        {name: 'complaints-icon', icon: '/Images/Icons/complaints.svg'},
       ]
     icons.forEach((icon) => {
       this.matIconRegistry.addSvgIcon(
@@ -264,13 +264,13 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     this.isExpanded.set(expanded);
     this.applyPanelState(expanded);
 
-    if (this.isBrowser) {
-      if (this.isExpanded() === true && isPlatformBrowser(this.platformId)) {
+    if(this.isBrowser) {
+      if(this.isExpanded() === true && isPlatformBrowser(this.platformId)) {
         setTimeout(() => {
           const iconText = document.querySelectorAll(
             '.delay-expand'
           ) as NodeListOf<HTMLElement>;
-          if (!iconText) return;
+          if(!iconText) return;
           iconText.forEach((element) => {
             element.style.opacity = '1';
             element.style.display = 'inline';
@@ -278,12 +278,12 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
           });
         }, 0);
       } else {
-        if (this.isExpanded() === false && isPlatformBrowser(this.platformId)) {
+        if(this.isExpanded() === false && isPlatformBrowser(this.platformId)) {
           this.toggleDropdown(this.currentOpenIndex as number);
           const iconText = document.querySelectorAll(
             '.delay-expand'
           ) as NodeListOf<HTMLElement>;
-          if (!iconText) return;
+          if(!iconText) return;
           iconText.forEach((element) => {
             element.style.opacity = '0';
             element.style.display = 'none';
@@ -295,10 +295,10 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
 
   protected applyPanelState(isExpanded: boolean): void {
     const sidePanel = document.querySelector('.side-panel') as HTMLElement;
-    if (!sidePanel) return;
+    if(!sidePanel) return;
 
     // sidePanel.style.transition = 'all 2s ease';
-    if (isExpanded) {
+    if(isExpanded) {
       sidePanel.classList.remove('side-panel-collapsed');
     } else {
       sidePanel.classList.add('side-panel-collapsed');
@@ -310,11 +310,11 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     subItemUrl: string | null,
     childItemUrl?: string | null
   ): boolean {
-    if (parent && subItemUrl && childItemUrl) {
+    if(parent && subItemUrl && childItemUrl) {
       return this.currentFullURL.includes(
         `/${parent}/${subItemUrl}/${childItemUrl}`
       );
-    } else if (parent && subItemUrl === null && childItemUrl) {
+    } else if(parent && subItemUrl === null && childItemUrl) {
       return this.currentFullURL.includes(`/${parent}/${childItemUrl}`);
     }
     return false;
@@ -326,9 +326,9 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     childChildrenPath: string | null
   ): void {
     this.closeMobileMenu.emit(true);
-    if (parentPath && childPath === null && childChildrenPath) {
+    if(parentPath && childPath === null && childChildrenPath) {
       this.router.navigate(['/dashboard', parentPath, childChildrenPath]);
-    } else if (parentPath && childPath) {
+    } else if(parentPath && childPath) {
       this.router.navigate(['/dashboard', parentPath, childPath]);
     } else {
       this.router.navigate(['/dashboard', parentPath]);
@@ -343,7 +343,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     const listItems = this.elementRef.nativeElement.querySelectorAll('ul > li');
 
     const element = listItems[index] as HTMLElement;
-    if (!element) return;
+    if(!element) return;
 
     const icon = element.querySelector(
       'button > span > span.dropdown-icon > i'
@@ -355,28 +355,28 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     this.elementRef.nativeElement
       .querySelectorAll('ul > li.open')
       .forEach((el: Element) => {
-        if ((el as HTMLElement).classList.contains('open')) {
+        if((el as HTMLElement).classList.contains('open')) {
           (el as HTMLElement).classList.remove('open');
         }
         const openIcon = el.querySelector(
           'button > span > span.dropdown-icon > i'
         ) as HTMLElement;
-        if (openIcon) {
+        if(openIcon) {
           openIcon.classList.remove('fa-chevron-up');
           openIcon.classList.add('fa-chevron-down');
         }
       });
 
     // Toggle current dropdown
-    if (!isCurrentlyOpen) {
+    if(!isCurrentlyOpen) {
       element.classList.add('open');
-      if (icon) {
+      if(icon) {
         icon.classList.remove('fa-chevron-down');
         icon.classList.add('fa-chevron-up');
       }
     } else {
       // Already closed by bulk close, just ensure icon is reverted
-      if (icon) {
+      if(icon) {
         icon.classList.remove('fa-chevron-up');
         icon.classList.add('fa-chevron-down');
       }
@@ -387,27 +387,27 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     const btn = event.currentTarget as HTMLElement;
     const li = btn.closest('li');
-    if (!li) return;
+    if(!li) return;
 
     const icons = li.querySelectorAll('button > span > span.dropdown-icon > i');
     const buttons = li.querySelectorAll('button.sub-btn');
 
     const isOpen = li.classList.contains('open');
 
-    if (isOpen) {
+    if(isOpen) {
       // Close current
       li.classList.remove('open');
 
-      if (icons) {
+      if(icons) {
         icons.forEach((icon) => {
           icon.classList.remove('fa-chevron-up');
           icon.classList.add('fa-chevron-down');
         });
       }
 
-      if (buttons) {
+      if(buttons) {
         buttons.forEach((button) => {
-          if (button.classList.contains('active')) {
+          if(button.classList.contains('active')) {
             button.classList.remove('active');
           }
         });
@@ -415,9 +415,9 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     } else {
       // Close siblings
       const siblings = li.parentElement?.children;
-      if (siblings) {
+      if(siblings) {
         Array.from(siblings).forEach((sibling) => {
-          if (sibling !== li && sibling.classList.contains('open')) {
+          if(sibling !== li && sibling.classList.contains('open')) {
             sibling.classList.remove('open');
             const siblingIcons = sibling.querySelectorAll(
               'button > span > span.dropdown-icon > i'
@@ -429,9 +429,9 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
               icon.classList.add('fa-chevron-down');
             });
 
-            if (siblingButtons) {
+            if(siblingButtons) {
               siblingButtons.forEach((button) => {
-                if (button.classList.contains('active')) {
+                if(button.classList.contains('active')) {
                   button.classList.remove('active');
                 }
               });
@@ -443,16 +443,16 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
       // Open clicked
       li.classList.add('open');
 
-      if (icons) {
+      if(icons) {
         icons.forEach((icon) => {
           icon.classList.remove('fa-chevron-down');
           icon.classList.add('fa-chevron-up');
         });
       }
 
-      if (buttons) {
+      if(buttons) {
         buttons.forEach((button) => {
-          if (!button.classList.contains('active')) {
+          if(!button.classList.contains('active')) {
             button.classList.add('active');
           }
         });
