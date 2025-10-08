@@ -4,9 +4,10 @@ import {
   PLATFORM_ID,
   OnInit,
   AfterViewInit,
-  ChangeDetectorRef,
+  DestroyRef,
 } from '@angular/core';
 import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {NetworkService} from '../../services/network/network.service';
 import {MatIconModule} from '@angular/material/icon';
 
@@ -14,24 +15,26 @@ import {MatIconModule} from '@angular/material/icon';
   selector: 'app-check-internet-status',
   standalone: true,
   imports: [CommonModule, MatIconModule],
+  // ⬇️ This tells Angular to skip hydrating this component on the client.
+  host: {ngSkipHydration: ''},
   templateUrl: './check-internet-status.component.html',
   styleUrl: './check-internet-status.component.scss',
 })
 export class CheckInternetStatusComponent implements OnInit, AfterViewInit {
-  protected isOnline: boolean = true; // default: true for SSR
-  protected showOnlineMessage: boolean = false;
-  private isBrowser: boolean;
+  protected isOnline = true;          // Stable SSR default
+  protected showOnlineMessage = false; // Stable SSR default
+  private readonly isBrowser: boolean;
 
   constructor (
     private networkService: NetworkService,
-    private cdRef: ChangeDetectorRef,
-    @Inject(PLATFORM_ID) private platformId: Object
+    private destroyRef: DestroyRef,
+    @Inject(PLATFORM_ID) platformId: Object
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser(platformId);
   }
 
   ngOnInit(): void {
-    // Render a predictable initial DOM structure for SSR
+    // Keep SSR and initial client DOM identical
     this.isOnline = true;
     this.showOnlineMessage = false;
   }
@@ -39,17 +42,17 @@ export class CheckInternetStatusComponent implements OnInit, AfterViewInit {
   ngAfterViewInit(): void {
     if(!this.isBrowser) return;
 
-    this.networkService.hasChecked$.subscribe((status: boolean) => {
-      this.isOnline = status;
-      this.showOnlineMessage = true;
-      this.cdRef.detectChanges();
+    this.networkService.hasChecked$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((status: boolean) => {
+        this.isOnline = status;
+        this.showOnlineMessage = true;
 
-      if(status) {
-        setTimeout(() => {
-          this.showOnlineMessage = false;
-          this.cdRef.detectChanges();
-        }, 5000);
-      }
-    });
+        if(status) {
+          setTimeout(() => {
+            this.showOnlineMessage = false;
+          }, 5000);
+        }
+      });
   }
 }
