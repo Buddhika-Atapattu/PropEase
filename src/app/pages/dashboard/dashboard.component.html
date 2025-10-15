@@ -45,62 +45,18 @@
             />
           </div>
           <div
-            class="col-xl-9 col-lg-7 col-md-6 col-sm-6 d-flex justify-content-center align-items-center"
+            class="col-xl-8 col-lg-6 col-md-6 col-sm-6 d-flex justify-content-center align-items-center"
           >
             <!-- <h2 class="title text-center">PropEase Dashboard</h2> -->
           </div>
           <div
-            class="col-xl-1 col-lg-2 col-md-2 col-sm-12 d-flex justify-content-end align-items-center"
+            class="col-xl-2 col-lg-3 col-md-2 col-sm-12 d-flex justify-content-between align-items-center"
           >
-            <div class="d-flex align-items-center">
-              <div class="notification-wrapper">
-                <button
-                  mat-icon-button
-                  aria-label="Notifications"
-                  class="notification-button position-relative"
-                  [matMenuTriggerFor]="notificationMenu"
-                >
-                  <i class="fa-solid fa-bell"></i>
-                  <span class="notification-badge" *ngIf="unreadCount > 0">{{
-                    unreadCount
-                  }}</span>
-                </button>
+            <div class="col-6 d-flex justify-content-end align-items-center">
+              <app-notification></app-notification>
+            </div>
 
-                <!-- give the panel a class -->
-                <mat-menu
-                  #notificationMenu="matMenu"
-                  panelClass="notif-menu-panel"
-                >
-                  <ng-container
-                    *ngIf="notifications?.length; else noNotifications"
-                  >
-                    <div
-                      *ngFor="let n of notifications | slice : 0 : 5"
-                      class="notification-item"
-                      (click)="markAsRead(n)"
-                    >
-                      <div class="notification-title">{{ n.title }}</div>
-                      <div class="notification-body text-muted small">
-                        {{ n.body }}
-                      </div>
-                    </div>
-
-                    <button
-                      mat-menu-item
-                      class="text-center w-100"
-                      routerLink="/notifications"
-                    >
-                      View all
-                    </button>
-                  </ng-container>
-
-                  <ng-template #noNotifications>
-                    <div class="p-3 text-center text-muted small">
-                      No new notifications
-                    </div>
-                  </ng-template>
-                </mat-menu>
-              </div>
+            <div class="col-6 d-flex align-items-center justify-content-end">
               <button
                 class="user-image-btn"
                 title="User Profile"

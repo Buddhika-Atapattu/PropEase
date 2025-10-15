@@ -1,0 +1,174 @@
+<!-- Trigger: bell with live badge + socket dot -->
+<button
+  mat-icon-button
+  [matMenuTriggerFor]="notifMenu"
+  (menuOpened)="onOpenMenu()"
+  #menuTrigger="matMenuTrigger"
+  [disabled]="!isLoggedIn"
+  class="notif-button"
+  [matBadge]="(unreadCount$ | async) || 0"
+  matBadgeColor="warn"
+  [matBadgeOverlap]="true"
+  [matBadgeHidden]="((unreadCount$ | async) || 0) === 0"
+  matBadgePosition="above after"
+  matBadgeSize="large"
+  aria-label="Open notifications menu"
+  aria-haspopup="menu"
+>
+  <mat-icon aria-hidden="true">notifications</mat-icon>
+  <span class="conn-dot" [class.on]="(connected$ | async) === true"></span>
+</button>
+
+<!-- Menu overlay -->
+<mat-menu
+  #notifMenu="matMenu"
+  panelClass="notifications-menu"
+  class="notifications-menu"
+  xPosition="before"
+  yPosition="below"
+>
+  <!-- prevent closing when clicking inside -->
+  <div class="notif-wrap" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="notif-header">
+      <h3 class="title" id="notifMenuTitle">Notifications</h3>
+
+      <div class="header-actions">
+        <button
+          type="button"
+          class="link-btn"
+          (click)="viewAllNotifications()"
+          aria-label="View all notifications"
+        >
+          View all
+        </button>
+
+        <button
+          type="button"
+          mat-icon-button
+          class="close-btn"
+          (click)="menuTrigger.closeMenu()"
+          aria-label="Close notifications"
+        >
+          <mat-icon aria-hidden="true">close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="notif-tabs" role="tablist" aria-labelledby="notifMenuTitle">
+      <button
+        type="button"
+        class="tab"
+        [class.active]="activeTab === 'direct'"
+        (click)="setTab('direct', $event)"
+        role="tab"
+        [attr.aria-selected]="activeTab === 'direct'"
+      >
+        Direct
+      </button>
+
+      <button
+        type="button"
+        class="tab"
+        [class.active]="activeTab === 'overall'"
+        (click)="setTab('overall', $event)"
+        role="tab"
+        [attr.aria-selected]="activeTab === 'overall'"
+      >
+        Overall
+      </button>
+
+      <div class="spacer"></div>
+
+      <button
+        type="button"
+        class="tab action"
+        (click)="markAllAsRead()"
+        aria-label="Mark all notifications as read"
+      >
+        Mark all as read
+      </button>
+    </div>
+
+    <!-- Lists -->
+    <div class="notif-list" role="list" aria-label="Notifications list">
+      <!-- Direct tab -->
+      <ng-container *ngIf="activeTab === 'direct'; else overallTab">
+        <ng-container
+          *ngIf="(directNotifications$ | async)?.length; else empty"
+        >
+          <div
+            class="notif-item"
+            *ngFor="let n of directNotifications$ | async; trackBy: trackById"
+            [class.unread]="!n.userState?.isRead"
+            (click)="markOneRead(n._id)"
+            (keydown.enter)="markOneRead(n._id)"
+            tabindex="0"
+            role="listitem"
+            [attr.aria-label]="(n.title || 'Notification') + ', ' + (n.severity || 'info')"
+          >
+            <div class="avatar" [attr.data-severity]="n.severity">
+              <!-- <mat-icon aria-hidden="true">{{ iconFor(n) }}</mat-icon> -->
+              <mat-icon aria-hidden="true">{{ n.icon }}</mat-icon>
+            </div>
+
+            <div class="content">
+              <div class="row-1">
+                <strong class="title">{{ n.title }}</strong>
+                <span class="time">{{ n.createdAt | date:'shortTime' }}</span>
+              </div>
+
+              <div class="body">{{ n.body }}</div>
+
+              <div class="meta">
+                <span class="pill">{{ n.type || 'general' }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <!-- Overall tab -->
+      <ng-template #overallTab>
+        <ng-container
+          *ngIf="(overallNotifications$ | async)?.length; else empty"
+        >
+          <div
+            class="notif-item"
+            *ngFor="let n of overallNotifications$ | async; trackBy: trackById"
+            [class.unread]="!n.userState?.isRead"
+            (click)="markOneRead(n._id)"
+            (keydown.enter)="markOneRead(n._id)"
+            tabindex="0"
+            role="listitem"
+            [attr.aria-label]="(n.title || 'Notification') + ', ' + (n.severity || 'info')"
+          >
+            <div class="avatar" [attr.data-severity]="n.severity">
+              <!-- <mat-icon aria-hidden="true">{{ iconFor(n) }}</mat-icon> -->
+              <mat-icon aria-hidden="true">{{ n.icon }}</mat-icon>
+            </div>
+
+            <div class="content">
+              <div class="row-1">
+                <strong class="title">{{ n.title }}</strong>
+                <span class="time">{{ n.createdAt | date:'shortTime' }}</span>
+              </div>
+
+              <div class="body">{{ n.body }}</div>
+
+              <div class="meta">
+                <span class="pill">{{ n.category }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </ng-template>
+
+      <!-- Empty state -->
+      <ng-template #empty>
+        <div class="empty-state" role="note">No notifications yet</div>
+      </ng-template>
+    </div>
+  </div>
+</mat-menu>

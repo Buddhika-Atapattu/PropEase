@@ -1,26 +1,18 @@
 // Core Angular features for application config and zone optimization
-import {
-  ApplicationConfig,
-  provideZoneChangeDetection,
-} from '@angular/core';
+import {ApplicationConfig, provideZoneChangeDetection} from '@angular/core';
 
 // Router setup with module preloading for faster lazy-loaded route access
-import {
-  provideRouter,
-  withPreloading,
-  PreloadAllModules
-} from '@angular/router';
+import {provideRouter, withPreloading, PreloadAllModules} from '@angular/router';
 
 // Choose URL strategy: Path-based (default) or Hash-based
-import {
-  LocationStrategy,
-  PathLocationStrategy,
-} from '@angular/common';
+import {LocationStrategy, PathLocationStrategy} from '@angular/common';
 
 // HTTP client with Fetch API support
 import {
+  HTTP_INTERCEPTORS,
   provideHttpClient,
-  withFetch
+  withFetch,
+  withInterceptorsFromDi, // <-- allow HTTP_INTERCEPTORS from DI
 } from '@angular/common/http';
 
 // Material date formats and locale support
@@ -32,10 +24,7 @@ import {
 } from '@angular/material/core';
 
 // Moment.js adapter for Angular Material DatePicker
-import {
-  MomentDateAdapter,
-  MAT_MOMENT_DATE_ADAPTER_OPTIONS,
-} from '@angular/material-moment-adapter';
+import {MomentDateAdapter, MAT_MOMENT_DATE_ADAPTER_OPTIONS} from '@angular/material-moment-adapter';
 
 // Enable Angular animations (required by many Angular Material components)
 import {provideAnimations} from '@angular/platform-browser/animations';
@@ -60,16 +49,40 @@ export const MY_DATE_FORMATS: MatDateFormats = {
   },
 };
 
+import {AuthInspectorService} from './services/inspectorService/auth-inspector-service';
+
+// HTTP interceptor to add JWT auth token to outgoing requests
+export const httpInterceptorProviders = [
+  {provide: HTTP_INTERCEPTORS, useClass: AuthInspectorService, multi: true},
+];
+
 // Main Angular standalone application configuration
 export const appConfig: ApplicationConfig = {
   providers: [
     // ❌ no provideClientHydration here (done conditionally in main.ts)
+
+    // Charts
     provideGoogleCharts(),
-    provideHttpClient(withFetch()),
+
+    // HttpClient with Fetch + DI-based interceptors (needed for JWT header)
+    provideHttpClient(
+      withFetch(),
+      withInterceptorsFromDi(), // <-- makes httpInterceptorProviders take effect
+    ),
+
+    // Animations
     provideAnimations(),
+
+    // Performance: coalesce change detection events
     provideZoneChangeDetection({eventCoalescing: true}),
+
+    // Router + preloading for better UX on lazy routes
     provideRouter(routes, withPreloading(PreloadAllModules)),
+
+    // URL strategy
     {provide: LocationStrategy, useClass: PathLocationStrategy},
+
+    // Material i18n + date adapter/format
     {provide: MAT_DATE_LOCALE, useValue: 'en-GB'},
     {
       provide: DateAdapter,
@@ -77,9 +90,11 @@ export const appConfig: ApplicationConfig = {
       deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS],
     },
     {provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS},
-    {
-      provide: MAT_DIALOG_DEFAULT_OPTIONS,
-      useValue: {hasBackdrop: true, autoFocus: true},
-    },
+
+    // Global dialog defaults
+    {provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: {hasBackdrop: true, autoFocus: true}},
+
+    // ✅ Register your HTTP interceptors
+    ...httpInterceptorProviders,
   ],
 };

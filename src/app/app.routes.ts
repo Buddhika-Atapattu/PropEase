@@ -35,6 +35,14 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'all-notifications',
+        loadComponent: () =>
+          import('./pages/notifications/notifications-main-page/notifications-main-page').then((m) => m.NotificationsMainPage),
+        data: {
+          roles: ['admin', 'agent', 'tenant', 'operator', 'developer', 'user'],
+        },
+      },
+      {
         path: 'properties',
         loadComponent: () =>
           import('./pages/property/properties/properties-main-panel.component').then(

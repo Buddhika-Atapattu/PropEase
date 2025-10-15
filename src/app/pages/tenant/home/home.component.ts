@@ -594,11 +594,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     try {
       this.progressBarComponent.start();
 
-      const leaseID = this._leaseTableButtonOperationTrigger.data.element.leaseID;
+      const leaseID = this._leaseTableButtonOperationTrigger.data.element.leaseid;
       if(!leaseID) throw new Error("Invalid lease ID");
 
+      if(this.authService.getLoggedUser === null) throw new Error("Please login first!")
+
       // Download PDF blob from backend
-      const blob = await this.tenantService.downloadLeaseAgreement(leaseID, 'download');
+      const blob = await this.tenantService.downloadLeaseAgreement(leaseID, 'download', this.authService.getLoggedUser.username);
 
       const actualName = `${leaseID}-lease-agreement.pdf`;
 

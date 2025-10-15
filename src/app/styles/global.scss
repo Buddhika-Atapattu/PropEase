@@ -9,6 +9,7 @@
 
 $gold-color: #f7c948 !default; // Rich gold for highlights, buttons, icons
 $blue-color: #4a90e2 !default; // Vivid blue for links
+// $accent-color:
 
 // ===================================================================
 // Dark Theme Core Colors
@@ -32,7 +33,7 @@ $dark-item-hover: rgba(255, 255, 255, 0.05) !default; // Subtle hover
 $dark-item-active: rgba(255, 255, 255, 0.1) !default; // Slightly bolder active
 $dark-border-color: #39414d !default;
 $dark-card-color: #1e293b !default; // Deep slate card
-$dark-hover-color: #334155 !default;
+$dark-hover-color: #465a75 !default;
 $dark-shadow-color: rgba(0, 0, 0, 0.7) !default;
 
 // Status Colors
@@ -47,6 +48,7 @@ $dark-btn-view-color: #00d3b0 !default; // Green blue
 $dark-btn-warning-color: #e7b017 !default; // Dark Yellow
 $dark-btn-danger-color: #dc2626 !default; // Bold red
 $dark-btn-custom-color: #005dae !default; // Blue
+$dark-btn-default-color: #8c8c8c !default; // Gray
 
 // ===================================================================
 // Light Theme Core Colors
@@ -84,6 +86,7 @@ $light-btn-view-color: #00d3b0 !default; // Green blue
 $light-btn-warning-color: #e7b017 !default; // Dark Yellow
 $light-btn-danger-color: #dc2626 !default; // Bold red
 $light-btn-custom-color: #005dae !default; // Blue
+$light-btn-default-color: #8c8c8c !default; // Gray
 // ===================================================================
 // Button Themes
 // ===================================================================
@@ -108,6 +111,10 @@ $light-btn-custom-color: #005dae !default; // Blue
   .btn-custom {
     background: $light-btn-custom-color;
   }
+
+  .btn-default {
+    background-color: $light-btn-default-color;
+  }
 }
 
 :host-context(html.dark) {
@@ -129,6 +136,10 @@ $light-btn-custom-color: #005dae !default; // Blue
 
   .btn-custom {
     background: $dark-btn-custom-color;
+  }
+
+  .btn-default {
+    background-color: $dark-btn-default-color;
   }
 }
 
@@ -193,7 +204,8 @@ $light-btn-custom-color: #005dae !default; // Blue
   .btn-view,
   .btn-warning,
   .btn-danger,
-  .btn-custom {
+  .btn-custom,
+  .btn-default {
     position: relative;
     display: flex;
     align-items: center;
@@ -357,7 +369,8 @@ $light-btn-custom-color: #005dae !default; // Blue
   .btn-save,
   .btn-warning,
   .btn-danger,
-  .btn-custom {
+  .btn-custom,
+  .btn-default {
     position: relative;
     display: flex;
     align-items: center;
@@ -1050,5 +1063,84 @@ button:focus:not(:focus-visible) {
         border: 0.0159rem solid #83cfff8a;
       }
     }
+  }
+}
+
+/* Tweak these if you have tokens in global.scss */
+$notify-orange-light: #ff9800; // material orange 500
+$notify-orange-dark: #ffb74d; // orange 300 (a bit lighter for dark bg)
+$notify-text-dark: #1f1400; // readable on light orange
+$notify-text-light: #2b1d00; // slightly darker for contrast
+
+/* MDC chip uses CSS variables; override them on our class */
+.chip-unread {
+  /* default (light theme baseline) */
+  --mdc-chip-elevated-container-color: #{$notify-orange-light};
+  --mdc-chip-label-text-color: #fff;
+  --mdc-chip-outline-color: #{$notify-orange-light};
+
+  /* ensure outline variant also looks orange */
+  background: var(--mdc-chip-elevated-container-color) !important;
+  color: var(--mdc-chip-label-text-color) !important;
+  border-color: var(--mdc-chip-outline-color) !important;
+
+  /* optional: a little weight */
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 18px;
+  }
+}
+
+/* Dark theme: use a softer orange for better contrast against dark bg */
+:host-context(html.dark) .chip-unread {
+  --mdc-chip-elevated-container-color: #{$notify-orange-dark};
+  --mdc-chip-label-text-color: #000; // better contrast over lighter orange
+}
+
+/* Light theme: keep the stronger orange with white text */
+:host-context(html.light) .chip-unread {
+  --mdc-chip-elevated-container-color: #{$notify-orange-light};
+  --mdc-chip-label-text-color: #fff;
+}
+
+/* Flexible, scrollable container with hidden scrollbars */
+.inner-container {
+  /* layout & sizing */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; /* allow flex children to shrink */
+  height: 100%;
+  min-height: 0; /* important in flex layouts to allow shrinking */
+
+  /* scrolling (but hide bars) */
+  overflow: auto; /* keep scrolling enabled */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch; /* smooth on iOS */
+
+  /* hide scrollbars (cross-browser) */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+.inner-container::-webkit-scrollbar {
+  /* Chrome/Safari/Edge */
+  width: 0;
+  height: 0;
+}
+
+/* Make the main content area flex & shrink properly */
+.inner-container > .auto-fit {
+  flex: 1 1 auto;
+  min-height: 0; /* allow vertical shrink inside flex */
+  min-width: 0; /* allow horizontal shrink inside flex */
+}
+
+/* Optional: compact padding at smaller widths */
+@media (max-width: 768px) {
+  .inner-container {
+    padding: 0.5rem;
   }
 }

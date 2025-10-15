@@ -23,27 +23,27 @@ import {
   ReactiveFormsModule,
   FormControl,
 } from '@angular/forms';
-import { RouterModule, Router, ActivatedRoute } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatRadioModule } from '@angular/material/radio';
-import { MatStepperModule } from '@angular/material/stepper';
-import { MatTableModule } from '@angular/material/table';
+import {RouterModule, Router, ActivatedRoute} from '@angular/router';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatNativeDateModule} from '@angular/material/core';
+import {MatRadioModule} from '@angular/material/radio';
+import {MatStepperModule} from '@angular/material/stepper';
+import {MatTableModule} from '@angular/material/table';
 import {
   MatDialog,
   MatDialogRef,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
-import { Subscription, of, pipe } from 'rxjs';
-import { Observable } from 'rxjs';
-import { EditorComponent } from '@tinymce/tinymce-angular';
-import { AuthService, BaseUser } from '../../../services/auth/auth.service';
+import {Subscription, of, pipe} from 'rxjs';
+import {Observable} from 'rxjs';
+import {EditorComponent} from '@tinymce/tinymce-angular';
+import {AuthService, BaseUser} from '../../../services/auth/auth.service';
 import {
   PropertyService,
   Property,
@@ -56,17 +56,17 @@ import {
   propertyImages,
   propertyDocBackend,
 } from '../../../services/property/property.service';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {CryptoService} from '../../../services/cryptoService/crypto.service';
+import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {
   msgTypes,
   NotificationComponent,
 } from '../../../components/dialogs/notification/notification.component';
-import { DomSanitizer } from '@angular/platform-browser';
-import { map, startWith } from 'rxjs/operators';
-import { AsyncPipe } from '@angular/common';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import {DomSanitizer} from '@angular/platform-browser';
+import {map, startWith} from 'rxjs/operators';
+import {AsyncPipe} from '@angular/common';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {
   APIsService,
   Country,
@@ -74,9 +74,9 @@ import {
   CountryDetailsCustomType,
   UsersType,
 } from '../../../services/APIs/apis.service';
-import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { MapComponent } from '../../../components/shared/map/map.component';
-import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
+import {MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
+import {MapComponent} from '../../../components/shared/map/map.component';
+import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
 import {
   DragDropModule,
   CdkDragDrop,
@@ -208,7 +208,7 @@ export class EditPropertyListingComponent
   //05. <================== Financial Details ==================>
   protected price: Property['price'] = 0;
   /*
-  
+
     05.1. isPriceCurrencyPanelOpen -> open pannel
     05.2. countryControlWithCurrency -> declaring and initializing an Angular FormControl
     05.3. filteredCountriesWithCurrency -> store the values that filter through all country
@@ -218,7 +218,7 @@ export class EditPropertyListingComponent
     05.7. countryActualCurrency -> get the actual country by text "Sri Lanka"
     05.8. isCountryOfCurrencySelected -> check the country is selected before closing the pannel
     05.9. countryOfCurrencySelectedError -> detect the error before clossing the pannel
-  
+
     */
   protected isPriceCurrencyPanelOpen: boolean = false;
   protected countryControlWithCurrency: FormControl = new FormControl('');
@@ -462,12 +462,12 @@ export class EditPropertyListingComponent
   ];
 
   protected tabIndicatorsActive: boolean = false;
-  @ViewChildren('tabElement', { read: ElementRef })
+  @ViewChildren('tabElement', {read: ElementRef})
   tabElements!: QueryList<ElementRef>;
   protected currentIndex = 0;
-  protected indicatorStyle: { width?: string; transform?: string } = {};
+  protected indicatorStyle: {width?: string; transform?: string} = {};
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
@@ -497,7 +497,7 @@ export class EditPropertyListingComponent
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.callTheAPI();
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
@@ -514,13 +514,13 @@ export class EditPropertyListingComponent
   }
 
   ngAfterViewInit(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       setTimeout(() => this.updateIndicatorPosition(this.currentIndex));
     }
   }
 
   ngOnDestroy(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       window.removeEventListener('dragover', this.preventDefault);
       window.removeEventListener('drop', this.preventDefault);
     }
@@ -579,7 +579,7 @@ export class EditPropertyListingComponent
 
   //<==================== Tab Make ====================>
   protected tabMaker(index: number, tabName: string) {
-    if (!this.isBrowser) return;
+    if(!this.isBrowser) return;
     this.currentIndex = index;
     setTimeout(() => this.updateIndicatorPosition(index));
   }
@@ -587,8 +587,8 @@ export class EditPropertyListingComponent
   private updateIndicatorPosition(index: number): void {
     const tabEl = this.tabElements.get(index)?.nativeElement;
 
-    if (tabEl) {
-      const { offsetLeft, offsetWidth } = tabEl;
+    if(tabEl) {
+      const {offsetLeft, offsetWidth} = tabEl;
 
       const newStyle = {
         width: `${offsetWidth}px`,
@@ -596,7 +596,7 @@ export class EditPropertyListingComponent
       };
 
       // Only update if it has changed
-      if (
+      if(
         this.indicatorStyle['width'] !== newStyle.width ||
         this.indicatorStyle['transform'] !== newStyle.transform
       ) {
@@ -606,7 +606,7 @@ export class EditPropertyListingComponent
       this.istabOpenButtonActive = false;
     }
 
-    if (this.map && this.currentIndex === 1) {
+    if(this.map && this.currentIndex === 1) {
       this.map.MapCenterMaker(this.mapLocationLat, this.mapLocationLng, 15);
     }
   }
@@ -614,7 +614,7 @@ export class EditPropertyListingComponent
 
   //<==================== Page Go Back ====================>
   protected goBack() {
-    if (this.currentIndex > 0) {
+    if(this.currentIndex > 0) {
       this.tabMaker(
         this.currentIndex - 1,
         this.tabIndicators[this.currentIndex - 1]
@@ -625,7 +625,7 @@ export class EditPropertyListingComponent
 
   //<==================== Page Go Next ====================>
   protected goNext() {
-    if (this.currentIndex < this.tabIndicators.length - 1) {
+    if(this.currentIndex < this.tabIndicators.length - 1) {
       this.tabMaker(
         this.currentIndex + 1,
         this.tabIndicators[this.currentIndex + 1]
@@ -636,7 +636,7 @@ export class EditPropertyListingComponent
 
   //<==================== Call the API to collect the data ====================>
   private async callTheAPI() {
-    if (this.id) {
+    if(this.id) {
       await this.propertyService
         .getPropertyById(this.id)
         .then(async (response) => {
@@ -694,7 +694,7 @@ export class EditPropertyListingComponent
 
           await this.filterOwnerThroughAllUsers(response.data.owner);
 
-          if (this.filterOwners.length === 1) {
+          if(this.filterOwners.length === 1) {
             this.isOwnerNotSelected = false;
             this.selectedOwner = this.filterOwners[0];
             this.ownerUsername = this.selectedOwner.username;
@@ -752,7 +752,7 @@ export class EditPropertyListingComponent
           this.listingExpiryDate = this.toValidDate(
             response.data.listingExpiryDate
           );
-          if (response.data.addedBy) {
+          if(response.data.addedBy) {
             await this.filterAgentThroughAllUsers(response.data.addedBy.name);
             this.AddedBy = response.data.addedBy;
             this.AddedByUsername = response.data.addedBy.username;
@@ -805,7 +805,7 @@ export class EditPropertyListingComponent
 
   //01. Property listing
   protected propertyListingSort(): string[] {
-    if (this.filterListingOptions.length === 0) {
+    if(this.filterListingOptions.length === 0) {
       return this.listingOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterListingOptions.sort((a, b) => a.localeCompare(b));
@@ -814,7 +814,7 @@ export class EditPropertyListingComponent
 
   //02. Property type
   protected propertyTypeSort(): string[] {
-    if (this.filterTypeOptions.length === 0) {
+    if(this.filterTypeOptions.length === 0) {
       return this.typeOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterTypeOptions.sort((a, b) => a.localeCompare(b));
@@ -823,7 +823,7 @@ export class EditPropertyListingComponent
 
   //03. Property amenities
   protected propertyAmenitiesSort(): string[] {
-    if (this.filterFeatureAmenity.length === 0) {
+    if(this.filterFeatureAmenity.length === 0) {
       return this.definedFeatureAmenity.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterFeatureAmenity.sort((a, b) => a.localeCompare(b));
@@ -832,7 +832,7 @@ export class EditPropertyListingComponent
 
   //04. Furnishing Status
   protected propertyFurnishingStatusOptionsSort() {
-    if (this.filterFurnishingStatusOptions.length === 0) {
+    if(this.filterFurnishingStatusOptions.length === 0) {
       return this.furnishingStatusOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterFurnishingStatusOptions.sort((a, b) =>
@@ -843,7 +843,7 @@ export class EditPropertyListingComponent
 
   //05. Property Condition
   protected propertyConditionOptionsSort() {
-    if (this.filterPropertyConditionOptions.length === 0) {
+    if(this.filterPropertyConditionOptions.length === 0) {
       return this.propertyConditionOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterPropertyConditionOptions.sort((a, b) =>
@@ -854,7 +854,7 @@ export class EditPropertyListingComponent
 
   //06. Property Availability Status
   protected propertyAvailabilityStatusOptionsSort() {
-    if (this.filterPropertyAvailabilityStatusOptions.length === 0) {
+    if(this.filterPropertyAvailabilityStatusOptions.length === 0) {
       return this.propertyAvailabilityStatusOptions.sort((a, b) =>
         a.localeCompare(b)
       );
@@ -867,7 +867,7 @@ export class EditPropertyListingComponent
 
   //07. Property Priority Options
   protected propertyPriorityOptionsSort() {
-    if (this.filterPropertyPriorityOptions.length === 0) {
+    if(this.filterPropertyPriorityOptions.length === 0) {
       return this.propertyPriorityOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterPropertyPriorityOptions.sort((a, b) =>
@@ -878,7 +878,7 @@ export class EditPropertyListingComponent
 
   //08. Property Verification Status
   protected propertyVerificationStatusOptionsSort() {
-    if (this.filterPropertyVerificationStatusOptions.length === 0) {
+    if(this.filterPropertyVerificationStatusOptions.length === 0) {
       return this.propertyVerificationStatusOptions.sort((a, b) =>
         a.localeCompare(b)
       );
@@ -891,7 +891,7 @@ export class EditPropertyListingComponent
 
   //09. Status of property
   protected propertyStatusOptionsSort() {
-    if (this.filterPropertyStatusOptions.length === 0) {
+    if(this.filterPropertyStatusOptions.length === 0) {
       return this.propertyStatusOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterPropertyStatusOptions.sort((a, b) =>
@@ -902,7 +902,7 @@ export class EditPropertyListingComponent
 
   //10. Ownership type
   protected ownerShipTypeOptionsSort() {
-    if (this.filterOwnerShipTypeOptions.length === 0) {
+    if(this.filterOwnerShipTypeOptions.length === 0) {
       return this.ownerShipTypeOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterOwnerShipTypeOptions.sort((a, b) => a.localeCompare(b));
@@ -946,7 +946,7 @@ export class EditPropertyListingComponent
       close: 'wrong.svg',
     };
 
-    for (const [name, path] of Object.entries(iconMap)) {
+    for(const [name, path] of Object.entries(iconMap)) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
@@ -959,7 +959,7 @@ export class EditPropertyListingComponent
 
   //<==================== Choose the correct icon for the file type ====================>
   protected chooceIcon(type: string): string {
-    switch (type) {
+    switch(type) {
       case 'doc':
         return 'word';
       case 'docx':
@@ -1043,7 +1043,7 @@ export class EditPropertyListingComponent
    * Useful after successfully creating or updating a property.
    */
   protected goToProperties(): void {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
       this.router.navigate(['/dashboard/properties']);
     });
   }
@@ -1053,7 +1053,7 @@ export class EditPropertyListingComponent
    * Useful for quickly reloading the form or returning after a navigation away.
    */
   protected goToListingEdit(): void {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
       this.router.navigate(['/dashboard/property-listing']);
     });
   }
@@ -1074,12 +1074,12 @@ export class EditPropertyListingComponent
     event.preventDefault();
 
     const items = event.clipboardData?.items;
-    if (!items) return;
+    if(!items) return;
 
-    for (const item of items) {
-      if (item.kind === 'file') {
+    for(const item of items) {
+      if(item.kind === 'file') {
         const file = item.getAsFile();
-        if (file) {
+        if(file) {
           this.processPastedPropertyImage(file);
         }
       }
@@ -1095,7 +1095,7 @@ export class EditPropertyListingComponent
     input.files = dataTransfer.files;
 
     // Trigger the same file selection logic
-    this.onFileSelectedPropertyImage({ target: input } as any);
+    this.onFileSelectedPropertyImage({target: input} as any);
   }
 
   //Process property image drop
@@ -1104,7 +1104,7 @@ export class EditPropertyListingComponent
     this.isPropertyImageDragOver = false;
 
     const files = event.dataTransfer?.files;
-    if (files) {
+    if(files) {
       this.propertyImagePreviewMaker(files);
     }
   }
@@ -1113,7 +1113,7 @@ export class EditPropertyListingComponent
   protected onDragOverPropertyImage(event: DragEvent): void {
     event.preventDefault(); // Crucial to allow drop
     event.stopPropagation();
-    if (event.currentTarget === event.target) {
+    if(event.currentTarget === event.target) {
       this.isPropertyImageDragOver = true;
     }
   }
@@ -1131,17 +1131,17 @@ export class EditPropertyListingComponent
   }
 
   /**
-  
+
     * Property image preview maker
     * Property images push into the selected property images array
-  
+
     **/
   private propertyImagePreviewMaker(files: FileList): void {
     // Loop through images of property
 
-    for (let file of Array.from(files)) {
+    for(let file of Array.from(files)) {
       // Check if file is an image
-      if (!this.allowedImageTypes.includes(file.type)) {
+      if(!this.allowedImageTypes.includes(file.type)) {
         this.isPropertyImageTypeMissMatched = true;
         this.propertyErrorText = `Error: ${file.name} type ${file.type} not matched!`;
         return;
@@ -1225,7 +1225,7 @@ export class EditPropertyListingComponent
   protected onDragOverPropertyDocs(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
-    if (event.currentTarget === event.target) {
+    if(event.currentTarget === event.target) {
       this.isPropertyDocsDragOver = true;
     }
   }
@@ -1239,7 +1239,7 @@ export class EditPropertyListingComponent
     this.isPropertyDocsDragOver = false;
 
     const files = event.dataTransfer?.files;
-    if (files) {
+    if(files) {
       this.propertyDocsPreviewMaker(files);
     }
   }
@@ -1260,12 +1260,12 @@ export class EditPropertyListingComponent
     event.preventDefault();
 
     const items = event.clipboardData?.items;
-    if (!items) return;
+    if(!items) return;
 
-    for (const item of items) {
-      if (item.kind === 'file') {
+    for(const item of items) {
+      if(item.kind === 'file') {
         const file = item.getAsFile();
-        if (file) {
+        if(file) {
           this.processPastedPropertyDocs(file);
         }
       }
@@ -1292,8 +1292,8 @@ export class EditPropertyListingComponent
    * Generates previews for allowed document types.
    */
   private async propertyDocsPreviewMaker(files: FileList): Promise<void> {
-    for (let file of Array.from(files)) {
-      if (!this.propertyFormallowedDocs.includes(file.type)) {
+    for(let file of Array.from(files)) {
+      if(!this.propertyFormallowedDocs.includes(file.type)) {
         await this.notification.notification(
           'error',
           `Error: ${file.name} type ${file.type} is not allowed!`
@@ -1368,7 +1368,7 @@ export class EditPropertyListingComponent
 
   //<==================== Filter Property Amenities ====================>
   protected filterFeatureAmenityOperation(data: string): void {
-    if (!this.definedFeatureAmenity.includes(data)) {
+    if(!this.definedFeatureAmenity.includes(data)) {
       this.isAmenitiesNotIncluded = true;
       this.amenitiesNotIncludedText = data;
     }
@@ -1385,17 +1385,17 @@ export class EditPropertyListingComponent
 
   //<==================== Filter address section country ====================>
   protected async addressMainFilterCountries(
-    data: string | { name: string }
+    data: string | {name: string}
   ): Promise<void> {
     // Normalize the country input to string
-    if (
+    if(
       typeof data === 'object' &&
       data &&
       'name' in data &&
       typeof data.name === 'string'
     ) {
       this.typeAddressCountry = data.name.toLowerCase();
-    } else if (typeof data === 'string') {
+    } else if(typeof data === 'string') {
       this.typeAddressCountry = data.toLowerCase();
     } else {
       this.typeAddressCountry = '';
@@ -1403,7 +1403,7 @@ export class EditPropertyListingComponent
 
     const countries: Country[] = await this.APIs.getCountries();
 
-    if (!Array.isArray(countries)) return;
+    if(!Array.isArray(countries)) return;
 
     this.AddressCountries = countries;
 
@@ -1451,7 +1451,7 @@ export class EditPropertyListingComponent
   }
 
   protected closeCurrency() {
-    if (this.isCountryOfCurrencySelected) {
+    if(this.isCountryOfCurrencySelected) {
       this.isPriceCurrencyPanelOpen = false;
       this.countryOfCurrencySelectedError = false;
     } else {
@@ -1462,7 +1462,7 @@ export class EditPropertyListingComponent
   protected async selectCountriesWithCurrencies(input: string): Promise<void> {
     const countries = await this.APIs.getCustomCountryDetails();
 
-    if (!Array.isArray(countries)) return;
+    if(!Array.isArray(countries)) return;
 
     this.filteredCountriesWithCurrency =
       this.countryControlWithCurrency.valueChanges.pipe(
@@ -1491,7 +1491,7 @@ export class EditPropertyListingComponent
       countryName
     );
 
-    if (!Array.isArray(country) || country.length === 0) {
+    if(!Array.isArray(country) || country.length === 0) {
       console.error('Country did not find!');
       return;
     }
@@ -1505,7 +1505,7 @@ export class EditPropertyListingComponent
     this.isCurrencySelected = true;
     this.countryActualCurrency = currencySymbol;
 
-    if (this.countryActualCurrency) {
+    if(this.countryActualCurrency) {
       this.isCountryOfCurrencySelected = true;
       this.countryOfCurrencySelectedError = false;
     }
@@ -1523,14 +1523,14 @@ export class EditPropertyListingComponent
     this.isAgentNotSelected = true;
 
     const users = await this.APIs.getAllUsers();
-    if (users) {
+    if(users) {
       this.allUsers = users;
       this.filterAgents = users.filter((user) =>
         user.name.toLowerCase().includes(input.toLowerCase())
       );
     }
 
-    if (this.filterAgents.length === 1) {
+    if(this.filterAgents.length === 1) {
       this.AddedByName = this.filterAgents[0].name;
       this.AddedByEmail = this.filterAgents[0].email;
       this.AddedByUsername = this.filterAgents[0].username;
@@ -1551,7 +1551,7 @@ export class EditPropertyListingComponent
 
   protected getTheSelectedAgent(input: MatAutocompleteSelectedEvent): void {
     const selectedAgent = input.option.value;
-    if (selectedAgent) {
+    if(selectedAgent) {
       this.isAgentNotSelected = false;
       this.selectedAgent =
         this.allUsers.find((data) => {
@@ -1569,7 +1569,7 @@ export class EditPropertyListingComponent
   protected async filterOwnerThroughAllUsers(input: string): Promise<void> {
     this.isOwnerNotSelected = true;
     const users = await this.APIs.getAllUsers();
-    if (users) {
+    if(users) {
       this.allUsers = users;
       this.filterOwners = users.filter(
         (user) =>
@@ -1577,7 +1577,7 @@ export class EditPropertyListingComponent
           user.username.toLowerCase().includes(input.toLowerCase())
       );
 
-      if (this.filterOwners.length === 1) {
+      if(this.filterOwners.length === 1) {
         this.isOwnerNotSelected = false;
         this.selectedOwner = this.filterOwners[0];
         this.ownerUsername = this.selectedOwner.username;
@@ -1588,7 +1588,7 @@ export class EditPropertyListingComponent
   protected getTheSelectedOwner(input: MatAutocompleteSelectedEvent): void {
     const selectedOwner = input.option.value;
 
-    if (selectedOwner) {
+    if(selectedOwner) {
       this.isOwnerNotSelected = false;
       this.selectedOwner =
         this.allUsers.find((data) => {
@@ -1600,14 +1600,14 @@ export class EditPropertyListingComponent
       this.isOwnerNotSelected = true;
     }
 
-    if (this.selectedOwner) this.ownerUsername = this.selectedOwner.username;
+    if(this.selectedOwner) this.ownerUsername = this.selectedOwner.username;
   }
   //<==================== End Property owner infor ====================>
 
   //<==================== featureAmenity ====================>
 
   protected addFeaturesAmenity(event: MatAutocompleteSelectedEvent) {
-    if (!this.featureAmenities.includes(event.option.value)) {
+    if(!this.featureAmenities.includes(event.option.value)) {
       this.featureAmenities.push(event.option.value);
     }
   }
@@ -1618,7 +1618,7 @@ export class EditPropertyListingComponent
 
   protected addFeaturesAmenityEnter(event: Event) {
     const keyboardEvent = event as KeyboardEvent;
-    if (keyboardEvent.key === 'Enter' && this.featureAmenity !== '') {
+    if(keyboardEvent.key === 'Enter' && this.featureAmenity !== '') {
       this.featureAmenities.push(this.featureAmenity);
     }
   }
@@ -1627,7 +1627,7 @@ export class EditPropertyListingComponent
 
   //<==================== Map ====================>
 
-  protected onLocationPicked(event: { lat: number; lng: number }) {
+  protected onLocationPicked(event: {lat: number; lng: number}) {
     this.mapLocationLat = event.lat;
     this.mapLocationLng = event.lng;
     this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps?q=${this.mapLocationLat},${this.mapLocationLng}&hl=en&z=14&output=embed`;
@@ -1650,19 +1650,19 @@ export class EditPropertyListingComponent
     const vimeoMatch = input.match(/vimeo\.com\/(\d+)/);
     const driveMatch = input.match(/drive\.google\.com\/file\/d\/([^/]+)/);
 
-    if (youtubeMatch) {
+    if(youtubeMatch) {
       const videoId = youtubeMatch[1];
       this.videoPreviewURL = `https://www.youtube.com/embed/${videoId}`;
       this.isIframeEmbed = true;
-    } else if (vimeoMatch) {
+    } else if(vimeoMatch) {
       const videoId = vimeoMatch[1];
       this.videoPreviewURL = `https://player.vimeo.com/video/${videoId}`;
       this.isIframeEmbed = true;
-    } else if (driveMatch) {
+    } else if(driveMatch) {
       const fileId = driveMatch[1];
       this.videoPreviewURL = `https://drive.google.com/file/d/${fileId}/preview`;
       this.isIframeEmbed = true;
-    } else if (input.includes('dropbox.com')) {
+    } else if(input.includes('dropbox.com')) {
       this.videoPreviewURL = input.replace('?dl=0', '?raw=1');
       this.isIframeEmbed = false;
     } else {
@@ -1681,6 +1681,8 @@ export class EditPropertyListingComponent
   //<==================== Form submit ====================>
   protected async submit() {
     try {
+
+      if(this.loggedUser === null) throw new Error('User need to login to the system before property update')
       // Assemble the Address
       const Address: Address = {
         houseNumber: this.AddressHouseNumber.trim(),
@@ -1694,7 +1696,7 @@ export class EditPropertyListingComponent
       const formData = new FormData();
 
       // Error validation
-      if (
+      if(
         !this.isUserCanAssignAgentToTheProperty() &&
         !this.isUserCanUploadDocumentsToTheProperty() &&
         !this.isUserCanManageAmenitiesToTheProperty() &&
@@ -1704,142 +1706,142 @@ export class EditPropertyListingComponent
       }
 
       // Basic Property Details
-      if (!this.title) {
+      if(!this.title) {
         throw new Error('Title is required!');
       }
-      if (!this.type) {
+      if(!this.type) {
         throw new Error('Type is required!');
       }
-      if (!this.listing) {
+      if(!this.listing) {
         throw new Error('Listing is required!');
       }
-      if (!this.description) {
+      if(!this.description) {
         throw new Error('Discription is required!');
       }
       // End Basic Property Details
 
       // Location Details
-      if (!this.AddressHouseNumber) {
+      if(!this.AddressHouseNumber) {
         throw new Error('House number is required!');
       }
 
-      if (!this.AddressStreet) {
+      if(!this.AddressStreet) {
         throw new Error('Address streat is required!');
       }
 
-      if (!this.AddressCity) {
+      if(!this.AddressCity) {
         throw new Error('Address city is required!');
       }
 
-      if (!this.AddressStateOrProvince) {
+      if(!this.AddressStateOrProvince) {
         throw new Error('Address state or province is required!');
       }
 
-      if (!this.AddressPostcode) {
+      if(!this.AddressPostcode) {
         throw new Error('Address postcode is required!');
       }
 
-      if (!this.typeAddressCountry) {
+      if(!this.typeAddressCountry) {
         throw new Error('Country is required!');
       }
       // End Location Details
 
       // Property Specifications
-      if (this.totalArea !== 0 && !this.totalArea) {
+      if(this.totalArea !== 0 && !this.totalArea) {
         throw new Error('Total area is required!');
       }
 
-      if (this.builtInArea !== 0 && !this.builtInArea) {
+      if(this.builtInArea !== 0 && !this.builtInArea) {
         throw new Error('Built in area is required!');
       }
 
-      if (this.balconies == null || this.balconies === undefined) {
+      if(this.balconies == null || this.balconies === undefined) {
         throw new Error('Balconies is required!');
       }
 
-      if (this.kitchen == null || this.kitchen === undefined) {
+      if(this.kitchen == null || this.kitchen === undefined) {
         throw new Error('Kitchen is required!');
       }
 
-      if (this.bedrooms == null || this.bedrooms === undefined) {
+      if(this.bedrooms == null || this.bedrooms === undefined) {
         throw new Error('Bedrooms is required!');
       }
 
-      if (this.bathrooms == null || this.bathrooms === undefined) {
+      if(this.bathrooms == null || this.bathrooms === undefined) {
         throw new Error('Bathrooms is required!');
       }
 
-      if (this.maidrooms === null || this.maidrooms === undefined) {
+      if(this.maidrooms === null || this.maidrooms === undefined) {
         throw new Error('Maidrooms is required!');
       }
 
-      if (this.driverRooms == null || this.driverRooms === undefined) {
+      if(this.driverRooms == null || this.driverRooms === undefined) {
         throw new Error('Driver rooms is required!');
       }
 
-      if (
+      if(
         !this.furnishingStatus &&
         !this.furnishingStatusOptions.includes(this.furnishingStatus)
       ) {
         throw new Error('Select the furnishing status!');
       }
 
-      if (!this.totalFloors) {
+      if(!this.totalFloors) {
         throw new Error('Number of floors is required!');
       }
 
-      if (!this.numberOfParking) {
+      if(!this.numberOfParking) {
         throw new Error('Number of parking is required!');
       }
       // End Property Specifications
 
       // Construction & Age
-      if (!this.builtYear && this.builtYear !== 0) {
+      if(!this.builtYear && this.builtYear !== 0) {
         throw new Error('Built year is required!');
       }
 
-      if (
+      if(
         !this.propertyCondition &&
         !this.propertyConditionOptions.includes(this.propertyCondition)
       ) {
         throw new Error('Select the property condition!');
       }
 
-      if (!this.developerName) {
+      if(!this.developerName) {
         throw new Error('Developer name is required!');
       }
 
-      if (!this.ownerShipType) {
+      if(!this.ownerShipType) {
         throw new Error('Owner ship type is required!');
       }
 
-      if (!this.selectedOwner) {
+      if(!this.selectedOwner) {
         throw new Error('Owner is required!');
       }
       // End Construction & Age
 
       // Financial Details
-      if (!this.price) {
+      if(!this.price) {
         throw new Error('Price is required!');
       }
 
-      if (!this.countryActualCurrency) {
+      if(!this.countryActualCurrency) {
         throw new Error('Currency is required!');
       }
 
-      if (!this.pricePerSqurFeet) {
+      if(!this.pricePerSqurFeet) {
         throw new Error('Price per squr feet is required!');
       }
 
-      if (!this.maintenanceFees) {
+      if(!this.maintenanceFees) {
         throw new Error('Maintenance fees is required!');
       }
 
-      if (!this.serviceCharges) {
+      if(!this.serviceCharges) {
         throw new Error('Service charges is required!');
       }
 
-      if (
+      if(
         !this.availabilityStatus &&
         !this.propertyAvailabilityStatusOptions.includes(
           this.availabilityStatus
@@ -1850,7 +1852,7 @@ export class EditPropertyListingComponent
       // End Financial Details
 
       // Features & Amenities
-      if (this.featureAmenities.length === 0) {
+      if(this.featureAmenities.length === 0) {
         throw new Error('Feature amenities is required!');
       }
       // End Features & Amenities
@@ -1866,21 +1868,21 @@ export class EditPropertyListingComponent
       // End Media
 
       // Listing Management
-      if (!this.listingDate) {
+      if(!this.listingDate) {
         throw new Error('Property listing date is required!');
       }
 
-      if (!this.AddedBy) {
+      if(!this.AddedBy) {
         throw new Error('Select the agent of the property!');
       }
       // End Listing Management
 
       // Administrative & Internal Use
-      if (!this.listingDate) {
+      if(!this.listingDate) {
         throw new Error('Property listing date is required!');
       }
 
-      if (
+      if(
         !this.verificationStatus &&
         !this.propertyVerificationStatusOptions.includes(
           this.verificationStatus
@@ -1891,18 +1893,18 @@ export class EditPropertyListingComponent
         );
       }
 
-      if (
+      if(
         !this.priority &&
         !this.propertyPriorityOptions.includes(this.priority)
       ) {
         throw new Error('Property priority is required, select from the list!');
       }
 
-      if (!this.status && !this.propertyStatusOptions.includes(this.priority)) {
+      if(!this.status && !this.propertyStatusOptions.includes(this.priority)) {
         throw new Error('Property status is required, select from the list!');
       }
 
-      if (!this.internalNote) {
+      if(!this.internalNote) {
         throw new Error('Internal note is required!');
       }
       // End Administrative & Internal Use
@@ -2014,7 +2016,7 @@ export class EditPropertyListingComponent
 
       // Media
       // Append each property image file individually
-      for (let file of this.selcetedPropertyImages) {
+      for(let file of this.selcetedPropertyImages) {
         formData.append('images', file, file.name);
       }
       // Append each property document file individually
@@ -2090,6 +2092,8 @@ export class EditPropertyListingComponent
         'soldDate',
         this.soldDate ? this.soldDate.toISOString().trim() : ''
       );
+
+      formData.append('updator', this.loggedUser?.username)
       // End Administrative & Internal Use
 
       // API calling
@@ -2099,7 +2103,7 @@ export class EditPropertyListingComponent
           this.notification.notification(res.status, res.message);
         })
         .catch((error) => {
-          if (error) {
+          if(error) {
             this.notification.notification(
               error.error.status,
               error.error.message
@@ -2113,8 +2117,8 @@ export class EditPropertyListingComponent
             this.router.navigate(['/dashboard/properties']);
           }, 2000);
         });
-    } catch (error) {
-      if (error) {
+    } catch(error) {
+      if(error) {
         this.notification.notification('error', error as string);
       }
     }

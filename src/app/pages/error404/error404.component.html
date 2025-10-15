@@ -1,4 +1,4 @@
-<div class="error-page-wrapper" [ngClass]="mode ? 'dark-mode' : 'light-mode'">
+<div class="error-page-wrapper" *ngIf="!mode">
   <div class="error-content">
     <div *ngIf="!isUnauthorized; else notFound">
       <h1 class="error-code">404</h1>

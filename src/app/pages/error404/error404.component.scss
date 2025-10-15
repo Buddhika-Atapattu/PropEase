@@ -8,15 +8,7 @@
   transition: background-color 0.3s ease;
   // border-top-left-radius: 50px;
 
-  &.light-mode {
-    background: $light-primary-color;
-    color: $light-text-color;
-  }
-
-  &.dark-mode {
-    background: $dark-secondary-color;
-    color: $dark-text-color;
-  }
+  &.dark-mode
 
   .error-content {
     text-align: center;
@@ -56,5 +48,21 @@
         transform: scale(1.05);
       }
     }
+  }
+}
+
+// Light Theme
+:host-context(html.light){
+  .error-page-wrapper{
+    background: $light-primary-color;
+    color: $light-text-color;
+  }
+}
+
+// Dark Theme
+:host-context(html.dark){
+  .error-page-wrapper{
+    background: $dark-secondary-color;
+    color: $dark-text-color;
   }
 }

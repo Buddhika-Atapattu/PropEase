@@ -1,0 +1,298 @@
+@use "../../../styles/global.scss" as *;
+@use "sass:color";
+
+.main-panel {
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  min-height: 85vh;
+  padding: 2rem;
+
+  .toolbar {
+    width: 100%;
+  }
+
+  .search-field {
+    min-width: clamp(220px, 50vw, 420px);
+  }
+
+  .category-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    .category-chip {
+      font-weight: 600;
+    }
+  }
+
+  /* Tabs — underline indicator height */
+  .notif-tabs {
+    margin-bottom: 1rem;
+  }
+  ::ng-deep
+    .mdc-tab--active
+    .mdc-tab-indicator
+    .mdc-tab-indicator__content--underline {
+    height: 0.175rem;
+  }
+
+  ::ng-deep.mat-mdc-tab-body-content {
+    overflow: hidden !important;
+    margin-top: 2rem;
+  }
+
+  ::ng-deep.mat-mdc-tab-body.mat-mdc-tab-body-active {
+    overflow-y: hidden !important;
+  }
+
+  .notification-row {
+    position: relative;
+    padding: 1rem 2rem;
+    margin: 2rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    border-radius: 1.5rem;
+    &:first-child {
+      margin-top: 0 !important;
+    }
+    &:last-child {
+      margin-bottom: 0 !important;
+    }
+  }
+
+  .time {
+    font-size: 0.75rem;
+    color: #676767;
+    font-weight: 600;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    mat-icon {
+      color: #fff;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  /* badges / chips */
+  .chip-unread {
+    font-weight: 700;
+  }
+  .chip-category,
+  .chip-tag {
+    font-size: 0.7rem;
+    letter-spacing: 0.3px;
+  }
+
+  /* number-row paginator */
+  .number-paginator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 1rem 0 0.25rem;
+    .num {
+      min-width: 40px;
+      height: 36px;
+      line-height: 36px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      &.active {
+        border-width: 2px;
+      }
+    }
+    .nav {
+      min-width: 40px;
+      height: 36px;
+      line-height: 36px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  }
+}
+
+/* Empty state */
+.empty-state {
+  padding: 2rem 1rem;
+  text-align: center;
+  opacity: 0.8;
+  .icon-wrap {
+    display: grid;
+    place-items: center;
+    margin-bottom: 0.5rem;
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+    }
+  }
+}
+
+/* small utility */
+.btn-mark-read {
+  height: 36px;
+}
+
+.visit-btn-wrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(-1rem, 0rem);
+  padding: 0.25rem;
+  border-radius: 10rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  button {
+    mat-icon {
+      width: 30px;
+      height: 30px;
+    }
+  }
+}
+
+/* ───── Dark theme ───── */
+:host-context(html.dark) {
+  .main-panel {
+    background: linear-gradient(
+      145deg,
+      $dark-secondary-color,
+      color.adjust($dark-secondary-color, $lightness: 2%)
+    );
+    color: $dark-text-color;
+
+    mat-chip.chip.online {
+      background: $dark-success-color;
+      color: #0e6800;
+    }
+    mat-chip.chip.offline {
+      background: $dark-error-color;
+      color: #6b1515;
+    }
+
+    /* gold underline */
+    ::ng-deep
+      .mdc-tab--active
+      .mdc-tab-indicator
+      .mdc-tab-indicator__content--underline {
+      background-color: $dark-accent-gold !important;
+      border-color: $dark-accent-gold !important;
+    }
+    ::ng-deep .mat-mdc-tab .mdc-tab__text-label {
+      font-weight: 600;
+      color: $dark-text-color;
+    }
+    ::ng-deep .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+      color: $dark-accent-gold !important;
+    }
+
+    .notification-row {
+      border: 0.125rem solid $dark-accent-gold;
+    }
+    .avatar {
+      background: $dark-accent-gold;
+    }
+
+    .chip-unread {
+      background: color.adjust($dark-accent-gold, $lightness: 10%) !important;
+      color: #3c2b00 !important;
+    }
+
+    .number-paginator {
+      .num.active {
+        border-color: $dark-accent-gold !important;
+        color: $dark-accent-gold !important;
+      }
+      .num {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        color: $dark-text-color;
+      }
+    }
+
+    ::ng-deep.mat-mdc-icon-button {
+      fill: gold;
+      color: gold;
+    }
+    .visit-btn-wrapper button mat-icon {
+      fill: gold;
+    }
+  }
+}
+
+/* ───── Light theme ───── */
+:host-context(html.light) {
+  .main-panel {
+    background: linear-gradient(
+      145deg,
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
+    );
+    color: $light-text-color;
+
+    mat-chip.chip.online {
+      background: $light-success-color;
+      color: #0e6800;
+    }
+    mat-chip.chip.offline {
+      background: $light-error-color;
+      color: #6b1515;
+    }
+
+    /* dark blue underline */
+    ::ng-deep
+      .mdc-tab--active
+      .mdc-tab-indicator
+      .mdc-tab-indicator__content--underline {
+      background-color: $light-accent-blue !important;
+      border-color: $light-accent-blue !important;
+    }
+    ::ng-deep .mat-mdc-tab .mdc-tab__text-label {
+      font-weight: 600;
+      color: $light-text-color;
+    }
+    ::ng-deep .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+      color: $light-accent-blue !important;
+    }
+
+    .notification-row {
+      border: 0.125rem solid royalblue;
+    }
+    .avatar {
+      background: $light-accent-gold;
+    }
+
+    .chip-unread {
+      background: color.adjust($light-accent-gold, $lightness: 5%) !important;
+      color: #5a3d00 !important;
+    }
+
+    .number-paginator {
+      .num.active {
+        border-color: $light-accent-blue !important;
+        color: $light-accent-blue !important;
+      }
+      .num {
+        border-color: rgba(0, 0, 0, 0.15) !important;
+        color: $light-text-color;
+      }
+    }
+
+    ::ng-deep.mat-mdc-icon-button {
+      fill: royalblue;
+      color: royalblue;
+    }
+    .visit-btn-wrapper button mat-icon {
+      fill: royalblue;
+    }
+  }
+}

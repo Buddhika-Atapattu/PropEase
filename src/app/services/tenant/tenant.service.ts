@@ -929,8 +929,8 @@ export class TenantService {
   }
 
   // Download lease agreement
-  public async downloadLeaseAgreement(leaseID: string, type: 'download' | 'view'): Promise<Blob> {
-    const url = `http://localhost:3000/api-lease/lease-agreement-pdf/${leaseID.trim()}/${type}`;
+  public async downloadLeaseAgreement(leaseID: string, type: 'download' | 'view', generator: string): Promise<Blob> {
+    const url = `http://localhost:3000/api-lease/lease-agreement-pdf/${leaseID.trim()}/${type}/${generator.trim()}`;
     return await firstValueFrom(
       this.http.get(url, {responseType: 'blob'})
     );

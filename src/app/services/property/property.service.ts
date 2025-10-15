@@ -585,10 +585,10 @@ export class PropertyService {
   }
 
   // Delete the property
-  public async deleteProperty(id: string): Promise<MSG> {
+  public async deleteProperty(id: string, username: string): Promise<MSG> {
     return firstValueFrom(
       this.http.delete<MSG>(
-        `http://localhost:3000/api-property/delete-property/${id.trim()}`
+        `http://localhost:3000/api-property/delete-property/${id.trim()}/${username.trim()}`,
       )
     );
   }

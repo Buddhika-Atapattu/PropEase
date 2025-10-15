@@ -518,10 +518,14 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
       this.progressBarComponent.start();
 
       const leaseID = this._leaseTableButtonOperationTrigger.data.element.leaseID;
+      console.log(leaseID)
       if(!leaseID) throw new Error("Invalid lease ID");
 
+      if(this.authService.getLoggedUser === null) throw new Error("User not logged in");
+
+
       // Download PDF blob from backend
-      const blob = await this.tenantService.downloadLeaseAgreement(leaseID, 'download');
+      const blob = await this.tenantService.downloadLeaseAgreement(leaseID, 'download', this.authService.getLoggedUser.username);
 
       const actualName = `${leaseID}-lease-agreement.pdf`;
 

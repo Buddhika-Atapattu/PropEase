@@ -154,7 +154,36 @@
     transition: all 0.3s ease-in-out;
   }
 
-  &.dark {
+  h2 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  mat-checkbox {
+    display: flex;
+    align-items: center;
+    h4,
+    p {
+      color: currentColor;
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  p {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .main-panel {
+    padding: 4rem 0 0 0;
+  }
+}
+
+// Dark theme
+:host-context(html.dark) {
+  .main-panel {
     background: linear-gradient(
       145deg,
       $dark-secondary-color,
@@ -181,8 +210,11 @@
       }
     }
   }
+}
 
-  &.light {
+// Light theme
+:host-context(html.light) {
+  .main-panel {
     background: linear-gradient(
       145deg,
       $light-primary-color,
@@ -208,31 +240,5 @@
         border: 0.0159rem solid #83cfff8a;
       }
     }
-  }
-
-  h2 {
-    font-weight: 600;
-    margin-bottom: 1rem;
-  }
-
-  mat-checkbox {
-    display: flex;
-    align-items: center;
-    h4,
-    p {
-      color: currentColor;
-      padding: 0;
-      margin: 0;
-    }
-  }
-
-  p {
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .main-panel {
-    padding: 4rem 0 0 0;
   }
 }

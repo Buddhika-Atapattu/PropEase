@@ -1,0 +1,317 @@
+<div *ngIf="mode !== null" class="main-panel">
+  <div class="container-fluid">
+    <!-- Title -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h1 class="title text-center">Notification Panel</h1>
+      </div>
+    </div>
+    <hr />
+
+    <!-- Toolbar -->
+    <div class="row align-items-center mb-3">
+      <div
+        class="col-12 d-flex flex-wrap gap-2 justify-content-between align-items-center toolbar"
+      >
+        <div class="left d-flex align-items-center gap-2">
+          <mat-chip-set aria-label="connection state">
+            <mat-chip
+              *ngIf="connected$ | async; else offline"
+              class="chip online"
+            >
+              <mat-icon>bolt</mat-icon>&nbsp;Live
+            </mat-chip>
+            <ng-template #offline>
+              <mat-chip class="chip offline">
+                <mat-icon>cloud_off</mat-icon>&nbsp;Offline
+              </mat-chip>
+            </ng-template>
+          </mat-chip-set>
+        </div>
+
+        <div class="right d-flex align-items-center gap-2">
+          <mat-form-field
+            appearance="fill"
+            class="search-field"
+            floatLabel="auto"
+          >
+            <mat-icon matPrefix>search</mat-icon>
+            <input
+              matInput
+              [formControl]="searchCtrl"
+              placeholder="Search title, body, or tags…"
+              aria-label="Search notifications"
+              (keyup.enter)="search(searchCtrl.value || '')"
+            />
+            <button
+              mat-icon-button
+              matSuffix
+              *ngIf="searchCtrl.value"
+              (click)="search('')"
+              aria-label="Clear search"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <button mat-icon-button (click)="refresh()" matTooltip="Refresh">
+            <mat-icon>refresh</mat-icon>
+          </button>
+
+          <ng-container *ngIf="pageItems$ | async as pageItems">
+            <button
+              mat-flat-button
+              class="btn-warning"
+              (click)="markAllVisibleAsRead(pageItems)"
+              [disabled]="!pageItems?.length"
+              matTooltip="Mark current page items as read"
+            >
+              <mat-icon>done_all</mat-icon>&nbsp;Mark Page Read
+            </button>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category chips -->
+    <div class="row mb-2">
+      <div class="col-12">
+        <mat-chip-set aria-label="Filter by category" class="category-chips">
+          <mat-chip-option
+            *ngFor="let cat of categories"
+            [selected]="(activeCategory$ | async) === cat"
+            (selectionChange)="onCategorySelect(cat, $event)"
+            class="category-chip"
+          >
+            {{ cat }}
+          </mat-chip-option>
+        </mat-chip-set>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <mat-tab-group
+      class="notif-tabs"
+      animationDuration="200ms"
+      (selectedIndexChange)="onTabChange($event)"
+    >
+      <mat-tab aria-label="All notifications" class="notification-tab">
+        <ng-template mat-tab-label><span>All</span></ng-template>
+        <ng-template matTabContent>
+          <ng-container *ngTemplateOutlet="listTpl"></ng-container>
+        </ng-template>
+      </mat-tab>
+
+      <mat-tab aria-label="Unread notifications" class="notification-tab">
+        <ng-template mat-tab-label>
+          <span
+            [matBadge]="(unreadCount$ | async) ?? 0"
+            matBadgeColor="warn"
+            matBadgeSize="small"
+            [matBadgeOverlap]="false"
+          >
+            Unread
+          </span>
+        </ng-template>
+        <ng-template matTabContent>
+          <ng-container *ngTemplateOutlet="listTpl"></ng-container>
+        </ng-template>
+      </mat-tab>
+
+      <mat-tab aria-label="Direct notifications" class="notification-tab">
+        <ng-template mat-tab-label><span>Direct</span></ng-template>
+        <ng-template matTabContent>
+          <ng-container *ngTemplateOutlet="listTpl"></ng-container>
+        </ng-template>
+      </mat-tab>
+
+      <mat-tab aria-label="Overall notifications" class="notification-tab">
+        <ng-template mat-tab-label><span>Overall</span></ng-template>
+        <ng-template matTabContent>
+          <ng-container *ngTemplateOutlet="listTpl"></ng-container>
+        </ng-template>
+      </mat-tab>
+    </mat-tab-group>
+
+    <!-- Shared list template -->
+    <ng-template #listTpl>
+      <!-- Loading -->
+      <div class="my-3" *ngIf="loading$ | async">
+        <app-skeleton-loader
+          [Mode]="mode"
+          [width]="'100%'"
+          [height]="'5rem'"
+          [borderRadius]="'0.5rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [Mode]="mode"
+          [width]="'75%'"
+          [height]="'2.5rem'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [Mode]="mode"
+          [width]="'50%'"
+          [height]="'1.25rem'"
+          [borderRadius]="'0.175rem'"
+        ></app-skeleton-loader>
+      </div>
+
+      <!-- Empty -->
+      <ng-container
+        *ngIf="(totalCount$ | async) === 0 && !(loading$ | async); else listContent"
+      >
+        <div class="empty-state">
+          <div class="icon-wrap"><mat-icon>notifications_none</mat-icon></div>
+          <h3>No notifications</h3>
+          <p>When there’s something new, it’ll show up here.</p>
+          <button mat-stroked-button (click)="refresh()">
+            <mat-icon>refresh</mat-icon>&nbsp;Check again
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Rows + Custom Paginator -->
+      <ng-template #listContent>
+        <!-- Rows -->
+        <div
+          class="row notification-row"
+          *ngFor="let n of (pageItems$ | async); trackBy: trackById"
+          [class.unread]="!n.userState?.isRead"
+        >
+          <div
+            class="col-xl-1 col-md-1 col-2 d-flex justify-content-center align-items-center"
+          >
+            <div class="avatar" [attr.data-severity]="n.severity">
+              <!-- <mat-icon aria-hidden="true">{{ iconFor(n) }}</mat-icon> -->
+              <mat-icon aria-hidden="true">{{ n.icon }}</mat-icon>
+            </div>
+          </div>
+
+          <div class="col-xl-8 col-md-8 col-6">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <h6 class="title mb-0">{{ n.title }}</h6>
+
+              <!-- unread chip -->
+              <mat-chip
+                *ngIf="!n.userState?.isRead"
+                class="chip-unread ms-auto"
+                selected
+              >
+                <mat-icon>mark_email_unread</mat-icon>&nbsp;New
+              </mat-chip>
+
+              <!-- category -->
+              <mat-chip
+                *ngIf="n.category"
+                class="chip-category"
+                [disableRipple]="true"
+              >
+                {{ n.category }}
+              </mat-chip>
+
+              <!-- tags -->
+              <ng-container *ngIf="n.tags?.length">
+                <mat-chip
+                  *ngFor="let t of n.tags"
+                  class="chip-tag"
+                  [disableRipple]="true"
+                >
+                  {{ t }}
+                </mat-chip>
+              </ng-container>
+            </div>
+
+            <hr />
+            <p class="mb-2">{{ n.body }}</p>
+          </div>
+
+          <div class="col-xl-3 col-md-3 col-4">
+            <div class="visit-btn-wrapper">
+              <button
+                mat-icon-button
+                (click)="openNotification(n)"
+                aria-label="View notification"
+                matTooltip="View Notification"
+                matTooltipPosition="above"
+                matTooltipClass="tags"
+              >
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </div>
+            <div
+              class="d-flex justify-content-end align-items-start flex-column h-100 gap-1 ms-auto"
+            >
+              <span class="time ms-auto"
+                >{{ n.createdAt | date: 'medium' }}</span
+              >
+              <button
+                mat-stroked-button
+                *ngIf="!n.userState?.isRead"
+                (click)="markRead(n._id)"
+                class="btn-mark-read ms-auto"
+              >
+                <mat-icon>done</mat-icon>&nbsp;Mark read
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom number-row paginator -->
+        <div class="number-paginator">
+          <button
+            mat-icon-button
+            class="nav skip"
+            (click)="skipBack()"
+            [disabled]="(currentPage$ | async)! <= 1"
+            matTooltip="Skip back 3"
+          >
+            <mat-icon>keyboard_double_arrow_left</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            class="nav step"
+            (click)="prevPage()"
+            [disabled]="(currentPage$ | async)! <= 1"
+            matTooltip="Previous"
+          >
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+
+          <ng-container *ngIf="pageNumbers$ | async as pages">
+            <button
+              mat-stroked-button
+              class="num"
+              *ngFor="let p of pages"
+              [class.active]="p === (currentPage$ | async)!"
+              (click)="goToPage(p)"
+            >
+              {{ p }}
+            </button>
+          </ng-container>
+
+          <button
+            mat-icon-button
+            class="nav step"
+            (click)="nextPage()"
+            [disabled]="(currentPage$ | async)! >= (totalPages$ | async)!"
+            matTooltip="Next"
+          >
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            class="nav skip"
+            (click)="skipForward()"
+            [disabled]="(currentPage$ | async)! >= (totalPages$ | async)!"
+            matTooltip="Skip forward 3"
+          >
+            <mat-icon>keyboard_double_arrow_right</mat-icon>
+          </button>
+        </div>
+      </ng-template>
+    </ng-template>
+  </div>
+</div>

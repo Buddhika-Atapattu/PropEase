@@ -29,6 +29,8 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatBadgeModule} from '@angular/material/badge';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatMenuModule} from '@angular/material/menu';
+import {NotificationComponent} from '../../components/shared/notification/notification';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -44,7 +46,8 @@ import {MatMenuModule} from '@angular/material/menu';
     MatButtonModule,
     MatBadgeModule,
     MatTooltipModule,
-    MatMenuModule
+    MatMenuModule,
+    NotificationComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -62,22 +65,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   //Mobile
   protected isMobileMenuOpen: boolean = false;
-
-
-  notifications = [
-    {id: 1, title: 'Payment received', body: 'Tenant John Doe paid $1200 rent.', isRead: false},
-    {id: 2, title: 'Lease expiring', body: 'Lease #L-2304 expires in 3 days.', isRead: false},
-    {id: 3, title: 'System update', body: 'Scheduled maintenance on Friday 10 PM.', isRead: true},
-  ];
-
-  get unreadCount(): number {
-    return this.notifications.filter(n => !n.isRead).length;
-  }
-
-  markAsRead(n: any) {
-    n.isRead = true;
-    // TODO: call your backend to persist read status
-  }
 
   constructor (
     private windowRef: WindowsRefService,

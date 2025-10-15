@@ -6,22 +6,22 @@ import {
   PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
-import { WindowsRefService } from '../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { filter, Subscription } from 'rxjs';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { APIsService, UsersType } from '../../services/APIs/apis.service';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
-import { CryptoService } from '../../services/cryptoService/crypto.service';
-import { AuthService, BaseUser } from '../../services/auth/auth.service';
-import { PropertyFilterDialogComponent } from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
-import { MatDialog } from '@angular/material/dialog';
-import { ConfirmationComponent } from '../../components/dialogs/confirmation/confirmation.component';
-import { NotificationComponent } from '../../components/dialogs/notification/notification.component';
-import { HttpErrorResponse } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {filter, Subscription} from 'rxjs';
+import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
+import {APIsService, MSG_DATA_TYPE, UsersType} from '../../services/APIs/apis.service';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
+import {SkeletonLoaderComponent} from '../../components/shared/skeleton-loader/skeleton-loader.component';
+import {CryptoService} from '../../services/cryptoService/crypto.service';
+import {AuthService, BaseUser} from '../../services/auth/auth.service';
+import {PropertyFilterDialogComponent} from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
+import {MatDialog} from '@angular/material/dialog';
+import {ConfirmationComponent} from '../../components/dialogs/confirmation/confirmation.component';
+import {NotificationComponent} from '../../components/dialogs/notification/notification.component';
+import {HttpErrorResponse, HttpHeaderResponse} from '@angular/common/http';
+import {FormsModule} from '@angular/forms';
 
 @Component({
   selector: 'app-users',
@@ -76,7 +76,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     'gif',
   ];
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
@@ -95,7 +95,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -113,17 +113,17 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   private iconMaker() {
     const iconMap = [
-      { name: 'view', path: '/Images/Icons/view.svg' },
-      { name: 'edit', path: '/Images/Icons/pencil-square.svg' },
-      { name: 'delete', path: '/Images/Icons/delete.svg' },
-      { name: 'add-new-user', path: '/Images/Icons/add-new-user.svg' },
-      { name: 'search', path: '/Images/Icons/search.svg' },
-      { name: 'filter', path: '/Images/Icons/filter.svg' },
-      { name: 'list', path: '/Images/Icons/list.svg' },
-      { name: 'lineColumns', path: '/Images/Icons/line-columns.svg' },
+      {name: 'view', path: '/Images/Icons/view.svg'},
+      {name: 'edit', path: '/Images/Icons/pencil-square.svg'},
+      {name: 'delete', path: '/Images/Icons/delete.svg'},
+      {name: 'add-new-user', path: '/Images/Icons/add-new-user.svg'},
+      {name: 'search', path: '/Images/Icons/search.svg'},
+      {name: 'filter', path: '/Images/Icons/filter.svg'},
+      {name: 'list', path: '/Images/Icons/list.svg'},
+      {name: 'lineColumns', path: '/Images/Icons/line-columns.svg'},
     ];
 
-    for (let icon of iconMap) {
+    for(let icon of iconMap) {
       this.matIconRegistry.addSvgIcon(
         icon.name.toString(),
         this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path.toString())
@@ -138,17 +138,17 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.loading = true;
       this.resetData();
       const users = await this.APIsService.getAllUsers();
-      if (!users) throw new Error("Users not found!");
+      if(!users) throw new Error("Users not found!");
       const usersWithoutLoggedUser = users.filter(
         (user) => user.username !== this.LOGGED_USER?.username
       );
       this.users = usersWithoutLoggedUser;
       this.makePagination(usersWithoutLoggedUser, 0)
     }
-    catch (error) {
+    catch(error) {
       console.log(error);
-      if (error instanceof HttpErrorResponse) {
-        if (error.status >= 400 && error.status <= 500) {
+      if(error instanceof HttpErrorResponse) {
+        if(error.status >= 400 && error.status <= 500) {
           this.notification.notification("error", error.error.message);
         }
         else {
@@ -170,11 +170,11 @@ export class UsersComponent implements OnInit, OnDestroy {
     try {
       this.loading = true;
       const safeInput = input.trim().toLowerCase();
-      if (!safeInput) {
+      if(!safeInput) {
         this.usersDataInit();
         return;
       }
-      if (!this.users) throw new Error("Users not found!");
+      if(!this.users) throw new Error("Users not found!");
       const usersWithoutLoggedUser = this.users.filter(
         (user) => user.username !== this.LOGGED_USER?.username
       );
@@ -185,10 +185,10 @@ export class UsersComponent implements OnInit, OnDestroy {
       )
       this.makePagination(filteredUsers, 0)
     }
-    catch (error) {
+    catch(error) {
       console.log(error);
-      if (error instanceof HttpErrorResponse) {
-        if (error.status >= 400 && error.status <= 500) {
+      if(error instanceof HttpErrorResponse) {
+        if(error.status >= 400 && error.status <= 500) {
           this.notification.notification("error", error.error.message);
         }
         else {
@@ -209,7 +209,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     try {
       this.loading = true;
 
-      if (!this.users) throw new Error("Users not found!");
+      if(!this.users) throw new Error("Users not found!");
 
       const usersWithoutLoggedUser = this.users.filter(
         user => user.username !== this.LOGGED_USER?.username
@@ -220,10 +220,10 @@ export class UsersComponent implements OnInit, OnDestroy {
 
       this.makePagination(usersWithoutLoggedUser, safeIndex)
 
-    } catch (error) {
+    } catch(error) {
       console.log(error);
-      if (error instanceof HttpErrorResponse) {
-        if (error.status >= 400 && error.status <= 500) {
+      if(error instanceof HttpErrorResponse) {
+        if(error.status >= 400 && error.status <= 500) {
           this.notification.notification("error", error.error.message);
         } else {
           this.notification.notification("error", "Something went wrong");
@@ -239,7 +239,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   //<============================================================ PAGE INDEX THREE PAGES BACKWORD ============================================================>
   protected async previousPage(): Promise<void> {
-    if (this.currentPageIndex > 0) {
+    if(this.currentPageIndex > 0) {
       this.currentPageIndex = Math.max(0, this.currentPageIndex - 3);
       this.makePagination(this.users.filter(u => u.username !== this.LOGGED_USER?.username), this.currentPageIndex);
     }
@@ -251,7 +251,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     const usersWithoutLoggedUser = this.users.filter(u => u.username !== this.LOGGED_USER?.username);
     const totalPages = Math.ceil(usersWithoutLoggedUser.length / this.limit);
 
-    if (this.currentPageIndex < totalPages - 1) {
+    if(this.currentPageIndex < totalPages - 1) {
       this.currentPageIndex = Math.min(totalPages - 1, this.currentPageIndex + 3);
       this.makePagination(usersWithoutLoggedUser, this.currentPageIndex);
     }
@@ -295,7 +295,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     const start = Math.max(1, current - 2);
     const end = Math.min(totalPages, current + 2);
 
-    return Array.from({ length: end - start + 1 }, (_, i) => i + start);
+    return Array.from({length: end - start + 1}, (_, i) => i + start);
   }
   //<============================================================ END PREPAIRE PAGINATION NUMBER ARRAY ============================================================>
 
@@ -313,7 +313,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   //Create user
   protected createUserAvailable(): boolean {
-    if (!this.LOGGED_USER) return false;
+    if(!this.LOGGED_USER) return false;
     return (
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
@@ -325,7 +325,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   // View user
   protected viewUserAvailable(): boolean {
-    if (!this.LOGGED_USER) return false;
+    if(!this.LOGGED_USER) return false;
     return (
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
@@ -337,7 +337,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   // View user
   protected updateUserAvailable(): boolean {
-    if (!this.LOGGED_USER) return false;
+    if(!this.LOGGED_USER) return false;
     return (
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
@@ -349,7 +349,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   // Delete user
   protected deleteUserAvailable(): boolean {
-    if (!this.LOGGED_USER) return false;
+    if(!this.LOGGED_USER) return false;
     return (
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
@@ -362,7 +362,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   // End logged user actions
 
   protected convertTheViewStyle(style: string) {
-    if (style === 'grid') {
+    if(style === 'grid') {
       this.isColView = true;
       this.isListView = false;
     } else {
@@ -372,19 +372,19 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   protected detectUserImage(image: string, gender: string): string {
-    if (typeof image === 'string') {
+    if(typeof image === 'string') {
       const imageArray: string[] = image ? image.split('/') : [];
-      if (imageArray.length > 0) {
-        if (
+      if(imageArray.length > 0) {
+        if(
           this.definedImageExtentionArray.includes(
             imageArray[imageArray.length - 1].split('.')[1]
           )
         ) {
           this.definedImage = image;
         } else {
-          if (gender.toLowerCase() === 'male') {
+          if(gender.toLowerCase() === 'male') {
             this.definedImage = this.definedMaleDummyImageURL;
-          } else if (gender.toLowerCase() === 'female') {
+          } else if(gender.toLowerCase() === 'female') {
             this.definedImage = this.definedWomanDummyImageURL;
           } else {
             this.definedImage = this.definedMaleDummyImageURL;
@@ -400,48 +400,57 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   protected async viewUser(data: string) {
-    if (this.isBrowser && data !== '') {
+    if(this.isBrowser && data !== '') {
       const username = await this.APIsService.generateToken(data);
       this.router.navigate(['/dashboard/view-user-profile', username.token]);
     }
   }
 
   protected async editUser(data: string) {
-    if (this.isBrowser && data !== '') {
+    if(this.isBrowser && data !== '') {
       const username = await this.APIsService.generateToken(data);
       this.router.navigate(['/dashboard/edit-user', username.token]);
     }
   }
 
   protected deleteUser(username: string, name: string) {
-    const dialogRef = this.dialog.open(ConfirmationComponent, {
-      width: 'auto',
-      height: 'auto',
-      data: {
-        title: `Delete ${name}`,
-        message: `Are you sure you want to delete ${name}?`,
-        isConfirm: true,
-      },
-    });
+    try {
+      if(!username) throw new Error('Username cannot be empty!');
+      if(!name) throw new Error('Name cannot be empty!');
+      const dialogRef = this.dialog.open(ConfirmationComponent, {
+        width: 'auto',
+        height: 'auto',
+        data: {
+          title: `Delete ${name}`,
+          message: `Are you sure you want to delete ${name}?`,
+          isConfirm: true,
+        },
+      });
 
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if (result?.isConfirm === true) {
-        await this.APIsService.deleteUserByUsername(username)
-          .then((res) => {
-            if (res) {
+      dialogRef.afterClosed().subscribe(async (result) => {
+        try {
+          if(!result?.isConfirm) return;
+          if(!this.LOGGED_USER) throw new Error("User must logged into the system");
+          await this.APIsService.deleteUserByUsername(username, this.LOGGED_USER?.username)
+            .then((res) => {
               this.notification.notification(res.status, res.message);
-              setTimeout(() => {
-                this.usersDataInit();
-              }, 500);
-            }
-          })
-          .catch((res) => {
-            if (res) {
-              this.notification.notification(res.status, res.message);
-            }
-          });
-      }
-    });
+              this.usersDataInit();
+            })
+            .catch((err: HttpErrorResponse) => {
+              this.notification.notification(err.error.error, err.error.message);
+            })
+        }
+        catch(err) {
+          this.notification.notification('error', err as string);
+        }
+      });
+    }
+    catch(error) {
+      this.notification.notification('error', error as string);
+    }
+
+
+
   }
 
   ngOnDestroy(): void {

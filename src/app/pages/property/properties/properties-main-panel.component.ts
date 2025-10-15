@@ -9,25 +9,25 @@ import {
   ViewChild,
   ElementRef,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { AuthService, BaseUser } from '../../../services/auth/auth.service';
-import { MatDialog } from '@angular/material/dialog';
-import { PropertyFilterDialogComponent } from '../../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Router} from '@angular/router';
+import {Subscription} from 'rxjs';
+import {ActivatedRoute} from '@angular/router';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
+import {AuthService, BaseUser} from '../../../services/auth/auth.service';
+import {MatDialog} from '@angular/material/dialog';
+import {PropertyFilterDialogComponent} from '../../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
 import {
   PropertyService,
   Property,
   PropertyFilter,
   BackEndPropertyData,
 } from '../../../services/property/property.service';
-import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
-import { NotificationComponent } from '../../../components/dialogs/notification/notification.component';
-import { PropertyViewCardComponent } from '../../../components/property-view-card/property-view-card.component';
+import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
+import {NotificationComponent} from '../../../components/dialogs/notification/notification.component';
+import {PropertyViewCardComponent} from '../../../components/property-view-card/property-view-card.component';
 interface filterDialogData {
   minPrice: number;
   maxPrice: number;
@@ -37,7 +37,7 @@ interface filterDialogData {
   type: string;
   status: string;
 }
-import { FormsModule } from '@angular/forms';
+import {FormsModule} from '@angular/forms';
 
 interface apiDataTypeForProperties {
   properties: Property[];
@@ -61,7 +61,7 @@ interface apiDataTypeForProperties {
 export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
   @ViewChild(NotificationComponent) notification!: NotificationComponent;
-  @ViewChild('searchInput', { static: true })
+  @ViewChild('searchInput', {static: true})
   searchInput!: ElementRef<HTMLInputElement>;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -90,7 +90,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   protected isColView: boolean = false;
   protected isListView: boolean = true;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
@@ -111,7 +111,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -134,19 +134,19 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
 
   private iconMaker() {
     const iconMap = [
-      { name: 'view', path: '/Images/Icons/view.svg' },
-      { name: 'listing', path: '/Images/Icons/listing.svg' },
-      { name: 'edit', path: '/Images/Icons/pencil-square.svg' },
-      { name: 'delete', path: '/Images/Icons/delete.svg' },
-      { name: 'add-new-user', path: '/Images/Icons/add-new-user.svg' },
-      { name: 'search', path: '/Images/Icons/search.svg' },
-      { name: 'filter', path: '/Images/Icons/filter.svg' },
-      { name: 'reset', path: '/Images/Icons/reset.svg' },
-      { name: 'list', path: '/Images/Icons/list.svg' },
-      { name: 'lineColumns', path: '/Images/Icons/line-columns.svg' },
+      {name: 'view', path: '/Images/Icons/view.svg'},
+      {name: 'listing', path: '/Images/Icons/listing.svg'},
+      {name: 'edit', path: '/Images/Icons/pencil-square.svg'},
+      {name: 'delete', path: '/Images/Icons/delete.svg'},
+      {name: 'add-new-user', path: '/Images/Icons/add-new-user.svg'},
+      {name: 'search', path: '/Images/Icons/search.svg'},
+      {name: 'filter', path: '/Images/Icons/filter.svg'},
+      {name: 'reset', path: '/Images/Icons/reset.svg'},
+      {name: 'list', path: '/Images/Icons/list.svg'},
+      {name: 'lineColumns', path: '/Images/Icons/line-columns.svg'},
     ];
 
-    for (let icon of iconMap) {
+    for(let icon of iconMap) {
       this.matIconRegistry.addSvgIcon(
         icon.name.toString(),
         this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path.toString())
@@ -156,7 +156,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
 
   // View style
   protected convertTheViewStyle(style: string) {
-    if (style === 'grid') {
+    if(style === 'grid') {
       this.isColView = true;
       this.isListView = false;
     } else {
@@ -174,7 +174,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     // properties: Property[]
     const data = await this.propertyService.getAllProperties();
     const properties: Property[] = data.data as Property[];
-    if (!properties || properties.length === 0) return 0;
+    if(!properties || properties.length === 0) return 0;
     return Math.max(...properties.map(prop => prop.price || 0));
   }
 
@@ -195,7 +195,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     });
 
     dialogRef.afterClosed().subscribe((result) => {
-      if (result !== null && result !== undefined) {
+      if(result !== null && result !== undefined) {
         this.filterDialogRefData = result;
         this.callTheSearchAPI();
       }
@@ -217,7 +217,8 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
 
   // Derected property delete and refresh the list
   protected onPropertyDeleted(event: boolean): void {
-    if (event) {
+    console.log(event);
+    if(event) {
       this.callTheSearchAPI(); // Refresh the list
     }
   }
@@ -248,7 +249,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
           filterData
         )
         .then((response) => {
-          if (response.status === 'success') {
+          if(response.status === 'success') {
             this.properties = response.data.properties;
             this.totalItems = response.data.count;
             this.pageCount = Math.ceil(this.totalItems / this.itemsPerPage);
@@ -259,8 +260,8 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
             throw new Error(response.message);
           }
         });
-    } catch (error: Error | any) {
-      if (error) {
+    } catch(error: Error | any) {
+      if(error) {
         this.notification.notification(
           'error',
           'Failed to fetch properties. Please try again later.'
@@ -283,14 +284,14 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   }
 
   protected async previousPage() {
-    if (this.currentPage > 0) {
+    if(this.currentPage > 0) {
       this.currentPage--;
       await this.callTheSearchAPI();
     }
   }
 
   protected async nextPage() {
-    if (this.currentPage < this.pageCount) {
+    if(this.currentPage < this.pageCount) {
       this.currentPage++;
       await this.callTheSearchAPI();
     }

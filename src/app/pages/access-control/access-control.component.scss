@@ -19,8 +19,11 @@
       margin-bottom: 1rem;
     }
   }
+}
 
-  &.dark {
+// Dark Theme
+:host-context(html.dark) {
+  .main-panel {
     background: linear-gradient(
       145deg,
       $dark-secondary-color,
@@ -36,8 +39,11 @@
       }
     }
   }
+}
 
-  &.light {
+// Light Theme
+:host-context(html.light) {
+  .main-panel {
     background: linear-gradient(
       145deg,
       $light-primary-color,

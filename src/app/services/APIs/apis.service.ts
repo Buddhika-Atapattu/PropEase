@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {
   Component,
   OnInit,
@@ -6,11 +6,11 @@ import {
   Inject,
   PLATFORM_ID,
 } from '@angular/core';
-import { firstValueFrom, Subscription, pipe, take } from 'rxjs';
-import { CryptoService } from '../cryptoService/crypto.service';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { isPlatformBrowser } from '@angular/common';
-import { getCountries } from '@yusifaliyevpro/countries';
+import {firstValueFrom, Subscription, pipe, take} from 'rxjs';
+import {CryptoService} from '../cryptoService/crypto.service';
+import {HttpClient, HttpParams} from '@angular/common/http';
+import {isPlatformBrowser} from '@angular/common';
+import {getCountries} from '@yusifaliyevpro/countries';
 
 export interface CurrencyFormat {
   country: string;
@@ -131,8 +131,8 @@ export interface CountryDetails {
   area: number; // Total area in square kilometers
 
   demonyms?: {
-    eng: { m: string; f: string }; // Demonyms in English
-    [langCode: string]: { m: string; f: string };
+    eng: {m: string; f: string}; // Demonyms in English
+    [langCode: string]: {m: string; f: string};
   };
 
   translations?: {
@@ -252,11 +252,11 @@ export interface NewUser extends BaseUser {
   password: string;
 }
 
-export interface UsersType extends NewUser { }
+export interface UsersType extends NewUser {}
 
-export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> { }
+export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> {}
 
-export interface LoggedUserType extends Omit<NewUser, 'password'> { }
+export interface LoggedUserType extends Omit<NewUser, 'password'> {}
 
 export type AccessMap = {
   [module: string]: string[]; // list of actions allowed
@@ -273,6 +273,8 @@ export interface MSG {
   status: string;
   message: string;
   data: any;
+  token?: string;
+  user?: LoggedUserType;
 }
 
 export interface MSG_WITH_BASEUSER {
@@ -303,7 +305,7 @@ export interface UDER_DOC_TYPES extends MSG_WITH_BASEUSER {
 })
 export class APIsService {
   private isBrowser: boolean;
-  constructor(
+  constructor (
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
@@ -342,7 +344,7 @@ export class APIsService {
     user: FormData,
     username: string
   ): Promise<MSG_DATA_TYPE | null> {
-    if (username) {
+    if(username) {
       console.log(username);
       const data = await firstValueFrom(
         this.http.put<MSG_DATA_TYPE>(
@@ -362,13 +364,13 @@ export class APIsService {
     search?: string
   ): Promise<any> {
     let params = new HttpParams();
-    if (search !== undefined) {
+    if(search !== undefined) {
       params = params.set('search', search.trim());
     }
     return await firstValueFrom(
       this.http.get<object | null>(
         `http://localhost:3000/api-user/users-with-pagination/${start}/${limit}`,
-        { params }
+        {params}
       )
     )
       .then((data) => {
@@ -417,7 +419,7 @@ export class APIsService {
     return await firstValueFrom(
       this.http.post<MSG_DATA_TYPE>(
         'http://localhost:3000/api-user/generate-token',
-        { username }
+        {username}
       )
     );
   }
@@ -497,10 +499,10 @@ export class APIsService {
     return countriesCodes;
   }
 
-  public async deleteUserByUsername(username: string): Promise<MSG_DATA_TYPE> {
+  public async deleteUserByUsername(username: string, deletedBy: string): Promise<MSG_DATA_TYPE> {
     return await firstValueFrom(
       this.http.delete<MSG_DATA_TYPE>(
-        `http://localhost:3000/api-user/user-delete/${username}`
+        `http://localhost:3000/api-user/user-delete/${username}/${deletedBy}`
       )
     );
   }

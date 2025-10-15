@@ -11,25 +11,26 @@ import {
   EventEmitter,
   ChangeDetectorRef,
 } from '@angular/core';
-import { WindowsRefService } from '../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { filter, Subscription } from 'rxjs';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { APIsService, UsersType } from '../../services/APIs/apis.service';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
-import { CryptoService } from '../../services/cryptoService/crypto.service';
-import { AuthService, BaseUser } from '../../services/auth/auth.service';
-import { PropertyFilterDialogComponent } from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {filter, Subscription} from 'rxjs';
+import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
+import {APIsService, UsersType} from '../../services/APIs/apis.service';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
+import {SkeletonLoaderComponent} from '../../components/shared/skeleton-loader/skeleton-loader.component';
+import {CryptoService} from '../../services/cryptoService/crypto.service';
+import {AuthService, BaseUser} from '../../services/auth/auth.service';
+import {PropertyFilterDialogComponent} from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
 import {
   BackEndPropertyData,
   Property,
 } from '../../services/property/property.service';
-import { MatDialog } from '@angular/material/dialog';
-import { ConfirmationComponent } from '../../components/dialogs/confirmation/confirmation.component';
-import { PropertyService } from '../../services/property/property.service';
-import { NotificationComponent } from '../dialogs/notification/notification.component';
+import {MatDialog} from '@angular/material/dialog';
+import {ConfirmationComponent} from '../../components/dialogs/confirmation/confirmation.component';
+import {PropertyService} from '../../services/property/property.service';
+import {NotificationComponent} from '../dialogs/notification/notification.component';
+import {HttpResponse} from '@angular/common/http';
 
 @Component({
   selector: 'app-property-view-card',
@@ -57,7 +58,7 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
   private routeSub: Subscription | null = null;
   private routerSub: Subscription | null = null;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
@@ -76,7 +77,7 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -88,8 +89,8 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    if (this.isBrowser) {
-      if (this.isListView === true) {
+    if(this.isBrowser) {
+      if(this.isListView === true) {
         this.loading = true;
         setTimeout(() => {
           this.loading = false;
@@ -112,15 +113,15 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
 
   private iconMaker() {
     const iconMap = [
-      { name: 'view', path: '/Images/Icons/view.svg' },
-      { name: 'edit', path: '/Images/Icons/pencil-square.svg' },
-      { name: 'delete', path: '/Images/Icons/delete.svg' },
-      { name: 'add-new-user', path: '/Images/Icons/add-new-user.svg' },
-      { name: 'search', path: '/Images/Icons/search.svg' },
-      { name: 'filter', path: '/Images/Icons/filter.svg' },
+      {name: 'view', path: '/Images/Icons/view.svg'},
+      {name: 'edit', path: '/Images/Icons/pencil-square.svg'},
+      {name: 'delete', path: '/Images/Icons/delete.svg'},
+      {name: 'add-new-user', path: '/Images/Icons/add-new-user.svg'},
+      {name: 'search', path: '/Images/Icons/search.svg'},
+      {name: 'filter', path: '/Images/Icons/filter.svg'},
     ];
 
-    for (let icon of iconMap) {
+    for(let icon of iconMap) {
       this.matIconRegistry.addSvgIcon(
         icon.name.toString(),
         this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path.toString())
@@ -159,13 +160,13 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
   }
 
   protected gotoTheProperty(propertyID: string) {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.router.navigate(['/dashboard/property-view', propertyID]);
     }
   }
 
   protected gotoThePropertyEdit(propertyID: string) {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.router.navigate(['/dashboard/property-edit', propertyID]);
     }
   }
@@ -180,12 +181,16 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
     });
 
     dialogRef.afterClosed().subscribe(async (result) => {
-      if (result?.isConfirm === true) {
+      if(result?.isConfirm === true) {
         try {
-          const respond = await this.propertService.deleteProperty(id);
+          if(this.LOGGED_USER === null) {
+            throw new Error('User not authenticated');
+          }
+          const respond = await this.propertService.deleteProperty(id, this.LOGGED_USER?.username);
+          console.log(respond);
           this.notification.notification(respond.status, respond.message);
           this.propertyDeleted.emit(true);
-        } catch (error: any) {
+        } catch(error: any) {
           this.notification.notification('error', error.message);
         }
       } else {
@@ -195,10 +200,10 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
   }
 
   ngOnDestroy() {
-    if (this.modeSub) {
+    if(this.modeSub) {
       this.modeSub.unsubscribe();
     }
-    if (this.routeSub) {
+    if(this.routeSub) {
       this.routeSub.unsubscribe();
     }
   }
