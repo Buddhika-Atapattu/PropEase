@@ -1,43 +1,127 @@
-# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# ======================================================
+# 🔹 Angular Frontend – .gitignore (Optimized)
+# ======================================================
 
-# Compiled output
-/dist
-/tmp
-/out-tsc
-/bazel-out
-/src/environments
+# ---------------------------
+# Build & Output Directories
+# ---------------------------
+dist/
+tmp/
+temp/
+out/
+out-tsc/
+bazel-out/
+.angular/
+.angular/cache/
+.angular-build/
+.angular-server/
+.angular-universal/
+.angularSSR/
 
-# Node
-/node_modules
-npm-debug.log
-yarn-error.log
+# ---------------------------
+# Node Modules
+# ---------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+package-lock.json.*
+.yarn-integrity
 
-# IDEs and editors
+# ---------------------------
+# Environment Files
+# ---------------------------
+src/environments/
+.env
+.env.*
+!.env.example      # Keep template for onboarding
+
+# ---------------------------
+# IDEs & Editors
+# ---------------------------
 .idea/
+.vscode/
 .project
 .classpath
 .c9/
 *.launch
 .settings/
 *.sublime-workspace
+*.sublime-project
+.history/
+*.swp
+*.swo
 
-# Visual Studio Code
-.vscode/*
+# Allow VSCode workspace configurations (recommended)
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.history/*
 
-# Miscellaneous
-/.angular/cache
-.sass-cache/
-/connect.lock
-/coverage
-/libpeerconnection.log
+# ---------------------------
+# Testing & Coverage
+# ---------------------------
+coverage/
 testem.log
-/typings
+karma-coverage/
+jest-coverage/
+.nyc_output/
 
-# System files
+# ---------------------------
+# Cache & Temp Files
+# ---------------------------
+.sass-cache/
+connect.lock
+typings/
+.libpeerconnection.log
+.cache/
+.tmp/
+.logs/
+*.log
+
+# ---------------------------
+# OS-specific
+# ---------------------------
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ---------------------------
+# Miscellaneous
+# ---------------------------
+*.local
+*.bak
+*.orig
+*.rej
+*.tmp
+*.temp
+*.swp
+*.lock
+*.tgz
+
+# ---------------------------
+# Angular Universal / SSR / Electron Artifacts
+# ---------------------------
+/server/
+main.server.ts
+dist-server/
+dist-electron/
+electron-build/
+electron-dist/
+release/
+*.asar
+
+# ---------------------------
+# Generated Assets (optional)
+# Uncomment if you want to ignore compiled or copied assets
+# ---------------------------
+# src/assets/generated/
+# src/assets/temp/
+# src/assets/cache/
+
+# ---------------------------
+# Allow versioning of important static assets if needed
+# ---------------------------
+!/src/assets/.gitkeep
+!/src/assets/README.md
