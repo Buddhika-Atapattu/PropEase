@@ -17,26 +17,26 @@ import {
   MatPaginatorModule,
   PageEvent,
 } from '@angular/material/paginator';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { Sort, MatSortModule, MatSort } from '@angular/material/sort';
-import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
+import {Sort, MatSortModule, MatSort} from '@angular/material/sort';
+import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {ActivatedRoute} from '@angular/router';
 import {
   APIsService,
   LoggedUserType,
   UsersType,
 } from '../../../../services/APIs/apis.service';
-import { SkeletonLoaderComponent } from '../../../shared/skeleton-loader/skeleton-loader.component';
-import { AuthService } from '../../../../services/auth/auth.service';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { PaginatorComponent } from '../../../shared/paginator/paginator.component';
+import {SkeletonLoaderComponent} from '../../../shared/skeleton-loader/skeleton-loader.component';
+import {AuthService} from '../../../../services/auth/auth.service';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {PaginatorComponent} from '../../../shared/paginator/paginator.component';
 import {
-  NotificationComponent,
+  NotificationDialogComponent,
   NotificationType,
 } from '../../../dialogs/notification/notification.component';
-import { ProgressBarComponent } from '../../../dialogs/progress-bar/progress-bar.component';
+import {ProgressBarComponent} from '../../../dialogs/progress-bar/progress-bar.component';
 import {
   TenantService,
 } from '../../../../services/tenant/tenant.service';
@@ -83,7 +83,7 @@ export interface CustomTableColumn {
     SkeletonLoaderComponent,
     MatTooltipModule,
     PaginatorComponent,
-    NotificationComponent,
+    NotificationDialogComponent,
     ProgressBarComponent,
   ],
   templateUrl: './tenant-table.component.html',
@@ -161,10 +161,10 @@ export class TenantTableComponent
   @Output() notificationChange = new EventEmitter<NotificationType>();
 
   // View child components
-  @ViewChild(ProgressBarComponent, { static: true })
+  @ViewChild(ProgressBarComponent, {static: true})
   progress!: ProgressBarComponent;
-  @ViewChild(NotificationComponent, { static: true })
-  notificationComponent!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent, {static: true})
+  NotificationDialogComponent!: NotificationDialogComponent;
 
   // Table data
   protected displayedColumnKeys: string[] = [];
@@ -181,34 +181,34 @@ export class TenantTableComponent
   protected definedImage: string =
     '/Images/user-images/dummy-user/dummy-user.jpg';
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
     private apiService: APIsService,
     private authService: AuthService,
     private tenantService: TenantService
-  ) { }
+  ) {}
 
   async ngOnInit() {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
     }
   }
 
-  ngAfterViewInit() { }
+  ngAfterViewInit() {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
+    if(changes['data']) {
       this.tableButtonAction = this.buttonAction.type.trim().toLowerCase();
       this.tableButtonOperation = this.buttonOperation.type
         .trim()
         .toLowerCase();
       this.dataSource.data = this.data;
     }
-    if (changes['columns']) {
+    if(changes['columns']) {
       this.displayedColumnKeys = this.columns.map((c) => c.key);
     }
   }
@@ -311,13 +311,13 @@ export class TenantTableComponent
   }
 
   protected handleOperationButtonTrigger(data: ButtonDataType | null) {
-    if (!data) return;
+    if(!data) return;
 
     const userData = this.dataSource.data.filter((item) =>
       item.name.toLowerCase().includes(data.name.toLowerCase())
     );
 
-    if (userData.length === 1) {
+    if(userData.length === 1) {
       const user = {
         type: data.type,
         username: userData[0].username,
@@ -340,11 +340,11 @@ export class TenantTableComponent
   }
 
   protected handleActionButtonTrigger(data: ButtonDataType | null) {
-    if (!data) return;
+    if(!data) return;
     const userData = this.dataSource.data.filter((item) =>
       item.name.toLowerCase().includes(data.name.toLowerCase())
     );
-    if (userData.length === 1) {
+    if(userData.length === 1) {
       const user = {
         type: data.type,
         username: userData[0].username,
@@ -368,14 +368,14 @@ export class TenantTableComponent
 
   //<======================= Sort Data =======================>
   protected sortData(sort: Sort, data?: any[]): void {
-    if (!this.tenantService.isTenantArray(this.dataSource.data)) {
+    if(!this.tenantService.isTenantArray(this.dataSource.data)) {
       return;
     }
 
     const sourceData = (data || this.dataSource.data).slice();
     const isAsc = sort.direction === 'asc';
 
-    if (!sort.active || sort.direction === '') {
+    if(!sort.active || sort.direction === '') {
       this.dataSource.data = sourceData;
       return;
     }
@@ -386,11 +386,11 @@ export class TenantTableComponent
   }
 
   private universalCompare(a: any, b: any, isAsc: boolean): number {
-    if (a == null && b != null) return isAsc ? -1 : 1;
-    if (a != null && b == null) return isAsc ? 1 : -1;
-    if (a == null && b == null) return 0;
+    if(a == null && b != null) return isAsc ? -1 : 1;
+    if(a != null && b == null) return isAsc ? 1 : -1;
+    if(a == null && b == null) return 0;
 
-    if (typeof a === 'string' && typeof b === 'string') {
+    if(typeof a === 'string' && typeof b === 'string') {
       return a.localeCompare(b) * (isAsc ? 1 : -1);
     }
 
@@ -400,9 +400,9 @@ export class TenantTableComponent
 
   //<======================= Image Checker =======================>
   protected imageGenerator(image: string): string {
-    if (image) {
+    if(image) {
       const imagetype = image.split('.')[1];
-      if (imagetype !== '') {
+      if(imagetype !== '') {
         return image;
       } else {
         return this.definedMaleDummyImageURL;

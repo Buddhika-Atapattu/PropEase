@@ -17,7 +17,7 @@ import {PropertyService, BackEndPropertyData} from '../../../services/property/p
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {CryptoService} from '../../../services/cryptoService/crypto.service';
 import {HttpErrorResponse} from '@angular/common/http';
-import {NotificationComponent} from '../../../components/dialogs/notification/notification.component';
+import {NotificationDialogComponent} from '../../../components/dialogs/notification/notification.component';
 import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
 import {APIsService} from '../../../services/APIs/apis.service';
@@ -40,12 +40,12 @@ interface ScannedFilePreview {
 @Component({
   selector: 'app-view-lease-agreement',
   standalone: true,
-  imports: [CommonModule, NotificationComponent, ProgressBarComponent, SkeletonLoaderComponent, MatDialogModule, MatIconModule, SafeUrlPipe],
+  imports: [CommonModule, NotificationDialogComponent, ProgressBarComponent, SkeletonLoaderComponent, MatDialogModule, MatIconModule, SafeUrlPipe],
   templateUrl: './view-lease-agreement.html',
   styleUrl: './view-lease-agreement.scss'
 })
 export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild(NotificationComponent) notificationComponent!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent) NotificationDialogComponent!: NotificationDialogComponent;
   @ViewChild(ProgressBarComponent) progressBarComponent !: ProgressBarComponent;
 
   protected mode: boolean | null = null;
@@ -186,10 +186,10 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
     }
     catch(error) {
       console.error(error);
-      if(error instanceof HttpErrorResponse) this.notificationComponent.notification('error', error.message);
-      else if(typeof error === 'string') this.notificationComponent.notification('error', error);
-      else if(error instanceof Error) this.notificationComponent.notification('error', error.message);
-      else this.notificationComponent.notification('error', 'Failed to load lease agreement.');
+      if(error instanceof HttpErrorResponse) this.NotificationDialogComponent.notification('error', error.message);
+      else if(typeof error === 'string') this.NotificationDialogComponent.notification('error', error);
+      else if(error instanceof Error) this.NotificationDialogComponent.notification('error', error.message);
+      else this.NotificationDialogComponent.notification('error', 'Failed to load lease agreement.');
     }
     finally {
       setTimeout(() => {
@@ -214,10 +214,10 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
     }
     catch(error) {
       console.error(error);
-      if(error instanceof HttpErrorResponse) this.notificationComponent.notification('error', error.message);
-      else if(typeof error === 'string') this.notificationComponent.notification('error', error);
-      else if(error instanceof Error) this.notificationComponent.notification('error', error.message);
-      else this.notificationComponent.notification('error', 'Failed to load property data.');
+      if(error instanceof HttpErrorResponse) this.NotificationDialogComponent.notification('error', error.message);
+      else if(typeof error === 'string') this.NotificationDialogComponent.notification('error', error);
+      else if(error instanceof Error) this.NotificationDialogComponent.notification('error', error.message);
+      else this.NotificationDialogComponent.notification('error', 'Failed to load property data.');
     }
   }
   //<============================================== END LOAD SELECTED PROPERTY DATA ==============================================>
@@ -237,10 +237,10 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
     }
     catch(error) {
       console.error(error);
-      if(error instanceof HttpErrorResponse) this.notificationComponent.notification('error', error.message);
-      else if(typeof error === 'string') this.notificationComponent.notification('error', error);
-      else if(error instanceof Error) this.notificationComponent.notification('error', error.message);
-      else this.notificationComponent.notification('error', 'Failed to load tenant data.');
+      if(error instanceof HttpErrorResponse) this.NotificationDialogComponent.notification('error', error.message);
+      else if(typeof error === 'string') this.NotificationDialogComponent.notification('error', error);
+      else if(error instanceof Error) this.NotificationDialogComponent.notification('error', error.message);
+      else this.NotificationDialogComponent.notification('error', 'Failed to load tenant data.');
     }
   }
   //<============================================== END LOAD TENANT DATA ==============================================>
@@ -269,10 +269,10 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
 
     } catch(error) {
       console.error(error);
-      if(error instanceof HttpErrorResponse) this.notificationComponent.notification('error', error.message);
-      else if(typeof error === 'string') this.notificationComponent.notification('error', error);
-      else if(error instanceof Error) this.notificationComponent.notification('error', error.message);
-      else this.notificationComponent.notification('error', 'Unable to load tenant view.');
+      if(error instanceof HttpErrorResponse) this.NotificationDialogComponent.notification('error', error.message);
+      else if(typeof error === 'string') this.NotificationDialogComponent.notification('error', error);
+      else if(error instanceof Error) this.NotificationDialogComponent.notification('error', error.message);
+      else this.NotificationDialogComponent.notification('error', 'Unable to load tenant view.');
     }
   }
 
@@ -479,10 +479,10 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
     }
     catch(error) {
       console.error(error)
-      if(error instanceof HttpErrorResponse) this.notificationComponent.notification('error', error.message);
-      else if(typeof error === 'string') this.notificationComponent.notification('error', error);
-      else if(error instanceof Error) this.notificationComponent.notification('error', error.message);
-      else this.notificationComponent.notification('error', 'Unable to view property details.');
+      if(error instanceof HttpErrorResponse) this.NotificationDialogComponent.notification('error', error.message);
+      else if(typeof error === 'string') this.NotificationDialogComponent.notification('error', error);
+      else if(error instanceof Error) this.NotificationDialogComponent.notification('error', error.message);
+      else this.NotificationDialogComponent.notification('error', 'Unable to view property details.');
     }
   }
   //<=========================== END VISIT THE SELECTED PROPERTY ===========================>
@@ -529,7 +529,7 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
 
     } catch(error) {
       console.error('Error opening lease agreement:', error);
-      this.notificationComponent.notification('error', error as string);
+      this.NotificationDialogComponent.notification('error', error as string);
     }
   }
   //<=========================== END VIEW LEASE AGREEMENT ===========================>

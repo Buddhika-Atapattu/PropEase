@@ -17,7 +17,7 @@ import {Subscription} from 'rxjs';
 import * as XLSX from 'xlsx';
 import {ConfirmationComponent} from '../../../components/dialogs/confirmation/confirmation.component';
 import {
-  NotificationComponent,
+  NotificationDialogComponent,
   NotificationType,
 } from '../../../components/dialogs/notification/notification.component';
 import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
@@ -85,7 +85,7 @@ interface LeaseTableDataType {
   imports: [
     CommonModule,
     RouterModule,
-    NotificationComponent,
+    NotificationDialogComponent,
     ProgressBarComponent,
     CustomTableComponent,
     MatBadgeModule,
@@ -98,8 +98,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   //<======================= Foreign Components =======================>
   @ViewChild(ProgressBarComponent, {static: true})
   progressBarComponent!: ProgressBarComponent;
-  @ViewChild(NotificationComponent, {static: true})
-  notificationComponent!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent, {static: true})
+  NotificationDialogComponent!: NotificationDialogComponent;
   //<======================= End Foreign Components =======================>
 
   //Test
@@ -516,7 +516,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     } catch(error) {
       console.error('Error organizing lease table data:', error);
-      this.notificationComponent.notification('error', (error as Error).message);
+      this.NotificationDialogComponent.notification('error', (error as Error).message);
     } finally {
       setTimeout(() => {
         this.isLoading = false;
@@ -553,16 +553,16 @@ export class HomeComponent implements OnInit, OnDestroy {
         } catch(error: any) {
           console.log('Error fetching property:', error);
           if(error.status === 404) {
-            this.notificationComponent.notification('error', 'No property found for this lease.');
+            this.NotificationDialogComponent.notification('error', 'No property found for this lease.');
           } else {
-            this.notificationComponent.notification('error', 'Failed to fetch property.');
+            this.NotificationDialogComponent.notification('error', 'Failed to fetch property.');
           }
         }
       }
 
     } catch(error) {
       console.error(error);
-      this.notificationComponent.notification('error', 'Failed to load selected properties.');
+      this.NotificationDialogComponent.notification('error', 'Failed to load selected properties.');
     }
     finally {
       setTimeout(() => {
@@ -620,16 +620,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     } catch(error) {
       console.error('Failed to download lease agreement PDF:', error);
       if(error instanceof HttpErrorResponse) {
-        this.notificationComponent.notification('error', error.message);
+        this.NotificationDialogComponent.notification('error', error.message);
       }
       else if(typeof error === 'string') {
-        this.notificationComponent.notification('error', error);
+        this.NotificationDialogComponent.notification('error', error);
       }
       else if(error instanceof Error) {
-        this.notificationComponent.notification('error', error.message);
+        this.NotificationDialogComponent.notification('error', error.message);
       }
       else {
-        this.notificationComponent.notification('error', 'Failed to download lease agreement PDF.');
+        this.NotificationDialogComponent.notification('error', 'Failed to download lease agreement PDF.');
       }
     } finally {
       this.progressBarComponent.complete();
@@ -668,10 +668,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
     catch(error) {
       console.error(error);
-      if(error instanceof HttpErrorResponse) this.notificationComponent.notification('error', error.message);
-      else if(typeof error === 'string') this.notificationComponent.notification('error', error);
-      else if(error instanceof Error) this.notificationComponent.notification('error', error.message);
-      else this.notificationComponent.notification('error', 'Failed to load tenant data.');
+      if(error instanceof HttpErrorResponse) this.NotificationDialogComponent.notification('error', error.message);
+      else if(typeof error === 'string') this.NotificationDialogComponent.notification('error', error);
+      else if(error instanceof Error) this.NotificationDialogComponent.notification('error', error.message);
+      else this.NotificationDialogComponent.notification('error', 'Failed to load tenant data.');
     }
   }
   //<========================================================================= END EXPORT LEASE DATA =========================================================================>
@@ -787,14 +787,14 @@ export class HomeComponent implements OnInit, OnDestroy {
       console.error(error);
 
       if(typeof error === 'string') {
-        this.notificationComponent.notification('error', error);
+        this.NotificationDialogComponent.notification('error', error);
       } else if(error instanceof HttpErrorResponse) {
-        this.notificationComponent.notification('error', error.error.message);
+        this.NotificationDialogComponent.notification('error', error.error.message);
       } else if(error instanceof Error) {
-        this.notificationComponent.notification('error', error.message);
+        this.NotificationDialogComponent.notification('error', error.message);
       }
       else {
-        this.notificationComponent.notification('error', 'Something went wrong!');
+        this.NotificationDialogComponent.notification('error', 'Something went wrong!');
       }
 
       return false;
@@ -819,14 +819,14 @@ export class HomeComponent implements OnInit, OnDestroy {
       console.error(error);
 
       if(typeof error === 'string') {
-        this.notificationComponent.notification('error', error);
+        this.NotificationDialogComponent.notification('error', error);
       } else if(error instanceof HttpErrorResponse) {
-        this.notificationComponent.notification('error', error.error.message);
+        this.NotificationDialogComponent.notification('error', error.error.message);
       } else if(error instanceof Error) {
-        this.notificationComponent.notification('error', error.message);
+        this.NotificationDialogComponent.notification('error', error.message);
       }
       else {
-        this.notificationComponent.notification('error', 'Something went wrong!');
+        this.NotificationDialogComponent.notification('error', 'Something went wrong!');
       }
 
       return false;
@@ -1252,7 +1252,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       this._noneTenantsButtonActionTrigger.type === 'add'
     ) {
       if(!this.permissionCheckerForAdd()) {
-        this.notificationComponent.notification('warning', 'You don\'t have permission to add tenant!')
+        this.NotificationDialogComponent.notification('warning', 'You don\'t have permission to add tenant!')
         return
       }
       const users = this.noneTenantsFull.filter(
@@ -1379,7 +1379,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     ) {
       try {
         if(!this.permissionCheckerForRemove()) {
-          this.notificationComponent.notification('warning', 'You don\'t have permission to remove tenant!');
+          this.NotificationDialogComponent.notification('warning', 'You don\'t have permission to remove tenant!');
           return;
         }
         let confirmRemove: boolean = false;
@@ -1413,13 +1413,13 @@ export class HomeComponent implements OnInit, OnDestroy {
       catch(error) {
         console.log(error);
         if(error instanceof HttpErrorResponse) {
-          this.notificationComponent.notification('error', error.error.message);
+          this.NotificationDialogComponent.notification('error', error.error.message);
         } else if(typeof error === 'string') {
-          this.notificationComponent.notification('error', error);
+          this.NotificationDialogComponent.notification('error', error);
         } else if(error instanceof Error) {
-          this.notificationComponent.notification('error', error.message);
+          this.NotificationDialogComponent.notification('error', error.message);
         } else {
-          this.notificationComponent.notification('error', 'An error occurred');
+          this.NotificationDialogComponent.notification('error', 'An error occurred');
         }
       }
     }
@@ -1644,7 +1644,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       .then(async (data) => {
         if(data.status === 'success') {
           this.isReloading = true;
-          this.notificationComponent.notification(data.status, data.message);
+          this.NotificationDialogComponent.notification(data.status, data.message);
           // await this.getAllUsers();
           // await this.getAllTenants();
         }
@@ -1653,7 +1653,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         if(error) {
           console.error('Action Button Error: ', error);
           this.progressBarComponent.stop();
-          this.notificationComponent.notification(
+          this.NotificationDialogComponent.notification(
             'warning',
             error.error.message
           );
@@ -1683,10 +1683,10 @@ export class HomeComponent implements OnInit, OnDestroy {
         .then((res) => {
           if(res.status === 'success') {
             this.isReloading = true;
-            this.notificationComponent.notification(res.status, res.message);
+            this.NotificationDialogComponent.notification(res.status, res.message);
             // this.getAllTenants();
           } else {
-            this.notificationComponent.notification('warning', res.message);
+            this.NotificationDialogComponent.notification('warning', res.message);
             this.progressBarComponent.stop();
             this.isLoading = false;
             this.isReloading = false;
@@ -1694,7 +1694,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         })
         .catch((error) => {
           if(error) {
-            this.notificationComponent.notification(
+            this.NotificationDialogComponent.notification(
               'error',
               error.error.message
             );

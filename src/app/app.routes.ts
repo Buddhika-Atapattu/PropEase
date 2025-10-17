@@ -43,6 +43,14 @@ export const routes: Routes = [
         },
       },
       {
+        path: 'deleted-items',
+        loadComponent: () =>
+          import('./pages/notifications/deleted-item-notifications/deleted-item-notifications').then((m) => m.DeletedItemNotificationsPage),
+        data: {
+          roles: ['admin', 'agent', 'tenant', 'operator', 'developer', 'user'],
+        },
+      },
+      {
         path: 'properties',
         loadComponent: () =>
           import('./pages/property/properties/properties-main-panel.component').then(

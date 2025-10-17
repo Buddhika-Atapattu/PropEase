@@ -16,25 +16,25 @@ import {
   BaseUser,
   UDER_DOC_TYPES,
 } from '../../../services/APIs/apis.service';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-loader.component';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatButtonModule } from '@angular/material/button';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {ActivatedRoute, Router} from '@angular/router';
+import {CryptoService} from '../../../services/cryptoService/crypto.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
+import {SkeletonLoaderComponent} from '../../shared/skeleton-loader/skeleton-loader.component';
+import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatInputModule} from '@angular/material/input';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatButtonModule} from '@angular/material/button';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {
   msgTypes,
-  NotificationComponent,
+  NotificationDialogComponent,
 } from '../../dialogs/notification/notification.component';
-import { ProgressBarComponent } from '../../dialogs/progress-bar/progress-bar.component';
-import { AuthService } from '../../../services/auth/auth.service';
+import {ProgressBarComponent} from '../../dialogs/progress-bar/progress-bar.component';
+import {AuthService} from '../../../services/auth/auth.service';
 
 interface selectedFiles {
   name: string;
@@ -55,7 +55,7 @@ interface selectedFiles {
     MatAutocompleteModule,
     FormsModule,
     ReactiveFormsModule,
-    NotificationComponent,
+    NotificationDialogComponent,
     ProgressBarComponent,
   ],
   standalone: true,
@@ -66,9 +66,9 @@ interface selectedFiles {
 export class DocumentsComponent
   implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-  @ViewChild(NotificationComponent, { static: true })
-  notification!: NotificationComponent;
-  @ViewChild(ProgressBarComponent, { static: true })
+  @ViewChild(NotificationDialogComponent, {static: true})
+  notification!: NotificationDialogComponent;
+  @ViewChild(ProgressBarComponent, {static: true})
   progress!: ProgressBarComponent;
   @Input() user: BaseUser | null = null;
   protected mode: boolean | null = null;
@@ -125,7 +125,7 @@ export class DocumentsComponent
     'image/svg+xml',
   ];
 
-  constructor(
+  constructor (
     private APIs: APIsService,
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -141,33 +141,33 @@ export class DocumentsComponent
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
       window.addEventListener('dragover', this.preventDefault, {
         passive: false,
       });
-      window.addEventListener('drop', this.preventDefault, { passive: false });
+      window.addEventListener('drop', this.preventDefault, {passive: false});
     }
     await this.callTheAPI();
   }
 
   protected async callTheAPI() {
-    if (this.user) {
+    if(this.user) {
       await this.APIs.getUserDocuments(this.user?.username)
         .then((data) => {
-          if (data) {
+          if(data) {
             this.documents = data.data as UDER_DOC_TYPES[];
 
           }
         })
         .catch((error) => {
-          if (error) {
+          if(error) {
             this.isNoData = true;
           }
         });
-      if (this.documents.length > 0) {
+      if(this.documents.length > 0) {
         this.isNoData = false;
       } else {
         this.isNoData = true;
@@ -186,7 +186,7 @@ export class DocumentsComponent
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['user'] && this.user) {
+    if(changes['user'] && this.user) {
       this.username = this.user.username;
     }
   }
@@ -214,7 +214,7 @@ export class DocumentsComponent
       image: 'file-types/image.svg',
     };
 
-    for (const [name, path] of Object.entries(iconMap)) {
+    for(const [name, path] of Object.entries(iconMap)) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
@@ -236,27 +236,27 @@ export class DocumentsComponent
     event.preventDefault();
 
     const items = event.clipboardData?.items;
-    if (!items) return;
+    if(!items) return;
 
     const validFiles: File[] = [];
 
-    for (const item of items) {
-      if (item.kind === 'file') {
+    for(const item of items) {
+      if(item.kind === 'file') {
         const file = item.getAsFile();
-        if (file && this.allowedTypes.includes(file.type)) {
+        if(file && this.allowedTypes.includes(file.type)) {
           validFiles.push(file);
         }
       }
     }
 
-    if (validFiles.length > 0) {
+    if(validFiles.length > 0) {
       this.processPastedFiles(validFiles);
     }
   }
 
   protected processPastedFiles(files: File[]): void {
     const dataTransfer = new DataTransfer();
-    for (const file of files) {
+    for(const file of files) {
       dataTransfer.items.add(file);
     }
 
@@ -264,7 +264,7 @@ export class DocumentsComponent
     input.files = dataTransfer.files;
 
     // Reuse existing file selection handler
-    this.onFileSelected({ target: input } as unknown as Event);
+    this.onFileSelected({target: input} as unknown as Event);
   }
   //<================== End File Copy and paste ==================>
 
@@ -284,19 +284,19 @@ export class DocumentsComponent
     this.isDragOver = false;
 
     const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
+    if(files && files.length > 0) {
       // Filter allowed types and collect valid files
       const validFiles: File[] = [];
-      for (let i = 0; i < files.length; i++) {
+      for(let i = 0; i < files.length; i++) {
         const file = files.item(i);
-        if (file && this.allowedTypes.includes(file.type)) {
+        if(file && this.allowedTypes.includes(file.type)) {
           validFiles.push(file);
         } else {
           this.isNotType = true;
         }
       }
 
-      if (validFiles.length > 0) {
+      if(validFiles.length > 0) {
         this.processDroppedFiles(validFiles);
       }
     }
@@ -305,7 +305,7 @@ export class DocumentsComponent
   // Accepts an array of Files, not FileList
   protected processDroppedFiles(files: File[]): void {
     const dataTransfer = new DataTransfer();
-    for (const file of files) {
+    for(const file of files) {
       dataTransfer.items.add(file);
     }
 
@@ -315,7 +315,7 @@ export class DocumentsComponent
     input.files = dataTransfer.files;
 
     // Trigger your upload handler
-    this.onFileSelected({ target: input } as unknown as Event);
+    this.onFileSelected({target: input} as unknown as Event);
   }
 
   private preventDefault(event: Event): void {
@@ -326,7 +326,7 @@ export class DocumentsComponent
 
   //<================== Choose icon ==================>
   protected chooceIcon(type: string): string {
-    switch (type) {
+    switch(type) {
       case 'doc':
         return 'word';
       case 'docx':
@@ -399,11 +399,11 @@ export class DocumentsComponent
   protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     let fileSize: number = 0;
-    if (input.files && input.files.length > 0) {
+    if(input.files && input.files.length > 0) {
       this.file = input.files;
       this.isFileSelected = true;
 
-      for (let i = 0; i < this.file.length; i++) {
+      for(let i = 0; i < this.file.length; i++) {
         const file = this.file[i];
         const data: selectedFiles = {
           name: file.name,
@@ -416,8 +416,8 @@ export class DocumentsComponent
         fileSize += file.size;
       }
 
-      if (fileSize !== 0 && this.notification) {
-        if (fileSize > 10 * 1024 * 1024) {
+      if(fileSize !== 0 && this.notification) {
+        if(fileSize > 10 * 1024 * 1024) {
           this.notification.notification(
             'error' as msgTypes,
             'File sizes should less than 10MB'
@@ -435,13 +435,13 @@ export class DocumentsComponent
   //<================== File Delete Item from array of files ==================>
   protected deleteFile(index: number) {
     this.selectedFiles.splice(index, 1);
-    if (this.selectedFiles.length === 0) this.isFileSelected = false;
+    if(this.selectedFiles.length === 0) this.isFileSelected = false;
   }
   //<================== End File Delete Item from array of files ==================>
 
   //<================== Download the documents ==================>
   protected async downloadFile(downloadURL: string) {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       window.open(downloadURL, '_blank');
       URL.revokeObjectURL(downloadURL);
     }
@@ -450,12 +450,12 @@ export class DocumentsComponent
 
   //<================== Insert the documents ==================>
   protected async insertDocumnets() {
-    if (this.selectedFiles.length === 0 && this.notification) {
+    if(this.selectedFiles.length === 0 && this.notification) {
       this.notification?.notification('error', 'No files selected to upload.');
       return;
     } else {
-      if (this.user) {
-        if (!this.progress) console.error('Progress bar not found!');
+      if(this.user) {
+        if(!this.progress) console.error('Progress bar not found!');
         const formData = new FormData();
         this.progress.start();
         formData.append('username', this.user?.username);
@@ -464,12 +464,12 @@ export class DocumentsComponent
           this.authService.getLoggedUser?.username ||
           'Error By taking logged user'
         );
-        for (let item of this.selectedFiles) {
+        for(let item of this.selectedFiles) {
           formData.append('files', item.file as File);
         }
         await this.APIs.uploadDocuments(formData, this.user?.username)
           .then((data) => {
-            if (data && this.notification) {
+            if(data && this.notification) {
               this.notification.notification(data.status, data.message);
             } else {
               this.notification.notification(
@@ -479,7 +479,7 @@ export class DocumentsComponent
             }
           })
           .catch((error) => {
-            if (error) {
+            if(error) {
               this.notification.notification('error', error.message);
               this.progress.error();
             }
@@ -498,7 +498,7 @@ export class DocumentsComponent
   //<================== End Insert the documents ==================>
 
   ngOnDestroy(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       window.removeEventListener('dragover', this.preventDefault);
       window.removeEventListener('drop', this.preventDefault);
     }

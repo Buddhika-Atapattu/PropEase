@@ -18,7 +18,7 @@ import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 import {LeaseWithProperty, TenantService} from '../../../services/tenant/tenant.service';
 import {BaseUser} from '../../../services/APIs/apis.service';
-import {NotificationComponent} from '../notification/notification.component';
+import {NotificationDialogComponent} from '../notification/notification.component';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
 import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
@@ -30,13 +30,13 @@ import {AuthService} from '../../../services/auth/auth.service';
 @Component({
   selector: 'app-lease-agreements',
   standalone: true,
-  imports: [CommonModule, NotificationComponent, MatProgressSpinnerModule, NgxExtendedPdfViewerModule],
+  imports: [CommonModule, NotificationDialogComponent, MatProgressSpinnerModule, NgxExtendedPdfViewerModule],
   templateUrl: './lease-agreements.html',
   styleUrl: './lease-agreements.scss'
 })
 export class LeaseAgreements implements OnInit, OnDestroy, AfterViewInit, OnChanges {
 
-  @ViewChild(NotificationComponent) notificationComponent!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent) NotificationDialogComponent!: NotificationDialogComponent;
   protected lease: LeaseWithProperty | null = null;
   protected tenant: BaseUser | null = null;
   protected isLoading: boolean = false;

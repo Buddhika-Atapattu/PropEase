@@ -61,7 +61,7 @@ import {CryptoService} from '../../../services/cryptoService/crypto.service';
 import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {
   msgTypes,
-  NotificationComponent,
+  NotificationDialogComponent,
 } from '../../../components/dialogs/notification/notification.component';
 import {DomSanitizer} from '@angular/platform-browser';
 import {map, startWith} from 'rxjs/operators';
@@ -98,7 +98,7 @@ interface propertyImagePreview {
     FormsModule,
     ReactiveFormsModule,
     ProgressBarComponent,
-    NotificationComponent,
+    NotificationDialogComponent,
     MatIconModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -127,7 +127,7 @@ export class EditPropertyListingComponent
   @ViewChild('propertyImages') propertyImages!: ElementRef<HTMLInputElement>;
   @ViewChild('propertyDocs') propertyDocs!: ElementRef<HTMLInputElement>;
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
-  @ViewChild(NotificationComponent) notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
   @ViewChild(MapComponent) map!: MapComponent;
 
   protected isFormError: boolean = false;

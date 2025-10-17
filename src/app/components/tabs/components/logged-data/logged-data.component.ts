@@ -14,32 +14,32 @@ import {
   BaseUser,
   UDER_DOC_TYPES,
 } from '../../../../services/APIs/apis.service';
-import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { CryptoService } from '../../../../services/cryptoService/crypto.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { SkeletonLoaderComponent } from '../../../shared/skeleton-loader/skeleton-loader.component';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatButtonModule } from '@angular/material/button';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
+import {ActivatedRoute, Router} from '@angular/router';
+import {CryptoService} from '../../../../services/cryptoService/crypto.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
+import {SkeletonLoaderComponent} from '../../../shared/skeleton-loader/skeleton-loader.component';
+import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatInputModule} from '@angular/material/input';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatButtonModule} from '@angular/material/button';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {
   msgTypes,
-  NotificationComponent,
+  NotificationDialogComponent,
 } from '../../../dialogs/notification/notification.component';
-import { ProgressBarComponent } from '../../../dialogs/progress-bar/progress-bar.component';
+import {ProgressBarComponent} from '../../../dialogs/progress-bar/progress-bar.component';
 import {
   ActivityTrackerService,
   MSG,
 } from '../../../../services/activityTacker/activity-tracker.service';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { Sort, MatSortModule, MatSort } from '@angular/material/sort';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
+import {MatPaginatorModule} from '@angular/material/paginator';
+import {Sort, MatSortModule, MatSort} from '@angular/material/sort';
+import {MatDatepickerModule} from '@angular/material/datepicker';
 import {
   MatMomentDateModule,
   MomentDateAdapter,
@@ -49,14 +49,14 @@ import {
   MAT_DATE_FORMATS,
   MAT_DATE_LOCALE,
 } from '@angular/material/core';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import {MatSelectModule} from '@angular/material/select';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatDialogModule} from '@angular/material/dialog';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
-import { GoogleChartsModule, ChartType } from 'angular-google-charts';
+import {GoogleChartsModule, ChartType} from 'angular-google-charts';
 
 interface allUsersLoginCounts {
   id: string;
@@ -232,7 +232,7 @@ export interface GoogleChartConfig {
     MatAutocompleteModule,
     FormsModule,
     ReactiveFormsModule,
-    NotificationComponent,
+    NotificationDialogComponent,
     ProgressBarComponent,
     MatTableModule,
     MatPaginatorModule,
@@ -249,10 +249,10 @@ export interface GoogleChartConfig {
   styleUrl: './logged-data.component.scss',
 })
 export class LoggedDataComponent {
-  @ViewChild(NotificationComponent, { static: true })
-  notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent, {static: true})
+  notification!: NotificationDialogComponent;
   @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(ProgressBarComponent, { static: true })
+  @ViewChild(ProgressBarComponent, {static: true})
   progress!: ProgressBarComponent;
 
   @Input() user: BaseUser | null = null;
@@ -283,7 +283,7 @@ export class LoggedDataComponent {
 
   protected tablePieChart: GoogleChartConfig | null = null;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private matIconRegistry: MatIconRegistry,
@@ -291,39 +291,39 @@ export class LoggedDataComponent {
     private activityTrackerService: ActivityTrackerService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    if (this.isBrowser) {
-      google.charts.load('current', { packages: ['corechart'] });
-      google.charts.setOnLoadCallback(() => { });
+    if(this.isBrowser) {
+      google.charts.load('current', {packages: ['corechart']});
+      google.charts.setOnLoadCallback(() => {});
     }
     this.iconMaker();
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
     }
 
-    if (this.startDate && this.endDate) {
+    if(this.startDate && this.endDate) {
       await this.getLoggedUserLoginTracking(1, this.startDate, this.endDate);
     } else {
       await this.getLoggedUserLoginTracking(1);
     }
-    if (this.user) {
+    if(this.user) {
       this.username = this.user.username;
     }
   }
 
-  ngAfterViewInit(): void { }
+  ngAfterViewInit(): void {}
 
   private iconMaker() {
     const icons = [
-      { name: 'search', path: '/Images/Icons/search.svg' },
-      { name: 'reset', path: '/Images/Icons/reset.svg' },
+      {name: 'search', path: '/Images/Icons/search.svg'},
+      {name: 'reset', path: '/Images/Icons/reset.svg'},
     ];
 
-    for (let icon of icons) {
+    for(let icon of icons) {
       this.matIconRegistry.addSvgIcon(
         icon.name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path)
@@ -334,7 +334,7 @@ export class LoggedDataComponent {
   public async refresh(username: string): Promise<void> {
     this.username = username;
 
-    if (this.user) {
+    if(this.user) {
       this.user.username = username;
     }
 
@@ -349,19 +349,19 @@ export class LoggedDataComponent {
   }
 
   protected totalPages(): number {
-    if (this.userLoggedTimes !== 0) return Math.ceil(this.userLoggedTimes / 10);
+    if(this.userLoggedTimes !== 0) return Math.ceil(this.userLoggedTimes / 10);
     else return 0;
   }
 
   protected getActualStart(): number {
     const actualStart = Math.ceil(this.userLoggedCurrentPage - 3);
-    if (actualStart < 0) return 1;
+    if(actualStart < 0) return 1;
     else return actualStart;
   }
 
   protected getActualEnd(): number {
     const actualEnd = Math.ceil(this.userLoggedCurrentPage + 3);
-    if (
+    if(
       actualEnd > this.userLoggedCurrentPage &&
       actualEnd <= this.totalPages()
     )
@@ -371,7 +371,7 @@ export class LoggedDataComponent {
 
   protected async goToThePage(number: number): Promise<void> {
     this.userLoggedCurrentPage = number;
-    if (this.startDate && this.endDate) {
+    if(this.startDate && this.endDate) {
       await this.getLoggedUserLoginTracking(
         number,
         this.startDate,
@@ -383,9 +383,9 @@ export class LoggedDataComponent {
   }
 
   protected async goThreePagesBack() {
-    if (this.userLoggedCurrentPage - 3 > 0) {
+    if(this.userLoggedCurrentPage - 3 > 0) {
       this.userLoggedCurrentPage = Math.ceil(this.userLoggedCurrentPage - 3);
-      if (this.startDate && this.endDate) {
+      if(this.startDate && this.endDate) {
         await this.getLoggedUserLoginTracking(
           this.userLoggedCurrentPage,
           this.startDate,
@@ -396,7 +396,7 @@ export class LoggedDataComponent {
       }
     } else {
       this.userLoggedCurrentPage = 1;
-      if (this.startDate && this.endDate) {
+      if(this.startDate && this.endDate) {
         await this.getLoggedUserLoginTracking(1, this.startDate, this.endDate);
       } else {
         await this.getLoggedUserLoginTracking(1);
@@ -405,9 +405,9 @@ export class LoggedDataComponent {
   }
 
   protected async goThreePagesForward() {
-    if (this.userLoggedCurrentPage + 3 < this.totalPages()) {
+    if(this.userLoggedCurrentPage + 3 < this.totalPages()) {
       this.userLoggedCurrentPage = Math.ceil(this.userLoggedCurrentPage + 3);
-      if (this.startDate && this.endDate) {
+      if(this.startDate && this.endDate) {
         await this.getLoggedUserLoginTracking(
           this.userLoggedCurrentPage,
           this.startDate,
@@ -418,7 +418,7 @@ export class LoggedDataComponent {
       }
     } else {
       this.userLoggedCurrentPage = this.totalPages();
-      if (this.startDate && this.endDate) {
+      if(this.startDate && this.endDate) {
         await this.getLoggedUserLoginTracking(
           this.totalPages(),
           this.startDate,
@@ -435,7 +435,7 @@ export class LoggedDataComponent {
     startDate?: Date,
     endDate?: Date
   ): Promise<void> {
-    if (!this.user) return;
+    if(!this.user) return;
 
     this.isLoading = true;
 
@@ -454,7 +454,7 @@ export class LoggedDataComponent {
           endDate
         );
 
-      if (
+      if(
         response &&
         response.status === 'success' &&
         response.data &&
@@ -482,7 +482,7 @@ export class LoggedDataComponent {
       } else {
         this.isTableEmpty = true;
       }
-    } catch (error) {
+    } catch(error) {
       console.error('Error retrieving login tracking data:', error);
       this.isTableEmpty = true;
     } finally {
@@ -494,7 +494,7 @@ export class LoggedDataComponent {
     chartUserPercentage: number,
     otherPercentage: number
   ): void {
-    this.tablePieChart = <GoogleChartConfig>{
+    this.tablePieChart = <GoogleChartConfig> {
       title: 'User Login Activity',
       type: ChartType.PieChart,
       columns: ['Username', 'Login Count'],
@@ -510,7 +510,7 @@ export class LoggedDataComponent {
         fontSize: 14,
         legend: {
           position: 'right',
-          textStyle: { color: '#333', fontSize: 12 },
+          textStyle: {color: '#333', fontSize: 12},
         },
         chartArea: {
           left: 0,
@@ -519,11 +519,11 @@ export class LoggedDataComponent {
           height: '100%',
         },
         slices: {
-          0: { color: '#ff00dd' },
-          1: { color: '#22ff00' },
+          0: {color: '#ff00dd'},
+          1: {color: '#22ff00'},
         },
         tooltip: {
-          textStyle: { color: '#000' },
+          textStyle: {color: '#000'},
           showColorCode: true,
         },
       },
@@ -534,7 +534,7 @@ export class LoggedDataComponent {
 
   protected sortData(sort: Sort): void {
     const data = this.userLoggedData?.data.userTrackingData.data.slice() ?? [];
-    if (!sort.active || sort.direction === '') {
+    if(!sort.active || sort.direction === '') {
       this.dataSource = new MatTableDataSource<userTrackingLoggedData>(data);
       this.dataSource.sort = this.sort;
       return;
@@ -542,7 +542,7 @@ export class LoggedDataComponent {
 
     const sortedData = data.sort((a, b) => {
       const isAsc = sort.direction === 'asc';
-      switch (sort.active) {
+      switch(sort.active) {
         case 'ip':
           return this.compare(a.ip, b.ip, isAsc);
         case 'date':
@@ -562,7 +562,7 @@ export class LoggedDataComponent {
   }
 
   protected async search() {
-    if (this.startDate && this.endDate) {
+    if(this.startDate && this.endDate) {
       await this.getLoggedUserLoginTracking(1, this.startDate, this.endDate);
     } else {
       await this.getLoggedUserLoginTracking(1);
@@ -588,7 +588,7 @@ export class LoggedDataComponent {
       exportData ?? []
     );
     const workbook: XLSX.WorkBook = {
-      Sheets: { 'User Login Data': worksheet },
+      Sheets: {'User Login Data': worksheet},
       SheetNames: ['User Login Data'],
     };
 
@@ -608,7 +608,7 @@ export class LoggedDataComponent {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['user'] && this.user) {
+    if(changes['user'] && this.user) {
       this.username = this.user.username;
     }
   }

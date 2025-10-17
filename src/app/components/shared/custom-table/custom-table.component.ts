@@ -34,7 +34,7 @@ import {
   PaginatorComponent,
 } from '../paginator/paginator.component';
 import {
-  NotificationComponent,
+  NotificationDialogComponent,
   NotificationType,
 } from '../../dialogs/notification/notification.component';
 import {ProgressBarComponent} from '../../dialogs/progress-bar/progress-bar.component';
@@ -89,7 +89,7 @@ export interface SwitchButtonDataFormatType {
     SkeletonLoaderComponent,
     MatTooltipModule,
     PaginatorComponent,
-    NotificationComponent,
+    NotificationDialogComponent,
     ProgressBarComponent,
     SwitchButton
   ],
@@ -176,10 +176,10 @@ export class CustomTableComponent
   @Output() switchButtonChange = new EventEmitter<SwitchButtonDataFormatType>();
 
   // View child components
-  @ViewChild(ProgressBarComponent, { static: true })
+  @ViewChild(ProgressBarComponent, {static: true})
   progress!: ProgressBarComponent;
-  @ViewChild(NotificationComponent, { static: true })
-  notificationComponent!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent, {static: true})
+  NotificationDialogComponent!: NotificationDialogComponent;
 
   // Table data
   protected displayedColumnKeys: string[] = [];
@@ -197,17 +197,17 @@ export class CustomTableComponent
     '/Images/user-images/dummy-user/dummy_woman.jpg';
   protected definedImage: string = '/Images/System-images/noImage.jpeg';
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
     private apiService: APIsService,
     private authService: AuthService,
     private tenantService: TenantService
-  ) { }
+  ) {}
 
   async ngOnInit() {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -215,10 +215,10 @@ export class CustomTableComponent
 
   }
 
-  ngAfterViewInit() { }
+  ngAfterViewInit() {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
+    if(changes['data']) {
       this.tableButtonAction = this.buttonAction.type.trim().toLowerCase();
       this.tableButtonOperation = this.buttonOperation.type
         .trim()
@@ -226,14 +226,14 @@ export class CustomTableComponent
       this.dataSource.data = this.data;
 
       setTimeout(() => {
-        if (this.fullDataCount > 0) {
+        if(this.fullDataCount > 0) {
           this.isTableVisible = true;
         } else {
           this.isTableVisible = false;
         }
       }, 1000);
     }
-    if (changes['columns']) {
+    if(changes['columns']) {
       this.displayedColumnKeys = this.columns.map((c) => c.key);
       this.tableStatus = (this.columns.find((c) => c.key.toLowerCase() === 'status')?.key || '').toLowerCase();
     }
@@ -345,7 +345,7 @@ export class CustomTableComponent
   }
 
   protected handleOperationButtonTrigger(data: ButtonDataType | null) {
-    if (!data) return;
+    if(!data) return;
 
     this.buttonOperationTrigger = data;
     this.buttonOperationTriggerChange.emit(this.buttonOperationTrigger);
@@ -357,7 +357,7 @@ export class CustomTableComponent
   }
 
   protected handleActionButtonTrigger(data: ButtonDataType | null) {
-    if (!data) return;
+    if(!data) return;
 
     this.buttonActionTrigger = data as ButtonDataType;
     this.buttonActionTriggerChange.emit(this.buttonActionTrigger);
@@ -381,14 +381,14 @@ export class CustomTableComponent
 
   //<======================= Sort Data =======================>
   protected sortData(sort: Sort, data?: any[]): void {
-    if (!this.tenantService.isTenantArray(this.dataSource.data)) {
+    if(!this.tenantService.isTenantArray(this.dataSource.data)) {
       return;
     }
 
     const sourceData = (data || this.dataSource.data).slice();
     const isAsc = sort.direction === 'asc';
 
-    if (!sort.active || sort.direction === '') {
+    if(!sort.active || sort.direction === '') {
       this.dataSource.data = sourceData;
       return;
     }
@@ -399,11 +399,11 @@ export class CustomTableComponent
   }
 
   private universalCompare(a: any, b: any, isAsc: boolean): number {
-    if (a == null && b != null) return isAsc ? -1 : 1;
-    if (a != null && b == null) return isAsc ? 1 : -1;
-    if (a == null && b == null) return 0;
+    if(a == null && b != null) return isAsc ? -1 : 1;
+    if(a != null && b == null) return isAsc ? 1 : -1;
+    if(a == null && b == null) return 0;
 
-    if (typeof a === 'string' && typeof b === 'string') {
+    if(typeof a === 'string' && typeof b === 'string') {
       return a.localeCompare(b) * (isAsc ? 1 : -1);
     }
 
@@ -417,15 +417,15 @@ export class CustomTableComponent
     type: string,
     gender?: string
   ): string {
-    switch (type.toLowerCase().trim()) {
+    switch(type.toLowerCase().trim()) {
       case 'userimage':
         const imagetype = image.split('.')[1];
-        if (imagetype !== '') {
+        if(imagetype !== '') {
           return image;
         } else {
-          if (gender?.toLocaleLowerCase() === 'male') {
+          if(gender?.toLocaleLowerCase() === 'male') {
             return this.definedMaleDummyImageURL;
-          } else if (gender?.toLocaleLowerCase() === 'female') {
+          } else if(gender?.toLocaleLowerCase() === 'female') {
             return this.definedWomanDummyImageURL;
           } else {
             return this.definedImage;
@@ -445,7 +445,7 @@ export class CustomTableComponent
     const formatWithSuffix = (date: Date): string => {
       const day = date.getDate();
       const suffix = this.getOrdinalSuffix(day);
-      const month = date.toLocaleString('default', { month: 'long' });
+      const month = date.toLocaleString('default', {month: 'long'});
       const year = date.getFullYear();
       return `${day}${suffix} of ${month} ${year}`;
     };
@@ -454,8 +454,8 @@ export class CustomTableComponent
   }
 
   private getOrdinalSuffix(day: number): string {
-    if (day >= 11 && day <= 13) return 'th';
-    switch (day % 10) {
+    if(day >= 11 && day <= 13) return 'th';
+    switch(day % 10) {
       case 1: return 'st';
       case 2: return 'nd';
       case 3: return 'rd';
@@ -483,14 +483,14 @@ export class CustomTableComponent
     const container = doc.body.firstChild as HTMLElement;
 
     function capitalizeTextNodes(node: Node): void {
-      if (node.nodeType === Node.TEXT_NODE) {
+      if(node.nodeType === Node.TEXT_NODE) {
         const originalText = node.nodeValue || '';
         const words = originalText.split(' ');
         const capitalized = words
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
         node.nodeValue = capitalized;
-      } else if (node.nodeType === Node.ELEMENT_NODE && node.childNodes) {
+      } else if(node.nodeType === Node.ELEMENT_NODE && node.childNodes) {
         node.childNodes.forEach(child => capitalizeTextNodes(child));
       }
     }

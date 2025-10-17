@@ -108,6 +108,8 @@ export class AppComponent implements OnInit, OnDestroy {
           }
         });
 
+        console.log(this.authService.getLoggedUser)
+
         this.lastURL = this.safeGetFromLocalStorage('LAST_URL');
         if(this.lastURL) {
           this.router.navigateByUrl(this.lastURL).catch(() => {});

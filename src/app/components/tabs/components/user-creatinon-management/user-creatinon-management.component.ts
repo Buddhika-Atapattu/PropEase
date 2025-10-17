@@ -9,41 +9,41 @@ import {
   PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { Subscription } from 'rxjs';
-import { ProgressBarComponent } from '../../../dialogs/progress-bar/progress-bar.component';
-import { NotificationComponent } from '../../../dialogs/notification/notification.component';
-import { BaseUser } from '../../../../services/auth/auth.service';
-import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
-import { ActivityTrackerService } from '../../../../services/activityTacker/activity-tracker.service';
+import {CommonModule, isPlatformBrowser} from '@angular/common';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
+import {Subscription} from 'rxjs';
+import {ProgressBarComponent} from '../../../dialogs/progress-bar/progress-bar.component';
+import {NotificationDialogComponent} from '../../../dialogs/notification/notification.component';
+import {BaseUser} from '../../../../services/auth/auth.service';
+import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
+import {ActivityTrackerService} from '../../../../services/activityTacker/activity-tracker.service';
 
-import { MatSelectModule } from '@angular/material/select';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import {MatSelectModule} from '@angular/material/select';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatDialogModule} from '@angular/material/dialog';
+import {MatTooltipModule} from '@angular/material/tooltip';
 
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { Sort, MatSortModule, MatSort } from '@angular/material/sort';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatMomentDateModule } from '@angular/material-moment-adapter';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { SkeletonLoaderComponent } from '../../../shared/skeleton-loader/skeleton-loader.component';
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
+import {MatPaginatorModule} from '@angular/material/paginator';
+import {Sort, MatSortModule, MatSort} from '@angular/material/sort';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatMomentDateModule} from '@angular/material-moment-adapter';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatButtonModule} from '@angular/material/button';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {SkeletonLoaderComponent} from '../../../shared/skeleton-loader/skeleton-loader.component';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
-import { CryptoService } from '../../../../services/cryptoService/crypto.service';
+import {CryptoService} from '../../../../services/cryptoService/crypto.service';
 import {
   APIsService,
   UsersType,
 } from '../../../../services/APIs/apis.service';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
 
 interface Data {
   name: string;
@@ -74,7 +74,7 @@ interface Data {
     MatAutocompleteModule,
     FormsModule,
     ReactiveFormsModule,
-    NotificationComponent,
+    NotificationDialogComponent,
     ProgressBarComponent,
     MatTableModule,
     MatPaginatorModule,
@@ -91,10 +91,10 @@ interface Data {
 })
 export class UserCreatinonManagementComponent
   implements OnInit, OnChanges, AfterViewInit, OnDestroy {
-  @ViewChild(ProgressBarComponent, { static: true })
+  @ViewChild(ProgressBarComponent, {static: true})
   progress!: ProgressBarComponent;
-  @ViewChild(NotificationComponent, { static: true })
-  notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent, {static: true})
+  notification!: NotificationDialogComponent;
 
   @Input() user: BaseUser | null = null;
   @Input() loggedUser: BaseUser | null = null;
@@ -145,7 +145,7 @@ export class UserCreatinonManagementComponent
   protected definedImage: string =
     '/Images/user-images/dummy-user/dummy-user.jpg';
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private matIconRegistry: MatIconRegistry,
@@ -164,11 +164,11 @@ export class UserCreatinonManagementComponent
     this.apiCall(this.start, this.limit);
   }
 
-  ngOnChanges(): void { }
+  ngOnChanges(): void {}
 
-  ngAfterViewInit(): void { }
+  ngAfterViewInit(): void {}
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {}
 
   public async refresh(username: string): Promise<void> {
     this.username = username;
@@ -183,12 +183,12 @@ export class UserCreatinonManagementComponent
   }
 
   protected imageGenerator(image: string, gender: string): string {
-    if (image) {
+    if(image) {
       const imagetype = image.split('.')[1];
-      if (imagetype !== '') {
+      if(imagetype !== '') {
         return image;
       } else {
-        if (gender === 'male') {
+        if(gender === 'male') {
           return this.definedMaleDummyImageURL;
         } else {
           return this.definedWomanDummyImageURL;
@@ -227,7 +227,7 @@ export class UserCreatinonManagementComponent
       image: 'file-types/image.svg',
     };
 
-    for (const [name, path] of Object.entries(iconMap)) {
+    for(const [name, path] of Object.entries(iconMap)) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
@@ -238,7 +238,7 @@ export class UserCreatinonManagementComponent
   }
 
   protected chooceIcon(type: string): string {
-    switch (type) {
+    switch(type) {
       case 'doc':
         return 'word';
       case 'docx':
@@ -335,14 +335,14 @@ export class UserCreatinonManagementComponent
           // this.paginate();
         })
         .catch((error) => {
-          if (error) {
+          if(error) {
             this.isTableEmpty = true;
             this.isLoading = true;
             throw new Error(error);
           }
         });
-    } catch (error) {
-      if (error) {
+    } catch(error) {
+      if(error) {
         this.isLoading = true;
         console.error('API ERROR: ', error);
       }
@@ -350,7 +350,7 @@ export class UserCreatinonManagementComponent
   }
 
   protected generateColData(data: string, element: any) {
-    switch (data) {
+    switch(data) {
       case 'Name':
         return element.name;
 
@@ -393,13 +393,13 @@ export class UserCreatinonManagementComponent
     const data = this.dataSource.data.slice();
     const isAsc = sort.direction === 'asc';
 
-    if (!sort.active || sort.direction === '') {
+    if(!sort.active || sort.direction === '') {
       this.dataSource.data = data;
       return;
     }
 
     // Map displayed column labels to actual Data fields
-    const columnFieldMap: { [key: string]: keyof Data } = {
+    const columnFieldMap: {[key: string]: keyof Data} = {
       Name: 'name',
       Username: 'username',
       Email: 'email',
@@ -416,7 +416,7 @@ export class UserCreatinonManagementComponent
 
     const field = columnFieldMap[sort.active];
 
-    if (field) {
+    if(field) {
       this.dataSource.data = data.sort((a, b) =>
         this.compare(a[field], b[field], isAsc)
       );
@@ -424,11 +424,11 @@ export class UserCreatinonManagementComponent
   }
 
   private compare(a: any, b: any, isAsc: boolean): number {
-    if (a == null && b != null) return isAsc ? -1 : 1;
-    if (a != null && b == null) return isAsc ? 1 : -1;
-    if (a == null && b == null) return 0;
+    if(a == null && b != null) return isAsc ? -1 : 1;
+    if(a != null && b == null) return isAsc ? 1 : -1;
+    if(a == null && b == null) return 0;
 
-    if (typeof a === 'string' && typeof b === 'string') {
+    if(typeof a === 'string' && typeof b === 'string') {
       return a.localeCompare(b) * (isAsc ? 1 : -1);
     }
 
@@ -440,7 +440,7 @@ export class UserCreatinonManagementComponent
     this.currentPage = 1; // Reset to first page
     const offset = (this.currentPage - 1) * this.limit;
 
-    if (this.startDate && this.endDate) {
+    if(this.startDate && this.endDate) {
       // Call API with current filters
       await this.apiCall(offset, this.limit, this.startDate, this.endDate);
     }
@@ -484,7 +484,7 @@ export class UserCreatinonManagementComponent
 
   // Jump back by 2 pages
   protected async goTwoPagesBack(): Promise<void> {
-    if (this.currentPage > 1) {
+    if(this.currentPage > 1) {
       this.currentPage = Math.max(1, this.currentPage - 2);
       const offset = (this.currentPage - 1) * this.limit;
       await this.paginate(offset, this.limit);
@@ -494,7 +494,7 @@ export class UserCreatinonManagementComponent
   // Jump forward by 2 pages
   protected async goTwoPagesForward(): Promise<void> {
     const totalPages = this.totalPages();
-    if (this.currentPage < totalPages) {
+    if(this.currentPage < totalPages) {
       this.currentPage = Math.min(totalPages, this.currentPage + 2);
       const offset = (this.currentPage - 1) * this.limit;
       await this.paginate(offset, this.limit);
@@ -513,7 +513,7 @@ export class UserCreatinonManagementComponent
   }
 
   protected formatDate(date: Date): string {
-    if (!date) return '';
+    if(!date) return '';
     const d = new Date(date);
     const options: Intl.DateTimeFormatOptions = {
       year: 'numeric',
@@ -532,8 +532,8 @@ export class UserCreatinonManagementComponent
   }
 
   protected async visitUser(data: string) {
-    if (this.isBrowser) {
-      if (data !== '' && this.crypto) {
+    if(this.isBrowser) {
+      if(data !== '' && this.crypto) {
         const username = await this.APIsService.generateToken(data);
         // this.refreshService.triggerRefresh();
         this.router.navigate(['/dashboard/view-user-profile', username.token]);
@@ -561,7 +561,7 @@ export class UserCreatinonManagementComponent
 
     const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
     const workbook: XLSX.WorkBook = {
-      Sheets: { 'User Files': worksheet },
+      Sheets: {'User Files': worksheet},
       SheetNames: ['User Files'],
     };
 

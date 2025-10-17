@@ -3,6 +3,7 @@
 @use "./font/EduVICWANTHand-VariableFont_wght/EduVICWANTHand-VariableFont_wght.scss"
   as *;
 @use "./font/Montserrat/Montserrat.scss" as *;
+
 // ===================================================================
 // Common Core Colors
 // ===================================================================
@@ -1009,35 +1010,10 @@ button:focus:not(:focus-visible) {
       font-weight: 500;
     }
   }
+}
 
-  &.dark {
-    .page-indecator {
-      color: $dark-accent-gold !important;
-      .page-indicator-btn {
-        color: $dark-accent-gold !important;
-      }
-    }
-
-    .drop-down-container {
-      background: linear-gradient(
-        144deg,
-        rgb(0 58 168 / 34%),
-        rgb(90 0 166 / 46%),
-        rgb(20 0 145 / 43%)
-      );
-      border: 0.0159rem solid #ffffff8a;
-      &.active {
-        background: linear-gradient(
-          144deg,
-          rgba(101, 125, 170, 0.34),
-          rgba(118, 79, 150, 0.46),
-          rgba(113, 105, 165, 0.43)
-        );
-        border: 0.0159rem solid #83cfff8a;
-      }
-    }
-  }
-  &.light {
+:host-context(html.light) {
+  .main-panel {
     .page-indecator {
       color: $light-accent-blue !important;
       .page-indicator-btn {
@@ -1059,6 +1035,36 @@ button:focus:not(:focus-visible) {
           #88784757,
           rgba(138, 126, 79, 0.46),
           #9182536e
+        );
+        border: 0.0159rem solid #83cfff8a;
+      }
+    }
+  }
+}
+
+:host-context(html.dark) {
+  .main-panel {
+    .page-indecator {
+      color: $dark-accent-gold !important;
+      .page-indicator-btn {
+        color: $dark-accent-gold !important;
+      }
+    }
+
+    .drop-down-container {
+      background: linear-gradient(
+        144deg,
+        rgb(0 58 168 / 34%),
+        rgb(90 0 166 / 46%),
+        rgb(20 0 145 / 43%)
+      );
+      border: 0.0159rem solid #ffffff8a;
+      &.active {
+        background: linear-gradient(
+          144deg,
+          rgba(101, 125, 170, 0.34),
+          rgba(118, 79, 150, 0.46),
+          rgba(113, 105, 165, 0.43)
         );
         border: 0.0159rem solid #83cfff8a;
       }
@@ -1144,3 +1150,205 @@ $notify-text-light: #2b1d00; // slightly darker for contrast
     padding: 0.5rem;
   }
 }
+
+/* ================================
+   Bootstrap Card Overrides (Light/Dark)
+   Requires your theme variables to be loaded first (global.scss)
+   ================================ */
+
+/* ---------- helpers / mixins ---------- */
+@mixin card-shell($bg, $fg, $border, $shadow) {
+  background: $bg !important;
+  color: $fg !important;
+  border: 1px solid $border !important;
+  border-radius: 0.875rem !important; // a bit more rounded than default
+  box-shadow: 0 0.75rem 1.25rem 0 $shadow !important;
+  overflow: hidden; /* smooth rounded corners for images/list-groups */
+  transition: transform 180ms ease, box-shadow 220ms ease;
+  will-change: transform, box-shadow;
+
+  .card-body {
+    color: inherit !important;
+  }
+
+  .card-title {
+    color: inherit !important;
+    margin-bottom: 0.35rem;
+    font-weight: 700;
+  }
+
+  .card-subtitle {
+    color: inherit !important;
+    opacity: 0.8;
+    margin-top: -0.15rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .card-text {
+    color: inherit !important;
+  }
+
+  .card-header,
+  .card-footer {
+    background: transparent !important;
+    color: inherit !important;
+    border-color: $border !important;
+  }
+
+  /* Bootstrap list-group inside card */
+  .list-group-item {
+    background: transparent !important;
+    color: inherit !important;
+    border-color: $border !important;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.03);
+    }
+  }
+
+  /* Images keep rounded top/bottom */
+  .card-img,
+  .card-img-top,
+  .card-img-bottom {
+    object-fit: cover;
+  }
+
+  a,
+  .stretched-link {
+    color: inherit;
+    text-decoration-color: currentColor;
+    text-underline-offset: 2px;
+
+    &:hover {
+      opacity: 0.9;
+      text-decoration: underline;
+    }
+  }
+
+  &.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 1rem 1.75rem 0 $shadow !important;
+  }
+
+  /* Optional slim border version */
+  &.card-outline {
+    box-shadow: none !important;
+    border-width: 1px !important;
+  }
+}
+
+/* Accent ribbon on header (optional helper)
+   Usage: <div class="card card-accent-success"> ... </div>
+*/
+@mixin card-accent($accent) {
+  .card-header {
+    position: relative;
+    border-bottom-width: 0 !important;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 0;
+      inset-block: 0;
+      width: 0.25rem;
+      background: $accent;
+    }
+  }
+}
+
+// /* ---------- LIGHT THEME ---------- */
+// html.light {
+//   .card {
+//     @include card-shell(
+//       $light-card-color,
+//       $light-text-color,
+//       $light-border-color,
+//       $light-shadow-color
+//     );
+//   }
+
+//   /* contextual header accents */
+//   .card-accent-success {
+//     @include card-accent($light-success-color);
+//   }
+//   .card-accent-warning {
+//     @include card-accent($light-warning-color);
+//   }
+//   .card-accent-danger {
+//     @include card-accent($light-error-color);
+//   }
+//   .card-accent-info {
+//     @include card-accent($light-accent-blue);
+//   }
+//   .card-accent-gold {
+//     @include card-accent($light-accent-gold);
+//   }
+
+//   /* subtle interactive state on list groups inside cards (light) */
+//   .card .list-group-item:hover {
+//     background: $light-hover-color !important;
+//   }
+// }
+
+// /* ---------- DARK THEME ---------- */
+// html.dark {
+//   .card {
+//     @include card-shell(
+//       $dark-card-color,
+//       $dark-text-color,
+//       $dark-border-color,
+//       $dark-shadow-color
+//     );
+//   }
+
+//   /* contextual header accents */
+//   .card-accent-success {
+//     @include card-accent($dark-success-color);
+//   }
+//   .card-accent-warning {
+//     @include card-accent($dark-warning-color);
+//   }
+//   .card-accent-danger {
+//     @include card-accent($dark-error-color);
+//   }
+//   .card-accent-info {
+//     @include card-accent($dark-accent-blue);
+//   }
+//   .card-accent-gold {
+//     @include card-accent($dark-accent-gold);
+//   }
+
+//   /* subtle interactive state on list groups inside cards (dark) */
+//   .card .list-group-item:hover {
+//     background: $dark-item-hover !important;
+//   }
+// }
+
+// /* ---------- Extras: utilities for tight layouts inside cards ---------- */
+// .card-sm {
+//   .card-body {
+//     padding: 0.75rem !important;
+//   }
+//   .card-header,
+//   .card-footer {
+//     padding: 0.5rem 0.75rem !important;
+//   }
+// }
+
+// .card-lg {
+//   .card-body {
+//     padding: 1.5rem !important;
+//   }
+//   .card-header,
+//   .card-footer {
+//     padding: 1.25rem 1.5rem !important;
+//   }
+// }
+
+// /* Edge cases: remove border/shadow if nested in another card section */
+// .card .card {
+//   box-shadow: none !important;
+//   border-color: transparent !important;
+// }

@@ -19,7 +19,7 @@ import {AuthService, BaseUser} from '../../services/auth/auth.service';
 import {PropertyFilterDialogComponent} from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
 import {ConfirmationComponent} from '../../components/dialogs/confirmation/confirmation.component';
-import {NotificationComponent} from '../../components/dialogs/notification/notification.component';
+import {NotificationDialogComponent} from '../../components/dialogs/notification/notification.component';
 import {HttpErrorResponse, HttpHeaderResponse} from '@angular/common/http';
 import {FormsModule} from '@angular/forms';
 
@@ -30,14 +30,14 @@ import {FormsModule} from '@angular/forms';
     CommonModule,
     MatIconModule,
     SkeletonLoaderComponent,
-    NotificationComponent,
+    NotificationDialogComponent,
     FormsModule
   ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
 })
 export class UsersComponent implements OnInit, OnDestroy {
-  @ViewChild(NotificationComponent) notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;

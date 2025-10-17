@@ -9,20 +9,20 @@ import {
   ChangeDetectionStrategy,
   AfterViewInit,
 } from '@angular/core';
-import { WindowsRefService } from '../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatButtonModule } from '@angular/material/button';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { provideNativeDateAdapter } from '@angular/material/core';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDividerModule } from '@angular/material/divider';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import {isPlatformBrowser, CommonModule, AsyncPipe} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {ActivatedRoute} from '@angular/router';
+import {MatInputModule} from '@angular/material/input';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatButtonModule} from '@angular/material/button';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {provideNativeDateAdapter} from '@angular/material/core';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatSelectModule} from '@angular/material/select';
+import {MatDividerModule} from '@angular/material/divider';
 import {
   MatCheckboxChange,
   MatCheckboxModule,
@@ -38,11 +38,11 @@ import {
   BaseUser,
   UpdateUserType,
 } from '../../services/auth/auth.service';
-import { APIsService, Country } from '../../services/APIs/apis.service';
-import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
-import { Observable, of, firstValueFrom } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
-import { DomSanitizer } from '@angular/platform-browser';
+import {APIsService, Country} from '../../services/APIs/apis.service';
+import {SkeletonLoaderComponent} from '../../components/shared/skeleton-loader/skeleton-loader.component';
+import {Observable, of, firstValueFrom} from 'rxjs';
+import {map, startWith} from 'rxjs/operators';
+import {DomSanitizer} from '@angular/platform-browser';
 import {
   MAT_DIALOG_DATA,
   MatDialog,
@@ -53,14 +53,14 @@ import {
   MatDialogTitle,
   MatDialogModule,
 } from '@angular/material/dialog';
-import { UserProfileDataSaveConfirmationComponent } from '../../components/dialogs/user-profile-data-save-confirmation/user-profile-data-save-confirmation.component';
+import {UserProfileDataSaveConfirmationComponent} from '../../components/dialogs/user-profile-data-save-confirmation/user-profile-data-save-confirmation.component';
 import {
   msg,
   msgTypes,
-  NotificationComponent,
+  NotificationDialogComponent,
 } from '../../components/dialogs/notification/notification.component';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { ProgressBarComponent } from '../../components/dialogs/progress-bar/progress-bar.component';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {ProgressBarComponent} from '../../components/dialogs/progress-bar/progress-bar.component';
 
 interface userActiveStatusType {
   typeName: string;
@@ -92,7 +92,7 @@ export interface MSG_DATA_TYPE extends UpdateUserType {
     MatSelectModule,
     MatDividerModule,
     MatDialogModule,
-    NotificationComponent,
+    NotificationDialogComponent,
     MatProgressBarModule,
     ProgressBarComponent,
   ],
@@ -155,11 +155,11 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
   public isEditConfirm: boolean = false;
   protected progerssOfUpload: number = 0;
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
-  @ViewChild(NotificationComponent) notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
   protected isLoading: boolean = true;
   protected readonly definedGenders: string[] = ['male', 'female', 'other'];
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
@@ -175,7 +175,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
     });
     this.iconMaker();
     this.user = this.authService.getLoggedUser;
-    if (this.user !== null) {
+    if(this.user !== null) {
       setTimeout(() => {
         this.isLoading = false;
       }, 500);
@@ -198,9 +198,9 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
       this.onCountryChange(this.user.address.country ?? '');
       this.isAdmin = this.user.role === 'admin';
       this.birthDay = this.user.dateOfBirth || null;
-      if (typeof this.userimage === 'string') {
+      if(typeof this.userimage === 'string') {
         const imageURL = this.userimage.split('.');
-        if (imageURL[1] === undefined) {
+        if(imageURL[1] === undefined) {
           this.userimage = '/Images/user-images/dummy-user/dummy-user.jpg';
         } else {
           this.userimage = this.user.image;
@@ -210,7 +210,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit() {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -223,11 +223,11 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private iconMaker() {
     const icons = [
-      { name: 'active', path: '/Images/Icons/correct.svg' },
-      { name: 'wrong', path: '/Images/Icons/wrong.svg' },
+      {name: 'active', path: '/Images/Icons/correct.svg'},
+      {name: 'wrong', path: '/Images/Icons/wrong.svg'},
     ];
 
-    for (let icon of icons) {
+    for(let icon of icons) {
       this.matIconRegistry.addSvgIcon(
         icon.name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path)
@@ -246,7 +246,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private async mainFilterCountries(name: string): Promise<Country[]> {
     const countries = await this.API.getCountries();
-    if (countries !== null) {
+    if(countries !== null) {
       this.countries = countries;
       this.filteredCountries = this.countryControl.valueChanges.pipe(
         startWith(this.typedCountry),
@@ -276,7 +276,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
 
   protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input?.files && input.files.length > 0) {
+    if(input?.files && input.files.length > 0) {
       const file = input.files[0];
       this.selectedUserImage = file;
       this.userimage = file;
@@ -288,7 +288,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  protected onImageError() { }
+  protected onImageError() {}
 
   get modeTheam(): boolean | null {
     return this.mode;
@@ -297,7 +297,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
   //Trying to open the dialog find the error
   private async openDialog() {
     try {
-      if (this.mode !== null) {
+      if(this.mode !== null) {
         const dialogRef: MatDialogRef<UserProfileDataSaveConfirmationComponent> =
           this.dialog.open(UserProfileDataSaveConfirmationComponent, {
             data: {
@@ -308,14 +308,14 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
         const result = await firstValueFrom(dialogRef.afterClosed());
         this.isEditConfirm = result === true;
       }
-    } catch (error) {
+    } catch(error) {
       console.error('Dialog failed to open:', error);
     }
   }
 
   protected async updateUserData(): Promise<void> {
     await this.openDialog().then(async () => {
-      if (this.user !== null && this.isEditConfirm) {
+      if(this.user !== null && this.isEditConfirm) {
         this.progress.start();
         this.progerssOfUpload = 0;
         const formData = new FormData();
@@ -327,17 +327,17 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
         formData.append('houseNumber', this.houseNumber || '');
         formData.append('city', this.city);
         formData.append('postcode', this.postcode);
-        if (
+        if(
           typeof this.typedCountry === 'object' &&
           this.typedCountry !== null
         ) {
           formData.append('country', this.typedCountry.name);
-        } else if (typeof this.typedCountry === 'string') {
+        } else if(typeof this.typedCountry === 'string') {
           formData.append('country', this.typedCountry);
         }
         formData.append('stateOrProvince', this.stateOrProvince || '');
         formData.append('role', this.role);
-        if (
+        if(
           typeof File !== 'undefined' &&
           this.selectedUserImage instanceof File
         ) {
@@ -351,7 +351,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
         const user = this.user?.username;
         await this.API.updateUser(formData, user)
           .then((data: MSG_DATA_TYPE | null) => {
-            if (this.notification && data)
+            if(this.notification && data)
               this.notification.notification(
                 data?.status as msgTypes,
                 data?.message as string
@@ -387,7 +387,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isEditable = true;
   }
 
-  protected onSubmit() { }
+  protected onSubmit() {}
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();

@@ -33,7 +33,7 @@ import {
 import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {Subscription} from 'rxjs';
-import {NotificationComponent} from '../notification/notification.component';
+import {NotificationDialogComponent} from '../notification/notification.component';
 import {ScanService} from '../../../services/scan/scan.service';
 import {toDataURL} from 'qrcode';
 
@@ -53,7 +53,7 @@ interface USBDevice {
   standalone: true,
   imports: [
     CommonModule,
-    NotificationComponent,
+    NotificationDialogComponent,
     FormsModule,
     ReactiveFormsModule,
     MatInputModule,
@@ -74,8 +74,8 @@ interface USBDevice {
 })
 export class FileScanner
   implements OnInit, OnDestroy, AfterViewInit, OnChanges {
-  @ViewChild(NotificationComponent, { static: true })
-  notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent, {static: true})
+  notification!: NotificationDialogComponent;
   // Dialog data
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -100,7 +100,7 @@ export class FileScanner
   protected scanners: string[] = [];
   protected selectedScanner: string = '';
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(MAT_DIALOG_DATA)
@@ -112,18 +112,18 @@ export class FileScanner
     private crypto: CryptoService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
     }
 
     this.tenantUsername = this.data.tenantUsername;
-    if (this.scanService.isElectron()) {
+    if(this.scanService.isElectron()) {
       this.isElectron = this.scanService.isElectron();
     }
 
-    if (!this.isElectron) {
+    if(!this.isElectron) {
       this.selectionMedia = 'Mobile';
     }
   }
@@ -131,7 +131,7 @@ export class FileScanner
   async ngOnInit() {
     await this.createQRCode();
 
-    if (this.isElectron) {
+    if(this.isElectron) {
       this.isLoading = true;
 
       try {
@@ -154,7 +154,7 @@ export class FileScanner
         this.scanners = [...usbScannerNames, ...wifiScannerNames];
 
         console.log(this.scanners);
-      } catch (err) {
+      } catch(err) {
         console.error('Scanner fetch failed:', err);
       } finally {
         this.isLoading = false;
@@ -165,7 +165,7 @@ export class FileScanner
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data'] && changes['data'].currentValue) {
+    if(changes['data'] && changes['data'].currentValue) {
     }
   }
 
@@ -180,7 +180,7 @@ export class FileScanner
   private async createQRCode(): Promise<void> {
     try {
       const tenantUserName = this.data?.tenantUsername;
-      if (!tenantUserName) throw new Error('Tenant username is missing');
+      if(!tenantUserName) throw new Error('Tenant username is missing');
 
       const payload = {
         tenant: tenantUserName,
@@ -188,7 +188,7 @@ export class FileScanner
       };
       const uniqueToken = await this.crypto.encrypt(JSON.stringify(payload));
 
-      if (!uniqueToken) throw new Error('Encryption failed!');
+      if(!uniqueToken) throw new Error('Encryption failed!');
 
       this.token = uniqueToken as string;
 
@@ -205,17 +205,17 @@ export class FileScanner
       const qrCodeDataUrl = await toDataURL(uploadUrl);
 
       this.qrDataUrl = qrCodeDataUrl;
-    } catch (error) {
+    } catch(error) {
       console.error('Failed to generate QR code:', error);
     }
   }
 
-  protected onSelectionMedia() { }
+  protected onSelectionMedia() {}
 
   protected async onSelectingScanner() {
     let selectedDevice: any;
 
-    if (this.selectedScanner) {
+    if(this.selectedScanner) {
       selectedDevice =
         this.USBDevices.find(
           (item) =>
@@ -228,7 +228,7 @@ export class FileScanner
             item.ip === this.selectedScanner
         );
 
-      if (selectedDevice) {
+      if(selectedDevice) {
         console.log('Selected device:', selectedDevice);
 
         // Notify Electron to scan
@@ -236,14 +236,14 @@ export class FileScanner
           const result = await window.electron.scanDocument(selectedDevice);
           console.log('Scan result:', result);
           // Handle result (e.g., display scanned image or PDF)
-        } catch (err) {
+        } catch(err) {
           console.error('Scan failed:', err);
         }
       }
     }
   }
 
-  protected onScannerChange() { }
+  protected onScannerChange() {}
 
   protected pannelClose() {
     this.dialogRef.close({

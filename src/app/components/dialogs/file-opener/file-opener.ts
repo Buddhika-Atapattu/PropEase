@@ -30,7 +30,7 @@ import {
 import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {Subscription} from 'rxjs';
-import {NotificationComponent} from '../notification/notification.component';
+import {NotificationDialogComponent} from '../notification/notification.component';
 import {ScanService} from '../../../services/scan/scan.service';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {HttpClient} from '@angular/common/http';
@@ -42,7 +42,7 @@ import {UserControllerService} from '../../../services/userController/user-contr
   selector: 'app-file-opener',
   imports: [
     CommonModule,
-    NotificationComponent,
+    NotificationDialogComponent,
     FormsModule,
     ReactiveFormsModule,
     MatInputModule,
@@ -64,8 +64,8 @@ import {UserControllerService} from '../../../services/userController/user-contr
   styleUrl: './file-opener.scss'
 })
 export class FileOpener implements OnInit, OnDestroy, AfterViewInit, OnChanges {
-  @ViewChild(NotificationComponent, {static: true})
-  notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent, {static: true})
+  notification!: NotificationDialogComponent;
 
   protected mode: boolean | null = null;
   protected isBrowser: boolean;

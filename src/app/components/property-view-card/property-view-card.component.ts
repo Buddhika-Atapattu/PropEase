@@ -29,7 +29,7 @@ import {
 import {MatDialog} from '@angular/material/dialog';
 import {ConfirmationComponent} from '../../components/dialogs/confirmation/confirmation.component';
 import {PropertyService} from '../../services/property/property.service';
-import {NotificationComponent} from '../dialogs/notification/notification.component';
+import {NotificationDialogComponent} from '../dialogs/notification/notification.component';
 import {HttpResponse} from '@angular/common/http';
 
 @Component({
@@ -38,7 +38,7 @@ import {HttpResponse} from '@angular/common/http';
     CommonModule,
     MatIconModule,
     SkeletonLoaderComponent,
-    NotificationComponent,
+    NotificationDialogComponent,
   ],
   standalone: true,
   templateUrl: './property-view-card.component.html',
@@ -46,7 +46,7 @@ import {HttpResponse} from '@angular/common/http';
 })
 export class PropertyViewCardComponent implements OnInit, AfterViewInit {
   @Output() propertyDeleted = new EventEmitter<boolean>();
-  @ViewChild(NotificationComponent) notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
   @Input() property: BackEndPropertyData | null = null;
   @Input() isColView: boolean = false;
   @Input() isListView: boolean = true;

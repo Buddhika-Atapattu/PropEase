@@ -48,7 +48,7 @@ import {map} from 'rxjs/operators';
 import {DomSanitizer} from '@angular/platform-browser';
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {
-  NotificationComponent,
+  NotificationDialogComponent,
   NotificationType,
 } from '../../../components/dialogs/notification/notification.component';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
@@ -169,7 +169,7 @@ interface PropertyCustomTableDataType {
     MatDividerModule,
     MatDialogModule,
     MatProgressBarModule,
-    NotificationComponent,
+    NotificationDialogComponent,
     ProgressBarComponent,
     CustomTableComponent,
     SafeUrlPipe,
@@ -185,7 +185,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
-  @ViewChild(NotificationComponent) notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
   @ViewChild(ImageCropperComponent) imageCropper!: ImageCropperComponent;
   @ViewChild(CameraBoxComponent) cameraBox!: CameraBoxComponent;
 

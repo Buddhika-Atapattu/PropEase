@@ -45,7 +45,7 @@ export interface NotificationType {
   templateUrl: './notification.component.html',
   styleUrl: './notification.component.scss',
 })
-export class NotificationComponent implements OnInit, OnDestroy, AfterViewInit {
+export class NotificationDialogComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('notification') notificationElement!: ElementRef<HTMLDivElement>;
   private isBrowser: boolean;
   protected status: msg['type'] = 'error';

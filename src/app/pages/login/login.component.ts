@@ -35,7 +35,7 @@ import {
 import { ActivityTrackerService } from '../../services/activityTacker/activity-tracker.service';
 import {
   msgTypes,
-  NotificationComponent,
+  NotificationDialogComponent,
 } from '../../components/dialogs/notification/notification.component';
 
 @Component( {
@@ -50,14 +50,14 @@ import {
     MatButtonModule,
     MatIconModule,
     MatCheckboxModule,
-    NotificationComponent,
+    NotificationDialogComponent,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 } )
 export class LoginComponent implements OnInit, OnDestroy {
-  @ViewChild( NotificationComponent, { static: true } )
-  notification!: NotificationComponent;
+  @ViewChild( NotificationDialogComponent, { static: true } )
+  notification!: NotificationDialogComponent;
   protected username: string | null = '';
   protected password: string | null = '';
   protected rememberMe: boolean = false;

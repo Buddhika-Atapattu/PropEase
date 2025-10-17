@@ -345,7 +345,6 @@ export class APIsService {
     username: string
   ): Promise<MSG_DATA_TYPE | null> {
     if(username) {
-      console.log(username);
       const data = await firstValueFrom(
         this.http.put<MSG_DATA_TYPE>(
           `http://localhost:3000/api-user/user-update/${username}`,

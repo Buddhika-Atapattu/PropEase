@@ -1,0 +1,437 @@
+/* deleted-item-notifications.component.scss */
+@use "../../../styles/global.scss" as *;
+@use "sass:color";
+
+/* ================================
+   Neutral structure (theme-agnostic)
+   ================================ */
+
+/* Shell */
+.main-panel {
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  min-height: 85vh;
+  padding: 1.25rem;
+  position: relative;
+
+  /* subtle top shine */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.05),
+      transparent 40%
+    );
+    mix-blend-mode: soft-light;
+  }
+}
+
+/* Card hero with vertical accent (inherits global card overrides) */
+.review-card {
+  border: none;
+  overflow: hidden;
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0.35rem;
+    /* gradient color themed below */
+    background: linear-gradient(180deg, #ff5757, #ffb700);
+    opacity: 0.95;
+  }
+}
+
+/* Header skeleton (colors themed below) */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+
+  .hero-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+  }
+
+  .title-wrap {
+    min-width: 0;
+  }
+  .title {
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    line-height: 1.1;
+  }
+  .sub {
+    opacity: 0.85;
+    font-size: 0.85rem;
+  }
+
+  .header-chip {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.725rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid transparent; /* themed below */
+  }
+}
+
+.card-body {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+/* Subject/Body line */
+.subject-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+
+  .dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.6;
+  }
+  .body-text {
+    font-size: 0.95rem;
+    opacity: 0.92;
+  }
+}
+
+/* Quick facts “chips” row */
+.keyline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.6rem;
+    font-weight: 700;
+    font-size: 0.75rem;
+    border: 1px solid transparent; /* themed below */
+    background: transparent; /* themed below */
+    i {
+      opacity: 0.75;
+    }
+  }
+
+  /* severity variants (filled by theme below) */
+  .pill.severity.info {
+  }
+  .pill.severity.success {
+  }
+  .pill.severity.warning {
+  }
+  .pill.severity.error {
+  }
+}
+
+/* Mosaic meta grid (tiles, not columns) */
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.6rem;
+
+  .meta-chip {
+    border: 1px dashed transparent; /* themed */
+    background: transparent; /* themed */
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.65rem;
+    min-width: 0;
+
+    .k {
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.75;
+      margin-bottom: 0.15rem;
+    }
+    .v {
+      font-weight: 700;
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+  }
+}
+
+/* Avatar / preview snapshot */
+.preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.75rem 0 0;
+
+  .avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    border: 2px solid transparent; /* themed */
+    overflow: hidden;
+    box-shadow: 0 0.35rem 0.7rem rgba(0, 0, 0, 0.08);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  .preview-text {
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+}
+
+/* Raw JSON viewer */
+.json-wrap {
+  margin-top: 0.75rem;
+
+  .json-block {
+    border-radius: 0.75rem;
+    padding: 0.85rem;
+    max-height: 45vh;
+    overflow: auto;
+    font-size: 0.85rem;
+    background: transparent; /* themed */
+  }
+}
+
+/* Footer actions */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+
+  .btn {
+    border-radius: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .btn-link {
+    margin-left: auto;
+    text-decoration: none !important;
+  }
+}
+
+/* Confirm bars */
+.confirm-bar {
+  border: 1px dashed currentColor;
+  border-radius: 0.65rem;
+  padding: 0.75rem 0.9rem;
+}
+
+/* Small helper */
+.small-muted {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
+/* Category icon palette (kept neutral; looks good in both themes) */
+.cat-icon {
+  &.user {
+    background: rgba(61, 90, 254, 0.12);
+    color: #3d5afe;
+  }
+  &.tenant {
+    background: rgba(0, 150, 136, 0.12);
+    color: #009688;
+  }
+  &.property {
+    background: rgba(255, 167, 38, 0.14);
+    color: #fb8c00;
+  }
+  &.lease {
+    background: rgba(96, 125, 139, 0.14);
+    color: #607d8b;
+  }
+  &.system {
+    background: rgba(99, 102, 241, 0.14);
+    color: #6366f1;
+  }
+  &.maintenance {
+    background: rgba(16, 185, 129, 0.14);
+    color: #10b981;
+  }
+  &.payment {
+    background: rgba(14, 165, 233, 0.14);
+    color: #0ea5e9;
+  }
+  &.complaint {
+    background: rgba(244, 63, 94, 0.14);
+    color: #f43f5e;
+  }
+}
+
+/* ================================
+   LIGHT THEME (tokens from global.scss)
+   ================================ */
+:host-context(html.light) {
+  .main-panel {
+    background: linear-gradient(
+      145deg,
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
+    );
+    color: $light-text-color;
+  }
+
+  .review-card::before {
+    background: linear-gradient(180deg, $light-error-color, $light-accent-gold);
+  }
+
+  .card {
+    background-color: $light-card-color !important;
+    box-shadow: 0rem 0rem 0.5rem 0rem rgba(0, 0, 0, 0.25) !important;
+    color: $light-text-color !important;
+    .card-header {
+      border-bottom: 1px dashed rgba(0, 0, 0, 0.08) !important;
+
+      .hero-icon {
+        background: rgba(0, 0, 0, 0.06);
+      }
+      .header-chip {
+        background: color.scale($light-error-color, $lightness: 40%);
+        color: color.scale($light-error-color, $lightness: -10%);
+        border-color: color.scale($light-error-color, $lightness: 15%);
+      }
+    }
+  }
+
+  /* quick facts chips */
+  .keyline .pill {
+    border-color: $light-border-color;
+    background: $light-item-hover;
+  }
+  .keyline .pill.severity.info {
+    background: #e6f0ff;
+    border-color: #cfe0ff;
+    color: #0b5ed7;
+  }
+  .keyline .pill.severity.success {
+    background: #e8fff3;
+    border-color: #c1f7dc;
+    color: #0f766e;
+  }
+  .keyline .pill.severity.warning {
+    background: #fff5e6;
+    border-color: #ffe4bf;
+    color: #a16207;
+  }
+  .keyline .pill.severity.error {
+    background: #ffebee;
+    border-color: #ffcdd2;
+    color: #b71c1c;
+  }
+
+  /* meta tiles & preview */
+  .meta-grid .meta-chip {
+    border-color: $light-border-color;
+    background: $light-item-hover;
+  }
+  .preview .avatar {
+    border-color: $light-border-color;
+  }
+
+  /* raw json */
+  .json-wrap .json-block {
+    background: $light-hover-color;
+  }
+}
+
+/* ================================
+   DARK THEME (tokens from global.scss)
+   ================================ */
+:host-context(html.dark) {
+  .main-panel {
+    background: linear-gradient(
+      145deg,
+      $dark-secondary-color,
+      color.adjust($dark-secondary-color, $lightness: 2%)
+    );
+    color: $dark-text-color;
+  }
+
+  .review-card::before {
+    background: linear-gradient(180deg, $dark-error-color, $dark-accent-gold);
+  }
+
+  .card {
+    background-color: $dark-card-color !important;
+    box-shadow: 0rem 0rem 0.5rem 0rem rgba(0, 0, 0, 0.25) !important;
+    color: $dark-text-color !important;
+
+    .card-header {
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.08) !important;
+
+      .hero-icon {
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .header-chip {
+        background: rgba(239, 68, 68, 0.14);
+        color: #fecaca;
+        border-color: rgba(239, 68, 68, 0.25);
+      }
+    }
+  }
+
+  .keyline .pill {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: $dark-item-hover;
+  }
+  .keyline .pill.severity.info {
+    background: rgba(13, 110, 253, 0.14);
+    border-color: rgba(13, 110, 253, 0.3);
+    color: #a5c4ff;
+  }
+  .keyline .pill.severity.success {
+    background: rgba(16, 185, 129, 0.14);
+    border-color: rgba(16, 185, 129, 0.28);
+    color: #b4f1d7;
+  }
+  .keyline .pill.severity.warning {
+    background: rgba(245, 158, 11, 0.14);
+    border-color: rgba(245, 158, 11, 0.28);
+    color: #fcd78a;
+  }
+  .keyline .pill.severity.error {
+    background: rgba(239, 68, 68, 0.14);
+    border-color: rgba(239, 68, 68, 0.28);
+    color: #fecaca;
+  }
+
+  .meta-grid .meta-chip {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .preview .avatar {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .json-wrap .json-block {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}

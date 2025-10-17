@@ -56,7 +56,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { MatDialogModule } from '@angular/material/dialog';
 import {
   msgTypes,
-  NotificationComponent,
+  NotificationDialogComponent,
 } from '../../components/dialogs/notification/notification.component';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ProgressBarComponent } from '../../components/dialogs/progress-bar/progress-bar.component';
@@ -103,7 +103,7 @@ interface MODEL_CHECK {
     MatDividerModule,
     MatDialogModule,
     MatProgressBarModule,
-    NotificationComponent,
+    NotificationDialogComponent,
     ProgressBarComponent,
     ImageCropperComponent,
     EditorComponent,
@@ -118,7 +118,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
-  @ViewChild(NotificationComponent) notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
   @ViewChild(ImageCropperComponent) imageCropper!: ImageCropperComponent;
   @ViewChild(CameraBoxComponent) cameraBox!: CameraBoxComponent;
 

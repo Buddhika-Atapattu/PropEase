@@ -15,7 +15,7 @@ import {APIsService, BaseUser} from '../../../services/APIs/apis.service';
 import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
 import {Lease, LeaseWithProperty, SWITCH_ON_ARRAY, TenantService} from '../../../services/tenant/tenant.service';
 import {
-  NotificationComponent,
+  NotificationDialogComponent,
   NotificationType,
 } from '../../../components/dialogs/notification/notification.component';
 import {HttpErrorResponse} from '@angular/common/http';
@@ -58,12 +58,12 @@ interface LeaseTableDataType {
 
 @Component({
   selector: 'app-tenant-view',
-  imports: [CommonModule, SkeletonLoaderComponent, CustomTableComponent, NotificationComponent, ProgressBarComponent],
+  imports: [CommonModule, SkeletonLoaderComponent, CustomTableComponent, NotificationDialogComponent, ProgressBarComponent],
   templateUrl: './tenant-view.component.html',
   styleUrl: './tenant-view.component.scss',
 })
 export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild(NotificationComponent) notificationComponent!: NotificationComponent
+  @ViewChild(NotificationDialogComponent) NotificationDialogComponent!: NotificationDialogComponent
   @ViewChild(ProgressBarComponent) progressBarComponent!: ProgressBarComponent
 
   protected mode: boolean | null = null;
@@ -345,10 +345,10 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     catch(error) {
       console.error(error);
-      if(error instanceof HttpErrorResponse) this.notificationComponent.notification('error', error.message);
-      else if(typeof error === 'string') this.notificationComponent.notification('error', error);
-      else if(error instanceof Error) this.notificationComponent.notification('error', error.message);
-      else this.notificationComponent.notification('error', 'Failed to load tenant data.');
+      if(error instanceof HttpErrorResponse) this.NotificationDialogComponent.notification('error', error.message);
+      else if(typeof error === 'string') this.NotificationDialogComponent.notification('error', error);
+      else if(error instanceof Error) this.NotificationDialogComponent.notification('error', error.message);
+      else this.NotificationDialogComponent.notification('error', 'Failed to load tenant data.');
     }
   }
 
@@ -384,7 +384,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
       await this.tenantService.getLeaseAgreementByIDAndUpdateValidationStatus(formdata, leaseId).then((res) => {
         try {
           if(res.status === 'success') {
-            this.notificationComponent.notification(res.status, res.message);
+            this.NotificationDialogComponent.notification(res.status, res.message);
           }
           else {
             throw new Error(res.message)
@@ -392,7 +392,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         catch(error) {
           console.log(error);
-          this.notificationComponent.notification("error", "Failed to update lease status!");
+          this.NotificationDialogComponent.notification("error", "Failed to update lease status!");
         }
       });
 
@@ -400,7 +400,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     catch(error) {
       console.log(error)
       if(error) {
-        this.notificationComponent.notification("error", "Failed to update lease status!")
+        this.NotificationDialogComponent.notification("error", "Failed to update lease status!")
       }
     }
     finally {
@@ -505,7 +505,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
     } catch(error) {
       console.error('Error organizing lease table data:', error);
-      this.notificationComponent.notification('error', (error as Error).message);
+      this.NotificationDialogComponent.notification('error', (error as Error).message);
     } finally {
       setTimeout(() => {
         this.isLoading = false;
@@ -545,16 +545,16 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch(error) {
       console.error('Failed to download lease agreement PDF:', error);
       if(error instanceof HttpErrorResponse) {
-        this.notificationComponent.notification('error', error.message);
+        this.NotificationDialogComponent.notification('error', error.message);
       }
       else if(typeof error === 'string') {
-        this.notificationComponent.notification('error', error);
+        this.NotificationDialogComponent.notification('error', error);
       }
       else if(error instanceof Error) {
-        this.notificationComponent.notification('error', error.message);
+        this.NotificationDialogComponent.notification('error', error.message);
       }
       else {
-        this.notificationComponent.notification('error', 'Failed to download lease agreement PDF.');
+        this.NotificationDialogComponent.notification('error', 'Failed to download lease agreement PDF.');
       }
     } finally {
       this.progressBarComponent.complete();
@@ -605,16 +605,16 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         } catch(error: any) {
           console.log('Error fetching property:', error);
           if(error.status === 404) {
-            this.notificationComponent.notification('error', 'No property found for this lease.');
+            this.NotificationDialogComponent.notification('error', 'No property found for this lease.');
           } else {
-            this.notificationComponent.notification('error', 'Failed to fetch property.');
+            this.NotificationDialogComponent.notification('error', 'Failed to fetch property.');
           }
         }
       }
 
     } catch(error) {
       console.error(error);
-      this.notificationComponent.notification('error', 'Failed to load selected properties.');
+      this.NotificationDialogComponent.notification('error', 'Failed to load selected properties.');
     }
     finally {
       setTimeout(() => {
@@ -637,7 +637,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
     } catch(error) {
       console.error('Error loading tenant data:', error);
-      this.notificationComponent?.notification?.(
+      this.NotificationDialogComponent?.notification?.(
         'error',
         'Failed to load tenant data. Please try again later.'
       );
@@ -666,7 +666,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
       } else {
         console.error('Failed to fetch lease agreements:', res.message);
         this.leases = [];
-        this.notificationComponent.notification(
+        this.NotificationDialogComponent.notification(
           'error',
           'Failed to fetch lease agreements. Please try again later.'
         );
@@ -676,12 +676,12 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
       console.error('Error fetching lease agreements:', error);
 
       if(error instanceof HttpErrorResponse && error.status === 404) {
-        this.notificationComponent.notification(
+        this.NotificationDialogComponent.notification(
           'error',
           'No lease agreements found for this tenant.'
         );
       } else {
-        this.notificationComponent.notification(
+        this.NotificationDialogComponent.notification(
           'error',
           'An error occurred while fetching lease agreements. Please try again later.'
         );
@@ -747,7 +747,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
     } catch(error) {
       console.error('Error while trying to create tenant lease:', error);
-      this.notificationComponent.notification('error', 'Unable to create tenant lease.');
+      this.NotificationDialogComponent.notification('error', 'Unable to create tenant lease.');
     }
   }
   //<========================================================================= END GO TO THE LEASE CREATION ========================================================================>
@@ -759,7 +759,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
       await this.router.navigate(['/dashboard/tenant/tenant-home/']);
     } catch(error) {
       console.error('Navigation to tenants page failed:', error);
-      this.notificationComponent.notification(
+      this.NotificationDialogComponent.notification(
         'error',
         'Failed to navigate to the tenants page.'
       );
@@ -785,7 +785,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
     } catch(error) {
       console.error('Navigation to tenant view failed:', error);
-      this.notificationComponent.notification('error', 'Unable to load tenant view.');
+      this.NotificationDialogComponent.notification('error', 'Unable to load tenant view.');
     }
   }
   //<========================================================================= END GO TO THE TENANT VIEW ========================================================================>

@@ -17,7 +17,7 @@ import {
   SimpleChanges,
   HostListener,
 } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 import {
   APIsService,
   BaseUser,
@@ -27,33 +27,33 @@ import {
   ROLE_ACCESS_MAP,
   validateType,
 } from '../../../services/APIs/apis.service';
-import { SkeletonLoaderComponent } from '../../../components/shared/skeleton-loader/skeleton-loader.component';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatButtonModule } from '@angular/material/button';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
+import {MatInputModule} from '@angular/material/input';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatButtonModule} from '@angular/material/button';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatDatepickerModule} from '@angular/material/datepicker';
 import {
   MatMomentDateModule,
   MomentDateAdapter,
 } from '@angular/material-moment-adapter';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
-import { DomSanitizer } from '@angular/platform-browser';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
-import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { CameraBoxComponent } from '../../../components/dialogs/camera-box/camera-box.component';
-import { EditorComponent } from '@tinymce/tinymce-angular';
-import { AuthService } from '../../../services/auth/auth.service';
+import {MatSelectModule} from '@angular/material/select';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {Observable} from 'rxjs';
+import {map, startWith} from 'rxjs/operators';
+import {DomSanitizer} from '@angular/platform-browser';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
+import {ImageCropperComponent, ImageCroppedEvent} from 'ngx-image-cropper';
+import {CryptoService} from '../../../services/cryptoService/crypto.service';
+import {CameraBoxComponent} from '../../../components/dialogs/camera-box/camera-box.component';
+import {EditorComponent} from '@tinymce/tinymce-angular';
+import {AuthService} from '../../../services/auth/auth.service';
 import Tesseract from 'tesseract.js';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import {FormBuilder, FormGroup} from '@angular/forms';
 import {
   MAT_DIALOG_DATA,
   MatDialog,
@@ -64,24 +64,24 @@ import {
   MatDialogTitle,
   MatDialogModule,
 } from '@angular/material/dialog';
-import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { Subscription } from 'rxjs';
+import {isPlatformBrowser, CommonModule, AsyncPipe} from '@angular/common';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {Subscription} from 'rxjs';
 import {
   BackEndPropertyData,
   MSG,
   PropertyService,
 } from '../../../services/property/property.service';
-import { NotificationComponent } from '../notification/notification.component';
-import { ScanService, DeviceInfo } from '../../../services/scan/scan.service';
-import { QRCode, QRCodeErrorCorrectionLevel, toDataURL } from 'qrcode';
-import { PC_IP_PLUS_PORT } from '../../../../environments/environment';
+import {NotificationDialogComponent} from '../notification/notification.component';
+import {ScanService, DeviceInfo} from '../../../services/scan/scan.service';
+import {QRCode, QRCodeErrorCorrectionLevel, toDataURL} from 'qrcode';
+import {PC_IP_PLUS_PORT} from '../../../../environments/environment';
 
 @Component({
   selector: 'app-file-viewer',
   imports: [
     CommonModule,
-    NotificationComponent,
+    NotificationDialogComponent,
     FormsModule,
     ReactiveFormsModule,
     MatInputModule,
@@ -101,8 +101,8 @@ import { PC_IP_PLUS_PORT } from '../../../../environments/environment';
   styleUrl: './file-viewer.scss',
 })
 export class FileViewer implements OnInit, OnDestroy, AfterViewInit, OnChanges {
-  @ViewChild(NotificationComponent, { static: true })
-  notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent, {static: true})
+  notification!: NotificationDialogComponent;
 
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -114,7 +114,7 @@ export class FileViewer implements OnInit, OnDestroy, AfterViewInit, OnChanges {
   private token: string = '';
 
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(MAT_DIALOG_DATA)
@@ -126,7 +126,7 @@ export class FileViewer implements OnInit, OnDestroy, AfterViewInit, OnChanges {
     private crypto: CryptoService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -139,7 +139,7 @@ export class FileViewer implements OnInit, OnDestroy, AfterViewInit, OnChanges {
     this.cdr.detectChanges();
   }
 
-  
+
   ngAfterViewInit(): void {}
   ngOnChanges(changes: SimpleChanges): void {}
   ngOnDestroy(): void {}

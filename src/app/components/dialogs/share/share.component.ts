@@ -21,26 +21,26 @@ import {
   MatDialogTitle,
   MatDialogModule,
 } from '@angular/material/dialog';
-import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { Subscription } from 'rxjs';
+import {isPlatformBrowser, CommonModule, AsyncPipe} from '@angular/common';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {Subscription} from 'rxjs';
 import {
   BackEndPropertyData,
   MSG,
   PropertyService,
 } from '../../../services/property/property.service';
-import { NotificationComponent } from '../notification/notification.component';
+import {NotificationDialogComponent} from '../notification/notification.component';
 
 @Component({
   selector: 'app-share',
   standalone: true,
-  imports: [CommonModule, NotificationComponent],
+  imports: [CommonModule, NotificationDialogComponent],
   templateUrl: './share.component.html',
   styleUrl: './share.component.scss',
 })
 export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild(NotificationComponent, { static: true })
-  notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent, {static: true})
+  notification!: NotificationDialogComponent;
   // Dialog data
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -81,7 +81,7 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
     },
   ];
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(MAT_DIALOG_DATA)
@@ -90,24 +90,24 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
     private cdr: ChangeDetectorRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
     }
-    if (this.data.property) {
+    if(this.data.property) {
       this.property = this.data.property;
       this.link = `https://www.google.com/maps/place/${this.property?.location?.lat},${this.property?.location?.lng}`;
     }
   }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
   ngAfterViewInit(): void {
     // Force redraw after DOM
   }
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {}
 
   protected copyToClipboard(inputElement: HTMLInputElement): void {
     console.log('Clciked');
@@ -136,7 +136,7 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
     const encodedUrl = encodeURIComponent(propertyUrl);
     let fullLink = '';
 
-    switch (type.toLowerCase()) {
+    switch(type.toLowerCase()) {
       case 'facebook':
         fullLink = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
         break;
@@ -153,7 +153,7 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
         fullLink = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
         break;
       case 'instagram':
-        if (this.notification) {
+        if(this.notification) {
           this.notification.notification(
             'warning',
             'Instagram does not support direct post sharing via links. Please copy the content manually.'

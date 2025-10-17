@@ -38,6 +38,9 @@ import {
   Notification,
 } from '../../../services/notifications/notification-service';
 import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
+import {NotificationsRoutingService} from '../../../services/notificationRouting/notifications-routing-service';
+
+
 
 /** Tabs */
 type TabKey = 'all' | 'unread' | 'direct' | 'overall';
@@ -147,7 +150,8 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private authService: AuthService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private readonly notificationsRoutingService: NotificationsRoutingService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -413,16 +417,8 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /** Open notification: internal links use Router; http(s) open in a new tab. Also mark read. */
-  protected openNotification(notification: Notification) {
-    const link = notification.link?.trim();
-    if(link) {
-      if(/^https?:\/\//i.test(link)) {
-        window.open(link, '_blank', 'noopener');
-      } else {
-        // treat as internal route
-        this.router.navigateByUrl(link).catch(err => console.error('navigateByUrl failed', err));
-      }
-    }
+  protected async openNotification(notification: Notification): Promise<void> {
+    await this.notificationsRoutingService.navigateTo(notification);
     if(!notification.userState?.isRead) this.markRead(notification._id);
   }
 }

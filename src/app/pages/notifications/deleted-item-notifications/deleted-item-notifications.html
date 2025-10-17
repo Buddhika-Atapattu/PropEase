@@ -1,0 +1,236 @@
+<app-notification />
+<app-progress-bar />
+<!-- Everything lives inside .main-panel -->
+<div *ngIf="mode !== null" class="main-panel">
+  <div class="container-fluid pt-5">
+    <div class="row page-indecator">
+      <span
+        ><button
+          type="button"
+          class="page-indicator-btn"
+          (click)="backToList()"
+        >
+          Notifications
+        </button>
+        <i class="fa-solid fa-angle-right my-2"></i
+        ><button type="button" class="page-indicator-btn">
+          {{!loading && notification ? 'Delete ' + notification.category:
+          'Delete item'}}
+        </button>
+      </span>
+    </div>
+    <!-- Loading / Error states -->
+    <div class="row" *ngIf="loading">
+      <div class="col-12">
+        <div class="alert alert-info d-flex align-items-center gap-2">
+          <i class="bi bi-arrow-repeat spinner-border spinner-border-sm"></i>
+          Loading deleted item details…
+        </div>
+      </div>
+    </div>
+
+    <div class="row" *ngIf="error">
+      <div class="col-12">
+        <div class="alert alert-danger d-flex align-items-center gap-2">
+          <i class="bi bi-exclamation-triangle"></i>
+          {{ error }}
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN: single modern review card (no columns) -->
+    <ng-container *ngIf="!loading && notification as n">
+      <div class="card review-card card-hover card-accent-danger">
+        <!-- Header -->
+        <div class="card-header">
+          <div
+            class="hero-icon cat-icon"
+            [ngClass]="{
+              'user': n.category === 'User',
+              'tenant': n.category === 'Tenant',
+              'property': n.category === 'Property',
+              'lease': n.category === 'Lease',
+              'system': n.category === 'System',
+              'maintenance': n.category === 'Maintenance',
+              'payment': n.category === 'Payment',
+              'complaint': n.category === 'Complaint'
+            }"
+            aria-hidden="true"
+          >
+            <!-- <i class="bi bi-trash3-fill"></i> -->
+            <mat-icon>{{ n.icon }}</mat-icon>
+          </div>
+
+          <div class="title-wrap">
+            <h5 class="title mb-2">{{ n.title || 'Deleted Item' }}</h5>
+            <div class="sub small-muted">
+              <!-- created date -->
+              <i class="bi bi-clock-history me-1"></i>
+              <ng-container *ngIf="n.createdAt"
+                >{{ n.createdAt | date:'medium' }}</ng-container
+              >
+            </div>
+          </div>
+
+          <!-- Right chip -->
+          <span class="header-chip">
+            <i class="bi bi-shield-exclamation"></i>
+            Deleted review
+          </span>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body">
+          <!-- Subject / body -->
+          <div class="subject-line" *ngIf="n.body">
+            <span class="dot"></span>
+            <span class="body-text">{{ n.body }}</span>
+          </div>
+
+          <!-- Key info line -->
+          <div class="keyline">
+            <span *ngIf="n.category" class="pill">
+              <i class="bi bi-folder2-open"></i> {{ n.category }}
+            </span>
+            <span *ngIf="n.type" class="pill">
+              <i class="bi bi-diagram-3"></i> {{ n.type }}
+            </span>
+            <span
+              *ngIf="n.severity"
+              class="pill severity"
+              [ngClass]="n.severity"
+            >
+              <i class="bi bi-activity"></i>
+              {{ n.severity }}
+            </span>
+
+            <span *ngIf="n.tags?.length" class="pill">
+              <i class="bi bi-tags"></i>
+              <ng-container *ngFor="let t of n.tags; let last = last">
+                {{ t }}<span *ngIf="!last">,</span>
+              </ng-container>
+            </span>
+
+            <span class="pill small-muted ms-auto" *ngIf="n._id">
+              <i class="bi bi-hash"></i> {{ n._id | slice: -8 }}
+            </span>
+          </div>
+
+          <!-- Preview (avatar) for user-like payloads -->
+          <!-- Render preview when metadata exists; alias it to `m` for readability -->
+          <div class="preview" *ngIf="n?.metadata as m">
+            <div class="avatar">
+              <img
+                [src]="getUserImage(m)"
+                (error)="setFallback($event)"
+                alt="item preview"
+                referrerpolicy="no-referrer"
+              />
+            </div>
+
+            <div class="preview-text">
+              <strong>{{ getUserName(m) }}</strong>
+              <div class="small-muted">
+                quick glance preview pulled from update payload
+              </div>
+            </div>
+          </div>
+
+          <!-- Mosaic meta grid -->
+          <div class="meta-grid mt-3" *ngIf="primaryMeta?.length">
+            <div class="meta-chip" *ngFor="let row of primaryMeta">
+              <div class="k">{{ row.key }}</div>
+              <div class="v" [title]="row.value | json">
+                {{ row.value | metaRender }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Raw JSON -->
+          <div class="json-wrap">
+            <button
+              class="btn btn-sm btn-outline-primary"
+              (click)="toggleRaw()"
+            >
+              <i
+                class="bi"
+                [ngClass]="{'bi-code-slash': !showRaw, 'bi-x-lg': showRaw}"
+              ></i>
+              {{ showRaw ? 'Hide raw JSON' : 'Show raw JSON' }}
+            </button>
+            <pre *ngIf="showRaw" class="json-block mt-2">
+{{ n.metadata | json }}</pre
+            >
+          </div>
+
+          <!-- Actions -->
+          <div class="actions">
+            <button class="btn btn-outline-success" (click)="askRestore()">
+              <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
+            </button>
+            <button
+              class="btn btn-outline-danger"
+              (click)="askPermanentDelete()"
+            >
+              <i class="bi bi-trash3-fill me-1"></i> Permanently Delete
+            </button>
+            <button class="btn btn-link ms-auto" (click)="backToList()">
+              <i class="bi bi-list-ul me-1"></i> Back to all notifications
+            </button>
+          </div>
+        </div>
+
+        <!-- Inline confirm bars -->
+        <div class="px-3 pb-3">
+          <div
+            *ngIf="confirm === 'restore'"
+            class="confirm-bar text-success d-flex align-items-center justify-content-between mt-2"
+          >
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-question-circle-fill"></i>
+              <span>Restore this item and return it to the system?</span>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-success btn-sm" (click)="restore(n)">
+                Yes, restore
+              </button>
+              <button
+                class="btn btn-outline-secondary btn-sm"
+                (click)="cancelConfirm()"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <div
+            *ngIf="confirm === 'delete'"
+            class="confirm-bar text-danger d-flex align-items-center justify-content-between mt-2"
+          >
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <span
+                >This will permanently delete the item. This action cannot be
+                undone.</span
+              >
+            </div>
+            <div class="d-flex gap-2">
+              <button
+                class="btn btn-danger btn-sm"
+                (click)="permanentDelete(n._id)"
+              >
+                Yes, delete forever
+              </button>
+              <button
+                class="btn btn-outline-secondary btn-sm"
+                (click)="cancelConfirm()"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>

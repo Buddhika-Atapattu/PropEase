@@ -26,7 +26,7 @@ import {
   BackEndPropertyData,
 } from '../../../services/property/property.service';
 import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
-import {NotificationComponent} from '../../../components/dialogs/notification/notification.component';
+import {NotificationDialogComponent} from '../../../components/dialogs/notification/notification.component';
 import {PropertyViewCardComponent} from '../../../components/property-view-card/property-view-card.component';
 interface filterDialogData {
   minPrice: number;
@@ -50,7 +50,7 @@ interface apiDataTypeForProperties {
   imports: [
     CommonModule,
     MatIconModule,
-    NotificationComponent,
+    NotificationDialogComponent,
     ProgressBarComponent,
     PropertyViewCardComponent,
     FormsModule
@@ -60,7 +60,7 @@ interface apiDataTypeForProperties {
 })
 export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
-  @ViewChild(NotificationComponent) notification!: NotificationComponent;
+  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
   @ViewChild('searchInput', {static: true})
   searchInput!: ElementRef<HTMLInputElement>;
   protected mode: boolean | null = null;
