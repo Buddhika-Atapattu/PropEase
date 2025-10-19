@@ -22,6 +22,8 @@ import {
   Notification,
 } from '../../../services/notifications/notification-service';
 import {AuthService} from '../../../services/auth/auth.service';
+
+// ✅ make sure the import path matches your file name/location exactly
 import {NotificationsRoutingService} from '../../../services/notificationRouting/notifications-routing-service';
 
 @Component({
@@ -61,7 +63,7 @@ export class NotificationComponent implements OnInit, OnDestroy {
     private readonly notificationService: NotificationService,
     private readonly authService: AuthService,
     private readonly router: Router,
-    private notificationsRoutingService: NotificationsRoutingService
+    private readonly notificationsRoutingService: NotificationsRoutingService
   ) {}
 
   ngOnInit(): void {
@@ -105,22 +107,22 @@ export class NotificationComponent implements OnInit, OnDestroy {
     };
 
     // Split views
-    this.directNotifications$ = this.notifications$.pipe(map((list) => list.filter(isDirect)));
-    this.overallNotifications$ = this.notifications$.pipe(map((list) => list.filter(isOverall)));
+    this.directNotifications$ = this.notifications$.pipe(map(list => list.filter(isDirect)));
+    this.overallNotifications$ = this.notifications$.pipe(map(list => list.filter(isOverall)));
 
     // Initial fetch
     this.notificationService.load({limit: 30}).catch((error) => {
       console.error('[notif] initial load failed', error);
     });
 
-    // Optional real-time: only if your service exposes it (safe guard)
+    // Optional real-time
     const maybeOnNew = (this.notificationService as any).onNew?.bind(this.notificationService);
     if(typeof maybeOnNew === 'function') {
       maybeOnNew()
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (n: Notification) => this.notificationService.upsert?.(n),
-          error: () => {/* ignore; polling handles resilience */},
+          error: () => { /* ignore; polling handles resilience */},
         });
     }
 
@@ -135,14 +137,10 @@ export class NotificationComponent implements OnInit, OnDestroy {
       .pipe(
         switchMap((isVisible) => {
           const intervalMs = isVisible ? 30_000 : 180_000; // 30s vs 3min
-          // Fire on each tick
           return timer(intervalMs, intervalMs).pipe(map(() => undefined));
         }),
-        // Call load() and convert to retry-able observable
         switchMap(() =>
           this.notificationService.load$?.({limit: 30}) ??
-          // Fallback if you don't have load$:
-          // Wrap promise -> observable for the same pipeline
           new Observable<void>((sub) => {
             this.notificationService
               .load({limit: 30})
@@ -155,7 +153,6 @@ export class NotificationComponent implements OnInit, OnDestroy {
         ),
         retryWhen((errors) =>
           errors.pipe(
-            // backoff: 5s → 15s → 45s → 135s → cap at 300s
             scan((acc: number) => Math.min(acc ? acc * 3 : 5000, 300000), 0),
             delayWhen((ms: number) => timer(ms))
           )
@@ -180,12 +177,24 @@ export class NotificationComponent implements OnInit, OnDestroy {
     this.activeTab = tab;
   }
 
+  /**
+   * FIX: Actually navigate.
+   * We use the routing service’s convenience method which builds the UrlTree and navigates.
+   * Then we mark as read and close the menu.
+   */
   protected async markOneRead(notification: Notification, ev?: MouseEvent) {
     ev?.stopPropagation();
+    ev?.preventDefault();
+
     try {
+      // Navigate to the appropriate page for this notification
+      const ok = await this.notificationsRoutingService.navigateToAny(notification);
+
+      // Mark as read after attempting navigation (or before, if you prefer)
       await this.notificationService.markRead(notification._id);
-      await await this.notificationsRoutingService.navigateTo(notification);
-      this.closeMenu();
+
+      // Close the menu (often auto-closes on nav, but this is safe)
+      if(ok) this.closeMenu();
     } catch(e) {
       console.error('[notif] markOneRead failed', e);
     }
@@ -201,14 +210,10 @@ export class NotificationComponent implements OnInit, OnDestroy {
 
   protected iconFor(n: Notification): string {
     switch(n.severity) {
-      case 'success':
-        return 'check_circle';
-      case 'warning':
-        return 'warning';
-      case 'error':
-        return 'error';
-      default:
-        return 'notifications';
+      case 'success': return 'check_circle';
+      case 'warning': return 'warning';
+      case 'error': return 'error';
+      default: return 'notifications';
     }
   }
 

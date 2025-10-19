@@ -1,69 +1,85 @@
-// src/app/services/notificationsRouting/notification-routing-service.ts
-// Purpose: Convert a Notification object into an Angular UrlTree and navigate there.
-// Highlights:
-// - Category-first routing model for Property, Tenant, Lease, User, etc.
-// - “Destructive” items (delete/terminate/expire/…) go to a Deleted Items hub.
-// - Robust metadata reading: supports flat and nested payloads with case-insensitive keys.
-// - Exact case-sensitive Title index to handle special-case routing quickly.
-// - User deep links may require a security token (generated via APIsService).
-// - Everything is encapsulated in the class (no free functions).
+// Path: src/app/services/notificationsRouting/notification-routing-service.ts
+// ─────────────────────────────────────────────────────────────────────────────
+// Purpose
+//   Convert either a Notification OR a direct backend action response into an
+//   Angular UrlTree and (optionally) navigate there.
+//
+// Why this file changed
+//   - Backend "metadata" is now { refId: string; data?: Record<string, any> }.
+//   - Some flows (restore/permanent_delete) respond directly from controllers
+//     with: { success, message, category, refId, restored? }.
+//   - Users & Tenants should be navigated by tokenized username.
+//
+// Usage
+//   const url = await notificationsRoutingService.routeForAny(notificationOrResponse);
+//   router.navigateByUrl(url);
+//
+// Notes
+//   - "Notification" is your app DTO (from your notification service).
+//   - "BackendActionResult" below is a local type for controller responses.
+//   - We carefully conditionally read fields to remain strict-mode friendly.
+// ─────────────────────────────────────────────────────────────────────────────
 
-import {Injectable} from '@angular/core';          // Angular DI decorator
-import {Router, UrlTree} from '@angular/router';   // Router + UrlTree for navigation
+import {Injectable} from '@angular/core';
+import {Router, UrlTree} from '@angular/router';
+
 import {
-  Notification,                                     // App-level Notification model
-  TitleCategory,                                    // Category string union
-  Title,                                            // Title string union
+  Notification,        // your app-level Notification DTO
+  TitleCategory,       // 'User' | 'Tenant' | 'Property' | 'Lease' | ...
+  Title,               // exact title literals you use
 } from '../notifications/notification-service';
-import {APIsService} from '../APIs/apis.service';  // Service used to generate user tokens
 
-// A helper type to represent IDs that may be a string, number or missing (undefined)
+import {APIsService} from '../APIs/apis.service';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Backend action response (from /restore or /permanent-delete endpoints).
+// Example:
+//   { success:true, message:"User restored", category:"User", refId:"PushpaLatha", restored:{_id:"..."} }
+// ─────────────────────────────────────────────────────────────────────────────
+export type BackendActionResult = {
+  success: boolean;
+  message: string;
+  category: TitleCategory | string;
+  refId: string;
+  restored?: {_id: string};   // present on restore
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper types
+// ─────────────────────────────────────────────────────────────────────────────
 type IdLike = string | number | undefined;
 
-// A structure describing how we route a specific notification Title
 type TitleHandler = {
-  // The category this title belongs to (User, Property, Tenant, Lease, System, …)
   category: TitleCategory;
-
-  // Where to find ids (by nested key paths) in the notification metadata
-  // Every path is an array of keys; each key is matched case-insensitively
+  // All id paths are resolved inside n.metadata.data (case-insensitive)
   idPaths?: {
     property?: string[][];
     tenant?: string[][];
     lease?: string[][];
     username?: string[][];
   };
-
-  // Optional pre-step before routing — can produce a token, for example
-  pre?: (ids: {property?: IdLike; tenant?: IdLike; lease?: IdLike; username?: string}) =>
-    Promise<Partial<{token: string}>> | Partial<{token: string}>;
-
-  // Function that turns the notification + pre-processing result into a UrlTree
+  pre?: (
+    ids: {property?: IdLike; tenant?: IdLike; lease?: IdLike; username?: string}
+  ) => Promise<Partial<{token: string}>> | Partial<{token: string}>;
   toUrl: (ctx: {
-    n: Notification;                                                             // the raw notification
-    ids: {property?: IdLike; tenant?: IdLike; lease?: IdLike; username?: string}; // extracted IDs
-    pre?: Partial<{token: string}>;                                           // output from pre()
-    router: Router;                                                             // router to build UrlTree
+    n: Notification;
+    ids: {property?: IdLike; tenant?: IdLike; lease?: IdLike; username?: string};
+    pre?: Partial<{token: string}>;
+    router: Router;
   }) => UrlTree;
 };
 
-// Make this service injectable and available app-wide
 @Injectable({providedIn: 'root'})
 export class NotificationsRoutingService {
-
-  // Inject Angular Router and the API service (used for generating user profile tokens)
   constructor (
     private readonly router: Router,
-    private readonly apis: APIsService
+    private readonly apis: APIsService,  // used to mint profile tokens
   ) {}
 
-  /* ──────────────────────────────────────────────────────────────────────────────
-   * Canonical ID path suggestions (flat + nested + CRUD variants)
-   * Each path segment is matched case-insensitively by getByPathCI()
-   * These lists help us extract IDs from various metadata shapes consistently.
-   * ────────────────────────────────────────────────────────────────────────────── */
+  // ───────────────────────────────────────────────────────────────────────────
+  // WHERE WE LOOK FOR IDS (inside n.metadata.data). Keys are case-insensitive.
+  // ───────────────────────────────────────────────────────────────────────────
 
-  // Property ID can be found in any of these places depending on event/payload
   private readonly PROP_ID_PATHS: string[][] = [
     ['propertyID'], ['propertyId'], ['propId'], ['id'],
     ['property', 'id'], ['property', 'propertyID'], ['property', 'propertyId'],
@@ -74,9 +90,8 @@ export class NotificationsRoutingService {
     ['DeletePropertyData', 'propertyID'], ['DeletePropertyData', 'propertyId'],
   ];
 
-  // Tenant ID lookup paths
   private readonly TENANT_ID_PATHS: string[][] = [
-    ['tenantID'], ['tenantId'],
+    ['tenantID'], ['tenantId'], ['id'],
     ['tenant', 'tenantID'], ['tenant', 'tenantId'], ['tenant', 'id'],
     ['NewTenantData', 'tenantID'], ['NewTenantData', 'tenantId'],
     ['UpdatedTenantData', 'tenantID'], ['UpdatedTenantData', 'tenantId'],
@@ -85,9 +100,8 @@ export class NotificationsRoutingService {
     ['DeleteTenantData', 'tenantID'], ['DeleteTenantData', 'tenantId'],
   ];
 
-  // Lease ID lookup paths
   private readonly LEASE_ID_PATHS: string[][] = [
-    ['leaseID'], ['leaseId'],
+    ['leaseID'], ['leaseId'], ['id'],
     ['lease', 'leaseID'], ['lease', 'leaseId'], ['lease', 'id'],
     ['NewLeaseData', 'leaseID'], ['NewLeaseData', 'leaseId'],
     ['UpdatedLeaseData', 'leaseID'], ['UpdatedLeaseData', 'leaseId'],
@@ -96,62 +110,65 @@ export class NotificationsRoutingService {
     ['DeleteLeaseData', 'leaseID'], ['DeleteLeaseData', 'leaseId'],
   ];
 
-  // Username lookup paths.
-  // NOTE: backend moved from UpdatedUserData → user, so we support both.
+  // Username detection (users & tenants). If not found in data, fallback to metadata.refId.
   private readonly USERNAME_PATHS: string[][] = [
-    ['username'], ['user'], ['owner'],           // flat fallbacks (string-only for 'username' & 'owner'; 'user' can be object)
-    ['user', 'username'],                        // nested under 'user' object
-    ['NewUserData', 'username'],                 // historical payload shapes
-    ['UpdatedUserData', 'username'], ['UpdateUserData', 'username'],
-    ['DeletedUserData', 'username'], ['DeleteUserData', 'username'],
+    ['username'], ['owner'],
+    ['user', 'username'],
+    ['tenant', 'username'],
+    ['UpdatedUserData', 'username'],
+    ['UpdateUserData', 'username'],
+    ['NewUserData', 'username'],
+    ['DeletedUserData', 'username'],
+    ['DeleteUserData', 'username'],
+    ['UpdatedTenantData', 'username'],
+    ['UpdateTenantData', 'username'],
+    ['NewTenantData', 'username'],
+    ['DeletedTenantData', 'username'],
+    ['DeleteTenantData', 'username'],
   ];
 
-  /* ──────────────────────────────────────────────────────────────────────────────
-   * Exact, case-sensitive Title index
-   * We can quickly route by exact title without switching by category
-   * and still use the same ID path extraction logic above.
-   * ────────────────────────────────────────────────────────────────────────────── */
+  // ───────────────────────────────────────────────────────────────────────────
+  // Exact-title handlers (fast path for common titles)
+  // NOTE: Delete handlers now include { selected: n._id } in query params.
+  // ───────────────────────────────────────────────────────────────────────────
   private readonly TITLE_INDEX: Record<string, TitleHandler> = {
-    // ─── USER TITLES ────────────────────────────────────────────────────────────
-    // For create/update, try to deep-link into the user profile if we can mint a token.
+    // USER
     'New User': {
-      category: 'User',                           // used for grouping / clarity
-      idPaths: {username: this.USERNAME_PATHS}, // where to find the username in metadata
-      toUrl: ({n, ids, pre, router}) => {       // build the UrlTree
-        if(ids.username && pre?.token) {         // if token exists → deep link to profile
+      category: 'User',
+      idPaths: {username: this.USERNAME_PATHS},
+      toUrl: ({ids, pre, router}) => {
+        if(ids.username && pre?.token) {
           return router.createUrlTree(['/dashboard/view-user-profile', pre.token]);
         }
-        // fallback to the users list (select this notification)
-        return router.createUrlTree(['/dashboard/users'], {queryParams: {selected: n._id}});
+        return router.createUrlTree(['/dashboard/users']);
       },
     },
     'Update User': {
       category: 'User',
       idPaths: {username: this.USERNAME_PATHS},
-      toUrl: ({n, ids, pre, router}) => {
+      toUrl: ({ids, pre, router}) => {
         if(ids.username && pre?.token) {
           return router.createUrlTree(['/dashboard/view-user-profile', pre.token]);
         }
-        return router.createUrlTree(['/dashboard/users'], {queryParams: {selected: n._id}});
+        return router.createUrlTree(['/dashboard/users']);
       },
     },
     'Delete User': {
       category: 'User',
       toUrl: ({n, router}) =>
         router.createUrlTree(
-          ['/dashboard/deleted-items'],                           // Deleted Items hub
+          ['/dashboard/deleted-items'],
           {queryParams: {selected: n._id, category: 'User', type: 'delete'}}
         ),
     },
 
-    // ─── PROPERTY TITLES ────────────────────────────────────────────────────────
+    // PROPERTY
     'New Property': {
       category: 'Property',
-      idPaths: {property: this.PROP_ID_PATHS},  // where to find property id
+      idPaths: {property: this.PROP_ID_PATHS},
       toUrl: ({ids, router}) =>
-        ids.property                               // if we have an id → go to property view
+        ids.property
           ? router.createUrlTree(['/dashboard/property-view', String(ids.property)])
-          // else → go to the listing page
           : router.createUrlTree(['/dashboard/property-listing']),
     },
     'Update Property': {
@@ -171,22 +188,30 @@ export class NotificationsRoutingService {
         ),
     },
 
-    // ─── TENANT TITLES ─────────────────────────────────────────────────────────
+    // TENANT
     'New Tenant': {
       category: 'Tenant',
-      idPaths: {tenant: this.TENANT_ID_PATHS},  // where to find tenant id
-      toUrl: ({ids, router}) =>
-        ids.tenant
+      idPaths: {tenant: this.TENANT_ID_PATHS, username: this.USERNAME_PATHS},
+      toUrl: ({ids, pre, router}) => {
+        if(ids.username && pre?.token) {
+          return router.createUrlTree(['/dashboard/tenant/tenant-view', pre.token]);
+        }
+        return ids.tenant
           ? router.createUrlTree(['/dashboard/tenant/tenant-view', String(ids.tenant)])
-          : router.createUrlTree(['/dashboard/tenant/tenant-home']),
+          : router.createUrlTree(['/dashboard/tenant/tenant-home']);
+      },
     },
     'Update Tenant': {
       category: 'Tenant',
-      idPaths: {tenant: this.TENANT_ID_PATHS},
-      toUrl: ({ids, router}) =>
-        ids.tenant
+      idPaths: {tenant: this.TENANT_ID_PATHS, username: this.USERNAME_PATHS},
+      toUrl: ({ids, pre, router}) => {
+        if(ids.username && pre?.token) {
+          return router.createUrlTree(['/dashboard/tenant/tenant-view', pre.token]);
+        }
+        return ids.tenant
           ? router.createUrlTree(['/dashboard/tenant/tenant-view', String(ids.tenant)])
-          : router.createUrlTree(['/dashboard/tenant/tenant-home']),
+          : router.createUrlTree(['/dashboard/tenant/tenant-home']);
+      },
     },
     'Delete Tenant': {
       category: 'Tenant',
@@ -197,10 +222,10 @@ export class NotificationsRoutingService {
         ),
     },
 
-    // ─── LEASE TITLES ──────────────────────────────────────────────────────────
+    // LEASE
     'New Lease': {
       category: 'Lease',
-      idPaths: {lease: this.LEASE_ID_PATHS},    // where to find lease id
+      idPaths: {lease: this.LEASE_ID_PATHS},
       toUrl: ({ids, router}) =>
         ids.lease
           ? router.createUrlTree(['/dashboard/tenant/view-lease', String(ids.lease)])
@@ -223,64 +248,62 @@ export class NotificationsRoutingService {
         ),
     },
 
-    // ─── SYSTEM/BROADCAST TITLES (examples) ────────────────────────────────────
+    // SYSTEM / BROADCAST
     'System Update': {
       category: 'System',
-      toUrl: ({n, router}) =>
-        router.createUrlTree(
-          ['/dashboard/all-notifications'],         // generic inbox page
-          {queryParams: {selected: n._id}}      // highlight selection
-        ),
+      toUrl: ({router}) => router.createUrlTree(['/dashboard/all-notifications']),
     },
     'Broadcast Announcement': {
       category: 'System',
-      toUrl: ({n, router}) =>
-        router.createUrlTree(
-          ['/dashboard/all-notifications'],
-          {queryParams: {selected: n._id}}
-        ),
+      toUrl: ({router}) => router.createUrlTree(['/dashboard/all-notifications']),
     },
   };
 
-  /* ──────────────────────────────────────────────────────────────────────────────
-   * PUBLIC API
-   * ────────────────────────────────────────────────────────────────────────────── */
+  // ───────────────────────────────────────────────────────────────────────────
+  // PUBLIC API
+  // ───────────────────────────────────────────────────────────────────────────
 
   /**
-   * Compute a UrlTree for a notification.
-   * Note: may call APIs to build a token for User deep links (hence async).
+   * Route for either a Notification or a backend action response.
+   * We detect which one it is and route accordingly.
    */
-  public async routeFor(n: Notification): Promise<UrlTree> {
-    const meta: Record<string, any> = n.metadata || {}; // guard if metadata is missing
+  public async routeForAny(input: Notification | BackendActionResult): Promise<UrlTree> {
+    const isBackend = this.isBackendResponse(input);
+    return isBackend
+      ? this.routeForBackend(input as BackendActionResult)
+      : this.routeForNotification(input as Notification);
+  }
 
-    // 0) Exact title fast-path: try TITLE_INDEX first for precision/speed
-    const exact = await this.routeByExactTitle(n, meta);
+  /** Convenience: compute + navigate. */
+  public async navigateToAny(input: Notification | BackendActionResult): Promise<boolean> {
+    try {
+      const url = await this.routeForAny(input);
+      return this.router.navigateByUrl(url);
+    } catch(err) {
+      console.error('[notif-route] navigateToAny failed:', err);
+      return this.router.navigateByUrl(this.router.createUrlTree(['/dashboard/all-notifications']));
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Notification routing
+  // ───────────────────────────────────────────────────────────────────────────
+
+  public async routeFor(n: Notification): Promise<UrlTree> {
+    return this.routeForNotification(n);
+  }
+
+  private async routeForNotification(n: Notification): Promise<UrlTree> {
+    // 1) Prefer new interface fields
+    const refId = typeof n?.metadata?.refId === 'string' ? n.metadata.refId.trim() : '';
+    const data: Record<string, any> =
+      n?.metadata?.data && typeof n.metadata.data === 'object' ? n.metadata.data : {};
+
+    // 2) Try exact-title fast path
+    const exact = await this.routeByExactTitle(n, refId, data);
     if(exact) return exact;
 
-    // 1) General extraction flow: compute common IDs from metadata (case-insensitive)
-    const propId: IdLike =
-      this.pick(meta, ['propertyID', 'propertyId', 'propId', 'id']) ??      // flat keys
-      this.getByPathCI(meta, ['property', 'id']) ??                         // nested under property.id
-      this.getByPathCI(meta, ['NewPropertyData', 'propertyID']) ??          // historical shapes
-      this.getByPathCI(meta, ['property', 'propertyID']) ??
-      this.getByPathCI(meta, ['UpdatedPropertyData', 'propertyID']);
-
-    const tenantId: IdLike =
-      this.pick(meta, ['tenantID', 'tenantId']) ??
-      this.getByPathCI(meta, ['tenant', 'tenantID']) ??
-      this.getByPathCI(meta, ['tenant', 'id']) ??
-      this.getByPathCI(meta, ['UpdatedTenantData', 'tenantID']);
-
-    const leaseId: IdLike =
-      this.pick(meta, ['leaseID', 'leaseId']) ??
-      this.getByPathCI(meta, ['lease', 'leaseID']) ??
-      this.getByPathCI(meta, ['lease', 'id']) ??
-      this.getByPathCI(meta, ['UpdatedLeaseData', 'leaseID']);
-
-    // Robust username resolver: supports UpdatedUserData.username and user.username
-    const username = this.resolveUsername(meta);
-
-    // 2) If this item is destructive (delete/terminate/…), go to Deleted Items hub
+    // 3) Destructive? send to Deleted Items hub with a selected id
     if(this.isDeleteOrDestructive(n)) {
       return this.router.createUrlTree(
         ['/dashboard/deleted-items'],
@@ -288,43 +311,50 @@ export class NotificationsRoutingService {
           queryParams: {
             selected: n._id,
             category: n.category || undefined,
-            type: n.type || undefined
+            type: n.type || undefined,
           }
         }
       );
     }
 
-    // 3) Category-first routing: direct to the most relevant page for each category
-    switch(n.category as TitleCategory | undefined) {
-      case 'Property':
-        // Property view if we have a property id, else property listing page
-        return (propId != null && String(propId).trim())
+    // 4) Generic by category
+    switch(n.category) {
+      case 'Property': {
+        const propId: IdLike = refId || this.firstPresent(data, this.PROP_ID_PATHS);
+        return propId
           ? this.router.createUrlTree(['/dashboard/property-view', String(propId)])
           : this.router.createUrlTree(['/dashboard/property-listing'], {queryParams: {selected: n._id}});
+      }
 
-      case 'Tenant':
-        // Tenant view if we have a tenant id, else tenant landing page
-        return (tenantId != null && String(tenantId).trim())
+      case 'Tenant': {
+        const tenantUsername = this.resolveUsername(data, refId);
+        if(tenantUsername) {
+          const token = await this.safeUserToken(tenantUsername);
+          if(token) return this.router.createUrlTree(['/dashboard/tenant/tenant-view', token]);
+        }
+        const tenantId: IdLike = this.firstPresent(data, this.TENANT_ID_PATHS);
+        return tenantId
           ? this.router.createUrlTree(['/dashboard/tenant/tenant-view', String(tenantId)])
           : this.router.createUrlTree(['/dashboard/tenant/tenant-home'], {queryParams: {selected: n._id}});
-
-      case 'Lease':
-        // Lease view if we have a lease id, else payments list
-        return (leaseId != null && String(leaseId).trim())
-          ? this.router.createUrlTree(['/dashboard/tenant/view-lease', String(leaseId)])
-          : this.router.createUrlTree(['/dashboard/tenant/payments-list'], {queryParams: {selected: n._id}});
+      }
 
       case 'User': {
-        // For users: try deep-linking to the profile by minting a token
+        const username = this.resolveUsername(data, refId);
         if(username) {
           const token = await this.safeUserToken(username);
           if(token) return this.router.createUrlTree(['/dashboard/view-user-profile', token]);
         }
-        // Fallback to users list
-        return this.router.createUrlTree(['/dashboard/users'], {queryParams: {selected: username ?? n._id}});
+        return this.router.createUrlTree(['/dashboard/users'], {queryParams: {selected: n._id}});
       }
 
-      // Other categories: keep user in notifications index (selected)
+      case 'Lease': {
+        const leaseId: IdLike = refId || this.firstPresent(data, this.LEASE_ID_PATHS);
+        return leaseId
+          ? this.router.createUrlTree(['/dashboard/tenant/view-lease', String(leaseId)])
+          : this.router.createUrlTree(['/dashboard/tenant/payments-list'], {queryParams: {selected: n._id}});
+      }
+
+      // Others → All Notifications inbox
       case 'System':
       case 'Payment':
       case 'Registration':
@@ -336,212 +366,199 @@ export class NotificationsRoutingService {
         return this.router.createUrlTree(['/dashboard/all-notifications'], {queryParams: {selected: n._id}});
     }
 
-    // 4) Title-based fallbacks (in case category was wrong/missing)
-    if(/property/i.test(n.title) && propId != null && String(propId).trim()) {
-      return this.router.createUrlTree(['/dashboard/property-view', String(propId)]);
-    }
-    if(/tenant/i.test(n.title) && tenantId != null && String(tenantId).trim()) {
-      return this.router.createUrlTree(['/dashboard/tenant/tenant-view', String(tenantId)]);
-    }
-    if(/lease/i.test(n.title) && leaseId != null && String(leaseId).trim()) {
-      return this.router.createUrlTree(['/dashboard/tenant/view-lease', String(leaseId)]);
-    }
-    if(/user/i.test(n.title) && username) {
-      const token = await this.safeUserToken(username);
-      if(token) return this.router.createUrlTree(['/dashboard/view-user-profile', token]);
-      return this.router.createUrlTree(['/dashboard/users'], {queryParams: {selected: username}});
-    }
-
-    // 5) Final fallback: the notifications index
+    // 5) Fallback
     return this.router.createUrlTree(['/dashboard/all-notifications'], {queryParams: {selected: n._id}});
   }
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // Backend action response routing (restore / permanent_delete)
+  // ───────────────────────────────────────────────────────────────────────────
+
   /**
-   * Convenience method: compute UrlTree and actually navigate there.
-   * Use this in your click handlers.
+   * Route for the direct controller response:
+   *   { success, message, category, refId, restored? }
+   * Logic:
+   *   - User/Tenant: tokenized route using refId as username
+   *   - Property/Lease: use restored._id (if present) or refId (if that's the id)
+   *   - Others: inbox/overview
    */
-  public async navigateTo(n: Notification): Promise<boolean> {
-    try {
-      const url = await this.routeFor(n);        // compute destination
-      return this.router.navigateByUrl(url);     // navigate
-    } catch(err) {
-      // Safety net: go to notifications index if routing fails
-      console.error('[notif-route] navigateTo failed:', err);
-      return this.router.navigateByUrl(
-        this.router.createUrlTree(['/dashboard/all-notifications'], {queryParams: {selected: n._id}})
-      );
+  private async routeForBackend(res: BackendActionResult): Promise<UrlTree> {
+    const category = String(res.category || '').trim() as TitleCategory;
+
+    switch(category) {
+      case 'User': {
+        const username = res.refId?.trim();
+        if(username) {
+          const token = await this.safeUserToken(username);
+          if(token) return this.router.createUrlTree(['/dashboard/view-user-profile', token]);
+        }
+        return this.router.createUrlTree(['/dashboard/users']);
+      }
+
+      case 'Tenant': {
+        const username = res.refId?.trim();
+        if(username) {
+          const token = await this.safeUserToken(username);
+          if(token) return this.router.createUrlTree(['/dashboard/tenant/tenant-view', token]);
+        }
+        if(username) return this.router.createUrlTree(['/dashboard/tenant/tenant-view', username]);
+        return this.router.createUrlTree(['/dashboard/tenant/tenant-home']);
+      }
+
+      case 'Property': {
+        const id = res.restored?._id || res.refId;
+        return id
+          ? this.router.createUrlTree(['/dashboard/property-view', String(id)])
+          : this.router.createUrlTree(['/dashboard/property-listing']);
+      }
+
+      case 'Lease': {
+        const id = res.restored?._id || res.refId;
+        return id
+          ? this.router.createUrlTree(['/dashboard/tenant/view-lease', String(id)])
+          : this.router.createUrlTree(['/dashboard/tenant/payments-list']);
+      }
+
+      // Other categories — send to an overview page or inbox
+      case 'System':
+      case 'Payment':
+      case 'Registration':
+      case 'Team':
+      case 'Developer':
+      case 'Agent':
+      case 'Maintenance':
+      case 'Complaint':
+        return this.router.createUrlTree(['/dashboard/all-notifications']);
     }
+
+    // Fallback
+    return this.router.createUrlTree(['/dashboard/all-notifications']);
   }
 
-  /* ──────────────────────────────────────────────────────────────────────────────
-   * PRIVATE HELPERS
-   * ────────────────────────────────────────────────────────────────────────────── */
+  // ───────────────────────────────────────────────────────────────────────────
+  // PRIVATE HELPERS
+  // ───────────────────────────────────────────────────────────────────────────
 
   /**
-   * Route by exact title using TITLE_INDEX.
-   * Also handles token generation automatically if username exists and pre() didn't produce one.
+   * Recognize backend action responses more strictly:
+   * - must have 'success' and 'category'
+   * - must NOT have 'title' (real Notification has title)
+   * - must NOT have '_id' (real Notification has _id)
    */
-  private async routeByExactTitle(n: Notification, meta: Record<string, any>): Promise<UrlTree | undefined> {
-    const handler = this.TITLE_INDEX[n.title as Title];  // find exact, case-sensitive title match
-    if(!handler) return undefined;                      // bail if not found
+  private isBackendResponse(x: any): x is BackendActionResult {
+    return !!(
+      x &&
+      typeof x === 'object' &&
+      'success' in x &&
+      'category' in x &&
+      !('title' in x) &&
+      !('_id' in x)
+    );
+  }
 
-    // Attempt to extract ids according to the handler’s idPaths
+  /** Exact-title routing with tokenization where needed. */
+  private async routeByExactTitle(
+    n: Notification,
+    refId: string,
+    data: Record<string, any>,
+  ): Promise<UrlTree | undefined> {
+    const handler = this.TITLE_INDEX[n.title as Title];
+    if(!handler) return undefined;
+
     const ids = {
-      property: handler.idPaths?.property ? this.firstPresent(meta, handler.idPaths.property) : undefined,
-      tenant: handler.idPaths?.tenant ? this.firstPresent(meta, handler.idPaths.tenant) : undefined,
-      lease: handler.idPaths?.lease ? this.firstPresent(meta, handler.idPaths.lease) : undefined,
+      property: handler.idPaths?.property ? this.firstPresent(data, handler.idPaths.property) : undefined,
+      tenant: handler.idPaths?.tenant ? this.firstPresent(data, handler.idPaths.tenant) : undefined,
+      lease: handler.idPaths?.lease ? this.firstPresent(data, handler.idPaths.lease) : undefined,
       username: handler.idPaths?.username
-        ? this.firstPresentStringFromPaths(meta, handler.idPaths.username)
-        : undefined,
+        ? (this.firstPresentStringFromPaths(data, handler.idPaths.username) || (refId || undefined))
+        : (refId || undefined),
     } as {property?: IdLike; tenant?: IdLike; lease?: IdLike; username?: string};
 
-    // Run an optional pre-step, which can return a token etc.
     let pre: Partial<{token: string}> | undefined = undefined;
     if(handler.pre) pre = await Promise.resolve(handler.pre(ids));
 
-    // If no token from pre(), yet we have a username → try to mint it here
     if(!pre?.token && ids.username) {
       const token = await this.safeUserToken(String(ids.username));
       if(token) pre = {...(pre || {}), token};
     }
 
-    // Finally, build the UrlTree using the handler logic
     return handler.toUrl({n, ids, pre, router: this.router});
   }
 
   /**
-   * A conservative “destructive” classifier that looks at notification.type and title text.
-   * If an item is destructive (delete/terminate/expire/archive/etc.), we route to Deleted Items hub.
+   * Classify deletes/terminations/archives as “destructive” so we send users to the
+   * Deleted Items hub. Note that "restore" is **NOT** destructive.
    */
   private isDeleteOrDestructive(n: Notification): boolean {
-    const t = (n.type || '').toLowerCase();         // normalize type
-    const title = (n.title || '').toLowerCase();    // normalize title
-    const destructive = new Set([                   // words that indicate destructive behavior
-      'delete', 'terminate', 'expire', 'unpublish', 'archive', 'remove', 'deactivate', 'restore'
+    const t = (n.type || '').toLowerCase();
+    const title = (n.title || '').toLowerCase();
+    const destructive = new Set([
+      'delete', 'permanent_delete', 'terminate', 'expire', 'unpublish', 'archive', 'remove', 'deactivate'
     ]);
     return (
-      destructive.has(t) ||                         // exact match with type
-      title.includes('delete') ||                   // or title contains a destructive word
+      destructive.has(t) ||
+      title.includes('delete') ||
       title.includes('deleted') ||
       title.includes('terminated') ||
       title.includes('expired') ||
-      title.includes('archiv') ||                   // covers archive/archived
+      title.includes('archiv') ||
       title.includes('removed') ||
       title.includes('deactivated')
     );
   }
 
-  /**
-   * Case-insensitive nested read:
-   * Traverse an object by keys in `path`, matching each segment ignoring case.
-   * Returns undefined if any segment is missing.
-   */
+  /** Case-insensitive nested read. */
   private getByPathCI(obj: any, path: string[]): any {
-    if(!obj || !path?.length) return undefined;    // guard invalid inputs
-    let cur: any = obj;                             // start at the root
-    for(const seg of path) {                       // walk each path segment
-      if(cur == null) return undefined;            // stop if branch is null/undefined
-      const key = Object.keys(cur).find(            // find the actual key that matches this segment case-insensitively
-        (k) => k.toLowerCase() === seg.toLowerCase()
-      );
-      if(!key) return undefined;                   // missing segment
-      cur = cur[key as keyof typeof cur];           // descend to the child
+    if(!obj || !path?.length) return undefined;
+    let cur: any = obj;
+    for(const seg of path) {
+      if(cur == null) return undefined;
+      const key = Object.keys(cur).find(k => k.toLowerCase() === seg.toLowerCase());
+      if(!key) return undefined;
+      cur = (cur as any)[key];
     }
-    return cur;                                     // success → value
+    return cur;
   }
 
-  /**
-   * Return the first present, non-empty value among candidate nested paths.
-   * Non-empty string or any non-nullish value qualifies.
-   */
+  /** First present (non-empty) value for any nested path. */
   private firstPresent(obj: Record<string, any>, paths: string[][]): any {
-    for(const p of paths) {                        // test each candidate path in order
-      const v = this.getByPathCI(obj, p);          // read the value
-      // accept any non-nullish value; empty string rejected
+    for(const p of paths) {
+      const v = this.getByPathCI(obj, p);
       if(v !== undefined && v !== null && (typeof v !== 'string' || v.trim() !== '')) return v;
       if(typeof v === 'string' && v.trim() !== '') return v;
     }
-    return undefined;                               // none matched
+    return undefined;
   }
 
-  /**
-   * Return the first present, non-empty **string** among candidate nested paths.
-   */
+  /** First present non-empty STRING for any nested path. */
   private firstPresentStringFromPaths(obj: Record<string, any>, paths: string[][]): string | undefined {
     for(const p of paths) {
       const v = this.getByPathCI(obj, p);
       if(typeof v === 'string') {
         const s = v.trim();
-        if(s) return s;                            // first non-empty string wins
-      }
-    }
-    return undefined;
-  }
-
-  /**
-   * Pick the first present value among a set of **flat** keys.
-   * Index-signature safe: we use bracket access (obj['key']).
-   */
-  private pick(obj: Record<string, any>, keys: string[]) {
-    for(const k of keys) {
-      const v = obj?.[k];                           // safe bracket access for index signature
-      if(v !== undefined && v !== null) {          // accept non-nullish
-        if(typeof v === 'string') {                // if string → must be non-empty
-          const s = v.trim?.() ?? '';
-          if(s) return s;
-        } else {
-          return v;                                 // non-string → return as-is
-        }
-      }
-    }
-    return undefined;
-  }
-
-  /**
-   * Robust username extractor:
-   * - tries common nested paths first (UpdatedUserData.username, user.username, …)
-   * - then checks flat keys: username/owner/user if sent as string
-   * - returns the first non-empty string found
-   */
-  private resolveUsername(meta: Record<string, any>): string | undefined {
-    const candidates: Array<string | undefined> = [
-      // preferred nested forms (case-insensitive)
-      this.firstPresentStringFromPaths(meta, [
-        ['UpdatedUserData', 'username'],
-        ['UpdateUserData', 'username'],
-        ['NewUserData', 'username'],
-        ['DeletedUserData', 'username'],
-        ['DeleteUserData', 'username'],
-        ['user', 'username'],             // current backend emits `metadata.user.username`
-      ]),
-      // flat string keys (index-signature safe)
-      typeof meta?.['username'] === 'string' ? meta['username'] : undefined,
-      typeof meta?.['owner'] === 'string' ? meta['owner'] : undefined,
-      typeof meta?.['user'] === 'string' ? meta['user'] : undefined, // in case 'user' is a string
-    ];
-
-    // return first non-empty string
-    for(const v of candidates) {
-      if(typeof v === 'string') {
-        const s = v.trim();
         if(s) return s;
       }
     }
-    return undefined;                                // no usable username found
+    return undefined;
   }
 
-  /**
-   * Generate a secure user profile token using the APIsService.
-   * Returns null if the token couldn’t be obtained.
-   */
+  /** Resolve username (from metadata.data paths first, then fallback to refId). */
+  private resolveUsername(data: Record<string, any>, refId?: string): string | undefined {
+    const fromData = this.firstPresentStringFromPaths(data, this.USERNAME_PATHS);
+    if(fromData && fromData.trim()) return fromData.trim();
+    if(refId && refId.trim()) return refId.trim();
+    return undefined;
+  }
+
+  /** Generate a secure profile token for username; return null on failure. */
   private async safeUserToken(username: string): Promise<string | null> {
     try {
-      const resp = await this.apis.generateToken(username);  // call backend to mint a token
-      const token = (resp as any)?.token ?? resp;            // support either {token} or raw string
-      return (typeof token === 'string' && token.trim()) ? token : null;
+      const resp = await this.apis.generateToken(username);
+      const token = (resp as any)?.token ?? resp;
+      return typeof token === 'string' && token.trim() ? token : null;
     } catch(err) {
       console.warn('[notif-route] token generation failed for', username, err);
-      return null;                                           // swallow errors and degrade gracefully
+      return null;
     }
   }
 }

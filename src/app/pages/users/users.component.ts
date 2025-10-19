@@ -18,7 +18,7 @@ import {CryptoService} from '../../services/cryptoService/crypto.service';
 import {AuthService, BaseUser} from '../../services/auth/auth.service';
 import {PropertyFilterDialogComponent} from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
 import {MatDialog} from '@angular/material/dialog';
-import {ConfirmationComponent} from '../../components/dialogs/confirmation/confirmation.component';
+import {ConfirmationComponent} from '../../components/shared/confirmation/confirmation.component';
 import {NotificationDialogComponent} from '../../components/dialogs/notification/notification.component';
 import {HttpErrorResponse, HttpHeaderResponse} from '@angular/common/http';
 import {FormsModule} from '@angular/forms';
@@ -418,7 +418,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       if(!username) throw new Error('Username cannot be empty!');
       if(!name) throw new Error('Name cannot be empty!');
       const dialogRef = this.dialog.open(ConfirmationComponent, {
-        width: 'auto',
+        width: '400px',
         height: 'auto',
         data: {
           title: `Delete ${name}`,

@@ -892,7 +892,8 @@ code {
 }
 
 .refresh {
-  i {
+  i,
+  mat-icon {
     animation: refresh 1s infinite;
     @keyframes refresh {
       0% {

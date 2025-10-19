@@ -27,7 +27,7 @@ import {
   Property,
 } from '../../services/property/property.service';
 import {MatDialog} from '@angular/material/dialog';
-import {ConfirmationComponent} from '../../components/dialogs/confirmation/confirmation.component';
+import {ConfirmationComponent} from '../shared/confirmation/confirmation.component';
 import {PropertyService} from '../../services/property/property.service';
 import {NotificationDialogComponent} from '../dialogs/notification/notification.component';
 import {HttpResponse} from '@angular/common/http';
@@ -173,6 +173,8 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
 
   protected deleteProperty(id: string) {
     const dialogRef = this.dialog.open(ConfirmationComponent, {
+      width: '400px',
+      height: 'auto',
       data: {
         title: 'Delete Property',
         message: 'Are you sure you want to delete this property?',

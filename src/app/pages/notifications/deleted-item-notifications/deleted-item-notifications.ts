@@ -1,4 +1,5 @@
-// deleted-item-notifications.ts
+// /src/pages/notifications/delete-item-notifications/deleted-item-notifications.ts
+
 import {
   Component,
   OnInit,
@@ -9,11 +10,8 @@ import {
   Pipe,
   PipeTransform,
   ViewChild,
-  ElementRef,
-  HostListener,
 } from '@angular/core';
 
-import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Subscription, firstValueFrom} from 'rxjs';
@@ -22,17 +20,30 @@ import {
   NotificationService,
   Notification,
   Severity,
-  responseMSG,
+  UserRole,
+  PermanentDeletePayload,
+  BackendBasicResponse,                         // <-- we’ll use this for a quick FE guard on permanent delete
+  TitleCategory
 } from '../../../services/notifications/notification-service';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {MatIconModule} from '@angular/material/icon';
 import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {NotificationDialogComponent} from '../../../components/dialogs/notification/notification.component';
+import {
+  RestoreNotificationPayload,
+  BackendRestoreResponse,
+} from '../../../types/notification.types'; // If you keep these types in service, adjust import path
+import {MatDialog} from '@angular/material/dialog';
+import {ConfirmationComponent} from '../../../components/shared/confirmation/confirmation.component';
+import {BackendActionResult, NotificationsRoutingService} from '../../../services/notificationRouting/notifications-routing-service';
 
-/* ───────────────────────────────
- * Simple value renderer for meta grid
- * - Shortens long JSON/arrays, keeps it readable in tiles
- * ─────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Pipe: MetaRender
+ * Renders short, readable strings for metadata values in the grid
+ *  - Strings: returned as-is
+ *  - Objects/arrays: JSON.stringify capped at ~80 chars for compact display
+ * ───────────────────────────────────────────────────────────────────────────── */
 @Pipe({name: 'metaRender', standalone: true})
 export class MetaRenderPipe implements PipeTransform {
   transform(v: any): string {
@@ -47,13 +58,14 @@ export class MetaRenderPipe implements PipeTransform {
   }
 }
 
-/**
+/* ─────────────────────────────────────────────────────────────────────────────
  * Deleted Item Review Page
- * - Pulls the selected notification from the query param (?selected=...)
- * - Shows a rich, adaptive summary and metadata grid
- * - Provides “Restore” and “Permanently Delete” actions (confirm banners)
- * - Uses Bootstrap classes for responsiveness; lives entirely inside .main-panel
- */
+ *  - Grabs the selected notification via query param (?selected=<id>)
+ *  - Shows metadata and actions:
+ *      • Restore (soft-undelete / reinsert)
+ *      • Permanent Delete (hard delete) — ADMIN ONLY
+ *  - Uses your NotificationService REST methods + existing dialog components
+ * ───────────────────────────────────────────────────────────────────────────── */
 @Component({
   selector: 'app-deleted-item-notifications',
   standalone: true,
@@ -64,7 +76,8 @@ export class MetaRenderPipe implements PipeTransform {
 export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
   @ViewChild(NotificationDialogComponent) notificationDialogComponent!: NotificationDialogComponent;
-  /** Theme mode (from your WindowRefService); gate rendering until known */
+
+  /** Theme mode (from WindowRefService); gate rendering until known. */
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
 
@@ -72,10 +85,10 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
   protected loading = true;
   protected error: string | null = null;
 
-  /** Current notification (selected via query param ?selected=) */
+  /** Current notification (selected via ?selected=) */
   protected notification: Notification | null = null;
 
-  /** Flattened primary metadata for a friendly grid */
+  /** Flattened metadata grid for quick scanning */
   protected primaryMeta: Array<{key: string; value: any}> = [];
 
   /** UI toggles */
@@ -85,6 +98,7 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
   private modeSub: Subscription | null = null;
   private qpSub: Subscription | null = null;
 
+  /** Fallback image */
   protected readonly dummyUserImg = '/Images/user-images/dummy-user/dummy-user.jpg';
 
   constructor (
@@ -93,19 +107,22 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly notif: NotificationService,
-    private readonly http: HttpClient
+    private readonly http: HttpClient,
+    private readonly dialog: MatDialog,
+    private readonly notificationsRouting: NotificationsRoutingService,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
+  /* ─────────────────────────── Lifecycle ─────────────────────────── */
+
   ngOnInit(): void {
-    // Watch theme/“mode” like in your other pages
+    // 1) Watch theme/“mode” like in other pages
     if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => (this.mode = val));
     }
 
-
-    // Read ?selected=… and load the corresponding notification from service
+    // 2) Read ?selected=… and resolve the notification from in-memory cache or by pulling a fresh page
     this.qpSub = this.route.queryParamMap.subscribe(async (params) => {
       const id = params.get('selected');
       if(!id) {
@@ -115,16 +132,25 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
       }
       await this.resolveNotification(id);
     });
+
+    this.authHeaders();
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void {
+    // No-op: Keep for symmetry; we already show a progress bar during async actions.
+    if(this.notification) {
+      console.log(this.notification)
+    }
+  }
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
     this.qpSub?.unsubscribe();
   }
 
-  /** Severity → chip class mapping for a bit of visual flavor */
+  /* ─────────────────────────── UI helpers ─────────────────────────── */
+
+  /** Severity → chip class mapping (visual hint only). */
   protected severityClass(s?: Severity) {
     switch(s) {
       case 'success':
@@ -138,97 +164,181 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
     }
   }
 
-  /** Toggle the raw JSON view of metadata */
-  protected toggleRaw() {
-    this.showRaw = !this.showRaw;
-  }
+  protected toggleRaw() {this.showRaw = !this.showRaw;}
+  protected askRestore(n: Notification) {
+    const dialog = this.dialog.open(ConfirmationComponent, {
+      width: '400px',
+      height: 'auto',
+      data: {
+        isConfirm: true,
+        title: 'Confirm Restore',
+        message: 'Do you wish to restore these data!'
+      }
+    })
 
-  /** Ask for actions (shows confirmation banners) */
-  protected askRestore() {
-    this.confirm = 'restore';
+    dialog.afterClosed().subscribe(async (val) => {
+      if(val.isConfirm) {
+        this.confirm = 'restore';
+        await this.restore(n);
+      }
+      else {
+        this.confirm = null;
+      }
+    })
   }
-  protected askPermanentDelete() {
-    this.confirm = 'delete';
-  }
-  protected cancelConfirm() {
-    this.confirm = null;
-  }
+  protected askPermanentDelete(n: Notification) {
+    const dialog = this.dialog.open(ConfirmationComponent, {
+      width: '400px',
+      height: 'auto',
+      data: {
+        isConfirm: true,
+        title: 'Permanent Delete',
+        message: 'Do you wish to permanent delete these data!'
+      }
+    })
 
-  /** Go back to the Deleted Items hub */
+    dialog.afterClosed().subscribe(async (val) => {
+      if(val.isConfirm) {
+        this.confirm = 'delete';
+        await this.permanentDelete(n)
+      }
+      else {
+        this.confirm = null;
+      }
+    })
+  }
+  // protected cancelConfirm() {this.confirm = null;}
+
+  /** Navigate back to the notifications list view. */
   protected backToList() {
     this.router.navigate(['/dashboard/all-notifications']);
   }
 
+  /* ─────────────────────────── Actions ─────────────────────────── */
+
   /**
-   * Restore action:
-   * - Calls your backend (adapt URL if needed)
-   * - On success, navigates back to Deleted Items
+   * Restore the deleted domain record referenced by this notification.
+   * BACKEND EXPECTS: { category, refId? OR snapshot? OR metadata.filePath? }
+   * BEST PRACTICE:
+   *  - Prefer refId (fastest, if soft-deleted).
+   *  - If fully removed, send a snapshot (domain JSON) or metadata.filePath.
    */
   protected async restore(notification: Notification) {
     try {
       this.loading = true;
       this.progress.start();
 
-      // Send JSON, not FormData
-      const payload = {notification};  // or send just { id: notification.id } if that’s all backend needs
+      const category = notification.category;
+      const refId = this.discoverRefId(notification);
+      const snapshot = this.discoverSnapshot(notification);
 
-      await this.notif.restoreDeleteJson(payload)   // <-- see service below
-        .then((res: responseMSG | undefined) => {
-          console.log(res);
-          if(res && res.status === 'success') {
-            this.notificationDialogComponent.notification('success', res.message);
+      // Carefully rebuild metadata in the new shape
+      const incomingData = (notification.metadata?.data ?? {}) as Record<string, any>;
+      const meta =
+        refId || snapshot || Object.keys(incomingData).length
+          ? {
+            refId: (notification.metadata?.refId || refId || '').trim(),
+            ...(Object.keys(incomingData).length ? {data: incomingData} : {}),
           }
-          else {
-            this.notificationDialogComponent.notification('error', 'Failed to restore the item!');
-          }
-        })
-        .catch((error) => {
-          console.error(error);
-          this.notificationDialogComponent.notification('error', 'Failed to restore the item!');
-          this.progress.stop();
-        })
-        .finally(() => {
-          this.progress.complete();
-          this.loading = false;
-          this.confirm = null;
-          this.backToList();
-        });
+          : undefined;
 
-    } catch(e: any) {
-      this.loading = false;
-      this.error = e?.message || 'Failed to restore the item.';
-      console.error('Error: ' + e);
-    }
-  }
+      const payload: RestoreNotificationPayload = {
+        _id: notification._id,
+        category,
+        ...(refId ? {refId} : {}),
+        ...(snapshot ? {snapshot} : {}),
+        ...(meta ? {metadata: meta} : {}),
+      };
 
-  /**
-   * Permanent delete action:
-   * - Calls your backend (adapt URL if needed)
-   * - On success, navigates back to Deleted Items
-   */
-  protected async permanentDelete(id: string) {
-    try {
-      this.loading = true;
-      await firstValueFrom(
-        this.http.post(`/api-notification/permanent-delete`, {id}, {headers: this.authHeaders()})
-      );
+      const res = await this.notif.restoreDeleteJson(payload);
+      console.log(res)
+      if(res?.success) {
+        this.notificationDialogComponent.notification('success', res.message || 'Item restored.');
+        await this.notificationsRouting.routeForAny(res as BackendActionResult);
+        return;
+      } else {
+        this.notificationDialogComponent.notification('error', res?.message || 'Failed to restore the item!');
+      }
+    } catch(error) {
+      console.error(error);
+      this.notificationDialogComponent.notification('error', 'Failed to restore the item!');
+    } finally {
+      this.progress.complete();
       this.loading = false;
       this.confirm = null;
-      this.backToList();
-    } catch(e: any) {
-      this.loading = false;
-      this.error = e?.message || 'Failed to permanently delete the item.';
+      setTimeout(() => {
+        this.backToList();
+      }, 1000)
     }
   }
+
+
+  /**
+   * Permanently delete the domain record referenced by this notification.
+   * ADMIN ONLY (server-enforced). We also add a small FE guard:
+   *  - If we can read the current role and it is not 'admin', we show an error without calling the server.
+   */
+  protected async permanentDelete(notification: Notification) {
+    try {
+      this.loading = true;
+      this.progress.start();
+
+      const refId = this.discoverRefId(notification);
+      if(!refId) {
+        this.notificationDialogComponent.notification('error', 'Cannot determine item id to delete.');
+        return;
+      }
+
+      const data = {
+        reason: 'User requested permanent deletion from Deleted Items page',
+        via: 'UI',
+        ...(notification.metadata?.data ?? {}),
+      };
+
+      const payload: PermanentDeletePayload = {
+        category: notification.category,
+        refId, // top-level required by backend
+        // We keep metadata as a bag, but respect the new shape inside:
+        metadata: {
+          refId,
+          data,
+        },
+      };
+
+      const currentRole = this.getCurrentUserRole(); // cosmetic FE guard
+      const res: BackendBasicResponse = await this.notif.permanentDeleteJson(payload, currentRole);
+
+      console.log(res)
+      if(res?.success) {
+        this.notificationDialogComponent.notification('success', res.message || 'Item permanently deleted.');
+        return;
+      } else {
+        this.notificationDialogComponent.notification('error', res?.message || 'Failed to permanently delete the item!');
+      }
+    } catch(e: any) {
+      console.error(e);
+      this.notificationDialogComponent.notification('error', e?.message || 'Failed to permanently delete the item!');
+    } finally {
+      this.progress.complete();
+      this.loading = false;
+      this.confirm = null;
+      setTimeout(() => {
+        this.backToList();
+      }, 1000)
+    }
+  }
+
 
   /* ───────────────────────── internals ───────────────────────── */
 
-  /** Resolve the selected notification (from cache or by refetch) */
+  /**
+   * Resolve the selected notification from cache, or fetch a page and try again.
+   */
   private async resolveNotification(id: string) {
     this.loading = true;
     this.error = null;
 
-    // Try from cache first
+    // 1) Try cache
     const cached = await firstValueFrom(this.notif.itemById$(id));
     if(cached) {
       this.setNotification(cached);
@@ -236,7 +346,7 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
       return;
     }
 
-    // If not found, pull a fresh page
+    // 2) Fallback: fetch a page and try again
     try {
       await this.notif.load({page: 0, limit: 50});
       const after = await firstValueFrom(this.notif.itemById$(id));
@@ -259,25 +369,104 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
     this.primaryMeta = this.extractPrimaryMeta(n);
   }
 
-  /** Pull friendly “key” fields out of arbitrary metadata */
+  /**
+   * Try to discover a *domain* id from the notification/metadata.
+   * - We DO NOT use `notification.type` (that’s usually an action verb, not an id).
+   * - Look through common keys set at delete time (tenantId, propertyId, userId, leaseId).
+   * - Prefer `notification['targetId']` if your delete logic stored it.
+   */
+  /** Resolve the domain refId (usually username or natural key). */
+  private discoverRefId(n: Notification): string | undefined {
+    // 1) New canonical place
+    if(typeof n.metadata?.refId === 'string' && n.metadata.refId.trim()) {
+      return n.metadata.refId.trim();
+    }
+
+    // 2) Common fallbacks inside metadata.data
+    const data = (n.metadata?.data ?? {}) as Record<string, any>;
+    const dataKeys = [
+      'refId', 'id', '_id',
+      'username', 'tenantUsername', 'owner',
+      'propertyId', 'propertyID', 'propId',
+      'tenantId', 'tenantID',
+      'userId', 'userID',
+      'leaseId', 'leaseID',
+      'entityId', 'documentId',
+    ];
+    for(const k of dataKeys) {
+      const v = data[k];
+      if(typeof v === 'string' && v.trim()) return v.trim();
+    }
+
+    // 3) Legacy/grab-bag fallbacks (top level object fields if any were mirrored)
+    const nAny = n as any;
+    const legacyKeys = ['refId', 'id', '_id', 'username', 'tenantUsername', 'propertyId', 'leaseId', 'userId'];
+    for(const k of legacyKeys) {
+      const v = nAny?.[k];
+      if(typeof v === 'string' && v.trim()) return v.trim();
+    }
+
+    return undefined;
+  }
+
+
+  /**
+   * Extract a domain snapshot if available (NOT the notification wrapper).
+   * Where could it be?
+   * - `metadata.snapshot`
+   * - `metadata.domainSnapshot`
+   * - If you purposely embedded it under a known key at delete time (adapt here).
+   */
+  /** Extract a domain snapshot if you embedded one inside metadata.data. */
+  private discoverSnapshot(n: Notification): Record<string, any> | undefined {
+    const data = (n.metadata?.data ?? {}) as Record<string, unknown>;
+
+    // Preferred keys
+    const snap = data['snapshot'];
+    if(snap && typeof snap === 'object' && !Array.isArray(snap)) {
+      return snap as Record<string, any>;
+    }
+
+    const domainSnap = data['domainSnapshot'];
+    if(domainSnap && typeof domainSnap === 'object' && !Array.isArray(domainSnap)) {
+      return domainSnap as Record<string, any>;
+    }
+
+    // You can add category-specific embeddings here:
+    // if (n.category === 'Tenant' && data['tenant'] && typeof data['tenant'] === 'object') {
+    //   return data['tenant'] as Record<string, any>;
+    // }
+
+    return undefined;
+  }
+
+
+
+  /**
+   * Build a compact, friendly metadata grid for the UI.
+   * - Pulls common keys first, then adds a few extra fields (up to 8) for context.
+   */
   private extractPrimaryMeta(n: Notification) {
-    const meta = n.metadata || {};
+    const meta = (n.metadata ?? {}) as Record<string, any>;
     const candidates = [
       'propertyID', 'propertyId', 'propId',
       'tenantID', 'tenantId',
       'leaseID', 'leaseId',
+      'userID', 'userId',
       'username', 'user', 'owner',
       'title', 'status', 'state', 'reason', 'by', 'byUser', 'byRole',
+      'filePath', 'path', 'targetId',
     ];
 
     const rows: Array<{key: string; value: any}> = [];
     for(const key of candidates) {
       const v = meta[key];
-      if(v !== undefined && v !== null && String(v).trim?.() !== '') {
+      if(v !== undefined && v !== null && (typeof v !== 'string' || v.trim() !== '')) {
         rows.push({key, value: v});
       }
     }
 
+    // Add a few extras for context (avoid overwhelming the UI)
     const extras = Object.keys(meta)
       .filter((k) => !candidates.includes(k))
       .slice(0, 8);
@@ -286,7 +475,7 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
     return rows;
   }
 
-  /** Build Authorization header if you keep tokens in localStorage */
+  /** Build Authorization header if you keep tokens in localStorage (used by any local HttpClient calls). */
   private authHeaders(): HttpHeaders {
     let token: string | null = null;
     try {
@@ -295,23 +484,37 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
     return token ? new HttpHeaders({Authorization: `Bearer ${token}`}) : new HttpHeaders();
   }
 
-  /** Choose the best available image; fall back to dummy. */
-  protected getUserImage(meta: Record<string, any>): string {
-    // Strict-safe index-signature access everywhere
-    const updated = meta?.['UpdatedUserData'];
-    const user = meta?.['user'];
-
-    const img1 = updated?.['image'];
-    const img2 = user?.['image'];
-
-    const chosen = (typeof img1 === 'string' && img1.trim())
-      ? img1
-      : (typeof img2 === 'string' && img2.trim() ? img2 : '');
-
-    return chosen || this.dummyUserImg;
+  /** Choose a sensible display image from metadata, fall back to dummy. */
+  protected getUserImage(n: Notification): string {
+    const data = n?.metadata?.data ?? {};
+    const image = typeof data['image'] === 'string' ? data['image'].trim() : '';
+    return image || this.filterImagesBasedCategory(n.category);
   }
 
-  /** If the image URL 404s or fails, swap to dummy (prevents broken icon). */
+  // Filter dummy images base category
+  private filterImagesBasedCategory(category: TitleCategory) {
+    switch(category) {
+      case 'User':
+        return '/Images/System-images/utilitiesImages/person.jpg';
+        break;
+      case 'Agent':
+        return '/Images/System-images/utilitiesImages/agent.jpg';
+        break;
+      case 'Tenant':
+        return '/Images/System-images/utilitiesImages/tenant.jpg';
+        break;
+      case 'Property':
+        return '/Images/System-images/utilitiesImages/property.jpg';
+        break;
+      case 'Lease':
+        return '/Images/System-images/utilitiesImages/document.jpg';
+        break;
+      default:
+        return this.dummyUserImg;
+    }
+  }
+
+  /** If the main image fails to load, swap to dummy to avoid a broken icon. */
   protected setFallback(ev: Event): void {
     const img = ev.target as HTMLImageElement | null;
     if(img && img.src !== this.dummyUserImg) {
@@ -319,27 +522,72 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
     }
   }
 
-  /** Pick a sensible display name from multiple possible locations. */
-  protected getUserName(meta: Record<string, any>): string {
-    const updated = meta?.['UpdatedUserData'];
-    const user = meta?.['user'];
+  /**
+ * Extract a readable name from notification metadata.
+ * - Works for both User and Tenant categories.
+ * - Prefers actual name, falls back to username, then to refId.
+ * - Safely navigates the new NotificationMetadata shape.
+ */
+  protected getUserName(meta: Record<string, any> | undefined): string {
+    // Step 1: Extract `data` block from metadata
+    const data = meta?.['data'] ?? {};
 
+    // Step 2: Try common nested objects (User, Tenant, UpdatedUserData, UpdatedTenantData)
+    const updated = data['UpdatedUserData'] || data['UpdatedTenantData'];
+    const user = data['user'] || data['tenant'] || data['owner'];
+
+    // Step 3: Extract name / username fields (most common ones first)
     const name1 = updated?.['name'];
     const name2 = user?.['name'];
-    const user1 = updated?.['username'];
-    const user2 = user?.['username'];
-    const userFlat =
-      (typeof meta?.['username'] === 'string' && meta?.['username'].trim())
-        ? meta?.['username']
-        : (typeof meta?.['owner'] === 'string' && meta?.['owner'].trim() ? meta?.['owner'] : undefined);
+    const username1 = updated?.['username'];
+    const username2 = user?.['username'];
 
+    // Step 4: Some systems store flat-level data (directly under `data`)
+    const flatName = data['name'] || data['tenantName'];
+    const flatUsername = data['username'] || data['tenantUsername'];
+
+    // Step 5: Fallback to metadata root-level refId (always exists in NotificationMetadata)
+    const refId: string | undefined =
+      typeof meta?.['refId'] === 'string' ? meta['refId'] : undefined;
+
+    // Step 6: Choose best available name, in priority order
     const chosen =
-      (typeof name1 === 'string' && name1.trim() && name1) ||
-      (typeof name2 === 'string' && name2.trim() && name2) ||
-      (typeof user1 === 'string' && user1.trim() && user1) ||
-      (typeof user2 === 'string' && user2.trim() && user2) ||
-      userFlat;
+      (typeof name1 === 'string' && name1.trim()) ? name1 :
+        (typeof name2 === 'string' && name2.trim()) ? name2 :
+          (typeof flatName === 'string' && flatName.trim()) ? flatName :
+            (typeof username1 === 'string' && username1.trim()) ? username1 :
+              (typeof username2 === 'string' && username2.trim()) ? username2 :
+                (typeof flatUsername === 'string' && flatUsername.trim()) ? flatUsername :
+                  refId;
 
+    // Step 7: Always return a string
     return chosen || 'Unknown User';
   }
+  /**
+   * Read the current user role (for a friendly FE guard on permanent delete).
+   * - In many apps, role comes from an AuthService/JWT; adapt as needed.
+   * - The server still enforces RBAC; this is just helpful UX.
+   */
+  private getCurrentUserRole(): UserRole | undefined {
+    try {
+      const roleRaw = localStorage.getItem('role');
+      if(typeof roleRaw === 'string' && roleRaw.trim()) {
+        const val = roleRaw.trim().toLowerCase();
+        // normalize to UserRole
+        switch(val) {
+          case 'admin': return 'admin';
+          case 'agent': return 'agent';
+          case 'tenant': return 'tenant';
+          case 'owner': return 'owner';
+          case 'operator': return 'operator';
+          case 'manager': return 'manager';
+          case 'developer': return 'developer';
+          case 'user': return 'user';
+        }
+      }
+    } catch {}
+    return undefined;
+  }
+
+  // Filter property images if category is property
 }

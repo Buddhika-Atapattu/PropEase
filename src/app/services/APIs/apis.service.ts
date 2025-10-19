@@ -516,10 +516,10 @@ export class APIsService {
       this.http.get<MSG>('http://localhost:3000/api-tenant/get-all-tenants')
     );
   }
-  public async deleteTenant(username: string): Promise<MSG> {
+  public async deleteTenant(username: string, deletor: string): Promise<MSG> {
     return await firstValueFrom(
       this.http.delete<MSG>(
-        `http://localhost:3000/api-tenant/delete-tenant/${username}`
+        `http://localhost:3000/api-tenant/delete-tenant/${username}/${deletor}`
       )
     );
   }

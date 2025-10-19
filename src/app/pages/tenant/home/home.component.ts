@@ -15,7 +15,7 @@ import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import * as FileSaver from 'file-saver';
 import {Subscription} from 'rxjs';
 import * as XLSX from 'xlsx';
-import {ConfirmationComponent} from '../../../components/dialogs/confirmation/confirmation.component';
+import {ConfirmationComponent} from '../../../components/shared/confirmation/confirmation.component';
 import {
   NotificationDialogComponent,
   NotificationType,
@@ -1400,11 +1400,14 @@ export class HomeComponent implements OnInit, OnDestroy {
             }
           })
 
+          const user: TenantHomeButtonDataType = users[0] as TenantHomeButtonDataType;
+
           dialogRef.afterClosed().subscribe(async (result) => {
             if(result) {
               confirmRemove = result.isConfirm;
               if(confirmRemove) {
-                await this.removeTenant(users[0] as TenantHomeButtonDataType);
+                console.log(user)
+                await this.removeTenant(user);
               }
             }
           })
@@ -1674,13 +1677,14 @@ export class HomeComponent implements OnInit, OnDestroy {
       (item) => item.name.toLowerCase() === data.name.toLowerCase()
     );
 
-    if(user) {
+    if(user && this.loggedUser?.username) {
       this.isLoading = true;
       this.progressBarComponent.start();
       const username = user.username;
       await this.apiService
-        .deleteTenant(username as string)
+        .deleteTenant(username as string, this.loggedUser?.username)
         .then((res) => {
+          console.log(res)
           if(res.status === 'success') {
             this.isReloading = true;
             this.NotificationDialogComponent.notification(res.status, res.message);
@@ -1693,6 +1697,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           }
         })
         .catch((error) => {
+          console.error(error)
           if(error) {
             this.NotificationDialogComponent.notification(
               'error',
@@ -1708,6 +1713,9 @@ export class HomeComponent implements OnInit, OnDestroy {
           this.isLoading = false;
           this.isReloading = false;
         });
+    }
+    else {
+      this.NotificationDialogComponent.notification('warning', 'Tenant not found!')
     }
   }
 

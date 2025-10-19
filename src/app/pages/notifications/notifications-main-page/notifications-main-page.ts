@@ -6,6 +6,9 @@ import {
   PLATFORM_ID,
   AfterViewInit,
   ChangeDetectionStrategy,
+  ElementRef,
+  ViewChild,
+  Renderer2
 } from '@angular/core';
 import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {
@@ -89,6 +92,7 @@ const CATEGORY_OPTIONS: Array<TitleCategory | 'All'> = [
 })
 export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
 
+
   /** Theme mode from global service (bool or null until first emit) */
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -151,7 +155,8 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private authService: AuthService,
     private notificationService: NotificationService,
-    private readonly notificationsRoutingService: NotificationsRoutingService
+    private readonly notificationsRoutingService: NotificationsRoutingService,
+    private renderer: Renderer2
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -168,11 +173,8 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
     this.unreadCount$ = this.notificationService.unreadCount$();
     this.connected$ = this.notificationService.connected$;
 
-
-
-    this.connSub = this.connected$.pipe(distinctUntilChanged())
-      .subscribe(isOn => (this.connected = isOn));
-
+    this.connSub = this.notificationService.connected$.pipe(distinctUntilChanged())
+      .subscribe(isOn => (this.connected = !isOn));
 
 
     // Logged user (for audience predicates)
@@ -306,7 +308,10 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /** Manual refresh */
-  protected refresh() {this.fetchPage();}
+  protected refresh() {
+    // this.refreshBtn.nativeElement.classList.toggle('refresh', this.isLoading);
+    this.fetchPage();
+  }
 
   /** Mark a single notification as read */
   protected async markRead(id: string) {
@@ -384,7 +389,7 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
   protected trackById(_: number, n: Notification) {return n._id;}
 
   /** Icon by severity (public so the template can call it) */
-  iconFor(n: Notification): string {
+  protected iconFor(n: Notification): string {
     switch(n.severity) {
       case 'success': return 'check_circle';
       case 'warning': return 'warning';
@@ -396,6 +401,7 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
   /** Fetch a page from backend with filters */
   private async fetchPage() {
     this.loading$.next(true);
+
     try {
       const tab = this.activeTab$.value;
       const onlyUnread = tab === 'unread';
@@ -412,13 +418,16 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
     } catch(err) {
       console.error('Failed to load notifications:', err);
     } finally {
+      await new Promise(resolve => setTimeout(resolve, 1000));
       this.loading$.next(false);
     }
+
+
   }
 
   /** Open notification: internal links use Router; http(s) open in a new tab. Also mark read. */
   protected async openNotification(notification: Notification): Promise<void> {
-    await this.notificationsRoutingService.navigateTo(notification);
+    await this.notificationsRoutingService.navigateToAny(notification);
     if(!notification.userState?.isRead) this.markRead(notification._id);
   }
 }

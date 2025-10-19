@@ -121,7 +121,7 @@
           <div class="preview" *ngIf="n?.metadata as m">
             <div class="avatar">
               <img
-                [src]="getUserImage(m)"
+                [src]="getUserImage(n)"
                 (error)="setFallback($event)"
                 alt="item preview"
                 referrerpolicy="no-referrer"
@@ -163,14 +163,23 @@
             >
           </div>
 
+          <!-- If property show images -->
+          <ng-template *ngIf="n.category === 'Property'">
+            <div class="row mt-3">
+              <div class="col-3">
+                <div class="image-container"></div>
+              </div>
+            </div>
+          </ng-template>
+
           <!-- Actions -->
           <div class="actions">
-            <button class="btn btn-outline-success" (click)="askRestore()">
+            <button class="btn btn-outline-success" (click)="askRestore(n)">
               <i class="bi bi-arrow-counterclockwise me-1"></i> Restore
             </button>
             <button
               class="btn btn-outline-danger"
-              (click)="askPermanentDelete()"
+              (click)="askPermanentDelete(n)"
             >
               <i class="bi bi-trash3-fill me-1"></i> Permanently Delete
             </button>
@@ -181,7 +190,7 @@
         </div>
 
         <!-- Inline confirm bars -->
-        <div class="px-3 pb-3">
+        <!-- <div class="px-3 pb-3">
           <div
             *ngIf="confirm === 'restore'"
             class="confirm-bar text-success d-flex align-items-center justify-content-between mt-2"
@@ -217,7 +226,7 @@
             <div class="d-flex gap-2">
               <button
                 class="btn btn-danger btn-sm"
-                (click)="permanentDelete(n._id)"
+                (click)="permanentDelete(n)"
               >
                 Yes, delete forever
               </button>
@@ -229,7 +238,7 @@
               </button>
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
     </ng-container>
   </div>

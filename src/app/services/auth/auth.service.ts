@@ -1,11 +1,41 @@
+// src/app/services/auth/auth.service.ts
+// -----------------------------------------------------------------------------
+// AuthService
+// - Owns login/logout/session restore.
+// - Boots *both* realtime layers:
+//     1) NotificationService (has its own Socket.IO for domain notifications)
+//     2) SocketService       (shared realtime bus for future chat/calls/etc)
+// - Keeps the two separated so you can gradually migrate notifications to the
+//   shared SocketService later without breaking anything.
+// -----------------------------------------------------------------------------
+//
+// Usage:
+//   await authService.sendVerifyUser();       // login
+//   await authService.getLocalLoggedUser();   // restore session on app start
+//   authService.clearCredentials();           // logout
+//
+// Exposed notification helpers (delegates to NotificationService):
+//   authService.notifications$
+//   authService.unreadNotifications$()
+//   authService.unreadNotificationsCount
+//   authService.markNotificationRead(id)
+//
+// Notes:
+// - SSR safe: guards with isPlatformBrowser.
+// - Token flow: reads and writes `auth_token` in localStorage.
+// - After login + restore: initializes NotificationService + SocketService once.
+// -----------------------------------------------------------------------------
+
 import {Injectable, Inject, PLATFORM_ID} from '@angular/core';
 import {isPlatformBrowser} from '@angular/common';
 import {CryptoService} from '../cryptoService/crypto.service';
 import {APIsService} from '../APIs/apis.service';
 import {ActivityTrackerService} from '../activityTacker/activity-tracker.service';
-import {NotificationService} from '../notifications/notification-service'; // <— make sure the filename matches
+import {NotificationService} from '../notifications/notification-service';
+import {SocketService} from '../socket/socket-service';
 
-// -------------------- Types (unchanged) --------------------
+/* ==================== Types (unchanged) ==================== */
+
 export interface UserCredentials {
   username: string;
   password: string;
@@ -89,10 +119,12 @@ export function getDefaultAccessByRole(role: Role) {
   return result;
 }
 
-// -------------------- Auth Service --------------------
+/* ==================== Auth Service ==================== */
+
 @Injectable({providedIn: 'root'})
 export class AuthService {
-  private isBrowser: boolean;
+  private readonly isBrowser: boolean;
+
   private isLoggedIn = false;
   private rememberMe = false;
   private username = '';
@@ -104,26 +136,29 @@ export class AuthService {
   private isValidUser = false;
   private isUserActive = false;
   private users: UsersType[] = [];
+
+  /** Ensure we boot the realtime layers once per session. */
   private notificationsInit = false;
 
   constructor (
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(PLATFORM_ID) platformId: Object,
     private cryptoService: CryptoService,
     private APIs: APIsService,
     private activityTrackerService: ActivityTrackerService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private socketService: SocketService,
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser(platformId);
   }
 
-  // -------- Notifications (app-wide accessors) --------
+  /* ---------- Delegates: Notification convenience ---------- */
   get notifications$() {return this.notificationService.items$;}
   get unreadNotifications$() {return this.notificationService.unreadCount$();}
   get unreadNotificationsCount(): number {return this.notificationService.unreadCount();}
   markNotificationRead(notificationId: string) {return this.notificationService.markRead(notificationId);}
 
-  // -------------------- Getters / Setters --------------------
-  get getUserCredentials(): UserCredentials | null {return this.user;}
+  /* ---------- Getters / Setters ---------- */
+  get getUserCredentials(): UserCredentials | null {return this.user ?? null;}
   get getLoggedUser(): LoggedUserType | null {return this.loggedUser;}
   get LocalUser(): LoggedUserType | null {return this.localUser;}
   get IsActiveUser(): boolean {return this.isUserActive;}
@@ -144,26 +179,31 @@ export class AuthService {
   }
   set logginUser(user: UserCredentials) {this.user = user;}
 
-  // -------------------- Auth flow --------------------
+  /* ---------- Login flow ---------- */
   public async sendVerifyUser(): Promise<boolean> {
     try {
       const response = await this.APIs.verifyUser(this.user);
       if(response?.status !== 'success') throw new Error('Invalid credentials!');
-      const user: LoggedUserType = response.user as LoggedUserType;
 
+      const user: LoggedUserType = response.user as LoggedUserType;
       if(!user) throw new Error('User not found!');
 
+      // Store state
       this.setLoggedUser = user;
       this.isUserLoggedIn = true;
       this.isValidUser = true;
       this.isUserActive = !!user.isActive;
 
-      // Save JWT if your API returns it
-      const token = (response as any)?.token ?? (this.APIs as any)?.token ?? localStorage.getItem('auth_token');
-      if(token) localStorage.setItem('auth_token', token);
+      // Persist JWT (server may also return via APIsService)
+      const token =
+        (response as any)?.token ??
+        (this.APIs as any)?.token ??
+        (this.isBrowser ? localStorage.getItem('auth_token') : null);
 
-      // init notifications immediately after successful login
-      this.initNotificationsIfNeeded();
+      if(this.isBrowser && token) localStorage.setItem('auth_token', token);
+
+      // Boot realtime layers (NotificationService + SocketService)
+      this.initRealtimeIfNeeded();
 
       return true;
     } catch(error) {
@@ -172,7 +212,7 @@ export class AuthService {
     }
   }
 
-  // Validate payload shape helper — supports single object OR array
+  /* ---------- Validate payload type helper ---------- */
   public isUsersType(data: any): data is UsersType[] | UsersType {
     const isOne = (item: any) =>
       item && typeof item.name === 'string' && typeof item.username === 'string' &&
@@ -196,11 +236,10 @@ export class AuthService {
       (typeof item.updator === 'string' || typeof item.updator === 'undefined') &&
       (typeof item.createdAt === 'string' || item.createdAt instanceof Date) &&
       (typeof item.updatedAt === 'string' || item.updatedAt instanceof Date);
-
     return Array.isArray(data) ? data.every(isOne) : isOne(data);
   }
 
-  // Fetch all users (admin/operator only)
+  /* ---------- Admin-only helper ---------- */
   public async sendUserCredentialsAndGetUserData(role: string): Promise<boolean> {
     if(!this.isBrowser) return false;
     try {
@@ -220,7 +259,7 @@ export class AuthService {
     }
   }
 
-  // Post-login persistence
+  /* ---------- Post-login persistence ---------- */
   public async afterUserLoggedInOperatios(): Promise<void> {
     if(!this.isBrowser) return;
     if(this.isValidUser && this.localUser) {
@@ -234,7 +273,7 @@ export class AuthService {
     }
   }
 
-  // Restore session from local storage + init notifications
+  /* ---------- Session restore on app start ---------- */
   public async getLocalLoggedUser(): Promise<LoggedUserType | null> {
     if(!this.isBrowser) return null;
     const encrypted = localStorage.getItem('ENCRYPED_LOGGED_USER');
@@ -248,8 +287,8 @@ export class AuthService {
       this.isValidUser = true;
       this.isLoggedIn = true;
 
-      // init notifications on session restore as well
-      this.initNotificationsIfNeeded();
+      // Boot realtime on session restore as well
+      this.initRealtimeIfNeeded();
       return decryptedUser;
     } catch(e) {
       console.error('[getLocalLoggedUser] decrypt failed', e);
@@ -257,15 +296,17 @@ export class AuthService {
     }
   }
 
+  /* ---------- Activity tracker ---------- */
   public async insertLoggedUserTracks() {
     const date = new Date();
     this.activityTrackerService.userLoggedTime = date;
     const data = {username: this.user?.username, date};
-    await this.activityTrackerService.saveLoggedUserDataToTracking(data).catch(() => {});
+    await this.activityTrackerService.saveLoggedUserDataToTracking(data).catch((error) => {console.error(error)});
   }
 
-  // -------------------- Notifications bootstrap --------------------
-  /** Resolve backend base URL without env files (tries APIsService first, then same-origin). */
+  /* ==================== Realtime bootstrap ==================== */
+
+  /** Build a backend base URL (prefers APIsService config; falls back to same-origin). */
   private resolveApiBase(): string {
     if(!this.isBrowser) return '';
     const anyAPIs = this.APIs as any;
@@ -277,37 +318,64 @@ export class AuthService {
     return String(base).replace(/\/+$/, '');
   }
 
-  /** Open socket + fetch first page, only once per session. */
-  private initNotificationsIfNeeded() {
+  /**
+   * Initialize:
+   *  - NotificationService (uses its own Socket.IO internally)
+   *  - SocketService (shared socket for chat/calls/other realtime)
+   *
+   * Runs once per session (guarded by `notificationsInit`).
+   */
+  private initRealtimeIfNeeded(): void {
     if(!this.isBrowser || this.notificationsInit) return;
 
-    const token = (this.APIs as any)?.token || localStorage.getItem('auth_token');
+    const token =
+      (this.APIs as any)?.token ||
+      localStorage.getItem('auth_token');
+
     if(!token) return;
 
-    const apiBase = this.resolveApiBase(); // may be 4200 (OK for REST)
-    const wsBase = 'http://localhost:3000'; // <<< ensure this points to the backend
+    // Prefer the API base as the WS base unless your backend differs.
+    const apiBase = this.resolveApiBase();
+    const wsBase = apiBase; // ✅ point to backend host (NOT the Angular dev server)
 
-    this.notificationService.initConnection({apiBase, wsBase, token});
+    // Provide a tokenProvider so both layers can refresh auth if server asks.
+    const tokenProvider = () => localStorage.getItem('auth_token') || '';
+
+    // 1) Shared realtime bus (for chat/calls/etc)
+    this.socketService.init({wsBase, token, tokenProvider});
+
+    // 2) Notifications (kept as-is; it owns its own socket)
+    this.notificationService.initConnection({apiBase, wsBase, token, tokenProvider});
     this.notificationService.load({limit: 20, skip: 0}).catch(() => {});
+
+
 
     this.notificationsInit = true;
   }
 
-  // -------------------- Cleanup --------------------
-  /** Clears creds and disconnects notifications (use in your logout). */
+  /* ==================== Cleanup (logout) ==================== */
+
+  /** Clears session and disconnects realtime. Call on logout. */
   public clearCredentials(): void {
-    this.user = {} as UserCredentials;
+    this.user = {username: '', password: '', rememberMe: false};
     this.isLoggedIn = false;
     this.isValidUser = false;
     this.isUserActive = false;
     this.setLoggedUser = null;
 
-    // Optional: clear local flags
-    localStorage.removeItem('ENCRYPED_LOGGED_USER');
-    localStorage.removeItem('IS_USER_LOGGED_IN');
-    localStorage.removeItem('PASSWORD');
+    // Optional: clear persisted user snapshot (kept original keys)
+    if(this.isBrowser) {
+      localStorage.removeItem('ENCRYPED_LOGGED_USER');
+      localStorage.removeItem('IS_USER_LOGGED_IN');
+      localStorage.removeItem('PASSWORD');
+      // NOTE: Do not forcibly remove auth_token here if a separate SSO flow manages it.
+      // If you do want to wipe it on logout, uncomment:
+      // localStorage.removeItem('auth_token');
+    }
 
+    // Disconnect both realtime layers
     this.notificationService.disconnect();
+    this.socketService.disconnect();
     this.notificationsInit = false;
   }
 }
