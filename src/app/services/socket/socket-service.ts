@@ -46,7 +46,7 @@ export class SocketService {
 
   // Default options (WS base + path). You can override in init().
   private opts: Required<Pick<RealtimeOptions, 'wsBase' | 'path'>> = {
-    wsBase: 'http://localhost:3000',
+    wsBase: 'http://localhost:3000', // Change in the production
     path: '/socket.io',
   };
   private tokenProvider?: () => string | Promise<string>;

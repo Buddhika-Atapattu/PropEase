@@ -1,137 +1,236 @@
+/* Path: src/components/user-info-panel/user-info-panel.component.scss */
+@use "../../styles/global.scss" as *;
+
+/* Root panel */
 .user-info-panel {
-  position: absolute;
-  top: 80px;
-  right: 40px;
-  width: auto;
-  height: auto;
+  position: fixed; /* pin to viewport for reliable placement over navbar */
+  top: 72px; /* align just under your navbar */
+  right: 24px;
+  width: min(360px, 92vw);
+  border-radius: 16px;
+  padding: 16px;
+  z-index: 1000;
+  outline: none;
+  animation: uip-slide-in 180ms ease-out both;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25),
+    0 1px 0 rgba(255, 255, 255, 0.12) inset;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  &.light {
+    background: rgba(255, 255, 255, 0.86);
+    color: $light-text-color;
+  }
+
+  &.dark {
+    background: rgba(21, 21, 28, 0.72);
+    color: $dark-text-color;
+  }
+}
+
+@keyframes uip-slide-in {
+  from {
+    transform: translateY(-8px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Header: avatar + meta + close */
+.uip-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.uip-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.18),
+    rgba(255, 255, 255, 0.06)
+  );
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  span {
+    font-size: 18px;
+    opacity: 0.9;
+  }
+}
+
+.uip-meta {
+  min-width: 0; /* avoid overflow */
+}
+
+.uip-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.uip-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  opacity: 0.9;
+  .uip-email {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 18ch;
+  }
+}
+
+.uip-role {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  background: rgba(127, 127, 255, 0.18);
+  border: 1px solid rgba(127, 127, 255, 0.28);
+}
+
+.uip-dot {
+  opacity: 0.6;
+}
+
+.uip-close {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: currentColor;
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.08s ease;
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  &:active {
+    transform: scale(0.96);
+  }
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+  }
+}
+
+/* Quick stats row */
+.uip-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 8px 0 12px 0;
+}
+
+.uip-stat {
+  padding: 10px 12px;
   border-radius: 12px;
-  padding: 1rem;
-  z-index: 10000000000000000000000000;
-  animation: slideIn 0.3s ease-out;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
 
-  &.light-mode {
-    background-color: #fff;
-    color: #000;
-
-    .user-info-content {
-      h5 {
-        color: #3f3f3f;
-      }
-
-      .logout-btn {
-        background-color: #d29e00;
-        color: white;
-
-        &:hover {
-          background-color: #b18600;
-        }
-      }
-      .profile-btn {
-        background-color: #d29e00;
-        color: white;
-        position: absolute;
-        right: 0;
-
-        &:hover {
-          background-color: #b18600;
-        }
-      }
-
-      .close-btn {
-        color: #999;
-
-        &:hover {
-          color: #333;
-        }
-      }
-    }
+  .uip-stat-label {
+    display: block;
+    font-size: 11px;
+    opacity: 0.8;
+    margin-bottom: 4px;
   }
+  .uip-stat-value {
+    font-size: 13px;
+    font-weight: 600;
 
-  &.dark-mode {
-    background-color: #1e1e2e;
-    color: #fcefcb;
-
-    .user-info-content {
-      h5 {
-        color: #ffcc00;
-      }
-
-      .logout-btn {
-        background-color: #ff8c00;
-        color: #fff;
-
-        &:hover {
-          background-color: #cc7200;
-        }
-      }
-      .profile-btn {
-        background-color: #ff8c00;
-        color: #fff;
-        position: absolute;
-        right: 0;
-
-        &:hover {
-          background-color: #cc7200;
-        }
-      }
-
-      .close-btn {
-        color: #ccc;
-
-        &:hover {
-          color: #fff;
-        }
-      }
-    }
-  }
-
-  .user-info-content {
-    position: relative;
-
-    h5 {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 1rem;
-    }
-
-    p {
-      margin: 0 0 0.5rem;
-      font-size: 14px;
-    }
-
-    .logout-btn,
-    .close-btn,
-    .profile-btn {
-      border: none;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .logout-btn,
-    .profile-btn {
-      padding: 6px 12px;
-      border-radius: 5px;
-      margin-top: 10px;
-    }
-
-    .close-btn {
-      position: absolute;
-      top: 0;
-      right: 0;
-      background: transparent;
-      font-size: 20px;
+    &.active {
+      color: lighten($dark-fourth-color, 10%);
     }
   }
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateY(-15px);
-    opacity: 0;
+.user-info-panel.light .uip-stat {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Actions */
+.uip-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  .uip-btn {
+    appearance: none;
+    border: 0;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
+    background: rgba(255, 255, 255, 0.08);
+    color: inherit;
+    text-align: center;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 14px rgba(0, 0, 0, 0.22);
+    }
+    &:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.85);
+      outline-offset: 2px;
+    }
+
+    &.primary {
+      background: $dark-third-color;
+      color: #fff;
+      &:hover {
+        background: $dark-fourth-color;
+      }
+    }
+
+    &.warn {
+      background: #b3261e; /* Material-like error tone */
+      color: #fff;
+      &:hover {
+        background: darken(#b3261e, 6%);
+      }
+    }
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+}
+
+/* Small screens */
+@media (max-width: 480px) {
+  .user-info-panel {
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+  .uip-actions {
+    grid-template-columns: 1fr;
+  }
+  .uip-sub .uip-email {
+    max-width: 12ch;
   }
 }

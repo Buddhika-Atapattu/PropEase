@@ -1,7 +1,176 @@
-<div
-  *ngIf="mode !== null"
-  class="main-panel"
->
-  <h2>Main Dashboard Area</h2>
-  <p>This is the main content panel for propease-fontend users.</p>
+<div *ngIf="mode !== null" class="main-panel" role="main">
+  <h2>Overview</h2>
+  <p class="subtitle">Key signals and quick actions tailored to your access.</p>
+
+  <!-- KPI row (auto-hidden per permission flags) -->
+  <div class="kpi-grid">
+    <!-- Occupancy (Property Management.view properties) -->
+    <div class="card kpi" *ngIf="canViewProperties">
+      <div>
+        <div class="kpi-title">Portfolio Occupancy</div>
+        <div class="kpi-value">{{ occupancyPct }}%</div>
+        <div class="kpi-trend">
+          <span
+            [class.badge]="true"
+            [class.ok]="occDelta > 0"
+            [class.warn]="occDelta === 0"
+            [class.err]="occDelta < 0"
+          >
+            {{ occDelta > 0 ? "+" : "" }}{{ occDelta }}%
+          </span>
+          vs last month
+        </div>
+      </div>
+      <svg class="spark" viewBox="0 0 120 40">
+        <path
+          [attr.d]="sparkPath(occupancySeries)"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          opacity="0.9"
+        ></path>
+      </svg>
+    </div>
+
+    <!-- Monthly Rent (Payment & Billing.view payments) -->
+    <div class="card kpi" *ngIf="canViewPayments">
+      <div>
+        <div class="kpi-title">Monthly Rent Collected</div>
+        <div class="kpi-value">
+          {{ rentCollected | number : "1.0-0" }} {{ currency }}
+        </div>
+        <div class="kpi-trend">
+          <span class="badge ok"
+            >{{ rentDelta > 0 ? "+" : ""
+            }}{{ rentDelta | number : "1.0-0" }}%</span
+          >
+          vs last month
+        </div>
+      </div>
+      <svg class="spark" viewBox="0 0 120 40">
+        <path
+          [attr.d]="sparkPath(rentSeries)"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          opacity="0.9"
+        ></path>
+      </svg>
+    </div>
+
+    <!-- Open Maintenance (Maintenance Requests.view requests) -->
+    <div class="card kpi" *ngIf="canViewMaintenance">
+      <div>
+        <div class="kpi-title">Open Maintenance</div>
+        <div class="kpi-value">{{ openMaintenance }}</div>
+        <div class="kpi-trend">
+          <span
+            [class.badge]="true"
+            [class.err]="mntDelta > 0"
+            [class.ok]="mntDelta <= 0"
+          >
+            {{ mntDelta > 0 ? "+" + mntDelta : mntDelta }} last 7d
+          </span>
+        </div>
+      </div>
+      <svg class="spark" viewBox="0 0 120 40">
+        <path
+          [attr.d]="sparkPath(maintenanceSeries)"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          opacity="0.9"
+        ></path>
+      </svg>
+    </div>
+
+    <!-- Expiring Leases (Lease Management.view leases) -->
+    <div class="card kpi" *ngIf="canViewLeases">
+      <div>
+        <div class="kpi-title">Leases Expiring (30d)</div>
+        <div class="kpi-value">{{ expiringLeases }}</div>
+        <div class="kpi-trend">
+          <span class="badge warn">{{
+            expiringLeases > 0 ? "Action needed" : "All good"
+          }}</span>
+        </div>
+      </div>
+      <svg class="spark" viewBox="0 0 120 40">
+        <path
+          [attr.d]="sparkPath(leaseSeries)"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          opacity="0.9"
+        ></path>
+      </svg>
+    </div>
+
+    <!-- Recent Activity (Audit Logs.view logs) -->
+    <div class="card half" *ngIf="canViewAudit">
+      <div class="section-title">Recent Activity</div>
+      <div class="list">
+        <div class="list-item" *ngFor="let a of recentActivity">
+          <span>{{ a.title }}</span>
+          <span
+            class="badge"
+            [class.ok]="a.level === 'info'"
+            [class.warn]="a.level === 'warn'"
+            [class.err]="a.level === 'error'"
+            >{{ a.time }}</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications (Communication & Notification.view message logs) -->
+    <div class="card half" *ngIf="canViewNotifications">
+      <div class="section-title">Notifications</div>
+      <div class="list">
+        <div class="list-item" *ngFor="let n of notifications">
+          <span>{{ n.title }}</span>
+          <span class="badge" [class.warn]="!n.read" [class.ok]="n.read">{{
+            n.read ? "Read" : "Unread"
+          }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions (show only actions user can actually do) -->
+    <div class="card full">
+      <div class="section-title">Quick Actions</div>
+      <div class="actions">
+        <button
+          class="btn primary"
+          *ngIf="canCreateLease"
+          (click)="goCreateLease()"
+        >
+          Create Lease
+        </button>
+        <button class="btn" *ngIf="canAssignAgent" (click)="goAssignAgent()">
+          Assign Agent
+        </button>
+        <button
+          class="btn"
+          *ngIf="canRecordPayment"
+          (click)="goRecordPayment()"
+        >
+          Record Payment
+        </button>
+        <button class="btn" *ngIf="canOpenRequests" (click)="goMaintenance()">
+          Maintenance
+        </button>
+        <button class="btn" *ngIf="canGenerateReports" (click)="goReports()">
+          Reports
+        </button>
+        <button
+          class="btn warn"
+          *ngIf="canTerminateLease"
+          (click)="goLeaseTerminations()"
+        >
+          Terminate Lease
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

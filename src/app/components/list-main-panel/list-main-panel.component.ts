@@ -79,64 +79,12 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
           icon_text: 'Home',
           toolTip: 'Home',
         },
-        // {
-        //   url: null,
-        //   mat_icon: 'payment-icon',
-        //   icon_text: 'Payments',
-        //   toolTip: 'Payments',
-        //   sub: [
-        //     {
-        //       url: 'payments-list',
-        //       mat_icon: 'bill-list-icon',
-        //       icon_text: 'List',
-        //       toolTip: 'List',
-        //     },
-        //     {
-        //       url: 'payments-upload-proof',
-        //       mat_icon: 'certification-icon',
-        //       icon_text: 'Upload',
-        //       toolTip: 'Upload',
-        //     },
-        //   ],
-        // },
         {
-          url: null,
+          url: 'complaints',
           mat_icon: 'complaints-icon',
           icon_text: 'Complaints',
           toolTip: 'Complaints',
-          sub: [
-            {
-              url: 'complaints-create',
-              mat_icon: 'create-icon',
-              icon_text: 'Create',
-              toolTip: 'Create',
-            },
-            {
-              url: 'complaints-status-view',
-              mat_icon: 'certification-icon',
-              icon_text: 'Log',
-              toolTip: 'Log',
-            },
-          ],
-        },
-        {
-          url: 'documents',
-          mat_icon: 'documents-icon',
-          icon_text: 'Documents',
-          toolTip: 'Documents',
-        },
-        {
-          url: 'notifications',
-          mat_icon: 'notifications-icon',
-          icon_text: 'Notifications',
-          toolTip: 'Notifications',
-        },
-        {
-          url: 'activity-log',
-          mat_icon: 'log-icon',
-          icon_text: 'Log',
-          toolTip: 'Log',
-        },
+        }
       ],
     },
     {
@@ -146,28 +94,22 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
       toolTip: 'Agents',
     },
     {
-      url: 'report',
-      mat_icon: 'report-icon',
-      icon_text: 'Reports',
-      toolTip: 'Reports',
-    },
-    {
-      url: 'owner',
-      mat_icon: 'owner-icon',
-      icon_text: 'Owners',
-      toolTip: 'Owners',
-    },
-    {
       url: 'payments',
       mat_icon: 'payment-icon',
       icon_text: 'Payments',
       toolTip: 'Payments',
     },
     {
-      url: 'access-control',
-      mat_icon: 'access-icon',
-      icon_text: 'Access Control',
-      toolTip: 'Access Control',
+      url: 'report',
+      mat_icon: 'report-icon',
+      icon_text: 'Reports',
+      toolTip: 'Reports',
+    },
+    {
+      url: 'log',
+      mat_icon: 'certification-icon',
+      icon_text: 'Log',
+      toolTip: 'Log',
     },
   ];
 

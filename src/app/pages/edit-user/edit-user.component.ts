@@ -9,17 +9,17 @@ import {
   HostListener,
   AfterViewInit,
 } from '@angular/core';
-import { WindowsRefService } from '../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatButtonModule } from '@angular/material/button';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import {isPlatformBrowser, CommonModule, AsyncPipe} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {ActivatedRoute, Router} from '@angular/router';
+import {MatInputModule} from '@angular/material/input';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatButtonModule} from '@angular/material/button';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatDatepickerModule} from '@angular/material/datepicker';
 import {
   MatMomentDateModule,
   MomentDateAdapter,
@@ -29,14 +29,13 @@ import {
   MAT_DATE_FORMATS,
   MAT_DATE_LOCALE,
 } from '@angular/material/core';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import {MatSelectModule} from '@angular/material/select';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 import {
   Role,
   UsersType,
   ACCESS_OPTIONS,
-  getDefaultAccessByRole,
   DEFAULT_ROLE_ACCESS,
   AccessMap,
   LoggedUserType,
@@ -50,24 +49,24 @@ import {
   ROLE_ACCESS_MAP,
   validateType,
 } from '../../services/APIs/apis.service';
-import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
-import { DomSanitizer } from '@angular/platform-browser';
-import { MatDialogModule } from '@angular/material/dialog';
+import {Observable} from 'rxjs';
+import {map, startWith} from 'rxjs/operators';
+import {DomSanitizer} from '@angular/platform-browser';
+import {MatDialogModule} from '@angular/material/dialog';
 import {
   msgTypes,
   NotificationDialogComponent,
 } from '../../components/dialogs/notification/notification.component';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { ProgressBarComponent } from '../../components/dialogs/progress-bar/progress-bar.component';
-import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
-import { CryptoService } from '../../services/cryptoService/crypto.service';
-import { CameraBoxComponent } from '../../components/dialogs/camera-box/camera-box.component';
-import { EditorComponent } from '@tinymce/tinymce-angular';
-import { AuthService } from '../../services/auth/auth.service';
-import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
-import { UserControllerService } from '../../services/userController/user-controller.service';
-import { HttpErrorResponse } from '@angular/common/http';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {ProgressBarComponent} from '../../components/dialogs/progress-bar/progress-bar.component';
+import {ImageCropperComponent, ImageCroppedEvent} from 'ngx-image-cropper';
+import {CryptoService} from '../../services/cryptoService/crypto.service';
+import {CameraBoxComponent} from '../../components/dialogs/camera-box/camera-box.component';
+import {EditorComponent} from '@tinymce/tinymce-angular';
+import {AuthService} from '../../services/auth/auth.service';
+import {SkeletonLoaderComponent} from '../../components/shared/skeleton-loader/skeleton-loader.component';
+import {UserControllerService} from '../../services/userController/user-controller.service';
+import {HttpErrorResponse} from '@angular/common/http';
 
 interface userAccessType {
   access: string[];
@@ -170,9 +169,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected readonly definedGender: string[] = ['Male', 'Female', 'Other'];
   protected accessOptions = ACCESS_OPTIONS;
   protected selectedPermissions: {
-    [module: string]: { [action: string]: boolean };
+    [module: string]: {[action: string]: boolean};
   } = {};
-  protected allSelected: { [module: string]: boolean } = {};
+  protected allSelected: {[module: string]: boolean} = {};
   protected autoSelectedRoleAccess: Record<Role, AccessMap> =
     DEFAULT_ROLE_ACCESS;
   protected isCameraOpen: boolean = false;
@@ -248,7 +247,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   protected isDragOver: boolean = false;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private activatedRouter: ActivatedRoute,
@@ -261,7 +260,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     private userControlService: UserControllerService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    this.activatedRouter.url.subscribe((segments) => { });
+    this.activatedRouter.url.subscribe((segments) => {});
     this.iconCreator();
     this.loggedUser = this.authService.getLoggedUser;
     this.updator = this.loggedUser !== null ? this.loggedUser.username : '';
@@ -272,12 +271,12 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       // Prevent default drag/drop behavior globally
       window.addEventListener('dragover', this.preventDefault, {
         passive: false,
       });
-      window.addEventListener('drop', this.preventDefault, { passive: false });
+      window.addEventListener('drop', this.preventDefault, {passive: false});
 
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
@@ -286,16 +285,16 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  ngAfterViewInit() { }
+  ngAfterViewInit() {}
 
   private iconCreator() {
     const icons = [
-      { name: 'camera', path: '/Images/Icons/camera.svg' },
-      { name: 'upload', path: '/Images/Icons/upload.svg' },
-      { name: 'insert', path: '/Images/Icons/user-plus.svg' },
+      {name: 'camera', path: '/Images/Icons/camera.svg'},
+      {name: 'upload', path: '/Images/Icons/upload.svg'},
+      {name: 'insert', path: '/Images/Icons/user-plus.svg'},
     ];
 
-    for (let icon of icons) {
+    for(let icon of icons) {
       this.matIconRegistry.addSvgIcon(
         icon.name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path)
@@ -304,9 +303,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   protected detectGender(value: string) {
-    if (value === 'Male') {
+    if(value === 'Male') {
       this.definedImage = this.definedMaleDummyImageURL;
-    } else if (value === 'Female') {
+    } else if(value === 'Female') {
       this.definedImage = this.definedWomanDummyImageURL;
     } else {
       this.definedImage = this.definedMaleDummyImageURL;
@@ -367,10 +366,10 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   //<==================== Load Data ====================>
   private async loadData() {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       await this.API.getUserByToken(this.username)
         .then((data) => {
-          if (data.user) {
+          if(data.user) {
             const user = data.user;
             // Assising the user all data
             this.fullname = user.name;
@@ -423,7 +422,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
           }
         })
         .catch((error) => {
-          if (error) {
+          if(error) {
             this.router.navigate(['/dashboard/unauthorized']);
           }
         });
@@ -431,17 +430,17 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   protected detectUserImage(image: string, gender: string): string {
-    if (typeof image === 'string') {
+    if(typeof image === 'string') {
       const imageArray: string[] = image ? image.split('/') : [];
-      if (imageArray.length > 0) {
-        if (
+      if(imageArray.length > 0) {
+        if(
           this.definedImageExtentionArray.includes(
             imageArray[imageArray.length - 1].split('.')[1]
           )
         ) {
           return image;
         } else {
-          if (gender === 'male') {
+          if(gender === 'male') {
             return this.definedMaleDummyImageURL;
           } else {
             return this.definedWomanDummyImageURL;
@@ -490,11 +489,11 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected convertToTheBlob(data: string): File {
     const byteString = atob(data.split(',')[1]); // decode base64
     const byteArray = new Uint8Array(byteString.length);
-    for (let i = 0; i < byteString.length; i++) {
+    for(let i = 0; i < byteString.length; i++) {
       byteArray[i] = byteString.charCodeAt(i);
     }
-    const blob = new Blob([byteArray], { type: 'image/png' });
-    return new File([blob], 'image.png', { type: 'image/png' });
+    const blob = new Blob([byteArray], {type: 'image/png'});
+    return new File([blob], 'image.png', {type: 'image/png'});
   }
 
   //<=========== End Capture the image and upload the image ============>
@@ -506,7 +505,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     const target = event.target as HTMLElement;
 
     // Allow default behavior for text inputs and editable fields
-    if (
+    if(
       target.tagName === 'INPUT' ||
       target.tagName === 'TEXTAREA' ||
       target.hasAttribute('contenteditable')
@@ -519,12 +518,12 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Custom paste handling for image files
     const items = event.clipboardData?.items;
-    if (!items) return;
+    if(!items) return;
 
-    for (const item of items) {
-      if (item.kind === 'file') {
+    for(const item of items) {
+      if(item.kind === 'file') {
         const file = item.getAsFile();
-        if (file) {
+        if(file) {
           this.processPastedFile(file);
         }
       }
@@ -539,7 +538,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     input.files = dataTransfer.files;
 
     // Trigger the same file selection logic
-    this.onFileSelected({ target: input } as any);
+    this.onFileSelected({target: input} as any);
   }
 
   //<=========== End Image Past On File Input ============>
@@ -561,9 +560,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isDragOver = false;
 
     const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
+    if(files && files.length > 0) {
       const file = files[0];
-      if (file.type.startsWith('image/')) {
+      if(file.type.startsWith('image/')) {
         this.processDroppedFile(file);
       }
     }
@@ -577,7 +576,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     input.files = dataTransfer.files;
 
     // Trigger your upload handler
-    this.onFileSelected({ target: input } as any);
+    this.onFileSelected({target: input} as any);
   }
 
   private preventDefault(event: Event): void {
@@ -626,13 +625,13 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   //<=========== Page indicator ============>
   protected goToUsers() {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
       this.router.navigate(['/dashboard/users']);
     });
   }
 
   protected async goToUser() {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
       this.router.navigate(['/dashboard/add-new-user']);
     });
   }
@@ -649,7 +648,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   //<=========== Validating the Date of birth ============>
   protected validateDateOfBirth(value: Date | string): void {
-    if (!value) {
+    if(!value) {
       this.isValidAge = false;
       this.age = 0;
       return;
@@ -663,7 +662,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     const monthDiff = today.getMonth() - dateOfBirth.getMonth();
     const dayDiff = today.getDate() - dateOfBirth.getDate();
 
-    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+    if(monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
       age--;
     }
     this.isValidAge = age >= 18;
@@ -676,9 +675,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private async mainFilterCountries(): Promise<Country[]> {
     const countries: Country[] = await this.API.getCountries();
-    if (!Array.isArray(countries)) return [];
+    if(!Array.isArray(countries)) return [];
 
-    if (countries) {
+    if(countries) {
       this.countries = countries;
       this.filteredCountries = this.countryControl.valueChanges.pipe(
         startWith(this.typedCountry),
@@ -707,16 +706,16 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected async checkUsername(event: Event): Promise<void> {
     this.usernameMatchPattern = false;
     const input = event.target as HTMLInputElement;
-    if (this.usernamePattern.test(input.value)) {
+    if(this.usernamePattern.test(input.value)) {
       this.usernameMatchPattern = true;
     } else {
       this.usernameMatchPattern = false;
     }
-    if (this.usernameMatchPattern) {
+    if(this.usernameMatchPattern) {
       const checking: validateType = await this.API.getUserByUsername(
         input.value
       );
-      if (checking.status === 'true') {
+      if(checking.status === 'true') {
         this.isUsernameExist = true;
       } else {
         this.isUsernameExist = false;
@@ -730,7 +729,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     this.passwordMatchPattern = false;
     const input = event.target as HTMLInputElement;
     const password = input.value;
-    if (this.strongPasswordPattern.test(password)) {
+    if(this.strongPasswordPattern.test(password)) {
       this.passwordMatchPattern = true;
     } else {
       this.passwordMatchPattern = false;
@@ -741,13 +740,13 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   //<=========== Checking the email ============>
   protected async checkEmail(input: string): Promise<void> {
     try {
-      if (this.emailPattern.test(input)) {
+      if(this.emailPattern.test(input)) {
         const checking = await this.userControlService.emailValidator(input);
-        if (checking.status === 'success') {
+        if(checking.status === 'success') {
           this.isEmailError = checking.data.validation;
           this.emailErrorMessage = checking.message;
           const existEmail = await this.API.getUserByEmail(input);
-          if (existEmail.status === 'true') {
+          if(existEmail.status === 'true') {
             this.isEmailError = true;
             this.emailErrorMessage = 'Email already exist';
             throw new Error('Email already exist');
@@ -768,9 +767,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
         this.emailErrorMessage = 'Invalid email format';
       }
     }
-    catch (error) {
+    catch(error) {
       console.error(error);
-      if (error instanceof HttpErrorResponse) {
+      if(error instanceof HttpErrorResponse) {
         this.notification.notification('error', error.error.message);
       }
       else {
@@ -785,8 +784,8 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
       const safeInput = input.trim();
       const checking = await this.userControlService.isPhoneNumberValid(safeInput);
       const isExistChecking = await this.API.getUserByPhone(safeInput);
-      if (isExistChecking.status === 'error') {
-        if (!checking) {
+      if(isExistChecking.status === 'error') {
+        if(!checking) {
           this.isPhoneError = true;
           this.phoneErrorMessage = 'Invalid phone number';
           throw new Error('Invalid phone number');
@@ -796,15 +795,15 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
           this.phoneErrorMessage = '';
         }
       }
-      else if (isExistChecking.status === 'success') {
+      else if(isExistChecking.status === 'success') {
         this.isPhoneError = true;
         this.phoneErrorMessage = isExistChecking.message;
         throw new Error(isExistChecking.message);
       }
     }
-    catch (error) {
+    catch(error) {
       console.error(error);
-      if (error instanceof HttpErrorResponse) {
+      if(error instanceof HttpErrorResponse) {
         this.isPhoneError = true;
         this.phoneErrorMessage = error.error.message;
         this.notification.notification('error', error.error.message);
@@ -822,7 +821,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * @returns true if the module exists under the current role's access; otherwise, false.
    */
   protected hasModel(model: string): boolean {
-    if (
+    if(
       this.role in this.autoSelectedRoleAccess &&
       model in this.autoSelectedRoleAccess[this.role as Role]
     ) {
@@ -838,7 +837,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * @returns true if the permission exists; otherwise, false.
    */
   protected hasAccess(access: string, model: string): boolean {
-    if (
+    if(
       this.role in this.autoSelectedRoleAccess &&
       model in this.autoSelectedRoleAccess[this.role as Role] &&
       this.autoSelectedRoleAccess[this.role as Role][model].includes(access)
@@ -860,29 +859,29 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     module: string,
     action: string
   ): void {
-    if (!(this.role in this.autoSelectedRoleAccess)) return;
+    if(!(this.role in this.autoSelectedRoleAccess)) return;
 
     const accessMap = this.autoSelectedRoleAccess[this.role as Role];
 
-    if (isChecked) {
+    if(isChecked) {
       // Create the module entry if it doesn't exist
-      if (!accessMap[module]) {
+      if(!accessMap[module]) {
         accessMap[module] = [];
       }
 
       // Add the action if it isn't already present
-      if (!accessMap[module].includes(action)) {
+      if(!accessMap[module].includes(action)) {
         accessMap[module].push(action);
       }
     } else {
       // Remove the action if it exists
       const index = accessMap[module]?.indexOf(action);
-      if (index !== -1) {
+      if(index !== -1) {
         accessMap[module].splice(index, 1);
       }
 
       // If the module has no more actions, remove the module key itself
-      if (accessMap[module]?.length === 0) {
+      if(accessMap[module]?.length === 0) {
         delete accessMap[module];
       }
     }
@@ -894,11 +893,11 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * @param module - The module whose permissions are being toggled.
    */
   protected toggleModule(isChecked: boolean, module: string): void {
-    if (!(this.role in this.autoSelectedRoleAccess)) return;
+    if(!(this.role in this.autoSelectedRoleAccess)) return;
 
     const accessMap = this.autoSelectedRoleAccess[this.role as Role];
 
-    if (isChecked) {
+    if(isChecked) {
       const fullActions =
         ACCESS_OPTIONS.find((opt) => opt.module === module)?.actions || [];
       accessMap[module] = [...fullActions];
@@ -913,7 +912,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * @param role - The role whose default permissions are to be loaded.
    */
   protected setPermissionsByRole(role: Role) {
-    this.selectedPermissions = getDefaultAccessByRole(role);
+    this.selectedPermissions = this.authService.getDefaultAccessByRole(role);
     this.updateAllSelectedStates();
   }
 
@@ -922,7 +921,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * Used to control "select all" checkboxes at the module level.
    */
   protected updateAllSelectedStates() {
-    for (const mod of this.accessOptions) {
+    for(const mod of this.accessOptions) {
       const allTrue = mod.actions.every(
         (act) => this.selectedPermissions[mod.module]?.[act]
       );
@@ -937,7 +936,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * @param isChecked - State to apply to all actions (true = checked).
    */
   protected toggleAllActions(module: string, isChecked: boolean) {
-    for (const action in this.selectedPermissions[module]) {
+    for(const action in this.selectedPermissions[module]) {
       this.selectedPermissions[module][action] = isChecked;
     }
     this.updateAllSelectedStates();
@@ -958,17 +957,17 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     const role = this.role;
     const permissions: PermissionEntry[] = [];
 
-    if (role in this.autoSelectedRoleAccess) {
+    if(role in this.autoSelectedRoleAccess) {
       const modules = this.autoSelectedRoleAccess[role as Role];
 
-      for (const [module, actions] of Object.entries(modules)) {
-        if (actions.length > 0) {
-          permissions.push({ module, actions });
+      for(const [module, actions] of Object.entries(modules)) {
+        if(actions.length > 0) {
+          permissions.push({module, actions});
         }
       }
     }
 
-    return { role, permissions };
+    return {role, permissions};
   }
 
   // <======= End Role Access Autocomplete Section =======>
@@ -984,7 +983,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
         new Date(now.setMonth(now.getMonth() + 1)).getTime()
       );
 
-      if (
+      if(
         !this.isUserCanMakeUserActivate() &&
         !this.isUserCanMakeUserDeactivate() &&
         !this.isUserCanAssignUserRoles()
@@ -992,77 +991,77 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
         throw new Error('User does not have permission to perform the action.');
       }
 
-      if (!this.fullname) {
+      if(!this.fullname) {
         throw new Error('User full name is required');
       }
-      if (!this.userGender) {
+      if(!this.userGender) {
         throw new Error('User gender is required');
       }
-      if (!this.email) {
+      if(!this.email) {
         throw new Error('User email is required');
       }
-      if (!this.phone) {
+      if(!this.phone) {
         throw new Error('User phone is required');
       }
-      if (!this.houseNumber) {
+      if(!this.houseNumber) {
         throw new Error('User house number is required');
       }
-      if (!this.street) {
+      if(!this.street) {
         throw new Error('User street is required');
       }
-      if (!this.city) {
+      if(!this.city) {
         throw new Error('User city is required');
       }
-      if (!this.postcode) {
+      if(!this.postcode) {
         throw new Error('User postcode is required');
       }
-      if (!this.countryControl.value) {
+      if(!this.countryControl.value) {
         throw new Error('User country is required');
       }
-      if (!this.dateOfBirth) {
+      if(!this.dateOfBirth) {
         throw new Error('User date of birth is required');
       }
-      if (!this.age) {
+      if(!this.age) {
         throw new Error('User age is required');
       }
-      if (!this.isValidAge) {
+      if(!this.isValidAge) {
         throw new Error('User age is not valid');
       }
-      if (!this.isActive) {
+      if(!this.isActive) {
         throw new Error('User active status is required');
       }
-      if (!this.userBio) {
+      if(!this.userBio) {
         throw new Error('User bio is required');
       }
-      if (!this.role) {
+      if(!this.role) {
         throw new Error('User role is required');
       }
-      if (!this.getRoleAccessPayload()) {
+      if(!this.getRoleAccessPayload()) {
         throw new Error('User access is required');
       }
 
-      if (this.isEmailError) {
+      if(this.isEmailError) {
         throw new Error(this.emailErrorMessage);
       }
 
-      if (this.isPhoneError) {
+      if(this.isPhoneError) {
         throw new Error(this.phoneErrorMessage);
       }
 
-      if (this.isUsernameExist) {
+      if(this.isUsernameExist) {
         throw new Error('Username already exist');
       }
 
-      if (!this.passwordMatchPattern) {
+      if(!this.passwordMatchPattern) {
         throw new Error('Password does not match the pattern');
       }
 
-      if (!this.usernameMatchPattern) {
+      if(!this.usernameMatchPattern) {
         throw new Error('Username does not match the pattern');
       }
 
 
-      if (!this.isValidAge) {
+      if(!this.isValidAge) {
         throw new Error('User does not fit the age criteria');
       }
 
@@ -1082,7 +1081,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
       formData.append('bio', this.userBio.trim());
       formData.append('phoneNumber', this.phone.toString().trim());
 
-      if (this.userimage !== null) {
+      if(this.userimage !== null) {
         console.log('Image not null');
         formData.append(
           'userimage',
@@ -1119,14 +1118,14 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
       await this.API.updateUser(formData, this.username)
         .then((res) => {
           console.log(res);
-          if (res && res.status === 'success') {
+          if(res && res.status === 'success') {
             this.notification.notification(res.status, res.message);
           } else {
             this.notification.notification('Error', 'User update failed');
           }
         })
         .catch((res) => {
-          if (res && res.status === 'error') {
+          if(res && res.status === 'error') {
             this.notification.notification(res.status, res.message);
           } else {
             this.notification.notification('Error', 'User update failed');
@@ -1138,15 +1137,15 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
             this.router.navigate(['/dashboard/users']);
           }, 1000);
         });
-    } catch (error) {
-      if (error) {
+    } catch(error) {
+      if(error) {
         this.notification.notification('error', error as string);
       }
     }
   }
 
   ngOnDestroy(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       window.removeEventListener('dragover', this.preventDefault);
       window.removeEventListener('drop', this.preventDefault);
     }

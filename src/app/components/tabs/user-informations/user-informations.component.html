@@ -130,7 +130,7 @@
         [borderRadius]="'0.2rem'"
         class="mt-2"
       ></app-skeleton-loader>
-      <div *ngIf="!isLoading" [innerHTML]="user.bio"></div>
+      <div *ngIf="!isLoading" [innerHTML]="safeBio"></div>
     </div>
   </div>
 </div>

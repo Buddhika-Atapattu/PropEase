@@ -1,24 +1,44 @@
-<div class="error-page-wrapper" *ngIf="!mode">
-  <div class="error-content">
-    <div *ngIf="!isUnauthorized; else notFound">
-      <h1 class="error-code">404</h1>
-      <h2 class="error-message">Page Not Found</h2>
+<!-- Path: src/app/pages/error404/error404.component.html -->
+<div class="error-page-wrapper">
+  <section
+    class="error-content"
+    role="alert"
+    aria-live="polite"
+    [attr.aria-labelledby]="isUnauthorized ? 'unauth-title' : 'notfound-title'"
+  >
+    <div class="error-illustration" aria-hidden="true">
+      <!-- Simple geometric illustration; purely decorative -->
+      <span class="orb orb-1"></span>
+      <span class="orb orb-2"></span>
+      <span class="orb orb-3"></span>
+    </div>
+
+    <h1 class="error-code">
+      {{ isUnauthorized ? "403" : "404" }}
+    </h1>
+
+    <h2
+      class="error-message"
+      [id]="isUnauthorized ? 'unauth-title' : 'notfound-title'"
+    >
+      {{ isUnauthorized ? "Access denied" : "Page not found" }}
+    </h2>
+
+    <p class="error-description" *ngIf="!isUnauthorized; else unauthorizedMsg">
+      We couldn’t find the page you’re looking for. It might have been moved,
+      renamed, or no longer exists.
+    </p>
+    <ng-template #unauthorizedMsg>
       <p class="error-description">
-        Oops! The page you're looking for doesn’t exist or has been moved.
+        You don’t have permission to view this page. If you believe this is a
+        mistake, please contact an administrator.
       </p>
-      <button class="home-button" (click)="goHome()">
-        {{ userLogIn ? "Back to Home" : "Login" }}
+    </ng-template>
+
+    <div class="actions">
+      <button class="home-button" type="button" (click)="goHome()">
+        {{ userLoggedIn ? "Back to dashboard" : "Go to login" }}
       </button>
     </div>
-  </div>
+  </section>
 </div>
-<ng-template #notFound>
-  <h1 class="error-code">Unauthorized!</h1>
-  <h2 class="error-message">Privent authority</h2>
-  <p class="error-description">
-    Oops! The page you're looking for is unauthorized to you. Contact the admin.
-  </p>
-  <button class="home-button" (click)="goHome()">
-    {{ userLogIn ? "Back to Home" : "Login" }}
-  </button>
-</ng-template>

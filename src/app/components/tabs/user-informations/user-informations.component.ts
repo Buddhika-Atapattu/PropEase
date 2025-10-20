@@ -7,15 +7,15 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import { APIsService, BaseUser } from '../../../services/APIs/apis.service';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-loader.component';
+import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
+import {APIsService, BaseUser} from '../../../services/APIs/apis.service';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {ActivatedRoute, Router} from '@angular/router';
+import {CryptoService} from '../../../services/cryptoService/crypto.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {SkeletonLoaderComponent} from '../../shared/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-user-informations',
@@ -31,8 +31,9 @@ export class UserInformationsComponent implements OnInit, OnChanges {
   private modeSub: Subscription | null = null;
   protected isActive: boolean = false;
   protected isLoading: boolean = true;
+  protected safeBio!: SafeHtml;
 
-  constructor(
+  constructor (
     private APIs: APIsService,
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -57,7 +58,10 @@ export class UserInformationsComponent implements OnInit, OnChanges {
     );
   }
   ngOnInit(): void {
-    if (this.isBrowser) {
+
+    this.safeBio = this.domSanitizer.bypassSecurityTrustHtml(this.user?.bio || '');
+
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -69,7 +73,7 @@ export class UserInformationsComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['user'] && this.user) {
+    if(changes['user'] && this.user) {
     }
   }
 }

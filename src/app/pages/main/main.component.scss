@@ -1,43 +1,207 @@
 @use "../../styles/global.scss" as *;
 @use "sass:color";
 
+/* -----------------------------
+   Main panel (keep pattern)
+------------------------------*/
 .main-panel {
   border-radius: 20px;
   transition: all 0.3s ease-in-out;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
   min-height: 85vh;
-  padding: 2rem;
+  padding: 1.5rem;
 
   h2 {
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
   }
-
-  p {
-    font-size: 16px;
-  }
-}
-
-// Dark Theme
-:host-context(html.dark) {
-  .main-panel {
-    background: linear-gradient(
-      145deg,
-      $dark-secondary-color,
-      color.adjust($dark-secondary-color, $lightness: 2%)
-    );
-    color: $dark-text-color;
+  .subtitle {
+    opacity: 0.9;
+    margin-bottom: 1.25rem;
+    font-size: 14px;
   }
 }
 
-// Light Theme
-:host-context(html.light) {
-  .main-panel {
-    background: linear-gradient(
-      145deg,
-      $light-primary-color,
-      color.adjust($light-primary-color, $lightness: 2%)
-    );
-    color: $light-text-color;
+/* Theme */
+:host-context(html.dark) .main-panel {
+  background: linear-gradient(
+    145deg,
+    $dark-secondary-color,
+    color.adjust($dark-secondary-color, $lightness: 2%)
+  );
+  color: $dark-text-color;
+}
+:host-context(html.light) .main-panel {
+  background: linear-gradient(
+    145deg,
+    $light-primary-color,
+    color.adjust($light-primary-color, $lightness: 2%)
+  );
+  color: $light-text-color;
+}
+
+/* -----------------------------
+   Layout
+------------------------------*/
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+}
+:host-context(html.light) .card {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* KPI Cards */
+.kpi {
+  grid-column: span 3; /* 4 per row on desktop */
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+
+  .kpi-title {
+    font-size: 12px;
+    opacity: 0.85;
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .kpi-trend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    opacity: 0.9;
+  }
+  .spark {
+    width: 120px;
+    height: 40px;
+  }
+}
+
+/* Wide cards */
+.half {
+  grid-column: span 6;
+} /* 2 per row */
+.full {
+  grid-column: 1 / -1;
+} /* full width */
+
+/* Sections */
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 2px 0 8px 0;
+}
+
+/* Lists */
+.list {
+  display: grid;
+  gap: 8px;
+}
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+}
+:host-context(html.light) .list-item {
+  background: rgba(0, 0, 0, 0.035);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+.badge {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.badge.ok {
+  background: rgba(46, 160, 67, 0.15);
+  border-color: rgba(46, 160, 67, 0.25);
+}
+.badge.warn {
+  background: rgba(255, 193, 7, 0.15);
+  border-color: rgba(255, 193, 7, 0.25);
+}
+.badge.err {
+  background: rgba(179, 38, 30, 0.18);
+  border-color: rgba(179, 38, 30, 0.28);
+}
+
+/* Quick actions */
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.btn {
+  appearance: none;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.22);
+}
+.btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+.btn.primary {
+  background: $dark-third-color;
+  color: #fff;
+}
+.btn.primary:hover {
+  background: $dark-fourth-color;
+}
+.btn.warn {
+  background: #b3261e;
+  color: #fff;
+}
+.btn.warn:hover {
+  background: color.scale(#b3261e, $lightness: -6%);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .kpi {
+    grid-column: span 6;
+  }
+  .half {
+    grid-column: span 12;
+  }
+}
+@media (max-width: 560px) {
+  .kpi {
+    grid-column: span 12;
+  }
+  .actions {
+    grid-template-columns: 1fr;
   }
 }

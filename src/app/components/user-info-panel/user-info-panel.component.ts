@@ -1,4 +1,4 @@
-// user-info-panel.component.ts
+// Path: src/components/user-info-panel/user-info-panel.component.ts
 import {
   Component,
   OnInit,
@@ -15,12 +15,12 @@ import {
   NewUser,
   LoggedUserType,
 } from '../../services/auth/auth.service';
-import { Router } from '@angular/router';
-import { WindowsRefService } from '../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { CryptoService } from '../../services/cryptoService/crypto.service';
-import { APIsService } from '../../services/APIs/apis.service';
+import {Router} from '@angular/router';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {CryptoService} from '../../services/cryptoService/crypto.service';
+import {APIsService} from '../../services/APIs/apis.service';
 
 @Component({
   selector: 'app-user-info-panel',
@@ -36,23 +36,23 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
   private modeSub: Subscription | null = null;
   protected user: LoggedUserType | null = null;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private authService: AuthService,
-    private router: Router,
+    protected authService: AuthService,
+    protected router: Router,
     private elementRef: ElementRef,
     private crypto: CryptoService,
     private APIsService: APIsService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    if (this.authService.getLoggedUser !== null) {
+    if(this.authService.getLoggedUser !== null) {
       this.user = this.authService.getLoggedUser;
     }
   }
 
   ngOnInit(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -66,7 +66,7 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     const clickedInside = this.elementRef.nativeElement.contains(event.target);
-    if (!clickedInside) {
+    if(!clickedInside) {
       this.close(false);
     }
   }
@@ -80,7 +80,7 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
   }
 
   protected async open() {
-    if (this.isBrowser && this.user && this.crypto) {
+    if(this.isBrowser && this.user && this.crypto) {
       this.close(false);
       const username = await this.APIsService.generateToken(
         this.user?.username

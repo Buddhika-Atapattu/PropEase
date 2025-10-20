@@ -52,7 +52,6 @@ import {
   AccessMap,
   AuthService,
   DEFAULT_ROLE_ACCESS,
-  getDefaultAccessByRole,
   LoggedUserType,
   Role,
   UsersType,
@@ -751,7 +750,7 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   protected setPermissionsByRole(role: Role) {
-    this.selectedPermissions = getDefaultAccessByRole(role);
+    this.selectedPermissions = this.authService.getDefaultAccessByRole(role);
     this.updateAllSelectedStates();
   }
 

@@ -66,58 +66,194 @@ export interface LoggedUserType extends Omit<NewUser, 'password'> {}
 
 export type AccessMap = {[module: string]: string[]};
 
+// --- Access Catalog (standardized verb–object phrasing) ---
 export const ACCESS_OPTIONS: ReadonlyArray<{module: string; actions: ReadonlyArray<string>}> = [
-  {module: 'User Management', actions: ['view', 'create', 'update', 'delete', 'activate', 'deactivate', 'reset password', 'change username', 'assign roles'] as const},
-  {module: 'Property Management', actions: ['view', 'create', 'update', 'delete', 'assign agent', 'upload documents', 'manage amenities', 'change status'] as const},
   {
-    module: 'Tenant Management', actions: [
-      'add new tenant', 'remove tenant', 'view tenant profile', 'edit tenant details',
-      'create lease', 'view lease', 'edit lease', 'terminate lease', 'activate lease', 'renew lease', 'extend lease', 'assign to a unit/property', 'view lease history',
-      'send notification', 'send email', 'send SMS',
-      'record manual payment', 'view payment history', 'upload payment proof',
-      'upload lease documents', 'view lease documents', 'download lease documents',
-      'view complaints', 'submit complaint',
-      'track activity log', 'view tenant dashboard',
+    module: 'User Management',
+    actions: [
+      'view users', 'create user', 'update user', 'delete user',
+      'activate user', 'deactivate user', 'reset password', 'change username',
+      'assign roles'
     ] as const
   },
-  {module: 'Owner Management', actions: ['view', 'create', 'update', 'delete', 'view documents', 'assign to property'] as const},
-  {module: 'Agent Management', actions: ['view', 'create', 'update', 'delete', 'assign properties', 'track performance'] as const},
-  {module: 'Lease Management', actions: ['view', 'create', 'update', 'terminate', 'renew', 'upload document', 'track expiry'] as const},
-  {module: 'Payment & Billing', actions: ['view', 'record manual', 'generate invoice', 'update invoice', 'delete invoice', 'view balance', 'export reports', 'configure rates'] as const},
-  {module: 'Maintenance Requests', actions: ['view', 'create', 'assign technician', 'update status', 'close', 'track progress', 'upload documents', 'add cost', 'generate report'] as const},
-  {module: 'Compliance Management', actions: ['upload certificates', 'view status', 'set reminders', 'update record', 'delete record', 'notify parties'] as const},
-  {module: 'Document Management', actions: ['upload', 'download', 'delete', 'share', 'categorize'] as const},
-  {module: 'Communication & Notification', actions: ['send', 'view logs', 'customize templates', 'schedule', 'notify'] as const},
-  {module: 'Report Management', actions: ['generate financial', 'generate occupancy', 'export lease', 'customize templates', 'view audit logs', 'download'] as const},
-  {module: 'Audit Logs', actions: ['view logs', 'filter logs', 'export', 'monitor login', 'track role changes'] as const},
-  {module: 'Dashboard & Analytics', actions: ['view analytics', 'customize widgets', 'download', 'view real time'] as const},
-  {module: 'System Settings', actions: ['manage roles', 'configure preferences', 'configure payments', 'manage integrations', 'backup restore'] as const},
-  {module: 'Support & Helpdesk', actions: ['view tickets', 'respond', 'assign staff', 'close ticket', 'track history', 'send feedback'] as const},
-  {module: 'Access Control', actions: ['grant access', 'revoke access', 'set restrictions', 'control sessions'] as const},
+  {
+    module: 'Property Management',
+    actions: [
+      'view properties', 'create property', 'update property', 'delete property',
+      'assign agent', 'upload property documents', 'manage amenities', 'change property status'
+    ] as const
+  },
+  {
+    module: 'Tenant Management',
+    actions: [
+      'view tenant profile', 'create tenant', 'update tenant', 'remove tenant',
+      'create lease', 'view lease', 'update lease', 'terminate lease', 'activate lease',
+      'renew lease', 'extend lease', 'assign tenant to unit', 'view lease history',
+      'send notification', 'send email', 'send sms',
+      'record manual payment', 'view payment history', 'upload payment proof',
+      'upload lease documents', 'view lease documents', 'download lease documents',
+      // Complaints (operator can edit per your rule)
+      'view complaint', 'create complaint', 'update complaint', 'delete complaint', 'submit complaint',
+      'view tenant activity', 'view tenant dashboard'
+    ] as const
+  },
+  {
+    module: 'Team Management',
+    actions: [
+      'view teams', 'create team', 'update team', 'delete team',
+      'view team documents', 'assign member',
+      'promote member', 'demote member', 'reassign tasks', 'approve reports',
+      'monitor performance', 'generate team reports', 'invite member', 'remove member',
+      'manage shifts', 'allocate resources', 'audit team activity', 'schedule training',
+      'review feedback', 'set team goals', 'handle escalations', 'manage hierarchy',
+      'lock access', 'unlock access',
+      // New: for your operator requirement
+      'assign team to maintenance ticket'
+    ] as const
+  },
+  {
+    module: 'Owner Management',
+    actions: ['view owners', 'create owner', 'update owner', 'delete owner', 'view owner documents', 'assign owner to property'] as const
+  },
+  {
+    module: 'Agent Management',
+    actions: ['view agents', 'create agent', 'update agent', 'delete agent', 'assign properties', 'track performance'] as const
+  },
+  {
+    module: 'Lease Management',
+    actions: ['view leases', 'create lease', 'update lease', 'terminate lease', 'renew lease', 'upload lease document', 'track lease expiry'] as const
+  },
+  {
+    module: 'Payment & Billing',
+    actions: ['view payments', 'record manual payment', 'generate invoice', 'update invoice', 'delete invoice', 'view balance', 'export payment reports', 'configure rates'] as const
+  },
+  {
+    module: 'Maintenance Requests',
+    actions: [
+      'view requests', 'create request', 'assign technician', 'assign maintenance team',
+      'update request status', 'close request', 'track progress',
+      'upload maintenance documents', 'add maintenance cost', 'generate maintenance report'
+    ] as const
+  },
+  {
+    module: 'Compliance Management',
+    actions: ['upload certificate', 'view compliance status', 'set compliance reminders', 'update compliance record', 'delete compliance record', 'notify parties'] as const
+  },
+  {
+    module: 'Document Management',
+    actions: ['upload document', 'download document', 'delete document', 'share document', 'categorize document'] as const
+  },
+  {
+    module: 'Communication & Notification',
+    actions: ['send message', 'view message logs', 'customize templates', 'schedule message', 'broadcast notification'] as const
+  },
+  {
+    module: 'Report Management',
+    actions: ['generate financial report', 'generate occupancy report', 'export lease report', 'customize report templates', 'view audit logs', 'download report'] as const
+  },
+  {
+    module: 'Audit Logs',
+    actions: ['view logs', 'filter logs', 'export logs', 'monitor logins', 'track role changes'] as const
+  },
+  {
+    module: 'Dashboard & Analytics',
+    actions: ['view analytics', 'customize widgets', 'download analytics', 'view realtime analytics'] as const
+  },
+  {
+    module: 'System Settings',
+    actions: ['manage roles', 'configure preferences', 'configure payments', 'manage integrations', 'backup and restore'] as const
+  },
+  {
+    module: 'Support & Helpdesk',
+    actions: ['view tickets', 'respond to ticket', 'assign support staff', 'close ticket', 'view ticket history', 'send satisfaction survey'] as const
+  },
+  {
+    module: 'Access Control',
+    actions: ['grant access', 'revoke access', 'set restrictions', 'control sessions'] as const
+  },
 ];
 
 export const DEFAULT_ROLE_ACCESS: Record<Role, AccessMap> = {
+  // Admin: everything (unchanged)
   admin: Object.fromEntries(ACCESS_OPTIONS.map(m => [m.module, [...m.actions]])),
-  agent: {'Property Management': ['view', 'update', 'upload documents'], 'Tenant Management': ['view', 'assign to property'], 'Communication & Notification': ['send', 'view logs'], 'Dashboard & Analytics': ['view analytics']},
-  tenant: {'Lease Management': ['view'], 'Payment & Billing': ['view', 'view balance'], 'Maintenance Requests': ['view', 'create'], 'Communication & Notification': ['view logs']},
-  owner: {'Property Management': ['view'], 'Tenant Management': ['view'], 'Report Management': ['generate financial', 'download']},
-  operator: {'User Management': ['view', 'update'], 'Maintenance Requests': ['view', 'assign technician', 'close']},
-  manager: {'User Management': ['view', 'update', 'assign roles'], 'Property Management': ['view', 'assign agent'], 'Compliance Management': ['view status', 'update record'], 'Report Management': ['generate occupancy', 'download']},
-  developer: {'System Settings': ['configure preferences', 'manage integrations'], 'Dashboard & Analytics': ['customize widgets', 'view analytics'], 'Audit Logs': ['view logs']},
-  user: {'Dashboard & Analytics': ['view analytics'], 'Communication & Notification': ['view logs']},
-};
 
-export function getDefaultAccessByRole(role: Role) {
-  const allowed = DEFAULT_ROLE_ACCESS[role] ?? {};
-  const result: Record<string, Record<string, boolean>> = {};
-  for(const {module, actions} of ACCESS_OPTIONS) {
-    result[module] = {};
-    for(const action of actions) {
-      result[module][action] = allowed[module]?.includes(action) ?? false;
-    }
-  }
-  return result;
-}
+  // Agent: focused on properties/tenants comms
+  agent: {
+    'Property Management': ['view properties', 'update property', 'upload property documents'],
+    'Tenant Management': ['view tenant profile', 'assign tenant to unit', 'send notification', 'send email', 'send sms'],
+    'Communication & Notification': ['send message', 'view message logs'],
+    'Dashboard & Analytics': ['view analytics'],
+  },
+
+  // Tenant: self-service
+  tenant: {
+    'Lease Management': ['view leases'],
+    'Payment & Billing': ['view payments', 'view balance'],
+    'Maintenance Requests': ['view requests', 'create request'],
+    'Communication & Notification': ['view message logs'],
+  },
+
+  // Owner: portfolio view + reports
+  owner: {
+    'Property Management': ['view properties'],
+    'Tenant Management': ['view tenant profile', 'view lease'],
+    'Report Management': ['generate financial report', 'download report'],
+  },
+
+  // Operator: daily operations (key updates below)
+  operator: {
+    'User Management': ['view users', 'update user'],
+    'Maintenance Requests': [
+      'view requests', 'create request', 'assign technician', 'assign maintenance team',
+      'update request status', 'close request', 'track progress'
+    ],
+    'Tenant Management': [
+      'view tenant profile', 'view complaint', 'create complaint', 'update complaint' // ← can edit complaints
+    ],
+    'Team Management': [
+      'view teams', 'assign team to maintenance ticket' // ← can route teams to tickets
+    ],
+    'Communication & Notification': ['send message', 'view message logs'],
+    'Dashboard & Analytics': ['view analytics'],
+  },
+
+  // Manager: ~half of admin (no deletes/security), with approvals/monitoring/reporting
+  manager: {
+    'User Management': ['view users', 'update user', 'assign roles'], // no create/delete/activate/deactivate
+    'Property Management': ['view properties', 'assign agent', 'change property status'],
+    'Tenant Management': [
+      'view tenant profile', 'create tenant', 'update tenant',
+      'create lease', 'view lease', 'update lease',
+      'renew lease', 'extend lease', 'assign tenant to unit',
+      'view lease history', 'send notification', 'send email', 'send sms'
+      // no deletes or terminate
+    ],
+    'Team Management': [
+      'view teams', 'approve reports', 'monitor performance', 'generate team reports',
+      'reassign tasks', 'review feedback', 'set team goals', 'handle escalations'
+      // no delete team, no lock/unlock access, no manage hierarchy
+    ],
+    'Maintenance Requests': ['view requests', 'assign technician', 'update request status', 'close request', 'generate maintenance report'],
+    'Compliance Management': ['view compliance status', 'update compliance record', 'set compliance reminders'],
+    'Report Management': ['generate financial report', 'generate occupancy report', 'download report'],
+    'Audit Logs': ['view logs', 'filter logs'], // read-only
+    'Dashboard & Analytics': ['view analytics', 'customize widgets'],
+    // No System Settings, Access Control (security-sensitive)
+  },
+
+  // Developer: observability + integrations
+  developer: {
+    'System Settings': ['configure preferences', 'manage integrations'],
+    'Dashboard & Analytics': ['customize widgets', 'view analytics'],
+    'Audit Logs': ['view logs'],
+  },
+
+  // General user
+  user: {
+    'Dashboard & Analytics': ['view analytics'],
+    'Communication & Notification': ['view message logs'],
+  },
+};
 
 /* ==================== Auth Service ==================== */
 
@@ -166,6 +302,7 @@ export class AuthService {
   get allUsers(): UsersType[] {return this.users;}
   get isUserLoggedIn(): boolean {return this.isLoggedIn;}
 
+
   set loginUserCredentials(user: UserCredentials) {
     this.username = user.username;
     this.password = user.password;
@@ -178,6 +315,7 @@ export class AuthService {
     this.activityTrackerService.loggedUser = user;
   }
   set logginUser(user: UserCredentials) {this.user = user;}
+
 
   /* ---------- Login flow ---------- */
   public async sendVerifyUser(): Promise<boolean> {
@@ -377,5 +515,22 @@ export class AuthService {
     this.notificationService.disconnect();
     this.socketService.disconnect();
     this.notificationsInit = false;
+  }
+
+  /** ================== Helper Common Methos =================== */
+  public getDefaultAccessByRole(role: Role) {
+    const allowed = DEFAULT_ROLE_ACCESS[role] ?? {};
+    const result: Record<string, Record<string, boolean>> = {};
+    for(const {module, actions} of ACCESS_OPTIONS) {
+      result[module] = {};
+      for(const action of actions) {
+        result[module][action] = allowed[module]?.includes(action) ?? false;
+      }
+    }
+    return result;
+  }
+
+  public getDefaultAccessByModel(module: string) {
+
   }
 }

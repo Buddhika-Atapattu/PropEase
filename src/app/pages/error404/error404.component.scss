@@ -1,68 +1,239 @@
+/* Path: src/app/pages/error404/error404.component.scss */
 @use "../../styles/global.scss" as *;
 
+/* ---------------------------
+   Layout wrapper
+----------------------------*/
 .error-page-wrapper {
-  height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ---------------------------
+   Card (glass) + content
+----------------------------*/
+.error-content {
+  position: relative;
+  width: min(720px, 92vw);
+  padding: 32px 28px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  text-align: center;
+  overflow: hidden;
+}
+
+/* ---------------------------
+   Decorative orbs
+----------------------------*/
+.error-illustration {
+  position: absolute;
+  inset: -40% -10% auto auto;
+  pointer-events: none;
+
+  .orb {
+    position: absolute;
+    display: block;
+    border-radius: 50%;
+    filter: blur(6px);
+    opacity: 0.28;
+    animation: floaty 9s ease-in-out infinite;
+    will-change: transform, opacity;
+
+    &.orb-1 {
+      width: 220px;
+      height: 220px;
+      top: -20px;
+      right: -40px;
+    }
+    &.orb-2 {
+      width: 140px;
+      height: 140px;
+      top: 120px;
+      right: 120px;
+      animation-duration: 11s;
+    }
+    &.orb-3 {
+      width: 90px;
+      height: 90px;
+      top: 40px;
+      right: 200px;
+      animation-duration: 13s;
+    }
+  }
+}
+
+@keyframes floaty {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.28;
+  }
+  50% {
+    transform: translate3d(-10px, 6px, 0) scale(1.04);
+    opacity: 0.34;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.28;
+  }
+}
+
+/* ---------------------------
+   Typography
+----------------------------*/
+.error-code {
+  font-size: clamp(64px, 12vw, 112px);
+  letter-spacing: -2px;
+  line-height: 0.95;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+}
+
+.error-message {
+  font-size: clamp(20px, 3.5vw, 28px);
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.error-description {
+  font-size: clamp(14px, 2.5vw, 16px);
+  margin: 0 auto 20px auto;
+  max-width: 56ch;
+  opacity: 0.9;
+}
+
+/* ---------------------------
+   Actions
+----------------------------*/
+.actions {
   display: flex;
   justify-content: center;
-  align-items: center;
-  transition: background-color 0.3s ease;
-  // border-top-left-radius: 50px;
+  gap: 12px;
+}
 
-  &.dark-mode
+.home-button {
+  background: $dark-third-color;
+  border: none;
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  outline: none;
 
-  .error-content {
-    text-align: center;
-    padding: 2rem;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+    background: $dark-fourth-color;
+  }
 
-    .error-code {
-      font-size: 8rem;
-      font-weight: 800;
-      margin-bottom: 0.5rem;
-    }
-
-    .error-message {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-
-    .error-description {
-      font-size: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .home-button {
-      background-color: $dark-third-color;
-      border: none;
-      color: white;
-      padding: 10px 25px;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease-in-out;
-
-      &:hover {
-        background-color: $dark-fourth-color;
-        transform: scale(1.05);
-      }
-    }
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.9);
+    outline-offset: 3px;
   }
 }
 
-// Light Theme
-:host-context(html.light){
-  .error-page-wrapper{
-    background: $light-primary-color;
+/* ---------------------------
+   Theme: Light
+----------------------------*/
+:host-context(html.light) {
+  .error-page-wrapper {
+    /* Gentle radial over brand primary */
+    background: radial-gradient(
+        1200px 600px at 15% 10%,
+        rgba(255, 255, 255, 0.8),
+        transparent 60%
+      ),
+      linear-gradient(
+        160deg,
+        lighten($light-primary-color, 8%),
+        $light-primary-color
+      );
     color: $light-text-color;
   }
+
+  .error-content {
+    background: rgba(255, 255, 255, 0.6);
+    color: $light-text-color;
+  }
+
+  .error-illustration .orb {
+    background: linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.08),
+      rgba(0, 0, 0, 0.02)
+    );
+  }
+
+  .home-button {
+    background: darken($light-primary-color, 10%);
+    &:hover {
+      background: darken($light-primary-color, 14%);
+    }
+    &:focus-visible {
+      outline-color: darken($light-primary-color, 18%);
+    }
+  }
 }
 
-// Dark Theme
-:host-context(html.dark){
-  .error-page-wrapper{
-    background: $dark-secondary-color;
+/* ---------------------------
+   Theme: Dark
+----------------------------*/
+:host-context(html.dark) {
+  .error-page-wrapper {
+    background: radial-gradient(
+        1200px 600px at 85% 10%,
+        rgba(255, 255, 255, 0.06),
+        transparent 60%
+      ),
+      linear-gradient(
+        180deg,
+        $dark-secondary-color,
+        darken($dark-secondary-color, 6%)
+      );
     color: $dark-text-color;
+  }
+
+  .error-content {
+    background: rgba(255, 255, 255, 0.06);
+    color: $dark-text-color;
+  }
+
+  .error-illustration .orb {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.25),
+      rgba(255, 255, 255, 0.05)
+    );
+  }
+
+  .home-button {
+    background: $dark-third-color;
+    &:hover {
+      background: $dark-fourth-color;
+    }
+    &:focus-visible {
+      outline-color: lighten($dark-fourth-color, 15%);
+    }
+  }
+}
+
+/* ---------------------------
+   Small screens polish
+----------------------------*/
+@media (max-width: 420px) {
+  .error-content {
+    padding: 24px 18px;
+    border-radius: 16px;
+  }
+  .error-description {
+    margin-bottom: 16px;
   }
 }

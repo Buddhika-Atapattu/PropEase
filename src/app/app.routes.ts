@@ -1,3 +1,4 @@
+// Path: src/app/app.routes.ts
 import {Routes} from '@angular/router';
 import {AuthGuard} from './services/guardAuth/guard-auth.guard';
 
@@ -142,9 +143,6 @@ export const routes: Routes = [
           import('./pages/tenant/tenant/tenant.component').then(
             (m) => m.TenantComponent
           ),
-        data: {
-          roles: ['admin'],
-        },
         children: [
           {
             path: 'tenant-home',
@@ -152,9 +150,6 @@ export const routes: Routes = [
               import('./pages/tenant/home/home.component').then(
                 (m) => m.HomeComponent
               ),
-            data: {
-              roles: ['admin'],
-            },
           },
           {
             path: 'payments-list',
@@ -162,9 +157,6 @@ export const routes: Routes = [
               import('./pages/tenant/payments/list/list.component').then(
                 (m) => m.ListComponent
               ),
-            data: {
-              roles: ['admin'],
-            },
           },
           {
             path: 'payments-upload-proof',
@@ -172,59 +164,6 @@ export const routes: Routes = [
               import(
                 './pages/tenant/payments/upload-proof/upload-proof.component'
               ).then((m) => m.UploadProofComponent),
-            data: {
-              roles: ['admin'],
-            },
-          },
-          {
-            path: 'complaints-create',
-            loadComponent: () =>
-              import('./pages/tenant/complaints/create/create.component').then(
-                (m) => m.CreateComponent
-              ),
-            data: {
-              roles: ['admin'],
-            },
-          },
-          {
-            path: 'complaints-status-view',
-            loadComponent: () =>
-              import(
-                './pages/tenant/complaints/status-view/status-view.component'
-              ).then((m) => m.StatusViewComponent),
-            data: {
-              roles: ['admin'],
-            },
-          },
-          {
-            path: 'documents',
-            loadComponent: () =>
-              import('./pages/tenant/documents/documents.component').then(
-                (m) => m.DocumentsComponent
-              ),
-            data: {
-              roles: ['admin'],
-            },
-          },
-          {
-            path: 'notifications',
-            loadComponent: () =>
-              import(
-                './pages/tenant/notifications/notifications.component'
-              ).then((m) => m.NotificationsComponent),
-            data: {
-              roles: ['admin'],
-            },
-          },
-          {
-            path: 'activity-log',
-            loadComponent: () =>
-              import('./pages/tenant/activity-log/activity-log.component').then(
-                (m) => m.ActivityLogComponent
-              ),
-            data: {
-              roles: ['admin'],
-            },
           },
           {
             path: 'tenant-lease/:leaseID',
@@ -232,9 +171,6 @@ export const routes: Routes = [
               import('./pages/tenant/tenant-edit/tenant-edit.component').then(
                 (m) => m.TenantEditComponent
               ),
-            data: {
-              roles: ['admin'],
-            },
           },
           {
             path: 'create-lease/:tenantID',
@@ -242,9 +178,6 @@ export const routes: Routes = [
               import('./pages/tenant/add-new-lease/add-new-lease').then(
                 (m) => m.AddNewLease
               ),
-            data: {
-              roles: ['admin'],
-            },
           },
           {
             path: 'view-lease/:leaseID',
@@ -252,9 +185,6 @@ export const routes: Routes = [
               import('./pages/tenant/view-lease-agreement/view-lease-agreement').then(
                 (m) => m.ViewLeaseAgreement
               ),
-            data: {
-              roles: ['admin'],
-            },
           },
           {
             path: 'tenant-view/:tenantID',
@@ -262,9 +192,34 @@ export const routes: Routes = [
               import('./pages/tenant/tenant-view/tenant-view.component').then(
                 (m) => m.TenantViewComponent
               ),
-            data: {
-              roles: ['admin'],
-            },
+          },
+          {
+            path: 'complaints',
+            loadComponent: () =>
+              import('./pages/tenant/complaints-main/complaints/complaints').then(
+                (m) => m.ComplaintsHome
+              ),
+          },
+          {
+            path: 'complaints/create-complaint/:tenantID',
+            loadComponent: () =>
+              import('./pages/tenant/complaints-main/create-complaints/create-complaints').then(
+                (m) => m.CreateComplaints
+              ),
+          },
+          {
+            path: 'complaints/edit-complaint/:complaintID',
+            loadComponent: () =>
+              import('./pages/tenant/complaints-main/edit-complaints/edit-complaints').then(
+                (m) => m.EditComplaints
+              ),
+          },
+          {
+            path: 'complaints/view-complaint/:complaintID',
+            loadComponent: () =>
+              import('./pages/tenant/complaints-main/view-complaints/view-complaints').then(
+                (m) => m.ViewComplaints
+              ),
           },
         ],
       },

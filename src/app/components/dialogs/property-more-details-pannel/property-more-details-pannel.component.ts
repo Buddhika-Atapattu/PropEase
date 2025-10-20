@@ -1,3 +1,4 @@
+//Path: src/app/components/dialogs/property-more-details-pannel.component.ts
 import {
   Component,
   OnInit,
@@ -35,18 +36,18 @@ import {
   MSG,
   BackEndPropertyData,
 } from '../../../services/property/property.service';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatRadioModule } from '@angular/material/radio';
-import { MatStepperModule } from '@angular/material/stepper';
-import { MatTableModule } from '@angular/material/table';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatNativeDateModule} from '@angular/material/core';
+import {MatRadioModule} from '@angular/material/radio';
+import {MatStepperModule} from '@angular/material/stepper';
+import {MatTableModule} from '@angular/material/table';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {
   FormBuilder,
   Validators,
@@ -54,13 +55,13 @@ import {
   ReactiveFormsModule,
   FormControl,
 } from '@angular/forms';
-import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { Subscription } from 'rxjs';
-import { MatSliderModule } from '@angular/material/slider';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MapComponent } from '../../shared/map/map.component';
-import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
+import {isPlatformBrowser, CommonModule, AsyncPipe} from '@angular/common';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {Subscription} from 'rxjs';
+import {MatSliderModule} from '@angular/material/slider';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import {MapComponent} from '../../shared/map/map.component';
+import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
 
 // MapComponent,
 @Component({
@@ -109,11 +110,11 @@ export class PropertyMoreDetailsPannelComponent
   protected mapLocationLng: GoogleMapLocation['lng'] = 0;
   protected GoogleMapLocationEmbeddedUrl: GoogleMapLocation['embeddedUrl'] = '';
 
-  protected propertySpecs: { [key: string]: string }[] = [];
-  protected financeSpecs: { [key: string]: string }[] = [];
-  protected constructionSpecs: { [key: string]: string }[] = [];
-  protected listingSpecs: { [key: string]: string }[] = [];
-  protected statusSpecs: { [key: string]: string }[] = [];
+  protected propertySpecs: {[key: string]: string}[] = [];
+  protected financeSpecs: {[key: string]: string}[] = [];
+  protected constructionSpecs: {[key: string]: string}[] = [];
+  protected listingSpecs: {[key: string]: string}[] = [];
+  protected statusSpecs: {[key: string]: string}[] = [];
 
   private location: Property['location'] = {
     lat: this.mapLocationLat,
@@ -133,14 +134,14 @@ export class PropertyMoreDetailsPannelComponent
   ];
 
   protected tabIndicatorsActive: boolean = false;
-  @ViewChildren('tabElement', { read: ElementRef })
+  @ViewChildren('tabElement', {read: ElementRef})
   tabElements!: QueryList<ElementRef>;
   protected currentIndex = 0;
-  protected indicatorStyle: { width?: string; transform?: string } = {};
+  protected indicatorStyle: {width?: string; transform?: string} = {};
 
   protected istabOpenButtonActive: boolean = false;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(MAT_DIALOG_DATA)
@@ -150,13 +151,13 @@ export class PropertyMoreDetailsPannelComponent
     private propertyService: PropertyService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
     }
     this.property = data.property;
-    if (this.property) {
+    if(this.property) {
       this.mapLocationLat = this.property.location?.lat ?? 0;
       this.mapLocationLng = this.property.location?.lng ?? 0;
     }
@@ -169,7 +170,7 @@ export class PropertyMoreDetailsPannelComponent
   }
 
   ngAfterViewInit(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       setTimeout(() => this.updateIndicatorPosition(this.currentIndex));
     }
     this.initializePropertyData();
@@ -179,10 +180,10 @@ export class PropertyMoreDetailsPannelComponent
 
   }
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {}
 
   private initializePropertyData(): void {
-    if (!this.property) return;
+    if(!this.property) return;
 
     this.propertySpecs = this.propertySpecifications();
     this.financeSpecs = this.financialDetails();
@@ -201,7 +202,7 @@ export class PropertyMoreDetailsPannelComponent
 
   //<==================== Tab Make ====================>
   protected tabMaker(index: number, tabName: string) {
-    if (!this.isBrowser) return;
+    if(!this.isBrowser) return;
     this.currentIndex = index;
     setTimeout(() => this.updateIndicatorPosition(index));
   }
@@ -209,8 +210,8 @@ export class PropertyMoreDetailsPannelComponent
   private updateIndicatorPosition(index: number): void {
     const tabEl = this.tabElements.get(index)?.nativeElement;
 
-    if (tabEl) {
-      const { offsetLeft, offsetWidth } = tabEl;
+    if(tabEl) {
+      const {offsetLeft, offsetWidth} = tabEl;
 
       const newStyle = {
         width: `${offsetWidth}px`,
@@ -218,7 +219,7 @@ export class PropertyMoreDetailsPannelComponent
       };
 
       // Only update if it has changed
-      if (
+      if(
         this.indicatorStyle['width'] !== newStyle.width ||
         this.indicatorStyle['transform'] !== newStyle.transform
       ) {
@@ -228,7 +229,7 @@ export class PropertyMoreDetailsPannelComponent
       this.istabOpenButtonActive = false;
     }
 
-    if (this.map && this.currentIndex === 1) {
+    if(this.map && this.currentIndex === 1) {
       this.map.MapCenterMaker(this.mapLocationLat, this.mapLocationLng, 15);
     }
   }
@@ -236,7 +237,7 @@ export class PropertyMoreDetailsPannelComponent
 
   //<==================== Page Go Back ====================>
   protected goBack() {
-    if (this.currentIndex > 0) {
+    if(this.currentIndex > 0) {
       this.tabMaker(
         this.currentIndex - 1,
         this.tabIndicators[this.currentIndex - 1]
@@ -247,7 +248,7 @@ export class PropertyMoreDetailsPannelComponent
 
   //<==================== Page Go Next ====================>
   protected goNext() {
-    if (this.currentIndex < this.tabIndicators.length - 1) {
+    if(this.currentIndex < this.tabIndicators.length - 1) {
       this.tabMaker(
         this.currentIndex + 1,
         this.tabIndicators[this.currentIndex + 1]
@@ -256,7 +257,7 @@ export class PropertyMoreDetailsPannelComponent
   }
   //<==================== End Page Go Next ====================>
 
-  protected onLocationPicked(event: { lat: number; lng: number }) {
+  protected onLocationPicked(event: {lat: number; lng: number}) {
     this.mapLocationLat = event.lat;
     this.mapLocationLng = event.lng;
     this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps/embed/v1/view?key=AIzaSyDtyUEKZAgXCBiuteyZVvaAaV0OVm-Wydc&center=${this.mapLocationLat},${this.mapLocationLng}&zoom=14`;
@@ -268,8 +269,8 @@ export class PropertyMoreDetailsPannelComponent
     };
   }
 
-  protected propertySpecifications(): { [key: string]: string }[] {
-    if (!this.property) return [];
+  protected propertySpecifications(): {[key: string]: string}[] {
+    if(!this.property) return [];
 
     const addSqFt = (value: number) =>
       `${value} <span>ft<sup>2</sup></span>`;
@@ -318,8 +319,8 @@ export class PropertyMoreDetailsPannelComponent
     ];
   }
 
-  protected constructionAndAge(): { [key: string]: string }[] {
-    if (!this.property) return [];
+  protected constructionAndAge(): {[key: string]: string}[] {
+    if(!this.property) return [];
 
     const addSqFt = (value: number) =>
       `${value} <span>ft<sup>2</sup></span>`;
@@ -348,8 +349,8 @@ export class PropertyMoreDetailsPannelComponent
     )
   }
 
-  protected financialDetails(): { [key: string]: string }[] {
-    if (!this.property) return [];
+  protected financialDetails(): {[key: string]: string}[] {
+    if(!this.property) return [];
 
     const currency = this.property.currency ?? '';
 
@@ -401,8 +402,8 @@ export class PropertyMoreDetailsPannelComponent
     ];
   }
 
-  protected propertyDateDetails(): { [key: string]: string }[] {
-    if (!this.property) return [];
+  protected propertyDateDetails(): {[key: string]: string}[] {
+    if(!this.property) return [];
 
     const formatDate = (date: string | Date | null | undefined): string =>
       date ? new Date(date).toLocaleDateString('en-GB') : "Not specified";
@@ -410,12 +411,12 @@ export class PropertyMoreDetailsPannelComponent
     const addIfExists = (
       label: string,
       dateValue: Date | string | null | undefined
-    ): { [key: string]: string } | null => {
-      if (!dateValue) return null;
-      return { [label]: formatDate(dateValue) };
+    ): {[key: string]: string} | null => {
+      if(!dateValue) return null;
+      return {[label]: formatDate(dateValue)};
     };
 
-    const details: ({ [key: string]: string } | null)[] = [
+    const details: ({[key: string]: string} | null)[] = [
       addIfExists("Listing Date", this.property.listingDate),
       addIfExists("Availability Date", this.property.availabilityDate),
       addIfExists("Listing Expiring Date", this.property.listingExpiryDate),
@@ -424,11 +425,11 @@ export class PropertyMoreDetailsPannelComponent
     ];
 
     // Filter out nulls
-    return details.filter((item): item is { [key: string]: string } => !!item);
+    return details.filter((item): item is {[key: string]: string} => !!item);
   }
 
-  protected propertyStatusDetails(): { [key: string]: string }[] {
-    if (!this.property) return [];
+  protected propertyStatusDetails(): {[key: string]: string}[] {
+    if(!this.property) return [];
 
     const safe = (value: string | number | null | undefined, fallback: string): string =>
       value === null || value === undefined || value === '' ? fallback : String(value);
@@ -449,11 +450,11 @@ export class PropertyMoreDetailsPannelComponent
     ];
   }
 
-  protected trackByKey(index: number, item: { [key: string]: string }): string {
+  protected trackByKey(index: number, item: {[key: string]: string}): string {
     return Object.keys(item)[0];
   }
 
-  protected getKey(obj: { [key: string]: string }): string {
+  protected getKey(obj: {[key: string]: string}): string {
     return Object.keys(obj)[0];
   }
 

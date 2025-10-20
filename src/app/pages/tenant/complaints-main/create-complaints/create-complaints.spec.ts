@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { StatusViewComponent } from './status-view.component';
+import { CreateComplaints } from './create-complaints';
 
-describe('StatusViewComponent', () => {
-  let component: StatusViewComponent;
-  let fixture: ComponentFixture<StatusViewComponent>;
+describe('CreateComplaints', () => {
+  let component: CreateComplaints;
+  let fixture: ComponentFixture<CreateComplaints>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [StatusViewComponent]
+      imports: [CreateComplaints]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(StatusViewComponent);
+    fixture = TestBed.createComponent(CreateComplaints);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
