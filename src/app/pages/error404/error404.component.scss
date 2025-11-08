@@ -1,4 +1,5 @@
 /* Path: src/app/pages/error404/error404.component.scss */
+@use "sass:color";
 @use "../../styles/global.scss" as *;
 
 /* ---------------------------
@@ -94,13 +95,11 @@
   font-weight: 800;
   margin: 0 0 8px 0;
 }
-
 .error-message {
   font-size: clamp(20px, 3.5vw, 28px);
   font-weight: 700;
   margin: 0 0 8px 0;
 }
-
 .error-description {
   font-size: clamp(14px, 2.5vw, 16px);
   margin: 0 auto 20px auto;
@@ -153,7 +152,7 @@
       ),
       linear-gradient(
         160deg,
-        lighten($light-primary-color, 8%),
+        color.adjust($light-primary-color, $lightness: 8%),
         $light-primary-color
       );
     color: $light-text-color;
@@ -173,12 +172,12 @@
   }
 
   .home-button {
-    background: darken($light-primary-color, 10%);
+    background: color.adjust($light-primary-color, $lightness: -10%);
     &:hover {
-      background: darken($light-primary-color, 14%);
+      background: color.adjust($light-primary-color, $lightness: -14%);
     }
     &:focus-visible {
-      outline-color: darken($light-primary-color, 18%);
+      outline-color: color.adjust($light-primary-color, $lightness: -18%);
     }
   }
 }
@@ -196,7 +195,7 @@
       linear-gradient(
         180deg,
         $dark-secondary-color,
-        darken($dark-secondary-color, 6%)
+        color.adjust($dark-secondary-color, $lightness: -6%)
       );
     color: $dark-text-color;
   }
@@ -220,7 +219,7 @@
       background: $dark-fourth-color;
     }
     &:focus-visible {
-      outline-color: lighten($dark-fourth-color, 15%);
+      outline-color: color.adjust($dark-fourth-color, $lightness: 15%);
     }
   }
 }

@@ -5,23 +5,17 @@ import {
   Inject,
   PLATFORM_ID,
   ViewChild,
-  ElementRef,
-  HostListener,
-  AfterViewInit,
+  ElementRef, AfterViewInit,
   QueryList,
-  ViewChildren,
+  ViewChildren
 } from '@angular/core';
 import {
-  CommonModule,
-  PlatformLocation,
-  isPlatformBrowser,
+  CommonModule, isPlatformBrowser
 } from '@angular/common';
 import {
-  FormBuilder,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
-  FormControl,
+  FormControl
 } from '@angular/forms';
 import {RouterModule, Router, ActivatedRoute} from '@angular/router';
 import {MatButtonModule} from '@angular/material/button';
@@ -34,13 +28,8 @@ import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatNativeDateModule} from '@angular/material/core';
 import {MatRadioModule} from '@angular/material/radio';
 import {MatStepperModule} from '@angular/material/stepper';
-import {MatTableModule} from '@angular/material/table';
-import {
-  MatDialog,
-  MatDialogRef,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
-import {Subscription, of, pipe} from 'rxjs';
+import * as table from '@angular/material/table';
+import {Subscription, of} from 'rxjs';
 import {Observable} from 'rxjs';
 import {EditorComponent} from '@tinymce/tinymce-angular';
 import {AuthService, BaseUser} from '../../../services/auth/auth.service';
@@ -51,17 +40,14 @@ import {
   GoogleMapLocation,
   AddedBy,
   Address,
-  propertyDocPreview,
-  MSG,
-  propertyImages,
-  propertyDocBackend,
+  propertyDocPreview, propertyImages,
+  propertyDocBackend
 } from '../../../services/property/property.service';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {CryptoService} from '../../../services/cryptoService/crypto.service';
 import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {
-  msgTypes,
-  NotificationDialogComponent,
+  NotificationDialogComponent
 } from '../../../components/dialogs/notification/notification.component';
 import {DomSanitizer} from '@angular/platform-browser';
 import {map, startWith} from 'rxjs/operators';
@@ -82,6 +68,7 @@ import {
   CdkDragDrop,
   moveItemInArray,
 } from '@angular/cdk/drag-drop';
+import {TextEditorComponent} from '../../../components/shared/textEditor/text-editor';
 
 interface propertyImagePreview {
   URL: string;
@@ -109,8 +96,7 @@ interface propertyImagePreview {
     MatNativeDateModule,
     MatRadioModule,
     MatStepperModule,
-    MatTableModule,
-    EditorComponent,
+    table.MatTableModule,
     RouterModule,
     MatAutocompleteModule,
     ReactiveFormsModule,
@@ -118,6 +104,7 @@ interface propertyImagePreview {
     MapComponent,
     SafeUrlPipe,
     DragDropModule,
+    TextEditorComponent
   ],
   templateUrl: './edit-property-listing.component.html',
   styleUrl: './edit-property-listing.component.scss',
@@ -950,7 +937,7 @@ export class EditPropertyListingComponent
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `/Images/Icons/${path}`
+          `Images/Icons/${path}`
         )
       );
     }

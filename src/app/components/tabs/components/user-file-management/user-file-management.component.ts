@@ -180,7 +180,7 @@ export class UserFileManagementComponent
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `/Images/Icons/${path}`
+          `Images/Icons/${path}`
         )
       );
     }

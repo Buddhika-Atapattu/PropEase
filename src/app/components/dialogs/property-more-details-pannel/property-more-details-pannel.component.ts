@@ -6,38 +6,20 @@ import {
   Inject,
   PLATFORM_ID,
   ViewChild,
-  ElementRef,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  AfterViewInit,
-  CUSTOM_ELEMENTS_SCHEMA,
-  ViewChildren,
+  ElementRef, ChangeDetectorRef,
+  AfterViewInit, ViewChildren,
   QueryList,
-  OnChanges,
+  OnChanges
 } from '@angular/core';
 import {
-  MAT_DIALOG_DATA,
-  MatDialog,
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogRef,
-  MatDialogTitle,
-  MatDialogModule,
+  MAT_DIALOG_DATA, MatDialogRef, MatDialogModule
 } from '@angular/material/dialog';
 import {
   PropertyService,
-  Property,
-  FEATURES_AMENITIES,
-  GoogleMapLocation,
-  AddedBy,
-  Address,
-  propertyDocPreview,
-  MSG,
-  BackEndPropertyData,
+  Property, GoogleMapLocation, BackEndPropertyData
 } from '../../../services/property/property.service';
 import {MatButtonModule} from '@angular/material/button';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatIconModule} from '@angular/material/icon';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
@@ -49,13 +31,10 @@ import {MatStepperModule} from '@angular/material/stepper';
 import {MatTableModule} from '@angular/material/table';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {
-  FormBuilder,
-  Validators,
   FormsModule,
-  ReactiveFormsModule,
-  FormControl,
+  ReactiveFormsModule
 } from '@angular/forms';
-import {isPlatformBrowser, CommonModule, AsyncPipe} from '@angular/common';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {Subscription} from 'rxjs';
 import {MatSliderModule} from '@angular/material/slider';

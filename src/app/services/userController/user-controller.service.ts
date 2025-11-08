@@ -5,12 +5,9 @@ import {filter} from 'rxjs/operators';
 import {parsePhoneNumberFromString} from 'libphonenumber-js';
 import {firstValueFrom} from 'rxjs';
 import {HttpClient, HttpParams} from '@angular/common/http';
+import {MSG} from '../APIs/apis.service'
 
-export interface MSG {
-  status: string;
-  message: string;
-  data: any;
-}
+
 
 @Injectable({
   providedIn: 'root',

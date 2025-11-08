@@ -16,7 +16,6 @@ import {Subscription} from 'rxjs';
 import {Router, ActivatedRoute} from '@angular/router';
 import {
   BackEndPropertyData,
-  MSG,
   PropertyService,
 } from '../../../services/property/property.service';
 import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
@@ -25,7 +24,7 @@ import {
   MatDialog, MatDialogModule
 } from '@angular/material/dialog';
 import {ViewPropertyImagesComponent} from '../../../components/dialogs/view-property-images/view-property-images.component';
-import {APIsService, UsersType} from '../../../services/APIs/apis.service';
+import {APIsService, UsersType, MSG} from '../../../services/APIs/apis.service';
 import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
 import {PropertyMoreDetailsPannelComponent} from '../../../components/dialogs/property-more-details-pannel/property-more-details-pannel.component';
 import {ShareComponent} from '../../../components/dialogs/share/share.component';
@@ -39,7 +38,7 @@ import {ShareComponent} from '../../../components/dialogs/share/share.component'
 })
 export class ViewComponent
   implements OnInit, AfterViewInit, AfterViewChecked, OnDestroy {
-  @ViewChild('sliderContainer', { static: false })
+  @ViewChild('sliderContainer', {static: false})
   sliderContainer!: ElementRef<HTMLElement>;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -66,7 +65,7 @@ export class ViewComponent
 
   private sliderInitDone = false;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private activatedRoute: ActivatedRoute,
@@ -89,7 +88,7 @@ export class ViewComponent
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -101,10 +100,10 @@ export class ViewComponent
     }
   }
 
-  ngAfterViewInit(): void { }
+  ngAfterViewInit(): void {}
 
   ngAfterViewChecked(): void {
-    if (!this.sliderInitDone && this.sliderContainer?.nativeElement) {
+    if(!this.sliderInitDone && this.sliderContainer?.nativeElement) {
       this.sliderInitDone = true;
       this.animetTheImageSilder();
     }
@@ -117,11 +116,11 @@ export class ViewComponent
   //<==================== Icon maker ====================>
   private iconMaker() {
     const icons = [
-      { name: 'viewImages', path: '/Images/Icons/view-images.svg' },
-      { name: 'maid', path: '/Images/Icons/maid.svg' },
+      {name: 'viewImages', path: 'Images/Icons/view-images.svg'},
+      {name: 'maid', path: 'Images/Icons/maid.svg'},
     ];
 
-    for (let icon of icons) {
+    for(let icon of icons) {
       this.matIconRegistry.addSvgIcon(
         icon.name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path)
@@ -138,13 +137,13 @@ export class ViewComponent
 
   //<==================== Page indicator ====================>
   protected goToProperties(): void {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
       this.router.navigate(['/dashboard/properties']);
     });
   }
 
   protected goToPropertyView(): void {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
       this.router.navigate(['/dashboard/property-view', this.propertyID]);
     });
   }
@@ -168,7 +167,7 @@ export class ViewComponent
 
   //<==================== Image slider ====================>
   private createImageTiles() {
-    if (!this.propertyImages || this.propertyImages.length === 0) return;
+    if(!this.propertyImages || this.propertyImages.length === 0) return;
     this.imageTiles = this.generateTilePositions();
   }
 
@@ -185,7 +184,7 @@ export class ViewComponent
   }
 
   private animateTheImage(index: number) {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.isImageTrasform = true;
       const oldImageUrl = this.propertyImages[this.currentImageIndex].imageURL;
       const newImageUrl = this.propertyImages[index].imageURL;
@@ -226,8 +225,8 @@ export class ViewComponent
 
   private generateTilePositions(): string[] {
     const tiles: string[] = [];
-    for (let row = 0; row < this.rows; row++) {
-      for (let col = 0; col < this.cols; col++) {
+    for(let row = 0; row < this.rows; row++) {
+      for(let col = 0; col < this.cols; col++) {
         const backgroundPosition = `-${col * (600 / this.cols)}px -${row * (400 / this.rows)
           }px`;
         tiles.push(backgroundPosition);
@@ -253,7 +252,7 @@ export class ViewComponent
   }
 
   private animetTheImageSilder() {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       const startSlider = () => {
         this.sliderInterval = setInterval(() => {
           this.nextImage();
@@ -262,7 +261,7 @@ export class ViewComponent
 
       // Stop animation interval
       const stopSlider = () => {
-        if (this.sliderInterval) {
+        if(this.sliderInterval) {
           clearInterval(this.sliderInterval);
           this.sliderInterval = null;
         }
@@ -293,7 +292,7 @@ export class ViewComponent
       height: 'auto',
     });
 
-    dialogRef.afterClosed().subscribe((result) => { });
+    dialogRef.afterClosed().subscribe((result) => {});
   }
 
   //<==================== End Open the dialod for the image preview ====================>
@@ -323,7 +322,7 @@ export class ViewComponent
 
   //<==================== Get the owner details by calling the api ====================>
   private async getOwnerDetails() {
-    if (
+    if(
       this.property &&
       this.property.addedBy &&
       this.property.addedBy.username
@@ -344,7 +343,7 @@ export class ViewComponent
 
   //<==================== Get the agent details by calling the api ====================>
   private async getAgentDetails() {
-    if (
+    if(
       this.property &&
       this.property.addedBy &&
       this.property.addedBy.username
@@ -377,19 +376,19 @@ export class ViewComponent
     const vimeoMatch = input.match(/vimeo\.com\/(\d+)/);
     const driveMatch = input.match(/drive\.google\.com\/file\/d\/([^/]+)/);
 
-    if (youtubeMatch) {
+    if(youtubeMatch) {
       const videoId = youtubeMatch[1];
       this.videoPreviewURL = `https://www.youtube.com/embed/${videoId}`;
       this.isIframeEmbed = true;
-    } else if (vimeoMatch) {
+    } else if(vimeoMatch) {
       const videoId = vimeoMatch[1];
       this.videoPreviewURL = `https://player.vimeo.com/video/${videoId}`;
       this.isIframeEmbed = true;
-    } else if (driveMatch) {
+    } else if(driveMatch) {
       const fileId = driveMatch[1];
       this.videoPreviewURL = `https://drive.google.com/file/d/${fileId}/preview`;
       this.isIframeEmbed = true;
-    } else if (input.includes('dropbox.com')) {
+    } else if(input.includes('dropbox.com')) {
       this.videoPreviewURL = input.replace('?dl=0', '?raw=1');
       this.isIframeEmbed = false;
     } else {

@@ -1,0 +1,393 @@
+@use "../../../../styles/global.scss" as *;
+@use "sass:color";
+
+.main-panel {
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  min-height: 85vh;
+  padding: 2rem;
+
+  h2 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 16px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   File Upload Drop-Zone
+   - Modernized with legacy palette compatibility
+   - Responsive + accessible + hover transitions
+───────────────────────────────────────────────────────────────*/
+
+/* Modern Dropzone — light/dark themed with your palette */
+::ng-deep .file-upload-drop-zone {
+  /* layout */
+  margin: 2rem 0;
+  height: 11rem;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+
+  /* shape & base */
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+
+  /* border (subtle dashed that we animate on .active) */
+  border: 2px dashed $light-border-color;
+
+  /* glass / surface */
+  background: radial-gradient(
+      120% 120% at 100% 0%,
+      color.adjust($light-dashboard-color, $lightness: 2%),
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      color.adjust($light-card-color, $lightness: 0%),
+      color.adjust($light-dashboard-color, $lightness: 4%)
+    );
+  color: $light-fourth-color;
+
+  /* depth & motion */
+  box-shadow: 0 8px 24px $light-shadow-color,
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  transition: transform 0.25s ease, box-shadow 0.25s ease,
+    border-color 0.2s ease, background 0.3s ease;
+
+  /* hover: lift slightly, keep colors restrained */
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px color.adjust($light-shadow-color, $alpha: -0.1);
+    border-color: color.adjust($blue-color, $lightness: -2%);
+  }
+
+  /* active (drag over): blue focus + animated edge */
+  &.active {
+    border-color: $blue-color;
+    box-shadow: 0 0 0 4px color.adjust($blue-color, $alpha: -0.7),
+      0 10px 28px rgba(0, 0, 0, 0.2);
+    background: radial-gradient(
+        140% 140% at 100% 0%,
+        color.adjust($light-dashboard-dark-color, $lightness: 6%),
+        transparent 60%
+      ),
+      linear-gradient(
+        180deg,
+        color.adjust($light-card-color, $lightness: 2%),
+        color.adjust($light-dashboard-color, $lightness: 6%)
+      );
+
+    /* animated conic highlight ring */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: conic-gradient(
+        from 0deg,
+        color.adjust($blue-color, $lightness: 6%) 0deg,
+        color.adjust($gold-color, $lightness: 6%) 120deg,
+        color.adjust($blue-color, $lightness: 6%) 240deg,
+        color.adjust($gold-color, $lightness: 6%) 360deg
+      );
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask: linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      padding: 2px; /* thickness of animated edge */
+      border-radius: 16px; /* match container */
+      mask-composite: exclude;
+      -webkit-mask-composite: xor;
+      animation: dz-ring 2.2s linear infinite;
+      opacity: 0.9;
+    }
+  }
+
+  /* inner hint */
+  .dropzone-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.375rem;
+    line-height: 1.2;
+    text-align: center;
+
+    /* icon */
+    mat-icon,
+    svg {
+      font-size: 2.1rem;
+      width: 2.1rem;
+      height: 2.1rem;
+      color: color.adjust($blue-color, $lightness: -2%);
+      opacity: 0.95;
+    }
+
+    /* headline */
+    .dz-title {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: $light-fourth-color;
+    }
+    /* subtext */
+    .dz-sub {
+      font-size: 0.875rem;
+      opacity: 0.75;
+    }
+  }
+
+  /* Dark theme */
+  :host-context(html.dark) & {
+    border-color: $dark-border-color;
+    color: $dark-text-color;
+    background: radial-gradient(
+        120% 120% at 100% 0%,
+        color.adjust($dark-dashboard-dark-color, $lightness: -2%),
+        transparent 60%
+      ),
+      linear-gradient(
+        180deg,
+        color.adjust($dark-card-color, $lightness: 0%),
+        color.adjust($dark-dashboard-color, $lightness: 2%)
+      );
+    box-shadow: 0 10px 28px $dark-shadow-color,
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+
+    &:hover {
+      border-color: color.adjust($dark-accent-blue, $lightness: -2%);
+      box-shadow: 0 14px 30px color.adjust($dark-shadow-color, $alpha: -0.15);
+    }
+
+    &.active {
+      border-color: $dark-accent-blue;
+      box-shadow: 0 0 0 4px color.adjust($dark-accent-blue, $alpha: -0.7),
+        0 12px 30px rgba(0, 0, 0, 0.45);
+      background: radial-gradient(
+          140% 140% at 100% 0%,
+          color.adjust($dark-dashboard-dark-color, $lightness: 4%),
+          transparent 60%
+        ),
+        linear-gradient(
+          180deg,
+          color.adjust($dark-card-color, $lightness: 2%),
+          color.adjust($dark-dashboard-color, $lightness: 4%)
+        );
+
+      &::after {
+        background: conic-gradient(
+          from 0deg,
+          color.adjust($dark-accent-blue, $lightness: 4%) 0deg,
+          color.adjust($dark-accent-gold, $lightness: 2%) 120deg,
+          color.adjust($dark-accent-blue, $lightness: 4%) 240deg,
+          color.adjust($dark-accent-gold, $lightness: 2%) 360deg
+        );
+      }
+    }
+
+    .dropzone-hint {
+      mat-icon,
+      svg {
+        color: color.adjust($dark-accent-blue, $lightness: 2%);
+      }
+      .dz-title {
+        color: $dark-text-color;
+      }
+      .dz-sub {
+        opacity: 0.8;
+      }
+    }
+  }
+}
+
+/* ring animation */
+@keyframes dz-ring {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Flip-card preview tile */
+.preview-chip {
+  /* size & layout */
+  width: 10rem;
+  height: 10rem;
+  position: relative;
+  perspective: 900px; /* enables 3D for children */
+  border-radius: 1rem;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+
+  /* nice shadow */
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+
+  /* inner 3D wrapper */
+  .flip {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d; /* keep children in 3D */
+    transition: transform 0.6s cubic-bezier(0.2, 0.6, 0.2, 1);
+    border-radius: inherit;
+  }
+
+  /* when hovered/focused/active, flip it */
+  &:hover .flip,
+  &:focus-within .flip,
+  &.active .flip {
+    transform: rotateY(180deg);
+  }
+
+  /* front (image) */
+  .front,
+  .back {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    backface-visibility: hidden; /* hide back during rotation */
+    -webkit-backface-visibility: hidden;
+    display: grid;
+    place-items: center;
+  }
+
+  .front {
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+      transform: translateZ(0); /* GPU hint */
+    }
+
+    /* subtle glass sheen */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.08),
+        rgba(0, 0, 0, 0)
+      );
+      pointer-events: none;
+    }
+  }
+
+  /* back (details) */
+  .back {
+    transform: rotateY(180deg);
+    padding: 0.6rem;
+    color: #fff;
+    background: radial-gradient(
+        100% 100% at 100% 0%,
+        rgba(0, 0, 0, 0.25),
+        transparent 50%
+      ),
+      linear-gradient(160deg, rgba(25, 31, 55, 0.9), rgba(15, 23, 42, 0.92));
+    display: grid;
+    grid-template-rows: 1fr auto;
+    gap: 0.4rem;
+
+    .content {
+      font-size: 0.85rem;
+      line-height: 1.25;
+      text-align: center;
+      padding: 0.25rem 0.2rem;
+      overflow: hidden;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      opacity: 0.9;
+    }
+  }
+
+  /* remove (X) button */
+  button.remove {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+    z-index: 3;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.45);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+
+    &:hover {
+      transform: scale(1.06);
+      background: rgba(0, 0, 0, 0.6);
+    }
+    &:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.9);
+      outline-offset: 2px;
+    }
+  }
+
+  /* accessibility: less motion */
+  @media (prefers-reduced-motion: reduce) {
+    .flip {
+      transition: none;
+    }
+  }
+
+  /* dark theme polish (optional: tweak to your tokens) */
+  :host-context(html.dark) & {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+
+    .back {
+      background: radial-gradient(
+          100% 100% at 100% 0%,
+          rgba(255, 255, 255, 0.06),
+          transparent 50%
+        ),
+        linear-gradient(160deg, rgba(31, 41, 69, 0.95), rgba(15, 23, 42, 0.96));
+    }
+  }
+}
+// Dark Theme
+:host-context(html.dark) {
+  .main-panel {
+    background: linear-gradient(
+      145deg,
+      $dark-secondary-color,
+      color.adjust($dark-secondary-color, $lightness: 2%)
+    );
+    color: $dark-text-color;
+  }
+}
+
+// Light Theme
+:host-context(html.light) {
+  .main-panel {
+    background: linear-gradient(
+      145deg,
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
+    );
+    color: $light-text-color;
+  }
+}

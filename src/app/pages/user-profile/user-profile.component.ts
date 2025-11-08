@@ -61,17 +61,18 @@ import {
 } from '../../components/dialogs/notification/notification.component';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
 import {ProgressBarComponent} from '../../components/dialogs/progress-bar/progress-bar.component';
+import {MSG} from '../../services/APIs/apis.service'
 
 interface userActiveStatusType {
   typeName: string;
   isActive: boolean;
 }
 
-export interface MSG_DATA_TYPE extends UpdateUserType {
-  status: string;
-  message: string;
-  user: UpdateUserType;
-}
+// export interface MGS extends UpdateUserType {
+//   status: string;
+//   message: string;
+//   user: UpdateUserType;
+// }
 
 @Component({
   selector: 'app-user-profile',
@@ -201,7 +202,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
       if(typeof this.userimage === 'string') {
         const imageURL = this.userimage.split('.');
         if(imageURL[1] === undefined) {
-          this.userimage = '/Images/user-images/dummy-user/dummy-user.jpg';
+          this.userimage = 'Images/user-images/dummy-user/dummy-user.jpg';
         } else {
           this.userimage = this.user.image;
         }
@@ -223,8 +224,8 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private iconMaker() {
     const icons = [
-      {name: 'active', path: '/Images/Icons/correct.svg'},
-      {name: 'wrong', path: '/Images/Icons/wrong.svg'},
+      {name: 'active', path: 'Images/Icons/correct.svg'},
+      {name: 'wrong', path: 'Images/Icons/wrong.svg'},
     ];
 
     for(let icon of icons) {
@@ -350,7 +351,7 @@ export class UserProfileComponent implements OnInit, OnDestroy, AfterViewInit {
         formData.append('username', this.user?.username || '');
         const user = this.user?.username;
         await this.API.updateUser(formData, user)
-          .then((data: MSG_DATA_TYPE | null) => {
+          .then((data) => {
             if(this.notification && data)
               this.notification.notification(
                 data?.status as msgTypes,

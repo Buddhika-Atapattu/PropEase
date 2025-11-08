@@ -175,11 +175,11 @@ export class TenantTableComponent
 
   // Defined images
   protected readonly definedMaleDummyImageURL =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL =
-    '/Images/user-images/dummy-user/dummy_woman.jpg';
+    'Images/user-images/dummy-user/dummy_woman.jpg';
   protected definedImage: string =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
 
   constructor (
     private windowRef: WindowsRefService,

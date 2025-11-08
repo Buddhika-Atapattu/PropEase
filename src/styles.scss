@@ -1,24 +1,94 @@
-// Custom Theming for Angular Material
-// For more information: https://material.angular.io/guide/theming
-@use "@angular/material" as mat;
-/* Importing Bootstrap SCSS file. */
-@use "bootstrap/scss/bootstrap" as *;
+/* =============================================================================
+   styles.scss (App-wide base styles)
+   -----------------------------------------------------------------------------
+   Purpose
+   - App-wide resets, typography, theming glue, and universal utilities.
+   - Professional recessed scrollbars + themed caret/selection with fallbacks.
+   - Predictable Angular Material + Bootstrap behavior (SSR/Electron-friendly).
 
+   Notes
+   - Authoritative tokens live in src/app/styles/global.scss.
+   - This file provides fallbacks + global glue styles.
+   - Ensure <html> has .light / .dark early (e.g., in index.html).
+============================================================================= */
+
+/* == 1) Framework imports (order matters) ================================== */
+@use "@angular/material" as mat; /* Angular Material theming API   */
+@use "bootstrap/scss/bootstrap" as *; /* Bootstrap core                 */
+
+/* Project fonts (local + optional Google fallback) */
 @use "../src/app/styles/font/Montserrat/Montserrat.scss" as *;
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
 
+/* == 2) Base CSS variables + typography root =============================== */
 :root {
-  --primary-bg: #fdf6e3;
-  --text-color: #1f1f1f;
+  --primary-bg: #fdf6e3; /* light background fallback */
+  --text-color: #1f1f1f; /* light text fallback */
   font-family: "Montserrat", sans-serif;
 }
 
-//dark mode
-.dark {
-  --primary-bg: #08122f;
-  --text-color: #fefefe;
+/* == 3) Theme tokens (fallbacks) =========================================== */
+/* LIGHT */
+html.light {
+  --surface: var(--surface, #ffffff);
+  --surface-variant: var(--surface-variant, #f6f8fb);
+  --on-surface: var(--on-surface, #14161a);
+  --primary: var(--primary, #2b59ff);
+  --secondary: var(--secondary, #ffcf4a);
+  --shadow-color: var(--shadow-color, rgba(0, 0, 0, 0.16));
+
+  /* Pro scrollbar tokens */
+  --scrollbar-gutter: color-mix(in srgb, #0a0f1f 6%, var(--surface));
+  --scrollbar-track: color-mix(in srgb, #0a0f1f 12%, var(--surface));
+  --scrollbar-thumb: #cfd6e1;
+  --scrollbar-thumb-hover: #b8c2d1;
+  --scrollbar-button: color-mix(in srgb, #000 35%, var(--scrollbar-track));
+  --scrollbar-button-hover: color-mix(
+    in srgb,
+    #000 45%,
+    var(--scrollbar-track)
+  );
+
+  /* Caret + selection */
+  --caret-color: var(--primary, #2b59ff);
+  --caret-selection-bg: color-mix(
+    in srgb,
+    var(--primary, #2b59ff) 15%,
+    #ffffff
+  );
 }
 
+/* DARK */
+html.dark {
+  --surface: var(--surface, #0f1220);
+  --surface-variant: var(--surface-variant, #111628);
+  --on-surface: var(--on-surface, #f4f6fb);
+  --primary: var(--primary, #2b59ff);
+  --secondary: var(--secondary, #ffcf4a);
+  --shadow-color: var(--shadow-color, rgba(0, 0, 0, 0.32));
+
+  /* Pro scrollbar tokens */
+  --scrollbar-gutter: #0d1322; /* deep outer lane */
+  --scrollbar-track: #1a202e; /* recessed channel */
+  --scrollbar-thumb: #bfc5ce; /* light, contrasty */
+  --scrollbar-thumb-hover: #aeb6c2;
+  --scrollbar-button: #121824;
+  --scrollbar-button-hover: #0f1622;
+
+  /* Base page colors for non-tokened areas */
+  --primary-bg: #08122f;
+  --text-color: #fefefe;
+
+  /* Caret + selection */
+  --caret-color: var(--secondary, #ffcf4a);
+  --caret-selection-bg: color-mix(
+    in srgb,
+    var(--secondary, #ffcf4a) 30%,
+    #000000
+  );
+}
+
+/* == 4) Angular Material global theme include ============================== */
 html {
   @include mat.theme(
     (
@@ -31,57 +101,139 @@ html {
       density: 0,
     )
   );
-} /* You can add global styles to this file, and also import other style files */
+}
 
+/* == 5) Universal pro scrollbars (Firefox + WebKit/Electron) =============== */
+/* Firefox (color parity) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* WebKit (Chromium/Electron/Safari) */
+*::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+  background: var(--scrollbar-gutter); /* faint outer lane */
+}
+
+/* Recessed channel */
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 0 6px rgba(0, 0, 0, 0.45);
+  border-radius: 10px;
+}
+
+/* Pill thumb */
+*::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 10px;
+  border: 3px solid var(--scrollbar-track); /* centers thumb in channel */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 1px 1px rgba(0, 0, 0, 0.2);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+/* Corner (when both axes scroll) */
+*::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
+}
+
+/* Optional: arrow buttons (Chromium/Electron; ignored by many browsers) */
+*::-webkit-scrollbar-button {
+  height: 14px;
+  background: linear-gradient(
+    180deg,
+    transparent 40%,
+    var(--scrollbar-button) 41%,
+    var(--scrollbar-button) 59%,
+    transparent 60%
+  );
+}
+*::-webkit-scrollbar-button:vertical:start:decrement {
+  background: radial-gradient(
+      6px 6px at 50% 55%,
+      var(--scrollbar-button) 49%,
+      transparent 51%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 40%,
+      var(--scrollbar-button) 41%,
+      var(--scrollbar-button) 59%,
+      transparent 60%
+    );
+}
+*::-webkit-scrollbar-button:vertical:end:increment {
+  background: radial-gradient(
+      6px 6px at 50% 45%,
+      var(--scrollbar-button) 49%,
+      transparent 51%
+    ),
+    linear-gradient(
+      180deg,
+      transparent 40%,
+      var(--scrollbar-button) 41%,
+      var(--scrollbar-button) 59%,
+      transparent 60%
+    );
+}
+*::-webkit-scrollbar-button:hover {
+  background-color: var(--scrollbar-button-hover);
+}
+
+/* == 6) Base document layout, preloader, typography ======================== */
 html,
 body {
   height: 100%;
-  #app-preloader {
-    position: fixed;
-    inset: 0;
-    background-color: #0e0e24;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    z-index: 9999;
+}
 
-    .preloader-wrapper {
-      text-align: center;
+#app-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: #0e0e24;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 
-      img {
-        width: 120px;
-        height: auto;
-        animation: pulse 1.5s infinite ease-in-out;
-      }
-
-      p {
-        color: #d29e00;
-        font-weight: 500;
-        margin-top: 1rem;
-      }
+  .preloader-wrapper {
+    text-align: center;
+    img {
+      width: 120px;
+      height: auto;
+      animation: pulse 1.5s infinite ease-in-out;
     }
-  }
-
-  @keyframes pulse {
-    0% {
-      transform: scale(1);
-      opacity: 0.8;
-    }
-    50% {
-      transform: scale(1.1);
-      opacity: 1;
-    }
-    100% {
-      transform: scale(1);
-      opacity: 0.8;
+    p {
+      color: #d29e00;
+      font-weight: 500;
+      margin-top: 1rem;
     }
   }
 }
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
 html,
 body {
   margin: 0;
-  // font-family: Roboto, "Helvetica Neue", sans-serif;
   font-family: "Montserrat", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -95,76 +247,100 @@ body {
   color: var(--text-color) !important;
 }
 
+/* == 7) Forms + caret/selection =========================================== */
 input[type="number"] {
-  /* Chrome, Safari, Edge, Opera */
   &::-webkit-inner-spin-button,
   &::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
+  appearance: textfield;
+  -moz-appearance: textfield; /* Firefox */
+}
+
+/* Global caret color */
+html,
+body,
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  caret-color: var(--caret-color);
+}
+
+/* Themed selection */
+::selection {
+  background-color: var(--caret-selection-bg);
+  color: var(--text-color);
+}
+::-moz-selection {
+  background-color: var(--caret-selection-bg);
+  color: var(--text-color);
+}
+
+/* == 8) Themed scrollbar mixin + utilities (container-scoped) ============== */
+@mixin themed-scrollbar($accent: false) {
+  $thumb: if(
+    $accent,
+    var(--scrollbar-thumb-accent, var(--scrollbar-thumb)),
+    var(--scrollbar-thumb)
+  );
+  $thumbHover: if(
+    $accent,
+    var(--scrollbar-thumb-accent-hover, var(--scrollbar-thumb-hover)),
+    var(--scrollbar-thumb-hover)
+  );
 
   /* Firefox */
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
+  scrollbar-width: thin;
+  scrollbar-color: #{$thumb} var(--scrollbar-track);
 
-// scrollbar style
-// === Light Mode Scrollbar (default) ===
-html {
-  scroll-behavior: smooth;
-  ::-webkit-scrollbar {
-    width: 0.4rem;
-    height: 0.4rem;
+  /* WebKit */
+  &::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+    background: var(--scrollbar-gutter);
   }
-
-  ::-webkit-scrollbar-track {
-    background: #ffde7c; // light background
-    border-radius: 4px;
+  &::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+      inset 0 0 6px rgba(0, 0, 0, 0.45);
+    border-radius: 10px;
   }
-
-  ::-webkit-scrollbar-thumb {
-    background: #b48c00; // light gray thumb
-    border-radius: 4px;
+  &::-webkit-scrollbar-thumb {
+    background-color: #{$thumb};
+    border-radius: 10px;
+    border: 3px solid var(--scrollbar-track);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+      0 1px 1px rgba(0, 0, 0, 0.2);
   }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: #675100; // darker gray on hover
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: #{$thumbHover};
   }
-}
-
-::selection {
-  background-color: #5500ff; // Your custom selection background
-  color: #ffffff; // Your custom selection text color
-}
-
-/* Optional - Firefox-specific */
-::-moz-selection {
-  background-color: #5500ff;
-  color: #ffffff;
-}
-
-:host-context(html.light) {
-  ::selection {
-    background-color: #1b1633; // Your custom selection background
-    color: #ffffff; // Your custom selection text color
-  }
-
-  /* Optional - Firefox-specific */
-  ::-moz-selection {
-    background-color: #1b1633;
-    color: #ffffff;
+  &::-webkit-scrollbar-corner {
+    background: var(--scrollbar-track);
   }
 }
 
-:host-context(html.dark) {
-  ::selection {
-    background-color: #ffd900; // Your custom selection background
-    color: #1b1633; // Your custom selection text color
+/* Utilities */
+.scrollbar-default {
+  @include themed-scrollbar(false);
+}
+.scrollbar-accent {
+  @include themed-scrollbar(true);
+}
+.scrollbar-thin {
+  scrollbar-width: thin;
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
   }
+  &::-webkit-scrollbar-thumb {
+    border-width: 2px;
+  }
+}
 
-  /* Optional - Firefox-specific */
-  ::-moz-selection {
-    background-color: #ffd900;
-    color: #1b1633;
-  }
+:host ::ng-deep .cdk-overlay-pane,
+:host ::ng-deep .cdk-overlay-container {
+  @include themed-scrollbar(false);
 }

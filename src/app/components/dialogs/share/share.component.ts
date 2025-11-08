@@ -4,30 +4,17 @@ import {
   OnDestroy,
   Inject,
   PLATFORM_ID,
-  ViewChild,
-  ElementRef,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  AfterViewInit,
-  CUSTOM_ELEMENTS_SCHEMA,
+  ViewChild, ChangeDetectorRef,
+  AfterViewInit
 } from '@angular/core';
 import {
-  MAT_DIALOG_DATA,
-  MatDialog,
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogRef,
-  MatDialogTitle,
-  MatDialogModule,
+  MAT_DIALOG_DATA, MatDialogRef
 } from '@angular/material/dialog';
-import {isPlatformBrowser, CommonModule, AsyncPipe} from '@angular/common';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {Subscription} from 'rxjs';
 import {
-  BackEndPropertyData,
-  MSG,
-  PropertyService,
+  BackEndPropertyData
 } from '../../../services/property/property.service';
 import {NotificationDialogComponent} from '../notification/notification.component';
 
@@ -52,32 +39,32 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
     {
       link: 'https://www.facebook.com/sharer/sharer.php?u=',
       type: 'facebook',
-      image: '/Images/System-images/social-media/facebook.png',
+      image: 'Images/System-images/social-media/facebook.png',
     },
     {
       link: 'https://twitter.com/intent/tweet?url=',
       type: 'twitter',
-      image: '/Images/System-images/social-media/twitter.png',
+      image: 'Images/System-images/social-media/twitter.png',
     },
     {
       link: 'https://www.instagram.com/share?url=',
       type: 'instagram',
-      image: '/Images/System-images/social-media/instagram.png',
+      image: 'Images/System-images/social-media/instagram.png',
     },
     {
       link: 'https://www.linkedin.com/shareArticle?url=',
       type: 'linkedin',
-      image: '/Images/System-images/social-media/linkedin.png',
+      image: 'Images/System-images/social-media/linkedin.png',
     },
     {
       link: 'https://web.whatsapp.com/send?text=',
       type: 'whatsapp',
-      image: '/Images/System-images/social-media/WhatsApp.png',
+      image: 'Images/System-images/social-media/WhatsApp.png',
     },
     {
       link: 'https://telegram.me/share/url?url=',
       type: 'telegram',
-      image: '/Images/System-images/social-media/telegram.png',
+      image: 'Images/System-images/social-media/telegram.png',
     },
   ];
 

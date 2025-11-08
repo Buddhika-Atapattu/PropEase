@@ -1,5 +1,6 @@
 /* Path: src/components/user-info-panel/user-info-panel.component.scss */
 @use "../../styles/global.scss" as *;
+@use "sass:color";
 
 /* Root panel */
 .user-info-panel {
@@ -165,7 +166,7 @@
     font-weight: 600;
 
     &.active {
-      color: lighten($dark-fourth-color, 10%);
+      color: color.adjust($dark-fourth-color, $lightness: 10%);
     }
   }
 }
@@ -214,7 +215,7 @@
       background: #b3261e; /* Material-like error tone */
       color: #fff;
       &:hover {
-        background: darken(#b3261e, 6%);
+        background: color.adjust(#b3261e, $lightness: -6%);
       }
     }
   }

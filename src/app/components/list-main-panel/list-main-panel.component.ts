@@ -175,22 +175,22 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
       name: string;
       icon: string;
     }[] = [
-        {name: 'home-icon', icon: '/Images/Icons/home.svg'},
-        {name: 'property-icon', icon: '/Images/Icons/property.svg'},
-        {name: 'users-icon', icon: '/Images/Icons/users.svg'},
-        {name: 'tenant-icon', icon: '/Images/Icons/tenant.svg'},
-        {name: 'agent-icon', icon: '/Images/Icons/agents.svg'},
-        {name: 'report-icon', icon: '/Images/Icons/report.svg'},
-        {name: 'owner-icon', icon: '/Images/Icons/owner.svg'},
-        {name: 'payment-icon', icon: '/Images/Icons/payments.svg'},
-        {name: 'access-icon', icon: '/Images/Icons/access-control.svg'},
-        {name: 'bill-list-icon', icon: '/Images/Icons/bill-list.svg'},
-        {name: 'certification-icon', icon: '/Images/Icons/certification.svg'},
-        {name: 'create-icon', icon: '/Images/Icons/create.svg'},
-        {name: 'documents-icon', icon: '/Images/Icons/documents.svg'},
-        {name: 'notifications-icon', icon: '/Images/Icons/notification.svg'},
-        {name: 'log-icon', icon: '/Images/Icons/log.svg'},
-        {name: 'complaints-icon', icon: '/Images/Icons/complaints.svg'},
+        {name: 'home-icon', icon: 'Images/Icons/home.svg'},
+        {name: 'property-icon', icon: 'Images/Icons/property.svg'},
+        {name: 'users-icon', icon: 'Images/Icons/users.svg'},
+        {name: 'tenant-icon', icon: 'Images/Icons/tenant.svg'},
+        {name: 'agent-icon', icon: 'Images/Icons/agents.svg'},
+        {name: 'report-icon', icon: 'Images/Icons/report.svg'},
+        {name: 'owner-icon', icon: 'Images/Icons/owner.svg'},
+        {name: 'payment-icon', icon: 'Images/Icons/payments.svg'},
+        {name: 'access-icon', icon: 'Images/Icons/access-control.svg'},
+        {name: 'bill-list-icon', icon: 'Images/Icons/bill-list.svg'},
+        {name: 'certification-icon', icon: 'Images/Icons/certification.svg'},
+        {name: 'create-icon', icon: 'Images/Icons/create.svg'},
+        {name: 'documents-icon', icon: 'Images/Icons/documents.svg'},
+        {name: 'notifications-icon', icon: 'Images/Icons/notification.svg'},
+        {name: 'log-icon', icon: 'Images/Icons/log.svg'},
+        {name: 'complaints-icon', icon: 'Images/Icons/complaints.svg'},
       ]
     icons.forEach((icon) => {
       this.matIconRegistry.addSvgIcon(

@@ -65,11 +65,11 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
   protected scannedFilePreview: ScannedFilePreview[] = [];
 
   protected readonly definedMaleDummyImageURL =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL =
-    '/Images/user-images/dummy-user/dummy_woman.jpg';
+    'Images/user-images/dummy-user/dummy_woman.jpg';
   protected definedImage: string =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedImageExtentionArray: string[] = [
     'jpg',
     'webp',
@@ -370,7 +370,7 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `/Images/Icons/${path}`
+          `Images/Icons/${path}`
         )
       );
     }
@@ -533,5 +533,24 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
     }
   }
   //<=========================== END VIEW LEASE AGREEMENT ===========================>
+
+  //<=========================== CREATE COMPLAINT ===========================>
+  protected async createComplaint(): Promise<void> {
+    try {
+      if(!this.tenant) throw new Error('Tenant is invalid!');
+      if(!this.leaseID) throw new Error('Lease ID is empty!');
+      const {token} = await this.apiService.generateToken(this.tenant.username);
+
+      await this.router.navigate(
+        ['/dashboard/tenant/complaints/create-complaint', encodeURIComponent(token)],
+        {queryParams: {leaseID: this.leaseID}}
+      );
+    } catch(error) {
+      console.error(error);
+      this.NotificationDialogComponent.notification('error', 'Unexpected error occurred!');
+      return;
+    }
+  }
+  //<=========================== END CREATE COMPLAINT ===========================>
 
 }

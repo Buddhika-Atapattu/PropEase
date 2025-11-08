@@ -62,11 +62,11 @@ export class UsersComponent implements OnInit, OnDestroy {
 
 
   protected readonly definedMaleDummyImageURL =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL =
-    '/Images/user-images/dummy-user/dummy_woman.jpg';
+    'Images/user-images/dummy-user/dummy_woman.jpg';
   protected definedImage: string =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedImageExtentionArray: string[] = [
     'jpg',
     'webp',
@@ -113,14 +113,14 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   private iconMaker() {
     const iconMap = [
-      {name: 'view', path: '/Images/Icons/view.svg'},
-      {name: 'edit', path: '/Images/Icons/pencil-square.svg'},
-      {name: 'delete', path: '/Images/Icons/delete.svg'},
-      {name: 'add-new-user', path: '/Images/Icons/add-new-user.svg'},
-      {name: 'search', path: '/Images/Icons/search.svg'},
-      {name: 'filter', path: '/Images/Icons/filter.svg'},
-      {name: 'list', path: '/Images/Icons/list.svg'},
-      {name: 'lineColumns', path: '/Images/Icons/line-columns.svg'},
+      {name: 'view', path: 'Images/Icons/view.svg'},
+      {name: 'edit', path: 'Images/Icons/pencil-square.svg'},
+      {name: 'delete', path: 'Images/Icons/delete.svg'},
+      {name: 'add-new-user', path: 'Images/Icons/add-new-user.svg'},
+      {name: 'search', path: 'Images/Icons/search.svg'},
+      {name: 'filter', path: 'Images/Icons/filter.svg'},
+      {name: 'list', path: 'Images/Icons/list.svg'},
+      {name: 'lineColumns', path: 'Images/Icons/line-columns.svg'},
     ];
 
     for(let icon of iconMap) {
@@ -318,7 +318,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('create')
+          permission.actions.includes('create user')
       ) ?? false
     );
   }
@@ -330,7 +330,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('view')
+          permission.actions.includes('view users')
       ) ?? false
     );
   }
@@ -342,7 +342,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('update')
+          permission.actions.includes('update user')
       ) ?? false
     );
   }
@@ -354,7 +354,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('delete')
+          permission.actions.includes('delete user')
       ) ?? false
     );
   }

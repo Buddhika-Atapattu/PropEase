@@ -8,20 +8,20 @@ import {
   QueryList,
   ElementRef,
 } from '@angular/core';
-import { WindowsRefService } from '../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { Router, ActivatedRoute } from '@angular/router';
-import { CryptoService } from '../../services/cryptoService/crypto.service';
-import { APIsService, BaseUser } from '../../services/APIs/apis.service';
-import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
-import { UserInformationsComponent } from '../../components/tabs/user-informations/user-informations.component';
-import { AccessabilitiesComponent } from '../../components/tabs/accessabilities/accessabilities.component';
-import { DocumentsComponent } from '../../components/tabs/documents/documents.component';
-import { ActivitiesComponent } from '../../components/tabs/activities/activities.component';
-import { MatTabsModule } from '@angular/material/tabs';
-import { AuthService } from '../../services/auth/auth.service';
-import { RefreshService } from '../../services/refresh/refresh.service';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {Router, ActivatedRoute} from '@angular/router';
+import {CryptoService} from '../../services/cryptoService/crypto.service';
+import {APIsService, BaseUser} from '../../services/APIs/apis.service';
+import {SkeletonLoaderComponent} from '../../components/shared/skeleton-loader/skeleton-loader.component';
+import {UserInformationsComponent} from '../../components/tabs/user-informations/user-informations.component';
+import {AccessabilitiesComponent} from '../../components/tabs/accessabilities/accessabilities.component';
+import {DocumentsComponent} from '../../components/tabs/documents/documents.component';
+import {ActivitiesComponent} from '../../components/tabs/activities/activities.component';
+import {MatTabsModule} from '@angular/material/tabs';
+import {AuthService} from '../../services/auth/auth.service';
+import {RefreshService} from '../../services/refresh/refresh.service';
 
 @Component({
   selector: 'app-view-user-profile',
@@ -46,11 +46,11 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
   protected user: BaseUser | null = null;
   protected isLoading: boolean = true;
   protected readonly definedMaleDummyImageURL =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL =
-    '/Images/user-images/dummy-user/dummy_woman.jpg';
+    'Images/user-images/dummy-user/dummy_woman.jpg';
   protected definedImage: string =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedImageExtentionArray: string[] = [
     'jpg',
     'webp',
@@ -73,7 +73,7 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
 
 
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private router: Router,
@@ -102,7 +102,7 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -110,24 +110,24 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
   }
 
   private async loadData() {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       const data = await this.APIs.getUserByToken(this.username);
-      if (data) {
+      if(data) {
         this.user = data.user;
         this.isUserCanEdit = data.user.username === this.LOGGED_USER?.username;
-        if (typeof this.user.image === 'string') {
+        if(typeof this.user.image === 'string') {
           const imageArray: string[] = this.user.image
             ? this.user.image.split('/')
             : [];
-          if (imageArray.length > 0) {
-            if (
+          if(imageArray.length > 0) {
+            if(
               this.definedImageExtentionArray.includes(
                 imageArray[imageArray.length - 1].split('.')[1]
               )
             ) {
               this.definedImage = this.user.image;
             } else {
-              if (this.user.gender === 'male') {
+              if(this.user.gender === 'male') {
                 this.definedImage = this.definedMaleDummyImageURL;
               } else {
                 this.definedImage = this.definedWomanDummyImageURL;
@@ -150,17 +150,17 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
   }
 
   protected goToUsers() {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
       this.router.navigate(['/dashboard/users']);
     });
   }
 
   protected async goToUser() {
-    if (this.user) {
+    if(this.user) {
       const username = await this.APIs.generateToken(this.user?.username);
-      if (username)
+      if(username)
         this.router
-          .navigateByUrl('/', { skipLocationChange: true })
+          .navigateByUrl('/', {skipLocationChange: true})
           .then(() => {
             this.router.navigate([
               '/dashboard/view-user-profile',
@@ -201,7 +201,7 @@ export class ViewUserProfileComponent implements OnInit, OnDestroy {
 
 
   protected async editUser() {
-    if (this.isBrowser && this.LOGGED_USER) {
+    if(this.isBrowser && this.LOGGED_USER) {
       const username = await this.APIs.generateToken(
         this.LOGGED_USER?.username
       );

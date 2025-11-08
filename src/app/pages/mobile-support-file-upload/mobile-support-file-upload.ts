@@ -9,17 +9,18 @@ import {
   ElementRef,
   AfterViewChecked,
 } from '@angular/core';
-import { WindowsRefService } from '../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { RouterModule, Router, ActivatedRoute } from '@angular/router';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
-import { PropertyMoreDetailsPannelComponent } from '../../components/dialogs/property-more-details-pannel/property-more-details-pannel.component';
-import { APIsService } from '../../services/APIs/apis.service';
-import { TokenService } from '../../services/token/token.service';
-import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {RouterModule, Router, ActivatedRoute} from '@angular/router';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
+import {SafeUrlPipe} from '../../pipes/safe-url.pipe';
+import {PropertyMoreDetailsPannelComponent} from '../../components/dialogs/property-more-details-pannel/property-more-details-pannel.component';
+import {APIsService} from '../../services/APIs/apis.service';
+import {TokenService} from '../../services/token/token.service';
+import {ImageCropperComponent, ImageCroppedEvent} from 'ngx-image-cropper';
+import {TenantService} from '../../services/tenant/tenant.service';
 
 @Component({
   selector: 'app-mobile-support-file-upload',
@@ -30,9 +31,9 @@ import { ImageCropperComponent, ImageCroppedEvent } from 'ngx-image-cropper';
 })
 export class MobileSupportFileUpload
   implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('videoRef', { static: false })
+  @ViewChild('videoRef', {static: false})
   videoRef!: ElementRef<HTMLVideoElement>;
-  @ViewChild('canvas', { static: false })
+  @ViewChild('canvas', {static: false})
   canvasRef!: ElementRef<HTMLCanvasElement>;
 
   @ViewChild('hiddenFileInput') hiddenFileInput!: ElementRef<HTMLInputElement>;
@@ -60,7 +61,7 @@ export class MobileSupportFileUpload
   protected uploadedImage: string = '';
   protected image: File | null = null;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private activatedRoute: ActivatedRoute,
@@ -68,7 +69,8 @@ export class MobileSupportFileUpload
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
     private apiServices: APIsService,
-    private tokenService: TokenService
+    private tokenService: TokenService,
+    private readonly tenantService: TenantService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.activatedRoute.url.subscribe((segments) => {
@@ -80,10 +82,10 @@ export class MobileSupportFileUpload
 
     this.isCameraOpen = true;
   }
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
   ngAfterViewInit(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.requestCameraAccessAndEnumerate();
     }
   }
@@ -118,14 +120,14 @@ export class MobileSupportFileUpload
 
       const devices = await navigator.mediaDevices.enumerateDevices();
       this.videoDevices = devices.filter((d) => d.kind === 'videoinput');
-    } catch (err) {
+    } catch(err) {
       console.error('Camera access or device enumeration failed:', err);
       alert('Failed to access camera devices. Check browser permissions.');
     }
   }
 
   private stopCamera(): void {
-    if (this.mediaStream) {
+    if(this.mediaStream) {
       this.mediaStream.getTracks().forEach((track) => track.stop());
       this.mediaStream = null;
     }
@@ -138,12 +140,12 @@ export class MobileSupportFileUpload
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if(!ctx) return;
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = canvas.toDataURL('image/png') || canvas.toDataURL();
 
-    if (imageData) {
+    if(imageData) {
       this.handleImage(imageData);
     }
     this.stopCamera();
@@ -170,11 +172,11 @@ export class MobileSupportFileUpload
   protected convertToTheBlob(data: string): File {
     const byteString = atob(data.split(',')[1]); // decode base64
     const byteArray = new Uint8Array(byteString.length);
-    for (let i = 0; i < byteString.length; i++) {
+    for(let i = 0; i < byteString.length; i++) {
       byteArray[i] = byteString.charCodeAt(i);
     }
-    const blob = new Blob([byteArray], { type: 'image/png' });
-    return new File([blob], 'image.png', { type: 'image/png' });
+    const blob = new Blob([byteArray], {type: 'image/png'});
+    return new File([blob], 'image.png', {type: 'image/png'});
   }
 
   //<===================== End Capturing The Image =====================>
@@ -196,7 +198,7 @@ export class MobileSupportFileUpload
     // Convert the cropped Blob into a File
     const blob = this.croppedImage.blob;
     const fileName = `cropped-image-${Date.now()}.png`;
-    this.image = new File([blob], fileName, { type: blob.type });
+    this.image = new File([blob], fileName, {type: blob.type});
 
     console.log('Converted cropped Blob to File:', this.image);
 
@@ -218,15 +220,15 @@ export class MobileSupportFileUpload
   //<===================== End Image Cropped =====================>
 
   protected async upload() {
-    if (this.image instanceof File) {
+    if(this.image instanceof File) {
       const formData: FormData = new FormData();
       formData.append('image', this.image as File, 'image.png');
       formData.append('token', this.token);
-      await this.apiServices
+      await this.tenantService
         .getTenantMobileFileUpload(this.token, formData)
         .then((res) => {
           console.log(res);
-          if (res) {
+          if(res) {
             this.tokenService.mobileTenantFileUploadToken = this.token;
             this.tokenService.mobileTenantFileUploadTokenFileData =
               res.data.file;

@@ -12,41 +12,37 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import {
-  MatPaginator,
-  MatPaginatorModule
-} from '@angular/material/paginator';
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
-import {Sort, MatSortModule} from '@angular/material/sort';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {CommonModule} from '@angular/common';
 import {Subscription} from 'rxjs';
 import {ActivatedRoute} from '@angular/router';
-import {
-  APIsService,
-  LoggedUserType
-} from '../../../services/APIs/apis.service';
-import {SkeletonLoaderComponent} from '../skeleton-loader/skeleton-loader.component';
-import {AuthService} from '../../../services/auth/auth.service';
+
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
+import {Sort, MatSortModule} from '@angular/material/sort';
+import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
 import {MatTooltipModule} from '@angular/material/tooltip';
-import {
-  FileExportButtonTypeByExtension,
-  PaginatorComponent,
-} from '../paginator/paginator.component';
-import {
-  NotificationDialogComponent,
-  NotificationType,
-} from '../../dialogs/notification/notification.component';
-import {ProgressBarComponent} from '../../dialogs/progress-bar/progress-bar.component';
+
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {APIsService, LoggedUserType} from '../../../services/APIs/apis.service';
+import {AuthService} from '../../../services/auth/auth.service';
 import {TenantService} from '../../../services/tenant/tenant.service';
+
+import {SkeletonLoaderComponent} from '../skeleton-loader/skeleton-loader.component';
+import {PaginatorComponent, FileExportButtonTypeByExtension} from '../paginator/paginator.component';
+import {NotificationDialogComponent, NotificationType} from '../../dialogs/notification/notification.component';
+import {ProgressBarComponent} from '../../dialogs/progress-bar/progress-bar.component';
 import {SwitchButton} from '../../../components/shared/buttons/switch-button/switch-button.component';
 
-
+/**
+ * Button click payload for row actions/operations
+ */
 export interface ButtonDataType {
   type: string;
   data: any;
 }
 
+/**
+ * Allowed button types in Action/Operation columns
+ */
 export interface ButtonType {
   type:
   | 'add'
@@ -59,23 +55,48 @@ export interface ButtonType {
   | 'activate'
   | 'deactivate'
   | 'upload'
+  | 'edit'
   | 'reset'
   | 'search';
 }
 
+/** Column descriptor for dynamic tables */
 export interface CustomTableColumnType {
-  key: string;
-  label: string;
+  key: string;   // must match a key on each row object
+  label: string; // header text
 }
 
+/** File export payload bubbled to parent */
 export interface FileExportWithDataAndExtentionType {
   data: any[];
   extention: FileExportButtonTypeByExtension;
 }
 
+/** Switch button (toggle) value contract */
 export interface SwitchButtonDataFormatType {
-  isActive: boolean; // Fixed spelling: was `isAvtive`
+  isActive: boolean;
   data: any;
+}
+
+/** Normalized event types so parents can listen to one stream */
+export type TableEventType =
+  | 'action'
+  | 'operation'
+  | 'edit:start'
+  | 'edit:save'
+  | 'edit:cancel'
+  | 'row:select';
+
+export interface TableEvent<T = any> {
+  type: TableEventType;
+  payload: T;
+  meta?: Record<string, any>;
+}
+
+/** Optional per-row visibility predicates for action/operation buttons */
+export interface ButtonVisibility {
+  action?: (row: any) => boolean;
+  operation?: (row: any) => boolean;
 }
 
 @Component({
@@ -86,305 +107,268 @@ export interface SwitchButtonDataFormatType {
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
-    SkeletonLoaderComponent,
     MatTooltipModule,
+
+    SkeletonLoaderComponent,
     PaginatorComponent,
     NotificationDialogComponent,
     ProgressBarComponent,
-    SwitchButton
+    SwitchButton,
   ],
   templateUrl: './custom-table.component.html',
-  styleUrl: './custom-table.component.scss',
+  styleUrls: ['./custom-table.component.scss'], // NOTE: plural is correct
 })
-export class CustomTableComponent
-  implements OnInit, AfterViewInit, OnDestroy, OnChanges {
+export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
+  // ─────────────────────────────────────────────────────────────
+  // Inputs from parent (BEGINNER TIP: think of these as "props")
+  // ─────────────────────────────────────────────────────────────
   @Input() loggedUser: LoggedUserType | null = null;
-  @Input() isLoading: boolean = false;
-  @Input() isBrowser: boolean = false;
+  @Input() isLoading = false;
+  @Input() isBrowser = false;
   @Input() mode: boolean | null = null;
   @Input() modeSub: Subscription | null = null;
-  @Input() isRemoving: boolean = false;
-  @Input() fullDataCount: number = 0;
-  @Input()
-  fileExportButtonTypeByExtension: FileExportButtonTypeByExtension | null =
-    null;
+  @Input() isRemoving = false;
 
-  @Input() buttonAction: ButtonType = {
-    type: 'add',
-  };
-  @Output() buttonActionChange = new EventEmitter<ButtonType>();
-
-  @Input() buttonOperation: ButtonType = {
-    type: 'view',
-  };
-  @Output() buttonOperationChange = new EventEmitter<ButtonType>();
-
-  @Input() paginationEnable: boolean = false;
-  @Output() paginationEnableChange = new EventEmitter<boolean>();
-
-  @Input() totalDataCount: number = 0;
-  @Output() totalDataCountChange = new EventEmitter<number>();
-
-  @Input() search: string = '';
-  @Output() searchChange = new EventEmitter<string>();
-
+  @Input() fullDataCount = 0;
+  @Input() totalDataCount = 0; @Output() totalDataCountChange = new EventEmitter<number>();
   @Input() data: any[] = [];
   @Input() columns: CustomTableColumnType[] = [];
 
-  @Input() pageSize = 2;
-  @Output() pageSizeChange = new EventEmitter<number>();
+  @Input() paginationEnable = false; @Output() paginationEnableChange = new EventEmitter<boolean>();
+  @Input() pageSize = 2; @Output() pageSizeChange = new EventEmitter<number>();
+  @Input() pageSizeOptions: number[] = [2, 4, 6]; @Output() pageSizeOptionsChange = new EventEmitter<number[]>();
+  @Input() pageIndex = 0; @Output() pageIndexChange = new EventEmitter<number>();
+  @Input() pageCount = 0; @Output() pageCountChange = new EventEmitter<number>();
+  @Input() tableType = ''; @Output() tableTypeChange = new EventEmitter<string>();
+  @Input() search = ''; @Output() searchChange = new EventEmitter<string>();
+  @Input() isReload = false; @Output() isReloadChange = new EventEmitter<boolean>();
 
-  @Input() pageSizeOptions: number[] = [2, 4, 6];
-  @Output() pageSizeOptionsChange = new EventEmitter<number[]>();
+  @Input() fileExportButtonTypeByExtension: FileExportButtonTypeByExtension | null = null;
+  @Output() fileExport = new EventEmitter<FileExportWithDataAndExtentionType>();
 
-  @Input() pageIndex = 0;
-  @Output() pageIndexChange = new EventEmitter<number>();
+  @Input() buttonAction: ButtonType = {type: 'add'}; @Output() buttonActionChange = new EventEmitter<ButtonType>();
+  @Input() buttonOperation: ButtonType = {type: 'view'}; @Output() buttonOperationChange = new EventEmitter<ButtonType>();
 
-  @Input() pageCount = 0;
-  @Output() pageCountChange = new EventEmitter<number>();
-
-  @Input() tableType: string = '';
-  @Output() tableTypeChange = new EventEmitter<string>();
-
-  @Input() isReload: boolean = false;
-  @Output() isReloadChange = new EventEmitter<boolean>();
-
-  @Input() buttonActionTrigger: ButtonDataType | null = null;
-  @Output() buttonActionTriggerChange =
-    new EventEmitter<ButtonDataType | null>();
-
-  @Input() buttonOperationTrigger: ButtonDataType | null = null;
-  @Output() buttonOperationTriggerChange =
-    new EventEmitter<ButtonDataType | null>();
-
-  @Input() buttonActionTriggerStarted: boolean = false;
-  @Output() buttonActionTriggerStartedChange = new EventEmitter<boolean>();
-
-  @Input() buttonOperationTriggerStarted: boolean = false;
-  @Output() buttonOperationTriggerStartedChange = new EventEmitter<boolean>();
-
-  @Input() notification: NotificationType = {
-    type: '',
-    message: '',
-  };
-  @Output() notificationChange = new EventEmitter<NotificationType>();
-
-  @Output() fileExport: EventEmitter<FileExportWithDataAndExtentionType> =
-    new EventEmitter<FileExportWithDataAndExtentionType>();
+  @Input() buttonActionTrigger: ButtonDataType | null = null; @Output() buttonActionTriggerChange = new EventEmitter<ButtonDataType | null>();
+  @Input() buttonOperationTrigger: ButtonDataType | null = null; @Output() buttonOperationTriggerChange = new EventEmitter<ButtonDataType | null>();
+  @Input() buttonActionTriggerStarted = false; @Output() buttonActionTriggerStartedChange = new EventEmitter<boolean>();
+  @Input() buttonOperationTriggerStarted = false; @Output() buttonOperationTriggerStartedChange = new EventEmitter<boolean>();
 
   @Input() switchButton: SwitchButtonDataFormatType | null = null;
   @Output() switchButtonChange = new EventEmitter<SwitchButtonDataFormatType>();
 
-  // View child components
-  @ViewChild(ProgressBarComponent, {static: true})
-  progress!: ProgressBarComponent;
-  @ViewChild(NotificationDialogComponent, {static: true})
-  NotificationDialogComponent!: NotificationDialogComponent;
+  @Input() notification: NotificationType = {type: '', message: ''};
+  @Output() notificationChange = new EventEmitter<NotificationType>();
 
-  // Table data
+  // Edit feature flags
+  @Input() editable = false;
+  @Input() editMode: 'inline' | 'side-panel' | 'modal' = 'side-panel';
+  @Input() rowIdKey = 'id';
+
+  // Button visibility toggles
+  @Input() showButtons: 'none' | 'action' | 'operation' | 'both' = 'both';
+  @Input() buttonVisibility: ButtonVisibility = {};
+
+  // Normalized event stream for parent
+  @Output() tableEvent = new EventEmitter<TableEvent>();
+  @Output() editRequested = new EventEmitter<any>();
+  @Output() editSaved = new EventEmitter<any>();
+  @Output() editCancelled = new EventEmitter<any>();
+
+  // ─────────────────────────────────────────────────────────────
+  // View children
+  // ─────────────────────────────────────────────────────────────
+  @ViewChild(ProgressBarComponent, {static: true}) progress!: ProgressBarComponent;
+  @ViewChild(NotificationDialogComponent, {static: true}) NotificationDialogComponent!: NotificationDialogComponent;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  // ─────────────────────────────────────────────────────────────
+  // Internal state used by the table
+  // ─────────────────────────────────────────────────────────────
   protected displayedColumnKeys: string[] = [];
   protected dataSource = new MatTableDataSource<any>();
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  protected tableButtonAction: string = '';
-  protected tableButtonOperation: string = '';
-  protected tableStatus: string = '';
-  protected isTableVisible: boolean = true;
+  protected tableButtonAction = '';
+  protected tableButtonOperation = '';
+  protected tableStatus = '';
+  protected isTableVisible = true;
+  protected dataCount: number = 0;
 
-  // Defined images
-  protected readonly definedMaleDummyImageURL =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
-  protected readonly definedWomanDummyImageURL =
-    '/Images/user-images/dummy-user/dummy_woman.jpg';
-  protected definedImage: string = '/Images/System-images/noImage.jpeg';
+  // Default images used as fallbacks
+  protected readonly definedMaleDummyImageURL = 'Images/user-images/dummy-user/dummy-user.jpg';
+  protected readonly definedWomanDummyImageURL = 'Images/user-images/dummy-user/dummy_woman.jpg';
+  protected definedImage = 'Images/System-images/noImage.jpeg';
 
-  constructor (
-    private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private route: ActivatedRoute,
-    private apiService: APIsService,
-    private authService: AuthService,
-    private tenantService: TenantService
+  // Editing state
+  private editingRowId: string | null = null;
+  private editingDraft: any = null;
+
+  // Cached per-row visibilities (avoid calling functions in template)
+  protected canShowActionForRow: Map<string, boolean> = new Map();
+  protected canShowOperationForRow: Map<string, boolean> = new Map();
+
+  // ─────────────────────────────────────────────────────────────
+  // DI
+  // ─────────────────────────────────────────────────────────────
+  public constructor (
+    private readonly windowRef: WindowsRefService,
+    @Inject(PLATFORM_ID) private readonly platformId: Object,
+    private readonly route: ActivatedRoute,
+    private readonly apiService: APIsService,
+    private readonly authService: AuthService,
+    private readonly tenantService: TenantService
   ) {}
 
-  async ngOnInit() {
+  // ─────────────────────────────────────────────────────────────
+  // Lifecycle
+  // ─────────────────────────────────────────────────────────────
+  public async ngOnInit(): Promise<void> {
+    // Subscribe to theme/mode only in browser
     if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
-        this.mode = val;
-      });
+      this.modeSub = this.windowRef.mode$.subscribe((val) => {this.mode = val;});
     }
-
   }
 
-  ngAfterViewInit() {}
+  public ngAfterViewInit(): void {
+    // Tie "loading" to parent-controlled isReload flag (for skeletons)
+    setTimeout(() => {
+      this.isLoading = this.isReload;
+    }, 500)
+  }
 
-  ngOnChanges(changes: SimpleChanges): void {
+  /**
+ * Normalizes any status string to a CSS-friendly class and returns:
+ *  "main-category <normalized>"
+ * - lowercases
+ * - trims
+ * - replaces spaces with underscores (so 'under review' -> 'under_review')
+ * - leaves complaint statuses like 'in_progress' as-is
+ */
+  protected statusClass(status: string | null | undefined): string {
+    const norm = String(status ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_');   // spaces → underscores
+
+    // If nothing sensible, just return base.
+    if(!norm) return 'main-category';
+
+    return `main-category ${norm}`;
+  }
+
+  public ngOnChanges(changes: SimpleChanges): void {
     if(changes['data']) {
       this.tableButtonAction = this.buttonAction.type.trim().toLowerCase();
-      this.tableButtonOperation = this.buttonOperation.type
-        .trim()
-        .toLowerCase();
-      this.dataSource.data = this.data;
+      this.tableButtonOperation = this.buttonOperation.type.trim().toLowerCase();
+
+      // guard + copy to trigger MatTable change detection
+      const rows = Array.isArray(this.data) ? this.data : [];
+      this.dataCount = rows.length;
+      this.dataSource.data = [...rows];
+
+      this.computeButtonVisibility(this.dataSource.data);
 
       setTimeout(() => {
-        if(this.fullDataCount > 0) {
-          this.isTableVisible = true;
-        } else {
-          this.isTableVisible = false;
-        }
-      }, 1000);
+        this.isTableVisible = this.fullDataCount > 0;
+      }, 0);
     }
+
     if(changes['columns']) {
-      this.displayedColumnKeys = this.columns.map((c) => c.key);
-      this.tableStatus = (this.columns.find((c) => c.key.toLowerCase() === 'status')?.key || '').toLowerCase();
+      this.displayedColumnKeys = (this.columns ?? []).map(c => c.key);
+      this.tableStatus = (this.columns.find(c => c.key.toLowerCase() === 'status')?.key || '').toLowerCase();
     }
   }
 
-  ngOnDestroy() {
+  public ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
   }
 
-  //<======================= Getter And Setter =======================>
+  // ─────────────────────────────────────────────────────────────
+  // Helpers (BEGINNER TIP: keep template simple; compute in TS)
+  // ─────────────────────────────────────────────────────────────
 
-  //Page Count
-  get userPageCount(): number {
-    return this.pageCount;
+  /** Expose a safe string converter for the template (instead of global String(...)) */
+  protected toStr(v: unknown): string {return String(v ?? '');}
+
+  /** Compute per-row visibility for action/operation buttons and cache in maps */
+  private computeButtonVisibility(rows: any[]): void {
+    this.canShowActionForRow.clear();
+    this.canShowOperationForRow.clear();
+
+    const showAction = this.showButtons === 'action' || this.showButtons === 'both';
+    const showOperation = this.showButtons === 'operation' || this.showButtons === 'both';
+
+    const hasActionPred = typeof this.buttonVisibility.action === 'function';
+    const hasOperationPred = typeof this.buttonVisibility.operation === 'function';
+
+    for(const row of rows) {
+      const rowId = this.toStr(row?.[this.rowIdKey]);
+      const allowAction = showAction && (!hasActionPred || !!this.buttonVisibility.action!(row));
+      const allowOperation = showOperation && (!hasOperationPred || !!this.buttonVisibility.operation!(row));
+      this.canShowActionForRow.set(rowId, allowAction);
+      this.canShowOperationForRow.set(rowId, allowOperation);
+    }
   }
 
-  set userPageCount(value: number) {
-    this.pageCount = value;
-    this.pageCountChange.emit(this.pageCount);
+  // Two-way binding proxies
+  get userPageCount(): number {return this.pageCount;}
+  set userPageCount(value: number) {this.pageCount = value; this.pageCountChange.emit(this.pageCount);}
+
+  get userPageIndex(): number {return this.pageIndex;}
+  set userPageIndex(value: number) {this.pageIndex = value; this.pageIndexChange.emit(this.pageIndex);}
+
+  get userPageSize(): number {return this.pageSize;}
+  set userPageSize(value: number) {this.pageSize = value; this.pageSizeChange.emit(this.pageSize);}
+
+  get searchValue(): string {return this.search;}
+  set searchValue(value: string) {this.search = value; this.searchChange.emit(this.search);}
+
+  get isReloading(): boolean {return this.isReload;}
+  set isReloading(value: boolean) {this.isReload = value; this.isReloadChange.emit(this.isReload);}
+
+  get userTotalDataCount(): number {return this.totalDataCount;}
+  set userTotalDataCount(value: number) {this.totalDataCount = value; this.totalDataCountChange.emit(this.totalDataCount);}
+
+  get userTableType(): string {return this.tableType;}
+  set userTableType(value: string) {this.tableType = value; this.tableTypeChange.emit(this.tableType);}
+
+  get userPageSizeOptions(): number[] {return this.pageSizeOptions;}
+  set userPageSizeOptions(value: number[]) {this.pageSizeOptions = value; this.pageSizeOptionsChange.emit(this.pageSizeOptions);}
+
+  get userIsPaginationEnabled(): boolean {return this.paginationEnable;}
+  set userIsPaginationEnabled(value: boolean) {this.paginationEnable = value; this.paginationEnableChange.emit(this.paginationEnable);}
+
+  // Toolbar: export
+  protected handleFileExport(ext: FileExportButtonTypeByExtension): void {
+    this.fileExport.emit({data: this.dataSource.data, extention: ext});
   }
 
-  // Page Index
-  get userPageIndex(): number {
-    return this.pageIndex;
-  }
-
-  set userPageIndex(value: number) {
-    this.pageIndex = value;
-    this.pageIndexChange.emit(this.pageIndex);
-  }
-
-  get userPageSize(): number {
-    return this.pageSize;
-  }
-
-  set userPageSize(value: number) {
-    this.pageSize = value;
-    this.pageSizeChange.emit(this.pageSize);
-  }
-
-  get searchValue(): string {
-    return this.search;
-  }
-
-  set searchValue(value: string) {
-    this.search = value;
-    this.searchChange.emit(this.search);
-  }
-
-  get isReloading(): boolean {
-    return this.isReload;
-  }
-
-  set isReloading(value: boolean) {
-    this.isReload = value;
-    this.isReloadChange.emit(this.isReload);
-  }
-
-  get userTotalDataCount(): number {
-    return this.totalDataCount;
-  }
-
-  set userTotalDataCount(value: number) {
-    this.totalDataCount = value;
-    this.totalDataCountChange.emit(this.totalDataCount);
-  }
-
-  get userTableType(): string {
-    return this.tableType;
-  }
-
-  set userTableType(value: string) {
-    this.tableType = value;
-    this.tableTypeChange.emit(this.tableType);
-  }
-
-  get userPageSizeOptions(): number[] {
-    return this.pageSizeOptions;
-  }
-
-  set userPageSizeOptions(value: number[]) {
-    this.pageSizeOptions = value;
-    this.pageSizeOptionsChange.emit(this.pageSizeOptions);
-  }
-
-  get userIsPaginationEnabled(): boolean {
-    return this.paginationEnable;
-  }
-
-  set userIsPaginationEnabled(value: boolean) {
-    this.paginationEnable = value;
-    this.paginationEnableChange.emit(this.paginationEnable);
-  }
-
-  //<======================= End Getter And Setter =======================>
-
-  //<======================= Handle Actions =======================>
-  protected handleFileExport(data: FileExportButtonTypeByExtension) {
-    // FileExportWithDataAndExtentionType
-    this.fileExport.emit({
-      data: this.dataSource.data,
-      extention: data,
-    });
-  }
-
-  protected handleActionButton(buttonAction: ButtonType) {
-    this.buttonAction = buttonAction;
+  // Toolbar: action button change (optional)
+  protected handleActionButton(btn: ButtonType): void {
+    this.buttonAction = btn;
     this.buttonActionChange.emit(this.buttonAction);
   }
 
-  protected handleOperationButtonTrigger(data: ButtonDataType | null) {
-    if(!data) return;
-
-    this.buttonOperationTrigger = data;
-    this.buttonOperationTriggerChange.emit(this.buttonOperationTrigger);
-
-    this.buttonOperationTriggerStarted = true;
-    this.buttonOperationTriggerStartedChange.emit(
-      this.buttonOperationTriggerStarted
-    );
-  }
-
-  protected handleActionButtonTrigger(data: ButtonDataType | null) {
-    if(!data) return;
-
-    this.buttonActionTrigger = data as ButtonDataType;
-    this.buttonActionTriggerChange.emit(this.buttonActionTrigger);
-
-    this.buttonActionTriggerStarted = true;
-    this.buttonActionTriggerStartedChange.emit(this.buttonActionTriggerStarted);
-  }
-
-  protected handleSwitchChange(
-    isActive: SwitchButtonDataFormatType['isActive'],
-    input: SwitchButtonDataFormatType['data']
-  ): void {
-    this.switchButton = {
-      isActive, // Fixed spelling
-      data: input
-    };
-
+  // Row toggle
+  protected handleSwitchChange(isActive: SwitchButtonDataFormatType['isActive'], input: SwitchButtonDataFormatType['data']): void {
+    this.switchButton = {isActive, data: input};
     this.switchButtonChange.emit(this.switchButton);
   }
-  //<======================= End Handle Actions =======================>
 
-  //<======================= Sort Data =======================>
+  // Sorting (null-safe)
   protected sortData(sort: Sort, data?: any[]): void {
+    // If not a tenant array, fall back to generic sort
     if(!this.tenantService.isTenantArray(this.dataSource.data)) {
+      const src = (data || this.dataSource.data).slice();
+      if(!sort.active || sort.direction === '') {
+        this.dataSource.data = src;
+        return;
+      }
+      const isAsc = sort.direction === 'asc';
+      this.dataSource.data = src.sort((a, b) => this.universalCompare(a?.[sort.active], b?.[sort.active], isAsc));
       return;
     }
 
+    // Tenant data path
     const sourceData = (data || this.dataSource.data).slice();
     const isAsc = sort.direction === 'asc';
 
@@ -406,41 +390,28 @@ export class CustomTableComponent
     if(typeof a === 'string' && typeof b === 'string') {
       return a.localeCompare(b) * (isAsc ? 1 : -1);
     }
-
     return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
   }
-  //<======================= End Sort Data =======================>
 
-  //<======================= Image Checker =======================>
-  protected imageGenerator(
-    image: string,
-    type: string,
-    gender?: string
-  ): string {
+  // Image helpers
+  protected imageGenerator(image: string, type: string, gender?: string): string {
     switch(type.toLowerCase().trim()) {
-      case 'userimage':
+      case 'userimage': {
         const imagetype = image.split('.')[1];
-        if(imagetype !== '') {
-          return image;
-        } else {
-          if(gender?.toLocaleLowerCase() === 'male') {
-            return this.definedMaleDummyImageURL;
-          } else if(gender?.toLocaleLowerCase() === 'female') {
-            return this.definedWomanDummyImageURL;
-          } else {
-            return this.definedImage;
-          }
-        }
+        if(imagetype) return image;
+        if(gender?.toLocaleLowerCase() === 'male') return this.definedMaleDummyImageURL;
+        if(gender?.toLocaleLowerCase() === 'female') return this.definedWomanDummyImageURL;
+        return this.definedImage;
+      }
       case 'propertyimage':
+      case 'image':
         return image;
       default:
         return this.definedImage;
     }
   }
 
-  //<======================= End Image Checker =======================>
-
-  //<======================= Format Date Range =======================>
+  // Formatting helpers
   protected formatDateRange(start: Date, end: Date): string {
     const formatWithSuffix = (date: Date): string => {
       const day = date.getDate();
@@ -449,7 +420,6 @@ export class CustomTableComponent
       const year = date.getFullYear();
       return `${day}${suffix} of ${month} ${year}`;
     };
-
     return `${formatWithSuffix(start)} to ${formatWithSuffix(end)}`;
   }
 
@@ -462,22 +432,33 @@ export class CustomTableComponent
       default: return 'th';
     }
   }
-  //<======================= End Format Date Range =======================>
 
-  //<======================= Trim Text =======================>
+  /** Pretty-print JSON or trim plain text safely */
   protected trimText(text: any): string {
-    const stringValue = typeof text === 'string' ? text : String(text ?? '');
-    const safeText = stringValue.trim();
-
-    return safeText.length > 30 ? safeText.slice(0, 30) + '...' : safeText;
+    try {
+      const stringValue = typeof text === 'string' ? text.trim() : JSON.stringify(text).trim();
+      const parsed = JSON.parse(stringValue);
+      if(typeof parsed === 'object' && parsed !== null) {
+        return Object.entries(parsed)
+          .map(([key, value]) => key.includes('_') ? '' : `${key} : ${value}`)
+          .filter(Boolean)
+          .join('<br>');
+      }
+      return String(parsed);
+    } catch {
+      const safeText = String(text ?? '').trim();
+      return safeText.length > 30 ? safeText.slice(0, 30) + '...' : safeText;
+    }
   }
-  //<======================= End Trim Text =======================>
 
-  //<======================= Make Capitalize =======================>
+  /**
+   * Capitalize every word, preserving inline HTML.
+   * BEGINNER TIP: DOMParser is browser-only; we guard with isBrowser.
+   */
   protected makeCapitalize(text: any): string {
     const stringValue = typeof text === 'string' ? text : String(text ?? '').trim();
+    if(!this.isBrowser) return stringValue; // SSR/Electron guard
 
-    // Parse the input HTML into a document fragment
     const parser = new DOMParser();
     const doc = parser.parseFromString(`<div>${stringValue}</div>`, 'text/html');
     const container = doc.body.firstChild as HTMLElement;
@@ -485,20 +466,81 @@ export class CustomTableComponent
     function capitalizeTextNodes(node: Node): void {
       if(node.nodeType === Node.TEXT_NODE) {
         const originalText = node.nodeValue || '';
-        const words = originalText.split(' ');
-        const capitalized = words
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        node.nodeValue = originalText
+          .split(' ')
+          .map(word => word ? (word.charAt(0).toUpperCase() + word.slice(1)) : '')
           .join(' ');
-        node.nodeValue = capitalized;
       } else if(node.nodeType === Node.ELEMENT_NODE && node.childNodes) {
         node.childNodes.forEach(child => capitalizeTextNodes(child));
       }
     }
 
     capitalizeTextNodes(container);
-
     return container.innerHTML;
   }
-  //<======================= End Make Capitalize =======================>
 
+  // Edit lifecycle
+  protected onEditStart(row: any): void {
+    if(!this.editable) return;
+    const rowId = this.toStr(row?.[this.rowIdKey]);
+    this.editingRowId = rowId;
+    this.editingDraft = {...row};
+
+    this.editRequested.emit({id: rowId, row: {...row}});
+    this.tableEvent.emit({type: 'edit:start', payload: {id: rowId, row}});
+  }
+
+  protected onEditDraftChange(patch: Partial<any>): void {
+    if(!this.editable || !this.editingDraft) return;
+    this.editingDraft = {...this.editingDraft, ...patch};
+  }
+
+  protected onEditSave(): void {
+    if(!this.editable || !this.editingDraft) return;
+
+    const rowId = this.toStr(this.editingDraft?.[this.rowIdKey] ?? this.editingRowId ?? '');
+    const payload = {id: rowId, row: {...this.editingDraft}};
+
+    this.editSaved.emit(payload);
+    this.tableEvent.emit({type: 'edit:save', payload});
+
+    this.editingRowId = null;
+    this.editingDraft = null;
+  }
+
+  protected onEditCancel(): void {
+    if(!this.editable) return;
+    const payload = {id: this.editingRowId};
+    this.editCancelled.emit(payload);
+    this.tableEvent.emit({type: 'edit:cancel', payload});
+
+    this.editingRowId = null;
+    this.editingDraft = null;
+  }
+
+  protected isRowEditing(row: any): boolean {
+    const rowId = this.toStr(row?.[this.rowIdKey]);
+    return !!this.editingRowId && this.editingRowId === rowId;
+  }
+
+  // Normalized button triggers
+  protected handleOperationButtonTrigger(data: ButtonDataType | null): void {
+    if(!data) return;
+    this.buttonOperationTrigger = data;
+    this.buttonOperationTriggerChange.emit(this.buttonOperationTrigger);
+    this.buttonOperationTriggerStarted = true;
+    this.buttonOperationTriggerStartedChange.emit(this.buttonOperationTriggerStarted);
+
+    this.tableEvent.emit({type: 'operation', payload: data, meta: {column: 'operation'}});
+  }
+
+  protected handleActionButtonTrigger(data: ButtonDataType | null): void {
+    if(!data) return;
+    this.buttonActionTrigger = data as ButtonDataType;
+    this.buttonActionTriggerChange.emit(this.buttonActionTrigger);
+    this.buttonActionTriggerStarted = true;
+    this.buttonActionTriggerStartedChange.emit(this.buttonActionTriggerStarted);
+
+    this.tableEvent.emit({type: 'action', payload: data, meta: {column: 'actions'}});
+  }
 }

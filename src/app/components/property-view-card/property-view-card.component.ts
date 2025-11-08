@@ -113,12 +113,12 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
 
   private iconMaker() {
     const iconMap = [
-      {name: 'view', path: '/Images/Icons/view.svg'},
-      {name: 'edit', path: '/Images/Icons/pencil-square.svg'},
-      {name: 'delete', path: '/Images/Icons/delete.svg'},
-      {name: 'add-new-user', path: '/Images/Icons/add-new-user.svg'},
-      {name: 'search', path: '/Images/Icons/search.svg'},
-      {name: 'filter', path: '/Images/Icons/filter.svg'},
+      {name: 'view', path: 'Images/Icons/view.svg'},
+      {name: 'edit', path: 'Images/Icons/pencil-square.svg'},
+      {name: 'delete', path: 'Images/Icons/delete.svg'},
+      {name: 'add-new-user', path: 'Images/Icons/add-new-user.svg'},
+      {name: 'search', path: 'Images/Icons/search.svg'},
+      {name: 'filter', path: 'Images/Icons/filter.svg'},
     ];
 
     for(let icon of iconMap) {
@@ -134,7 +134,7 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
           permission.module === 'Property Management' &&
-          permission.actions.includes('delete')
+          permission.actions.includes('delete property')
       ) ?? false
     );
   }
@@ -144,7 +144,7 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
           permission.module === 'Property Management' &&
-          permission.actions.includes('update')
+          permission.actions.includes('update property')
       ) ?? false
     );
   }
@@ -154,7 +154,7 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit {
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
           permission.module === 'Property Management' &&
-          permission.actions.includes('view')
+          permission.actions.includes('view properties')
       ) ?? false
     );
   }

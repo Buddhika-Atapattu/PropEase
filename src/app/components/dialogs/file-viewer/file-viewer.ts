@@ -7,75 +7,34 @@ import {
   OnDestroy,
   Inject,
   PLATFORM_ID,
-  ViewChild,
-  ElementRef,
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  AfterViewInit,
-  CUSTOM_ELEMENTS_SCHEMA,
-  OnChanges,
-  SimpleChanges,
-  HostListener,
+  ViewChild, ChangeDetectorRef,
+  AfterViewInit, OnChanges,
+  SimpleChanges
 } from '@angular/core';
-import {ActivatedRoute, Router} from '@angular/router';
-import {
-  APIsService,
-  BaseUser,
-  Country,
-  MSG_DATA_TYPE,
-  PermissionEntry,
-  ROLE_ACCESS_MAP,
-  validateType,
-} from '../../../services/APIs/apis.service';
-import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
+import {Router} from '@angular/router';
 import {MatInputModule} from '@angular/material/input';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatButtonModule} from '@angular/material/button';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatIconModule} from '@angular/material/icon';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {
-  MatMomentDateModule,
-  MomentDateAdapter,
+  MatMomentDateModule
 } from '@angular/material-moment-adapter';
 import {MatSelectModule} from '@angular/material/select';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatCheckboxModule} from '@angular/material/checkbox';
-import {Observable} from 'rxjs';
-import {map, startWith} from 'rxjs/operators';
-import {DomSanitizer} from '@angular/platform-browser';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
-import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
-import {ImageCropperComponent, ImageCroppedEvent} from 'ngx-image-cropper';
 import {CryptoService} from '../../../services/cryptoService/crypto.service';
-import {CameraBoxComponent} from '../../../components/dialogs/camera-box/camera-box.component';
-import {EditorComponent} from '@tinymce/tinymce-angular';
-import {AuthService} from '../../../services/auth/auth.service';
-import Tesseract from 'tesseract.js';
-import {FormBuilder, FormGroup} from '@angular/forms';
 import {
-  MAT_DIALOG_DATA,
-  MatDialog,
-  MatDialogActions,
-  MatDialogClose,
-  MatDialogContent,
-  MatDialogRef,
-  MatDialogTitle,
-  MatDialogModule,
+  MAT_DIALOG_DATA, MatDialogRef, MatDialogModule
 } from '@angular/material/dialog';
-import {isPlatformBrowser, CommonModule, AsyncPipe} from '@angular/common';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {Subscription} from 'rxjs';
-import {
-  BackEndPropertyData,
-  MSG,
-  PropertyService,
-} from '../../../services/property/property.service';
 import {NotificationDialogComponent} from '../notification/notification.component';
-import {ScanService, DeviceInfo} from '../../../services/scan/scan.service';
-import {QRCode, QRCodeErrorCorrectionLevel, toDataURL} from 'qrcode';
-import {PC_IP_PLUS_PORT} from '../../../../environments/environment';
+import {ScanService} from '../../../services/scan/scan.service';
 
 @Component({
   selector: 'app-file-viewer',

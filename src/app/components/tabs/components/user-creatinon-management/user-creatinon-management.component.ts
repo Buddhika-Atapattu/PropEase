@@ -21,13 +21,12 @@ import {ActivityTrackerService} from '../../../../services/activityTacker/activi
 
 import {MatSelectModule} from '@angular/material/select';
 import {MatDividerModule} from '@angular/material/divider';
-import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatTooltipModule} from '@angular/material/tooltip';
 
 import {MatTableDataSource, MatTableModule} from '@angular/material/table';
 import {MatPaginatorModule} from '@angular/material/paginator';
-import {Sort, MatSortModule, MatSort} from '@angular/material/sort';
+import {Sort, MatSortModule} from '@angular/material/sort';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatMomentDateModule} from '@angular/material-moment-adapter';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
@@ -40,10 +39,9 @@ import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
 import {CryptoService} from '../../../../services/cryptoService/crypto.service';
 import {
-  APIsService,
-  UsersType,
+  APIsService
 } from '../../../../services/APIs/apis.service';
-import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
+import {ActivatedRoute, Router} from '@angular/router';
 
 interface Data {
   name: string;
@@ -139,11 +137,11 @@ export class UserCreatinonManagementComponent
   ];
 
   protected readonly definedMaleDummyImageURL =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL =
-    '/Images/user-images/dummy-user/dummy_woman.jpg';
+    'Images/user-images/dummy-user/dummy_woman.jpg';
   protected definedImage: string =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
 
   constructor (
     private windowRef: WindowsRefService,
@@ -231,7 +229,7 @@ export class UserCreatinonManagementComponent
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `/Images/Icons/${path}`
+          `Images/Icons/${path}`
         )
       );
     }

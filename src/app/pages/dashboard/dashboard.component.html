@@ -38,11 +38,7 @@
           <div
             class="col-xl-2 col-lg-3 col-md-4 col-sm-6 d-flex align-items-center"
           >
-            <img
-              src="/Images/company-images/cover-no-bg.webp"
-              alt="Logo"
-              class="logo me-2"
-            />
+            <img [src]="noBGImage" alt="Logo" class="logo me-2" />
           </div>
           <div
             class="col-xl-8 col-lg-6 col-md-6 col-sm-6 d-flex justify-content-center align-items-center"
@@ -71,7 +67,8 @@
                 />
                 <ng-template #userImage>
                   <img
-                    src="{{ user?.image }}"
+                    *ngIf="user"
+                    [src]="sanitizeURL(user.image)"
                     alt="User Profile"
                     class="user-image"
                   />
@@ -86,20 +83,9 @@
         </div>
       </div>
     </nav>
-    <!-- <div class="d-flex justify-content-between align-items-center w-100 px-4">
-      <div class="d-flex align-items-center">
-        <img
-          src="/Images/company-images/cover-no-bg.webp"
-          alt="Logo"
-          class="logo me-2"
-        />
-        <app-mode-changer></app-mode-changer>
-      </div>
-    </div> -->
   </header>
 
   <!-- Main Content -->
-
   <main [ngClass]="{ 'main-content': true, dark: mode, light: !mode }">
     <div class="dashboard-main-container"><router-outlet></router-outlet></div>
   </main>
@@ -125,7 +111,8 @@
             />
             <ng-template #userImage>
               <img
-                src="{{ user?.image }}"
+                *ngIf="user"
+                [src]="sanitizeURL(user.image)"
                 alt="User Profile"
                 class="user-image"
               />
@@ -137,11 +124,7 @@
           />
         </div>
         <div class="d-flex align-items-center">
-          <img
-            src="/Images/company-images/cover-no-bg.webp"
-            alt="Logo"
-            class="logo me-2"
-          />
+          <img [src]="noBGImage" alt="Logo" class="logo me-2" />
           <app-mode-changer></app-mode-changer>
         </div>
       </div>

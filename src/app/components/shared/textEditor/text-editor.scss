@@ -1,0 +1,260 @@
+@use "../../../styles/global.scss" as *;
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TinyMCE – Modern chrome (token-driven, skin ON or OFF)
+   - No layout hacks: just visual polish with safe overrides
+   - Honors html.light / html.dark and your extended scales
+   - Supports a compact density via .pe-editor--compact on host
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Remove Tiny promo */
+:host ::ng-deep .tox-promotion {
+  width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  a {
+    display: none !important;
+  }
+}
+
+/* Shell (card) */
+:host {
+  display: block;
+  width: 100%;
+}
+:host ::ng-deep .tox-tinymce {
+  background: var(--surface) !important;
+  color: var(--on-surface) !important;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px var(--shadow-color);
+  overflow: hidden;
+}
+
+:host ::ng-deep .tox .tox-edit-area::before {
+  border: 1px solid var(--surface-variant) !important;
+}
+
+/* Header strips */
+:host ::ng-deep .tox:not(.tox-tinymce-inline) .tox-editor-header {
+  background: var(--surface-variant) !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Menubar (File/Edit/…) */
+:host ::ng-deep .tox-menubar {
+  background: var(--surface-variant) !important;
+  border-bottom: 1px solid var(--border-color);
+  padding: 6px 10px;
+}
+:host ::ng-deep .tox .tox-mbtn {
+  border-radius: 10px;
+  color: var(--on-surface);
+  background: transparent;
+}
+:host ::ng-deep .tox .tox-mbtn:hover,
+:host ::ng-deep .tox .tox-mbtn:focus {
+  background: var(--hover-bg);
+  color: var(--on-surface);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 30%, transparent);
+}
+
+/* Toolbar ribbon */
+:host ::ng-deep .tox-toolbar-overlord {
+  background: var(--surface-variant) !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Primary toolbar row */
+:host ::ng-deep .tox-toolbar,
+:host ::ng-deep .tox-toolbar__primary {
+  padding: 10px 14px;
+  gap: 12px;
+}
+
+/* Group “chips” */
+:host ::ng-deep .tox-toolbar__group {
+  display: inline-flex; /* prevent weird wrapping */
+  flex-wrap: nowrap;
+  background: color-mix(in oklab, var(--elevated) 92%, transparent);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  box-shadow: 0 2px 6px
+    color-mix(in oklab, var(--shadow-color) 80%, transparent);
+}
+
+/* Buttons (icons, split, selects) */
+:host ::ng-deep .tox .tox-tbtn,
+:host ::ng-deep .tox .tox-split-button {
+  border-radius: 10px;
+  color: var(--on-surface);
+  background: transparent;
+  min-height: 32px;
+}
+
+/* ensure icons follow text color in both skins */
+:host ::ng-deep .tox .tox-tbtn svg,
+:host ::ng-deep .tox .tox-tbtn .tox-icon svg {
+  fill: currentColor;
+}
+
+/* States */
+:host ::ng-deep .tox .tox-tbtn:hover {
+  background: var(--hover-bg);
+}
+:host ::ng-deep .tox .tox-tbtn:active {
+  background: color-mix(in oklab, var(--primary) 16%, var(--hover-bg));
+}
+:host ::ng-deep .tox .tox-tbtn--enabled,
+:host ::ng-deep .tox .tox-tbtn--enabled:hover {
+  background: color-mix(in oklab, var(--primary) 22%, transparent);
+  color: var(--on-primary);
+}
+:host ::ng-deep .tox .tox-tbtn:focus {
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 40%, transparent);
+}
+
+/* Density – compact */
+:host(.pe-editor--compact) ::ng-deep .tox-toolbar,
+:host(.pe-editor--compact) ::ng-deep .tox-toolbar__primary {
+  padding: 6px 8px;
+  gap: 8px;
+}
+:host(.pe-editor--compact) ::ng-deep .tox-toolbar__group {
+  padding: 2px;
+  gap: 2px;
+}
+
+/* Font/Paragraph/Size selectors */
+:host ::ng-deep .tox .tox-listbox--select,
+:host ::ng-deep .tox .tox-split-button {
+  border: 1px solid var(--border-color);
+  background: var(--elevated);
+  border-radius: 10px;
+}
+:host ::ng-deep .tox .tox-tbtn__select-label,
+:host ::ng-deep .tox .tox-listbox__select-label {
+  color: var(--on-surface);
+}
+
+/* Menus & popovers */
+:host ::ng-deep .tox .tox-menu,
+:host ::ng-deep .tox .tox-pop {
+  background: var(--elevated);
+  color: var(--on-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px var(--shadow-color);
+}
+:host ::ng-deep .tox .tox-collection__item {
+  color: var(--on-surface);
+}
+:host ::ng-deep .tox .tox-collection__item--active,
+:host ::ng-deep .tox .tox-collection__item--enabled {
+  background: var(--hover-bg);
+}
+
+/* Stage (outside the page) for Word feel */
+:host ::ng-deep .tox-editor-container {
+  background: var(--main) !important;
+}
+:host ::ng-deep .tox-edit-area__iframe {
+  background: var(--main) !important;
+}
+
+/* Status bar */
+:host ::ng-deep .tox .tox-statusbar {
+  background: var(--surface-variant) !important;
+  color: var(--muted);
+  border-top: 1px solid var(--border-color);
+  padding: 6px 10px;
+}
+:host ::ng-deep .tox .tox-statusbar__path-item,
+:host ::ng-deep .tox .tox-statusbar__wordcount {
+  color: var(--muted);
+}
+
+/* Dialogs */
+:host ::ng-deep .tox .tox-dialog {
+  background: var(--elevated);
+  color: var(--on-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 18px 48px var(--shadow-color);
+}
+:host ::ng-deep .tox .tox-dialog__footer {
+  background: var(--surface-variant);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Dialog buttons */
+:host ::ng-deep .tox .tox-button--primary {
+  background: var(--primary) !important;
+  color: var(--on-primary) !important;
+  border-radius: 12px;
+  border: 0;
+}
+:host ::ng-deep .tox .tox-button--secondary {
+  background: transparent !important;
+  color: var(--on-surface) !important;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+:host ::ng-deep .tox .tox-button--primary:hover {
+  filter: brightness(0.96);
+}
+:host ::ng-deep .tox .tox-button--secondary:hover {
+  background: var(--hover-bg);
+}
+
+/* Inline notifications */
+:host ::ng-deep .tox .tox-notification--success {
+  background: color-mix(in oklab, var(--success) 16%, transparent);
+}
+:host ::ng-deep .tox .tox-notification--warning {
+  background: color-mix(in oklab, var(--warning) 16%, transparent);
+}
+:host ::ng-deep .tox .tox-notification--error {
+  background: color-mix(in oklab, var(--danger) 16%, transparent);
+}
+
+/* Focus rings (a11y) */
+:host ::ng-deep .tox .tox-tbtn:focus-visible,
+:host ::ng-deep .tox .tox-mbtn:focus-visible,
+:host ::ng-deep .tox .tox-listbox--select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
+/* Ensure the editable body inherits theme tokens */
+:host ::ng-deep #tinymce.mce-content-body {
+  background: var(--bs-card-bg, var(--surface)) !important;
+  color: var(--on-surface, #14161a) !important;
+}
+
+/* Theme-specific icon contrast tweaks */
+:host-context(html.dark) ::ng-deep .tox .tox-tbtn:hover,
+:host-context(html.dark) ::ng-deep .tox .tox-tbtn:active {
+  color: #fff !important;
+}
+:host-context(html.light) ::ng-deep .tox .tox-tbtn:hover,
+:host-context(html.light) ::ng-deep .tox .tox-tbtn:active {
+  color: #000 !important;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  :host ::ng-deep .tox-toolbar,
+  :host ::ng-deep .tox-toolbar__primary {
+    padding: 6px 8px;
+    gap: 8px;
+  }
+  :host ::ng-deep .tox-toolbar__group {
+    padding: 2px;
+    gap: 2px;
+  }
+}

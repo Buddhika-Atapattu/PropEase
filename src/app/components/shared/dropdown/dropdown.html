@@ -1,0 +1,65 @@
+<!--
+  Reusable file dropzone.
+  - Click to browse
+  - Drag & drop
+  - Paste (if enabled)
+-->
+
+<div
+  #dropHost
+  class="dz-shell"
+  [class.is-dragging]="isDragging"
+  [class.is-compact]="compact"
+  role="button"
+  tabindex="0"
+  (click)="onBrowseClick()"
+  (keyup.enter)="onBrowseClick()"
+  (keyup.space)="onBrowseClick()"
+  aria-label="Upload files"
+>
+  <div class="dz-inner">
+    <!-- <div class="dz-icon" aria-hidden="true">📁</div> -->
+    <mat-icon class="dz-icon" aria-hidden="true">cloud_upload</mat-icon>
+    <div class="dz-title">Drop files to upload</div>
+    <div class="dz-sub">or click to browse or Ctrl + v</div>
+  </div>
+
+  <input
+    #fileInput
+    class="dz-input"
+    type="file"
+    [attr.accept]="accept"
+    [attr.multiple]="multiple ? '' : null"
+    (change)="onFileInputChanged($event)"
+  />
+</div>
+
+<!-- Previews (optional) -->
+<div class="dz-previews" *ngIf="showPreviews && queue.length">
+  <div class="preview-chip" *ngFor="let item of queue; let i = index">
+    <div class="flip">
+      <div class="front">
+        <img
+          [src]="item.previewDataUrl || 'data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect width=%22200%22 height=%22200%22 fill=%22%23f1f5f9%22/><text x=%2250%22 y=%22105%22 fill=%22%2394a3b8%22 font-size=%2214%22 font-family=%22Arial%22>no preview</text></svg>'"
+          alt="preview"
+        />
+      </div>
+      <div class="back">
+        <div class="content">
+          <strong>{{ item.file.name }}</strong><br />
+          {{ (item.file.size / 1024) | number:'1.0-0' }} KB
+        </div>
+        <div class="meta">{{ item.file.type || 'unknown type' }}</div>
+      </div>
+    </div>
+
+    <button
+      class="remove"
+      type="button"
+      (click)="removeAt(i)"
+      aria-label="Remove"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</div>

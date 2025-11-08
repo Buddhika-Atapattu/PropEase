@@ -45,9 +45,9 @@ export class LeaseAgreements implements OnInit, OnDestroy, AfterViewInit, OnChan
   protected PDFURL: SafeResourceUrl | null = null;
   protected pdfBlob: string = '';
 
-  protected readonly definedMaleDummyImageURL = '/Images/user-images/dummy-user/dummy-user.jpg';
-  protected readonly definedWomanDummyImageURL = '/Images/user-images/dummy-user/dummy_woman.jpg';
-  protected definedImage: string = '/Images/user-images/dummy-user/dummy-user.jpg';
+  protected readonly definedMaleDummyImageURL = 'Images/user-images/dummy-user/dummy-user.jpg';
+  protected readonly definedWomanDummyImageURL = 'Images/user-images/dummy-user/dummy_woman.jpg';
+  protected definedImage: string = 'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedImageExtentionArray: string[] = ['jpg', 'webp', 'jpeg', 'png', 'ico', 'gif'];
 
   constructor (

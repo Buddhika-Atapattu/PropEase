@@ -59,6 +59,7 @@ import {
 import {CryptoService} from '../../services/cryptoService/crypto.service';
 import {UserControllerService} from '../../services/userController/user-controller.service';
 import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import {TextEditorComponent} from '../../components/shared/textEditor/text-editor';
 
 interface userAccessType {
   access: string[];
@@ -99,9 +100,9 @@ interface MODEL_CHECK {
     NotificationDialogComponent,
     ProgressBarComponent,
     ImageCropperComponent,
-    EditorComponent,
     CameraBoxComponent,
     SkeletonLoaderComponent,
+    TextEditorComponent
   ],
   standalone: true,
   templateUrl: './add-new-user.component.html',
@@ -116,11 +117,11 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(CameraBoxComponent) cameraBox!: CameraBoxComponent;
 
   protected readonly definedMaleDummyImageURL =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL =
-    '/Images/user-images/dummy-user/dummy_woman.jpg';
+    'Images/user-images/dummy-user/dummy_woman.jpg';
   protected definedImage: string =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
 
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -296,9 +297,9 @@ export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private iconCreator() {
     const icons = [
-      {name: 'camera', path: '/Images/Icons/camera.svg'},
-      {name: 'upload', path: '/Images/Icons/upload.svg'},
-      {name: 'insert', path: '/Images/Icons/user-plus.svg'},
+      {name: 'camera', path: 'Images/Icons/camera.svg'},
+      {name: 'upload', path: 'Images/Icons/upload.svg'},
+      {name: 'insert', path: 'Images/Icons/user-plus.svg'},
     ];
 
     for(let icon of icons) {

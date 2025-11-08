@@ -270,6 +270,7 @@ export interface MSG_DATA_TYPE extends UpdateUserType {
 }
 
 export interface MSG {
+  success?: boolean;
   status: string;
   message: string;
   data: any;
@@ -305,6 +306,9 @@ export interface UDER_DOC_TYPES extends MSG_WITH_BASEUSER {
 })
 export class APIsService {
   private isBrowser: boolean;
+  private baseURL: string = 'http://localhost:3000';
+  private userAPI: string = 'api-user'
+
   constructor (
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -315,7 +319,7 @@ export class APIsService {
   public async getAllUsers(): Promise<UsersType[]> {
     return (
       (await firstValueFrom(
-        this.http.get<UsersType[]>('http://localhost:3000/api-user/users')
+        this.http.get<UsersType[]>(`${this.baseURL}/${this.userAPI}/users`)
       ))
     );
   }
@@ -324,7 +328,7 @@ export class APIsService {
     return (
       (await firstValueFrom(
         this.http.post<MSG>(
-          'http://localhost:3000/api-user/verify-user',
+          `${this.baseURL}/${this.userAPI}/verify-user`,
           user
         )
       ))
@@ -347,7 +351,7 @@ export class APIsService {
     if(username) {
       const data = await firstValueFrom(
         this.http.put<MSG_DATA_TYPE>(
-          `http://localhost:3000/api-user/user-update/${username}`,
+          `${this.baseURL}/${this.userAPI}/user-update/${username}`,
           user
         )
       );
@@ -368,7 +372,7 @@ export class APIsService {
     }
     return await firstValueFrom(
       this.http.get<object | null>(
-        `http://localhost:3000/api-user/users-with-pagination/${start}/${limit}`,
+        `${this.baseURL}/${this.userAPI}/users-with-pagination/${start}/${limit}`,
         {params}
       )
     )
@@ -384,7 +388,7 @@ export class APIsService {
   public async getUserByUsername(username: string): Promise<validateType> {
     return await firstValueFrom(
       this.http.get<validateType>(
-        `http://localhost:3000/api-user/user-username/${username}`
+        `${this.baseURL}/${this.userAPI}/user-username/${username}`
       )
     );
   }
@@ -392,7 +396,7 @@ export class APIsService {
   public async getUserByEmail(email: string): Promise<validateType> {
     return await firstValueFrom(
       this.http.get<validateType>(
-        `http://localhost:3000/api-user/user-email/${email}`
+        `${this.baseURL}/${this.userAPI}/user-email/${email}`
       )
     );
   }
@@ -400,7 +404,7 @@ export class APIsService {
   public async getUserByPhone(phone: string): Promise<MSG> {
     return await firstValueFrom(
       this.http.get<MSG>(
-        `http://localhost:3000/api-user/user-phone/${phone}`
+        `${this.baseURL}/${this.userAPI}/user-phone/${phone}`
       )
     );
   }
@@ -408,7 +412,7 @@ export class APIsService {
   public async createNewUser(data: FormData): Promise<MSG_DATA_TYPE> {
     return await firstValueFrom(
       this.http.post<MSG_DATA_TYPE>(
-        'http://localhost:3000/api-user/create-user',
+        `${this.baseURL}/${this.userAPI}/create-user`,
         data
       )
     );
@@ -417,7 +421,7 @@ export class APIsService {
   public async generateToken(username: string): Promise<MSG_DATA_TYPE> {
     return await firstValueFrom(
       this.http.post<MSG_DATA_TYPE>(
-        'http://localhost:3000/api-user/generate-token',
+        `${this.baseURL}/${this.userAPI}/generate-token`,
         {username}
       )
     );
@@ -429,7 +433,7 @@ export class APIsService {
   ): Promise<MSG_WITH_BASEUSER> {
     return await firstValueFrom(
       this.http.post<MSG_WITH_BASEUSER>(
-        `http://localhost:3000/api-user/user-document-upload/${username}`,
+        `${this.baseURL}/${this.userAPI}/user-document-upload/${username}`,
         data
       )
     );
@@ -438,7 +442,7 @@ export class APIsService {
   public async getUserByToken(token: string): Promise<MSG_WITH_BASEUSER> {
     return await firstValueFrom(
       this.http.get<MSG_WITH_BASEUSER>(
-        `http://localhost:3000/api-user/user-token/${token}`
+        `${this.baseURL}/${this.userAPI}/user-token/${token}`
       )
     );
   }
@@ -446,7 +450,7 @@ export class APIsService {
   public async getUserDocuments(username: string): Promise<UDER_DOC_TYPES> {
     return await firstValueFrom(
       this.http.get<UDER_DOC_TYPES>(
-        `http://localhost:3000/api-user/uploads/${username}/documents`
+        `${this.baseURL}/${this.userAPI}/uploads/${username}/documents`
       )
     );
   }
@@ -501,36 +505,7 @@ export class APIsService {
   public async deleteUserByUsername(username: string, deletedBy: string): Promise<MSG_DATA_TYPE> {
     return await firstValueFrom(
       this.http.delete<MSG_DATA_TYPE>(
-        `http://localhost:3000/api-user/user-delete/${username}/${deletedBy}`
-      )
-    );
-  }
-
-  public async insertTenant(data: FormData): Promise<MSG> {
-    return await firstValueFrom(
-      this.http.post<MSG>('http://localhost:3000/api-tenant/insertTenant', data)
-    );
-  }
-  public async getAllTenants(): Promise<MSG> {
-    return await firstValueFrom(
-      this.http.get<MSG>('http://localhost:3000/api-tenant/get-all-tenants')
-    );
-  }
-  public async deleteTenant(username: string, deletor: string): Promise<MSG> {
-    return await firstValueFrom(
-      this.http.delete<MSG>(
-        `http://localhost:3000/api-tenant/delete-tenant/${username}/${deletor}`
-      )
-    );
-  }
-  public async getTenantMobileFileUpload(
-    token: string,
-    data: FormData
-  ): Promise<MSG> {
-    return await firstValueFrom(
-      this.http.post<MSG>(
-        `http://localhost:3000/api-file-transfer/get-tenant-mobile-file-upload/${token}`,
-        data
+        `${this.baseURL}/${this.userAPI}/user-delete/${username}/${deletedBy}`
       )
     );
   }

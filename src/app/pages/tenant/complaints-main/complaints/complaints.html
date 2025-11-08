@@ -1,5 +1,148 @@
 <app-notification></app-notification>
+<app-progress-bar></app-progress-bar>
+
 <div *ngIf="mode !== null" class="main-panel">
-  <h2>Complaint Dashboard Area</h2>
-  <p>This is the main content panel for propease-fontend users.</p>
+  <div class="container-fluid">
+    <!-- Page Head -->
+    <div class="row">
+      <div class="col-12">
+        <h1>Tenant Complaint Management</h1>
+        <hr />
+      </div>
+
+      <!-- Create button (available to anyone who can create complaints) -->
+      <div
+        class="clo-xl-3 col-md-4 col-12 d-flex justify-content-start align-items-center"
+      >
+        <button
+          type="button"
+          class="btn btn-warning"
+          (click)="createComplaints()"
+        >
+          Create Complaints
+        </button>
+      </div>
+    </div>
+
+    <!-- ───────────────────────────────────────────────────────────────
+         TENANT SECTION (visible when NOT admin/operator/manager)
+         Shows only the logged-in tenant's complaints
+         ─────────────────────────────────────────────────────────────── -->
+    <ng-container *ngIf="!isAdminLike; else adminBlock">
+      <div class="row my-4">
+        <div class="col-12">
+          <h4 class="text-default">My Complaints</h4>
+          <hr />
+        </div>
+      </div>
+
+      <div class="row my-2">
+        <div class="col-12">
+          <app-custom-table
+            [(isReload)]="tenantIsReloading"
+            [(pageSize)]="tenantPageSize"
+            [(pageSizeOptions)]="tenantPageSizeOptions"
+            [(pageIndex)]="tenantPageIndex"
+            [(pageCount)]="tenantPageCount"
+            [(tableType)]="tenantTableType"
+            [(search)]="tenantSearch"
+            [(buttonAction)]="viewActionButton"
+            [(buttonOperation)]="editOperationButton"
+            [(totalDataCount)]="tenantTotalDataCount"
+            [(buttonActionTrigger)]="tenantButtonActionTrigger"
+            [(buttonOperationTrigger)]="tenantButtonOperationTrigger"
+            [data]="tenantTableData"
+            [columns]="complaintTableColumns"
+            [loggedUser]="loggedUser"
+            [isLoading]="isLoading"
+            [fullDataCount]="tenantAllData.length"
+          ></app-custom-table>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ───────────────────────────────────────────────────────────────
+         ADMIN SECTION (visible when admin/operator/manager)
+         Shows all complaints across tenants
+         ─────────────────────────────────────────────────────────────── -->
+    <ng-template #adminBlock>
+      <div class="row my-4">
+        <div class="col-12">
+          <h4 class="text-default">All Complaints (Admin)</h4>
+          <hr />
+        </div>
+      </div>
+
+      <!-- Chart row -->
+      <div class="row d-flex justify-content-center align-items-center">
+        <div class="col-xl-6 col-lg-12 col-md-12 col-12 my-3">
+          <h4 class="mb-3">Based on status</h4>
+          <ng-container *ngIf="!adminStatusPieChart">
+            <app-skeleton-loader
+              [Mode]="mode"
+              [height]="'10rem'"
+              [width]="'100%'"
+              [borderRadius]="'0.5rem'"
+            >
+            </app-skeleton-loader>
+          </ng-container>
+          <div class="gc-card" *ngIf="adminStatusPieChart">
+            <google-chart
+              [type]="adminStatusPieChart.type"
+              [columns]="adminStatusPieChart.columns"
+              [data]="adminStatusPieChart.data"
+              [options]="adminStatusPieChart.options"
+            >
+            </google-chart>
+          </div>
+        </div>
+        <div class="col-xl-6 col-lg-12 col-md-12 col-12 my-3">
+          <h4 class="mb-3">Based on category</h4>
+          <ng-container *ngIf="!adminCategoryBarChart">
+            <app-skeleton-loader
+              [Mode]="mode"
+              [height]="'10rem'"
+              [width]="'100%'"
+              [borderRadius]="'0.5rem'"
+            >
+            </app-skeleton-loader>
+          </ng-container>
+          <div class="gc-card" *ngIf="adminCategoryBarChart">
+            <google-chart
+              [type]="adminCategoryBarChart.type"
+              [columns]="adminCategoryBarChart.columns"
+              [data]="adminCategoryBarChart.data"
+              [options]="adminCategoryBarChart.options"
+            >
+            </google-chart>
+          </div>
+        </div>
+      </div>
+      <!-- End chart row -->
+
+      <div class="row my-2">
+        <div class="col-12">
+          <app-custom-table
+            [(isReload)]="adminIsReloading"
+            [(pageSize)]="adminPageSize"
+            [(pageSizeOptions)]="adminPageSizeOptions"
+            [(pageIndex)]="adminPageIndex"
+            [(pageCount)]="adminPageCount"
+            [(tableType)]="adminTableType"
+            [(search)]="adminSearch"
+            [(buttonAction)]="viewActionButton"
+            [(buttonOperation)]="editOperationButton"
+            [(totalDataCount)]="adminTotalDataCount"
+            [(buttonActionTrigger)]="adminButtonActionTrigger"
+            [(buttonOperationTrigger)]="adminButtonOperationTrigger"
+            [data]="adminTableData"
+            [columns]="complaintTableColumns"
+            [loggedUser]="loggedUser"
+            [isLoading]="isLoading"
+            [fullDataCount]="adminAllData.length"
+          ></app-custom-table>
+        </div>
+      </div>
+    </ng-template>
+  </div>
 </div>

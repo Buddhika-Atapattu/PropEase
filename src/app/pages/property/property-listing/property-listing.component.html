@@ -17,7 +17,7 @@
   >
     <div class="container-fluid">
       <!-- page indicators -->
-      <div class="row page-indecator">
+      <div class="row page-indicator">
         <span
           ><button
             type="button"
@@ -178,16 +178,13 @@
               <div class="col-xl-12">
                 <h3 class="title">Discription:</h3>
                 <div>
-                  <editor
-                    apiKey="azinteymcwk49hq4199jdh7mjyoqb88jqz88upe7gestbrp5"
-                    [init]="init"
-                    [(ngModel)]="description"
-                    [ngModelOptions]="{ standalone: true }"
-                    name="description"
-                    class="property-description"
-                    aria-placeholder="user bio"
-                    aria-autocomplete="none"
-                  />
+                  <app-text-editor
+                    [id]="'description'"
+                    [name]="'description'"
+                    [placeholder]="'Property description'"
+                    [(modelValue)]="description"
+                  >
+                  </app-text-editor>
                 </div>
               </div>
             </div>
@@ -1507,16 +1504,13 @@
               <div class="col-xl-12">
                 <h4 class="title mt-5 mb-1">Internal Note:</h4>
                 <div>
-                  <editor
-                    apiKey="azinteymcwk49hq4199jdh7mjyoqb88jqz88upe7gestbrp5"
-                    [init]="init"
-                    [(ngModel)]="internalNote"
-                    [ngModelOptions]="{ standalone: true }"
-                    name="internalNote"
-                    class="property-description"
-                    aria-placeholder="internal note"
-                    aria-autocomplete="none"
-                  />
+                  <app-text-editor
+                    [id]="'internalNote'"
+                    [name]="'internalNote'"
+                    [placeholder]="'Property internal admin note'"
+                    [(modelValue)]="internalNote"
+                  >
+                  </app-text-editor>
                 </div>
               </div>
             </div>

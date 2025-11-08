@@ -67,6 +67,7 @@ import {AuthService} from '../../services/auth/auth.service';
 import {SkeletonLoaderComponent} from '../../components/shared/skeleton-loader/skeleton-loader.component';
 import {UserControllerService} from '../../services/userController/user-controller.service';
 import {HttpErrorResponse} from '@angular/common/http';
+import {TextEditorComponent} from '../../components/shared/textEditor/text-editor';
 
 interface userAccessType {
   access: string[];
@@ -105,9 +106,9 @@ interface MODEL_CHECK {
     NotificationDialogComponent,
     ProgressBarComponent,
     ImageCropperComponent,
-    EditorComponent,
     CameraBoxComponent,
     SkeletonLoaderComponent,
+    TextEditorComponent
   ],
   standalone: true,
   templateUrl: './edit-user.component.html',
@@ -124,11 +125,11 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected user: BaseUser | null = null;
   protected isLoading: boolean = true;
   protected readonly definedMaleDummyImageURL =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL =
-    '/Images/user-images/dummy-user/dummy_woman.jpg';
+    'Images/user-images/dummy-user/dummy_woman.jpg';
   protected definedImage: string =
-    '/Images/user-images/dummy-user/dummy-user.jpg';
+    'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedImageExtentionArray: string[] = [
     'jpg',
     'webp',
@@ -289,9 +290,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private iconCreator() {
     const icons = [
-      {name: 'camera', path: '/Images/Icons/camera.svg'},
-      {name: 'upload', path: '/Images/Icons/upload.svg'},
-      {name: 'insert', path: '/Images/Icons/user-plus.svg'},
+      {name: 'camera', path: 'Images/Icons/camera.svg'},
+      {name: 'upload', path: 'Images/Icons/upload.svg'},
+      {name: 'insert', path: 'Images/Icons/user-plus.svg'},
     ];
 
     for(let icon of icons) {

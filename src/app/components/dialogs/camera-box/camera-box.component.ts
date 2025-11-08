@@ -10,16 +10,16 @@ import {
   PLATFORM_ID,
   Inject,
 } from '@angular/core';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { Subscription } from 'rxjs';
-import { DomSanitizer } from '@angular/platform-browser';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {Subscription} from 'rxjs';
+import {DomSanitizer} from '@angular/platform-browser';
 
 @Component({
   selector: 'app-camera-box',
@@ -54,7 +54,7 @@ export class CameraBoxComponent implements OnInit, AfterViewInit, OnDestroy {
   private offsetX = 0;
   private offsetY = 0;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private matIconRegistry: MatIconRegistry,
@@ -65,21 +65,21 @@ export class CameraBoxComponent implements OnInit, AfterViewInit, OnDestroy {
     this.matIconRegistry.addSvgIcon(
       'close',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/wrong.svg'
+        'Images/Icons/wrong.svg'
       )
     );
   }
 
   ngOnInit(): void {
-    if (!this.isCameraSupported()) {
+    if(!this.isCameraSupported()) {
       alert('Camera API not supported in this browser.');
     }
   }
 
   async ngAfterViewInit(): Promise<void> {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       await this.requestCameraAccessAndEnumerate();
-      if (this.videoDevices.length && !this.selectedDeviceId) {
+      if(this.videoDevices.length && !this.selectedDeviceId) {
         this.selectedDeviceId = this.videoDevices[0].deviceId;
         await this.onSelectCamera(this.selectedDeviceId);
       }
@@ -96,7 +96,7 @@ export class CameraBoxComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private async requestCameraAccessAndEnumerate(): Promise<void> {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await navigator.mediaDevices.getUserMedia({video: true});
       this.mediaStream = stream;
 
       const video = this.videoRef.nativeElement;
@@ -111,7 +111,7 @@ export class CameraBoxComponent implements OnInit, AfterViewInit, OnDestroy {
       // }
 
       this.stopCamera(); // Stop temporary stream used for permission/device list
-    } catch (err) {
+    } catch(err) {
       console.error('Camera access or device enumeration failed:', err);
       alert('Failed to access camera devices. Check browser permissions.');
     }
@@ -123,17 +123,17 @@ export class CameraBoxComponent implements OnInit, AfterViewInit, OnDestroy {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { deviceId: { exact: deviceId } },
+        video: {deviceId: {exact: deviceId}},
       });
 
       this.mediaStream = stream;
       const video = this.videoRef.nativeElement;
       video.srcObject = stream;
       await video.play();
-    } catch (err: any) {
-      if (err.name === 'NotAllowedError') {
+    } catch(err: any) {
+      if(err.name === 'NotAllowedError') {
         alert('Camera access denied. Please enable it and try again.');
-      } else if (err.name === 'NotFoundError') {
+      } else if(err.name === 'NotFoundError') {
         alert('No camera device found.');
       } else {
         console.error('Failed to start camera:', err);
@@ -142,7 +142,7 @@ export class CameraBoxComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private stopCamera(): void {
-    if (this.mediaStream) {
+    if(this.mediaStream) {
       this.mediaStream.getTracks().forEach((track) => track.stop());
       this.mediaStream = null;
     }
@@ -157,7 +157,7 @@ export class CameraBoxComponent implements OnInit, AfterViewInit, OnDestroy {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if(!ctx) return;
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = canvas.toDataURL('image/png') || canvas.toDataURL();
@@ -182,7 +182,7 @@ export class CameraBoxComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected onMouseMove = (event: MouseEvent): void => {
-    if (this.isDragging) {
+    if(this.isDragging) {
       const box = this.cameraBoxRef.nativeElement;
       box.style.left = `${event.clientX - this.offsetX}px`;
       box.style.top = `${event.clientY - this.offsetY}px`;

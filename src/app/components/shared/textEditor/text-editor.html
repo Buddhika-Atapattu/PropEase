@@ -1,0 +1,12 @@
+<editor
+  class="pe-richtext"
+  [init]="init"
+  [(ngModel)]="innerValue"
+  (ngModelChange)="onEditorValueChange($event)"
+  [ngModelOptions]="{ standalone: true }"
+  [attr.aria-placeholder]="placeholder"
+  [disabled]="disabled"
+  [id]="id"
+  [name]="name"
+>
+</editor>

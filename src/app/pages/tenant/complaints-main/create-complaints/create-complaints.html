@@ -1,1 +1,180 @@
-<p>create-complaints works!</p>
+<app-notification></app-notification>
+<app-progress-bar></app-progress-bar>
+<div class="main-panel">
+  <div class="container-fluid">
+    <!-- Page title -->
+    <div class="row">
+      <div class="col-12">
+        <h1>Create Complaint</h1>
+        <hr />
+      </div>
+    </div>
+    <!-- End page title -->
+
+    <!-- Admin property table -->
+    <ng-container *ngIf="checkLoggedUserRole">
+      <div class="row my-4">
+        <div class="col-12">
+          <h4>Admin Panel</h4>
+          <hr />
+        </div>
+      </div>
+      <div class="row">
+        <app-custom-table
+          *ngIf="properties.length > 0"
+          [(isReload)]="isReloading"
+          [(pageSize)]="pageSize"
+          [(pageSizeOptions)]="pageSizeOptions"
+          [(pageIndex)]="pageIndex"
+          [(pageCount)]="pageCount"
+          [(tableType)]="tableType"
+          [(search)]="search"
+          [(buttonAction)]="actionButton"
+          [(buttonOperation)]="operationButton"
+          [(totalDataCount)]="totleDataCount"
+          [(buttonActionTrigger)]="actionButtonFunction"
+          [(buttonOperationTrigger)]="operationButtonFunction"
+          [data]="data"
+          [columns]="tableColumns"
+          [fullDataCount]="properties.length"
+        ></app-custom-table>
+      </div>
+    </ng-container>
+    <!-- End admin property table -->
+
+    <div class="row my-2">
+      <div class="col-12">
+        <h4>Complaint</h4>
+        <hr />
+      </div>
+    </div>
+
+    <!-- Display selected property -->
+    <ng-container *ngIf="property">
+      <div class="row my-2">
+        <div class="col-xl-6 col-md-6 col-12">
+          <div class="image-container rounded">
+            <img
+              [src]="property.images[0].imageURL"
+              alt="Selected property image"
+              class="rounded"
+            />
+          </div>
+        </div>
+        <div class="col-xl-6 col-md-6 col-12">
+          <h3 class="title my-2">{{property.title}}</h3>
+          <hr class="my-3" />
+          <h4 class="my-2">Property Address:</h4>
+          <p class="text-capitalize">
+            {{property.address.houseNumber}}, <br />
+            {{property.address.street}}, <br />
+            {{property.address.city}}, <br />
+            {{property.address.stateOrProvince}}, <br />
+            {{property.address.country}}, <br />
+            {{property.address.postcode}}.
+          </p>
+        </div>
+      </div>
+      <div class="row d-flex justify-content-end align-items-center">
+        <p
+          class="badge text-default d-flex justify-content-end align-items-center"
+        >
+          <ng-container *ngIf="property.id"
+            >Property ID: {{property.id}}</ng-container
+          >
+          | <ng-container *ngIf="leaseID">lease ID: {{leaseID}}</ng-container>
+        </p>
+      </div>
+    </ng-container>
+
+    <!-- End display selected property -->
+
+    <!-- Compalint data -->
+    <form
+      action=""
+      method="POST"
+      enctype="multipart/form-data"
+      (ngSubmit)="submit()"
+      class="profile-form"
+      autocomplete="off"
+      #comaplaintForm="ngForm"
+    >
+      <!-- Complaint title and category -->
+      <div class="row my-4">
+        <div class="col-xl-9 col-md-8 col-12">
+          <mat-form-field class="w-100">
+            <mat-label>Complaint Title</mat-label>
+            <input
+              matInput
+              required
+              [(ngModel)]="title"
+              name="complaintTitle"
+              #complaintTitle
+            />
+          </mat-form-field>
+        </div>
+        <div class="col-xl-3 col-md-4 col-12">
+          <mat-form-field class="w-100">
+            <mat-label>Complaint Category</mat-label>
+            <mat-select [(ngModel)]="category" required name="category">
+              <mat-option
+                *ngFor="let item of DEFINED_COMPLAINT_CATEGORIES"
+                [value]="item"
+              >
+                {{ item }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+      <!-- End complaint title and category -->
+
+      <!-- Complaint description -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <hr />
+          <app-text-editor
+            [id]="'description'"
+            [name]="'description'"
+            [placeholder]="'Details about complaint'"
+            [(modelValue)]="description"
+          >
+          </app-text-editor>
+        </div>
+      </div>
+      <!-- End complaint description -->
+
+      <div class="row my-2">
+        <div class="col-12">
+          <!-- create-complaints.html (example snippet) -->
+          <app-dropdown
+            [accept]="'image/*'"
+            [multiple]="true"
+            [maxFiles]="12"
+            [maxSizeBytes]="10 * 1024 * 1024"
+            [showPreviews]="true"
+            [compact]="false"
+            [enablePaste]="true"
+            (filesChange)="onQueueChanged($event)"
+            (filesAdded)="onNewFiles($event)"
+            (fileRemoved)="onRemovedFile($event)"
+          >
+          </app-dropdown>
+        </div>
+      </div>
+
+      <div class="row d-flex justify-content-end align-items-center">
+        <div
+          class="col-xl-3 col-md-4 col-12 d-flex justify-content-end align-items-center"
+        >
+          <button
+            type="submit"
+            class="btn rounded btn-view d-flex justify-content-center align-items-center"
+          >
+            <mat-icon class="mx-2">save</mat-icon> Create
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

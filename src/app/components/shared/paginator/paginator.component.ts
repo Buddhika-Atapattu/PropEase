@@ -12,25 +12,25 @@ import {
   ViewChild,
   Inject,
 } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { Subscription } from 'rxjs';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatMomentDateModule } from '@angular/material-moment-adapter';
-import { MatButtonModule } from '@angular/material/button';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { APIsService, UsersType } from '../../../services/APIs/apis.service';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import {CommonModule, isPlatformBrowser} from '@angular/common';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
+import {Subscription} from 'rxjs';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatDialogModule} from '@angular/material/dialog';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {MatPaginatorModule} from '@angular/material/paginator';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatMomentDateModule} from '@angular/material-moment-adapter';
+import {MatButtonModule} from '@angular/material/button';
+import {CryptoService} from '../../../services/cryptoService/crypto.service';
+import {APIsService, UsersType} from '../../../services/APIs/apis.service';
+import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
 
 export interface FileExportButtonTypeByExtension {
   type:
@@ -121,7 +121,7 @@ export class PaginatorComponent
   // protected pageSizeOptions: number[] = [];
   protected selectedPageSize: number = 0;
 
-  constructor(
+  constructor (
     @Inject(PLATFORM_ID) private platformId: Object,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
@@ -137,30 +137,30 @@ export class PaginatorComponent
   ngOnInit() {
   }
 
-  ngAfterViewInit(): void { }
+  ngAfterViewInit(): void {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['pageSizeOptions'] && this.pageSizeOptions?.length > 0) {
+    if(changes['pageSizeOptions'] && this.pageSizeOptions?.length > 0) {
       const newPageSize = this.pageSizeOptions[0];
       const shouldResetPageIndex = this.selectedPageSize !== newPageSize;
 
       this.selectedPageSize = newPageSize;
 
-      if (shouldResetPageIndex && this.pageIndex !== 0) {
+      if(shouldResetPageIndex && this.pageIndex !== 0) {
         this.pageIndex = 0;
         this.pageIndexChange.emit(this.pageIndex);
       }
     }
 
-    if (changes['pageSize']) {
+    if(changes['pageSize']) {
       const newSize = changes['pageSize'].currentValue || 0;
-      if (this.pageSize !== newSize) {
+      if(this.pageSize !== newSize) {
         this.pageSize = newSize;
       }
     }
   }
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {}
 
   private registerCustomIcons(): void {
     const iconMap = {
@@ -190,18 +190,18 @@ export class PaginatorComponent
       image: 'file-types/image.svg',
     };
 
-    for (const [name, path] of Object.entries(iconMap)) {
+    for(const [name, path] of Object.entries(iconMap)) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `/Images/Icons/${path}`
+          `Images/Icons/${path}`
         )
       );
     }
   }
 
   protected chooceIcon(type: string): string {
-    switch (type) {
+    switch(type) {
       case 'doc':
         return 'word';
       case 'docx':
@@ -285,7 +285,7 @@ export class PaginatorComponent
   }
 
   private paginationChecker(type: string): number {
-    switch (type) {
+    switch(type) {
       case 'doubleBackword':
         return -this.pageSize * 2;
       case 'backward':
@@ -304,10 +304,10 @@ export class PaginatorComponent
     let newIndex = this.pageIndex + delta;
 
     // Clamp the value within [0, pageCount - 1]
-    if (newIndex < 0) newIndex = 0;
-    if (newIndex >= this.pageCount) newIndex = this.pageCount - 1;
+    if(newIndex < 0) newIndex = 0;
+    if(newIndex >= this.pageCount) newIndex = this.pageCount - 1;
 
-    if (newIndex !== this.pageIndex) {
+    if(newIndex !== this.pageIndex) {
       this.pageIndex = newIndex;
       this.pageIndexChange.emit(this.pageIndex);
     }

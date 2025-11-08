@@ -2,7 +2,7 @@ const CACHE_NAME = "propease-fontend-cache-v1";
 const urlsToCache = [
   "/",
   "/index.html",
-  "/Images/company-images/LogoIcon.png",
+  "Images/company-images/LogoIcon.png",
   "/styles.css",
   // Add more static resources here
 ];

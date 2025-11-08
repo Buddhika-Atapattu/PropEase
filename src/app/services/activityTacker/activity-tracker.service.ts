@@ -6,12 +6,8 @@ import { AuthService, BaseUser, LoggedUserType } from '../auth/auth.service';
 import { firstValueFrom, Subscription, pipe, take } from 'rxjs';
 import { CryptoService } from '../cryptoService/crypto.service';
 import * as moment from 'moment';
+import{MSG} from '../APIs/apis.service'
 
-export interface MSG {
-  status: string;
-  message: string;
-  data: any;
-}
 
 @Injectable({
   providedIn: 'root',

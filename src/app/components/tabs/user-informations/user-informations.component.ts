@@ -47,13 +47,13 @@ export class UserInformationsComponent implements OnInit, OnChanges {
     this.matIconRegistry.addSvgIcon(
       'active',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/correct.svg'
+        'Images/Icons/correct.svg'
       )
     );
     this.matIconRegistry.addSvgIcon(
       'inactive',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/wrong.svg'
+        'Images/Icons/wrong.svg'
       )
     );
   }

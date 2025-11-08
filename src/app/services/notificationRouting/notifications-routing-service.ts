@@ -1,69 +1,113 @@
 // Path: src/app/services/notificationsRouting/notification-routing-service.ts
 // ─────────────────────────────────────────────────────────────────────────────
-// Purpose
-//   Convert either a Notification OR a direct backend action response into an
-//   Angular UrlTree and (optionally) navigate there.
+// PURPOSE
+//   Convert a Notification (or a direct backend action response) into a
+//   Router UrlTree, with optional navigation. This centralizes all routing
+//   rules for notifications so deep links remain consistent and type-safe.
 //
-// Why this file changed
-//   - Backend "metadata" is now { refId: string; data?: Record<string, any> }.
-//   - Some flows (restore/permanent_delete) respond directly from controllers
-//     with: { success, message, category, refId, restored? }.
-//   - Users & Tenants should be navigated by tokenized username.
+// WHY THIS EXISTS
+//   • Our backend sends notifications with metadata: { refId, data? }.
+//   • Some actions (restore/permanent_delete) reply directly with:
+//       { success, message, category, refId, restored? }.
+//   • Certain routes require a token (e.g., username → tokenized profile).
 //
-// Usage
+// DESIGN NOTES
+//   • Exact-title routing: TITLE_INDEX maps titles → route logic.
+//   • Generic fallback by category ensures sensible defaults.
+//   • “Complaint” uses code first (refId / data) then falls back to id.
+//   • SSR/Electron safe: no direct window/document usage.
+//
+// USAGE
 //   const url = await notificationsRoutingService.routeForAny(notificationOrResponse);
-//   router.navigateByUrl(url);
+//   this.router.navigateByUrl(url);
 //
-// Notes
-//   - "Notification" is your app DTO (from your notification service).
-//   - "BackendActionResult" below is a local type for controller responses.
-//   - We carefully conditionally read fields to remain strict-mode friendly.
+// CODING STANDARD
+//   • Strong typing, no ambient anys.
+//   • Guard token usage and avoid unnecessary network calls.
+//   • Case-insensitive path reads for metadata.data.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {Injectable} from '@angular/core';
 import {Router, UrlTree} from '@angular/router';
 
+// Import your project DTO/types (kept external to avoid duplication)
 import {
-  Notification,        // your app-level Notification DTO
-  TitleCategory,       // 'User' | 'Tenant' | 'Property' | 'Lease' | ...
-  Title,               // exact title literals you use
+  Notification,   // Your app-level Notification DTO
+  TitleCategory,  // 'User' | 'Tenant' | 'Property' | 'Lease' | 'Complaint' | ...
+  Title,          // Exact title literals (e.g., 'New Complaint', 'Update User', ...)
 } from '../notifications/notification-service';
 
 import {APIsService} from '../APIs/apis.service';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Backend action response (from /restore or /permanent-delete endpoints).
-// Example:
-//   { success:true, message:"User restored", category:"User", refId:"PushpaLatha", restored:{_id:"..."} }
+// Lightweight helper types
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * IdLike — Values we treat as identifiers for building URLs.
+ * String or number is acceptable; undefined means “not found”.
+ */
+type IdLike = string | number | undefined;
+
+/**
+ * BackendActionResult — Shape of direct controller responses (non-Notification).
+ * Example:
+ *   { success:true, message:"User restored", category:"User", refId:"PushpaLatha", restored:{_id:"..."} }
+ *
+ * Notes:
+ *   • category can be a string fallback but we cast to TitleCategory when switching.
+ *   • refId is commonly a username, property ID, complaint code, etc.
+ *   • restored? may carry the newly restored entity’s _id (when applicable).
+ */
 export type BackendActionResult = {
   success: boolean;
   message: string;
   category: TitleCategory | string;
   refId: string;
-  restored?: {_id: string};   // present on restore
+  restored?: {_id: string};
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper types
-// ─────────────────────────────────────────────────────────────────────────────
-type IdLike = string | number | undefined;
-
+/**
+ * TitleHandler — Routing rule for a single exact title (e.g., 'New Complaint').
+ *  - category: Which category this title belongs to (for sanity/context).
+ *  - idPaths:  Paths to look up ids inside n.metadata.data (case-insensitive).
+ *  - pre:      Optional pre-resolution step (e.g., minting a token).
+ *  - toUrl:    The pure function to build a UrlTree from computed ids and pre.
+ *
+ * NOTE:
+ *  We keep username population opt-in: only if a handler declares username
+ *  paths will we attempt to read username and mint a token.
+ */
 type TitleHandler = {
   category: TitleCategory;
-  // All id paths are resolved inside n.metadata.data (case-insensitive)
   idPaths?: {
     property?: string[][];
     tenant?: string[][];
     lease?: string[][];
     username?: string[][];
+    complaintCode?: string[][]; // complaint code patterns
+    complaintId?: string[][];   // complaint id patterns
   };
   pre?: (
-    ids: {property?: IdLike; tenant?: IdLike; lease?: IdLike; username?: string}
+    ids: {
+      property?: IdLike;
+      tenant?: IdLike;
+      lease?: IdLike;
+      username?: string;
+      complaintCode?: string;
+      complaintId?: IdLike;
+    }
   ) => Promise<Partial<{token: string}>> | Partial<{token: string}>;
   toUrl: (ctx: {
     n: Notification;
-    ids: {property?: IdLike; tenant?: IdLike; lease?: IdLike; username?: string};
+    ids: {
+      property?: IdLike;
+      tenant?: IdLike;
+      lease?: IdLike;
+      username?: string;
+      complaintCode?: string;
+      complaintId?: IdLike;
+    };
     pre?: Partial<{token: string}>;
     router: Router;
   }) => UrlTree;
@@ -71,15 +115,21 @@ type TitleHandler = {
 
 @Injectable({providedIn: 'root'})
 export class NotificationsRoutingService {
+  /**
+   * Router — Angular Router used to build UrlTree and navigate.
+   * APIsService — Used to mint tokens (e.g., username → token).
+   */
   constructor (
     private readonly router: Router,
-    private readonly apis: APIsService,  // used to mint profile tokens
+    private readonly apis: APIsService,
   ) {}
 
   // ───────────────────────────────────────────────────────────────────────────
   // WHERE WE LOOK FOR IDS (inside n.metadata.data). Keys are case-insensitive.
+  // Each entry is a list of alternative paths; the first non-empty wins.
   // ───────────────────────────────────────────────────────────────────────────
 
+  /** Property id paths */
   private readonly PROP_ID_PATHS: string[][] = [
     ['propertyID'], ['propertyId'], ['propId'], ['id'],
     ['property', 'id'], ['property', 'propertyID'], ['property', 'propertyId'],
@@ -90,6 +140,7 @@ export class NotificationsRoutingService {
     ['DeletePropertyData', 'propertyID'], ['DeletePropertyData', 'propertyId'],
   ];
 
+  /** Tenant id paths */
   private readonly TENANT_ID_PATHS: string[][] = [
     ['tenantID'], ['tenantId'], ['id'],
     ['tenant', 'tenantID'], ['tenant', 'tenantId'], ['tenant', 'id'],
@@ -100,6 +151,7 @@ export class NotificationsRoutingService {
     ['DeleteTenantData', 'tenantID'], ['DeleteTenantData', 'tenantId'],
   ];
 
+  /** Lease id paths */
   private readonly LEASE_ID_PATHS: string[][] = [
     ['leaseID'], ['leaseId'], ['id'],
     ['lease', 'leaseID'], ['lease', 'leaseId'], ['lease', 'id'],
@@ -110,7 +162,11 @@ export class NotificationsRoutingService {
     ['DeleteLeaseData', 'leaseID'], ['DeleteLeaseData', 'leaseId'],
   ];
 
-  // Username detection (users & tenants). If not found in data, fallback to metadata.refId.
+  /**
+   * Username detection (users & tenants).
+   * If not found from data paths, we may fallback to refId — but ONLY when
+   * a handler actually declares `username` idPaths (opt-in).
+   */
   private readonly USERNAME_PATHS: string[][] = [
     ['username'], ['owner'],
     ['user', 'username'],
@@ -127,10 +183,35 @@ export class NotificationsRoutingService {
     ['DeleteTenantData', 'username'],
   ];
 
+  /** Complaint code paths (prefer code over id) */
+  private readonly COMPLAINT_CODE_PATHS: string[][] = [
+    ['code'], ['complaintCode'],
+    ['complaint', 'code'], ['complaint', 'complaintCode'],
+    ['NewComplaintData', 'code'], ['NewComplaintData', 'complaintCode'],
+    ['UpdatedComplaintData', 'code'], ['UpdatedComplaintData', 'complaintCode'],
+    ['UpdateComplaintData', 'code'], ['UpdateComplaintData', 'complaintCode'],
+    ['DeletedComplaintData', 'code'], ['DeletedComplaintData', 'complaintCode'],
+    ['DeleteComplaintData', 'code'], ['DeleteComplaintData', 'complaintCode'],
+    ['snapshot', 'code'], ['snapshot', 'complaintCode'],
+  ];
+
+  /** Complaint id paths (fallback if no code) */
+  private readonly COMPLAINT_ID_PATHS: string[][] = [
+    ['complaintID'], ['complaintId'], ['_id'], ['id'],
+    ['complaint', 'complaintID'], ['complaint', 'complaintId'], ['complaint', '_id'], ['complaint', 'id'],
+    ['NewComplaintData', 'complaintID'], ['NewComplaintData', 'complaintId'], ['NewComplaintData', '_id'], ['NewComplaintData', 'id'],
+    ['UpdatedComplaintData', 'complaintID'], ['UpdatedComplaintData', 'complaintId'], ['UpdatedComplaintData', '_id'], ['UpdatedComplaintData', 'id'],
+    ['UpdateComplaintData', 'complaintID'], ['UpdateComplaintData', 'complaintId'], ['UpdateComplaintData', '_id'], ['UpdateComplaintData', 'id'],
+    ['DeletedComplaintData', 'complaintID'], ['DeletedComplaintData', 'complaintId'], ['DeletedComplaintData', '_id'], ['DeletedComplaintData', 'id'],
+    ['DeleteComplaintData', 'complaintID'], ['DeleteComplaintData', 'complaintId'], ['DeleteComplaintData', '_id'], ['DeleteComplaintData', 'id'],
+    ['snapshot', '_id'], ['snapshot', 'id'],
+  ];
+
   // ───────────────────────────────────────────────────────────────────────────
-  // Exact-title handlers (fast path for common titles)
-  // NOTE: Delete handlers now include { selected: n._id } in query params.
+  // Exact-title handlers (“fast path” for common titles)
+  // Keep handlers tiny: resolve IDs → call router.createUrlTree(...)
   // ───────────────────────────────────────────────────────────────────────────
+
   private readonly TITLE_INDEX: Record<string, TitleHandler> = {
     // USER
     'New User': {
@@ -156,10 +237,9 @@ export class NotificationsRoutingService {
     'Delete User': {
       category: 'User',
       toUrl: ({n, router}) =>
-        router.createUrlTree(
-          ['/dashboard/deleted-items'],
-          {queryParams: {selected: n._id, category: 'User', type: 'delete'}}
-        ),
+        router.createUrlTree(['/dashboard/deleted-items'], {
+          queryParams: {selected: n._id, category: 'User', type: 'delete'},
+        }),
     },
 
     // PROPERTY
@@ -182,10 +262,9 @@ export class NotificationsRoutingService {
     'Delete Property': {
       category: 'Property',
       toUrl: ({n, router}) =>
-        router.createUrlTree(
-          ['/dashboard/deleted-items'],
-          {queryParams: {selected: n._id, category: 'Property', type: 'delete'}}
-        ),
+        router.createUrlTree(['/dashboard/deleted-items'], {
+          queryParams: {selected: n._id, category: 'Property', type: 'delete'},
+        }),
     },
 
     // TENANT
@@ -216,10 +295,9 @@ export class NotificationsRoutingService {
     'Delete Tenant': {
       category: 'Tenant',
       toUrl: ({n, router}) =>
-        router.createUrlTree(
-          ['/dashboard/deleted-items'],
-          {queryParams: {selected: n._id, category: 'Tenant', type: 'delete'}}
-        ),
+        router.createUrlTree(['/dashboard/deleted-items'], {
+          queryParams: {selected: n._id, category: 'Tenant', type: 'delete'},
+        }),
     },
 
     // LEASE
@@ -242,13 +320,51 @@ export class NotificationsRoutingService {
     'Delete Lease': {
       category: 'Lease',
       toUrl: ({n, router}) =>
-        router.createUrlTree(
-          ['/dashboard/deleted-items'],
-          {queryParams: {selected: n._id, category: 'Lease', type: 'delete'}}
-        ),
+        router.createUrlTree(['/dashboard/deleted-items'], {
+          queryParams: {selected: n._id, category: 'Lease', type: 'delete'},
+        }),
     },
 
-    // SYSTEM / BROADCAST
+    // COMPLAINTS — prefer complaintCode, fallback complaintId
+    'New Complaint': {
+      category: 'Complaint',
+      idPaths: {
+        complaintCode: this.COMPLAINT_CODE_PATHS,
+        complaintId: this.COMPLAINT_ID_PATHS,
+      },
+      toUrl: ({ids, router}) => {
+        const code = (ids.complaintCode && String(ids.complaintCode).trim()) || '';
+        const id = (ids.complaintId !== undefined && ids.complaintId !== null) ? String(ids.complaintId) : '';
+        const val = code || id;
+        return val
+          ? router.createUrlTree(['/dashboard/tenant/complaints/view-complaint', val])
+          : router.createUrlTree(['/dashboard/tenant/complaints']);
+      },
+    },
+    'Update Complaint': {
+      category: 'Complaint',
+      idPaths: {
+        complaintCode: this.COMPLAINT_CODE_PATHS,
+        complaintId: this.COMPLAINT_ID_PATHS,
+      },
+      toUrl: ({ids, router}) => {
+        const code = (ids.complaintCode && String(ids.complaintCode).trim()) || '';
+        const id = (ids.complaintId !== undefined && ids.complaintId !== null) ? String(ids.complaintId) : '';
+        const val = code || id;
+        return val
+          ? router.createUrlTree(['/dashboard/tenant/complaints/edit-complaint', val])
+          : router.createUrlTree(['/dashboard/all-notifications']);
+      },
+    },
+    'Delete Complaint': {
+      category: 'Complaint',
+      toUrl: ({n, router}) =>
+        router.createUrlTree(['/dashboard/deleted-items'], {
+          queryParams: {selected: n._id, category: 'Complaint', type: 'delete'},
+        }),
+    },
+
+    // SYSTEM / BROADCAST (general inbox)
     'System Update': {
       category: 'System',
       toUrl: ({router}) => router.createUrlTree(['/dashboard/all-notifications']),
@@ -260,12 +376,12 @@ export class NotificationsRoutingService {
   };
 
   // ───────────────────────────────────────────────────────────────────────────
-  // PUBLIC API
+  // PUBLIC API — MAIN ENTRY POINTS
   // ───────────────────────────────────────────────────────────────────────────
 
   /**
-   * Route for either a Notification or a backend action response.
-   * We detect which one it is and route accordingly.
+   * routeForAny — build a UrlTree for either a Notification or a BackendActionResult.
+   * This decides which path to use and delegates to the proper handler.
    */
   public async routeForAny(input: Notification | BackendActionResult): Promise<UrlTree> {
     const isBackend = this.isBackendResponse(input);
@@ -274,7 +390,10 @@ export class NotificationsRoutingService {
       : this.routeForNotification(input as Notification);
   }
 
-  /** Convenience: compute + navigate. */
+  /**
+   * navigateToAny — convenience: compute + navigate.
+   * Always returns a boolean indicating navigation success.
+   */
   public async navigateToAny(input: Notification | BackendActionResult): Promise<boolean> {
     try {
       const url = await this.routeForAny(input);
@@ -285,39 +404,48 @@ export class NotificationsRoutingService {
     }
   }
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Notification routing
-  // ───────────────────────────────────────────────────────────────────────────
-
+  /**
+   * routeFor — explicit Notification routing (alias).
+   */
   public async routeFor(n: Notification): Promise<UrlTree> {
     return this.routeForNotification(n);
   }
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // NOTIFICATION ROUTING
+  // ───────────────────────────────────────────────────────────────────────────
+
+  /**
+   * routeForNotification — full routing decision for a Notification.
+   * Steps:
+   *  1) Extract refId and data.
+   *  2) Try exact-title handlers (TITLE_INDEX).
+   *  3) If “destructive” → Deleted Items hub.
+   *  4) Generic by category fallback.
+   *  5) Final catch-all: inbox.
+   */
   private async routeForNotification(n: Notification): Promise<UrlTree> {
-    // 1) Prefer new interface fields
+    // 1) Normalize fields (defensive against partial payloads)
     const refId = typeof n?.metadata?.refId === 'string' ? n.metadata.refId.trim() : '';
     const data: Record<string, any> =
       n?.metadata?.data && typeof n.metadata.data === 'object' ? n.metadata.data : {};
 
-    // 2) Try exact-title fast path
+    // 2) Exact-title fast path
     const exact = await this.routeByExactTitle(n, refId, data);
     if(exact) return exact;
 
-    // 3) Destructive? send to Deleted Items hub with a selected id
+    // 3) Destructive → Deleted Items hub
     if(this.isDeleteOrDestructive(n)) {
-      return this.router.createUrlTree(
-        ['/dashboard/deleted-items'],
-        {
-          queryParams: {
-            selected: n._id,
-            category: n.category || undefined,
-            type: n.type || undefined,
-          }
-        }
-      );
+      return this.router.createUrlTree(['/dashboard/deleted-items'], {
+        queryParams: {
+          selected: n._id,
+          category: n.category || undefined,
+          type: n.type || undefined,
+        },
+      });
     }
 
-    // 4) Generic by category
+    // 4) Generic fallback by category
     switch(n.category) {
       case 'Property': {
         const propId: IdLike = refId || this.firstPresent(data, this.PROP_ID_PATHS);
@@ -354,7 +482,17 @@ export class NotificationsRoutingService {
           : this.router.createUrlTree(['/dashboard/tenant/payments-list'], {queryParams: {selected: n._id}});
       }
 
-      // Others → All Notifications inbox
+      case 'Complaint': {
+        // Prefer code, fallback to id, then (last) refId
+        const code = this.firstPresentStringFromPaths(data, this.COMPLAINT_CODE_PATHS) || (refId || '');
+        const id = this.firstPresent(data, this.COMPLAINT_ID_PATHS);
+        const val = (code && code.trim()) ? code.trim() : (id !== undefined ? String(id) : '');
+        return val
+          ? this.router.createUrlTree(['/dashboard/tenant/complaints/view-complaint', val])
+          : this.router.createUrlTree(['/dashboard/tenant/complaints'], {queryParams: {selected: n._id}});
+      }
+
+      // Other categories → notifications inbox
       case 'System':
       case 'Payment':
       case 'Registration':
@@ -362,25 +500,24 @@ export class NotificationsRoutingService {
       case 'Developer':
       case 'Agent':
       case 'Maintenance':
-      case 'Complaint':
         return this.router.createUrlTree(['/dashboard/all-notifications'], {queryParams: {selected: n._id}});
     }
 
-    // 5) Fallback
+    // 5) Fallback inbox
     return this.router.createUrlTree(['/dashboard/all-notifications'], {queryParams: {selected: n._id}});
   }
 
   // ───────────────────────────────────────────────────────────────────────────
-  // Backend action response routing (restore / permanent_delete)
+  // BACKEND ACTION RESPONSE ROUTING
   // ───────────────────────────────────────────────────────────────────────────
 
   /**
-   * Route for the direct controller response:
-   *   { success, message, category, refId, restored? }
-   * Logic:
-   *   - User/Tenant: tokenized route using refId as username
-   *   - Property/Lease: use restored._id (if present) or refId (if that's the id)
-   *   - Others: inbox/overview
+   * routeForBackend — routing for direct controller responses.
+   * Rules:
+   *  • User/Tenant: tokenized route by refId (username).
+   *  • Property/Lease: use restored._id if present, else refId.
+   *  • Complaint: prefer refId (code), else restored._id.
+   *  • Others: inbox/overview.
    */
   private async routeForBackend(res: BackendActionResult): Promise<UrlTree> {
     const category = String(res.category || '').trim() as TitleCategory;
@@ -419,20 +556,17 @@ export class NotificationsRoutingService {
           : this.router.createUrlTree(['/dashboard/tenant/payments-list']);
       }
 
-      // Other categories — send to an overview page or inbox
-      case 'System':
-      case 'Payment':
-      case 'Registration':
-      case 'Team':
-      case 'Developer':
-      case 'Agent':
-      case 'Maintenance':
-      case 'Complaint':
+      case 'Complaint': {
+        const val = (res.refId && String(res.refId).trim())
+          || (res.restored?._id && String(res.restored._id));
+        return val
+          ? this.router.createUrlTree(['/dashboard/tenant/complaints/view-complaint', val])
+          : this.router.createUrlTree(['/dashboard/tenant/complaints']);
+      }
+
+      default:
         return this.router.createUrlTree(['/dashboard/all-notifications']);
     }
-
-    // Fallback
-    return this.router.createUrlTree(['/dashboard/all-notifications']);
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -440,10 +574,8 @@ export class NotificationsRoutingService {
   // ───────────────────────────────────────────────────────────────────────────
 
   /**
-   * Recognize backend action responses more strictly:
-   * - must have 'success' and 'category'
-   * - must NOT have 'title' (real Notification has title)
-   * - must NOT have '_id' (real Notification has _id)
+   * isBackendResponse — stricter recognition of controller responses.
+   * Return true if it looks like a BackendActionResult (not a Notification).
    */
   private isBackendResponse(x: any): x is BackendActionResult {
     return !!(
@@ -456,7 +588,14 @@ export class NotificationsRoutingService {
     );
   }
 
-  /** Exact-title routing with tokenization where needed. */
+  /**
+   * routeByExactTitle — the “fast path” for hand-crafted titles.
+   * Steps:
+   *  1) Look up the handler by exact title.
+   *  2) Build the ids object by probing only the paths that handler requested.
+   *  3) Optionally run a pre-step (e.g., mint token).
+   *  4) Return handler.toUrl(...).
+   */
   private async routeByExactTitle(
     n: Notification,
     refId: string,
@@ -465,19 +604,40 @@ export class NotificationsRoutingService {
     const handler = this.TITLE_INDEX[n.title as Title];
     if(!handler) return undefined;
 
+    // Extract only what the handler asked for
     const ids = {
       property: handler.idPaths?.property ? this.firstPresent(data, handler.idPaths.property) : undefined,
       tenant: handler.idPaths?.tenant ? this.firstPresent(data, handler.idPaths.tenant) : undefined,
       lease: handler.idPaths?.lease ? this.firstPresent(data, handler.idPaths.lease) : undefined,
+
+      // Only populate username if handler declared username paths
       username: handler.idPaths?.username
         ? (this.firstPresentStringFromPaths(data, handler.idPaths.username) || (refId || undefined))
-        : (refId || undefined),
-    } as {property?: IdLike; tenant?: IdLike; lease?: IdLike; username?: string};
+        : undefined,
 
+      // Complaint code (prefer) and id (fallback) if handler requested them
+      complaintCode: handler.idPaths?.complaintCode
+        ? (this.firstPresentStringFromPaths(data, handler.idPaths.complaintCode) || (refId || undefined))
+        : undefined,
+
+      complaintId: handler.idPaths?.complaintId
+        ? this.firstPresent(data, handler.idPaths.complaintId)
+        : undefined,
+    } as {
+      property?: IdLike;
+      tenant?: IdLike;
+      lease?: IdLike;
+      username?: string;
+      complaintCode?: string;
+      complaintId?: IdLike;
+    };
+
+    // Optional pre-stage (e.g., to fetch a token)
     let pre: Partial<{token: string}> | undefined = undefined;
     if(handler.pre) pre = await Promise.resolve(handler.pre(ids));
 
-    if(!pre?.token && ids.username) {
+    // Only try to mint a token when the handler actually needs a username
+    if(!pre?.token && handler.idPaths?.username && ids.username) {
       const token = await this.safeUserToken(String(ids.username));
       if(token) pre = {...(pre || {}), token};
     }
@@ -486,8 +646,8 @@ export class NotificationsRoutingService {
   }
 
   /**
-   * Classify deletes/terminations/archives as “destructive” so we send users to the
-   * Deleted Items hub. Note that "restore" is **NOT** destructive.
+   * isDeleteOrDestructive — classify destructive actions so we route to Deleted Items.
+   * “restore” is NOT destructive.
    */
   private isDeleteOrDestructive(n: Notification): boolean {
     const t = (n.type || '').toLowerCase();
@@ -507,7 +667,10 @@ export class NotificationsRoutingService {
     );
   }
 
-  /** Case-insensitive nested read. */
+  /**
+   * getByPathCI — Case-insensitive nested read: obj['Foo']['Bar'] with ['foo','bar'].
+   * Returns undefined if any segment is missing.
+   */
   private getByPathCI(obj: any, path: string[]): any {
     if(!obj || !path?.length) return undefined;
     let cur: any = obj;
@@ -520,17 +683,28 @@ export class NotificationsRoutingService {
     return cur;
   }
 
-  /** First present (non-empty) value for any nested path. */
+  /**
+   * firstPresent — Return the first non-empty value for any nested path.
+   * • Empty strings are ignored.
+   * • Trims strings to avoid whitespace-only false positives.
+   */
   private firstPresent(obj: Record<string, any>, paths: string[][]): any {
     for(const p of paths) {
       const v = this.getByPathCI(obj, p);
-      if(v !== undefined && v !== null && (typeof v !== 'string' || v.trim() !== '')) return v;
-      if(typeof v === 'string' && v.trim() !== '') return v;
+      if(v === undefined || v === null) continue;
+      if(typeof v === 'string') {
+        const s = v.trim();
+        if(s) return s;
+        continue;
+      }
+      return v;
     }
     return undefined;
   }
 
-  /** First present non-empty STRING for any nested path. */
+  /**
+   * firstPresentStringFromPaths — As above, but ensures a string is returned.
+   */
   private firstPresentStringFromPaths(obj: Record<string, any>, paths: string[][]): string | undefined {
     for(const p of paths) {
       const v = this.getByPathCI(obj, p);
@@ -542,7 +716,10 @@ export class NotificationsRoutingService {
     return undefined;
   }
 
-  /** Resolve username (from metadata.data paths first, then fallback to refId). */
+  /**
+   * resolveUsername — Extract username from metadata.data paths first, then fallback to refId.
+   * Used only in generic category fallback for User/Tenant.
+   */
   private resolveUsername(data: Record<string, any>, refId?: string): string | undefined {
     const fromData = this.firstPresentStringFromPaths(data, this.USERNAME_PATHS);
     if(fromData && fromData.trim()) return fromData.trim();
@@ -550,7 +727,10 @@ export class NotificationsRoutingService {
     return undefined;
   }
 
-  /** Generate a secure profile token for username; return null on failure. */
+  /**
+   * safeUserToken — Generate a secure profile token for a username.
+   * Returns null on failure (never throws).
+   */
   private async safeUserToken(username: string): Promise<string | null> {
     try {
       const resp = await this.apis.generateToken(username);

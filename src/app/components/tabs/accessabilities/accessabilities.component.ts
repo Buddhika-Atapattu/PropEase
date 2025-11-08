@@ -7,15 +7,15 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import { APIsService, BaseUser } from '../../../services/APIs/apis.service';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { ActivatedRoute, Router } from '@angular/router';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-loader.component';
+import {APIsService, BaseUser} from '../../../services/APIs/apis.service';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {ActivatedRoute, Router} from '@angular/router';
+import {CryptoService} from '../../../services/cryptoService/crypto.service';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
+import {SkeletonLoaderComponent} from '../../shared/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-accessabilities',
@@ -33,7 +33,7 @@ export class AccessabilitiesComponent implements OnInit, OnChanges {
   protected isLoading: boolean = true;
   protected accessabilities: BaseUser['access'] | null = null;
 
-  constructor(
+  constructor (
     private APIs: APIsService,
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -47,18 +47,18 @@ export class AccessabilitiesComponent implements OnInit, OnChanges {
     this.matIconRegistry.addSvgIcon(
       'active',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/correct.svg'
+        'Images/Icons/correct.svg'
       )
     );
     this.matIconRegistry.addSvgIcon(
       'inactive',
       this.domSanitizer.bypassSecurityTrustResourceUrl(
-        '/Images/Icons/wrong.svg'
+        'Images/Icons/wrong.svg'
       )
     );
   }
   ngOnInit(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -70,7 +70,7 @@ export class AccessabilitiesComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['user'] && this.user) {
+    if(changes['user'] && this.user) {
       this.accessabilities = this.user.access;
 
     }

@@ -99,7 +99,7 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
   private qpSub: Subscription | null = null;
 
   /** Fallback image */
-  protected readonly dummyUserImg = '/Images/user-images/dummy-user/dummy-user.jpg';
+  protected readonly dummyUserImg = 'Images/user-images/dummy-user/dummy-user.jpg';
 
   constructor (
     private readonly windowRef: WindowsRefService,
@@ -495,19 +495,19 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
   private filterImagesBasedCategory(category: TitleCategory) {
     switch(category) {
       case 'User':
-        return '/Images/System-images/utilitiesImages/person.jpg';
+        return 'Images/System-images/utilitiesImages/person.jpg';
         break;
       case 'Agent':
-        return '/Images/System-images/utilitiesImages/agent.jpg';
+        return 'Images/System-images/utilitiesImages/agent.jpg';
         break;
       case 'Tenant':
-        return '/Images/System-images/utilitiesImages/tenant.jpg';
+        return 'Images/System-images/utilitiesImages/tenant.jpg';
         break;
       case 'Property':
-        return '/Images/System-images/utilitiesImages/property.jpg';
+        return 'Images/System-images/utilitiesImages/property.jpg';
         break;
       case 'Lease':
-        return '/Images/System-images/utilitiesImages/document.jpg';
+        return 'Images/System-images/utilitiesImages/document.jpg';
         break;
       default:
         return this.dummyUserImg;

@@ -7,12 +7,9 @@
 >
 </app-camera-box>
 <app-skeleton-loader></app-skeleton-loader>
-<div
-  *ngIf="mode !== null"
-  class="main-panel"
->
+<div *ngIf="mode !== null" class="main-panel">
   <div class="container-fluid overflow-hidden">
-    <div class="row page-indecator">
+    <div class="row page-indicator">
       <span
         ><button type="button" class="page-indicator-btn" (click)="goToUsers()">
           Users
@@ -526,15 +523,13 @@
         <div class="col-xl-12">
           <h3>User Bio:</h3>
           <div class="my-4">
-            <editor
-              apiKey="azinteymcwk49hq4199jdh7mjyoqb88jqz88upe7gestbrp5"
-              [init]="init"
-              [(ngModel)]="userBio"
-              [ngModelOptions]="{ standalone: true }"
-              name="userBio"
-              aria-placeholder="user bio"
-              aria-autocomplete="none"
-            />
+            <app-text-editor
+              [id]="'description'"
+              [name]="'description'"
+              [placeholder]="'Details about complaint'"
+              [(modelValue)]="userBio"
+            >
+            </app-text-editor>
           </div>
         </div>
       </div>

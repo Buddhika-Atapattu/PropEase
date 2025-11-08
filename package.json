@@ -13,7 +13,13 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "start:web": "ng serve -c development",
+    "start:electron": "npm run electron-dev",
+    "build:web": "ng build -c web",
+    "build:prod": "ng build -c production",
+    "build:electron": "ng build -c electron && npm run compile:electron",
+    "pack:electron": "npm run build:electron && electron-builder"
   },
   "dependencies": {
     "@angular/animations": "^20.0.2",
@@ -30,8 +36,12 @@
     "@angular/router": "^20.0.2",
     "@angular/service-worker": "^20.0.2",
     "@angular/ssr": "^20.0.1",
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "@fortawesome/free-brands-svg-icons": "^7.1.0",
+    "@fortawesome/free-regular-svg-icons": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@popperjs/core": "^2.11.8",
-    "@tinymce/tinymce-angular": "^8.0.1",
+    "@tinymce/tinymce-angular": "^9.1.1",
     "@yusifaliyevpro/countries": "^2.2.2",
     "abort-controller": "^3.0.0",
     "adbkit": "^2.0.17",
@@ -59,6 +69,7 @@
     "sharp": "^0.34.2",
     "socket.io-client": "^4.8.1",
     "tesseract.js": "^6.0.1",
+    "tinymce": "^8.2.1",
     "tslib": "^2.3.0",
     "usb": "^2.15.0",
     "usb-detection": "^4.14.2",
@@ -116,19 +127,19 @@
       "main": "dist-electron/electron-main.js"
     },
     "win": {
-      "icon": "public/Images/company-images/ICO/PropEaseLogo.ico",
+      "icon": "Images/company-images/ICO/PropEaseLogo.ico",
       "target": [
         "nsis"
       ]
     },
     "mac": {
-      "icon": "public/Images/company-images/ICNS/PropEaseLogo1024X1024.icns",
+      "icon": "Images/company-images/ICNS/PropEaseLogo1024X1024.icns",
       "target": [
         "dmg"
       ]
     },
     "linux": {
-      "icon": "public/Images/company-images/PropEaseLogo1024X1024.png",
+      "icon": "Images/company-images/PropEaseLogo1024X1024.png",
       "target": [
         "AppImage",
         "deb"

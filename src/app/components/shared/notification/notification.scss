@@ -35,9 +35,10 @@
   position: absolute;
   top: 0;
   right: 0;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
+  // transform: translate();
+  min-width: 9px;
+  min-height: 9px;
+  border-radius: 100%;
   background-color: #9aa0a6;
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
   transition: background-color 0.3s;
@@ -167,17 +168,6 @@
   max-height: 26rem;
   overflow-y: auto;
   padding: 0.25rem 0;
-
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-  &::-webkit-scrollbar-thumb {
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.15);
-  }
-  :host-context(html.dark) &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-  }
 
   .notif-item {
     display: grid;

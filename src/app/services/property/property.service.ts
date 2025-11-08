@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {
   Component,
   OnInit,
@@ -6,25 +6,26 @@ import {
   Inject,
   PLATFORM_ID,
 } from '@angular/core';
-import { firstValueFrom, Subscription, pipe, take } from 'rxjs';
-import { CryptoService } from '../cryptoService/crypto.service';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { isPlatformBrowser } from '@angular/common';
-import { DomSanitizer } from '@angular/platform-browser';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import {firstValueFrom, Subscription, pipe, take} from 'rxjs';
+import {CryptoService} from '../cryptoService/crypto.service';
+import {HttpClient, HttpParams} from '@angular/common/http';
+import {isPlatformBrowser} from '@angular/common';
+import {DomSanitizer} from '@angular/platform-browser';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MSG} from '../APIs/apis.service'
 
 export interface Property {
   // Basic Property Details
   id: string;
   title: string;
   type:
-    | 'Apartment'
-    | 'House'
-    | 'Villa'
-    | 'Commercial'
-    | 'Land'
-    | 'Stodio'
-    | string;
+  | 'Apartment'
+  | 'House'
+  | 'Villa'
+  | 'Commercial'
+  | 'Land'
+  | 'Stodio'
+  | string;
   listing: 'Sale' | 'Rent' | 'Sold' | 'Rented' | string;
   description: string;
   // End Basic Property Details
@@ -53,12 +54,12 @@ export interface Property {
   // Construction & Age
   builtYear: number;
   propertyCondition:
-    | 'New'
-    | 'Old'
-    | 'Excellent'
-    | 'Good'
-    | 'Needs Renovation'
-    | string;
+  | 'New'
+  | 'Old'
+  | 'Excellent'
+  | 'Good'
+  | 'Needs Renovation'
+  | string;
   developerName: string;
   projectName?: string;
   ownerShipType: 'Freehold' | 'Leasehold' | 'Company' | 'Trust' | string;
@@ -76,11 +77,11 @@ export interface Property {
   serviceCharges: number;
   transferFees?: number;
   availabilityStatus:
-    | 'Available'
-    | 'Not Available'
-    | 'Pending'
-    | 'Ready to Move'
-    | string;
+  | 'Available'
+  | 'Not Available'
+  | 'Pending'
+  | 'Ready to Move'
+  | string;
   // End Financial Details
 
   // Features & Amenities
@@ -212,8 +213,8 @@ export interface CountryDetails {
   area: number; // Total area in square kilometers
 
   demonyms?: {
-    eng: { m: string; f: string }; // Demonyms in English
-    [langCode: string]: { m: string; f: string };
+    eng: {m: string; f: string}; // Demonyms in English
+    [langCode: string]: {m: string; f: string};
   };
 
   translations?: {
@@ -391,11 +392,6 @@ export interface propertyDocPreview {
   icon: string;
 }
 
-export interface MSG {
-  message: string;
-  status: string;
-  data: any;
-}
 
 export interface propertyImages {
   originalname: string;
@@ -425,7 +421,7 @@ export interface BackEndPropertyData
 export class PropertyService {
   private isBrowser: boolean;
 
-  private iconsMap: { [key: string]: string } = {
+  private iconsMap: {[key: string]: string} = {
     // Common
     AirConditioning: 'amenities/air-conditioning.svg',
     Heating: 'amenities/heating.svg',
@@ -488,7 +484,7 @@ export class PropertyService {
     Defalt: 'amenities/default.svg',
   };
 
-  constructor(
+  constructor (
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object,
     private cryptoService: CryptoService,
@@ -508,11 +504,11 @@ export class PropertyService {
 
   // Amenities icon maker
   private amenityIconMaker() {
-    for (const [name, path] of Object.entries(this.iconsMap)) {
+    for(const [name, path] of Object.entries(this.iconsMap)) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `/Images/Icons/${path}`
+          `Images/Icons/${path}`
         )
       );
     }
@@ -525,7 +521,7 @@ export class PropertyService {
       (key) => key.toLowerCase() === cleanedText
     );
 
-    if (matchedKey) {
+    if(matchedKey) {
       return matchedKey;
     } else {
       return 'Defalt';
@@ -555,16 +551,16 @@ export class PropertyService {
     filter?: string
   ): Promise<MSG> {
     let params = new HttpParams();
-    if (search !== undefined && search !== '' && search !== null) {
+    if(search !== undefined && search !== '' && search !== null) {
       params = params.append('search', search);
     }
-    if (filter !== undefined && filter !== '' && filter !== null) {
+    if(filter !== undefined && filter !== '' && filter !== null) {
       params = params.append('filter', filter);
     }
     return firstValueFrom(
       this.http.get<MSG>(
         `http://localhost:3000/api-property/get-all-properties-with-pagination/${start}/${end}`,
-        { params }
+        {params}
       )
     );
   }

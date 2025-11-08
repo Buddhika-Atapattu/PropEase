@@ -5,45 +5,34 @@ import {
   Inject,
   PLATFORM_ID,
   ViewChild,
-  ElementRef,
-  HostListener,
-  AfterViewInit,
+  ElementRef, AfterViewInit,
   QueryList,
-  ViewChildren,
+  ViewChildren
 } from '@angular/core';
 import {
-  CommonModule,
-  PlatformLocation,
-  isPlatformBrowser,
+  CommonModule, isPlatformBrowser
 } from '@angular/common';
 import {
-  FormBuilder,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
-  FormControl,
+  FormControl
 } from '@angular/forms';
-import { RouterModule, Router, ActivatedRoute } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatRadioModule } from '@angular/material/radio';
-import { MatStepperModule } from '@angular/material/stepper';
-import { MatTableModule } from '@angular/material/table';
-import {
-  MatDialog,
-  MatDialogRef,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
-import { Subscription, of, pipe } from 'rxjs';
-import { Observable } from 'rxjs';
-import { EditorComponent } from '@tinymce/tinymce-angular';
-import { AuthService, BaseUser } from '../../../services/auth/auth.service';
+import {RouterModule, Router, ActivatedRoute} from '@angular/router';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
+import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatNativeDateModule} from '@angular/material/core';
+import {MatRadioModule} from '@angular/material/radio';
+import {MatStepperModule} from '@angular/material/stepper';
+import {MatTableModule} from '@angular/material/table';
+import {Subscription, of} from 'rxjs';
+import {Observable} from 'rxjs';
+import {EditorComponent} from '@tinymce/tinymce-angular';
+import {AuthService, BaseUser} from '../../../services/auth/auth.service';
 import {
   PropertyService,
   Property,
@@ -51,20 +40,18 @@ import {
   GoogleMapLocation,
   AddedBy,
   Address,
-  propertyDocPreview,
-  MSG,
+  propertyDocPreview
 } from '../../../services/property/property.service';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {CryptoService} from '../../../services/cryptoService/crypto.service';
+import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {
-  msgTypes,
-  NotificationDialogComponent,
+  NotificationDialogComponent
 } from '../../../components/dialogs/notification/notification.component';
-import { DomSanitizer } from '@angular/platform-browser';
-import { map, startWith } from 'rxjs/operators';
-import { AsyncPipe } from '@angular/common';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import {DomSanitizer} from '@angular/platform-browser';
+import {map, startWith} from 'rxjs/operators';
+import {AsyncPipe} from '@angular/common';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {
   APIsService,
   Country,
@@ -72,10 +59,10 @@ import {
   CountryDetailsCustomType,
   UsersType,
 } from '../../../services/APIs/apis.service';
-import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
-import { MapComponent } from '../../../components/shared/map/map.component';
-import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
-import { getCountries } from '@yusifaliyevpro/countries';
+import {MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
+import {MapComponent} from '../../../components/shared/map/map.component';
+import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
+import {TextEditorComponent} from '../../../components/shared/textEditor/text-editor';
 
 interface propertyImagePreview {
   URL: string;
@@ -104,13 +91,13 @@ interface propertyImagePreview {
     MatRadioModule,
     MatStepperModule,
     MatTableModule,
-    EditorComponent,
     RouterModule,
     MatAutocompleteModule,
     ReactiveFormsModule,
     AsyncPipe,
     MapComponent,
     SafeUrlPipe,
+    TextEditorComponent
   ],
   templateUrl: './property-listing.component.html',
   styleUrl: './property-listing.component.scss',
@@ -440,12 +427,12 @@ export class PropertyListingComponent
     'Admin',
   ];
   protected tabIndicatorsActive: boolean = false;
-  @ViewChildren('tabElement', { read: ElementRef })
+  @ViewChildren('tabElement', {read: ElementRef})
   tabElements!: QueryList<ElementRef>;
   protected currentIndex = 0;
-  protected indicatorStyle: { width?: string; transform?: string } = {};
+  protected indicatorStyle: {width?: string; transform?: string} = {};
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
@@ -478,7 +465,7 @@ export class PropertyListingComponent
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -494,13 +481,13 @@ export class PropertyListingComponent
   }
 
   ngAfterViewInit(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       setTimeout(() => this.updateIndicatorPosition(this.currentIndex));
     }
   }
 
   ngOnDestroy(): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       window.removeEventListener('dragover', this.preventDefault);
       window.removeEventListener('drop', this.preventDefault);
     }
@@ -559,7 +546,7 @@ export class PropertyListingComponent
 
   //<==================== Tab Make ====================>
   protected tabMaker(index: number, tabName: string) {
-    if (!this.isBrowser) return;
+    if(!this.isBrowser) return;
     this.currentIndex = index;
     setTimeout(() => this.updateIndicatorPosition(index));
   }
@@ -567,8 +554,8 @@ export class PropertyListingComponent
   private updateIndicatorPosition(index: number): void {
     const tabEl = this.tabElements.get(index)?.nativeElement;
 
-    if (tabEl) {
-      const { offsetLeft, offsetWidth } = tabEl;
+    if(tabEl) {
+      const {offsetLeft, offsetWidth} = tabEl;
 
       const newStyle = {
         width: `${offsetWidth}px`,
@@ -576,7 +563,7 @@ export class PropertyListingComponent
       };
 
       // Only update if it has changed
-      if (
+      if(
         this.indicatorStyle['width'] !== newStyle.width ||
         this.indicatorStyle['transform'] !== newStyle.transform
       ) {
@@ -589,7 +576,7 @@ export class PropertyListingComponent
 
   //<==================== Page Go Back ====================>
   protected goBack() {
-    if (this.currentIndex > 0) {
+    if(this.currentIndex > 0) {
       this.tabMaker(
         this.currentIndex - 1,
         this.tabIndicators[this.currentIndex - 1]
@@ -600,7 +587,7 @@ export class PropertyListingComponent
 
   //<==================== Page Go Next ====================>
   protected goNext() {
-    if (this.currentIndex < this.tabIndicators.length - 1) {
+    if(this.currentIndex < this.tabIndicators.length - 1) {
       this.tabMaker(
         this.currentIndex + 1,
         this.tabIndicators[this.currentIndex + 1]
@@ -612,7 +599,7 @@ export class PropertyListingComponent
   //<==================== Making sort ====================>
   //01. Propert type sort
   protected propertyTypeSort(): string[] {
-    if (this.filterTypeOptions.length === 0) {
+    if(this.filterTypeOptions.length === 0) {
       return this.typeOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterTypeOptions.sort((a, b) => a.localeCompare(b));
@@ -621,7 +608,7 @@ export class PropertyListingComponent
 
   //02. Propert listing sort
   protected propertyStatusSort(): string[] {
-    if (this.filterStatusOptions.length === 0) {
+    if(this.filterStatusOptions.length === 0) {
       return this.statusOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterStatusOptions.sort((a, b) => a.localeCompare(b));
@@ -630,7 +617,7 @@ export class PropertyListingComponent
 
   //03. Propert amenities sort
   protected propertyAmenitiesSort(): string[] {
-    if (this.filterFeatureAmenity.length === 0) {
+    if(this.filterFeatureAmenity.length === 0) {
       return this.definedFeatureAmenity.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterFeatureAmenity.sort((a, b) => a.localeCompare(b));
@@ -639,7 +626,7 @@ export class PropertyListingComponent
 
   //04. Propert furnishing status sort
   protected propertyFurnishingStatusOptionsSort() {
-    if (this.filterFurnishingStatusOptions.length === 0) {
+    if(this.filterFurnishingStatusOptions.length === 0) {
       return this.furnishingStatusOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterFurnishingStatusOptions.sort((a, b) =>
@@ -650,7 +637,7 @@ export class PropertyListingComponent
 
   //05. Propert condition status sort
   protected propertyConditionOptionsSort() {
-    if (this.filterPropertyConditionOptions.length === 0) {
+    if(this.filterPropertyConditionOptions.length === 0) {
       return this.propertyConditionOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterPropertyConditionOptions.sort((a, b) =>
@@ -661,7 +648,7 @@ export class PropertyListingComponent
 
   //06. Propert availability status sort
   protected propertyAvailabilityStatusOptionsSort() {
-    if (this.filterPropertyAvailabilityStatusOptions.length === 0) {
+    if(this.filterPropertyAvailabilityStatusOptions.length === 0) {
       return this.propertyAvailabilityStatusOptions.sort((a, b) =>
         a.localeCompare(b)
       );
@@ -674,7 +661,7 @@ export class PropertyListingComponent
 
   //07. Propert priority status sort
   protected propertyPriorityOptionsSort() {
-    if (this.filterPropertyPriorityOptions.length === 0) {
+    if(this.filterPropertyPriorityOptions.length === 0) {
       return this.propertyPriorityOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterPropertyPriorityOptions.sort((a, b) =>
@@ -685,7 +672,7 @@ export class PropertyListingComponent
 
   //08. Property Verification Status
   protected propertyVerificationStatusOptionsSort() {
-    if (this.filterPropertyVerificationStatusOptions.length === 0) {
+    if(this.filterPropertyVerificationStatusOptions.length === 0) {
       return this.propertyVerificationStatusOptions.sort((a, b) =>
         a.localeCompare(b)
       );
@@ -698,7 +685,7 @@ export class PropertyListingComponent
 
   //09. Status of property
   protected propertyStatusOptionsSort() {
-    if (this.filterPropertyStatusOptions.length === 0) {
+    if(this.filterPropertyStatusOptions.length === 0) {
       return this.propertyStatusOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterPropertyStatusOptions.sort((a, b) =>
@@ -709,7 +696,7 @@ export class PropertyListingComponent
 
   //10. Ownership type
   protected ownerShipTypeOptionsSort() {
-    if (this.filterOwnerShipTypeOptions.length === 0) {
+    if(this.filterOwnerShipTypeOptions.length === 0) {
       return this.ownerShipTypeOptions.sort((a, b) => a.localeCompare(b));
     } else {
       return this.filterOwnerShipTypeOptions.sort((a, b) => a.localeCompare(b));
@@ -753,11 +740,11 @@ export class PropertyListingComponent
       close: 'wrong.svg',
     };
 
-    for (const [name, path] of Object.entries(iconMap)) {
+    for(const [name, path] of Object.entries(iconMap)) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `/Images/Icons/${path}`
+          `Images/Icons/${path}`
         )
       );
     }
@@ -766,7 +753,7 @@ export class PropertyListingComponent
 
   //<==================== Choose the correct icon for the file type ====================>
   protected chooceIcon(type: string): string {
-    switch (type) {
+    switch(type) {
       case 'doc':
         return 'word';
       case 'docx':
@@ -850,7 +837,7 @@ export class PropertyListingComponent
    * Useful after successfully creating or updating a property.
    */
   protected goToProperties(): void {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
       this.router.navigate(['/dashboard/properties']);
     });
   }
@@ -860,7 +847,7 @@ export class PropertyListingComponent
    * Useful for quickly reloading the form or returning after a navigation away.
    */
   protected goToListing(): void {
-    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
       this.router.navigate(['/dashboard/property-listing']);
     });
   }
@@ -881,12 +868,12 @@ export class PropertyListingComponent
     event.preventDefault();
 
     const items = event.clipboardData?.items;
-    if (!items) return;
+    if(!items) return;
 
-    for (const item of items) {
-      if (item.kind === 'file') {
+    for(const item of items) {
+      if(item.kind === 'file') {
         const file = item.getAsFile();
-        if (file) {
+        if(file) {
           this.processPastedPropertyImage(file);
         }
       }
@@ -902,7 +889,7 @@ export class PropertyListingComponent
     input.files = dataTransfer.files;
 
     // Trigger the same file selection logic
-    this.onFileSelectedPropertyImage({ target: input } as any);
+    this.onFileSelectedPropertyImage({target: input} as any);
   }
 
   //Process property image drop
@@ -913,7 +900,7 @@ export class PropertyListingComponent
     console.log('event.dataTransfer?.files: ', event.dataTransfer?.files);
 
     const files = event.dataTransfer?.files;
-    if (files) {
+    if(files) {
       this.propertyImagePreviewMaker(files);
     }
   }
@@ -922,7 +909,7 @@ export class PropertyListingComponent
   protected onDragOverPropertyImage(event: DragEvent): void {
     event.preventDefault(); // Crucial to allow drop
     event.stopPropagation();
-    if (event.currentTarget === event.target) {
+    if(event.currentTarget === event.target) {
       this.isPropertyImageDragOver = true;
     }
   }
@@ -948,9 +935,9 @@ export class PropertyListingComponent
   private propertyImagePreviewMaker(files: FileList): void {
     // Loop through images of property
 
-    for (let file of Array.from(files)) {
+    for(let file of Array.from(files)) {
       // Check if file is an image
-      if (!this.allowedImageTypes.includes(file.type)) {
+      if(!this.allowedImageTypes.includes(file.type)) {
         this.isPropertyImageTypeMissMatched = true;
         this.propertyErrorText = `Error: ${file.name} type ${file.type} not matched!`;
         return;
@@ -1021,7 +1008,7 @@ export class PropertyListingComponent
   protected onDragOverPropertyDocs(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
-    if (event.currentTarget === event.target) {
+    if(event.currentTarget === event.target) {
       this.isPropertyDocsDragOver = true;
     }
   }
@@ -1035,7 +1022,7 @@ export class PropertyListingComponent
     this.isPropertyDocsDragOver = false;
 
     const files = event.dataTransfer?.files;
-    if (files) {
+    if(files) {
       this.propertyDocsPreviewMaker(files);
     }
   }
@@ -1056,12 +1043,12 @@ export class PropertyListingComponent
     event.preventDefault();
 
     const items = event.clipboardData?.items;
-    if (!items) return;
+    if(!items) return;
 
-    for (const item of items) {
-      if (item.kind === 'file') {
+    for(const item of items) {
+      if(item.kind === 'file') {
         const file = item.getAsFile();
-        if (file) {
+        if(file) {
           this.processPastedPropertyDocs(file);
         }
       }
@@ -1088,8 +1075,8 @@ export class PropertyListingComponent
    * Generates previews for allowed document types.
    */
   private async propertyDocsPreviewMaker(files: FileList): Promise<void> {
-    for (let file of Array.from(files)) {
-      if (!this.propertyFormallowedDocs.includes(file.type)) {
+    for(let file of Array.from(files)) {
+      if(!this.propertyFormallowedDocs.includes(file.type)) {
         await this.notification.notification(
           'error',
           `Error: ${file.name} type ${file.type} is not allowed!`
@@ -1142,7 +1129,7 @@ export class PropertyListingComponent
   //<==================== End Filter Property Status ====================>
   //<==================== Filter Property Amenities ====================>
   protected filterFeatureAmenityOperation(data: string): void {
-    if (!this.definedFeatureAmenity.includes(data)) {
+    if(!this.definedFeatureAmenity.includes(data)) {
       this.isAmenitiesNotIncluded = true;
       this.amenitiesNotIncludedText = data;
     }
@@ -1159,17 +1146,17 @@ export class PropertyListingComponent
 
   //<==================== Filter address section country ====================>
   protected async addressMainFilterCountries(
-    data: string | { name: string }
+    data: string | {name: string}
   ): Promise<void> {
     // Normalize the country input to string
-    if (
+    if(
       typeof data === 'object' &&
       data &&
       'name' in data &&
       typeof data.name === 'string'
     ) {
       this.typeAddressCountry = data.name.toLowerCase();
-    } else if (typeof data === 'string') {
+    } else if(typeof data === 'string') {
       this.typeAddressCountry = data.toLowerCase();
     } else {
       this.typeAddressCountry = '';
@@ -1177,7 +1164,7 @@ export class PropertyListingComponent
 
     const countries: Country[] = await this.APIs.getCountries();
 
-    if (!Array.isArray(countries)) return;
+    if(!Array.isArray(countries)) return;
 
     this.AddressCountries = countries;
 
@@ -1224,7 +1211,7 @@ export class PropertyListingComponent
   }
 
   protected closeCurrency() {
-    if (this.isCountryOfCurrencySelected) {
+    if(this.isCountryOfCurrencySelected) {
       this.isPriceCurrencyPanelOpen = false;
       this.countryOfCurrencySelectedError = false;
     } else {
@@ -1235,7 +1222,7 @@ export class PropertyListingComponent
   protected async selectCountriesWithCurrencies(input: string): Promise<void> {
     const countries = await this.APIs.getCustomCountryDetails();
 
-    if (!Array.isArray(countries)) return;
+    if(!Array.isArray(countries)) return;
 
     this.filteredCountriesWithCurrency =
       this.countryControlWithCurrency.valueChanges.pipe(
@@ -1264,7 +1251,7 @@ export class PropertyListingComponent
       countryName
     );
 
-    if (!Array.isArray(country) || country.length === 0) {
+    if(!Array.isArray(country) || country.length === 0) {
       console.error('Country did not find!');
       return;
     }
@@ -1278,7 +1265,7 @@ export class PropertyListingComponent
     this.isCurrencySelected = true;
     this.countryActualCurrency = currencySymbol;
 
-    if (this.countryActualCurrency) {
+    if(this.countryActualCurrency) {
       this.isCountryOfCurrencySelected = true;
       this.countryOfCurrencySelectedError = false;
     }
@@ -1295,7 +1282,7 @@ export class PropertyListingComponent
   protected async filterOwnerThroughAllUsers(input: string): Promise<void> {
     this.isOwnerNotSelected = true;
     const users = await this.APIs.getAllUsers();
-    if (users) {
+    if(users) {
       this.allUsers = users;
       this.filterOwner = users.filter((user) =>
         user.name.toLowerCase().includes(input.toLowerCase())
@@ -1305,7 +1292,7 @@ export class PropertyListingComponent
 
   protected getTheSelectedOwner(input: MatAutocompleteSelectedEvent): void {
     const selectedOwner = input.option.value;
-    if (selectedOwner) {
+    if(selectedOwner) {
       this.isOwnerNotSelected = false;
       this.selectedOwner =
         this.allUsers.find((data) => {
@@ -1316,14 +1303,14 @@ export class PropertyListingComponent
     } else {
       this.isOwnerNotSelected = true;
     }
-    if (this.selectedOwner) this.ownerUsername = this.selectedOwner.username;
+    if(this.selectedOwner) this.ownerUsername = this.selectedOwner.username;
   }
   //<==================== End Property owner infor ====================>
 
   //<==================== featureAmenity ====================>
 
   protected addFeaturesAmenity(event: MatAutocompleteSelectedEvent) {
-    if (!this.featureAmenities.includes(event.option.value)) {
+    if(!this.featureAmenities.includes(event.option.value)) {
       this.featureAmenities.push(event.option.value);
     }
   }
@@ -1334,7 +1321,7 @@ export class PropertyListingComponent
 
   protected addFeaturesAmenityEnter(event: Event) {
     const keyboardEvent = event as KeyboardEvent;
-    if (keyboardEvent.key === 'Enter' && this.featureAmenity !== '') {
+    if(keyboardEvent.key === 'Enter' && this.featureAmenity !== '') {
       this.featureAmenities.push(this.featureAmenity);
     }
   }
@@ -1343,7 +1330,7 @@ export class PropertyListingComponent
 
   //<==================== Map ====================>
 
-  protected onLocationPicked(event: { lat: number; lng: number }) {
+  protected onLocationPicked(event: {lat: number; lng: number}) {
     this.mapLocationLat = event.lat;
     this.mapLocationLng = event.lng;
     this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps?q=${this.mapLocationLat},${this.mapLocationLng}&hl=en&z=14&output=embed`;
@@ -1365,19 +1352,19 @@ export class PropertyListingComponent
     const vimeoMatch = input.match(/vimeo\.com\/(\d+)/);
     const driveMatch = input.match(/drive\.google\.com\/file\/d\/([^/]+)/);
 
-    if (youtubeMatch) {
+    if(youtubeMatch) {
       const videoId = youtubeMatch[1];
       this.videoPreviewURL = `https://www.youtube.com/embed/${videoId}`;
       this.isIframeEmbed = true;
-    } else if (vimeoMatch) {
+    } else if(vimeoMatch) {
       const videoId = vimeoMatch[1];
       this.videoPreviewURL = `https://player.vimeo.com/video/${videoId}`;
       this.isIframeEmbed = true;
-    } else if (driveMatch) {
+    } else if(driveMatch) {
       const fileId = driveMatch[1];
       this.videoPreviewURL = `https://drive.google.com/file/d/${fileId}/preview`;
       this.isIframeEmbed = true;
-    } else if (input.includes('dropbox.com')) {
+    } else if(input.includes('dropbox.com')) {
       this.videoPreviewURL = input.replace('?dl=0', '?raw=1');
       this.isIframeEmbed = false;
     } else {
@@ -1423,7 +1410,7 @@ export class PropertyListingComponent
 
       // Error validation
 
-      if (
+      if(
         !this.isUserCanAssignAgentToTheProperty() &&
         !this.isUserCanUploadDocumentsToTheProperty() &&
         !this.isUserCanManageAmenitiesToTheProperty() &&
@@ -1433,142 +1420,142 @@ export class PropertyListingComponent
       }
 
       // Basic Property Details
-      if (!this.title) {
+      if(!this.title) {
         throw new Error('Title is required!');
       }
-      if (!this.type) {
+      if(!this.type) {
         throw new Error('Type is required!');
       }
-      if (!this.listing) {
+      if(!this.listing) {
         throw new Error('Listing is required!');
       }
-      if (!this.description) {
+      if(!this.description) {
         throw new Error('Discription is required!');
       }
       // End Basic Property Details
 
       // Location Details
-      if (!this.AddressHouseNumber) {
+      if(!this.AddressHouseNumber) {
         throw new Error('House number is required!');
       }
 
-      if (!this.AddressStreet) {
+      if(!this.AddressStreet) {
         throw new Error('Address streat is required!');
       }
 
-      if (!this.AddressCity) {
+      if(!this.AddressCity) {
         throw new Error('Address city is required!');
       }
 
-      if (!this.AddressStateOrProvince) {
+      if(!this.AddressStateOrProvince) {
         throw new Error('Address state or province is required!');
       }
 
-      if (!this.AddressPostcode) {
+      if(!this.AddressPostcode) {
         throw new Error('Address postcode is required!');
       }
 
-      if (!this.typeAddressCountry) {
+      if(!this.typeAddressCountry) {
         throw new Error('Country is required!');
       }
       // End Location Details
 
       // Property Specifications
-      if (this.totalArea !== 0 && !this.totalArea) {
+      if(this.totalArea !== 0 && !this.totalArea) {
         throw new Error('Total area is required!');
       }
 
-      if (this.builtInArea !== 0 && !this.builtInArea) {
+      if(this.builtInArea !== 0 && !this.builtInArea) {
         throw new Error('Built in area is required!');
       }
 
-      if (this.balconies == null || this.balconies === undefined) {
+      if(this.balconies == null || this.balconies === undefined) {
         throw new Error('Balconies is required!');
       }
 
-      if (this.kitchen == null || this.kitchen === undefined) {
+      if(this.kitchen == null || this.kitchen === undefined) {
         throw new Error('Kitchen is required!');
       }
 
-      if (this.bedrooms == null || this.bedrooms === undefined) {
+      if(this.bedrooms == null || this.bedrooms === undefined) {
         throw new Error('Bedrooms is required!');
       }
 
-      if (this.bathrooms == null || this.bathrooms === undefined) {
+      if(this.bathrooms == null || this.bathrooms === undefined) {
         throw new Error('Bathrooms is required!');
       }
 
-      if (this.maidrooms === null || this.maidrooms === undefined) {
+      if(this.maidrooms === null || this.maidrooms === undefined) {
         throw new Error('Maidrooms is required!');
       }
 
-      if (this.driverRooms == null || this.driverRooms === undefined) {
+      if(this.driverRooms == null || this.driverRooms === undefined) {
         throw new Error('Driver rooms is required!');
       }
 
-      if (
+      if(
         !this.furnishingStatus &&
         !this.furnishingStatusOptions.includes(this.furnishingStatus)
       ) {
         throw new Error('Select the furnishing status!');
       }
 
-      if (!this.totalFloors) {
+      if(!this.totalFloors) {
         throw new Error('Number of floors is required!');
       }
 
-      if (!this.numberOfParking) {
+      if(!this.numberOfParking) {
         throw new Error('Number of parking is required!');
       }
       // End Property Specifications
 
       // Construction & Age
-      if (!this.builtYear && this.builtYear !== 0) {
+      if(!this.builtYear && this.builtYear !== 0) {
         throw new Error('Built year is required!');
       }
 
-      if (
+      if(
         !this.propertyCondition &&
         !this.propertyConditionOptions.includes(this.propertyCondition)
       ) {
         throw new Error('Select the property condition!');
       }
 
-      if (!this.developerName) {
+      if(!this.developerName) {
         throw new Error('Developer name is required!');
       }
 
-      if (!this.ownerShipType) {
+      if(!this.ownerShipType) {
         throw new Error('Owner ship type is required!');
       }
 
-      if (!this.ownerName) {
+      if(!this.ownerName) {
         throw new Error('Owner is required!');
       }
       // End Construction & Age
 
       // Financial Details
-      if (!this.price) {
+      if(!this.price) {
         throw new Error('Price is required!');
       }
 
-      if (!this.countryActualCurrency) {
+      if(!this.countryActualCurrency) {
         throw new Error('Currency is required!');
       }
 
-      if (!this.pricePerSqurFeet) {
+      if(!this.pricePerSqurFeet) {
         throw new Error('Price per squr feet is required!');
       }
 
-      if (!this.maintenanceFees) {
+      if(!this.maintenanceFees) {
         throw new Error('Maintenance fees is required!');
       }
 
-      if (!this.serviceCharges) {
+      if(!this.serviceCharges) {
         throw new Error('Service charges is required!');
       }
 
-      if (
+      if(
         !this.availabilityStatus &&
         !this.propertyAvailabilityStatusOptions.includes(
           this.availabilityStatus
@@ -1579,37 +1566,37 @@ export class PropertyListingComponent
       // End Financial Details
 
       // Features & Amenities
-      if (this.featureAmenities.length === 0) {
+      if(this.featureAmenities.length === 0) {
         throw new Error('Feature amenities is required!');
       }
       // End Features & Amenities
 
       // Media
-      if (this.selcetedPropertyImages.length === 0) {
+      if(this.selcetedPropertyImages.length === 0) {
         throw new Error('Property images is required!');
       }
 
-      if (this.propertyDocuments.length === 0) {
+      if(this.propertyDocuments.length === 0) {
         throw new Error('Property documents is required!');
       }
       // End Media
 
       // Listing Management
-      if (!this.listingDate) {
+      if(!this.listingDate) {
         throw new Error('Property listing date is required!');
       }
 
-      if (!this.AddedBy) {
+      if(!this.AddedBy) {
         throw new Error('Select the owner of the property!');
       }
       // End Listing Management
 
       // Administrative & Internal Use
-      if (!this.listingDate) {
+      if(!this.listingDate) {
         throw new Error('Property listing date is required!');
       }
 
-      if (
+      if(
         !this.verificationStatus &&
         !this.propertyVerificationStatusOptions.includes(
           this.verificationStatus
@@ -1620,18 +1607,18 @@ export class PropertyListingComponent
         );
       }
 
-      if (
+      if(
         !this.priority &&
         !this.propertyPriorityOptions.includes(this.priority)
       ) {
         throw new Error('Property priority is required, select from the list!');
       }
 
-      if (!this.status && !this.propertyStatusOptions.includes(this.priority)) {
+      if(!this.status && !this.propertyStatusOptions.includes(this.priority)) {
         throw new Error('Property status is required, select from the list!');
       }
 
-      if (!this.internalNote) {
+      if(!this.internalNote) {
         throw new Error('Internal note is required!');
       }
       // End Administrative & Internal Use
@@ -1743,7 +1730,7 @@ export class PropertyListingComponent
 
       // Media
       // Append each property image file individually
-      for (let file of this.selcetedPropertyImages) {
+      for(let file of this.selcetedPropertyImages) {
         formData.append('images', file, file.name);
       }
       // Append each property document file individually
@@ -1798,7 +1785,7 @@ export class PropertyListingComponent
           this.notification.notification(res.status, res.message);
         })
         .catch((error) => {
-          if (error) {
+          if(error) {
             console.log('Error: ', error.error);
             this.notification.notification(
               error.error.status,
@@ -1813,8 +1800,8 @@ export class PropertyListingComponent
             this.router.navigate(['/dashboard/properties']);
           }, 2000);
         });
-    } catch (error) {
-      if (error) {
+    } catch(error) {
+      if(error) {
         this.notification.notification('error', error as string);
       }
     }

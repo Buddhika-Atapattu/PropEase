@@ -1557,7 +1557,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Get All Tenants
   private async getAllTenants() {
     this.isLoading = true;
-    await this.apiService
+    await this.tenantService
       .getAllTenants()
       .then((res) => {
         if(res.status === 'success') {
@@ -1642,7 +1642,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     formData.append('gender', data.gender);
     formData.append('addedBy', data.addedBy as string);
 
-    await this.apiService
+    await this.tenantService
       .insertTenant(formData)
       .then(async (data) => {
         if(data.status === 'success') {
@@ -1681,7 +1681,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.isLoading = true;
       this.progressBarComponent.start();
       const username = user.username;
-      await this.apiService
+      await this.tenantService
         .deleteTenant(username as string, this.loggedUser?.username)
         .then((res) => {
           console.log(res)

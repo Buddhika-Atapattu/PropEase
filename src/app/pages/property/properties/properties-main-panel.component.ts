@@ -127,23 +127,23 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
       this.LOGGED_USER?.access.permissions.some(
         (permission) =>
           permission.module === 'Property Management' &&
-          permission.actions.includes('create')
+          permission.actions.includes('create property')
       ) ?? false
     );
   }
 
   private iconMaker() {
     const iconMap = [
-      {name: 'view', path: '/Images/Icons/view.svg'},
-      {name: 'listing', path: '/Images/Icons/listing.svg'},
-      {name: 'edit', path: '/Images/Icons/pencil-square.svg'},
-      {name: 'delete', path: '/Images/Icons/delete.svg'},
-      {name: 'add-new-user', path: '/Images/Icons/add-new-user.svg'},
-      {name: 'search', path: '/Images/Icons/search.svg'},
-      {name: 'filter', path: '/Images/Icons/filter.svg'},
-      {name: 'reset', path: '/Images/Icons/reset.svg'},
-      {name: 'list', path: '/Images/Icons/list.svg'},
-      {name: 'lineColumns', path: '/Images/Icons/line-columns.svg'},
+      {name: 'view', path: 'Images/Icons/view.svg'},
+      {name: 'listing', path: 'Images/Icons/listing.svg'},
+      {name: 'edit', path: 'Images/Icons/pencil-square.svg'},
+      {name: 'delete', path: 'Images/Icons/delete.svg'},
+      {name: 'add-new-user', path: 'Images/Icons/add-new-user.svg'},
+      {name: 'search', path: 'Images/Icons/search.svg'},
+      {name: 'filter', path: 'Images/Icons/filter.svg'},
+      {name: 'reset', path: 'Images/Icons/reset.svg'},
+      {name: 'list', path: 'Images/Icons/list.svg'},
+      {name: 'lineColumns', path: 'Images/Icons/line-columns.svg'},
     ];
 
     for(let icon of iconMap) {

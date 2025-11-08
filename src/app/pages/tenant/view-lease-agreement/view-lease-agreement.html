@@ -10,7 +10,7 @@
     *ngIf="lease && selectedProperty && tenant; else loading"
   >
     <!-- Page Indicators -->
-    <div class="row page-indecator">
+    <div class="row page-indicator">
       <span
         ><button
           type="button"
@@ -54,6 +54,22 @@
       </div>
     </div>
     <!-- end user-image row -->
+
+    <!-- Complaint create -->
+    <div class="row d-flex justify-content-end align-item-center my-2">
+      <div
+        class="col-xl-3 col-md-4 col-12 d-flex justify-content-end align-item-center"
+      >
+        <button
+          type="button"
+          class="btn btn-warning d-flex justify-content-center align-item-center"
+          (click)="createComplaint()"
+        >
+          <mat-icon class="mx-2">create</mat-icon> Create Complaint
+        </button>
+      </div>
+    </div>
+    <!-- End complaint create -->
 
     <!-- LeaseID -->
     <div class="row mt-5">

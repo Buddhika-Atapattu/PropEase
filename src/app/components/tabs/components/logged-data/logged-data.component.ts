@@ -2,56 +2,39 @@ import {
   Component,
   Inject,
   Input,
-  PLATFORM_ID,
-  OnInit,
-  OnChanges,
-  SimpleChanges,
-  ViewChild,
-  AfterViewInit,
+  PLATFORM_ID, SimpleChanges,
+  ViewChild
 } from '@angular/core';
 import {
-  APIsService,
-  BaseUser,
-  UDER_DOC_TYPES,
+  BaseUser
 } from '../../../../services/APIs/apis.service';
 import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
-import {ActivatedRoute, Router} from '@angular/router';
-import {CryptoService} from '../../../../services/cryptoService/crypto.service';
 import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {Subscription} from 'rxjs';
 import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 import {SkeletonLoaderComponent} from '../../../shared/skeleton-loader/skeleton-loader.component';
-import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatInputModule} from '@angular/material/input';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatButtonModule} from '@angular/material/button';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {
-  msgTypes,
-  NotificationDialogComponent,
+  NotificationDialogComponent
 } from '../../../dialogs/notification/notification.component';
 import {ProgressBarComponent} from '../../../dialogs/progress-bar/progress-bar.component';
 import {
-  ActivityTrackerService,
-  MSG,
+  ActivityTrackerService
 } from '../../../../services/activityTacker/activity-tracker.service';
 import {MatTableDataSource, MatTableModule} from '@angular/material/table';
 import {MatPaginatorModule} from '@angular/material/paginator';
 import {Sort, MatSortModule, MatSort} from '@angular/material/sort';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {
-  MatMomentDateModule,
-  MomentDateAdapter,
+  MatMomentDateModule
 } from '@angular/material-moment-adapter';
-import {
-  DateAdapter,
-  MAT_DATE_FORMATS,
-  MAT_DATE_LOCALE,
-} from '@angular/material/core';
 import {MatSelectModule} from '@angular/material/select';
 import {MatDividerModule} from '@angular/material/divider';
-import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import * as XLSX from 'xlsx';
@@ -319,8 +302,8 @@ export class LoggedDataComponent {
 
   private iconMaker() {
     const icons = [
-      {name: 'search', path: '/Images/Icons/search.svg'},
-      {name: 'reset', path: '/Images/Icons/reset.svg'},
+      {name: 'search', path: 'Images/Icons/search.svg'},
+      {name: 'reset', path: 'Images/Icons/reset.svg'},
     ];
 
     for(let icon of icons) {
