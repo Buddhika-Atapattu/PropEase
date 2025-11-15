@@ -1,22 +1,20 @@
-import { Injectable } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { filter } from 'rxjs/operators';
-import { AuthService, BaseUser, LoggedUserType } from '../auth/auth.service';
-import { firstValueFrom, Subscription, pipe, take } from 'rxjs';
-import { CryptoService } from '../cryptoService/crypto.service';
+import {HttpClient} from '@angular/common/http';
+import {Injectable} from '@angular/core';
+import {Router} from '@angular/router';
+
 import * as moment from 'moment';
-import{MSG} from '../APIs/apis.service'
+import {firstValueFrom} from 'rxjs';
+import {User, MSG} from '../APIs/apis.service';
 
 
 @Injectable({
   providedIn: 'root',
 })
 export class ActivityTrackerService {
-  private user: LoggedUserType | null = null;
+  private user: User | null = null;
   private loggedTime: Date | null = null;
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor (private http: HttpClient, private router: Router) {}
 
   set userLoggedTime(time: Date | null) {
     this.loggedTime = time;
@@ -26,11 +24,11 @@ export class ActivityTrackerService {
     return this.loggedTime;
   }
 
-  set loggedUser(user: LoggedUserType | null) {
+  set loggedUser(user: User | null) {
     this.user = user;
   }
 
-  get loggedUser(): LoggedUserType | null {
+  get loggedUser(): User | null {
     return this.user;
   }
 
@@ -46,13 +44,13 @@ export class ActivityTrackerService {
 
   private formatDateOnly(date: moment.Moment | Date | string): string {
     // If it's a Moment object
-    if (moment.isMoment(date)) {
+    if(moment.isMoment(date)) {
       return date.format('YYYY-MM-DD');
     }
 
     // If it's a native Date or string
     const parsedDate = new Date(date);
-    if (isNaN(parsedDate.getTime())) {
+    if(isNaN(parsedDate.getTime())) {
       throw new Error('Invalid date provided to formatDateOnly');
     }
 
@@ -72,10 +70,10 @@ export class ActivityTrackerService {
     let URL = `http://localhost:3000/api-tracking/get-logged-user-tracking/${username}/${start}/${limit}`;
 
     const queryParams: string[] = [];
-    if (startDate)
+    if(startDate)
       queryParams.push(`startDate=${this.formatDateOnly(startDate)}`);
-    if (endDate) queryParams.push(`endDate=${this.formatDateOnly(endDate)}`);
-    if (queryParams.length > 0) {
+    if(endDate) queryParams.push(`endDate=${this.formatDateOnly(endDate)}`);
+    if(queryParams.length > 0) {
       URL += `?${queryParams.join('&')}`;
     }
 
@@ -100,13 +98,13 @@ export class ActivityTrackerService {
     let URL = `http://localhost:3000/api-tracking/user-file-management-activity/${username}/${start}/${limit}`;
 
     const queryParams: string[] = [];
-    if (startDate) {
+    if(startDate) {
       queryParams.push(`startDate=${this.formatDateOnly(startDate)}`);
     }
-    if (endDate) {
+    if(endDate) {
       queryParams.push(`endDate=${this.formatDateOnly(endDate)}`);
     }
-    if (queryParams.length > 0) {
+    if(queryParams.length > 0) {
       URL += `?${queryParams.join('&')}`;
     }
     return await firstValueFrom(this.http.get<MSG>(URL));
@@ -122,13 +120,13 @@ export class ActivityTrackerService {
     let URL = `http://localhost:3000/api-tracking/get-created-users-based-on-creator/${username}/${start}/${limit}`;
 
     const queryParams: string[] = [];
-    if (startDate) {
+    if(startDate) {
       queryParams.push(`startDate=${this.formatDateOnly(startDate)}`);
     }
-    if (endDate) {
+    if(endDate) {
       queryParams.push(`endDate=${this.formatDateOnly(endDate)}`);
     }
-    if (queryParams.length > 0) {
+    if(queryParams.length > 0) {
       URL += `?${queryParams.join('&')}`;
     }
     return await firstValueFrom(this.http.get<MSG>(URL));

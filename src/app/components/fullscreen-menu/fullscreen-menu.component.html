@@ -1,0 +1,194 @@
+<div
+  class="fx-root"
+  [class.open]="open"
+  [attr.aria-hidden]="open ? 'false' : 'true'"
+>
+  <!-- Backdrop -->
+  <div class="fx-backdrop" (click)="onBackdrop()" aria-label="Close menu"></div>
+
+  <!-- Panel -->
+  <aside
+    class="fx-panel"
+    role="dialog"
+    aria-label="Mobile menu"
+    [attr.aria-modal]="open ? 'true' : null"
+  >
+    <!-- Header -->
+    <header class="fx-head">
+      <button type="button" class="avatar" (click)="viewUserProfile()">
+        <img
+          *ngIf="profile?.avatarSrc"
+          [src]="profile?.avatarSrc!"
+          alt="Profile"
+        />
+      </button>
+
+      <div class="name">
+        {{ profile?.name }}
+      </div>
+      <button type="button" class="close" (click)="onBackdrop()">
+        <mat-icon>close</mat-icon>
+      </button>
+      <div class="email" *ngIf="profile?.email">{{ profile?.email }}</div>
+    </header>
+
+    <!-- Ultra-compact switch -->
+    <section class="fx-switch">
+      <button
+        type="button"
+        class="pill"
+        [class.active]="activeView === 'menu'"
+        (click)="showMenu()"
+        aria-label="Show menu"
+      >
+        <mat-icon>menu</mat-icon>
+        <span>Menu</span>
+      </button>
+
+      <button
+        type="button"
+        class="pill"
+        [class.active]="activeView === 'notifications'"
+        (click)="showNotifications()"
+        aria-label="Show notifications"
+      >
+        <mat-icon>notifications</mat-icon>
+        <span>Notifications</span>
+        <ng-container *ngIf="unreadCount$ | async as unread">
+          <i class="badge" *ngIf="unread > 0">{{ unread }}</i>
+        </ng-container>
+      </button>
+    </section>
+
+    <!-- Body -->
+    <section class="fx-body">
+      <!-- MENU VIEW -->
+      <ng-container *ngIf="activeView === 'menu'; else notifView">
+        <ul class="list lvl-1-wrap">
+          <li
+            class="lvl-1"
+            *ngFor="let p of links; let i = index; trackBy: trackTop"
+            [attr.data-idx]="i"
+          >
+            <button
+              matRipple
+              class="row row-1"
+              [class.active]="isActive(p.url)"
+              (click)="p.sub?.length ? toggleTop(i) : go(p.url, null, null)"
+              [attr.aria-expanded]="p.sub?.length ? 'true' : null"
+              [class.link-active]="this.activeItem(p, null)"
+            >
+              <mat-icon class="ic" [svgIcon]="p.mat_icon"></mat-icon>
+              <span class="txt">{{ p.icon_text }}</span>
+              <span class="chev" *ngIf="p.sub?.length">▾</span>
+            </button>
+
+            <div class="collapse-body">
+              <ul class="list lvl-2-wrap">
+                <li
+                  class="lvl-2"
+                  *ngFor="let s of p.sub; let j = index; trackBy: trackSub"
+                  [attr.data-idx]="i + '-' + j"
+                >
+                  <button
+                    matRipple
+                    class="row row-2"
+                    [class.active]="isActive(s.url)"
+                    (click)="
+                      s.sub?.length ? toggleSub(i, j) : go(p.url, s.url, null)
+                    "
+                    [attr.aria-expanded]="s.sub?.length ? 'true' : null"
+                    [class.link-active]="this.activeItem(null, s)"
+                  >
+                    <mat-icon class="ic" [svgIcon]="s.mat_icon"></mat-icon>
+                    <span class="txt">{{ s.icon_text }}</span>
+                    <span class="chev" *ngIf="s.sub?.length">▾</span>
+                  </button>
+
+                  <div class="collapse-body">
+                    <ul class="list lvl-3-wrap">
+                      <li
+                        class="lvl-3"
+                        *ngFor="let g of s.sub; trackBy: trackChild"
+                      >
+                        <button
+                          matRipple
+                          class="row row-3"
+                          [class.active]="isActive(g.url)"
+                          (click)="go(p.url, s.url, g.url)"
+                        >
+                          <mat-icon
+                            class="ic"
+                            [svgIcon]="g.mat_icon"
+                          ></mat-icon>
+                          <span class="txt">{{ g.icon_text }}</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+      </ng-container>
+
+      <!-- NOTIFICATIONS VIEW -->
+      <ng-template #notifView>
+        <div class="notif-toolbar">
+          <button type="button" class="btn-ghost" (click)="markAllAsRead()">
+            <mat-icon>done_all</mat-icon><span>Mark all read</span>
+          </button>
+          <button
+            type="button"
+            class="btn-ghost"
+            (click)="viewAllNotifications()"
+          >
+            <mat-icon>open_in_new</mat-icon><span>Open inbox</span>
+          </button>
+        </div>
+
+        <ng-container *ngIf="directNotifications$ | async as list">
+          <div class="empty" *ngIf="!list.length">
+            <mat-icon>inbox</mat-icon>
+            <p>No new notifications</p>
+          </div>
+
+          <ul class="notif-list" *ngIf="list.length">
+            <li
+              class="notif-item"
+              *ngFor="let n of list; trackBy: trackById"
+              (click)="markOneRead(n, $event)"
+            >
+              <div class="left">
+                <!-- iconFor(n) -->
+                <mat-icon class="kind" [ngClass]="n.severity">{{
+                  n.icon
+                }}</mat-icon>
+              </div>
+              <div class="mid">
+                <div class="title">
+                  {{ n.title || "Notification" }}
+                  <span class="dot" *ngIf="!n.userState?.isRead"></span>
+                </div>
+                <div class="msg" [title]="n.title">{{ n.body }}</div>
+                <div class="meta">
+                  <span class="time">{{ n.createdAt | date : "short" }}</span>
+                </div>
+              </div>
+              <div class="right">
+                <button
+                  type="button"
+                  class="btn-mini"
+                  (click)="markOneRead(n, $event)"
+                >
+                  <mat-icon>chevron_right</mat-icon>
+                </button>
+              </div>
+            </li>
+          </ul>
+        </ng-container>
+      </ng-template>
+    </section>
+  </aside>
+</div>

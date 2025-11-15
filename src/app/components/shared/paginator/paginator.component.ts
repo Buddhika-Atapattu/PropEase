@@ -1,36 +1,34 @@
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
+  AfterViewInit,
   Component,
   EventEmitter,
-  Input,
-  Output,
-  OnInit,
-  OnDestroy,
-  AfterViewInit,
-  SimpleChanges,
-  OnChanges,
-  PLATFORM_ID,
-  ViewChild,
   Inject,
+  Input,
+  OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  PLATFORM_ID,
+  SimpleChanges
 } from '@angular/core';
-import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatInputModule} from '@angular/material/input';
-import {MatSelectModule} from '@angular/material/select';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {DomSanitizer} from '@angular/platform-browser';
-import {Subscription} from 'rxjs';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatDialogModule} from '@angular/material/dialog';
-import {MatTooltipModule} from '@angular/material/tooltip';
-import {MatPaginatorModule} from '@angular/material/paginator';
-import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatMomentDateModule} from '@angular/material-moment-adapter';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatButtonModule} from '@angular/material/button';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatDialogModule} from '@angular/material/dialog';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatPaginatorModule} from '@angular/material/paginator';
+import {MatSelectModule} from '@angular/material/select';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {DomSanitizer} from '@angular/platform-browser';
+import {ActivatedRoute, Router} from '@angular/router';
+import {APIsService} from '../../../services/APIs/apis.service';
 import {CryptoService} from '../../../services/cryptoService/crypto.service';
-import {APIsService, UsersType} from '../../../services/APIs/apis.service';
-import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
 
 export interface FileExportButtonTypeByExtension {
   type:

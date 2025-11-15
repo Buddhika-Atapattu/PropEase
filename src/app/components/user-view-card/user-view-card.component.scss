@@ -1,0 +1,306 @@
+@use "../../styles/global.scss" as *;
+@use "sass:color";
+
+/* ─────────────────────────────────────────────────────────────
+   Base card shell
+   ──────────────────────────────────────────────────────────── */
+.mobile {
+  height: 100%;
+  display: none !important;
+}
+.desktop {
+  height: 100%;
+  display: block !important;
+}
+.user {
+  width: 100%;
+  height: auto; /* was 100% */
+  overflow: hidden;
+  background: linear-gradient(40deg, var(--neutral-150), var(--neutral-200));
+  border-radius: 1rem;
+  box-shadow: 0 0 15px 0 rgb(0 0 0 / 28%);
+  margin: 0; /* grid gap handles spacing */
+  padding: 1.25rem 1rem;
+  color: var(--on-surface);
+}
+
+/* Used only under 992px unless you explicitly show it elsewhere */
+
+/* Utilities */
+button {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+}
+mat-icon {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Shared avatar container */
+.user-image-container {
+  max-width: 10rem;
+  max-height: 10rem;
+  aspect-ratio: 1 / 1;
+  border-radius: 100%;
+  box-shadow: 0 0 15px 0 rgb(0 0 0 / 28%);
+  overflow: hidden;
+
+  img {
+    object-fit: cover;
+    object-position: center;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Desktop "Row" layout (visible ≥ 992px by default here)
+   ──────────────────────────────────────────────────────────── */
+.user-row {
+  display: grid !important;
+  grid-template-areas: "image content actions";
+  grid-template-columns: 10% 75% auto;
+  gap: 1rem;
+  justify-self: start;
+  align-self: flex-start;
+  margin: 1rem 0;
+  height: 100%;
+  cursor: default;
+
+  @media (min-width: 1000px) and (max-width: 1300px) {
+    grid-template-columns: 10% 60% auto;
+  }
+
+  /* Image column */
+  .first {
+    grid-area: image;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Content column */
+  .second {
+    grid-area: content;
+    display: grid;
+    grid-template-areas: "header" "body" "footer";
+    grid-template-rows: 20% 1fr auto;
+    gap: 15px;
+    justify-self: flex-start;
+
+    .top {
+      grid-area: header;
+    }
+
+    .middle {
+      grid-area: body;
+      display: block; /* safe; can swap to flex/grid later */
+      flex-wrap: wrap; /* harmless with block */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .bottom {
+      grid-area: footer;
+      display: grid;
+      grid-template-areas: "start middle end";
+      grid-template-columns: auto;
+      overflow: hidden;
+      justify-self: flex-start;
+
+      .first {
+        grid-area: start;
+        display: flex;
+        flex-wrap: wrap;
+        justify-self: start;
+        align-self: center;
+        justify-content: start;
+        align-items: center;
+        padding: 0 1rem 0 0;
+      }
+      .second {
+        grid-area: middle;
+        display: flex;
+        flex-wrap: wrap;
+        justify-self: center;
+        align-self: center;
+        justify-content: center;
+        align-items: center;
+        padding: 0 1rem;
+        border-left: 1px solid var(--text-muted);
+        border-right: 1px solid var(--text-muted);
+      }
+      .third {
+        grid-area: end;
+        display: flex;
+        flex-wrap: wrap;
+        justify-self: end;
+        align-self: center;
+        justify-content: end;
+        align-items: center;
+        padding: 0 1rem;
+      }
+    }
+  }
+
+  /* Actions column */
+  .third {
+    grid-area: actions;
+    display: grid;
+    grid-template-areas: "top" "middle" "bottom";
+    grid-template-rows: 1fr auto;
+    gap: 10px;
+    justify-items: center;
+    align-self: center;
+    justify-content: end;
+    align-content: center;
+
+    .top {
+      grid-area: top;
+    }
+    .middle {
+      grid-area: middle;
+    }
+    .bottom {
+      grid-area: bottom;
+    }
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Card/Column layout (stacked)
+   ──────────────────────────────────────────────────────────── */
+.user-card {
+  display: grid !important;
+  grid-template-areas: "image" "content" "actions";
+  grid-template-rows: auto 1fr auto; /* desktop-friendly; overridden on small */
+  gap: 10px;
+  justify-self: center;
+  align-self: start;
+  flex-wrap: wrap;
+  overflow: hidden;
+  width: 100%;
+  height: 100% !important;
+
+  .first {
+    grid-area: image;
+    display: flex;
+    justify-items: center;
+    align-self: start;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .second {
+    grid-area: content;
+    display: grid;
+    grid-template-areas: "top" "middle" "bottom";
+    grid-template-rows: auto 1fr auto; /* overridden on small */
+    gap: 10px;
+    justify-items: start;
+    align-self: center;
+    width: 100%;
+    @media (max-width: 767.98px) {
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .top {
+      grid-area: top;
+      justify-content: center;
+      justify-self: center;
+      align-items: center;
+      align-self: center;
+    }
+    .middle {
+      grid-area: middle;
+      justify-content: space-around;
+      justify-self: start;
+      align-items: center;
+      align-self: center;
+    }
+    .bottom {
+      grid-area: bottom;
+      justify-content: space-around;
+      justify-self: start;
+      align-items: center;
+      align-self: center;
+    }
+  }
+
+  .third {
+    grid-area: actions;
+    display: grid;
+    grid-template-areas: "first second third";
+    grid-template-columns: auto auto auto;
+    grid-gap: 5px;
+    justify-content: center;
+    justify-self: start;
+    align-items: center;
+    align-self: center;
+    width: 100%;
+
+    .btn-view {
+      grid-area: first;
+    }
+    .btn-warning {
+      grid-area: second;
+    }
+    .btn-danger {
+      grid-area: third;
+    }
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Responsive visibility & sizing
+   S  < 768px        → prefer card (mobile-view for your special markup)
+   M  768–991.98px   → prefer card
+   L  ≥ 992px        → row layout available
+   (Parent grid controls column count; this controls inner sizing)
+   ──────────────────────────────────────────────────────────── */
+
+/* Small-only: use mobile-view block, prevent stretch */
+@media (max-width: 767.98px) {
+  .desktop {
+    display: none !important;
+  }
+  .mobile {
+    display: block !important;
+  }
+}
+
+/* Medium: still card by default (parent shows 2 columns) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .user-card {
+    grid-template-rows: 10rem auto auto;
+    .second {
+      grid-template-rows: 18pt auto auto;
+    }
+  }
+}
+
+/* Large and up: allow row (parent likely 3/4/5 columns) */
+@media (min-width: 992px) {
+  /* Keep both row/card available; control which to show from parent/template */
+}
+
+/* Ultra-small padding tweak */
+@media (max-width: 480px) {
+  .user {
+    padding: 1rem 0.75rem;
+  }
+}

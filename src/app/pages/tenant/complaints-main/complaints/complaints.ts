@@ -7,9 +7,9 @@ import {Subscription} from 'rxjs';
 import {Router} from '@angular/router';
 
 import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
-import {AuthService, LoggedUserType} from '../../../../services/auth/auth.service';
+import {AuthService} from '../../../../services/auth/auth.service';
 import {TenantService, ComplaintClient} from '../../../../services/tenant/tenant.service';
-import {APIsService} from '../../../../services/APIs/apis.service';
+import {APIsService, User} from '../../../../services/APIs/apis.service';
 
 import {NotificationDialogComponent} from '../../../../components/dialogs/notification/notification.component';
 import {ProgressBarComponent} from '../../../../components/dialogs/progress-bar/progress-bar.component';
@@ -61,7 +61,7 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
   protected mode: boolean | null = null;                      // current theme mode (light/dark)
   protected isBrowser: boolean;                                // SSR/Electron guard
   private modeSub: Subscription | null = null;               // subscription for theme changes
-  protected loggedUser!: LoggedUserType | null;                // current logged user (role checks)
+  protected loggedUser!: User | null;                // current logged user (role checks)
   protected isLoading = false;                                 // page-level loading gate
   private tenantToken = '';                                  // token used for "create complaint" navigation
 

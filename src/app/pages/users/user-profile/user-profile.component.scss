@@ -1,0 +1,237 @@
+@use "../../../styles/global.scss" as *;
+@use "sass:color";
+
+.main-panel {
+  .user-image-row {
+    position: relative;
+    border-radius: 1rem;
+    height: 10rem;
+    margin-top: 2rem;
+    margin-bottom: 10rem;
+    .btn-warning {
+      position: absolute;
+      width: 2rem;
+      height: 2rem;
+      top: 0;
+      right: 0px;
+      box-shadow: none;
+      background: none;
+      z-index: 10;
+    }
+    .image-container {
+      position: absolute;
+      bottom: -50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      .user-image {
+        width: 10rem;
+        height: 10rem;
+        border-radius: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+    }
+  }
+
+  .list-group {
+    background: none !important;
+    border: none !important;
+    .list-group-item {
+      background: none !important;
+      border: none !important;
+    }
+  }
+  .tab-row {
+    position: relative;
+    .list-btn {
+      display: none;
+    }
+    .tab-list {
+      position: absolute;
+      bottom: -0.4rem;
+      display: flex;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      z-index: 1;
+      transition: 1s ease-in-out;
+      .tab-list-item {
+        .tab-list-item-btn {
+          position: relative;
+          margin: 0rem;
+          border: none;
+          background: none;
+
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          align-content: center;
+          padding: 0.5rem 2rem;
+          color: currentColor;
+          transition: all 0.3s ease-in-out;
+          cursor: pointer;
+
+          &::before {
+            content: "";
+            position: absolute;
+            bottom: -0.4rem;
+            left: -4rem;
+            width: 100%;
+            height: 0.3rem;
+            background-color: #e8bd00;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+            opacity: 0;
+          }
+
+          &::after {
+            content: "";
+            position: absolute;
+            bottom: -0.4rem;
+            left: 0;
+            width: 100%;
+            height: 0.3rem;
+            background-color: #e8bd00;
+            transform: scaleX(0);
+            transform-origin: left;
+            opacity: 0;
+            transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+          }
+          &.active::after {
+            transform: scaleX(1);
+            opacity: 1;
+            transition-delay: 0.1s;
+          }
+
+          // &.active {
+          //   opacity: 1;
+          //   transform: translateY(0);
+          //   visibility: visible;
+          //   z-index: 2;
+
+          //   &::after {
+          //     transform: scaleX(1);
+          //     opacity: 1;
+          //     transition-delay: 0.2s;
+          //   }
+          // }
+          // &.active {
+          //   opacity: 1;
+          //   transform: translateY(0);
+          //   transition: opacity 0.8s ease, transform 0.8s ease;
+          //   visibility: visible;
+          //   pointer-events: auto;
+          //   z-index: 2;
+          //   &::before {
+          //     transition-delay: 0.2s ease;
+          //   }
+          // }
+        }
+      }
+    }
+  }
+
+  &:host-context(html.dark) {
+    .user-image-row {
+      background: linear-gradient(
+        45deg,
+        color.adjust($dark-third-color, $lightness: -20%),
+        $dark-third-color,
+        color.adjust($dark-third-color, $lightness: -20%)
+      );
+      .image-container {
+        .user-image {
+          box-shadow: 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
+        }
+      }
+    }
+
+    .tab-row {
+      border-bottom: rgba($dark-third-color, 0.5) solid 0.4rem;
+    }
+
+    .active {
+      border-bottom: $dark-third-color solid 0.4rem;
+    }
+  }
+
+  &:host-context(html.light) {
+    .user-image-row {
+      background: linear-gradient(
+        45deg,
+        color.adjust($dark-primary-color, $lightness: 15%),
+        color.adjust($dark-primary-color, $lightness: 10%),
+        color.adjust($dark-primary-color, $lightness: 15%)
+      );
+      .image-container {
+        .user-image {
+          box-shadow: 0rem 0rem 1rem 0rem #100a2b;
+        }
+      }
+    }
+
+    .tab-row {
+      border-bottom: rgba($light-secondary-color, 0.5) solid 0.4rem;
+    }
+
+    .active {
+      border-bottom: color.adjust($light-secondary-color, $lightness: -15%)
+        solid 0.4rem;
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .main-panel {
+    padding: 0.25rem;
+    overflow-x: hidden;
+    .tab-row {
+      border: none !important;
+      min-height: 1.75rem;
+      margin-top: 0 !important;
+      overflow: hidden;
+      transition: all 0.6s ease-in-out;
+      .list-btn {
+        display: flex;
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: none;
+        border-radius: 0.25rem;
+        // transform: translateY(-50%);
+        padding: 0.25rem;
+        transition: all 0.3s ease-in-out;
+        z-index: 100;
+        width: 1.75rem;
+        height: 1.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        align-content: center;
+      }
+      .tab-list {
+        display: block !important;
+        background: #131527;
+        padding: 1rem;
+        top: -100%;
+        left: 0;
+        right: 0;
+        border-radius: 0.5rem;
+        z-index: 10;
+        width: 100%;
+        opacity: 0;
+        transition: all 0.3s ease-in-out;
+        &.active {
+          position: relative !important;
+          top: 0;
+          opacity: 1;
+          border: none;
+        }
+      }
+      &.tab-row-active {
+        min-height: 10rem;
+      }
+    }
+  }
+}

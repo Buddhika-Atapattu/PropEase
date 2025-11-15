@@ -1,39 +1,37 @@
 // Angular core imports
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
-  Component,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
   AfterViewInit,
-  ViewChild,
-  Renderer2,
-  HostListener,
+  Component,
   ElementRef,
+  Inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+  Renderer2,
+  ViewChild
 } from '@angular/core';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {Subscription, firstValueFrom} from 'rxjs';
-import {ActivatedRoute, Router} from '@angular/router';
 import {FormsModule} from '@angular/forms';
+import {ActivatedRoute, Router} from '@angular/router';
+import {Subscription} from 'rxjs';
 
 // Service and types imports
-import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
+import {APIsService, type User, type MSG} from '../../../../services/APIs/apis.service';
+import {AuthService} from '../../../../services/auth/auth.service';
 import {
   PropertyService,
   type Address,
   type BackEndPropertyData,
-
 } from '../../../../services/property/property.service';
-import {AuthService, LoggedUserType, type BaseUser} from '../../../../services/auth/auth.service';
 import {
-  TenantService,
-  type Lease,
-  type ComplaintClient,
-  type PendingAttachmentClient,
   COMPLAINT_CATEGORIES,
+  TenantService,
+  type ComplaintClient,
   type CreateComplaintPayload,
+  type Lease,
+  type PendingAttachmentClient,
 } from '../../../../services/tenant/tenant.service';
-import {APIsService, type MSG} from '../../../../services/APIs/apis.service';
+import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
 
 // Component imports
 import {NotificationDialogComponent} from '../../../../components/dialogs/notification/notification.component';
@@ -46,15 +44,15 @@ import {
 } from '../../../../components/shared/custom-table/custom-table.component';
 // import {EditorComponent} from '@tinymce/tinymce-angular';
 import {Dropdown} from '../../../../components/shared/dropdown/dropdown';
-import {TextEditorComponent} from '../../../../components/shared/textEditor/text-editor'
+import {TextEditorComponent} from '../../../../components/shared/textEditor/text-editor';
 
 // Material UI imports
+import {MatButtonModule} from '@angular/material/button';
 import {MatDialog} from '@angular/material/dialog';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIcon} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatButtonModule} from '@angular/material/button';
-import {MatIcon} from '@angular/material/icon';
 
 /** Simple row model for the property selector table */
 interface PropertyTableData {
@@ -120,7 +118,7 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
-  private loggedUser!: LoggedUserType | null;
+  private loggedUser!: User | null;
 
   // ─────────────────────────────────────────────
   // Raw backend properties / leases
@@ -164,7 +162,7 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
   // Complaint form fields
   // (Use public for template binding; keep internals private)
   // ─────────────────────────────────────────────
-  private tenant!: BaseUser;
+  private tenant!: User;
   protected title!: ComplaintClient['title'];
   protected description!: ComplaintClient['description'];
   protected category!: ComplaintClient['category'];
@@ -470,7 +468,7 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
       if(!this.actionButtonFunction) throw new Error('Property view button function invalid!');
       const data = this.actionButtonFunction.data.element;
       const propertyID = data.id;
-      await this.router.navigate(['/dashboard/property-view/', propertyID]);
+      await this.router.navigate(['/dashboard/properties/property-view/', propertyID]);
     }
     catch(error) {
       console.error(error);
@@ -627,6 +625,35 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
     }
     finally {
       this.progressBar.complete();
+    }
+  }
+
+  // Page indicators
+  protected async gotComplaintDashboard(): Promise<void> {
+    try {
+      await this.router.navigate(['/dashboard/tenant/complaints']);
+      return;
+    }
+    catch(err) {
+      console.error(err);
+      this.notification.notification('error', 'Route to complaints failed!');
+      return;
+    }
+  }
+
+  protected async createComplaint(): Promise<void> {
+    try {
+      if(!this.loggedUser) throw new Error('Logged user invalid!');
+      const res = await this.APIsService.generateToken(this.loggedUser.username);
+      const token = res.token;
+      if(!token) throw new Error('Token generation failed!');
+      await this.router.navigate(['/dashboard/tenant/complaints/create-complaint', token]);
+      return;
+    }
+    catch(err) {
+      console.error(err);
+      this.notification.notification('error', 'Route to complaints failed!');
+      return;
     }
   }
 }

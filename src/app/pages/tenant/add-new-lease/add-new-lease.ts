@@ -16,7 +16,7 @@ import {of, Subscription} from 'rxjs';
 import {ActivatedRoute, Router} from '@angular/router';
 import {
   APIsService,
-  BaseUser,
+  User,
   Country,
   CountryCodes, ROLE_ACCESS_MAP
 } from '../../../services/APIs/apis.service';
@@ -41,7 +41,6 @@ import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {
   AuthService,
-  LoggedUserType,
 } from '../../../services/auth/auth.service';
 import {Observable} from 'rxjs';
 import {map} from 'rxjs/operators';
@@ -200,7 +199,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   protected isBrowser: boolean;
   protected modeSub: Subscription | null = null;
   protected isLoading: boolean = true;
-  protected loggedUser: LoggedUserType | null = null;
+  protected loggedUser: User | null = null;
 
   protected readonly definedMaleDummyImageURL =
     'Images/user-images/dummy-user/dummy-user.jpg';
@@ -291,7 +290,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   // <=============================== LEASE INFORMATION ===============================>
   // <=============================== Tenant Information ===============================>
   private tenantID: string = '';
-  protected tenant: BaseUser | null = null;
+  protected tenant: User | null = null;
 
   // <=============================== Tenant Basic Information ===============================>
 
@@ -751,7 +750,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       this.isLoading = true;
       const response = await this.apiService.getUserByToken(this.tenantID);
       if(response.status === 'success') {
-        this.tenant = response.user as BaseUser;
+        this.tenant = response.user as User;
         this.tenantUsername = this.tenant.username;
         this.tenantFullName = this.tenant.name;
         this.tenantEmail = this.tenant.email;
@@ -1599,7 +1598,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== Property Common Handlers ===========================>
   protected gotoTheProperty(propertyID: string) {
     if(this.isBrowser) {
-      this.router.navigate(['/dashboard/property-view', propertyID]);
+      this.router.navigate(['/dashboard/properties/property-view', propertyID]);
     }
   }
 

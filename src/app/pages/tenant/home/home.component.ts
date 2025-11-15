@@ -27,13 +27,12 @@ import {
   CustomTableColumnType,
   CustomTableComponent,
   FileExportWithDataAndExtentionType,
-  SwitchButtonDataFormatType,
+  SwitchButtonType,
 } from '../../../components/shared/custom-table/custom-table.component';
 import {FileExportButtonTypeByExtension} from '../../../components/shared/paginator/paginator.component';
-import {APIsService, BaseUser, UsersType} from '../../../services/APIs/apis.service';
+import {APIsService, User} from '../../../services/APIs/apis.service';
 import {
   AuthService,
-  LoggedUserType,
 } from '../../../services/auth/auth.service';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {Lease, LeaseWithProperty, TenantService} from '../../../services/tenant/tenant.service';
@@ -110,8 +109,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   protected modeSub: Subscription | null = null;
-  protected loggedUser: LoggedUserType | null = null;
-  protected allUsers: UsersType[] | null = [];
+  protected loggedUser: User | null = null;
+  protected allUsers: User[] | null = [];
   private _isReloading: boolean = false;
 
   // Table Data for all users
@@ -221,8 +220,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   };
   private _leaseTableData: LeaseTableDataType[] = [];
   private _leaseTableColumns: CustomTableColumnType[] = [];
-  private _leaseSwitchButton: SwitchButtonDataFormatType = {
+  private _leaseSwitchButton: SwitchButtonType = {
     isActive: false,
+    index: null,
     data: null
   };
   protected leaseLength: number = 0;
@@ -1116,7 +1116,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private async handleUserView(username: string) {
     if(this.isBrowser && username !== '') {
       const tokenResult = await this.apiService.generateToken(username);
-      this.router.navigate(['/dashboard/view-user-profile', tokenResult.token]);
+      this.router.navigate(['/dashboard/users/user-profile', tokenResult.token]);
     }
   }
 
@@ -1530,7 +1530,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     await this.apiService
       .getAllUsers()
-      .then((res: UsersType[] | null) => {
+      .then((res: User[] | null) => {
         if(res) {
           this.allUsers = res;
           setTimeout(() => {
@@ -1584,7 +1584,7 @@ export class HomeComponent implements OnInit, OnDestroy {
               (tenant) => tenant.username === user.username
             );
             return !userIsTenant;
-          }) as UsersType[];
+          }) as User[];
 
           data.forEach((item) => {
             this.noneTenantsFull.push({

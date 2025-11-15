@@ -1,9 +1,10 @@
-<div class="container-fluid my-4 w-100 h-100">
+<close-btn [matDialogRef]="dialogRef"></close-btn>
+<div class="container-fluid w-100 h-100" #dialog>
   <!-- close btn -->
-  <div class="row position-relative top-close-btn-row">
-    <button type="button" class="close-btn" (click)="closeTheDialog()">
+  <div class="row position-relative">
+    <!-- <button type="button" class="close-btn" (click)="closeTheDialog()">
       <i class="fa-solid fa-rectangle-xmark"></i>
-    </button>
+    </button> -->
   </div>
   <!-- end close btn -->
   <!-- selected image preview -->
@@ -17,7 +18,10 @@
           />
         </div>
         <div class="property-image-overlay">
-          <button type="button" (click)="downloadImage(propertyImages[currentImageIndex].imageURL)">
+          <button
+            type="button"
+            (click)="downloadImage(propertyImages[currentImageIndex].imageURL)"
+          >
             <i class="fa-solid fa-download"></i>
           </button>
         </div>

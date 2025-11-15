@@ -37,7 +37,7 @@ export type Severity = 'info' | 'success' | 'warning' | 'error';
 export type Channel = 'inapp' | 'email' | 'sms' | 'push';
 export type TitleCategory =
   | 'User' | 'Tenant' | 'Property' | 'Lease' | 'Agent' | 'Developer'
-  | 'Maintenance' | 'Complaint' | 'Team' | 'Registration' | 'Payment' | 'System';
+  | 'Maintenance' | 'Complaint' | 'Team' | 'Registration' | 'Payment' | 'System' | 'Comment';
 
 export type Title =
   | 'New User' | 'Update User' | 'Delete User' | 'User Role Changed' | 'User Password Reset' | 'User Suspended' | 'User Reactivated'
@@ -52,7 +52,7 @@ export type Title =
   | 'New Registration' | 'Account Verified' | 'KYC Document Uploaded' | 'KYC Document Approved' | 'KYC Document Rejected'
   | 'New Invoice' | 'Update Invoice' | 'Invoice Paid' | 'Invoice Overdue' | 'Refund Issued' | 'Payment Failed'
   | 'System Update' | 'Security Alert' | 'Backup Completed' | 'New Message' | 'New Notification' | 'Broadcast Announcement'
-  | '';
+  | 'New Comment' | 'Update Comment' | 'Delete Comment' | 'Reject Comment' | '';
 
 export interface NotificationAudience {
   mode: AudienceMode;

@@ -1,3 +1,4 @@
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -9,35 +10,33 @@ import {
   PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
-import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 import {Subscription} from 'rxjs';
-import {ProgressBarComponent} from '../../../dialogs/progress-bar/progress-bar.component';
-import {NotificationDialogComponent} from '../../../dialogs/notification/notification.component';
-import {BaseUser} from '../../../../services/auth/auth.service';
-import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
 import {ActivityTrackerService} from '../../../../services/activityTacker/activity-tracker.service';
+import {User} from '../../../../services/APIs/apis.service';
+import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
+import {NotificationDialogComponent} from '../../../dialogs/notification/notification.component';
+import {ProgressBarComponent} from '../../../dialogs/progress-bar/progress-bar.component';
 
-import {MatSelectModule} from '@angular/material/select';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDialogModule} from '@angular/material/dialog';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
 
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
-import {MatPaginatorModule} from '@angular/material/paginator';
-import {Sort, MatSortModule, MatSort} from '@angular/material/sort';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MatMomentDateModule} from '@angular/material-moment-adapter';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatMomentDateModule} from '@angular/material-moment-adapter';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatButtonModule} from '@angular/material/button';
+import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
-import {SkeletonLoaderComponent} from '../../../shared/skeleton-loader/skeleton-loader.component';
-import * as XLSX from 'xlsx';
+import {MatPaginatorModule} from '@angular/material/paginator';
+import {MatSortModule, Sort} from '@angular/material/sort';
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
 import * as FileSaver from 'file-saver';
+import * as XLSX from 'xlsx';
+import {SkeletonLoaderComponent} from '../../../shared/skeleton-loader/skeleton-loader.component';
 
 interface Data {
   URL: string;
@@ -88,8 +87,8 @@ export class UserFileManagementComponent
   @ViewChild(NotificationDialogComponent, {static: true})
   notification!: NotificationDialogComponent;
 
-  @Input() user: BaseUser | null = null;
-  @Input() loggedUser: BaseUser | null = null;
+  @Input() user: User | null = null;
+  @Input() loggedUser: User | null = null;
   @Input() mode: boolean | null = null;
 
   protected isBrowser: boolean;

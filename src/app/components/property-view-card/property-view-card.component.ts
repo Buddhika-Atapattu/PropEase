@@ -1,212 +1,241 @@
+// Path: src/app/components/property-view-card/property-view-card.component.ts
+// Angular core
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
   Component,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
-  Input,
-  AfterViewInit,
-  ViewChild,
-  Output,
   EventEmitter,
-  ChangeDetectorRef,
+  Inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  PLATFORM_ID, AfterViewInit, HostListener
 } from '@angular/core';
+
+// Material UI
+import {MatIconModule} from '@angular/material/icon';
+import {MatTooltipModule} from '@angular/material/tooltip';
+
+// Services
+import {AuthService} from '../../services/auth/auth.service';
 import {WindowsRefService} from '../../services/windowRef/windowRef.service';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {filter, Subscription} from 'rxjs';
-import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
-import {APIsService, UsersType} from '../../services/APIs/apis.service';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {DomSanitizer} from '@angular/platform-browser';
-import {SkeletonLoaderComponent} from '../../components/shared/skeleton-loader/skeleton-loader.component';
-import {CryptoService} from '../../services/cryptoService/crypto.service';
-import {AuthService, BaseUser} from '../../services/auth/auth.service';
-import {PropertyFilterDialogComponent} from '../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
-import {
-  BackEndPropertyData,
-  Property,
-} from '../../services/property/property.service';
-import {MatDialog} from '@angular/material/dialog';
-import {ConfirmationComponent} from '../shared/confirmation/confirmation.component';
-import {PropertyService} from '../../services/property/property.service';
-import {NotificationDialogComponent} from '../dialogs/notification/notification.component';
-import {HttpResponse} from '@angular/common/http';
+import {BackEndPropertyData} from '../../services/property/property.service';
+import {ImageService} from '../../services/imageService/image.service';
+
+// Components
+import {SkeletonLoaderComponent} from '../shared/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-property-view-card',
   imports: [
+    // Angular core
     CommonModule,
+
+    // Material UI
     MatIconModule,
+    MatTooltipModule,
+
+    // Components
     SkeletonLoaderComponent,
-    NotificationDialogComponent,
   ],
   standalone: true,
   templateUrl: './property-view-card.component.html',
   styleUrl: './property-view-card.component.scss',
 })
-export class PropertyViewCardComponent implements OnInit, AfterViewInit {
-  @Output() propertyDeleted = new EventEmitter<boolean>();
-  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
-  @Input() property: BackEndPropertyData | null = null;
-  @Input() isColView: boolean = false;
-  @Input() isListView: boolean = true;
-  protected mode: boolean | null = null;
-  protected isBrowser: boolean;
-  protected LOGGED_USER: BaseUser | null = null;
-  private modeSub: Subscription | null = null;
-  protected loading: boolean = true;
-  private routeSub: Subscription | null = null;
-  private routerSub: Subscription | null = null;
+export class PropertyViewCardComponent implements OnInit, AfterViewInit, OnDestroy {
+  @Input({required: true}) property!: BackEndPropertyData;
+  @Input({required: true}) viewMode !: boolean;
+  @Input({required: true}) isLoading: boolean = true;
+  @Input({required: false}) mode: boolean | null = null;
+  @Output() viewProperty: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() editProperty: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() deleteProperty: EventEmitter<boolean> = new EventEmitter<boolean>();
+
+  protected readonly definedPropertyImage =
+    'Images/System-images/noProperties.jpg';
+  private propertyImage !: string;
 
   constructor (
-    private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private route: ActivatedRoute,
-    private authService: AuthService,
-    private router: Router,
-    private APIsService: APIsService,
-    private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer,
-    private crypto: CryptoService,
-    private dialog: MatDialog,
-    private propertService: PropertyService,
-    private cdr: ChangeDetectorRef
+    private readonly authService: AuthService,
+    @Inject(PLATFORM_ID) private readonly platformId: Object,
+    private readonly windiwRef: WindowsRefService,
+    private readonly imageService: ImageService
   ) {
-    this.LOGGED_USER = this.authService.getLoggedUser;
-    this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
-  ngOnInit() {
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
-        this.mode = val;
-      });
-    }
-
-    this.routeSub = this.route.url.subscribe((segments) => {
-      const path = segments.map((s) => s.path).join('/');
-    });
+  // Lifecycles
+  async ngOnInit(): Promise<void> {
+    this.isLoading = true;
+    const isImage = await this.imageService.universalImageCheck(this.property.images[0].imageURL);
+    this.propertyImage = isImage ? this.property.images[0].imageURL : this.definedPropertyImage;
+    this.isLoading = false;
   }
 
-  ngAfterViewInit() {
-    if(this.isBrowser) {
-      if(this.isListView === true) {
-        this.loading = true;
-        setTimeout(() => {
-          this.loading = false;
-        }, 500);
-      } else {
-        this.loading = true;
-        setTimeout(() => {
-          this.loading = false;
-        }, 500);
-      }
-    }
+  async ngAfterViewInit(): Promise<void> {
 
-    this.iconMaker();
   }
 
-  protected triggerOnRender(style: string) {
-    console.log(style, ': ', this.loading);
-    this.cdr.detectChanges();
+
+
+  ngOnDestroy(): void {
+
   }
 
-  private iconMaker() {
-    const iconMap = [
-      {name: 'view', path: 'Images/Icons/view.svg'},
-      {name: 'edit', path: 'Images/Icons/pencil-square.svg'},
-      {name: 'delete', path: 'Images/Icons/delete.svg'},
-      {name: 'add-new-user', path: 'Images/Icons/add-new-user.svg'},
-      {name: 'search', path: 'Images/Icons/search.svg'},
-      {name: 'filter', path: 'Images/Icons/filter.svg'},
-    ];
-
-    for(let icon of iconMap) {
-      this.matIconRegistry.addSvgIcon(
-        icon.name.toString(),
-        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path.toString())
-      );
-    }
+  // Operators methods
+  protected viewPropertyFunction(): void {
+    this.viewProperty.emit(true);
   }
 
-  protected isUserCanDeleteTheProperty(): boolean {
-    return (
-      this.LOGGED_USER?.access.permissions.some(
-        (permission) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes('delete property')
-      ) ?? false
-    );
+  protected editPropertyFunction(): void {
+    this.editProperty.emit(true);
   }
 
-  protected isUserCanEditTheProperty(): boolean {
-    return (
-      this.LOGGED_USER?.access.permissions.some(
-        (permission) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes('update property')
-      ) ?? false
-    );
+  protected deletePropertyFunction(): void {
+    this.deleteProperty.emit(true);
   }
 
-  protected isUserCanViewTheProperty(): boolean {
-    return (
-      this.LOGGED_USER?.access.permissions.some(
-        (permission) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes('view properties')
-      ) ?? false
-    );
+  // Helper operations
+  protected detectPropertyImage(): string {
+    return this.propertyImage;
   }
 
-  protected gotoTheProperty(propertyID: string) {
-    if(this.isBrowser) {
-      this.router.navigate(['/dashboard/property-view', propertyID]);
+
+
+  protected detectTypeIcon(property: BackEndPropertyData): string {
+    try {
+      if(!property || !property.type)
+        throw new Error('Property is invalid or has no type');
+
+      const type = property.type.trim().toLowerCase();
+
+      // Material icon mapping
+      const iconMap: Record<string, string> = {
+        apartment: 'apartment',             // 🏢
+        house: 'home',                      // 🏠
+        villa: 'villa',                     // 🏛️ (Material symbol)
+        commercial: 'storefront',           // 🏬
+        land: 'terrain',                    // 🌄
+        studio: 'meeting_room',             // 🎥 or single-room concept
+      };
+
+      // Safe fallback if no matching key
+      const icon = iconMap[type];
+      if(!icon) throw new Error(`Unknown property type: ${property.type}`);
+
+      return icon;
+    } catch(err) {
+      console.error('Property icon process failed:', err);
+      return 'home'; // universal fallback
     }
   }
 
-  protected gotoThePropertyEdit(propertyID: string) {
-    if(this.isBrowser) {
-      this.router.navigate(['/dashboard/property-edit', propertyID]);
+
+  protected makeUppercase(input: unknown): string {
+    try {
+      if(!input || typeof input !== 'string') throw new Error('Input value either invalid or empty!');
+      const text = input.toUpperCase();
+      return text.trim();
+    }
+    catch(err) {
+      console.error(err);
+      return '';
     }
   }
 
-  protected deleteProperty(id: string) {
-    const dialogRef = this.dialog.open(ConfirmationComponent, {
-      width: '400px',
-      height: 'auto',
-      data: {
-        title: 'Delete Property',
-        message: 'Are you sure you want to delete this property?',
-        isConfirm: true,
-      },
-    });
+  /**
+   * Public API: produce a safe, short, plain-text bio for card bodies.
+   */
+  protected filterPortionOfDescription(property: BackEndPropertyData): string {
+    try {
+      if(!property) throw new Error('Invalid property!');
+      if(!property.description || typeof property.description !== 'string') throw new Error('Invalid property description!');
 
-    dialogRef.afterClosed().subscribe(async (result) => {
-      if(result?.isConfirm === true) {
-        try {
-          if(this.LOGGED_USER === null) {
-            throw new Error('User not authenticated');
-          }
-          const respond = await this.propertService.deleteProperty(id, this.LOGGED_USER?.username);
-          console.log(respond);
-          this.notification.notification(respond.status, respond.message);
-          this.propertyDeleted.emit(true);
-        } catch(error: any) {
-          this.notification.notification('error', error.message);
-        }
-      } else {
-        this.propertyDeleted.emit(false);
-      }
-    });
+      // 1) Strip tags safely (DOMParser in browser, regex fallback for SSR/Electron)
+      const plain = this.extractPlainText(property.description);
+
+      // 2) Normalize whitespace
+      const compact = this.normalizeWhitespace(plain);
+
+      // 3) Return a tidy preview (default 140 chars)
+      const endTail = compact.length > 140 ? '...' : '.'
+      return this.truncateAtWordBoundary(compact, 140) + endTail;
+    } catch(err) {
+      console.error('Processing property description failed: ', err);
+      return '';
+    }
   }
 
-  ngOnDestroy() {
-    if(this.modeSub) {
-      this.modeSub.unsubscribe();
+  // ────────────────────────────────
+  // Helpers (kept class-based)
+  // ────────────────────────────────
+
+  /**
+   * Convert HTML to plain text.
+   * Browser: uses DOMParser for robust tag removal & entity decoding.
+   * SSR/Electron: strips tags & decodes a safe subset of entities.
+   */
+  private extractPlainText(html: string): string {
+    if(this.isBrowser()) {
+      // DOMParser reliably removes all tags & decodes entities.
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      return (doc.body.textContent ?? '').trim();
     }
-    if(this.routeSub) {
-      this.routeSub.unsubscribe();
-    }
+
+    // SSR/Electron fallback: strip <script>/<style>, then all tags.
+    const noCode = html
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<\/?[^>]+>/g, ' ');
+
+    // Decode a minimal, common entity set (extend if needed).
+    return this.decodeEntities(noCode).trim();
+  }
+
+  /**
+   * Collapse whitespace and non-breaking spaces to single spaces.
+   */
+  private normalizeWhitespace(input: string): string {
+    return input
+      .replace(/\u00A0/g, ' ')   // NBSP → space
+      .replace(/\s+/g, ' ')      // collapse runs of whitespace
+      .trim();
+  }
+
+  /**
+   * Truncate without cutting words in half; adds an ellipsis when truncated.
+   * Ensures a sensible minimum before falling back to hard cut.
+   */
+  private truncateAtWordBoundary(input: string, maxLen: number): string {
+    if(input.length <= maxLen) return input;
+
+    const slice = input.slice(0, maxLen);
+    const lastSpace = slice.lastIndexOf(' ');
+
+    // Prefer trimming at a word boundary if it keeps at least ~80 chars
+    const cutoff = lastSpace >= Math.min(80, Math.floor(maxLen * 0.6)) ? lastSpace : maxLen;
+    return input.slice(0, cutoff).trimEnd() + '…';
+  }
+
+  /**
+   * Minimal HTML entity decoder for SSR/Electron fallback.
+   * Add more entities as your content requires.
+   */
+  private decodeEntities(text: string): string {
+    const map: Record<string, string> = {
+      '&nbsp;': ' ',
+      '&amp;': '&',
+      '&lt;': '<',
+      '&gt;': '>',
+      '&quot;': '"',
+      '&#39;': "'",
+    };
+    return text.replace(/&(nbsp|amp|lt|gt|quot|#39);/g, (m) => map[m] ?? m);
+  }
+
+  /**
+   * Runtime guard for browser-only features (e.g., DOMParser).
+   */
+  private isBrowser(): boolean {
+    return isPlatformBrowser(this.platformId);
   }
 }

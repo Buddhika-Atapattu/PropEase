@@ -89,6 +89,7 @@ export class TextEditorComponent implements ControlValueAccessor, OnInit, OnDest
     if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe(() => {
         if(this.editorRef) this.applyEditorThemeClass(this.editorRef);
+        console.log(this.editorRef)
       });
     }
 

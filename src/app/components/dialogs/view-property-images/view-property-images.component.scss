@@ -17,18 +17,22 @@
 }
 
 .top-close-btn-row {
-  height: 4rem;
+  height: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  align-items: center;
   .close-btn {
-    position: absolute;
-    width: 2rem;
-    height: 2rem;
     display: flex;
-    justify-content: center;
+    justify-content: end;
+    align-items: center;
+    position: sticky;
+    width: auto;
+    height: auto;
     flex-wrap: wrap;
-    align-content: center;
-    top: 0;
-    left: 100%;
-    transform: translate(-150%, 5%);
+    top: -50%;
+    right: -30%;
+    border-radius: 100%;
     background: none;
     border: none;
     i {
@@ -98,7 +102,7 @@
   display: flex;
   justify-content: start;
   align-items: center;
-  overflow: auto;
+  overflow: hidden;
   ul {
     list-style: none;
     display: inline-flex;

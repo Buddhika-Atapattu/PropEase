@@ -1,13 +1,13 @@
 import {TestBed} from '@angular/core/testing';
 
-import {RichTextUploadServiceTs} from './rich-text-upload.service.ts';
+import {RichTextUploadService} from './rich-text-upload.service.ts';
 
 describe('RichTextUploadServiceTs', () => {
-  let service: RichTextUploadServiceTs;
+  let service: RichTextUploadService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(RichTextUploadServiceTs);
+    service = TestBed.inject(RichTextUploadService);
   });
 
   it('should be created', () => {

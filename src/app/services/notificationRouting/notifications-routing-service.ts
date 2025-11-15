@@ -219,7 +219,7 @@ export class NotificationsRoutingService {
       idPaths: {username: this.USERNAME_PATHS},
       toUrl: ({ids, pre, router}) => {
         if(ids.username && pre?.token) {
-          return router.createUrlTree(['/dashboard/view-user-profile', pre.token]);
+          return router.createUrlTree(['/dashboard/users/user-profile', pre.token]);
         }
         return router.createUrlTree(['/dashboard/users']);
       },
@@ -229,7 +229,7 @@ export class NotificationsRoutingService {
       idPaths: {username: this.USERNAME_PATHS},
       toUrl: ({ids, pre, router}) => {
         if(ids.username && pre?.token) {
-          return router.createUrlTree(['/dashboard/view-user-profile', pre.token]);
+          return router.createUrlTree(['/dashboard/users/user-profile', pre.token]);
         }
         return router.createUrlTree(['/dashboard/users']);
       },
@@ -237,7 +237,7 @@ export class NotificationsRoutingService {
     'Delete User': {
       category: 'User',
       toUrl: ({n, router}) =>
-        router.createUrlTree(['/dashboard/deleted-items'], {
+        router.createUrlTree(['/dashboard/notifications/deleted-items'], {
           queryParams: {selected: n._id, category: 'User', type: 'delete'},
         }),
     },
@@ -248,7 +248,7 @@ export class NotificationsRoutingService {
       idPaths: {property: this.PROP_ID_PATHS},
       toUrl: ({ids, router}) =>
         ids.property
-          ? router.createUrlTree(['/dashboard/property-view', String(ids.property)])
+          ? router.createUrlTree(['/dashboard/properties/property-view', String(ids.property)])
           : router.createUrlTree(['/dashboard/property-listing']),
     },
     'Update Property': {
@@ -256,13 +256,13 @@ export class NotificationsRoutingService {
       idPaths: {property: this.PROP_ID_PATHS},
       toUrl: ({ids, router}) =>
         ids.property
-          ? router.createUrlTree(['/dashboard/property-view', String(ids.property)])
+          ? router.createUrlTree(['/dashboard/properties/property-view', String(ids.property)])
           : router.createUrlTree(['/dashboard/property-listing']),
     },
     'Delete Property': {
       category: 'Property',
       toUrl: ({n, router}) =>
-        router.createUrlTree(['/dashboard/deleted-items'], {
+        router.createUrlTree(['/dashboard/notifications/deleted-items'], {
           queryParams: {selected: n._id, category: 'Property', type: 'delete'},
         }),
     },
@@ -295,7 +295,7 @@ export class NotificationsRoutingService {
     'Delete Tenant': {
       category: 'Tenant',
       toUrl: ({n, router}) =>
-        router.createUrlTree(['/dashboard/deleted-items'], {
+        router.createUrlTree(['/dashboard/notifications/deleted-items'], {
           queryParams: {selected: n._id, category: 'Tenant', type: 'delete'},
         }),
     },
@@ -320,7 +320,7 @@ export class NotificationsRoutingService {
     'Delete Lease': {
       category: 'Lease',
       toUrl: ({n, router}) =>
-        router.createUrlTree(['/dashboard/deleted-items'], {
+        router.createUrlTree(['/dashboard/notifications/deleted-items'], {
           queryParams: {selected: n._id, category: 'Lease', type: 'delete'},
         }),
     },
@@ -353,25 +353,42 @@ export class NotificationsRoutingService {
         const val = code || id;
         return val
           ? router.createUrlTree(['/dashboard/tenant/complaints/edit-complaint', val])
-          : router.createUrlTree(['/dashboard/all-notifications']);
+          : router.createUrlTree(['/dashboard/notifications/all-notifications']);
       },
     },
     'Delete Complaint': {
       category: 'Complaint',
       toUrl: ({n, router}) =>
-        router.createUrlTree(['/dashboard/deleted-items'], {
+        router.createUrlTree(['/dashboard/notifications/deleted-items'], {
           queryParams: {selected: n._id, category: 'Complaint', type: 'delete'},
         }),
     },
 
+    'New Comment': {
+      category: 'Complaint',
+      idPaths: {
+        complaintCode: this.COMPLAINT_CODE_PATHS,
+        complaintId: this.COMPLAINT_ID_PATHS,
+      },
+      toUrl: ({ids, router}) => {
+        const code = (ids.complaintCode && String(ids.complaintCode).trim()) || '';
+        const id = (ids.complaintId !== undefined && ids.complaintId !== null) ? String(ids.complaintId) : '';
+        const val = code || id;
+        return val
+          ? router.createUrlTree(['/dashboard/tenant/complaints/view-complaint', val])
+          : router.createUrlTree(['/dashboard/tenant/complaints']);
+      },
+    },
+
+
     // SYSTEM / BROADCAST (general inbox)
     'System Update': {
       category: 'System',
-      toUrl: ({router}) => router.createUrlTree(['/dashboard/all-notifications']),
+      toUrl: ({router}) => router.createUrlTree(['/dashboard/notifications/all-notifications']),
     },
     'Broadcast Announcement': {
       category: 'System',
-      toUrl: ({router}) => router.createUrlTree(['/dashboard/all-notifications']),
+      toUrl: ({router}) => router.createUrlTree(['/dashboard/notifications/all-notifications']),
     },
   };
 
@@ -400,7 +417,7 @@ export class NotificationsRoutingService {
       return this.router.navigateByUrl(url);
     } catch(err) {
       console.error('[notif-route] navigateToAny failed:', err);
-      return this.router.navigateByUrl(this.router.createUrlTree(['/dashboard/all-notifications']));
+      return this.router.navigateByUrl(this.router.createUrlTree(['/dashboard/notifications/all-notifications']));
     }
   }
 
@@ -436,7 +453,7 @@ export class NotificationsRoutingService {
 
     // 3) Destructive → Deleted Items hub
     if(this.isDeleteOrDestructive(n)) {
-      return this.router.createUrlTree(['/dashboard/deleted-items'], {
+      return this.router.createUrlTree(['/dashboard/notifications/deleted-items'], {
         queryParams: {
           selected: n._id,
           category: n.category || undefined,
@@ -450,7 +467,7 @@ export class NotificationsRoutingService {
       case 'Property': {
         const propId: IdLike = refId || this.firstPresent(data, this.PROP_ID_PATHS);
         return propId
-          ? this.router.createUrlTree(['/dashboard/property-view', String(propId)])
+          ? this.router.createUrlTree(['/dashboard/properties/property-view', String(propId)])
           : this.router.createUrlTree(['/dashboard/property-listing'], {queryParams: {selected: n._id}});
       }
 
@@ -470,7 +487,7 @@ export class NotificationsRoutingService {
         const username = this.resolveUsername(data, refId);
         if(username) {
           const token = await this.safeUserToken(username);
-          if(token) return this.router.createUrlTree(['/dashboard/view-user-profile', token]);
+          if(token) return this.router.createUrlTree(['/dashboard/users/user-profile', token]);
         }
         return this.router.createUrlTree(['/dashboard/users'], {queryParams: {selected: n._id}});
       }
@@ -500,11 +517,11 @@ export class NotificationsRoutingService {
       case 'Developer':
       case 'Agent':
       case 'Maintenance':
-        return this.router.createUrlTree(['/dashboard/all-notifications'], {queryParams: {selected: n._id}});
+        return this.router.createUrlTree(['/dashboard/notifications/all-notifications'], {queryParams: {selected: n._id}});
     }
 
     // 5) Fallback inbox
-    return this.router.createUrlTree(['/dashboard/all-notifications'], {queryParams: {selected: n._id}});
+    return this.router.createUrlTree(['/dashboard/notifications/all-notifications'], {queryParams: {selected: n._id}});
   }
 
   // ───────────────────────────────────────────────────────────────────────────
@@ -527,7 +544,7 @@ export class NotificationsRoutingService {
         const username = res.refId?.trim();
         if(username) {
           const token = await this.safeUserToken(username);
-          if(token) return this.router.createUrlTree(['/dashboard/view-user-profile', token]);
+          if(token) return this.router.createUrlTree(['/dashboard/users/user-profile', token]);
         }
         return this.router.createUrlTree(['/dashboard/users']);
       }
@@ -545,7 +562,7 @@ export class NotificationsRoutingService {
       case 'Property': {
         const id = res.restored?._id || res.refId;
         return id
-          ? this.router.createUrlTree(['/dashboard/property-view', String(id)])
+          ? this.router.createUrlTree(['/dashboard/properties/property-view', String(id)])
           : this.router.createUrlTree(['/dashboard/property-listing']);
       }
 
@@ -565,7 +582,7 @@ export class NotificationsRoutingService {
       }
 
       default:
-        return this.router.createUrlTree(['/dashboard/all-notifications']);
+        return this.router.createUrlTree(['/dashboard/notifications/all-notifications']);
     }
   }
 

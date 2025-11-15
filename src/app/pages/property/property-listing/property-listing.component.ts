@@ -1,68 +1,66 @@
 import {
-  Component,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
-  ViewChild,
-  ElementRef, AfterViewInit,
-  QueryList,
-  ViewChildren
-} from '@angular/core';
-import {
+  AsyncPipe,
   CommonModule, isPlatformBrowser
 } from '@angular/common';
 import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  Inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+  QueryList,
+  ViewChild,
+  ViewChildren
+} from '@angular/core';
+import {
+  FormControl,
   FormsModule,
-  ReactiveFormsModule,
-  FormControl
+  ReactiveFormsModule
 } from '@angular/forms';
-import {RouterModule, Router, ActivatedRoute} from '@angular/router';
+import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
 import {MatButtonModule} from '@angular/material/button';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatInputModule} from '@angular/material/input';
-import {MatSelectModule} from '@angular/material/select';
 import {MatCheckboxModule} from '@angular/material/checkbox';
-import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatNativeDateModule} from '@angular/material/core';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
 import {MatRadioModule} from '@angular/material/radio';
+import {MatSelectModule} from '@angular/material/select';
 import {MatStepperModule} from '@angular/material/stepper';
 import {MatTableModule} from '@angular/material/table';
-import {Subscription, of} from 'rxjs';
-import {Observable} from 'rxjs';
+import {DomSanitizer} from '@angular/platform-browser';
+import {ActivatedRoute, Router, RouterModule} from '@angular/router';
 import {EditorComponent} from '@tinymce/tinymce-angular';
-import {AuthService, BaseUser} from '../../../services/auth/auth.service';
-import {
-  PropertyService,
-  Property,
-  FEATURES_AMENITIES,
-  GoogleMapLocation,
-  AddedBy,
-  Address,
-  propertyDocPreview
-} from '../../../services/property/property.service';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
-import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
+import {Observable, Subscription, of} from 'rxjs';
+import {map, startWith} from 'rxjs/operators';
 import {
   NotificationDialogComponent
 } from '../../../components/dialogs/notification/notification.component';
-import {DomSanitizer} from '@angular/platform-browser';
-import {map, startWith} from 'rxjs/operators';
-import {AsyncPipe} from '@angular/common';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
+import {MapComponent} from '../../../components/shared/map/map.component';
+import {TextEditorComponent} from '../../../components/shared/textEditor/text-editor';
+import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
 import {
-  APIsService,
-  Country,
+  APIsService, Country,
   CountryDetails,
   CountryDetailsCustomType,
-  UsersType,
+  User
 } from '../../../services/APIs/apis.service';
-import {MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
-import {MapComponent} from '../../../components/shared/map/map.component';
-import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
-import {TextEditorComponent} from '../../../components/shared/textEditor/text-editor';
+import {AuthService} from '../../../services/auth/auth.service';
+import {CryptoService} from '../../../services/cryptoService/crypto.service';
+import {
+  AddedBy,
+  Address,
+  FEATURES_AMENITIES,
+  GoogleMapLocation,
+  Property,
+  PropertyService,
+  propertyDocPreview
+} from '../../../services/property/property.service';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 
 interface propertyImagePreview {
   URL: string;
@@ -116,7 +114,7 @@ export class PropertyListingComponent
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
-  protected loggedUser: BaseUser | null = null;
+  protected loggedUser: User | null = null;
   protected loggedUsername: string = '';
 
   protected istabOpenButtonActive: boolean = false;
@@ -315,10 +313,10 @@ export class PropertyListingComponent
 
   //Owner information
   protected ownerUsername: string = '';
-  protected allUsers: UsersType[] = [];
-  protected selectedOwner: UsersType | null = null;
+  protected allUsers: User[] = [];
+  protected selectedOwner: User | null = null;
   protected ownerName: string = '';
-  protected filterOwner: UsersType[] = [];
+  protected filterOwner: User[] = [];
   protected isOwnerNotSelected: boolean = false;
 
   //<================== End Listing Management ==================>
@@ -345,7 +343,7 @@ export class PropertyListingComponent
     'Villa',
     'Commercial',
     'Land',
-    'Stodio',
+    '',
   ];
   protected filterTypeOptions: string[] = [];
 

@@ -1,3 +1,17 @@
+/*****************************************************************************************
+ * ListMainPanelComponent
+ * -----------------------------------------------------------------------------
+ * Sidebar navigation component with:
+ *   - Expand / Collapse behaviour (ExpandableService)
+ *   - Dynamic menu list with optional submenus
+ *   - CDK Overlay-based fly-out submenu (for collapsed mode)
+ *   - URL tracking for active item highlighting
+ *   - SSR-safe browser checks
+ *   - Custom SVG icon registration for MatIcon
+ *
+ *  REORGANISED + COMMENTED VERSION — BUDDHIKA ✨
+ *****************************************************************************************/
+
 import {
   Component,
   OnInit,
@@ -9,396 +23,566 @@ import {
   EventEmitter,
   ElementRef,
   Input,
+  ViewChild,
 } from '@angular/core';
-import {WindowsRefService} from '../../services/windowRef/windowRef.service';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {Subscription} from 'rxjs';
-import {MatIconModule} from '@angular/material/icon';
-import {MatButtonModule} from '@angular/material/button';
-import {Router, NavigationEnd} from '@angular/router';
-import {ExpandableService} from '../../services/expandable/expandable.service';
-import {MatIconRegistry} from '@angular/material/icon';
-import {DomSanitizer} from '@angular/platform-browser';
-import {MatTooltipModule} from '@angular/material/tooltip';
-import {filter} from 'rxjs/operators';
-import {AuthService} from '../../services/auth/auth.service';
-import {LoggedUserType} from '../../services/APIs/apis.service';
 
-interface PageLinkLists {
-  url: string | null;
-  mat_icon: string;
-  icon_text: string;
-  toolTip?: string;
-  sub?: PageLinkLists[] | null;
+import {
+  CdkOverlayOrigin,
+  ConnectedPosition,
+  OverlayModule,
+  CdkConnectedOverlay,
+} from '@angular/cdk/overlay';
+
+import {CommonModule, isPlatformBrowser} from '@angular/common';
+import {Router, NavigationEnd} from '@angular/router';
+import {filter, Subscription} from 'rxjs';
+
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatButtonModule} from '@angular/material/button';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {DomSanitizer} from '@angular/platform-browser';
+
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import {ExpandableService} from '../../services/expandable/expandable.service';
+import {AuthService} from '../../services/auth/auth.service';
+import {User} from '../../services/APIs/apis.service';
+
+/* ----------------------------------------------------------------------------
+ * Menu interface
+ * ---------------------------------------------------------------------------*/
+export interface FullscreenMenuLink {
+  url: string | null;                    // route segment under /dashboard
+  mat_icon: string;                      // registered MatIcon SVG name
+  icon_text: string;                     // label text
+  toolTip?: string;                      // optional tooltip
+  sub?: FullscreenMenuLink[] | null;     // optional submenu items
 }
 
+/* =============================================================================
+ * COMPONENT
+ * ===========================================================================*/
 @Component({
   selector: 'app-list-main-panel',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatTooltipModule],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    OverlayModule,
+  ],
   templateUrl: './list-main-panel.component.html',
-  styleUrl: './list-main-panel.component.scss',
+  styleUrls: ['./list-main-panel.component.scss'],
 })
 export class ListMainPanelComponent implements OnInit, OnDestroy {
-  @Output() closeMobileMenu = new EventEmitter<boolean>();
-  @Input() isMobile: boolean = false;
-  mode: boolean | null = null;
-  isBrowser: boolean;
+  /* ---------------------------------------------------------------------------
+   * INPUT + OUTPUT
+   * ---------------------------------------------------------------------------*/
+
+  /**
+   * Whether the side panel is collapsed (icon-only) or expanded (full width).
+   * Parent drives this via @Input, but we also keep it in sync with ExpandableService.
+   */
+  @Input({required: true}) collapsed: boolean = false;
+
+  /**
+   * Emit whenever this component decides to change collapsed state
+   * (e.g. when clicking the expand/collapse button).
+   */
+  @Output() collapsedChange: EventEmitter<boolean> = new EventEmitter<boolean>();
+
+  /* ---------------------------------------------------------------------------
+   * VIEW CHILDREN
+   * ---------------------------------------------------------------------------*/
+
+  /**
+   * Reference to the CDK Connected Overlay that renders the submenu fly-out.
+   * Used to force re-positioning after fonts/layout stabilize.
+   */
+  @ViewChild('submenuOverlay')
+  private submenuOverlay?: CdkConnectedOverlay;
+
+  /* ---------------------------------------------------------------------------
+   * GENERAL STATE
+   * ---------------------------------------------------------------------------*/
+
+  /** SSR flag — we must not touch window / document when rendering on server. */
+  public isBrowser: boolean;
+
+  /** Current theme mode from WindowsRefService (light / dark). */
+  public mode: boolean | null = null;
+
+  /** Subscriptions for clean teardown. */
   private modeSub: Subscription | null = null;
   private expandSub: Subscription | null = null;
-  protected currecntURL: string = '';
-  protected loggedUser: LoggedUserType | null = null;
-  protected linkLists: PageLinkLists[] = [
+  private routerSub: Subscription | null = null;
+
+  /** Routing / active-state tracking. */
+  protected currecntURL: string = '';          // last segment under /dashboard/...
+  protected activeParentRoute: string = '';    // parent route segment after /dashboard
+  protected currentFullURL: string = '';       // full URL after redirects
+
+  /** Logged user (to be used later for role-based menus if needed). */
+  protected loggedUser: User | null = null;
+
+  /** Signal controlling visual expand/collapse state (backed by ExpandableService). */
+  public isExpanded = signal<boolean>(true);
+
+  /**
+   * Index of the dropdown that is open in expanded mode (normal dropdowns).
+   * Used only by toggleDropdown/closeAllDropdowns.
+   */
+  private currentOpenIndex: number | null = null;
+
+  /* ---------------------------------------------------------------------------
+   * CDK Overlay submenu fly-out (collapsed mode)
+   * ---------------------------------------------------------------------------*/
+
+  /**
+   * Whether the submenu fly-out overlay is currently open.
+   * This controls the <ng-template cdkConnectedOverlay>.
+   */
+  protected submenuOpen: boolean = false;
+
+  /** The submenu items of the currently active parent. */
+  protected submenuItems: FullscreenMenuLink[] = [];
+
+  /** CDK overlay origin for the currently active parent button. */
+  protected submenuOrigin!: CdkOverlayOrigin;
+
+  /** Route of the active parent item whose submenu is open. */
+  protected activeParentPath: string | null = null;
+
+  /**
+   * Index of the parent whose submenu arrow should be rotated.
+   * When this is null, no `.rotate` class is applied.
+   * IMPORTANT RULE: whenever the submenu is not visible, this must be null.
+   */
+  protected activeSubmenuIndex: number | null = null;
+
+  /**
+   * Pre-configured overlay position for the fly-out:
+   *   - Anchored to the end of the parent button (right edge)
+   *   - Overlay appears to the right-hand side.
+   */
+  protected readonly overlayPositions: ConnectedPosition[] = [
     {
-      url: 'home',
-      mat_icon: 'home-icon',
-      icon_text: 'Home',
-      toolTip: 'Home',
+      originX: 'end',
+      originY: 'center',
+      overlayX: 'start',
+      overlayY: 'center',
+      offsetX: 12,
     },
-    {
-      url: 'properties',
-      mat_icon: 'property-icon',
-      icon_text: 'Properties',
-      toolTip: 'Properties',
-    },
-    {
-      url: 'users',
-      mat_icon: 'users-icon',
-      icon_text: 'Users',
-      toolTip: 'Users',
-    },
+  ];
+
+  /* ---------------------------------------------------------------------------
+   * STATIC MENU DATA
+   * ---------------------------------------------------------------------------*/
+
+  /**
+   * Static menu definitions.
+   * In future this can be generated based on user role (Admin/Tenant/etc.).
+   */
+  public static menuLists: FullscreenMenuLink[] = [
+    {url: 'home', mat_icon: 'home-icon', icon_text: 'Home', toolTip: 'Home'},
+    {url: 'properties', mat_icon: 'property-icon', icon_text: 'Properties', toolTip: 'Properties'},
+    {url: 'users', mat_icon: 'users-icon', icon_text: 'Users', toolTip: 'Users'},
     {
       url: 'tenant',
       mat_icon: 'tenant-icon',
       icon_text: 'Tenants',
       toolTip: 'Tenants',
       sub: [
-        {
-          url: 'tenant-home',
-          mat_icon: 'home-icon',
-          icon_text: 'Home',
-          toolTip: 'Home',
-        },
-        {
-          url: 'complaints',
-          mat_icon: 'complaints-icon',
-          icon_text: 'Complaints',
-          toolTip: 'Complaints',
-        }
+        {url: 'tenant-home', mat_icon: 'home-icon', icon_text: 'Home', toolTip: 'Tenant Home'},
+        {url: 'complaints', mat_icon: 'complaints-icon', icon_text: 'Complaints', toolTip: 'Complaints'},
       ],
     },
-    {
-      url: 'agent',
-      mat_icon: 'agent-icon',
-      icon_text: 'Agents',
-      toolTip: 'Agents',
-    },
-    {
-      url: 'payments',
-      mat_icon: 'payment-icon',
-      icon_text: 'Payments',
-      toolTip: 'Payments',
-    },
-    {
-      url: 'report',
-      mat_icon: 'report-icon',
-      icon_text: 'Reports',
-      toolTip: 'Reports',
-    },
-    {
-      url: 'log',
-      mat_icon: 'certification-icon',
-      icon_text: 'Log',
-      toolTip: 'Log',
-    },
+    {url: 'agent', mat_icon: 'agent-icon', icon_text: 'Agents', toolTip: 'Agent'},
+    {url: 'payments', mat_icon: 'payment-icon', icon_text: 'Payments', toolTip: 'Payments'},
+    {url: 'report', mat_icon: 'report-icon', icon_text: 'Reports', toolTip: 'Reports'},
+    {url: 'log', mat_icon: 'certification-icon', icon_text: 'Log', toolTip: 'Log'},
   ];
 
-  isExpanded = signal(true);
-  // delayedExpandedClass = signal(false);
-
-  protected activeParentRoute: string = '';
-  protected currentFullURL: string = '';
-  private currentOpenIndex: number | null = null;
+  /* =============================================================================
+   * CONSTRUCTOR
+   * ===========================================================================*/
 
   constructor (
     private windowRef: WindowsRefService,
     private expandableService: ExpandableService,
     private router: Router,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject(PLATFORM_ID) platformId: Object,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
     private authService: AuthService,
     private elementRef: ElementRef
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser(platformId);
     this.loggedUser = this.authService.getLoggedUser;
 
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe((event: NavigationEnd) => {
-        this.currentFullURL = event.urlAfterRedirects;
-        const urlArray: Array<string> = event.urlAfterRedirects.split('/');
-        const dashboardIndex = urlArray.indexOf('dashboard');
-        const url: string = urlArray[urlArray.length - 1];
+    this.bootstrapRouterListener();
+    this.registerIcons();
+  }
+
+  /**
+   * Subscribes to router NavigationEnd events to keep track of:
+   *   - full URL (for isSubItemActive)
+   *   - active parent route segment under /dashboard
+   *   - last segment (used for main active state)
+   */
+  private bootstrapRouterListener(): void {
+    this.routerSub = this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        const navEvent = event as NavigationEnd;
+        this.currentFullURL = navEvent.urlAfterRedirects;
+
+        const segments: string[] = this.currentFullURL.split('/').filter(Boolean);
+        const dashboardIndex: number = segments.indexOf('dashboard');
+
         this.activeParentRoute =
-          dashboardIndex !== -1 && urlArray.length > dashboardIndex + 1
-            ? urlArray[dashboardIndex + 1]
+          dashboardIndex !== -1 && segments.length > dashboardIndex + 1
+            ? segments[dashboardIndex + 1]
             : '';
-        this.currecntURL = url;
+
+        this.currecntURL = segments[segments.length - 1] ?? '';
       });
-    this.makeIcons();
   }
 
-  ngOnInit(): void {
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
-        this.mode = val;
-      });
+  /* =============================================================================
+   * LIFECYCLE
+   * ===========================================================================*/
 
-      this.expandSub = this.expandableService.isExpanded$.subscribe(
-        (expanded) => {
-          this.isExpanded.set(expanded);
-          this.applyPanelState(expanded);
-        }
-      );
+  public ngOnInit(): void {
+    // On server, avoid touching browser-only things.
+    if(!this.isBrowser) {
+      this.isExpanded.set(!this.collapsed);
+      return;
     }
+
+    // Subscribe to theme mode (light/dark).
+    this.modeSub = this.windowRef.mode$.subscribe((val: boolean | null) => {
+      this.mode = val;
+    });
+
+    // Keep local signal + @Input collapsed in sync with global ExpandableService.
+    this.expandSub = this.expandableService.isExpanded$.subscribe(
+      (expanded: boolean) => {
+        this.isExpanded.set(expanded);
+        this.syncCollapsedFromExpanded(expanded);
+      }
+    );
   }
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
     this.expandSub?.unsubscribe();
+    this.routerSub?.unsubscribe();
   }
 
-  private makeIcons() {
+  /* =============================================================================
+   * GETTERS
+   * ===========================================================================*/
 
-    const icons: {
-      name: string;
-      icon: string;
-    }[] = [
-        {name: 'home-icon', icon: 'Images/Icons/home.svg'},
-        {name: 'property-icon', icon: 'Images/Icons/property.svg'},
-        {name: 'users-icon', icon: 'Images/Icons/users.svg'},
-        {name: 'tenant-icon', icon: 'Images/Icons/tenant.svg'},
-        {name: 'agent-icon', icon: 'Images/Icons/agents.svg'},
-        {name: 'report-icon', icon: 'Images/Icons/report.svg'},
-        {name: 'owner-icon', icon: 'Images/Icons/owner.svg'},
-        {name: 'payment-icon', icon: 'Images/Icons/payments.svg'},
-        {name: 'access-icon', icon: 'Images/Icons/access-control.svg'},
-        {name: 'bill-list-icon', icon: 'Images/Icons/bill-list.svg'},
-        {name: 'certification-icon', icon: 'Images/Icons/certification.svg'},
-        {name: 'create-icon', icon: 'Images/Icons/create.svg'},
-        {name: 'documents-icon', icon: 'Images/Icons/documents.svg'},
-        {name: 'notifications-icon', icon: 'Images/Icons/notification.svg'},
-        {name: 'log-icon', icon: 'Images/Icons/log.svg'},
-        {name: 'complaints-icon', icon: 'Images/Icons/complaints.svg'},
-      ]
-    icons.forEach((icon) => {
+  public get menuLists(): FullscreenMenuLink[] {
+    return ListMainPanelComponent.menuLists;
+  }
+
+  /* =============================================================================
+   * ICON REGISTRATION
+   * ===========================================================================*/
+
+  /**
+   * Registers all SVG icons so that <mat-icon [svgIcon]="..."> can resolve them.
+   * All paths are relative to /public for Electron compatibility.
+   */
+  private registerIcons(): void {
+    const icons: {name: string; icon: string}[] = [
+      {name: 'home-icon', icon: 'Images/Icons/home.svg'},
+      {name: 'property-icon', icon: 'Images/Icons/property.svg'},
+      {name: 'users-icon', icon: 'Images/Icons/users.svg'},
+      {name: 'tenant-icon', icon: 'Images/Icons/tenant.svg'},
+      {name: 'agent-icon', icon: 'Images/Icons/agents.svg'},
+      {name: 'report-icon', icon: 'Images/Icons/report.svg'},
+      {name: 'owner-icon', icon: 'Images/Icons/owner.svg'},
+      {name: 'payment-icon', icon: 'Images/Icons/payments.svg'},
+      {name: 'access-icon', icon: 'Images/Icons/access-control.svg'},
+      {name: 'bill-list-icon', icon: 'Images/Icons/bill-list.svg'},
+      {name: 'certification-icon', icon: 'Images/Icons/certification.svg'},
+      {name: 'create-icon', icon: 'Images/Icons/create.svg'},
+      {name: 'documents-icon', icon: 'Images/Icons/documents.svg'},
+      {name: 'notifications-icon', icon: 'Images/Icons/notification.svg'},
+      {name: 'log-icon', icon: 'Images/Icons/log.svg'},
+      {name: 'complaints-icon', icon: 'Images/Icons/complaints.svg'},
+    ];
+
+    icons.forEach((iconDef: {name: string; icon: string}) => {
       this.matIconRegistry.addSvgIcon(
-        icon.name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.icon)
+        iconDef.name,
+        this.domSanitizer.bypassSecurityTrustResourceUrl(iconDef.icon)
       );
     });
   }
 
+  /* =============================================================================
+   * PANEL EXPAND / COLLAPSE
+   * ===========================================================================*/
+
+  /**
+   * Triggered when user clicks expand/collapse button.
+   * Flips the expanded signal, updates service, and adjusts label visibility.
+   */
   protected togglePanel(): void {
-    const expanded = !this.isExpanded();
+    const expanded: boolean = !this.isExpanded();
     this.expandableService.setExpanded(expanded);
-    this.isExpanded.set(expanded);
-    this.applyPanelState(expanded);
+    this.syncCollapsedFromExpanded(expanded);
+    this.updateLabelVisibility(expanded);
+  }
 
-    if(this.isBrowser) {
-      if(this.isExpanded() === true && isPlatformBrowser(this.platformId)) {
-        setTimeout(() => {
-          const iconText = document.querySelectorAll(
-            '.delay-expand'
-          ) as NodeListOf<HTMLElement>;
-          if(!iconText) return;
-          iconText.forEach((element) => {
-            element.style.opacity = '1';
-            element.style.display = 'inline';
-            element.style.transition = 'opacity 0.2s ease';
-          });
-        }, 0);
-      } else {
-        if(this.isExpanded() === false && isPlatformBrowser(this.platformId)) {
-          this.toggleDropdown(this.currentOpenIndex as number);
-          const iconText = document.querySelectorAll(
-            '.delay-expand'
-          ) as NodeListOf<HTMLElement>;
-          if(!iconText) return;
-          iconText.forEach((element) => {
-            element.style.opacity = '0';
-            element.style.display = 'none';
-          });
-        }
-      }
+  /**
+   * Derive @Input collapsed from expanded state and emit if changed.
+   */
+  private syncCollapsedFromExpanded(expanded: boolean): void {
+    const newCollapsed: boolean = !expanded;
+    if(this.collapsed !== newCollapsed) {
+      this.collapsed = newCollapsed;
+      this.collapsedChange.emit(newCollapsed);
     }
   }
 
-  protected applyPanelState(isExpanded: boolean): void {
-    const sidePanel = document.querySelector('.side-panel') as HTMLElement;
-    if(!sidePanel) return;
-
-    // sidePanel.style.transition = 'all 2s ease';
-    if(isExpanded) {
-      sidePanel.classList.remove('side-panel-collapsed');
-    } else {
-      sidePanel.classList.add('side-panel-collapsed');
+  /**
+   * Imperatively show/hide `.delay-expand` labels for a smoother
+   * icon-only vs full-width transition, and close menus when collapsing.
+   *
+   * NOTE: We keep this DOM-level for now because it affects many small spans;
+   * later this could be replaced with a structural directive if needed.
+   */
+  private updateLabelVisibility(expanded: boolean): void {
+    if(!this.isBrowser) {
+      return;
     }
-  }
 
-  protected isSubItemActive(
-    parent: string | null,
-    subItemUrl: string | null,
-    childItemUrl?: string | null
-  ): boolean {
-    if(parent && subItemUrl && childItemUrl) {
-      return this.currentFullURL.includes(
-        `/${parent}/${subItemUrl}/${childItemUrl}`
-      );
-    } else if(parent && subItemUrl === null && childItemUrl) {
-      return this.currentFullURL.includes(`/${parent}/${childItemUrl}`);
-    }
-    return false;
-  }
+    const labels: NodeListOf<HTMLElement> =
+      this.elementRef.nativeElement.querySelectorAll(
+        '.delay-expand'
+      ) as NodeListOf<HTMLElement>;
 
-  protected navigateTo(
-    parentPath: string | null,
-    childPath: string | null,
-    childChildrenPath: string | null
-  ): void {
-    this.closeMobileMenu.emit(true);
-    if(parentPath && childPath === null && childChildrenPath) {
-      this.router.navigate(['/dashboard', parentPath, childChildrenPath]);
-    } else if(parentPath && childPath) {
-      this.router.navigate(['/dashboard', parentPath, childPath]);
-    } else {
-      this.router.navigate(['/dashboard', parentPath]);
-    }
-  }
-
-  //<=================== Dropdown Menu =====================>
-
-  protected toggleDropdown(index: number): void {
-    this.currentOpenIndex = index;
-
-    const listItems = this.elementRef.nativeElement.querySelectorAll('ul > li');
-
-    const element = listItems[index] as HTMLElement;
-    if(!element) return;
-
-    const icon = element.querySelector(
-      'button > span > span.dropdown-icon > i'
-    ) as HTMLElement;
-
-    const isCurrentlyOpen = element.classList.contains('open');
-
-    // Close all other dropdowns
-    this.elementRef.nativeElement
-      .querySelectorAll('ul > li.open')
-      .forEach((el: Element) => {
-        if((el as HTMLElement).classList.contains('open')) {
-          (el as HTMLElement).classList.remove('open');
-        }
-        const openIcon = el.querySelector(
-          'button > span > span.dropdown-icon > i'
-        ) as HTMLElement;
-        if(openIcon) {
-          openIcon.classList.remove('fa-chevron-up');
-          openIcon.classList.add('fa-chevron-down');
-        }
+    if(expanded) {
+      labels.forEach((el: HTMLElement) => {
+        el.style.opacity = '1';
+        el.style.display = 'inline-flex';
       });
-
-    // Toggle current dropdown
-    if(!isCurrentlyOpen) {
-      element.classList.add('open');
-      if(icon) {
-        icon.classList.remove('fa-chevron-down');
-        icon.classList.add('fa-chevron-up');
-      }
     } else {
-      // Already closed by bulk close, just ensure icon is reverted
-      if(icon) {
-        icon.classList.remove('fa-chevron-up');
-        icon.classList.add('fa-chevron-down');
-      }
+      // When collapsing, always close all dropdowns and any overlay submenu.
+      this.closeAllDropdowns();
+      this.closeSubmenu();
+
+      labels.forEach((el: HTMLElement) => {
+        el.style.opacity = '0';
+        el.style.display = 'none';
+      });
     }
   }
 
-  protected toggleDropdownByElement(event: Event): void {
-    event.stopPropagation();
-    const btn = event.currentTarget as HTMLElement;
-    const li = btn.closest('li');
-    if(!li) return;
+  /* =============================================================================
+   * OVERLAY SUBMENU (collapsed mode)
+   * ===========================================================================*/
 
-    const icons = li.querySelectorAll('button > span > span.dropdown-icon > i');
-    const buttons = li.querySelectorAll('button.sub-btn');
+  /**
+   * Click handler for parent menu items that may or may not have submenus.
+   * In collapsed mode:
+   *   - If the item has sub[], show a fly-out submenu via CDK overlay.
+   *   - Clicking the same item again closes the submenu.
+   *   - Clicking another parent switches the submenu to that parent.
+   * In all cases, `activeSubmenuIndex` reflects the item whose arrow should rotate.
+   */
+  protected onParentClick(
+    link: FullscreenMenuLink,
+    origin: CdkOverlayOrigin,
+    index: number
+  ): void {
+    if(link.sub?.length) {
+      const isSameItem: boolean = this.activeSubmenuIndex === index;
 
-    const isOpen = li.classList.contains('open');
+      // CASE 1: Clicking the same item while submenu is open → close it.
+      if(isSameItem && this.submenuOpen) {
+        this.closeSubmenu();
+        return;
+      }
 
-    if(isOpen) {
-      // Close current
+      // CASE 2: Open or switch submenu to this parent.
+      this.activeParentPath = link.url;
+      this.submenuItems = link.sub;
+      this.submenuOrigin = origin;
+
+      this.submenuOpen = true;
+      this.activeSubmenuIndex = index; // drives [class.rotate]="activeSubmenuIndex === i"
+
+      // Force CDK to recalc overlay position after view updates
+      // (fonts & layout can shift right after load).
+      if(this.isBrowser) {
+        setTimeout(() => {
+          this.submenuOverlay?.overlayRef?.updatePosition();
+        }, 0);
+      }
+
+      return;
+    }
+
+    // No submenu → treat as simple navigation and reset submenu state.
+    this.submenuOpen = false;
+    this.activeSubmenuIndex = null;
+    this.navigateTo(link.url, null, null);
+  }
+
+  /**
+   * Shared method to fully close the submenu overlay.
+   * IMPORTANT: whenever submenu is not visible, activeSubmenuIndex must be null
+   * so that the chevron rotation class is removed.
+   */
+  protected closeSubmenu(): void {
+    this.submenuOpen = false;
+    this.activeSubmenuIndex = null;
+  }
+
+  /* =============================================================================
+   * NORMAL DROPDOWNS (expanded mode)
+   * ===========================================================================*/
+
+  /**
+   * Close any expanded-mode dropdowns (regular nested <ul> based menus).
+   * This is independent from the CDK overlay used in collapsed mode.
+   */
+  private closeAllDropdowns(): void {
+    const root: HTMLElement = this.elementRef.nativeElement as HTMLElement;
+    const openItems: NodeListOf<Element> = root.querySelectorAll(
+      'ul.menu > li.open'
+    );
+
+    openItems.forEach((li: Element) => {
       li.classList.remove('open');
 
-      if(icons) {
-        icons.forEach((icon) => {
-          icon.classList.remove('fa-chevron-up');
-          icon.classList.add('fa-chevron-down');
-        });
-      }
+      li.querySelectorAll('.dropdown-icon i').forEach((icon: Element) => {
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+      });
 
-      if(buttons) {
-        buttons.forEach((button) => {
-          if(button.classList.contains('active')) {
-            button.classList.remove('active');
-          }
-        });
-      }
-    } else {
-      // Close siblings
-      const siblings = li.parentElement?.children;
-      if(siblings) {
-        Array.from(siblings).forEach((sibling) => {
-          if(sibling !== li && sibling.classList.contains('open')) {
-            sibling.classList.remove('open');
-            const siblingIcons = sibling.querySelectorAll(
-              'button > span > span.dropdown-icon > i'
-            );
-            const siblingButtons = sibling.querySelectorAll('button');
+      li.querySelectorAll('button').forEach((b: Element) => {
+        b.classList.remove('active');
+      });
+    });
 
-            siblingIcons.forEach((icon) => {
-              icon.classList.remove('fa-chevron-up');
-              icon.classList.add('fa-chevron-down');
-            });
+    this.currentOpenIndex = null;
+  }
 
-            if(siblingButtons) {
-              siblingButtons.forEach((button) => {
-                if(button.classList.contains('active')) {
-                  button.classList.remove('active');
-                }
-              });
-            }
-          }
-        });
-      }
+  /**
+   * Toggle a normal (expanded-mode) dropdown at the given index.
+   * NOTE: This path is separate from the overlay submenu, used when the
+   * sidebar is expanded and submenus are inline.
+   */
+  protected toggleDropdown(index: number): void {
+    const root: HTMLElement = this.elementRef.nativeElement as HTMLElement;
+    const items: NodeListOf<HTMLElement> = root.querySelectorAll(
+      'ul.menu > li'
+    ) as NodeListOf<HTMLElement>;
 
-      // Open clicked
+    const li: HTMLElement | undefined = items[index];
+    if(!li) {
+      return;
+    }
+
+    const wasOpen: boolean = li.classList.contains('open');
+
+    this.closeAllDropdowns();
+
+    if(!wasOpen) {
       li.classList.add('open');
 
-      if(icons) {
-        icons.forEach((icon) => {
-          icon.classList.remove('fa-chevron-down');
-          icon.classList.add('fa-chevron-up');
-        });
-      }
+      li.querySelectorAll('.dropdown-icon i').forEach((icon: Element) => {
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+      });
 
-      if(buttons) {
-        buttons.forEach((button) => {
-          if(!button.classList.contains('active')) {
-            button.classList.add('active');
-          }
-        });
-      }
+      li.querySelectorAll('button').forEach((b: Element) => {
+        b.classList.add('active');
+      });
+
+      this.currentOpenIndex = index;
     }
+  }
+
+  /* =============================================================================
+   * ROUTING
+   * ===========================================================================*/
+
+  /**
+   * Navigate using the provided segments.
+   *
+   * parent   →  /dashboard/parent
+   * parent+child → /dashboard/parent/child
+   * parent+child+subChild → /dashboard/parent/child/subChild
+   *
+   * If parent is null, fall back to /dashboard.
+   */
+  protected navigateTo(
+    parent: string | null,
+    child: string | null,
+    subChild: string | null
+  ): void {
+    if(!parent) {
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
+    if(parent && child && subChild) {
+      this.router.navigate(['/dashboard', parent, child, subChild]);
+      return;
+    }
+
+    if(parent && child) {
+      this.router.navigate(['/dashboard', parent, child]);
+      return;
+    }
+
+    if(parent && subChild) {
+      this.router.navigate(['/dashboard', parent, subChild]);
+      return;
+    }
+
+    this.router.navigate(['/dashboard', parent]);
+  }
+
+  /* =============================================================================
+   * ACTIVE STATE HELPERS
+   * ===========================================================================*/
+
+  /**
+   * Helper used by the template to mark submenu items as active
+   * based on the current URL.
+   */
+  protected isSubItemActive(
+    parent: string | null,
+    sub: string | null,
+    child?: string | null
+  ): boolean {
+    if(!parent) {
+      return false;
+    }
+
+    const url: string = this.currentFullURL;
+
+    if(parent && sub && !child) {
+      return url.includes(`/${parent}/${sub}`);
+    }
+
+    if(parent && !sub && child) {
+      return url.includes(`/${parent}/${child}`);
+    }
+
+    if(parent && sub && child) {
+      return url.includes(`/${parent}/${sub}/${child}`);
+    }
+
+    return false;
   }
 }

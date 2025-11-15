@@ -1,20 +1,21 @@
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
   Component,
   Inject,
   Input,
-  PLATFORM_ID,
-  OnInit,
   OnChanges,
+  OnInit,
+  PLATFORM_ID,
   SimpleChanges,
+  AfterViewInit
 } from '@angular/core';
-import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
-import {APIsService, BaseUser} from '../../../services/APIs/apis.service';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {ActivatedRoute, Router} from '@angular/router';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {Subscription} from 'rxjs';
 import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer, SafeHtml} from '@angular/platform-browser';
+import {ActivatedRoute, Router} from '@angular/router';
+import {Subscription} from 'rxjs';
+import {APIsService, User} from '../../../services/APIs/apis.service';
+import {CryptoService} from '../../../services/cryptoService/crypto.service';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {SkeletonLoaderComponent} from '../../shared/skeleton-loader/skeleton-loader.component';
 
 @Component({
@@ -24,8 +25,8 @@ import {SkeletonLoaderComponent} from '../../shared/skeleton-loader/skeleton-loa
   templateUrl: './user-informations.component.html',
   styleUrl: './user-informations.component.scss',
 })
-export class UserInformationsComponent implements OnInit, OnChanges {
-  @Input() user: BaseUser | null = null;
+export class UserInformationsComponent implements OnInit, OnChanges, AfterViewInit {
+  @Input() user!: User;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
@@ -70,6 +71,16 @@ export class UserInformationsComponent implements OnInit, OnChanges {
     setTimeout(() => {
       this.isLoading = false;
     }, 500);
+  }
+
+  ngAfterViewInit(): void {
+    try {
+      if(!this.user) throw new Error('Invalid user!')
+    }
+    catch(err) {
+      console.error(err);
+      return;
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {

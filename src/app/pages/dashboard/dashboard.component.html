@@ -1,139 +1,84 @@
 <app-top-progress-bar></app-top-progress-bar>
-
-<div class="dashboard-container">
-  <!-- Menu Icon -->
+@if(user){
+<ng-container>
+  <!-- Mobile: hamburger -->
   <div
     class="menu-icon"
-    (click)="mobileMenuOpen()"
-    [class.open]="isMobileMenuOpen"
+    (click)="isMobileMenuOpen = true"
+    aria-label="Open menu"
   >
-    <button type="button">
-      <span class="menu-bar"></span>
-      <span class="menu-bar"></span>
-      <span class="menu-bar"></span>
-    </button>
+    <mat-icon>menu</mat-icon>
   </div>
 
-  <!-- Sidebar -->
-  <aside
-    [ngClass]="{
-      sidebar: true,
-      collapsed: !isExpanded,
-      dark: mode,
-      light: !mode
-    }"
+  <!-- Fullscreen Mobile Menu -->
+  <app-fullscreen-menu
+    [open]="isMobileMenuOpen"
+    [links]="linkLists"
+    [profile]="userProfileData"
+    [currentUrl]="currentFullURL"
+    (navigate)="onMenuNavigate($event)"
+    (closed)="isMobileMenuOpen = false"
   >
-    <!-- Rendering 01 -->
-    <app-list-main-panel
-      *ngIf="!isMobile"
-      [isMobile]="isMobile"
-    ></app-list-main-panel>
-  </aside>
+  </app-fullscreen-menu>
+</ng-container>
 
-  <!-- Navbar -->
-  <header [ngClass]="{ 'dashboard-navbar': true, dark: mode, light: !mode }">
-    <nav class="navbar navbar-expand-xl w-100">
-      <div class="container-fluid w-100">
-        <div class="row w-100">
-          <div
-            class="col-xl-2 col-lg-3 col-md-4 col-sm-6 d-flex align-items-center"
-          >
-            <img [src]="noBGImage" alt="Logo" class="logo me-2" />
-          </div>
-          <div
-            class="col-xl-8 col-lg-6 col-md-6 col-sm-6 d-flex justify-content-center align-items-center"
-          >
-            <!-- <h2 class="title text-center">PropEase Dashboard</h2> -->
-          </div>
-          <div
-            class="col-xl-2 col-lg-3 col-md-2 col-sm-12 d-flex justify-content-between align-items-center"
-          >
-            <div class="col-6 d-flex justify-content-end align-items-center">
-              <app-notification></app-notification>
-            </div>
+<div class="dashboard-container">
+  <!-- Desktop Navbar -->
+  <header class="dashboard-navbar">
+    <div class="company-logo">
+      <img [src]="noBGImage" alt="Logo" class="logo me-2" />
+    </div>
+    <div class="empty-area"></div>
+    <div class="notification">
+      <app-notification></app-notification>
+    </div>
+    <div class="userimage">
+      <button
+        class="user-image-btn"
+        title="User Profile"
+        type="button"
+        (click)="menuOpen = !menuOpen"
+      >
+        <app-skeleton-loader
+          *ngIf="isLoading; else userImage"
+          [Mode]="mode"
+          [width]="'4rem'"
+          [height]="'4rem'"
+          [borderRadius]="'100%'"
+        />
+        <ng-template #userImage>
+          <img
+            *ngIf="user"
+            #userDesktopImage
+            [src]="sanitizeURL(user.image)"
+            alt="User Profile"
+            class="user-image"
+            (error)="onImageError()"
+            aria-label="User profile image"
+          />
+        </ng-template>
+      </button>
 
-            <div class="col-6 d-flex align-items-center justify-content-end">
-              <button
-                class="user-image-btn"
-                title="User Profile"
-                (click)="menuOpen = !menuOpen"
-              >
-                <app-skeleton-loader
-                  *ngIf="isLoading; else userImage"
-                  [Mode]="mode"
-                  [width]="'4rem'"
-                  [height]="'4rem'"
-                  [borderRadius]="'100%'"
-                />
-                <ng-template #userImage>
-                  <img
-                    *ngIf="user"
-                    [src]="sanitizeURL(user.image)"
-                    alt="User Profile"
-                    class="user-image"
-                  />
-                </ng-template>
-              </button>
-              <app-user-info-panel
-                *ngIf="menuOpen"
-                (closePanel)="menuOpen = false"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </nav>
+      <app-user-info-panel *ngIf="menuOpen" (closePanel)="menuOpen = false" />
+    </div>
   </header>
 
-  <!-- Main Content -->
-  <main [ngClass]="{ 'main-content': true, dark: mode, light: !mode }">
-    <div class="dashboard-main-container"><router-outlet></router-outlet></div>
-  </main>
-</div>
+  <div class="body" [class.collapsed]="collapsed">
+    <aside class="menu">
+      <app-list-main-panel
+        [collapsed]="collapsed"
+        (collapsedChange)="detectCollapse($event)"
+      ></app-list-main-panel>
+    </aside>
 
-<!-- Mobile version menu -->
-<div class="mobile-menu" [class.menu-open]="isMobileMenuOpen">
-  <div class="container-fluid">
-    <div class="row mt-5">
-      <div class="d-flex justify-content-between align-items-center w-100 px-4">
-        <div class="d-flex align-items-center">
-          <button
-            class="user-image-btn"
-            title="User Profile"
-            (click)="openMenu()"
-          >
-            <app-skeleton-loader
-              *ngIf="isLoading; else userImage"
-              [Mode]="mode"
-              [width]="'4rem'"
-              [height]="'4rem'"
-              [borderRadius]="'100%'"
-            />
-            <ng-template #userImage>
-              <img
-                *ngIf="user"
-                [src]="sanitizeURL(user.image)"
-                alt="User Profile"
-                class="user-image"
-              />
-            </ng-template>
-          </button>
-          <app-user-info-panel
-            *ngIf="menuOpen"
-            (closePanel)="onProfilePanelClosed($event)"
-          />
+    <main class="content">
+      <div class="sub-content">
+        <div class="my-3">
+          <app-breadcrumbs class="page-indicator"></app-breadcrumbs>
         </div>
-        <div class="d-flex align-items-center">
-          <img [src]="noBGImage" alt="Logo" class="logo me-2" />
-          <app-mode-changer></app-mode-changer>
-        </div>
+        <router-outlet></router-outlet>
       </div>
-    </div>
-    <!-- Rendering 02 -->
-    <app-list-main-panel
-      *ngIf="isMobile"
-      (closeMobileMenu)="mobileMenuOpenFromLink($event)"
-      [isMobile]="isMobile"
-    ></app-list-main-panel>
+    </main>
   </div>
 </div>
+}

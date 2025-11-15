@@ -10,12 +10,12 @@
 // - Provides a single "Go Home" action that redirects appropriately.
 // -----------------------------------------------------------------------------
 
-import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {Component, Inject, OnDestroy, OnInit, PLATFORM_ID} from '@angular/core';
 import {Router} from '@angular/router';
 import {Subject, takeUntil} from 'rxjs';
-import {WindowsRefService} from '../../services/windowRef/windowRef.service';
 import {AuthService} from '../../services/auth/auth.service';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
 
 @Component({
   selector: 'app-error-page',

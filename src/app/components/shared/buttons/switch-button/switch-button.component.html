@@ -2,9 +2,10 @@
 <label class="toggle-switch">
   <input
     type="checkbox"
-    [checked]="checked"
-    (change)="onToggle($event)"
+    [checked]="localCheck"
+    (change)="onToggle()"
     name="switch"
+    #checkBox
   />
   <span class="slider">
     <span class="label-text on">{{ labelOn }}</span>

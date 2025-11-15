@@ -1,0 +1,35 @@
+<div #container class="stage-indicator-container">
+  <div class="stage-row" *ngFor="let row of rows; trackBy: trackRow">
+    <!-- Base line + GOLD FILL as a real element -->
+    <div class="stage-line">
+      <!-- absolute child; width bound as a string -->
+      <div class="stage-fill" [style.width]="rowFillPercent(row) + '%'"></div>
+    </div>
+
+    <!-- Points -->
+    <div
+      class="stage-point"
+      *ngFor="let item of row.items; trackBy: trackItem"
+      [class.reached]="isReached(item)"
+      [class.current]="isCurrent(item)"
+      [class.disabled]="isDisabled(item.disabled)"
+    >
+      <div class="point-marker"></div>
+
+      <!-- Button = focusable, reliable tooltip target -->
+
+      <button
+        type="button"
+        class="point-bubble"
+        [matTooltip]="item.label"
+        matTooltipPosition="above"
+      >
+        {{
+          item.label.length > 10
+            ? (item.label | slice : 0 : 10) + "..."
+            : item.label
+        }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -23,7 +23,6 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatProgressBarModule} from '@angular/material/progress-bar';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
 import {
   MAT_DIALOG_DATA, MatDialogRef, MatDialogModule
 } from '@angular/material/dialog';
@@ -31,12 +30,12 @@ import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {Subscription} from 'rxjs';
 import {NotificationDialogComponent} from '../notification/notification.component';
-import {ScanService} from '../../../services/scan/scan.service';
 import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {HttpClient} from '@angular/common/http';
 import {NgxExtendedPdfViewerModule} from 'ngx-extended-pdf-viewer';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {UserControllerService} from '../../../services/userController/user-controller.service';
+import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
 
 @Component({
   selector: 'app-file-opener',
@@ -58,7 +57,8 @@ import {UserControllerService} from '../../../services/userController/user-contr
     MatDialogModule,
     MatProgressBarModule,
     NgxExtendedPdfViewerModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    CloseBtnComponent
   ],
   templateUrl: './file-opener.html',
   styleUrl: './file-opener.scss'

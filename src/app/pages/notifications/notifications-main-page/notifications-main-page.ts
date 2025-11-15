@@ -1,49 +1,47 @@
+// Path: src/app/pages/notifications/notifications-main-page.ts
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
-  Component,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
   AfterViewInit,
   ChangeDetectionStrategy,
-  ElementRef,
-  ViewChild,
+  Component,
+  Inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
   Renderer2
 } from '@angular/core';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {FormControl, ReactiveFormsModule} from '@angular/forms';
+import {ActivatedRoute, Router} from '@angular/router';
 import {
-  Subscription,
   BehaviorSubject,
   combineLatest,
-  Observable,
   distinctUntilChanged,
-  firstValueFrom
+  firstValueFrom,
+  Observable,
+  Subscription
 } from 'rxjs';
-import {map, startWith, debounceTime} from 'rxjs/operators';
-import {ActivatedRoute, Router} from '@angular/router';
-import {FormControl, ReactiveFormsModule} from '@angular/forms';
+import {debounceTime, map, startWith} from 'rxjs/operators';
 
-import {MatTabsModule} from '@angular/material/tabs';
-import {MatIconModule} from '@angular/material/icon';
-import {MatButtonModule} from '@angular/material/button';
-import {MatChipsModule, MatChipSelectionChange} from '@angular/material/chips';
 import {MatBadgeModule} from '@angular/material/badge';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatInputModule} from '@angular/material/input';
+import {MatButtonModule} from '@angular/material/button';
 import {MatCardModule} from '@angular/material/card';
+import {MatChipSelectionChange, MatChipsModule} from '@angular/material/chips';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
 import {MatPaginatorModule, PageEvent} from '@angular/material/paginator';
+import {MatTabsModule} from '@angular/material/tabs';
 import {MatTooltipModule} from '@angular/material/tooltip';
 
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {AuthService, LoggedUserType} from '../../../services/auth/auth.service';
-import {
-  NotificationService,
-  Notification,
-} from '../../../services/notifications/notification-service';
 import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
+import {User} from '../../../services/APIs/apis.service';
+import {AuthService} from '../../../services/auth/auth.service';
 import {NotificationsRoutingService} from '../../../services/notificationRouting/notifications-routing-service';
-
-
+import {
+  Notification,
+  NotificationService,
+} from '../../../services/notifications/notification-service';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 
 /** Tabs */
 type TabKey = 'all' | 'unread' | 'direct' | 'overall';
@@ -92,7 +90,6 @@ const CATEGORY_OPTIONS: Array<TitleCategory | 'All'> = [
 })
 export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
 
-
   /** Theme mode from global service (bool or null until first emit) */
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -116,20 +113,21 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
     | '' = '';
 
   /** UI state */
-  protected activeTab$ = new BehaviorSubject<TabKey>('all');
-  protected searchCtrl = new FormControl<string>('', {nonNullable: true});
+  protected activeTab$: BehaviorSubject<TabKey> = new BehaviorSubject<TabKey>('all');
+  protected searchCtrl: FormControl<string> = new FormControl<string>('', {nonNullable: true});
 
   /** Category chips */
-  protected categories = CATEGORY_OPTIONS;
-  protected activeCategory$ = new BehaviorSubject<TitleCategory | 'All'>('All');
+  protected categories: Array<TitleCategory | 'All'> = CATEGORY_OPTIONS;
+  protected activeCategory$: BehaviorSubject<TitleCategory | 'All'> =
+    new BehaviorSubject<TitleCategory | 'All'>('All');
 
   /** Pagination state */
-  protected pageSizeOptions = [10, 20, 30, 50];
-  private pageIndex$ = new BehaviorSubject<number>(0); // 0-based
-  private pageSize$ = new BehaviorSubject<number>(10);
+  protected pageSizeOptions: number[] = [10, 20, 30, 50];
+  private pageIndex$: BehaviorSubject<number> = new BehaviorSubject<number>(0); // 0-based
+  private pageSize$: BehaviorSubject<number> = new BehaviorSubject<number>(10);
 
   /** Loading (skeletons) */
-  protected loading$ = new BehaviorSubject<boolean>(false);
+  protected loading$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
   /** View-model */
   protected filteredItems$!: Observable<Notification[]>;
@@ -146,53 +144,58 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
   protected connected!: boolean;
 
   /** Logged User snapshot */
-  private me: LoggedUserType | null = null;
+  private me: User | null = null;
 
-  constructor (
-    private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private route: ActivatedRoute,
-    private router: Router,
-    private authService: AuthService,
-    private notificationService: NotificationService,
+  public constructor (
+    private readonly windowRef: WindowsRefService,
+    @Inject(PLATFORM_ID) private readonly platformId: object,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly authService: AuthService,
+    private readonly notificationService: NotificationService,
     private readonly notificationsRoutingService: NotificationsRoutingService,
-    private renderer: Renderer2
+    private readonly renderer: Renderer2
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     // Theme
     if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {this.mode = val;});
+      this.modeSub = this.windowRef.mode$.subscribe((val: boolean | null): void => {
+        this.mode = val;
+      });
     }
 
-    // Core data streams
+    // Core data streams from service
     this.notifications$ = this.notificationService.items$;
     this.unreadNotifications$ = this.notificationService.unreadNotifications$();
     this.unreadCount$ = this.notificationService.unreadCount$();
     this.connected$ = this.notificationService.connected$;
 
-    this.connSub = this.notificationService.connected$.pipe(distinctUntilChanged())
-      .subscribe(isOn => (this.connected = !isOn));
-
+    this.connSub = this.notificationService.connected$
+      .pipe(distinctUntilChanged())
+      .subscribe((isOn: boolean): void => {
+        // Keep existing behaviour; if UI expects "!connected" you can invert here.
+        this.connected = !isOn;
+      });
 
     // Logged user (for audience predicates)
     this.me = this.authService.getLoggedUser;
     this.username = this.me?.username || '';
     this.role = this.me?.role || '';
 
-    // Audience derived
+    // Audience derived (direct)
     this.directNotifications$ = this.notifications$.pipe(
-      map(list =>
-        list.filter(n => {
-          const names = n.audience?.usernames ?? [];
-          const roles = n.audience?.roles ?? [];
-          const includesMe =
+      map((list: Notification[]) =>
+        list.filter((n: Notification) => {
+          const names: string[] = n.audience?.usernames ?? [];
+          const roles: string[] = n.audience?.roles ?? [];
+          const includesMe: boolean =
             names.includes(this.username) ||
             (!!this.role && roles.includes(this.role as Exclude<typeof this.role, ''>));
 
-          const modeOk =
+          const modeOk: boolean =
             n.audience?.mode === 'broadcast' ||
             n.audience?.mode === 'user' ||
             n.audience?.mode === 'role';
@@ -202,20 +205,25 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
       )
     );
 
+    // Audience derived (overall – admin sees others)
     this.overallNotifications$ = this.notifications$.pipe(
-      map(list =>
-        list.filter(n => {
-          if(this.role !== 'admin') return false;
+      map((list: Notification[]) =>
+        list.filter((n: Notification) => {
+          if(this.role !== 'admin') {
+            return false;
+          }
 
-          const modeOk =
+          const modeOk: boolean =
             n.audience?.mode === 'broadcast' ||
             n.audience?.mode === 'user' ||
             n.audience?.mode === 'role';
-          if(!modeOk) return false;
+          if(!modeOk) {
+            return false;
+          }
 
-          const names = n.audience?.usernames ?? [];
-          const roles = n.audience?.roles ?? [];
-          const targetsMe =
+          const names: string[] = n.audience?.usernames ?? [];
+          const roles: string[] = n.audience?.roles ?? [];
+          const targetsMe: boolean =
             names.includes(this.username) ||
             (!!this.role && roles.includes(this.role as Exclude<typeof this.role, ''>));
 
@@ -224,79 +232,119 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
       )
     );
 
-    // Tab + search + category filter (LOCAL)
+    // Tab + search + category filter (LOCAL ONLY)
     this.filteredItems$ = combineLatest([
-      this.notifications$,            // raw list from service
+      this.notifications$,             // raw list from service (shared)
       this.directNotifications$,       // derived
       this.overallNotifications$,      // derived
-      this.activeTab$,                 // tab
-      this.activeCategory$,            // <-- include category subject
-      this.searchCtrl.valueChanges.pipe(startWith(''), debounceTime(150)), // search
+      this.activeTab$,                 // tab selection
+      this.activeCategory$,            // category chip
+      this.searchCtrl.valueChanges.pipe(
+        startWith<string>(''),
+        debounceTime(150)
+      ),                               // search query
     ]).pipe(
       map(([all, direct, overall, tab, activeCat, q]) => {
-        // choose the right pool by tab
-        const pool =
-          tab === 'all' ? all :
-            tab === 'unread' ? all.filter(n => !n.userState?.isRead) :
-              tab === 'direct' ? direct : overall;
+        // pick pool by tab
+        const pool: Notification[] =
+          tab === 'all'
+            ? all
+            : tab === 'unread'
+              ? all.filter((n: Notification) => !n.userState?.isRead)
+              : tab === 'direct'
+                ? direct
+                : overall;
 
-        // apply local category filter (instant feedback)
-        const withCategory = (activeCat && activeCat !== 'All')
-          ? pool.filter(n => n.category === activeCat)
-          : pool;
+        // category filter (local)
+        const withCategory: Notification[] =
+          activeCat && activeCat !== 'All'
+            ? pool.filter((n: Notification) => n.category === activeCat)
+            : pool;
 
-        // apply local search
-        const query = q?.trim().toLowerCase();
-        if(!query) return withCategory;
+        // search filter (local)
+        const query: string = q?.trim().toLowerCase() ?? '';
+        if(!query) {
+          return withCategory;
+        }
 
-        return withCategory.filter(n => {
-          const title = (n.title ?? '').toLowerCase();
-          const body = (n.body ?? '').toLowerCase();
-          const tags = (n.tags ?? []).map(t => t.toLowerCase());
-          return title.includes(query) || body.includes(query) || tags.some(t => t.includes(query));
+        return withCategory.filter((n: Notification) => {
+          const title: string = (n.title ?? '').toLowerCase();
+          const body: string = (n.body ?? '').toLowerCase();
+          const tags: string[] = (n.tags ?? []).map((t: string) => t.toLowerCase());
+
+          return (
+            title.includes(query) ||
+            body.includes(query) ||
+            tags.some((t: string) => t.includes(query))
+          );
         });
       })
     );
 
-    // Counts + page slice
-    this.totalCount$ = this.filteredItems$.pipe(map(arr => arr.length));
-    this.pageItems$ = combineLatest([this.filteredItems$, this.pageIndex$, this.pageSize$]).pipe(
-      map(([items, pageIndex, pageSize]) => {
-        const start = pageIndex * pageSize;
+    // Counts + page slice (LOCAL pagination)
+    this.totalCount$ = this.filteredItems$.pipe(
+      map((arr: Notification[]) => arr.length)
+    );
+
+    this.pageItems$ = combineLatest([
+      this.filteredItems$,
+      this.pageIndex$,
+      this.pageSize$
+    ]).pipe(
+      map(([items, pageIndex, pageSize]: [Notification[], number, number]) => {
+        const start: number = pageIndex * pageSize;
         return items.slice(start, start + pageSize);
       })
     );
 
-    // Paginator meta
-    this.totalPages$ = combineLatest([this.totalCount$, this.pageSize$]).pipe(
-      map(([count, size]) => Math.max(1, Math.ceil((count || 0) / (size || 1))))
+    // Paginator meta for number-row
+    this.totalPages$ = combineLatest([
+      this.totalCount$,
+      this.pageSize$
+    ]).pipe(
+      map(([count, size]: [number, number]) =>
+        Math.max(1, Math.ceil((count || 0) / (size || 1)))
+      )
     );
-    this.currentPage$ = this.pageIndex$.pipe(map(i => i + 1));
-    this.pageNumbers$ = combineLatest([this.currentPage$, this.totalPages$]).pipe(
-      map(([current, total]) => {
-        const windowSize = 5;
-        let start = Math.max(1, current - 2);
-        let end = Math.min(total, current + 2);
+
+    this.currentPage$ = this.pageIndex$.pipe(
+      map((i: number) => i + 1)
+    );
+
+    this.pageNumbers$ = combineLatest([
+      this.currentPage$,
+      this.totalPages$
+    ]).pipe(
+      map(([current, total]: [number, number]) => {
+        const windowSize: number = 5;
+        let start: number = Math.max(1, current - 2);
+        let end: number = Math.min(total, current + 2);
 
         while(end - start + 1 < Math.min(windowSize, total)) {
-          if(start > 1) start--;
-          else if(end < total) end++;
-          else break;
+          if(start > 1) {
+            start--;
+          } else if(end < total) {
+            end++;
+          } else {
+            break;
+          }
         }
 
         const pages: number[] = [];
-        for(let p = start; p <= end; p++) pages.push(p);
+        for(let p: number = start; p <= end; p++) {
+          pages.push(p);
+        }
         return pages; // e.g., current=5 -> [3,4,5,6,7]
       })
     );
 
-    // Initial fetch
+    // Initial fetch (backend-agnostic)
     this.fetchPage();
   }
 
-  ngAfterViewInit(): void {}
+  public ngAfterViewInit(): void {}
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
     this.connSub?.unsubscribe();
 
@@ -307,15 +355,16 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
     this.activeCategory$.complete();
   }
 
-  /** Manual refresh */
-  protected refresh() {
-    // this.refreshBtn.nativeElement.classList.toggle('refresh', this.isLoading);
+  /** Manual refresh – only re-calls backend */
+  protected refresh(): void {
     this.fetchPage();
   }
 
   /** Mark a single notification as read */
-  protected async markRead(id: string) {
-    if(!id) return;
+  protected async markRead(id: string): Promise<void> {
+    if(!id) {
+      return;
+    }
     try {
       await this.notificationService.markRead(id);
       this.refresh();
@@ -324,61 +373,83 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  /** Search */
-  protected search(q: string) {
-    const query = (q ?? '').trim();
+  /** Search – LOCAL filter only */
+  protected search(q: string): void {
+    const query: string = (q ?? '').trim();
+    if(query === this.searchCtrl.value) {
+      return;
+    }
     this.searchCtrl.setValue(query, {emitEvent: true});
     this.pageIndex$.next(0);
-    this.fetchPage();
   }
 
-  /** Chip selection handler: ensures subject reflects UI state */
-  protected onCategorySelect(cat: TitleCategory | 'All', ev: MatChipSelectionChange) {
-    if(!ev.selected) return;      // only react when a chip becomes selected
+  /** Category chip selection – LOCAL filter only */
+  protected onCategorySelect(
+    cat: TitleCategory | 'All',
+    ev: MatChipSelectionChange
+  ): void {
+    if(!ev.selected) {
+      return; // only react when a chip becomes selected
+    }
     this.activeCategory$.next(cat);
     this.pageIndex$.next(0);
-    this.fetchPage();              // still call BE so pagination/counts align
   }
 
-  /** Tab change */
-  protected onTabChange(idx: number) {
-    const key: TabKey = idx === 0 ? 'all' : idx === 1 ? 'unread' : idx === 2 ? 'direct' : 'overall';
+  /** Tab change – LOCAL filter only */
+  protected onTabChange(idx: number): void {
+    const key: TabKey =
+      idx === 0 ? 'all' :
+        idx === 1 ? 'unread' :
+          idx === 2 ? 'direct' :
+            'overall';
+
     this.activeTab$.next(key);
     this.pageIndex$.next(0);
-    this.fetchPage();
   }
 
-  /** If using MatPaginator somewhere else */
-  protected onPage(e: PageEvent) {
+  /** MatPaginator handler – LOCAL pagination only */
+  protected onPage(e: PageEvent): void {
     this.pageIndex$.next(e.pageIndex);
     this.pageSize$.next(e.pageSize);
-    this.fetchPage();
   }
 
-  /** Number-row paginator actions (1-based) */
-  protected async goToPage(p: number) {
-    if(p < 1) return;
-    const total = await firstValueFrom(this.totalPages$);
-    const clamped = Math.min(total, Math.max(1, p));
+  /** Number-row paginator actions (1-based) – LOCAL pagination only */
+  protected async goToPage(p: number): Promise<void> {
+    if(p < 1) {
+      return;
+    }
+    const total: number = await firstValueFrom(this.totalPages$);
+    const clamped: number = Math.min(total, Math.max(1, p));
     this.pageIndex$.next(clamped - 1);
-    this.fetchPage();
   }
-  protected async prevPage(step = 1) {
-    const current = await firstValueFrom(this.currentPage$);
-    this.goToPage(current - step);
+
+  protected async prevPage(step: number = 1): Promise<void> {
+    const current: number = await firstValueFrom(this.currentPage$);
+    await this.goToPage(current - step);
   }
-  protected async nextPage(step = 1) {
-    const current = await firstValueFrom(this.currentPage$);
-    this.goToPage(current + step);
+
+  protected async nextPage(step: number = 1): Promise<void> {
+    const current: number = await firstValueFrom(this.currentPage$);
+    await this.goToPage(current + step);
   }
-  protected async skipBack() {this.prevPage(3);}
-  protected async skipForward() {this.nextPage(3);}
+
+  protected async skipBack(): Promise<void> {
+    await this.prevPage(3);
+  }
+
+  protected async skipForward(): Promise<void> {
+    await this.nextPage(3);
+  }
 
   /** Mark all currently visible (paged) notifications as read. */
-  protected async markAllVisibleAsRead(items: Notification[] | null | undefined) {
-    if(!items?.length) return;
+  protected async markAllVisibleAsRead(
+    items: Notification[] | null | undefined
+  ): Promise<void> {
+    if(!items?.length) {
+      return;
+    }
     try {
-      await this.notificationService.markManyAsRead(items.map(n => n._id));
+      await this.notificationService.markManyAsRead(items.map((n: Notification) => n._id));
       this.refresh();
     } catch(err) {
       console.error('markManyAsRead failed', err);
@@ -386,48 +457,51 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /** TrackBy for *ngFor perf */
-  protected trackById(_: number, n: Notification) {return n._id;}
+  protected trackById(_: number, n: Notification): string {
+    return n._id;
+  }
 
   /** Icon by severity (public so the template can call it) */
   protected iconFor(n: Notification): string {
     switch(n.severity) {
-      case 'success': return 'check_circle';
-      case 'warning': return 'warning';
-      case 'error': return 'error';
-      default: return 'notifications';
+      case 'success':
+        return 'check_circle';
+      case 'warning':
+        return 'warning';
+      case 'error':
+        return 'error';
+      default:
+        return 'notifications';
     }
   }
 
-  /** Fetch a page from backend with filters */
-  private async fetchPage() {
+  /**
+   * Fetch a page from backend.
+   * ❗ Does NOT use tab/category/search – those are LOCAL-ONLY filters.
+   */
+  private async fetchPage(): Promise<void> {
     this.loading$.next(true);
 
     try {
-      const tab = this.activeTab$.value;
-      const onlyUnread = tab === 'unread';
-      const cat = this.activeCategory$.value;
-      const category = cat === 'All' ? undefined : cat;
-
       await this.notificationService.load({
         page: this.pageIndex$.value,
         limit: this.pageSize$.value,
-        onlyUnread,
-        search: this.searchCtrl.value || undefined,
-        category,
+        // no tab/category/search here – keeps this screen independent
       });
     } catch(err) {
       console.error('Failed to load notifications:', err);
     } finally {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // keep your skeleton delay
+      await new Promise<void>((resolve: () => void) => setTimeout(resolve, 1000));
       this.loading$.next(false);
     }
-
-
   }
 
-  /** Open notification: internal links use Router; http(s) open in a new tab. Also mark read. */
+  /** Open notification and mark as read if needed. */
   protected async openNotification(notification: Notification): Promise<void> {
     await this.notificationsRoutingService.navigateToAny(notification);
-    if(!notification.userState?.isRead) this.markRead(notification._id);
+    if(!notification.userState?.isRead) {
+      await this.markRead(notification._id);
+    }
   }
 }

@@ -36,6 +36,7 @@ import {Subscription} from 'rxjs';
 import {NotificationDialogComponent} from '../notification/notification.component';
 import {ScanService} from '../../../services/scan/scan.service';
 import {toDataURL} from 'qrcode';
+import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
 
 interface USBDevice {
   deviceId: string;
@@ -68,6 +69,7 @@ interface USBDevice {
     MatDividerModule,
     MatDialogModule,
     MatProgressBarModule,
+    CloseBtnComponent
   ],
   templateUrl: './file-scanner.html',
   styleUrl: './file-scanner.scss',

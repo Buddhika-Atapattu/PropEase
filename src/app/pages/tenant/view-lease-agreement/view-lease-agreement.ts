@@ -12,7 +12,7 @@ import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {Subscription} from 'rxjs';
 import {ActivatedRoute, Router} from '@angular/router';
 import {Lease, ScannedFileRecordJSON, TenantService, LeaseWithProperty} from '../../../services/tenant/tenant.service';
-import {AuthService, BaseUser} from '../../../services/auth/auth.service';
+import {AuthService} from '../../../services/auth/auth.service';
 import {PropertyService, BackEndPropertyData} from '../../../services/property/property.service';
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {CryptoService} from '../../../services/cryptoService/crypto.service';
@@ -20,7 +20,7 @@ import {HttpErrorResponse} from '@angular/common/http';
 import {NotificationDialogComponent} from '../../../components/dialogs/notification/notification.component';
 import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
-import {APIsService} from '../../../services/APIs/apis.service';
+import {APIsService, User} from '../../../services/APIs/apis.service';
 import {MatIconRegistry, MatIconModule} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
 import {FileOpener} from '../../../components/dialogs/file-opener/file-opener'
@@ -51,7 +51,7 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
-  protected loggedUser: BaseUser | null = null;
+  protected loggedUser: User | null = null;
 
   //Lease details
   private leaseID: string = '';
@@ -59,7 +59,7 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
   protected selectedProperty: BackEndPropertyData | null = null;
   private propertyID: string = '';
   protected isLoading: boolean = false;
-  protected tenant: BaseUser | null = null;
+  protected tenant: User | null = null;
   private tenantUsername: string = '';
   protected scannedDocuments: ScannedFileRecordJSON[] = [];
   protected scannedFilePreview: ScannedFilePreview[] = [];
@@ -231,7 +231,7 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
 
       if(response.status !== 'true') throw new Error('Tenant cloud not find!');
 
-      this.tenant = response.user as BaseUser;
+      this.tenant = response.user as User;
 
       if(!this.tenant) throw new Error('No tenant found!')
     }
@@ -475,7 +475,7 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
 
       if(!propertyID) throw new Error('No property ID found!');
 
-      this.router.navigate(['/dashboard/property-view', propertyID]);
+      this.router.navigate(['/dashboard/properties/property-view', propertyID]);
     }
     catch(error) {
       console.error(error)
@@ -540,7 +540,7 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
       if(!this.tenant) throw new Error('Tenant is invalid!');
       if(!this.leaseID) throw new Error('Lease ID is empty!');
       const {token} = await this.apiService.generateToken(this.tenant.username);
-
+      if(!token) throw new Error('Invalid token')!
       await this.router.navigate(
         ['/dashboard/tenant/complaints/create-complaint', encodeURIComponent(token)],
         {queryParams: {leaseID: this.leaseID}}

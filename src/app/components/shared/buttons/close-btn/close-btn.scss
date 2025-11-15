@@ -1,0 +1,65 @@
+@use "../../../../styles/global.scss" as *;
+
+/* Root host ensures our fixed button sits above the dialog */
+:host {
+  position: fixed; /* we compute viewport coords */
+  inset: 0; /* establish a fixed positioning context */
+  pointer-events: none; /* only the button should be clickable */
+  z-index: 10001; /* above mat-dialog content but below CDK overlay blockers */
+}
+
+/* Container is a no-op holder (kept for clarity/extensibility) */
+.btn-container {
+  position: static;
+}
+
+/* The actual close button is positioned via inline styles from TS */
+.close-button {
+  pointer-events: auto; /* re-enable pointer events for the button */
+  position: fixed; /* TS sets top/left each layout pass */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* Theme-aware visuals (use project tokens) */
+  background: color-mix(in oklab, var(--on-surface) 20%, transparent);
+  color: var(--on-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  outline: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+  /* Elevation hover/focus */
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.08);
+    box-shadow: 0 8px 16px 0 var(--shadow-color);
+    background: color-mix(
+      in oklab,
+      var(--on-surface) 16%,
+      var(--surface-variant)
+    );
+  }
+
+  /* Icon color parity */
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+
+    svg,
+    svg path {
+      fill: currentColor;
+    }
+  }
+}
+
+/* When we decide “inside mode”, TS adds this class for a tighter inset */
+.close-button.close-button--inside {
+  /* nothing special needed visually; we place it a few px in from edges via TS */
+}

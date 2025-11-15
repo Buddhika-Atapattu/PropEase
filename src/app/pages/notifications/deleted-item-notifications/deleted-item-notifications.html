@@ -3,22 +3,7 @@
 <!-- Everything lives inside .main-panel -->
 <div *ngIf="mode !== null" class="main-panel">
   <div class="container-fluid pt-5">
-    <div class="row page-indicator">
-      <span
-        ><button
-          type="button"
-          class="page-indicator-btn"
-          (click)="backToList()"
-        >
-          Notifications
-        </button>
-        <i class="fa-solid fa-angle-right my-2"></i
-        ><button type="button" class="page-indicator-btn">
-          {{!loading && notification ? 'Delete ' + notification.category:
-          'Delete item'}}
-        </button>
-      </span>
-    </div>
+
     <!-- Loading / Error states -->
     <div class="row" *ngIf="loading">
       <div class="col-12">

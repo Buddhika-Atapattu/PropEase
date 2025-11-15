@@ -1,0 +1,30 @@
+<div class="pe-preview" *ngIf="ready">
+  <ng-container [ngSwitch]="kind">
+    <iframe *ngSwitchCase="'pdf'" [src]="safeUrl" title="PDF preview"></iframe>
+
+    <pre *ngSwitchCase="'text'" class="text-view">{{ textContent }}</pre>
+
+    <div *ngSwitchCase="'csv'" class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th *ngFor="let h of csvHeader">{{ h }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of csvRows">
+            <td *ngFor="let cell of row">{{ cell }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <audio *ngSwitchCase="'audio'" [src]="safeUrl" controls></audio>
+    <video *ngSwitchCase="'video'" [src]="safeUrl" controls></video>
+
+    <div *ngSwitchDefault class="fallback">
+      <p>Preview not supported for this file type.</p>
+      <button type="button" (click)="download()">Download</button>
+    </div>
+  </ng-container>
+</div>

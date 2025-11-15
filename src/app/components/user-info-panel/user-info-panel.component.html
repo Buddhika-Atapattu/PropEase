@@ -81,7 +81,10 @@
     <button
       type="button"
       class="uip-btn"
-      (click)="close(false); router.navigate(['/dashboard/all-notifications'])"
+      (click)="
+        close(false);
+        router.navigate(['/dashboard/notifications/all-notifications'])
+      "
     >
       Notifications
     </button>

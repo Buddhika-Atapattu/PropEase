@@ -1,6 +1,6 @@
-import { Injectable, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { BehaviorSubject, fromEvent, Subscription } from 'rxjs';
+import {Injectable, Inject, PLATFORM_ID, OnDestroy} from '@angular/core';
+import {isPlatformBrowser} from '@angular/common';
+import {BehaviorSubject, fromEvent, Subscription} from 'rxjs';
 import {
   debounceTime,
   startWith,
@@ -8,7 +8,7 @@ import {
   distinctUntilChanged,
 } from 'rxjs/operators';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({providedIn: 'root'})
 export class WindowsRefService implements OnDestroy {
   private isBrowser: boolean;
 
@@ -20,10 +20,10 @@ export class WindowsRefService implements OnDestroy {
   private windowWidthSubject = new BehaviorSubject<number>(0);
   private resizeSub: Subscription | null = null;
 
-  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+  constructor (@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
 
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       // Detect color scheme preference
       this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
       this.setDarkMode(this.mediaQueryList.matches);
@@ -68,7 +68,7 @@ export class WindowsRefService implements OnDestroy {
   // Theme toggle helpers
   initTheme() {
     return this.mode$.subscribe((mode) => {
-      if (mode === null) {
+      if(mode === null) {
         const preferredMode = localStorage.getItem('preferred-mode');
         this.setDarkMode(preferredMode === 'dark');
       }
@@ -80,7 +80,7 @@ export class WindowsRefService implements OnDestroy {
   }
 
   setDarkMode(mode: boolean): void {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       document.documentElement.classList.toggle('dark', mode);
       document.documentElement.classList.toggle('light', !mode);
       localStorage.setItem('preferred-mode', mode ? 'dark' : 'light');
@@ -102,14 +102,14 @@ export class WindowsRefService implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.mediaQueryList) {
+    if(this.mediaQueryList) {
       this.mediaQueryList.removeEventListener(
         'change',
         this.handleSystemThemeChange.bind(this)
       );
     }
 
-    if (this.resizeSub) {
+    if(this.resizeSub) {
       this.resizeSub.unsubscribe();
     }
   }

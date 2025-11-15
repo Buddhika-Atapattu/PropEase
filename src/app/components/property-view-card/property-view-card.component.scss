@@ -1,168 +1,427 @@
 @use "../../styles/global.scss" as *;
 @use "sass:color";
 
-.main-panel-mobile {
-  display: none;
+/* ─────────────────────────────────────────────────────────────
+   Base card shell
+   ──────────────────────────────────────────────────────────── */
+.mobile {
+  height: 100%;
+  display: none !important;
 }
-
-.card-body {
+.desktop {
+  height: 100%;
+  display: block !important;
+}
+.property {
   width: 100%;
-}
-
-.property-title,
-.property-location {
-  flex: 1 1 15rem; /* Grow and shrink, base 15rem */
-  white-space: nowrap;
+  height: auto; /* was 100% */
   overflow: hidden;
-  text-overflow: ellipsis;
+  background: linear-gradient(40deg, var(--neutral-150), var(--neutral-200));
+  border-radius: 1rem;
+  box-shadow: 0 0 15px 0 rgb(0 0 0 / 28%);
+  margin: 0; /* grid gap handles spacing */
+  padding: 1.25rem 1rem;
+  color: var(--on-surface);
 }
 
-.property-image-container {
+%responsive-shared {
+  width: auto;
+  height: auto;
+  white-space: nowrap;
+}
+
+/* Used only under 992px unless you explicitly show it elsewhere */
+
+/* Utilities */
+button {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
-  overflow: hidden;
-  width: 100%;
-  min-height: 25vh;
-  height: 100%;
-  max-height: 50vh;
-  .property-image {
-    width: 100%;
-    height: 100%;
-    border-radius: 0.5rem;
-    object-fit: cover;
-    object-position: center;
-    box-shadow: 0rem 0rem 1rem 0rem rgba(0, 0, 0, 0.1);
-  }
-}
-
-.card-footer {
-  position: relative;
-  background: none;
-  border: none;
   padding: 0;
   margin: 0;
-  .action-btn-row {
-    margin-bottom: 1rem;
-  }
 }
-
-.property-bar,
-.card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  border-radius: 0.372rem;
-  padding: 1rem;
+mat-icon {
+  padding: 0;
+  margin: 0;
+  width: 100%;
   height: 100%;
-  position: relative;
+  overflow: visible;
+}
 
-  mat-icon {
-    ::ng-deep svg {
-      fill: currentColor;
-      ::ng-deep rect {
-        fill: transparent;
-      }
-      ::ng-deep path {
-        fill: currentColor;
-      }
-    }
-  }
-  h6 {
-    margin-top: 0.3rem;
-  }
+/* Shared avatar container */
+.property-image-container {
+  border-radius: 0.5rem;
+  box-shadow: 0 0 15px 0 rgb(0 0 0 / 28%);
+  overflow: hidden;
 
-  &.dark {
-    background-color: $dark-primary-color;
-    box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
-    color: $dark-text-color;
-    .add-user-btn {
-      background: $dark-primary-color;
-      box-shadow: $dark-dashboard-dark-color;
-    }
-  }
-
-  &.light {
-    background-color: #ffe394;
-    box-shadow: 0rem 0rem 1rem 0rem #a3a3a3;
-    color: $light-text-color;
-    .add-user-btn {
-      background: $light-primary-color;
-      box-shadow: $light-dashboard-dark-color;
-    }
+  img {
+    object-fit: cover;
+    object-position: center;
+    width: 100%;
+    height: 100%;
   }
 }
 
-@media (max-width: 1024px) {
-  .property-bar {
-    display: none;
+/* ─────────────────────────────────────────────────────────────
+   Desktop "Row" layout (visible ≥ 992px by default here)
+   ──────────────────────────────────────────────────────────── */
+.property-row {
+  display: grid !important;
+  grid-template-areas: "image content actions";
+  grid-template-columns: 10% 75% auto;
+  gap: 1rem;
+  justify-self: start;
+  align-self: flex-start;
+  margin: 1rem 0;
+  height: 100%;
+  cursor: default;
+
+  @media (min-width: 768px) and (max-width: 1300px) {
+    grid-template-columns: 25% 50% auto;
   }
-  .main-panel-mobile {
-    display: block;
-    width: 100%;
-    margin: 1rem 0rem;
 
-    &.dark {
-      background: linear-gradient(
-        145deg,
-        $dark-secondary-color,
-        color.adjust($dark-secondary-color, $lightness: 2%)
-      );
-      color: $dark-text-color;
-      .card {
-        background-color: $dark-primary-color;
-        box-shadow: 0rem 0rem 1rem 0rem $dark-secondary-color;
-      }
+  /* Image column */
+  .first {
+    grid-area: image;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    .property-image-container {
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 1 / 1;
+    }
+  }
 
-      h1,
-      h2,
-      h3,
-      h4,
-      h5,
-      h6,
-      p {
-        color: #fff;
-      }
+  /* Content column */
+  .second {
+    grid-area: content;
+    display: grid;
+    grid-template-areas: "header" "body" "footer";
+    grid-template-rows: 20% 1fr auto;
+    gap: 15px;
+    justify-self: flex-start;
 
-      .btn-view,
-      .btn-warning,
-      .btn-danger {
-        mat-icon {
-          ::ng-deep svg {
-            fill: currentColor;
-            ::ng-deep rect {
-              fill: transparent;
-            }
-            ::ng-deep path {
-              fill: currentColor;
-            }
-          }
+    .top {
+      grid-area: header;
+      text-transform: uppercase;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      width: 100%;
+      max-width: 100%;
+      @media (max-width: 1200px) and (min-width: 768px) {
+        white-space: nowrap;
+        height: auto;
+        > * {
+          width: 100%;
+          white-space: nowrap;
+          height: auto;
         }
       }
     }
 
-    &.light {
-      background: linear-gradient(
-        145deg,
-        $light-primary-color,
-        color.adjust($light-primary-color, $lightness: 2%)
-      );
-      color: $light-text-color;
-      .card {
-        background-color: $light-primary-color;
-        box-shadow: 0rem 0rem 1rem 0rem $light-secondary-color;
-      }
-      h1,
-      h2,
-      h3,
-      h4,
-      h5,
-      h6,
-      p {
-        color: #000000;
+    .middle {
+      grid-area: body;
+      display: block; /* safe; can swap to flex/grid later */
+      flex-wrap: wrap; /* harmless with block */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      width: 100%;
+      max-width: 100%;
+      @media (max-width: 1200px) and (min-width: 768px) {
+        white-space: nowrap;
+        width: 100%;
+        height: auto;
+        > * {
+          width: 100%;
+          white-space: nowrap;
+          height: auto;
+        }
       }
     }
+
+    .bottom {
+      grid-area: footer;
+      display: grid;
+      grid-template-areas: "start middle end";
+      grid-template-columns: auto;
+      overflow: hidden;
+      justify-self: flex-start;
+
+      .first {
+        grid-area: start;
+        display: flex;
+        flex-wrap: wrap;
+        justify-self: start;
+        align-self: center;
+        justify-content: start;
+        align-items: center;
+        padding: 0 1rem 0 0;
+        mat-icon {
+          font-size: 18pt;
+          width: 20pt;
+          height: 20pt;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          justify-self: center;
+          align-self: center;
+          padding: 0.5rem;
+          border-radius: 0.25rem !important;
+        }
+      }
+      .second {
+        grid-area: middle;
+        display: flex;
+        flex-wrap: wrap;
+        justify-self: center;
+        align-self: center;
+        justify-content: center;
+        align-items: center;
+        padding: 0 1rem;
+        border-left: 1px solid var(--text-muted);
+        border-right: 1px solid var(--text-muted);
+        @media (max-width: 1200px) and (min-width: 768px) {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          word-break: break-word;
+          overflow-wrap: anywhere;
+          width: 100%;
+          height: auto;
+          max-width: 100%;
+          > * {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+          }
+        }
+      }
+      .third {
+        grid-area: end;
+        display: flex;
+        flex-wrap: wrap;
+        justify-self: end;
+        align-self: center;
+        justify-content: end;
+        align-items: center;
+        padding: 0 1rem;
+        @media (max-width: 1200px) and (min-width: 768px) {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          word-break: break-word;
+          overflow-wrap: anywhere;
+          width: 100%;
+          height: auto;
+          max-width: 100%;
+          > * {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+          }
+        }
+      }
+    }
+  }
+
+  /* Actions column */
+  .third {
+    grid-area: actions;
+    display: grid;
+    grid-template-areas: "top" "middle" "bottom";
+    grid-template-rows: 1fr auto;
+    gap: 10px;
+    justify-items: center;
+    align-self: center;
+    justify-content: end;
+    align-content: center;
+
+    .top {
+      grid-area: top;
+      padding: 0.125rem 0.5rem;
+    }
+    .middle {
+      grid-area: middle;
+      padding: 0.125rem 0.5rem;
+    }
+    .bottom {
+      grid-area: bottom;
+      padding: 0.125rem 0.5rem;
+    }
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Card/Column layout (stacked)
+   ──────────────────────────────────────────────────────────── */
+.property-card {
+  display: grid !important;
+  grid-template-areas: "image" "content" "actions";
+  grid-template-rows: 10rem 1fr auto; /* desktop-friendly; overridden on small */
+  gap: 10px;
+  justify-self: center;
+  align-self: start;
+  flex-wrap: wrap;
+  overflow: hidden;
+  width: 100%;
+  height: 100% !important;
+  overflow: hidden;
+
+  .first {
+    grid-area: image;
+    display: flex;
+    justify-items: center;
+    align-self: start;
+    justify-content: center;
+    align-items: stretch;
+    width: auto;
+    overflow: hidden;
+    height: 100%;
+    .property-image-container {
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 2 / 1;
+    }
+  }
+
+  .second {
+    grid-area: content;
+    display: grid;
+    grid-template-areas: "top" "middle" "bottom";
+    grid-template-rows: auto 1fr auto; /* overridden on small */
+    gap: 10px;
+    justify-items: start;
+    align-self: center;
+    width: 100%;
+    overflow: hidden;
+    height: 100%;
+    @media (max-width: 767.98px) {
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .top {
+      grid-area: top;
+      justify-content: center;
+      justify-self: center;
+      align-items: center;
+      align-self: center;
+      overflow: hidden;
+      text-transform: uppercase;
+      width: 100%;
+      height: 100%;
+    }
+    .middle {
+      grid-area: middle;
+      justify-self: start;
+      align-items: center;
+      align-self: center;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+    }
+    .bottom {
+      grid-area: bottom;
+      display: inline-flex;
+      height: 100%;
+      > * {
+        margin: 0rem 0.25rem;
+        mat-icon {
+          font-size: 18pt;
+          width: 20pt;
+          height: 20pt;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          justify-self: center;
+          align-self: center;
+          padding: 0.5rem;
+          border-radius: 0.25rem !important;
+        }
+      }
+    }
+  }
+
+  .third {
+    grid-area: actions;
+    display: grid;
+    grid-template-areas: "first second third";
+    grid-template-columns: auto auto auto;
+    grid-gap: 10px;
+    justify-content: center;
+    justify-self: start;
+    align-items: center;
+    align-self: center;
+    width: 100%;
+    overflow: hidden;
+    height: 100%;
+
+    .btn-view {
+      grid-area: first;
+    }
+    .btn-warning {
+      grid-area: second;
+    }
+    .btn-danger {
+      grid-area: third;
+    }
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Responsive visibility & sizing
+   S  < 768px        → prefer card (mobile-view for your special markup)
+   M  768–991.98px   → prefer card
+   L  ≥ 992px        → row layout available
+   (Parent grid controls column count; this controls inner sizing)
+   ──────────────────────────────────────────────────────────── */
+
+/* Small-only: use mobile-view block, prevent stretch */
+@media (max-width: 767.98px) {
+  .desktop {
+    display: none !important;
+  }
+  .mobile {
+    display: block !important;
+  }
+}
+
+/* Medium: still card by default (parent shows 2 columns) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .property-card {
+    grid-template-rows: 10rem auto auto;
+    .second {
+      grid-template-rows: 18pt auto auto;
+    }
+  }
+}
+
+/* Large and up: allow row (parent likely 3/4/5 columns) */
+@media (min-width: 992px) {
+  /* Keep both row/card available; control which to show from parent/template */
+}
+
+/* Ultra-small padding tweak */
+@media (max-width: 480px) {
+  .property {
+    padding: 1rem 0.75rem;
   }
 }

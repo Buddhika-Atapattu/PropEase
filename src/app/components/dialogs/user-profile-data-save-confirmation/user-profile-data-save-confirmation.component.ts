@@ -18,21 +18,22 @@ import {
   MatDialogTitle,
   MatDialogModule,
 } from '@angular/material/dialog';
-import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { Subscription } from 'rxjs';
+import {isPlatformBrowser, CommonModule, AsyncPipe} from '@angular/common';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {Subscription} from 'rxjs';
+import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
 
 @Component({
   selector: 'app-user-profile-data-save-confirmation',
   standalone: true,
-  imports: [CommonModule, MatDialogModule],
+  imports: [CommonModule, MatDialogModule, CloseBtnComponent],
   templateUrl: './user-profile-data-save-confirmation.component.html',
   styleUrl: './user-profile-data-save-confirmation.component.scss',
 })
 export class UserProfileDataSaveConfirmationComponent {
   protected isBrowser: boolean;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(MAT_DIALOG_DATA)

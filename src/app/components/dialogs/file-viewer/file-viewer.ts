@@ -35,6 +35,7 @@ import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {Subscription} from 'rxjs';
 import {NotificationDialogComponent} from '../notification/notification.component';
 import {ScanService} from '../../../services/scan/scan.service';
+import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
 
 @Component({
   selector: 'app-file-viewer',
@@ -55,6 +56,7 @@ import {ScanService} from '../../../services/scan/scan.service';
     MatDividerModule,
     MatDialogModule,
     MatProgressBarModule,
+    CloseBtnComponent
   ],
   templateUrl: './file-viewer.html',
   styleUrl: './file-viewer.scss',

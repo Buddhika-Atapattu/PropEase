@@ -33,13 +33,12 @@ import {
 
 import {
   AuthService,
-  LoggedUserType,
   AccessMap,
   DEFAULT_ROLE_ACCESS,
   ACCESS_OPTIONS,
   Role,
 } from '../auth/auth.service';
-
+import {User} from '../APIs/apis.service'
 interface RouteRequirement {
   /** Concrete URL pattern from the router (supports :params and *). */
   url: string;
@@ -97,7 +96,7 @@ export class AuthGuard implements CanActivate, CanActivateChild {
    * Returns true if user's role is included in route.data.roles (when provided).
    * If no roles are defined on the route, we allow and defer to permission check.
    */
-  private passesRouteRoleFilter(route: ActivatedRouteSnapshot, user: LoggedUserType): boolean {
+  private passesRouteRoleFilter(route: ActivatedRouteSnapshot, user: User): boolean {
     const allowedRoles = (route.data?.['roles'] as Role[] | undefined) ?? undefined;
     if(!allowedRoles || allowedRoles.length === 0) return true;
     return allowedRoles.includes(user.role);
@@ -109,7 +108,7 @@ export class AuthGuard implements CanActivate, CanActivateChild {
    * Matches current URL to a (module, action) requirement and verifies
    * the user's effective permission.
    */
-  private passesPermissionForUrl(currentUrl: string, user: LoggedUserType): boolean {
+  private passesPermissionForUrl(currentUrl: string, user: User): boolean {
     // 1) Find the first matching URL rule (if any). If none, allow by default.
     const match = this.matchRequirement(currentUrl);
     if(!match) return true;
@@ -177,24 +176,25 @@ export class AuthGuard implements CanActivate, CanActivateChild {
     // (No strict module/action needed for /dashboard/home — roles on the route already handle it)
 
     // ---------- Notifications ----------
-    {url: '/dashboard/all-notifications', module: 'Communication & Notification', action: 'view message logs'},
+    {url: '/dashboard/notifications/all-notifications', module: 'Communication & Notification', action: 'view message logs'},
 
     // ---------- User Management ----------
     {url: '/dashboard/users', module: 'User Management', action: 'view users'},
-    {url: '/dashboard/add-new-user', module: 'User Management', action: 'create user'},
-    {url: '/dashboard/edit-user/:username', module: 'User Management', action: 'update user'},
-    {url: '/dashboard/view-user-profile/:username', module: 'User Management', action: 'view users'},
+    {url: '/dashboard/users/add-new-user', module: 'User Management', action: 'create user'},
+    {url: '/dashboard/users/edit-user/:username', module: 'User Management', action: 'update user'},
+    {url: '/dashboard/users/user-profile/:username', module: 'User Management', action: 'view users'},
 
     // Optional: access-control is admin-only by route roles, but bind to rule too:
     {url: '/dashboard/access-control', module: 'Access Control', action: 'control sessions'},
 
     // ---------- Property Management ----------
     {url: '/dashboard/properties', module: 'Property Management', action: 'view properties'},
-    {url: '/dashboard/property-listing', module: 'Property Management', action: 'create property'},
-    {url: '/dashboard/property-view/:propertyID', module: 'Property Management', action: 'view properties'},
-    {url: '/dashboard/property-edit/:propertyID', module: 'Property Management', action: 'update property'},
+    {url: '/dashboard/properties/property-listing', module: 'Property Management', action: 'create property'},
+    {url: '/dashboard/properties/property-view/:propertyID', module: 'Property Management', action: 'view properties'},
+    {url: '/dashboard/properties/property-edit/:propertyID', module: 'Property Management', action: 'update property'},
 
     // ---------- Tenant Management (main) ----------
+    {url: '/dashboard/tenant/tenant-home', module: 'Tenant Management', action: 'view tenant profile'},
     {url: '/dashboard/tenant/tenant-view/:tenantID', module: 'Tenant Management', action: 'view tenant profile'},
     {url: '/dashboard/tenant/create-lease/:tenantID', module: 'Tenant Management', action: 'create lease'},
     {url: '/dashboard/tenant/view-lease/:leaseID', module: 'Tenant Management', action: 'view lease'},

@@ -1,36 +1,34 @@
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
   AfterViewInit,
   Component,
-  ViewChild,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
-  Input,
-  Output,
   EventEmitter,
+  Inject,
+  Input,
   OnChanges,
+  OnDestroy,
+  OnInit,
+  Output,
+  PLATFORM_ID,
   SimpleChanges,
+  ViewChild,
 } from '@angular/core';
-import {CommonModule} from '@angular/common';
 import {Subscription} from 'rxjs';
-import {ActivatedRoute} from '@angular/router';
 
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
-import {Sort, MatSortModule} from '@angular/material/sort';
 import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
+import {MatSortModule, Sort} from '@angular/material/sort';
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
 import {MatTooltipModule} from '@angular/material/tooltip';
 
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {APIsService, LoggedUserType} from '../../../services/APIs/apis.service';
-import {AuthService} from '../../../services/auth/auth.service';
+import {User} from '../../../services/APIs/apis.service';
 import {TenantService} from '../../../services/tenant/tenant.service';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 
-import {SkeletonLoaderComponent} from '../skeleton-loader/skeleton-loader.component';
-import {PaginatorComponent, FileExportButtonTypeByExtension} from '../paginator/paginator.component';
+import {SwitchButton} from '../../../components/shared/buttons/switch-button/switch-button.component';
 import {NotificationDialogComponent, NotificationType} from '../../dialogs/notification/notification.component';
 import {ProgressBarComponent} from '../../dialogs/progress-bar/progress-bar.component';
-import {SwitchButton} from '../../../components/shared/buttons/switch-button/switch-button.component';
+import {FileExportButtonTypeByExtension, PaginatorComponent} from '../paginator/paginator.component';
+import {SkeletonLoaderComponent} from '../skeleton-loader/skeleton-loader.component';
 
 /**
  * Button click payload for row actions/operations
@@ -72,11 +70,7 @@ export interface FileExportWithDataAndExtentionType {
   extention: FileExportButtonTypeByExtension;
 }
 
-/** Switch button (toggle) value contract */
-export interface SwitchButtonDataFormatType {
-  isActive: boolean;
-  data: any;
-}
+
 
 /** Normalized event types so parents can listen to one stream */
 export type TableEventType =
@@ -85,7 +79,8 @@ export type TableEventType =
   | 'edit:start'
   | 'edit:save'
   | 'edit:cancel'
-  | 'row:select';
+  | 'row:select'
+  | 'switch';
 
 export interface TableEvent<T = any> {
   type: TableEventType;
@@ -97,6 +92,15 @@ export interface TableEvent<T = any> {
 export interface ButtonVisibility {
   action?: (row: any) => boolean;
   operation?: (row: any) => boolean;
+}
+
+/** Switch button (toggle) value contract */
+export interface SwitchButtonType {
+  isActive: boolean;
+  index: number | null;
+  on?: string;
+  off?: string;
+  data?: any;
 }
 
 @Component({
@@ -122,7 +126,7 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   // ─────────────────────────────────────────────────────────────
   // Inputs from parent (BEGINNER TIP: think of these as "props")
   // ─────────────────────────────────────────────────────────────
-  @Input() loggedUser: LoggedUserType | null = null;
+  @Input() loggedUser: User | null = null;
   @Input() isLoading = false;
   @Input() isBrowser = false;
   @Input() mode: boolean | null = null;
@@ -131,8 +135,8 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
 
   @Input() fullDataCount = 0;
   @Input() totalDataCount = 0; @Output() totalDataCountChange = new EventEmitter<number>();
-  @Input() data: any[] = [];
-  @Input() columns: CustomTableColumnType[] = [];
+  @Input({required: true}) data: any[] = [];
+  @Input({required: true}) columns: CustomTableColumnType[] = [];
 
   @Input() paginationEnable = false; @Output() paginationEnableChange = new EventEmitter<boolean>();
   @Input() pageSize = 2; @Output() pageSizeChange = new EventEmitter<number>();
@@ -143,7 +147,7 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   @Input() search = ''; @Output() searchChange = new EventEmitter<string>();
   @Input() isReload = false; @Output() isReloadChange = new EventEmitter<boolean>();
 
-  @Input() fileExportButtonTypeByExtension: FileExportButtonTypeByExtension | null = null;
+  @Input() fileExportButtonTypeByExtension!: FileExportButtonTypeByExtension;
   @Output() fileExport = new EventEmitter<FileExportWithDataAndExtentionType>();
 
   @Input() buttonAction: ButtonType = {type: 'add'}; @Output() buttonActionChange = new EventEmitter<ButtonType>();
@@ -154,8 +158,8 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   @Input() buttonActionTriggerStarted = false; @Output() buttonActionTriggerStartedChange = new EventEmitter<boolean>();
   @Input() buttonOperationTriggerStarted = false; @Output() buttonOperationTriggerStartedChange = new EventEmitter<boolean>();
 
-  @Input() switchButton: SwitchButtonDataFormatType | null = null;
-  @Output() switchButtonChange = new EventEmitter<SwitchButtonDataFormatType>();
+  @Input() switchButton!: SwitchButtonType;
+  @Output() switchButtonChange = new EventEmitter<SwitchButtonType>();
 
   @Input() notification: NotificationType = {type: '', message: ''};
   @Output() notificationChange = new EventEmitter<NotificationType>();
@@ -212,11 +216,10 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   public constructor (
     private readonly windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private readonly platformId: Object,
-    private readonly route: ActivatedRoute,
-    private readonly apiService: APIsService,
-    private readonly authService: AuthService,
     private readonly tenantService: TenantService
-  ) {}
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
 
   // ─────────────────────────────────────────────────────────────
   // Lifecycle
@@ -349,8 +352,8 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   }
 
   // Row toggle
-  protected handleSwitchChange(isActive: SwitchButtonDataFormatType['isActive'], input: SwitchButtonDataFormatType['data']): void {
-    this.switchButton = {isActive, data: input};
+  protected handleSwitchChange(isActive: SwitchButtonType['isActive'], input: SwitchButtonType['data'], index: number): void {
+    this.switchButton = {isActive, index, data: input};
     this.switchButtonChange.emit(this.switchButton);
   }
 

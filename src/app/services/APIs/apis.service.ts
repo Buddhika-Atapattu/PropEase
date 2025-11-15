@@ -1,16 +1,8 @@
-import {Injectable} from '@angular/core';
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
-} from '@angular/core';
-import {firstValueFrom, Subscription, pipe, take} from 'rxjs';
-import {CryptoService} from '../cryptoService/crypto.service';
-import {HttpClient, HttpParams} from '@angular/common/http';
 import {isPlatformBrowser} from '@angular/common';
+import {HttpClient, HttpParams} from '@angular/common/http';
+import {Inject, Injectable, PLATFORM_ID} from '@angular/core';
 import {getCountries} from '@yusifaliyevpro/countries';
+import {firstValueFrom} from 'rxjs';
 
 export interface CurrencyFormat {
   country: string;
@@ -216,7 +208,7 @@ export type Role =
   | 'developer'
   | 'user';
 
-export interface BaseUser {
+export interface User {
   __id?: string;
   __v?: number;
   name: string;
@@ -248,26 +240,16 @@ export interface BaseUser {
   updatedAt: Date;
 }
 
-export interface NewUser extends BaseUser {
+export interface NewUser extends User {
   password: string;
 }
 
-export interface UsersType extends NewUser {}
-
-export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> {}
-
-export interface LoggedUserType extends Omit<NewUser, 'password'> {}
 
 export type AccessMap = {
   [module: string]: string[]; // list of actions allowed
 };
 
-export interface MSG_DATA_TYPE extends UpdateUserType {
-  status: string;
-  message: string;
-  user: UpdateUserType;
-  token: string;
-}
+
 
 export interface MSG {
   success?: boolean;
@@ -275,22 +257,22 @@ export interface MSG {
   message: string;
   data: any;
   token?: string;
-  user?: LoggedUserType;
+  user?: User;
 }
 
-export interface MSG_WITH_BASEUSER {
+export interface MSG_WITH_User {
   status: string;
   message: string;
-  user: BaseUser;
+  user: User;
   data: any;
 }
 
 export interface validateType {
   status: string;
-  user: UsersType;
+  user: User;
 }
 
-export interface UDER_DOC_TYPES extends MSG_WITH_BASEUSER {
+export interface UDER_DOC_TYPES extends MSG_WITH_User {
   originalName: string;
   storedName: string;
   mimeType: string;
@@ -316,10 +298,10 @@ export class APIsService {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
 
-  public async getAllUsers(): Promise<UsersType[]> {
+  public async getAllUsers(): Promise<User[]> {
     return (
       (await firstValueFrom(
-        this.http.get<UsersType[]>(`${this.baseURL}/${this.userAPI}/users`)
+        this.http.get<User[]>(`${this.baseURL}/${this.userAPI}/users`)
       ))
     );
   }
@@ -347,10 +329,10 @@ export class APIsService {
   public async updateUser(
     user: FormData,
     username: string
-  ): Promise<MSG_DATA_TYPE | null> {
+  ): Promise<MSG | null> {
     if(username) {
       const data = await firstValueFrom(
-        this.http.put<MSG_DATA_TYPE>(
+        this.http.put<MSG>(
           `${this.baseURL}/${this.userAPI}/user-update/${username}`,
           user
         )
@@ -409,20 +391,20 @@ export class APIsService {
     );
   }
 
-  public async createNewUser(data: FormData): Promise<MSG_DATA_TYPE> {
+  public async createNewUser(data: FormData): Promise<MSG> {
     return await firstValueFrom(
-      this.http.post<MSG_DATA_TYPE>(
+      this.http.post<MSG>(
         `${this.baseURL}/${this.userAPI}/create-user`,
         data
       )
     );
   }
 
-  public async generateToken(username: string): Promise<MSG_DATA_TYPE> {
+  public async generateToken(username: string): Promise<MSG> {
     return await firstValueFrom(
-      this.http.post<MSG_DATA_TYPE>(
+      this.http.post<MSG>(
         `${this.baseURL}/${this.userAPI}/generate-token`,
-        {username}
+        {username: username}
       )
     );
   }
@@ -430,18 +412,18 @@ export class APIsService {
   public async uploadDocuments(
     data: FormData,
     username: string
-  ): Promise<MSG_WITH_BASEUSER> {
+  ): Promise<MSG_WITH_User> {
     return await firstValueFrom(
-      this.http.post<MSG_WITH_BASEUSER>(
+      this.http.post<MSG_WITH_User>(
         `${this.baseURL}/${this.userAPI}/user-document-upload/${username}`,
         data
       )
     );
   }
 
-  public async getUserByToken(token: string): Promise<MSG_WITH_BASEUSER> {
+  public async getUserByToken(token: string): Promise<MSG_WITH_User> {
     return await firstValueFrom(
-      this.http.get<MSG_WITH_BASEUSER>(
+      this.http.get<MSG_WITH_User>(
         `${this.baseURL}/${this.userAPI}/user-token/${token}`
       )
     );
@@ -502,9 +484,9 @@ export class APIsService {
     return countriesCodes;
   }
 
-  public async deleteUserByUsername(username: string, deletedBy: string): Promise<MSG_DATA_TYPE> {
+  public async deleteUserByUsername(username: string, deletedBy: string): Promise<MSG> {
     return await firstValueFrom(
-      this.http.delete<MSG_DATA_TYPE>(
+      this.http.delete<MSG>(
         `${this.baseURL}/${this.userAPI}/user-delete/${username}/${deletedBy}`
       )
     );

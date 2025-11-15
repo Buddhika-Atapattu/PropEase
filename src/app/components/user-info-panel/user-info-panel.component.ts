@@ -1,26 +1,24 @@
 // Path: src/components/user-info-panel/user-info-panel.component.ts
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
   Component,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
   ElementRef,
   EventEmitter,
-  Output,
   HostListener,
+  Inject,
+  OnDestroy,
+  OnInit,
+  Output,
+  PLATFORM_ID,
 } from '@angular/core';
-import {
-  AuthService,
-  NewUser,
-  LoggedUserType,
-} from '../../services/auth/auth.service';
 import {Router} from '@angular/router';
-import {WindowsRefService} from '../../services/windowRef/windowRef.service';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {Subscription} from 'rxjs';
+import {APIsService, User} from '../../services/APIs/apis.service';
+import {
+  AuthService
+} from '../../services/auth/auth.service';
 import {CryptoService} from '../../services/cryptoService/crypto.service';
-import {APIsService} from '../../services/APIs/apis.service';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
 
 @Component({
   selector: 'app-user-info-panel',
@@ -34,7 +32,7 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
-  protected user: LoggedUserType | null = null;
+  protected user: User | null = null;
 
   constructor (
     private windowRef: WindowsRefService,
@@ -85,7 +83,7 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
       const username = await this.APIsService.generateToken(
         this.user?.username
       );
-      this.router.navigate(['/dashboard/view-user-profile', username.token]);
+      this.router.navigate(['/dashboard/users/user-profile', username.token]);
     }
   }
 

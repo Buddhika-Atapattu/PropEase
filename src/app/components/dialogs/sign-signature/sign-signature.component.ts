@@ -22,11 +22,12 @@ import {
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { Subscription } from 'rxjs';
+import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
 
 @Component({
   selector: 'app-sign-signature',
   standalone: true,
-  imports: [CommonModule, MatDialogModule],
+  imports: [CommonModule, MatDialogModule, CloseBtnComponent],
   templateUrl: './sign-signature.component.html',
   styleUrl: './sign-signature.component.scss',
 })

@@ -1,40 +1,40 @@
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
+  AfterViewInit,
   Component,
+  ElementRef,
   Inject,
   Input,
-  PLATFORM_ID,
-  OnInit,
   OnChanges,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
   SimpleChanges,
   ViewChild,
-  AfterViewInit,
-  ElementRef,
-  OnDestroy,
 } from '@angular/core';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatButtonModule} from '@angular/material/button';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {DomSanitizer} from '@angular/platform-browser';
+import {ActivatedRoute, Router} from '@angular/router';
+import {Subscription} from 'rxjs';
 import {
   APIsService,
-  BaseUser,
+  User,
   UDER_DOC_TYPES,
 } from '../../../services/APIs/apis.service';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {ActivatedRoute, Router} from '@angular/router';
+import {AuthService} from '../../../services/auth/auth.service';
 import {CryptoService} from '../../../services/cryptoService/crypto.service';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {Subscription} from 'rxjs';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {DomSanitizer} from '@angular/platform-browser';
-import {SkeletonLoaderComponent} from '../../shared/skeleton-loader/skeleton-loader.component';
-import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatInputModule} from '@angular/material/input';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatButtonModule} from '@angular/material/button';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {
   msgTypes,
   NotificationDialogComponent,
 } from '../../dialogs/notification/notification.component';
 import {ProgressBarComponent} from '../../dialogs/progress-bar/progress-bar.component';
-import {AuthService} from '../../../services/auth/auth.service';
+import {SkeletonLoaderComponent} from '../../shared/skeleton-loader/skeleton-loader.component';
 
 interface selectedFiles {
   name: string;
@@ -70,7 +70,7 @@ export class DocumentsComponent
   notification!: NotificationDialogComponent;
   @ViewChild(ProgressBarComponent, {static: true})
   progress!: ProgressBarComponent;
-  @Input() user: BaseUser | null = null;
+  @Input() user: User | null = null;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;

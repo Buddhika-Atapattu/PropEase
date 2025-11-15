@@ -11,7 +11,7 @@ import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {Subscription} from 'rxjs';
 import {ActivatedRoute, Router} from '@angular/router';
-import {APIsService, BaseUser} from '../../../services/APIs/apis.service';
+import {APIsService, User} from '../../../services/APIs/apis.service';
 import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
 import {Lease, LeaseWithProperty, SWITCH_ON_ARRAY, TenantService} from '../../../services/tenant/tenant.service';
 import {
@@ -25,7 +25,7 @@ import {
   ButtonType,
   CustomTableColumnType,
   FileExportWithDataAndExtentionType,
-  SwitchButtonDataFormatType,
+  SwitchButtonType,
 } from '../../../components/shared/custom-table/custom-table.component';
 import {FileExportButtonTypeByExtension} from '../../../components/shared/paginator/paginator.component';
 import {BackEndPropertyData, PropertyService} from '../../../services/property/property.service';
@@ -53,7 +53,7 @@ interface LeaseTableDataType {
   download: {
     type: string
   }
-  switchButton: boolean;
+  switchButton: SwitchButtonType;
 }
 
 @Component({
@@ -70,7 +70,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   protected isBrowser: boolean;
   protected modeSub: Subscription | null = null;
   private tenantID: string = '';
-  protected tenant: BaseUser | null = null;
+  protected tenant: User | null = null;
   protected leases: Lease[] = [];
   protected isLoading: boolean = true;
 
@@ -121,11 +121,13 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   };
   private _leaseTableData: LeaseTableDataType[] = [];
   private _leaseTableColumns: CustomTableColumnType[] = [];
-  private _leaseSwitchButton: SwitchButtonDataFormatType = {
+  private _leaseSwitchButton: SwitchButtonType = {
     isActive: false,
-    data: null
+    index: 0,
+    on: 'ACTIVE',
+    off: 'DEACTIVE'
   };
-  protected loggedUser: BaseUser | null = null;
+  protected loggedUser: User | null = null;
   protected leaseLength: number = 0;
   private selectedProperties: BackEndPropertyData[] = [];
   private today: Date = new Date();
@@ -303,12 +305,12 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   //switchButton
-  get leaseSwitchButton(): SwitchButtonDataFormatType {
+  get leaseSwitchButton(): SwitchButtonType {
     return this._leaseSwitchButton;
   }
-  set leaseSwitchButton(value: SwitchButtonDataFormatType) {
+  set leaseSwitchButton(value: SwitchButtonType) {
     this._leaseSwitchButton = value;
-    this.handleUpdateLeaseStatus()
+    this.handleUpdateLeaseStatus(this._leaseSwitchButton)
   }
 
 
@@ -352,61 +354,60 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private async handleUpdateLeaseStatus() {
+  private async handleUpdateLeaseStatus(data: SwitchButtonType): Promise<void> {
     try {
+
       this.isLoading = true;
-      const tableData: LeaseTableDataType = this._leaseSwitchButton?.data as LeaseTableDataType;
-      const isActive: SwitchButtonDataFormatType['isActive'] = this._leaseSwitchButton.isActive;
+
+      if(!data) throw new Error('Invalid data from table!');
+
+      const tableData: LeaseTableDataType = data.data as LeaseTableDataType;
 
       if(!tableData) throw new Error('No table data found!');
 
       const leaseId = tableData.leaseid;// get the lease ID from the table data
+
       if(!leaseId) throw new Error('No lease ID found!');
 
       // Update Lease Array
       const filteredLease = this.leases.find((lease) => lease.leaseID === leaseId);
+
       if(!filteredLease) throw new Error('Lease not found in the leases array!');
 
-      const status: Lease['systemMetadata']['validationStatus'] = isActive ? 'active' : 'inactive'
-
-      const leaseAgreement = this.leases.find((lease) => lease.leaseID === leaseId);
-      if(!leaseAgreement) throw new Error('Lease not found in the leases array!');
-
-      filteredLease.systemMetadata.validationStatus = status;
-      tableData.switchButton = isActive;
-      tableData.status = status;
-      leaseAgreement.systemMetadata.validationStatus = status;
+      const status: Lease['systemMetadata']['validationStatus'] = data.isActive ? 'active' : 'inactive';
 
       const formdata: FormData = new FormData();
 
       formdata.append('validationStatus', status);
 
-      await this.tenantService.getLeaseAgreementByIDAndUpdateValidationStatus(formdata, leaseId).then((res) => {
-        try {
-          if(res.status === 'success') {
-            this.NotificationDialogComponent.notification(res.status, res.message);
-          }
-          else {
-            throw new Error(res.message)
-          }
-        }
-        catch(error) {
-          console.log(error);
-          this.NotificationDialogComponent.notification("error", "Failed to update lease status!");
-        }
-      });
+      const res = await this.tenantService.getLeaseAgreementByIDAndUpdateValidationStatus(formdata, leaseId);
 
+      const updatedLease: Lease = res.data;
+
+      const isActive: SwitchButtonType['isActive'] = updatedLease.systemMetadata.validationStatus.toLowerCase() === 'active' ? true : false;
+
+      filteredLease.systemMetadata.validationStatus = updatedLease.systemMetadata.validationStatus;
+
+      tableData.switchButton = {
+        isActive: isActive,
+        index: null,
+        on: 'ACTIVE',
+        off: 'DEACTIVE'
+      };
+
+      tableData.status = updatedLease.systemMetadata.validationStatus;
+
+      if(typeof data.index !== 'number' || !Number.isFinite(data.index)) throw new Error('Data index is invalid');
+
+      this.leaseTableData[data.index] = tableData
     }
     catch(error) {
-      console.log(error)
-      if(error) {
-        this.NotificationDialogComponent.notification("error", "Failed to update lease status!")
-      }
+      console.error(error)
+      this.NotificationDialogComponent.notification("error", "Failed to update lease status!");
+      return;
     }
     finally {
-      setTimeout(() => {
-        this.isLoading = false;
-      }, 500);
+      this.isLoading = false;
     }
   }
 
@@ -484,7 +485,12 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         const notify: LeaseTableDataType['notify'] = remaningDays < 30;
         const view: LeaseTableDataType['view'] = {type: 'view'};
         const download: LeaseTableDataType['download'] = {type: 'download'};
-        const switchButton: boolean = SWITCH_ON_ARRAY.includes(status.toLowerCase()) ? true : false;
+        const switchButton: SwitchButtonType = {
+          isActive: SWITCH_ON_ARRAY.includes(status.toLowerCase()) ? true : false,
+          index: null,
+          on: 'ACTIVE',
+          off: 'DEACTIVE'
+        };
 
 
         const rowData: LeaseTableDataType = {
@@ -633,7 +639,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         throw new Error('User data is missing from response.');
       }
 
-      this.tenant = res.user as BaseUser;
+      this.tenant = res.user as User;
 
     } catch(error) {
       console.error('Error loading tenant data:', error);

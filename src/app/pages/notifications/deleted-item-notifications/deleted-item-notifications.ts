@@ -22,7 +22,7 @@ import {
   Severity,
   UserRole,
   PermanentDeletePayload,
-  BackendBasicResponse,                         // <-- we’ll use this for a quick FE guard on permanent delete
+  BackendBasicResponse, // <-- we’ll use this for a quick FE guard on permanent delete
   TitleCategory
 } from '../../../services/notifications/notification-service';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
@@ -30,8 +30,7 @@ import {MatIconModule} from '@angular/material/icon';
 import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {NotificationDialogComponent} from '../../../components/dialogs/notification/notification.component';
 import {
-  RestoreNotificationPayload,
-  BackendRestoreResponse,
+  RestoreNotificationPayload
 } from '../../../types/notification.types'; // If you keep these types in service, adjust import path
 import {MatDialog} from '@angular/material/dialog';
 import {ConfirmationComponent} from '../../../components/shared/confirmation/confirmation.component';
@@ -211,7 +210,7 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
 
   /** Navigate back to the notifications list view. */
   protected backToList() {
-    this.router.navigate(['/dashboard/all-notifications']);
+    this.router.navigate(['/dashboard/notifications/all-notifications']);
   }
 
   /* ─────────────────────────── Actions ─────────────────────────── */

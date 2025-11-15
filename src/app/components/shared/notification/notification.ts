@@ -224,7 +224,7 @@ export class NotificationComponent implements OnInit, OnDestroy {
   protected viewAllNotifications(): void {
     if(!this.isLoggedIn) return;
     this.closeMenu();
-    this.router.navigate(['/dashboard/all-notifications']);
+    this.router.navigate(['/dashboard/notifications/all-notifications']);
   }
 
   protected trackById(_: number, item: Notification) {

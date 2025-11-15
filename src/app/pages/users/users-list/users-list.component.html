@@ -1,0 +1,122 @@
+<app-notification />
+
+<div class="main-panel">
+  <!-- top means hear -->
+  <div class="container-fluid">
+    <div class="main-container">
+      <!-- Search Top bar -->
+      <div class="top-bar">
+        <div class="search-container">
+          <input
+            type="text"
+            #searchInput
+            placeholder="Search user by name, email, or username"
+            class="search-input"
+            name="search"
+            [(ngModel)]="search"
+            (ngModelChange)="searchUsers($event)"
+          />
+
+          <button
+            type="button"
+            class="search-action"
+            (click)="searchBtn()"
+            matTooltip="Search users"
+            matTooltipPosition="above"
+          >
+            <mat-icon>search</mat-icon>
+          </button>
+        </div>
+        <div class="add-user">
+          <button class="btn-warning" type="button" (click)="addUser()">
+            <!-- <mat-icon svgIcon="add-new-user"></mat-icon> -->
+            <i class="fa-solid fa-user-plus"></i>
+            <span class="btn-label">Add User</span>
+          </button>
+        </div>
+      </div>
+      <!-- top bar ended -->
+
+      <!-- Layout Style -->
+      <div
+        class="row d-flex justify-content-end align-items-center my-3 layout-switch-btn"
+      >
+        <div class="col-12 d-flex justify-content-end align-items-center">
+          <app-layout-switch-btn
+            [value]="viewMode"
+            (valueChange)="changeLayout($event)"
+            [rowLabel]="'Row'"
+            [colLabel]="'Column'"
+          >
+          </app-layout-switch-btn>
+        </div>
+      </div>
+      <!-- End Layout Style -->
+
+      @if (displayingUsers.length > 0) {
+      <div class="desktop">
+        @if(!viewMode){ @for (user of displayingUsers; track $index; let i =
+        $index) {
+        <app-user-view-card
+          [user]="user"
+          [viewMode]="viewMode"
+          [isLoading]="loading"
+          [mode]="mode"
+          (viewUser)="viewUser($event, user)"
+          (editUser)="editUser($event, user)"
+          (deleteUser)="deleteUser($event, user)"
+        ></app-user-view-card>
+        } } @else {
+        <div class="users-grid">
+          @for (user of displayingUsers; track $index) {
+          <app-user-view-card
+            [user]="user"
+            [viewMode]="viewMode"
+            [isLoading]="loading"
+            [mode]="mode"
+            (viewUser)="viewUser($event, user)"
+            (editUser)="editUser($event, user)"
+            (deleteUser)="deleteUser($event, user)"
+          >
+          </app-user-view-card>
+          }
+        </div>
+        }
+      </div>
+
+      <!-- This for only for the mobile view -->
+      <div class="mobile">
+        <div class="users-grid">
+          @for (user of displayingUsers; track $index) {
+          <app-user-view-card
+            [user]="user"
+            [viewMode]="viewMode"
+            [isLoading]="loading"
+            [mode]="mode"
+            (viewUser)="viewUser($event, user)"
+            (editUser)="editUser($event, user)"
+            (deleteUser)="deleteUser($event, user)"
+          >
+          </app-user-view-card>
+          }
+        </div>
+      </div>
+      } @else {
+      <div class="no-users-container">
+        <mat-icon class="no-users-icon" aria-hidden="true">group_off</mat-icon>
+        <p class="no-users-text">
+          {{
+            search.length === 0
+              ? "No users currently registered."
+              : search + " is not listed as registered user in the system."
+          }}
+        </p>
+        <small class="no-users-subtext"
+          >You can add a new user to get started.</small
+        >
+      </div>
+      }
+      <!-- user container ended -->
+    </div>
+  </div>
+</div>

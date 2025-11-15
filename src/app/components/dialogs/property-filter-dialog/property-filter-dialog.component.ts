@@ -35,6 +35,7 @@ import {Subscription} from 'rxjs';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatButtonToggleModule} from '@angular/material/button-toggle';
 import {CustomRangeSliderComponent} from '../../shared/custom-range-slider/custom-range-slider.component';
+import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
 // MatButtonToggleModule,
 
 @Component({
@@ -61,6 +62,7 @@ import {CustomRangeSliderComponent} from '../../shared/custom-range-slider/custo
     MatButtonToggleModule,
     MatDialogModule,
     CustomRangeSliderComponent,
+    CloseBtnComponent,
   ],
   templateUrl: './property-filter-dialog.component.html',
   styleUrl: './property-filter-dialog.component.scss',
@@ -100,7 +102,7 @@ export class PropertyFilterDialogComponent
     'Villa',
     'Commercial',
     'Land',
-    'Stodio',
+    '',
   ];
   protected filterTypeOptions: string[] = [];
   protected selectedType: string = '';

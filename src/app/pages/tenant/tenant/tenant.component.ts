@@ -1,19 +1,18 @@
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
   Component,
-  OnInit,
-  OnDestroy,
   Inject,
+  OnDestroy,
+  OnInit,
   PLATFORM_ID,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import {ActivatedRoute, Router, RouterModule} from '@angular/router';
+import {Subscription} from 'rxjs';
+import {User} from '../../../services/APIs/apis.service';
 import {
   AuthService,
-  LoggedUserType,
 } from '../../../services/auth/auth.service';
-import { APIsService, UsersType } from '../../../services/APIs/apis.service';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 
 @Component({
   selector: 'app-tenant',
@@ -26,17 +25,16 @@ export class TenantComponent implements OnInit, OnDestroy {
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
-  protected loggedUser: LoggedUserType | null = null;
-  protected users: UsersType[] | null = [];
+  protected loggedUser: User | null = null;
+  protected users: User[] | null = [];
 
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private route: ActivatedRoute,
     private authService: AuthService,
-    private router: Router,
-    private apiService: APIsService
+    private router: Router
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.route.url.subscribe((segments) => {
@@ -47,28 +45,15 @@ export class TenantComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
     }
-    await this.getAllUsers();
+    this.router.navigate(['/dashboard/tenant/tenant-home'])
   }
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
-  }
-
-  private async getAllUsers() {
-    this.isLoading = true;
-    await this.apiService
-      .getAllUsers()
-      .then((res: UsersType[] | null) => {
-        
-      })
-      .catch((err) => {
-        console.log(err);
-        this.isLoading = false;
-      });
   }
 }

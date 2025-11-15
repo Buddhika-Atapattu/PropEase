@@ -1,0 +1,39 @@
+<div class="ta-shell" [class.invalid]="invalid" [class.disabled]="disabled">
+  <label class="ta-label" [attr.for]="id">
+    {{ label }} <span *ngIf="required" class="req">*</span>
+  </label>
+
+  <div class="ta-field">
+    <textarea
+      #ta
+      class="ta-input"
+      [id]="id"
+      [name]="name"
+      [attr.placeholder]="placeholder"
+      [attr.rows]="rows"
+      [disabled]="disabled"
+      [ngModel]="text"
+      (ngModelChange)="onInput($event)"
+      [attr.maxlength]="maxLength ?? null"
+      [attr.aria-invalid]="invalid"
+      [attr.aria-required]="required"
+      [attr.aria-describedby]="describedBy()"
+      [style.resize]="
+        resize === 'none' ? 'none' : resize === 'both' ? 'both' : resize
+      "
+    ></textarea>
+    <div class="focus-ring"></div>
+  </div>
+
+  <div class="ta-footer">
+    <div class="hint" *ngIf="hint" [id]="id + '-hint'">{{ hint }}</div>
+    <div
+      class="counter"
+      *ngIf="showCounter && maxLength != null"
+      [id]="id + '-counter'"
+      [class.near-limit]="isNearLimit"
+    >
+      {{ currentLength }} / {{ maxLength }}
+    </div>
+  </div>
+</div>

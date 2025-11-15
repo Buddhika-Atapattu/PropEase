@@ -24,7 +24,7 @@ import {
   MatDialog, MatDialogModule
 } from '@angular/material/dialog';
 import {ViewPropertyImagesComponent} from '../../../components/dialogs/view-property-images/view-property-images.component';
-import {APIsService, UsersType, MSG} from '../../../services/APIs/apis.service';
+import {APIsService, User, MSG} from '../../../services/APIs/apis.service';
 import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
 import {PropertyMoreDetailsPannelComponent} from '../../../components/dialogs/property-more-details-pannel/property-more-details-pannel.component';
 import {ShareComponent} from '../../../components/dialogs/share/share.component';
@@ -52,8 +52,8 @@ export class ViewComponent
   private cols: number = 10;
   protected imageTiles: string[] = [];
   protected isImageTrasform: boolean = false;
-  protected owner: UsersType | null = null;
-  protected agent: UsersType | null = null;
+  protected owner: User | null = null;
+  protected agent: User | null = null;
 
   protected isIframeEmbed: boolean = false;
 
@@ -144,7 +144,7 @@ export class ViewComponent
 
   protected goToPropertyView(): void {
     this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
-      this.router.navigate(['/dashboard/property-view', this.propertyID]);
+      this.router.navigate(['/dashboard/properties/property-view', this.propertyID]);
     });
   }
   //<==================== End Page indicator ====================>
@@ -330,7 +330,7 @@ export class ViewComponent
       await this.propertyService
         .getUserData(this.property.owner)
         .then((response: MSG) => {
-          this.owner = response.data as UsersType;
+          this.owner = response.data as User;
         })
         .catch((error: MSG) => {
           console.error(error);
@@ -351,7 +351,7 @@ export class ViewComponent
       await this.propertyService
         .getUserData(this.property.addedBy.username)
         .then((response: MSG) => {
-          this.agent = response.data as UsersType;
+          this.agent = response.data as User;
         })
         .catch((error: MSG) => {
           console.error(error);

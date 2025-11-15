@@ -1,23 +1,6 @@
 @use "../../../../styles/global.scss" as *;
 @use "sass:color";
 
-.main-panel {
-  border-radius: 20px;
-  transition: all 0.3s ease-in-out;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  min-height: 85vh;
-  padding: 2rem;
-
-  h2 {
-    font-weight: 600;
-    margin-bottom: 1rem;
-  }
-
-  p {
-    font-size: 16px;
-  }
-}
-
 /* ─────────────────────────────────────────────────────────────
    File Upload Drop-Zone
    - Modernized with legacy palette compatibility
@@ -366,28 +349,5 @@
         ),
         linear-gradient(160deg, rgba(31, 41, 69, 0.95), rgba(15, 23, 42, 0.96));
     }
-  }
-}
-// Dark Theme
-:host-context(html.dark) {
-  .main-panel {
-    background: linear-gradient(
-      145deg,
-      $dark-secondary-color,
-      color.adjust($dark-secondary-color, $lightness: 2%)
-    );
-    color: $dark-text-color;
-  }
-}
-
-// Light Theme
-:host-context(html.light) {
-  .main-panel {
-    background: linear-gradient(
-      145deg,
-      $light-primary-color,
-      color.adjust($light-primary-color, $lightness: 2%)
-    );
-    color: $light-text-color;
   }
 }

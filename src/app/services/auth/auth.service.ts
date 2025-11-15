@@ -33,6 +33,7 @@ import {APIsService} from '../APIs/apis.service';
 import {ActivityTrackerService} from '../activityTacker/activity-tracker.service';
 import {NotificationService} from '../notifications/notification-service';
 import {SocketService} from '../socket/socket-service';
+import {User} from '../APIs/apis.service';
 
 /* ==================== Types (unchanged) ==================== */
 
@@ -51,18 +52,6 @@ export type Role =
   | 'admin' | 'agent' | 'tenant' | 'owner'
   | 'operator' | 'manager' | 'developer' | 'user';
 
-export interface BaseUser {
-  _id?: string; __v?: number;
-  name: string; username: string; email: string;
-  dateOfBirth?: Date | null; age: number; image?: string | File;
-  phoneNumber?: string; bio: string; role: Role; gender: string;
-  address: Address; isActive: boolean; access: ROLE_ACCESS_MAP;
-  creator: string; updator?: string; createdAt: Date; updatedAt: Date;
-}
-export interface NewUser extends BaseUser {password: string;}
-export interface UsersType extends NewUser {}
-export interface UpdateUserType extends Omit<BaseUser, 'createdAt'> {}
-export interface LoggedUserType extends Omit<NewUser, 'password'> {}
 
 export type AccessMap = {[module: string]: string[]};
 
@@ -267,11 +256,11 @@ export class AuthService {
   private password = '';
   private user: UserCredentials = {username: '', password: '', rememberMe: false};
 
-  private loggedUser: LoggedUserType | null = null;
-  private localUser: LoggedUserType | null = null;
+  private loggedUser: User | null = null;
+  private localUser: User | null = null;
   private isValidUser = false;
   private isUserActive = false;
-  private users: UsersType[] = [];
+  private users: User[] = [];
 
   /** Ensure we boot the realtime layers once per session. */
   private notificationsInit = false;
@@ -295,11 +284,11 @@ export class AuthService {
 
   /* ---------- Getters / Setters ---------- */
   get getUserCredentials(): UserCredentials | null {return this.user ?? null;}
-  get getLoggedUser(): LoggedUserType | null {return this.loggedUser;}
-  get LocalUser(): LoggedUserType | null {return this.localUser;}
+  get getLoggedUser(): User | null {return this.loggedUser;}
+  get LocalUser(): User | null {return this.localUser;}
   get IsActiveUser(): boolean {return this.isUserActive;}
   get getIsValidUser(): boolean {return this.isValidUser;}
-  get allUsers(): UsersType[] {return this.users;}
+  get allUsers(): User[] {return this.users;}
   get isUserLoggedIn(): boolean {return this.isLoggedIn;}
 
 
@@ -310,7 +299,7 @@ export class AuthService {
     this.user = user;
   }
   set isUserLoggedIn(value: boolean) {this.isLoggedIn = value;}
-  set setLoggedUser(user: LoggedUserType | null) {
+  set setLoggedUser(user: User | null) {
     this.loggedUser = user;
     this.activityTrackerService.loggedUser = user;
   }
@@ -323,7 +312,7 @@ export class AuthService {
       const response = await this.APIs.verifyUser(this.user);
       if(response?.status !== 'success') throw new Error('Invalid credentials!');
 
-      const user: LoggedUserType = response.user as LoggedUserType;
+      const user: User = response.user as User;
       if(!user) throw new Error('User not found!');
 
       // Store state
@@ -351,7 +340,7 @@ export class AuthService {
   }
 
   /* ---------- Validate payload type helper ---------- */
-  public isUsersType(data: any): data is UsersType[] | UsersType {
+  public isUsersType(data: any): data is User[] | User {
     const isOne = (item: any) =>
       item && typeof item.name === 'string' && typeof item.username === 'string' &&
       typeof item.email === 'string' &&
@@ -412,13 +401,13 @@ export class AuthService {
   }
 
   /* ---------- Session restore on app start ---------- */
-  public async getLocalLoggedUser(): Promise<LoggedUserType | null> {
+  public async getLocalLoggedUser(): Promise<User | null> {
     if(!this.isBrowser) return null;
     const encrypted = localStorage.getItem('ENCRYPED_LOGGED_USER');
     if(!encrypted) return null;
 
     try {
-      const decryptedUser = (await this.cryptoService.decrypt(encrypted)) as LoggedUserType;
+      const decryptedUser = (await this.cryptoService.decrypt(encrypted)) as User;
       this.localUser = decryptedUser;
       this.loggedUser = decryptedUser;
       this.isUserActive = !!decryptedUser.isActive;

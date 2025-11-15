@@ -8,12 +8,12 @@
 
 /* Shell */
 .main-panel {
-  border-radius: 20px;
-  transition: all 0.3s ease-in-out;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  min-height: 85vh;
-  padding: 1.25rem;
-  position: relative;
+  // border-radius: 20px;
+  // transition: all 0.3s ease-in-out;
+  // box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  // min-height: 85vh;
+  // padding: 1.25rem;
+  // position: relative;
 
   /* subtle top shine */
   &::after {
@@ -140,14 +140,14 @@
   }
 
   /* severity variants (filled by theme below) */
-  .pill.severity.info {
-  }
-  .pill.severity.success {
-  }
-  .pill.severity.warning {
-  }
-  .pill.severity.error {
-  }
+  // .pill.severity.info {
+  // }
+  // .pill.severity.success {
+  // }
+  // .pill.severity.warning {
+  // }
+  // .pill.severity.error {
+  // }
 }
 
 /* Mosaic meta grid (tiles, not columns) */
@@ -290,14 +290,14 @@
    LIGHT THEME (tokens from global.scss)
    ================================ */
 :host-context(html.light) {
-  .main-panel {
-    background: linear-gradient(
-      145deg,
-      $light-primary-color,
-      color.adjust($light-primary-color, $lightness: 2%)
-    );
-    color: $light-text-color;
-  }
+  // .main-panel {
+  //   background: linear-gradient(
+  //     145deg,
+  //     $light-primary-color,
+  //     color.adjust($light-primary-color, $lightness: 2%)
+  //   );
+  //   color: $light-text-color;
+  // }
 
   .review-card::before {
     background: linear-gradient(180deg, $light-error-color, $light-accent-gold);
@@ -366,14 +366,14 @@
    DARK THEME (tokens from global.scss)
    ================================ */
 :host-context(html.dark) {
-  .main-panel {
-    background: linear-gradient(
-      145deg,
-      $dark-secondary-color,
-      color.adjust($dark-secondary-color, $lightness: 2%)
-    );
-    color: $dark-text-color;
-  }
+  // .main-panel {
+  //   background: linear-gradient(
+  //     145deg,
+  //     $dark-secondary-color,
+  //     color.adjust($dark-secondary-color, $lightness: 2%)
+  //   );
+  //   color: $dark-text-color;
+  // }
 
   .review-card::before {
     background: linear-gradient(180deg, $dark-error-color, $dark-accent-gold);

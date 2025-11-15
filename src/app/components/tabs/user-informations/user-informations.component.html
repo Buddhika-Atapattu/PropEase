@@ -8,23 +8,12 @@
         [borderRadius]="'0.2rem'"
         [height]="'4rem'"
       ></app-skeleton-loader>
-      <h1 *ngIf="!isLoading" class="text-capitalize">
+      <h3
+        *ngIf="!isLoading"
+        class="text-capitalize d-flex align-items-center w-100"
+      >
         {{ user.name }}: {{ user.role }}
-        <mat-icon
-          *ngIf="isActive"
-          aria-hidden="false"
-          aria-label="Example home icon"
-          svgIcon="active"
-          [ngClass]="{ success: isActive }"
-        ></mat-icon>
-        <mat-icon
-          *ngIf="!isActive"
-          aria-hidden="false"
-          aria-label="Example home icon"
-          svgIcon="inactive"
-          [ngClass]="{ danger: !isActive }"
-        ></mat-icon>
-      </h1>
+      </h3>
       <ul class="list-group">
         <li class="list-group-item user-info-sm">
           <app-skeleton-loader

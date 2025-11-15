@@ -1,0 +1,8 @@
+<nav class="pe-breadcrumbs" aria-label="Breadcrumb" *ngIf="(svc.breadcrumbs$ | async) as crumbs">
+  <ol>
+    <li *ngFor="let c of crumbs; let last = last">
+      <a *ngIf="!last" [routerLink]="c.url">{{ c.label }}</a>
+      <span *ngIf="last">{{ c.label }}</span>
+    </li>
+  </ol>
+</nav>

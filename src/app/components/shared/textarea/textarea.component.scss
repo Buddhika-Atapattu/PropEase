@@ -1,0 +1,127 @@
+/* Path: src/app/components/shared/textarea/textarea.component.scss */
+/* Uses your global CSS variables (light/dark) – no hardcoded colors. */
+
+.ta-shell {
+  width: 100%;
+  display: grid;
+  gap: 8px;
+  color: var(--on-surface);
+
+  &.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  &.invalid .ta-field {
+    --border-active: var(--danger);
+  }
+}
+
+.ta-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--on-surface);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  .req {
+    color: var(--danger);
+    font-weight: 700;
+  }
+}
+
+.ta-field {
+  position: relative;
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 16px var(--shadow-color);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  --border-active: var(--primary);
+
+  &:hover {
+    border-color: color-mix(
+      in oklab,
+      var(--border-color) 70%,
+      var(--on-surface) 30%
+    );
+    background: var(--surface-variant);
+  }
+
+  &:focus-within {
+    border-color: var(--border-active);
+    box-shadow: 0 8px 24px var(--shadow-color),
+      0 0 0 4px color-mix(in oklab, var(--primary) 15%, transparent);
+    background: var(--elevated);
+  }
+}
+
+.ta-input {
+  width: 100%;
+  display: block;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--on-surface);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 14px 16px;
+  border-radius: 16px;
+  caret-color: var(--primary);
+
+  /* Nice scroll for overflow (when autoGrow hits cap) */
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--on-surface) 30%, transparent)
+    transparent;
+
+  &::placeholder {
+    color: var(--muted);
+    opacity: 0.95;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+/* Subtle focus border overlay (kept separate for soft corners) */
+.focus-ring {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+}
+
+/* Footer (hint + counter) */
+.ta-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  .hint {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .counter {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: var(--muted);
+
+    &.near-limit {
+      color: var(--warning);
+      font-weight: 600;
+    }
+  }
+}
+
+/* Compact utility (optional) */
+:host(.compact) .ta-input {
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+:host(.compact) .ta-field {
+  border-radius: 12px;
+}

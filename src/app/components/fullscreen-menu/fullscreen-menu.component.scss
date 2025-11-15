@@ -1,0 +1,435 @@
+@use "../../styles/global.scss" as *;
+@use "sass:color";
+
+/* ── Overlay root ─────────────────────────────────────────── */
+.fx-root {
+  display: none;
+  z-index: -1;
+  position: fixed;
+  inset: 0;
+  .fx-backdrop {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    background: color-mix(in oklab, var(--on-surface), transparent 82%);
+    transition: opacity 0.25s ease;
+  }
+  .fx-panel {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: 4fr 0fr 20fr;
+    background: var(--surface);
+    color: var(--on-primary);
+    transform: translateY(8%);
+    opacity: 0;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    box-shadow: 0 20px 80px var(--shadow);
+    pointer-events: none;
+  }
+  &.open {
+    display: block;
+    z-index: 1400;
+    .fx-backdrop {
+      opacity: 1;
+    }
+    .fx-panel {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+.fx-head {
+  display: grid;
+  grid-template-columns: 50px 1fr auto;
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "avatar name  close"
+    "avatar email close";
+  column-gap: 12px;
+  row-gap: 4px;
+  align-items: center;
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid var(--border-color);
+  width: 100%;
+
+  .avatar {
+    grid-area: avatar;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    border-radius: 100%;
+    overflow: hidden;
+    img {
+      width: 50px !important;
+      height: 50px !important;
+      min-width: 50px;
+      min-height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border-color);
+    }
+  }
+
+  .name {
+    grid-area: name;
+    font-weight: 600;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--on-surface);
+  }
+  .email {
+    grid-area: email;
+    font-size: 12px;
+    opacity: 0.8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--on-surface);
+    width: 100%;
+  }
+  .close {
+    grid-area: close;
+    @include button-reset();
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--on-surface);
+    &:hover {
+      background: var(--hover-bg);
+    }
+  }
+}
+@media (max-width: 360px) {
+  .fx-head {
+    column-gap: 8px;
+    .name {
+      font-size: 14px;
+    }
+    .email {
+      font-size: 11px;
+    }
+  }
+}
+
+/* ── Super-compact view switch (under header) ─────────────── */
+.fx-switch {
+  --pill-h: 30px; /* ← your compact button height */
+  display: flex;
+  justify-content: center;
+  height: calc(var(--pill-h) + 25px);
+  align-items: center;
+  padding-block: 5px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface);
+  overflow: hidden; /* no extra growth due to badges */
+
+  .pill {
+    @include button-reset();
+    position: relative;
+    display: inline-grid;
+    grid-auto-flow: column;
+    align-items: center;
+    height: var(--pill-h);
+    gap: 6px;
+    padding-inline: 10px;
+    border-radius: 12px;
+    border: 1px solid transparent; /* no heavy outline */
+    background: transparent;
+    color: var(--on-surface);
+    font-weight: 600;
+    font-size: 13px;
+    line-height: var(--pill-h);
+    transition: background 0.18s ease, border-color 0.18s ease,
+      transform 0.12s ease;
+
+    mat-icon {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 14px;
+      height: 14px;
+      padding: 0 4px;
+      border-radius: 7px;
+      font-size: 10px;
+      line-height: 14px;
+      text-align: center;
+      background: var(--danger);
+      color: var(--on-surface);
+      box-shadow: 0 2px 6px var(--shadow);
+    }
+
+    &:hover {
+      background: var(--hover-bg);
+    }
+    &.active {
+      background: var(--surface-variant);
+      border-color: var(--border-color);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+/* Icon-only pills on tiny screens to save height/width */
+@media (max-width: 420px) {
+  .fx-switch .pill span {
+    display: none;
+  } /* icon-only */
+  .fx-switch .pill {
+    padding-inline: 8px;
+  }
+  .notif-toolbar {
+    justify-content: center;
+  }
+}
+
+/* ── Notifications toolbar (also compact) ─────────────────── */
+.notif-toolbar {
+  display: grid;
+  grid-auto-flow: column;
+  justify-content: space-around;
+  gap: 6px;
+  padding: 6px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--surface);
+  border-bottom: 1px dashed var(--border-color);
+
+  .btn-ghost {
+    @include button-reset();
+    display: inline-grid;
+    grid-auto-flow: column;
+    gap: 4px;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 10px;
+    color: var(--on-surface);
+    font-size: 13px;
+    &:hover {
+      background: var(--hover-bg);
+    }
+  }
+}
+
+/* ── Main scroll body (tighter paddings) ──────────────────── */
+.fx-body {
+  height: 100%;
+  overflow: auto;
+  padding: 0px 8px 16px; /* ↓ from 12/24 */
+  position: sticky;
+  top: -1px;
+}
+
+/* ── Menu rows (tighter) ──────────────────────────────────── */
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link-active {
+  background: #87878754;
+  border-radius: 0.75rem;
+}
+
+.row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 30px auto 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border-radius: 14px;
+  color: var(--on-surface);
+  background: transparent;
+  border: 1px solid transparent;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  align-content: center;
+  justify-items: center;
+  /* hover should only run on devices that actually have hover */
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: var(--hover-bg);
+    }
+  }
+
+  &:active {
+    background: var(--hover-bg);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  &.active {
+    background: var(--surface-variant);
+    border-color: var(--border-color);
+  }
+  .ic {
+    display: contents;
+    opacity: 1;
+    ::ng-deep svg {
+      fill: var(--on-surface);
+      stroke-width: 1px;
+      stroke: transparent;
+      path {
+        fill: var(--on-surface);
+        stroke-width: 1px;
+        stroke: transparent;
+      }
+    }
+  }
+  .txt {
+    font-weight: 500;
+  }
+  .chev {
+    text-align: right;
+    opacity: 0.8;
+  }
+}
+.link-active > .row {
+  background: #87878754;
+  border-radius: 0.75rem;
+}
+
+.lvl-1 + .lvl-1 {
+  margin-top: 4px;
+}
+.lvl-2,
+.lvl-3 {
+  margin-top: 3px;
+}
+
+.row-2 {
+  padding-left: 28px;
+}
+.row-3 {
+  padding-left: 46px;
+}
+
+/* collapses */
+.collapse-body {
+  height: 0;
+  overflow: hidden;
+  transition: height 0.25s ease;
+}
+
+/* ── Notification list (cards compact) ────────────────────── */
+.notif-list {
+  list-style: none;
+  margin: 6px 6px 12px;
+  padding: 0;
+  .notif-item {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 8px;
+    padding: 10px;
+    margin-bottom: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: var(--elevated);
+    transition: background 0.18s ease, border-color 0.18s ease,
+      transform 0.1s ease;
+    &:hover {
+      background: var(--hover-bg);
+      transform: translateY(-1px);
+      cursor: pointer;
+    }
+
+    .left {
+      display: grid;
+      place-items: center;
+      .kind {
+        font-size: 20px;
+        fill: var(--on-surface);
+        color: var(--on-surface);
+        &.success {
+          color: var(--success);
+          fill: var(--success);
+        }
+        &.warning {
+          color: var(--warning);
+          fill: var(--warning);
+        }
+        &.error {
+          color: var(--danger);
+          fill: var(--danger);
+        }
+      }
+    }
+    .mid {
+      min-width: 0;
+      .title {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--on-surface);
+        .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--primary);
+        }
+      }
+      .msg {
+        margin-top: 2px;
+        opacity: 0.9;
+        color: var(--on-surface);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .meta {
+        margin-top: 3px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+    }
+    .right {
+      display: grid;
+      align-content: center;
+      .btn-mini {
+        @include button-reset();
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        color: var(--on-surface);
+        &:hover {
+          background: var(--hover-bg);
+        }
+      }
+    }
+  }
+}
+
+/* Scrollbar parity */
+.fx-body::-webkit-scrollbar {
+  width: 10px;
+}
+.fx-body::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 10px;
+}

@@ -1,0 +1,26 @@
+<button
+  type="button"
+  class="layout-toggle"
+  [class.is-column]="value"
+  [attr.aria-pressed]="value"
+  [attr.aria-label]="value ? colLabel : rowLabel"
+  [disabled]="disabled"
+  (click)="onToggle()"
+>
+  <span class="track" aria-hidden="true">
+    <span class="half left" (click)="setRow(); $event.stopPropagation()">
+      <mat-icon class="half-icon">view_list</mat-icon>
+      <span class="half-text">{{ rowLabel }}</span>
+    </span>
+    <span class="half right" (click)="setCol(); $event.stopPropagation()">
+      <mat-icon class="half-icon">grid_view</mat-icon>
+      <span class="half-text">{{ colLabel }}</span>
+    </span>
+  </span>
+
+  <span class="thumb" aria-hidden="true">
+    <mat-icon class="thumb-icon"
+      >{{ value ? 'grid_view' : 'view_list' }}</mat-icon
+    >
+  </span>
+</button>

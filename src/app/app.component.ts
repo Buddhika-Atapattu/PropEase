@@ -1,26 +1,29 @@
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
-  Component,
-  OnInit,
-  OnDestroy,
   AfterViewInit,
-  Inject,
-  PLATFORM_ID,
   ChangeDetectorRef,
+  Component,
+  Inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
   Renderer2,
 } from '@angular/core';
-import {CommonModule, isPlatformBrowser} from '@angular/common';
-import {Router, NavigationEnd, RouterModule} from '@angular/router';
+import {NavigationEnd, Router, RouterModule} from '@angular/router';
 import {Subscription, filter} from 'rxjs';
 
-import {WindowsRefService} from './services/windowRef/windowRef.service';
 import {
-  AuthService,
-  LoggedUserType,
+  type User,
+} from './services/APIs/apis.service';
+import {
+  AuthService
 } from './services/auth/auth.service';
+import {WindowsRefService} from './services/windowRef/windowRef.service';
 
+
+import {CheckInternetStatusComponent} from './components/check-internet-status/check-internet-status.component';
 import {ModeChangerComponent} from './components/mode-changer/mode-changer.component';
 import {TopProgressBarComponent} from './components/top-progress-bar/top-progress-bar.component';
-import {CheckInternetStatusComponent} from './components/check-internet-status/check-internet-status.component';
 
 import {environment} from '../environments/environment';
 
@@ -51,7 +54,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   protected isAppLoad: boolean = false;
 
   /** Logged user (if available) */
-  private loggedUser: LoggedUserType | null = null;
+  private loggedUser: User | null = null;
 
   /** Whether user is authenticated (cached for quick checks) */
   private userLoggedIn: boolean = false;
@@ -83,8 +86,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
    * Heavy initializations go to ngAfterViewInit (after the view exists).
    */
   public ngOnInit(): void {
+    this.loggedUser = this.authService.getLoggedUser
     // No-op for now; reserved for future lightweight init
   }
+
+
 
   // ── Lifecycle: AfterViewInit ────────────────────────────────────────────────
   /**
@@ -122,8 +128,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Public getters ──────────────────────────────────────────────────────────
   /** Fast getter for auth state (used by template) */
-  public get isUserLoggedIn(): boolean {
-    return this.authService.isUserLoggedIn;
+  get isUserLoggedIn(): boolean {
+    if(this.loggedUser) return true;
+    else return false;
   }
 
   // ── Private helpers — Initialization ────────────────────────────────────────

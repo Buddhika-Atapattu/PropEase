@@ -7,7 +7,7 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import {APIsService, BaseUser} from '../../../services/APIs/apis.service';
+import {APIsService, User} from '../../../services/APIs/apis.service';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {ActivatedRoute, Router} from '@angular/router';
 import {CryptoService} from '../../../services/cryptoService/crypto.service';
@@ -25,13 +25,13 @@ import {SkeletonLoaderComponent} from '../../shared/skeleton-loader/skeleton-loa
   styleUrl: './accessabilities.component.scss',
 })
 export class AccessabilitiesComponent implements OnInit, OnChanges {
-  @Input() user: BaseUser | null = null;
+  @Input() user: User | null = null;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
   protected isActive: boolean = false;
   protected isLoading: boolean = true;
-  protected accessabilities: BaseUser['access'] | null = null;
+  protected accessabilities: User['access'] | null = null;
 
   constructor (
     private APIs: APIsService,

@@ -1,406 +1,370 @@
 @use "../../styles/global.scss" as *;
 
-.main-container-of-side-panel {
-  position: relative;
-}
+/* ───────────────────────────────────────────────
+   1) Text fade in/out on collapse
+   ─────────────────────────────────────────────── */
 
-// Ensure nested dropdowns behave correctly
-:host-context(html.light),
-:host-context(html.dark) {
-  .dropdown {
-    display: none;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.5s ease-in-out;
-    position: relative;
-    padding-left: 1rem;
-    li.open > .dropdown {
-      display: block;
-      opacity: 1;
-      visibility: visible;
-    }
-
-    ul li.dropdown-item button::after {
-      content: "\25BC";
-      font-size: 0.6rem;
-      margin-left: auto;
-      transition: transform 0.3s;
-      transform: rotate(0deg);
-    }
-
-    li.open > button::after {
-      transform: rotate(180deg);
-    }
-  }
-
-  li.open > .dropdown {
-    display: block;
-    opacity: 1;
-    visibility: visible;
-  }
-
-  ul li.dropdown-item button::after {
-    content: "\25BC";
-    font-size: 0.6rem;
-    margin-left: auto;
-    transition: transform 0.3s;
-    transform: rotate(0deg);
-  }
-
-  li.open > button::after {
-    transform: rotate(180deg);
-  }
-}
-
-// Fix spacing and layout in collapsed mode
-.btn-collapse span {
-  display: none;
-  opacity: 0;
-}
-
+/* Normal state: label & arrow visible */
 .delay-expand {
   opacity: 1;
-  display: inline;
-  transition: opacity 0.3s ease;
+  display: inline-flex;
+  transition: opacity 0.2s ease;
 }
 
-// Optional: collapse transition for smoother animation
-.dropdown ul {
-  padding-left: 0;
-  margin: 0;
-  list-style: none;
+/* Collapsed state: hide/fade text + arrow (icon only) */
+.menu-btn.btn-collapse .delay-expand {
+  opacity: 0;
+  pointer-events: none;
 }
 
-.dropdown li button {
-  padding-left: 2.5rem;
-  width: 100%;
+/* Prevent layout jump when hiding text */
+.menu-btn .label {
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
+/* Ensure mat-button label stretches full width */
 ::ng-deep .mdc-button__label {
   width: 100%;
   display: flex;
 }
 
-.dropdown-icon {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  transition: 0.3s all ease-in-out;
+/* Chevron transition (rotation handled via .open state) */
+li > .menu-btn > .dropdown-icon {
+  transition: transform 0.2s ease-in-out;
 }
 
-//Light mode
-:host-context(html.light) {
-  .side-panel {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    border-radius: 20px;
-    padding: 2rem 1rem;
-    min-height: 85vh;
-    overflow-x: hidden;
-    background-color: $light-dashboard-color;
-    color: $light-text-color !important;
-    &.side-panel-collapsed {
-      display: flex;
-      width: 100%;
-      justify-content: center;
+/* Rotate caret when parent <li> is open */
+li > .menu-btn .dropdown-icon.rotate i {
+  transform: rotate(180deg);
+  transition: 0.2s ease-in-out;
+}
+
+/* ───────────────────────────────────────────────
+   2) Side panel shell (single scroll container)
+   ─────────────────────────────────────────────── */
+
+.side-panel {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  display: grid;
+  grid-template-areas: "button" "menu";
+  grid-template-rows: 70px minmax(0, 1fr);
+  grid-gap: 1rem;
+  align-items: flex-start;
+  padding: 0 2rem;
+
+  /* Vertical scroll only; no horizontal scroll bar */
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* Themed scrollbar for this column */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+
+  &::-webkit-scrollbar {
+    width: 12px;
+    background: var(--scrollbar-gutter);
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 10px;
+    border: 3px solid var(--scrollbar-track);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+  }
+
+  @media (max-width: 1300px) and (min-width: 1024px) {
+    padding: 0 !important;
+  }
+
+  &.side-panel-collapsed {
+    justify-content: center;
+    padding: 0 !important;
+  }
+
+  /* ───────── Expand / collapse button ───────── */
+  .expand-btn {
+    grid-area: button;
+    position: relative;
+    display: flex;
+    transition: 0.5s ease-in-out;
+    justify-content: center;
+    align-items: center;
+    align-self: center;
+    justify-self: end;
+
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    background-color: color-mix(in srgb, var(--primary) 30%, transparent);
+    box-shadow: 0 4px 14px
+      color-mix(in srgb, var(--shadow-color) 30%, transparent);
+
+    &.expand-collapse-btn {
+      align-self: center;
+      justify-self: center;
     }
-    h3 {
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      font-size: 20px;
-      text-align: center;
-    }
 
-    ul {
-      padding: 0;
-      list-style: none;
-      margin-top: 2rem;
+    mat-icon {
+      color: var(--on-primary);
 
-      li {
-        position: relative;
-        margin-bottom: 1rem;
-
-        button {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          font-weight: 500;
-          font-size: 15px;
-          padding: 10px;
-          border-radius: 12px;
-          transition: background-color 0.3s ease, color 0.3s ease;
-          color: $light-text-color !important;
-          &.btn-collapse {
-            width: 40px;
-            height: 40px;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            padding: 0;
-
-            mat-icon {
-              font-size: 0px;
-              height: 20px;
-              width: 20px;
-              margin: 0.2rem;
-            }
-
-            span {
-              display: none !important; // no invisible span taking space
-            }
-          }
-
-          mat-icon {
-            font-size: 0px;
-            margin-right: 12px;
-            color: $light-text-color !important;
-            &.collapse {
-              font-size: 0px;
-              height: 20px;
-              width: 20px;
-              margin: 0.2rem;
-            }
-            ::ng-deep svg {
-              fill: currentColor;
-              ::ng-deep path {
-                fill: currentColor;
-                stroke: none;
-              }
-            }
-          }
-
-          span {
-            transition: opacity 0.3s ease;
-          }
-
-          &:hover {
-            background-color: $light-item-hover;
-          }
-          &.active {
-            background-color: $light-item-active;
-            color: $light-text-color !important;
-            mat-icon {
-              color: $light-text-color !important;
-            }
-          }
-        }
-        .dropdown {
-          position: relative;
-          top: 0;
-          left: 0;
-          z-index: 10;
-          // background: #08122f;
-          border-radius: 0.5rem;
-          padding: 0.25rem;
-          width: 100%;
-          height: 100%;
-          transform: translateX(10%);
-          ul {
-            margin-top: 0;
-            li {
-              margin: 0;
-            }
-          }
-        }
+      &:hover {
+        background: none;
       }
     }
 
-    .expand-btn {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      background-color: rgba(255, 255, 255, 0.349);
-      &.expand-collapse-btn {
-        right: auto !important;
-      }
-
-      mat-icon {
-        color: $dark-third-color;
-        &:hover {
-          background: none;
-        }
-      }
+    &:hover {
+      background-color: color-mix(
+        in srgb,
+        var(--primary) 45%,
+        var(--surface) 55%
+      );
     }
   }
-}
 
-//Dark mode
-:host-context(html.dark) {
-  .side-panel {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    border-radius: 20px;
-    padding: 2rem 1rem;
-    min-height: 85vh;
+  /* ───────── List + buttons (content area) ───────── */
+  .menu {
+    grid-area: menu;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    /* Let side-panel own the scroll; menu just flows */
+    max-height: none;
+    overflow-y: visible;
     overflow-x: hidden;
-    background-color: $dark-dashboard-color;
-    color: $dark-text-color !important;
-    &.side-panel-collapsed {
-      display: flex;
-      width: 100%;
-      justify-content: center;
-    }
-    h3 {
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-      font-size: 20px;
-      text-align: center;
-    }
 
     ul {
       padding: 0;
       list-style: none;
       margin-top: 2rem;
-
-      li {
-        position: relative;
-        margin-bottom: 1rem;
-
-        button {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: flex-start;
-          font-weight: 500;
-          font-size: 15px;
-          padding: 10px;
-          border-radius: 12px;
-          transition: background-color 0.3s ease, color 0.3s ease;
-          color: $dark-text-color !important;
-          &.btn-collapse {
-            width: 40px;
-            height: 40px;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            padding: 0;
-
-            mat-icon {
-              font-size: 0px;
-              height: 20px;
-              width: 20px;
-              margin: 0.2rem;
-            }
-
-            span {
-              display: none !important; // no invisible span taking space
-            }
-          }
-
-          mat-icon {
-            font-size: 0px;
-            margin-right: 12px;
-            color: $dark-text-color !important;
-            &.collapse {
-              font-size: 0px;
-              height: 20px;
-              width: 20px;
-              margin: 0.2rem;
-            }
-            ::ng-deep svg {
-              fill: currentColor;
-              ::ng-deep path {
-                fill: currentColor;
-                stroke: none;
-              }
-            }
-          }
-
-          span {
-            transition: opacity 0.3s ease;
-          }
-
-          &:hover {
-            background-color: $dark-item-hover;
-          }
-          &.active {
-            background-color: $dark-item-active;
-            color: $dark-text-color !important;
-            mat-icon {
-              color: $dark-text-color !important;
-            }
-          }
-        }
-        .dropdown {
-          position: relative;
-          top: 0;
-          left: 0;
-          z-index: 10;
-          // background: #08122f;
-          border-radius: 0.5rem;
-          padding: 0.25rem;
-          width: 100%;
-          height: 100%;
-          transform: translateX(10%);
-          ul {
-            margin-top: 0;
-            li {
-              margin: 0;
-            }
-          }
-        }
-      }
     }
 
-    .expand-btn {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      background-color: rgba(255, 255, 255, 0.15);
-      &.expand-collapse-btn {
-        right: auto !important;
-      }
+    .menu-item {
+      position: relative;
+      align-items: stretch;
+      padding: 10px 15px;
+      border-radius: 10px;
 
-      mat-icon {
-        color: $dark-third-color;
-        &:hover {
-          background: none;
-        }
+      /* Collapsed: icon-only → center button inside li */
+      &:has(.menu-btn.btn-collapse) {
+        padding: 6px 0;
+        display: flex;
+        justify-content: center;
       }
 
       &:hover {
-        background-color: $dark-item-hover;
+        background-color: var(--hover-bg);
+        border-color: color-mix(
+          in srgb,
+          var(--border-color) 40%,
+          var(--primary) 60%
+        );
+        color: var(--on-surface);
+      }
+
+      &.active {
+        background-color: color-mix(
+          in srgb,
+          var(--primary) 18%,
+          var(--surface) 82%
+        );
+        border-color: var(--primary);
+        color: var(--on-surface);
+
+        .menu-btn mat-icon {
+          color: var(--on-surface);
+        }
+      }
+
+      /* ───────── Menu button styles ───────── */
+      .menu-btn {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-columns: 25px 1fr 25px;
+        grid-gap: 15px;
+        align-items: center;
+        justify-content: flex-start;
+        font-weight: 500;
+        font-size: 0.95rem;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        background-color: transparent;
+        padding: 0;
+        transition: all 0.25s ease-in-out;
+        position: relative;
+
+        /* Collapsed icon-only appearance */
+        &.btn-collapse {
+          display: flex; // override grid
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          width: 40px;
+          height: 40px;
+          grid-template-columns: none;
+          justify-self: center;
+          align-self: center;
+          padding: 0;
+        }
+
+        mat-icon {
+          grid-column: 1;
+          font-size: 40px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+
+          ::ng-deep svg {
+            fill: currentColor;
+
+            ::ng-deep path {
+              fill: currentColor;
+              stroke: none;
+            }
+          }
+        }
+
+        .label {
+          grid-column: 2;
+          display: flex;
+          justify-self: start;
+          align-self: center;
+        }
+
+        .dropdown-icon {
+          grid-column: 3;
+          display: flex;
+          justify-self: end;
+          align-self: center;
+        }
+
+        &.btn-collapse mat-icon {
+          margin: 0;
+        }
       }
     }
   }
 }
 
-@media (max-width: 768px) {
-  .side-panel {
-    display: block !important;
-    padding: 0 !important;
-    min-height: 25vh !important;
-  }
-  .expand-btn {
-    display: none !important;
-  }
-  .dropdown {
-    position: relative !important;
+/* ───────────────────────────────────────────────
+   3) Overlay fly-out submenu (CDK overlay panel)
+   ─────────────────────────────────────────────── */
+
+/* Base panel appearance (CDK panel now has this class) */
+::ng-deep .cdk-overlay-pane.submenu-flyout {
+  min-width: 40px;
+  max-width: 260px;
+  border-radius: 16px;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-side-panel-sub-menu);
+  border: var(--border-side-panel-sub-menu);
+  box-shadow: var(--box-shadow-side-panel-sub-menu);
+  justify-content: stretch;
+  align-items: stretch;
+  .submenu-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
     width: 100%;
-    top: auto;
-    left: auto;
-    transform: none;
+    justify-content: stretch;
+    align-items: stretch;
+    .submenu-item {
+      padding: 6px 10px;
+      border-radius: 10px;
+      &:hover {
+        background-color: var(--hover-bg);
+      }
+      .menu-btn {
+        position: relative;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 25px 1fr;
+        grid-gap: 10px;
+        align-items: center;
+        border-radius: 10px;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        font: inherit;
+        color: inherit;
+        &.btn-collapse {
+          display: flex; // override grid
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          width: 40px;
+          height: 40px;
+          grid-template-columns: none;
+          justify-self: center;
+          align-self: center;
+          padding: 0;
+          .label {
+            display: none;
+            width: 0%;
+            height: 0%;
+          }
+        }
+        mat-icon {
+          /* IMPORTANT: don't use font-size: 0 here */
+          font-size: 1.1rem;
+          width: 1.1rem;
+          height: 1.1rem;
+          display: inline-flex;
+          justify-content: center;
+          align-items: center;
+          fill: var(--on-surface);
+          justify-self: center;
+          svg {
+            fill: var(--on-surface);
+            path {
+              fill: var(--on-surface);
+            }
+          }
+        }
+        .label {
+          white-space: nowrap;
+          justify-self: start;
+        }
+      }
+    }
   }
 }
+
+/* Dark theme */
+// :host-context(html.dark) ::ng-deep .cdk-overlay-pane.submenu-flyout {
+//   background: color-mix(in srgb, var(--surface-variant) 30%, #020617);
+//   border: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
+//   box-shadow: 0 18px 40px
+//     color-mix(in srgb, var(--shadow-color) 70%, transparent);
+// }
+
+/* Light theme */
+// :host-context(html.light) ::ng-deep .cdk-overlay-pane.submenu-flyout {
+//   background: color-mix(
+//     in srgb,
+//     var(--surface) 88%,
+//     var(--surface-variant) 12%
+//   );
+//   border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
+//   box-shadow: 0 14px 30px
+//     color-mix(in srgb, var(--shadow-color) 25%, transparent);
+// }
+
+/* Fly-out list + item styling */

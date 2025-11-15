@@ -1,26 +1,23 @@
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
-  Component,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
   AfterViewInit,
-  ViewChild,
+  Component,
   ElementRef,
-  AfterViewChecked,
+  Inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+  ViewChild
 } from '@angular/core';
-import {WindowsRefService} from '../../services/windowRef/windowRef.service';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {Subscription} from 'rxjs';
-import {RouterModule, Router, ActivatedRoute} from '@angular/router';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatIconRegistry} from '@angular/material/icon';
 import {DomSanitizer} from '@angular/platform-browser';
-import {SafeUrlPipe} from '../../pipes/safe-url.pipe';
-import {PropertyMoreDetailsPannelComponent} from '../../components/dialogs/property-more-details-pannel/property-more-details-pannel.component';
+import {ActivatedRoute, Router} from '@angular/router';
+import {ImageCroppedEvent, ImageCropperComponent} from 'ngx-image-cropper';
+import {Subscription} from 'rxjs';
 import {APIsService} from '../../services/APIs/apis.service';
-import {TokenService} from '../../services/token/token.service';
-import {ImageCropperComponent, ImageCroppedEvent} from 'ngx-image-cropper';
 import {TenantService} from '../../services/tenant/tenant.service';
+import {TokenService} from '../../services/token/token.service';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
 
 @Component({
   selector: 'app-mobile-support-file-upload',

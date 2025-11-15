@@ -1,17 +1,17 @@
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
   Component,
   Inject,
-  PLATFORM_ID,
   OnDestroy,
   OnInit,
+  PLATFORM_ID,
 } from '@angular/core';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
 import {
-  Router,
-  NavigationStart,
-  NavigationEnd,
   NavigationCancel,
+  NavigationEnd,
   NavigationError,
+  NavigationStart,
+  Router,
 } from '@angular/router';
 import {Subscription} from 'rxjs';
 

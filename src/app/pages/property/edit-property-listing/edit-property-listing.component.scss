@@ -10,13 +10,6 @@
 }
 
 .main-panel {
-  position: relative;
-  border-radius: 20px;
-  transition: all 0.3s ease-in-out;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-
-
   .tab-container {
     position: relative;
     margin-top: 3rem;
@@ -200,7 +193,7 @@
     }
   }
 
-  .container-for-absolute{
+  .container-for-absolute {
     position: relative;
     width: 100%;
     height: auto;
@@ -221,7 +214,6 @@
     align-items: center;
     box-shadow: 0rem 0rem 1rem 0rem #000000b0;
     z-index: 1;
-
 
     ::ng-deep .mat-mdc-form-field-subscript-wrapper {
       height: 0rem;
@@ -329,14 +321,6 @@
 
   // Dark Theam
   &.dark {
-    background: linear-gradient(
-      145deg,
-      $dark-secondary-color,
-      color.adjust($dark-secondary-color, $lightness: 2%)
-    );
-    color: $dark-text-color;
-  
-
     .error-container {
       background: linear-gradient(45deg, #be0000, #ff0000, #be0000);
     }
@@ -403,14 +387,6 @@
 
   // Light Theam
   &.light {
-    background: linear-gradient(
-      145deg,
-      $light-primary-color,
-      color.adjust($light-primary-color, $lightness: 2%)
-    );
-    color: $light-text-color;
-
-
     .image-preview,
     .document-preview {
       box-shadow: inset 0rem 0rem 1rem rgb(120 94 0 / 34%);

@@ -1,3 +1,4 @@
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
   Component,
   Inject,
@@ -5,41 +6,40 @@ import {
   PLATFORM_ID, SimpleChanges,
   ViewChild
 } from '@angular/core';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {
-  BaseUser
+  MatMomentDateModule
+} from '@angular/material-moment-adapter';
+import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import {MatButtonModule} from '@angular/material/button';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatDialogModule} from '@angular/material/dialog';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatPaginatorModule} from '@angular/material/paginator';
+import {MatSelectModule} from '@angular/material/select';
+import {MatSort, MatSortModule, Sort} from '@angular/material/sort';
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {DomSanitizer} from '@angular/platform-browser';
+import {ChartType, GoogleChartsModule} from 'angular-google-charts';
+import * as FileSaver from 'file-saver';
+import {Subscription} from 'rxjs';
+import * as XLSX from 'xlsx';
+import {
+  ActivityTrackerService
+} from '../../../../services/activityTacker/activity-tracker.service';
+import {
+  User
 } from '../../../../services/APIs/apis.service';
 import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {Subscription} from 'rxjs';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {DomSanitizer} from '@angular/platform-browser';
-import {SkeletonLoaderComponent} from '../../../shared/skeleton-loader/skeleton-loader.component';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatInputModule} from '@angular/material/input';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatButtonModule} from '@angular/material/button';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {
   NotificationDialogComponent
 } from '../../../dialogs/notification/notification.component';
 import {ProgressBarComponent} from '../../../dialogs/progress-bar/progress-bar.component';
-import {
-  ActivityTrackerService
-} from '../../../../services/activityTacker/activity-tracker.service';
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
-import {MatPaginatorModule} from '@angular/material/paginator';
-import {Sort, MatSortModule, MatSort} from '@angular/material/sort';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {
-  MatMomentDateModule
-} from '@angular/material-moment-adapter';
-import {MatSelectModule} from '@angular/material/select';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatDialogModule} from '@angular/material/dialog';
-import {MatTooltipModule} from '@angular/material/tooltip';
-import * as XLSX from 'xlsx';
-import * as FileSaver from 'file-saver';
-import {GoogleChartsModule, ChartType} from 'angular-google-charts';
+import {SkeletonLoaderComponent} from '../../../shared/skeleton-loader/skeleton-loader.component';
 
 interface allUsersLoginCounts {
   id: string;
@@ -238,8 +238,8 @@ export class LoggedDataComponent {
   @ViewChild(ProgressBarComponent, {static: true})
   progress!: ProgressBarComponent;
 
-  @Input() user: BaseUser | null = null;
-  @Input() loggedUser: BaseUser | null = null;
+  @Input() user: User | null = null;
+  @Input() loggedUser: User | null = null;
   @Input() mode: boolean | null = null;
 
   protected isBrowser: boolean;

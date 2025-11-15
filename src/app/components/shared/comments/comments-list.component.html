@@ -1,0 +1,94 @@
+<!-- comments-list.component.html -->
+<div class="row d-flex justify-content-end align-items-center my-4">
+  <div
+    class="col-3 d-flex justify-content-end align-items-center position-relative my-4"
+  >
+    <button
+      type="button"
+      class="btn btn-outline-warning d-flex justify-content-center align-items-center position-absolute top-0"
+      [ngClass]="(ds.loading$ | async) ? 'refresh' : ''"
+      (click)="refresh()"
+    >
+      <mat-icon>autorenew</mat-icon>
+    </button>
+  </div>
+</div>
+<ng-container *ngIf="(ds?.items$ | async)?.length; else noComments">
+  <div class="pe-comments-list position-sticky">
+    <div
+      class="comment"
+      *ngFor="let c of ds.items$ | async; trackBy: trackById"
+    >
+      <img
+        class="avatar"
+        [src]="c.image || 'public/system/user.png'"
+        alt=""
+        loading="lazy"
+      />
+      <div class="bubble">
+        <div class="meta">
+          <span class="name">{{ c.byName }}</span>
+          <span class="dot">•</span>
+          <time [attr.datetime]="c.createdAt">{{
+            c.createdAt | date : "medium"
+          }}</time>
+          <span class="audience">/{{ c.audience }}</span>
+        </div>
+        <div class="text" [innerHTML]="c.message"></div>
+
+        <div class="attachments" *ngIf="c.attachments?.length">
+          <div class="file" *ngFor="let a of c.attachments; let i = index">
+            <button
+              type="button"
+              class="btn btn-link p-0"
+              (click)="onDownload(a, attachmentId(c._id, i))"
+            >
+              Download {{ a.name }}
+            </button>
+
+            <span
+              class="progress"
+              *ngIf="downloadingIds.has(attachmentId(c._id, i))"
+            >
+              {{ progressMap.get(attachmentId(c._id, i)) || 0 }}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div #sentinel class="sentinel" aria-hidden="true"></div>
+
+    <div class="footer">
+      <button
+        mat-button
+        class="load-more"
+        matTooltip="Load more"
+        matTooltipPosition="above"
+        (click)="onLoadMore()"
+        [disabled]="(ds.loading$ | async) || (ds.ended$ | async)"
+        *ngIf="!(ds.ended$ | async)"
+      >
+        <ng-container *ngIf="!(ds.loading$ | async); else spinner"
+          >Load more</ng-container
+        >
+        <ng-template #spinner
+          ><mat-spinner diameter="18"></mat-spinner
+        ></ng-template>
+      </button>
+      <div class="end" *ngIf="ds.ended$ | async">No more comments</div>
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #noComments>
+  <div class="row d-flex justify-content-center align-items-center">
+    <div
+      class="col-xl-4 col-md-5 col-12 d-flex justify-content-center align-items-center"
+    >
+      <div class="image-container no-comment-container">
+        <img [src]="DEFINED_NO_COMMENT" alt="No comment posted yet image" />
+      </div>
+    </div>
+  </div>
+</ng-template>

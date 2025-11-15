@@ -154,7 +154,7 @@ export const SWITCH_OFF_ARRAY: string[] = [
 
 export const DEFAULT_RULES_AND_REGULATIONS: RulesAndRegulations[] = [{rule: 'Timely Rent Payment', description: 'The tenant must pay the rent on or before the due date each month. Late payments may incur penalties as outlined in the lease agreement.', }, {rule: 'Property Maintenance', description: 'The tenant shall keep the premises clean and in good condition, and shall promptly notify the landlord of any damage or maintenance issues.', }, {rule: 'No Unauthorized Alterations', description: 'The tenant shall not make any structural changes, paint, or install fixtures without prior written consent from the landlord.', }, {rule: 'Occupancy Limit', description: 'Only the individuals listed in the lease agreement may reside on the property. Subleasing or allowing additional occupants without approval is prohibited.', }, {rule: 'Noise and Disturbance', description: 'The tenant shall not cause or permit any nuisance or disturbance that interferes with the peaceful enjoyment of neighbors or other tenants.', }, {rule: 'Pets Policy', description: 'No pets are allowed on the premises unless explicitly permitted in the lease agreement. If allowed, pets must not cause damage or disturbances.', }, {rule: 'Use of Premises', description: 'The property shall be used solely for residential purposes. Commercial or illegal activities are strictly prohibited.', }, {rule: 'End of Lease Condition', description: 'The tenant must return the property in the same condition as it was at the start of the lease, minus normal wear and tear.', }, {rule: 'Utilities Responsibility', description: 'The tenant is responsible for paying all utility bills unless otherwise stated in the lease agreement.', }, {rule: 'Entry by Landlord', description: 'The landlord may enter the premises for inspections, repairs, or emergencies with proper notice, typically 24 hours in advance unless in emergencies.', },];
 
-// Large HTML kept as-is from your earlier code 
+// Large HTML kept as-is from your earlier code
 export const DEFAULT_COMPANY_POLICY: string = `<div class="company-policy"> <h2>PropEase – Company Policies</h2> <ol> <li> <strong>Professional Conduct</strong> <p> All PropEase employees, partners, tenants, and landlords are expected to maintain professional behavior and communicate respectfully. Discrimination, harassment, or abusive language of any kind will not be tolerated. </p> </li> <li> <strong>Fair Housing Compliance</strong> <p> PropEase is committed to upholding equal opportunity housing practices. We strictly follow all local and international housing laws and do not discriminate based on race, religion, gender, age, marital status, disability, or nationality. </p> </li> <li> <strong>Tenant Screening & Verification</strong> <p> All prospective tenants will undergo standard verification, including background, credit, employment, and reference checks to ensure a secure and trustworthy rental environment for all parties. </p> </li> <li> <strong>Property Maintenance Policy</strong> <p> Landlords are responsible for major property repairs, while tenants must handle basic cleanliness and minor upkeep. Emergency repairs must be reported immediately via the PropEase platform or hotline. </p> </li> <li> <strong>Late Payment & Penalties</strong> <p> Rent is due on the specified date in the lease agreement. Late payments may incur a penalty fee based on predefined lease terms. Continuous defaults may lead to legal action or lease termination. </p> </li> <li> <strong>Use of Premises</strong> <p> Properties listed through PropEase must be used for residential or commercial purposes only, as stated in the lease. Illegal activities or unauthorized subletting are grounds for immediate action. </p> </li> <li> <strong>Privacy & Data Protection</strong> <p> PropEase values user privacy. All data shared on our platform is protected under our privacy policy and will not be shared without consent, except where legally required. </p> </li> <li> <strong>Inspection & Entry</strong> <p> Landlords must provide at least 24 hours' notice before entering a rented property unless there is an emergency. Inspections will be documented and scheduled through PropEase. </p> </li> <li> <strong>Termination & Eviction Policy</strong> <p> Lease termination must follow proper notice periods as outlined in the lease. In case of violations (e.g., unpaid rent, property damage), PropEase reserves the right to initiate legal eviction processes in accordance with governing laws. </p> </li> <li> <strong>Customer Support</strong> <p> Our support team is available 24/7 to address complaints, resolve disputes, and ensure fair practices are upheld. Users can contact us via the PropEase platform, email, or hotline. </p> </li> </ol> </div> `;
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
@@ -166,7 +166,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {id: 'jcb', name: 'JCB', category: 'card'},
   {id: 'unionpay', name: 'UnionPay', category: 'card'},
   {id: 'diners', name: 'Diners Club', category: 'card'},
-  // Digital Wallets 
+  // Digital Wallets
   {id: 'paypal', name: 'PayPal', category: 'wallet'},
   {id: 'applepay', name: 'Apple Pay', category: 'wallet'},
   {id: 'googlepay', name: 'Google Pay', category: 'wallet'},
@@ -186,7 +186,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {id: 'mpesa', name: 'M-Pesa', category: 'wallet', region: 'Africa/India'},
   {id: 'yandexmoney', name: 'YooMoney (Yandex Money)', category: 'wallet', region: 'Russia'},
   {id: 'qiwi', name: 'QIWI Wallet', category: 'wallet', region: 'Russia'},
-  // Bank Transfers 
+  // Bank Transfers
   {id: 'swift', name: 'SWIFT / IBAN Transfer', category: 'bank'},
   {id: 'sepa', name: 'SEPA Transfer', category: 'bank', region: 'EU'},
   {id: 'ach', name: 'ACH Transfer', category: 'bank', region: 'US'},
@@ -195,7 +195,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {id: 'interac', name: 'Interac e-Transfer', category: 'bank', region: 'Canada'},
   {id: 'bacs', name: 'BACS Transfer', category: 'bank', region: 'UK'},
   {id: 'bank', name: 'Bank Transfer', category: 'bank', region: 'International'},
-  // International Payment Gateways 
+  // International Payment Gateways
   {id: 'stripe', name: 'Stripe', category: 'gateway'},
   {id: 'wise', name: 'Wise (TransferWise)', category: 'gateway'},
   {id: 'payoneer', name: 'Payoneer', category: 'gateway'},
@@ -211,13 +211,13 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {id: 'authorize', name: 'Authorize.Net', category: 'gateway', region: 'US'},
   {id: 'razorpay', name: 'Razorpay', category: 'gateway', region: 'India'},
   {id: 'flutterwave', name: 'Flutterwave', category: 'gateway', region: 'Africa'},
-  // Cash-Based / Vouchers 
+  // Cash-Based / Vouchers
   {id: 'westernunion', name: 'Western Union', category: 'cash'},
   {id: 'moneygram', name: 'MoneyGram', category: 'cash'},
   {id: 'ria', name: 'Ria', category: 'cash'},
   {id: 'paysafecard', name: 'Paysafecard', category: 'cash'},
   {id: 'cod', name: 'Cash on Delivery (COD)', category: 'cash'},
-  // Cryptocurrencies 
+  // Cryptocurrencies
   {id: 'bitcoin', name: 'Bitcoin (BTC)', category: 'crypto'},
   {id: 'ethereum', name: 'Ethereum (ETH)', category: 'crypto'},
   {id: 'usdt', name: 'Tether (USDT)', category: 'crypto'},
@@ -226,7 +226,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {id: 'xrp', name: 'Ripple (XRP)', category: 'crypto'},
   {id: 'dogecoin', name: 'Dogecoin (DOGE)', category: 'crypto'},
   {id: 'cardano', name: 'Cardano (ADA)', category: 'crypto'},
-  // Buy Now, Pay Later (BNPL) 
+  // Buy Now, Pay Later (BNPL)
   {id: 'klarna', name: 'Klarna', category: 'bnpl'},
   {id: 'afterpay', name: 'Afterpay', category: 'bnpl'},
   {id: 'affirm', name: 'Affirm', category: 'bnpl'},
@@ -234,10 +234,10 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   {id: 'tabby', name: 'Tabby', category: 'bnpl', region: 'Middle East'},
   {id: 'tamara', name: 'Tamara', category: 'bnpl', region: 'Middle East'},
   {id: 'hoolah', name: 'Hoolah', category: 'bnpl', region: 'Southeast Asia'},
-  // Other 
+  // Other
   {id: 'boleto', name: 'Boleto Bancário', category: 'bank', region: 'Brazil'},
   {id: 'konbini', name: 'Konbini', category: 'cash', region: 'Japan'},
-  // Local / Manual Methods 
+  // Local / Manual Methods
   {id: 'handcash', name: 'Cash (In Person)', category: 'cash', region: 'Local', isEditable: false, description: 'Direct cash payment to landlord or office'},
   {id: 'cheque', name: 'Cheque Payment', category: 'cash', region: 'Local/Bank', isEditable: false, description: 'Paper cheque issued to payee'},
   {id: 'bankdeposit', name: 'Manual Bank Deposit', category: 'cash', region: 'Local', isEditable: false, description: 'Deposit cash at a local bank branch'},
@@ -259,7 +259,8 @@ export type ComplaintStatus =
   | 'new' | 'triaged' | 'in_progress' | 'awaiting_tenant'
   | 'resolved' | 'closed' | 'reopened' | 'cancelled';
 export type ComplaintPriority = 'low' | 'medium' | 'high' | 'urgent';
-export type ComplaintAudience = 'tenant' | 'admin' | 'agent' | 'system' | 'developer';
+export type ComplaintAudience = 'admin' | 'agent' | 'tenant' | 'owner'
+  | 'operator' | 'manager' | 'developer' | 'user' | 'system' | 'all';
 export type AttachmentSource = 'camera' | 'filesystem' | 'paste' | 'dragdrop';
 export type ComplaintsCategory =
   | 'Plumbing' | 'Electrical' | 'Hvac' | 'Appliances' | 'Structural'
@@ -276,12 +277,14 @@ export const COMPLAINT_CATEGORIES: readonly ComplaintsCategory[] = [
   'Painting Decor', 'Gas Supply', 'Noise Nuisance', 'Renovation Work', 'Other'
 ] as const;
 
+export const COMPLAINT_STATUS: readonly ComplaintStatus[] = ['new', 'triaged', 'in_progress', 'awaiting_tenant', 'resolved', 'closed', 'reopened', 'cancelled'] as const;
+
 export interface ComplaintAttachmentClient {
   _id?: string; name: string; mimetype: string; size: number; url: string; width?: number; height?: number;
 }
 export interface PendingAttachmentClient {source: AttachmentSource; file: File; previewDataUrl?: string;}
 export interface ComplaintCommentClient {
-  _id?: string; byUserId: string; byName: string; audience: ComplaintAudience; message: string;
+  _id?: string; byUserId: string; byName: string; image: string; audience: ComplaintAudience; message: string;
   createdAt: string; attachments?: ComplaintAttachmentClient[];
 }
 export interface ComplaintTimelineEventClient {
@@ -366,7 +369,8 @@ export class TenantService {
     create: () => `${this.API_TENANT_ROOT}/create-complaint`,
     byId: (complaintID: string) => `${this.API_TENANT_ROOT}/complaint/${this.safeSeg(complaintID)}`,
     byTenant: (username: string) => `${this.API_TENANT_ROOT}/complaints/tenant/${this.safeSeg(username)}`,
-    allComplaints: () => `${this.API_TENANT_ROOT}/complaints/all`
+    allComplaints: () => `${this.API_TENANT_ROOT}/complaints/all`,
+    postComment: () => `${this.API_TENANT_ROOT}/complaints/post-comments`,
   } as const;
 
   constructor (
@@ -562,22 +566,26 @@ export class TenantService {
       if(!this.isValidComplaintCategory(payload.category)) return {status: 'error', message: 'Invalid category', data: null};
       if(!this.isValidComplaintPriority(payload.priority)) return {status: 'error', message: 'Invalid priority', data: null};
 
-      const resp = await firstValueFrom(this.http.post(this.URLS_COMPLAINT.create(), this.buildCreateComplaintFormData(payload, attachments)));
+      const resp = await firstValueFrom(this.http.post<MSG>(this.URLS_COMPLAINT.create(), this.buildCreateComplaintFormData(payload, attachments)));
       return this.normalizeToMSG(resp);
     } catch(e) {
       return this.mapError(e);
     }
   }
   public async getComplaintById(complaintID: string): Promise<MSG> {
-    try {return this.normalizeToMSG(await firstValueFrom(this.http.get(this.URLS_COMPLAINT.byId(complaintID))));}
+    try {return this.normalizeToMSG(await firstValueFrom(this.http.get<MSG>(this.URLS_COMPLAINT.byId(complaintID))));}
     catch(e) {return this.mapError(e);}
   }
   public async getAllComplaintsByTenant(username: string): Promise<MSG> {
-    try {return this.normalizeToMSG(await firstValueFrom(this.http.get(this.URLS_COMPLAINT.byTenant(username))));}
+    try {return this.normalizeToMSG(await firstValueFrom(this.http.get<MSG>(this.URLS_COMPLAINT.byTenant(username))));}
     catch(e) {return this.mapError(e);}
   }
   public async getAllComplaints(): Promise<MSG> {
-    try {return this.normalizeToMSG(await firstValueFrom(this.http.get(this.URLS_COMPLAINT.allComplaints())));}
+    try {return this.normalizeToMSG(await firstValueFrom(this.http.get<MSG>(this.URLS_COMPLAINT.allComplaints())));}
+    catch(e) {return this.mapError(e);}
+  }
+  public async postComment(data: FormData): Promise<MSG> {
+    try {return this.normalizeToMSG(await firstValueFrom(this.http.post<MSG>(this.URLS_COMPLAINT.postComment(), data)));}
     catch(e) {return this.mapError(e);}
   }
 }

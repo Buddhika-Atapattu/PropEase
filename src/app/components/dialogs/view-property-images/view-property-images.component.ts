@@ -21,21 +21,22 @@ import {
   MatDialogTitle,
   MatDialogModule,
 } from '@angular/material/dialog';
-import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { Subscription } from 'rxjs';
-import { BackEndPropertyData } from '../../../services/property/property.service';
+import {isPlatformBrowser, CommonModule, AsyncPipe} from '@angular/common';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {Subscription} from 'rxjs';
+import {BackEndPropertyData} from '../../../services/property/property.service';
+import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
 
 @Component({
   selector: 'app-view-property-images',
-  imports: [CommonModule],
+  imports: [CommonModule, CloseBtnComponent],
   standalone: true,
   templateUrl: './view-property-images.component.html',
   styleUrl: './view-property-images.component.scss',
 })
 export class ViewPropertyImagesComponent
   implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('indicatorContainer', { static: false })
+  @ViewChild('indicatorContainer', {static: false})
   private indicatorContainerRef!: ElementRef<HTMLDivElement>;
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -44,7 +45,7 @@ export class ViewPropertyImagesComponent
   protected currentImageIndex: number = 0;
   protected propertyImages: BackEndPropertyData['images'] = [];
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(MAT_DIALOG_DATA)
@@ -53,7 +54,7 @@ export class ViewPropertyImagesComponent
     private cdr: ChangeDetectorRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
@@ -63,9 +64,9 @@ export class ViewPropertyImagesComponent
     this.propertyImages = this.data.images;
     this.currentImageIndex = this.data.currentImageIndex;
   }
-  ngAfterViewInit(): void { }
+  ngAfterViewInit(): void {}
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {}
 
   protected changeImage(index: number) {
     this.currentImageIndex = index;
@@ -74,14 +75,14 @@ export class ViewPropertyImagesComponent
 
   private scrollToCurrentIndicator(): void {
 
-    if (!this.isBrowser || !this.indicatorContainerRef) return;
+    if(!this.isBrowser || !this.indicatorContainerRef) return;
 
     const container = this.indicatorContainerRef.nativeElement;
     const activeEl = document.getElementById(
       'indicator-' + this.currentImageIndex
     );
 
-    if (container && activeEl) {
+    if(container && activeEl) {
       const containerRect = container.getBoundingClientRect();
       const activeRect = activeEl.getBoundingClientRect();
 
@@ -100,7 +101,7 @@ export class ViewPropertyImagesComponent
   }
 
   protected prevImage() {
-    if (this.currentImageIndex > 0) {
+    if(this.currentImageIndex > 0) {
       this.currentImageIndex -= 1;
     } else {
       this.currentImageIndex = this.propertyImages.length - 1;
@@ -112,7 +113,7 @@ export class ViewPropertyImagesComponent
   }
 
   protected nextImage() {
-    if (this.currentImageIndex < this.propertyImages.length - 1) {
+    if(this.currentImageIndex < this.propertyImages.length - 1) {
       this.currentImageIndex += 1;
     } else {
       this.currentImageIndex = 0;
@@ -124,7 +125,7 @@ export class ViewPropertyImagesComponent
   }
 
   protected downloadImage(url: string) {
-    if (!this.isBrowser) return;
+    if(!this.isBrowser) return;
     window.open(url, '_blank');
   }
 

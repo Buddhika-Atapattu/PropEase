@@ -9,15 +9,16 @@ import {
   ViewChild,
   AfterViewInit,
 } from '@angular/core';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
+import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {Subscription} from 'rxjs';
 
-import { AuthService, BaseUser } from '../../../services/auth/auth.service';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+import {AuthService} from '../../../services/auth/auth.service';
+import {User} from '../../../services/APIs/apis.service';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 
-import { LoggedDataComponent } from '../components/logged-data/logged-data.component';
-import { UserFileManagementComponent } from '../components/user-file-management/user-file-management.component';
-import { UserCreatinonManagementComponent } from '../components/user-creatinon-management/user-creatinon-management.component';
+import {LoggedDataComponent} from '../components/logged-data/logged-data.component';
+import {UserFileManagementComponent} from '../components/user-file-management/user-file-management.component';
+import {UserCreatinonManagementComponent} from '../components/user-creatinon-management/user-creatinon-management.component';
 
 @Component({
   selector: 'app-activities',
@@ -32,25 +33,25 @@ import { UserCreatinonManagementComponent } from '../components/user-creatinon-m
   styleUrl: './activities.component.scss',
 })
 export class ActivitiesComponent implements OnInit, OnChanges, AfterViewInit {
-  @ViewChild(LoggedDataComponent, { static: true })
+  @ViewChild(LoggedDataComponent, {static: true})
   loggedData!: LoggedDataComponent;
 
-  @ViewChild(UserFileManagementComponent, { static: true })
+  @ViewChild(UserFileManagementComponent, {static: true})
   userFileManagement!: UserFileManagementComponent;
 
-  @ViewChild(UserCreatinonManagementComponent, { static: true })
+  @ViewChild(UserCreatinonManagementComponent, {static: true})
   userCreationManagement!: UserCreatinonManagementComponent;
 
-  @Input() user: BaseUser | null = null;
+  @Input() user: User | null = null;
 
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   protected username: string = '';
-  protected loggedUser: BaseUser | null = null;
+  protected loggedUser: User | null = null;
 
   private modeSub: Subscription | null = null;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private authService: AuthService
@@ -60,21 +61,21 @@ export class ActivitiesComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   async ngOnInit(): Promise<void> {
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
     }
 
     // Initial username setup if available early
-    if (this.user) {
+    if(this.user) {
       this.username = this.user.username;
     }
   }
 
   ngAfterViewInit(): void {
     // Ensure refresh is called after view is initialized (for ViewChild access)
-    if (this.user) {
+    if(this.user) {
       setTimeout(() => {
         this.refresh(this.user!.username);
       });
@@ -82,7 +83,7 @@ export class ActivitiesComponent implements OnInit, OnChanges, AfterViewInit {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['user'] && this.user) {
+    if(changes['user'] && this.user) {
       this.refresh(this.user.username);
     }
   }
@@ -91,13 +92,13 @@ export class ActivitiesComponent implements OnInit, OnChanges, AfterViewInit {
   public refresh(username: string): void {
     this.username = username;
 
-    if (this.loggedData) {
+    if(this.loggedData) {
       this.loggedData.refresh(this.username);
     }
-    if (this.userFileManagement) {
+    if(this.userFileManagement) {
       this.userFileManagement.refresh(this.username);
     }
-    if (this.userCreationManagement) {
+    if(this.userCreationManagement) {
       this.userCreationManagement.refresh(this.username);
     }
   }

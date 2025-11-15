@@ -31,6 +31,7 @@ import {
   withPreloading,
   PreloadAllModules,
   withHashLocation,
+  TitleStrategy,
 } from '@angular/router';
 import {routes} from './app.routes';
 
@@ -71,6 +72,10 @@ import {AuthInspectorService} from './services/inspectorService/auth-inspector-s
 
 // ── TinyMCE Angular wrapper (self-hosted, CSP-safe) ──────────────────────────
 import {EditorModule, TINYMCE_SCRIPT_SRC} from '@tinymce/tinymce-angular';
+
+import {AppTitleStrategy} from './core/routing/app-title.strategy';
+
+
 
 // ── Custom Material date format (UK style: DD/MM/YYYY) ───────────────────────
 export const MY_DATE_FORMATS: MatDateFormats = {
@@ -114,6 +119,9 @@ const routerProviders = environment.electron
 // ── Final Application Config ─────────────────────────────────────────────────
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideRouter(routes, withInMemoryScrolling({scrollPositionRestoration: 'top'})),
+    {provide: TitleStrategy, useClass: AppTitleStrategy},
+
     // ── Router ───────────────────────────────────────────────────────────────
     routerProviders,
 

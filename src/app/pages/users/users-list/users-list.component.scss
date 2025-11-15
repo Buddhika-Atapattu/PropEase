@@ -1,0 +1,205 @@
+@use "../../../styles/global.scss" as *;
+@use "sass:color";
+
+.main-panel {
+  .main-container {
+    border-radius: 2rem;
+    min-height: 50rem;
+    overflow: hidden;
+    display: block;
+    padding: 2rem;
+
+    @media (max-width: 480px) {
+      padding: 1.5rem 0.25rem !important;
+    }
+
+    // Top bar styles
+    .top-bar {
+      display: grid;
+      grid-template-areas: "search addUser";
+      grid-template-columns: 80% auto;
+      grid-gap: 1rem;
+      background: transparent;
+      justify-content: center;
+      align-items: center;
+      justify-items: center;
+      align-self: center;
+      margin: 1rem 0rem;
+      width: 100%;
+      @media (max-width: 550px) {
+        grid-template-areas: "search" "addUser";
+        grid-template-rows: auto;
+        grid-gap: 0.5rem;
+        align-self: stretch;
+        align-items: stretch;
+        grid-template-columns: 1fr;
+      }
+      .search-container {
+        grid-area: search;
+      }
+      .add-user {
+        grid-area: addUser;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        position: relative;
+        justify-content: center;
+        align-items: center;
+      }
+    }
+
+    .layout-switch-btn {
+      @media (max-width: 767.98px) {
+        display: none !important;
+      }
+    }
+
+    /* One responsive grid handles all sizes */
+    .users-grid {
+      display: grid;
+      gap: 1rem;
+      width: 100%;
+      height: auto;
+      justify-items: stretch;
+      align-items: stretch; /* equal-height rows when > small */
+      grid-auto-rows: 1fr; /* equalize row heights by default */
+      grid-template-columns: 1fr; /* small: 1 col by default */
+
+      > * {
+        height: 100% !important;
+      }
+
+      @media (max-width: 599.99px) {
+        grid-auto-rows: auto; /* stop equal-height on small */
+        align-items: start; /* don’t stretch cards vertically */
+      }
+
+      /* Medium: 2 columns (≥600px) */
+      @media (min-width: 600px) and (max-width: 991.98px) {
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: 1fr;
+      }
+
+      /* Large: 3 columns (≥992px) */
+      @media (min-width: 992px) and (max-width: 1199.98px) {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      /* Medium-large: 4 columns (≥1200px) */
+      @media (min-width: 1200px) and (max-width: 1599.98px) {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      /* Extra large: 5 columns (≥1600px) */
+      @media (min-width: 1600px) {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+    /* Responsive grid container for card mode */
+
+    @media (max-width: 767.98px) {
+      .desktop {
+        display: none !important;
+      }
+      .mobile {
+        display: block !important;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .desktop {
+        display: block !important;
+      }
+      .mobile {
+        display: none !important;
+      }
+    }
+
+    .pagination-list-group {
+      display: inline-flex;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      .pagination-list-group-item {
+        .pagination-btn {
+          padding: 0.5rem 1rem;
+          margin: 0.5rem;
+          border-radius: 0.5rem;
+          border: none;
+          font-weight: 700;
+        }
+      }
+    }
+  }
+
+  // No user message style
+  .no-users-container {
+    @include card-shell(
+      var(--elevated),
+      var(--on-surface),
+      var(--border-color),
+      var(--shadow-color)
+    );
+    text-align: center;
+    padding: 3rem 1rem;
+    margin: 2rem 0rem;
+
+    .no-users-icon {
+      font-size: 3.5rem;
+      width: 100%;
+      height: 100%;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .no-users-text {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .no-users-subtext {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+  }
+}
+
+:host-context(html.dark) {
+  .main-panel {
+    .main-container {
+      background-color: $dark-secondary-color;
+      box-shadow: inset 0rem 0rem 1rem 0rem $dark-dashboard-dark-color;
+      .column-change-icons {
+        ::ng-deep mat-icon {
+          ::ng-deep svg {
+            fill: $dark-text-color;
+            ::ng-deep path {
+              fill: $dark-text-color;
+              stroke: $dark-text-color;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+:host-context(html.light) {
+  .main-panel {
+    .main-container {
+      background-color: $light-primary-color;
+      box-shadow: inset 0rem 0rem 1rem 0rem $light-dashboard-dark-color;
+      .column-change-icons {
+        ::ng-deep mat-icon {
+          ::ng-deep svg {
+            fill: $light-text-color;
+            ::ng-deep path {
+              fill: $light-text-color;
+              stroke: $light-text-color;
+            }
+          }
+        }
+      }
+    }
+  }
+}

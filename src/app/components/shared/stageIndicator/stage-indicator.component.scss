@@ -1,0 +1,153 @@
+@use "../../../styles/global.scss" as *;
+
+/* Container */
+.stage-indicator-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 2rem;
+  color: var(--on-surface);
+  margin: 2rem 0rem;
+}
+
+/* Row grid */
+.stage-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  align-items: center;
+  justify-items: center;
+  overflow: visible; /* ensure last marker never clips */
+  margin: 2rem 0rem;
+}
+
+/* Base line + gold fill */
+.stage-line {
+  position: absolute;
+  z-index: 1; /* behind markers and bubbles */
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 6px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--on-surface) 22%, transparent);
+
+  .stage-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--secondary, #ffcf4a); /* GOLD */
+    border-radius: inherit;
+    transition: width 220ms ease-in-out;
+  }
+}
+
+/* Point */
+.stage-point {
+  position: relative;
+  text-align: center;
+  z-index: 2; /* over the line */
+
+  .point-marker {
+    width: 16px;
+    height: 16px;
+    margin: 0 auto;
+    border-radius: 50%;
+    cursor: pointer;
+    /* Future (default) = outline with high-contrast stroke */
+    background: var(--surface);
+    z-index: 10;
+    border: 2px solid color-mix(in oklab, var(--on-surface) 75%, transparent);
+    transition: background 0.2s ease, border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  /* Past = primary (royal blue) */
+  &.reached .point-marker {
+    background: var(--primary, #2b59ff);
+    border-color: var(--primary, #2b59ff);
+  }
+
+  /* Current = gold */
+  &.current .point-marker {
+    background: var(--secondary, #ffcf4a);
+    border-color: var(--secondary, #ffcf4a);
+    box-shadow: 0 0 12px color-mix(in oklab, var(--secondary) 60%, transparent);
+  }
+
+  /* Disabled visual (if provided) */
+  &.disabled .point-marker {
+    opacity: 0.5;
+    border-color: var(--border-color);
+    background: transparent;
+  }
+
+  /* Bubble (tooltip target is the button itself) */
+  .point-bubble {
+    position: absolute;
+    top: -2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--elevated);
+    color: var(--on-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.35rem 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    // overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 10rem;
+    box-shadow: 0 4px 8px var(--shadow-color);
+    z-index: 3; /* above everything */
+    cursor: pointer;
+    transition: 0.25s ease-in-out;
+
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%) rotate(45deg);
+      width: 10px;
+      height: 10px;
+      background: var(--elevated);
+      border-right: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+    }
+    &:hover {
+      transform: scale(1.125) translateX(-45%);
+    }
+  }
+
+  /* Alternate bubble side to reduce overlaps */
+  &:nth-child(even) .point-bubble {
+    top: auto;
+    bottom: -2.5rem;
+    &::after {
+      top: -5px;
+      bottom: auto;
+      transform: translateX(-50%) rotate(225deg);
+    }
+  }
+}
+
+/* Mobile: one per line (keeps tooltip usable) */
+@media (max-width: 600px) {
+  .stage-row {
+    grid-template-columns: 1fr;
+  }
+  .stage-line {
+    display: none;
+  }
+  .point-bubble {
+    position: static !important;
+    transform: none !important;
+    margin-top: 0.5rem;
+  }
+}

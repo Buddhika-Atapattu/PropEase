@@ -9,75 +9,72 @@
     <hr />
 
     <!-- Toolbar -->
-    <div class="row align-items-center mb-3">
-      <div
-        class="col-12 d-flex flex-wrap gap-2 justify-content-between align-items-center toolbar"
-      >
-        <div class="left d-flex align-items-center gap-2">
-          <mat-chip-set aria-label="connection state">
-            <mat-chip
-              *ngIf="connected$ | async; else offline"
-              class="chip online"
-            >
-              <mat-icon>bolt</mat-icon>&nbsp;Live
+
+    <div class="top-bar">
+      <div class="connection-chip">
+        <mat-chip-set aria-label="connection state">
+          <mat-chip
+            *ngIf="connected$ | async; else offline"
+            class="chip online"
+          >
+            <mat-icon>bolt</mat-icon>&nbsp;Live
+          </mat-chip>
+          <ng-template #offline>
+            <mat-chip class="chip offline">
+              <mat-icon>cloud_off</mat-icon>&nbsp;Offline
             </mat-chip>
-            <ng-template #offline>
-              <mat-chip class="chip offline">
-                <mat-icon>cloud_off</mat-icon>&nbsp;Offline
-              </mat-chip>
-            </ng-template>
-          </mat-chip-set>
-        </div>
+          </ng-template>
+        </mat-chip-set>
+      </div>
+      <div class="search-container">
+        <input
+          matInput
+          [formControl]="searchCtrl"
+          placeholder="Search title, body, or tags…"
+          aria-label="Search notifications"
+          class="search-input"
+          (keyup.enter)="search(searchCtrl.value || '')"
+        />
 
-        <div class="right d-flex align-items-center gap-2">
-          <mat-form-field
-            appearance="fill"
-            class="search-field"
-            floatLabel="auto"
-          >
-            <mat-icon matPrefix>search</mat-icon>
-            <input
-              matInput
-              [formControl]="searchCtrl"
-              placeholder="Search title, body, or tags…"
-              aria-label="Search notifications"
-              (keyup.enter)="search(searchCtrl.value || '')"
-            />
-            <button
-              mat-icon-button
-              matSuffix
-              *ngIf="searchCtrl.value"
-              (click)="search('')"
-              aria-label="Clear search"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
-          </mat-form-field>
+        <button
+          #refreshBtn
+          mat-icon-button
+          [class]="(loading$ | async) ? 'refresh' : ''"
+          (click)="refresh()"
+          matTooltip="Refresh"
+          matTooltipPosition="above"
+          matTooltipClass="tags"
+          class="search-action"
+        >
+          <mat-icon>refresh</mat-icon>
+        </button>
 
+        <button
+          mat-icon-button
+          matSuffix
+          *ngIf="searchCtrl.value"
+          (click)="search('')"
+          aria-label="Clear search"
+          class="search-action"
+          matTooltip="Search clear"
+          matTooltipPosition="above"
+          matTooltipClass="tags"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div class="notification-action-btn">
+        <ng-container *ngIf="pageItems$ | async as pageItems">
           <button
-            #refreshBtn
-            mat-icon-button
-            [class]="(loading$ | async) ? 'refresh' : ''"
-            (click)="refresh()"
-            matTooltip="Refresh"
-            matTooltipPosition="above"
-            matTooltipClass="tags"
+            class="btn-warning"
+            (click)="markAllVisibleAsRead(pageItems)"
+            [disabled]="!pageItems?.length"
+            matTooltip="Mark current page items as read"
           >
-            <mat-icon>refresh</mat-icon>
+            <mat-icon class="btn-icon">done_all</mat-icon>
+            <span class="btn-label">Mark Read</span>
           </button>
-
-          <ng-container *ngIf="pageItems$ | async as pageItems">
-            <button
-              mat-flat-button
-              class="btn-warning"
-              (click)="markAllVisibleAsRead(pageItems)"
-              [disabled]="!pageItems?.length"
-              matTooltip="Mark current page items as read"
-            >
-              <mat-icon>done_all</mat-icon>&nbsp;Mark Page Read
-            </button>
-          </ng-container>
-        </div>
+        </ng-container>
       </div>
     </div>
 
@@ -190,57 +187,148 @@
             (click)="openNotification(n)"
             aria-label="Notification row"
           >
-            <div
-              class="col-xl-1 col-md-1 col-2 d-flex justify-content-center align-items-center"
-            >
-              <div class="avatar" [attr.data-severity]="n.severity">
-                <!-- <mat-icon aria-hidden="true">{{ iconFor(n) }}</mat-icon> -->
-                <mat-icon aria-hidden="true">{{ n.icon }}</mat-icon>
+            <!-- Mobile view -->
+            <div class="notif-card-mobile">
+              <!-- TOP SECTION -->
+              <div class="row-top">
+                <!-- comment icon (avatar) — 25% of the top section -->
+                <div class="icon-spot">
+                  <div class="avatar" [attr.data-severity]="n.severity">
+                    <mat-icon aria-hidden="true">{{ n.icon }}</mat-icon>
+                  </div>
+                </div>
+
+                <!-- title + tags area (centered; tags flow up to ~75%) -->
+                <div class="top-main">
+                  <h6 class="title mb-2">{{ n.title }}</h6>
+
+                  <div class="top-tags">
+                    <!-- unread chip -->
+                    <mat-chip
+                      *ngIf="!n.userState?.isRead"
+                      class="chip-unread"
+                      selected
+                    >
+                      <mat-icon>mark_email_unread</mat-icon>&nbsp;New
+                    </mat-chip>
+
+                    <!-- category -->
+                    <mat-chip
+                      *ngIf="n.category"
+                      class="chip-category"
+                      [disableRipple]="true"
+                    >
+                      {{ n.category }}
+                    </mat-chip>
+
+                    <!-- tags -->
+                    <ng-container *ngIf="n.tags?.length">
+                      <mat-chip
+                        *ngFor="let t of n.tags"
+                        class="chip-tag"
+                        [disableRipple]="true"
+                      >
+                        {{ t }}
+                      </mat-chip>
+                    </ng-container>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div class="col-xl-8 col-md-8 col-6">
-              <div class="d-flex align-items-center gap-2 flex-wrap">
-                <h6 class="title mb-0">{{ n.title }}</h6>
+              <!-- BOTTOM SECTION -->
+              <div class="row-bottom">
+                <!-- body — left bottom, ~65% -->
+                <div class="body-text">
+                  <p class="mb-0">{{ n.body }}</p>
+                </div>
 
-                <!-- unread chip -->
-                <mat-chip
-                  *ngIf="!n.userState?.isRead"
-                  class="chip-unread ms-auto"
-                  selected
-                >
-                  <mat-icon>mark_email_unread</mat-icon>&nbsp;New
-                </mat-chip>
-
-                <!-- category -->
-                <mat-chip
-                  *ngIf="n.category"
-                  class="chip-category"
-                  [disableRipple]="true"
-                >
-                  {{ n.category }}
-                </mat-chip>
-
-                <!-- tags -->
-                <ng-container *ngIf="n.tags?.length">
-                  <mat-chip
-                    *ngFor="let t of n.tags"
-                    class="chip-tag"
-                    [disableRipple]="true"
+                <!-- actions — right bottom corner (eye + mark read + time) -->
+                <div class="bottom-actions" (click)="$event.stopPropagation()">
+                  <button
+                    mat-icon-button
+                    class="view-btn"
+                    (click)="openNotification(n)"
+                    aria-label="View notification"
+                    matTooltip="View Notification"
+                    matTooltipPosition="above"
+                    matTooltipClass="tags"
                   >
-                    {{ t }}
-                  </mat-chip>
-                </ng-container>
-              </div>
+                    <mat-icon>visibility</mat-icon>
+                  </button>
 
-              <hr />
-              <p class="mb-2">{{ n.body }}</p>
+                  <button
+                    mat-stroked-button
+                    *ngIf="!n.userState?.isRead"
+                    (click)="markRead(n._id)"
+                    class="btn-mark-read"
+                  >
+                    <mat-icon>done</mat-icon>&nbsp;<span class="label-mark-read"
+                      >Mark read</span
+                    >
+                  </button>
+
+                  <span class="time">{{ n.createdAt | date: 'medium' }}</span>
+                </div>
+              </div>
             </div>
 
-            <div class="col-xl-3 col-md-3 col-4">
-              <div class="visit-btn-wrapper">
+            <!-- Desktop view -->
+            <div class="notif-card-large">
+              <!-- FIRST COLUMN -->
+              <div class="first-col">
+                <div class="icon-spot">
+                  <div class="avatar" [attr.data-severity]="n.severity">
+                    <mat-icon aria-hidden="true">{{ n.icon }}</mat-icon>
+                  </div>
+                </div>
+              </div>
+              <!-- SECOND COLUMN -->
+              <div class="second-col">
+                <div class="first-row">
+                  <h6 class="title mb-3">{{ n.title }}</h6>
+
+                  <div class="top-tags">
+                    <!-- unread chip -->
+                    <mat-chip
+                      *ngIf="!n.userState?.isRead"
+                      class="chip-unread"
+                      selected
+                    >
+                      <mat-icon>mark_email_unread</mat-icon>&nbsp;New
+                    </mat-chip>
+
+                    <!-- category -->
+                    <mat-chip
+                      *ngIf="n.category"
+                      class="chip-category"
+                      [disableRipple]="true"
+                    >
+                      {{ n.category }}
+                    </mat-chip>
+
+                    <!-- tags -->
+                    <ng-container *ngIf="n.tags?.length">
+                      <mat-chip
+                        *ngFor="let t of n.tags"
+                        class="chip-tag"
+                        [disableRipple]="true"
+                      >
+                        {{ t }}
+                      </mat-chip>
+                    </ng-container>
+                  </div>
+                </div>
+                <div class="second-row">
+                  <div class="body-text">
+                    <p class="mb-0">{{ n.body }}</p>
+                  </div>
+                </div>
+              </div>
+              <!-- THIRD COLUMN -->
+              <div class="third-col" (click)="$event.stopPropagation()">
                 <button
                   mat-icon-button
+                  class="view-btn"
                   (click)="openNotification(n)"
                   aria-label="View notification"
                   matTooltip="View Notification"
@@ -249,21 +337,17 @@
                 >
                   <mat-icon>visibility</mat-icon>
                 </button>
-              </div>
-              <div
-                class="d-flex justify-content-end align-items-start flex-column h-100 gap-1 ms-auto"
-              >
-                <span class="time ms-auto"
-                  >{{ n.createdAt | date: 'medium' }}</span
-                >
+
                 <button
                   mat-stroked-button
                   *ngIf="!n.userState?.isRead"
                   (click)="markRead(n._id)"
-                  class="btn-mark-read ms-auto"
+                  class="btn-mark-read"
                 >
-                  <mat-icon>done</mat-icon>&nbsp;Mark read
+                  <mat-icon>done</mat-icon>&nbsp;<span>Mark read</span>
                 </button>
+
+                <span class="time">{{ n.createdAt | date: 'medium' }}</span>
               </div>
             </div>
           </div>

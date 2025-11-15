@@ -41,6 +41,7 @@ import {MatSliderModule} from '@angular/material/slider';
 import {MatButtonToggleModule} from '@angular/material/button-toggle';
 import {MapComponent} from '../../shared/map/map.component';
 import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
+import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
 
 // MapComponent,
 @Component({
@@ -66,7 +67,7 @@ import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
     MatAutocompleteModule,
     MatButtonToggleModule,
     MatDialogModule,
-
+    CloseBtnComponent,
     SafeUrlPipe,
   ],
   templateUrl: './property-more-details-pannel.component.html',

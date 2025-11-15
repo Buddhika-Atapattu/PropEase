@@ -58,7 +58,7 @@ export class CameraBoxComponent implements OnInit, AfterViewInit, OnDestroy {
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer
+    private domSanitizer: DomSanitizer,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
 

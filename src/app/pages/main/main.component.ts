@@ -1,23 +1,21 @@
 // Path: src/app/pages/main/main.component.ts
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
-  Component,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
   AfterViewInit,
+  Component,
+  Inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
 } from '@angular/core';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {Subscription} from 'rxjs';
 import {ActivatedRoute, Router} from '@angular/router';
+import {Subscription} from 'rxjs';
 import {WindowsRefService} from '../../services/windowRef/windowRef.service';
 
 // Permissions source
 import {
   AuthService,
-  DEFAULT_ROLE_ACCESS,
-  ACCESS_OPTIONS,
-  Role,
+  DEFAULT_ROLE_ACCESS, Role
 } from '../../services/auth/auth.service';
 
 @Component({
@@ -176,7 +174,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   public goReports(): void {
     // Point to an existing reports page if/when added
-    this.router.navigate(['/dashboard/all-notifications']); // placeholder target
+    this.router.navigate(['/dashboard/notifications/all-notifications']); // placeholder target
   }
   public goLeaseTerminations(): void {
     // You might implement a filtered leases page for upcoming terminations

@@ -24,7 +24,7 @@ export interface Property {
   | 'Villa'
   | 'Commercial'
   | 'Land'
-  | 'Stodio'
+  | 'Studio'
   | string;
   listing: 'Sale' | 'Rent' | 'Sold' | 'Rented' | string;
   description: string;
@@ -112,6 +112,9 @@ export interface Property {
   status: 'Draft' | 'Published' | 'Archived';
   internalNote: string;
   // End Administrative & Internal Use
+
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Address {

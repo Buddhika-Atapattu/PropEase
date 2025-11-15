@@ -1,0 +1,294 @@
+@use "../../styles/global.scss" as *;
+@use "sass:color";
+
+/* =========================================================
+   1) Layout grid (desktop)
+   ========================================================= */
+.dashboard-container {
+  display: grid;
+  grid-template-areas:
+    "navbar navbar"
+    "sidebar main";
+  grid-template-rows: 70px 1fr;
+  grid-template-columns: 250px 1fr;
+  grid-gap: 2rem;
+  height: 100vh;
+  overflow: hidden; /* clip any child overflow outside the grid */
+  @media (max-height: 550px) {
+    position: relative;
+    overflow-y: auto;
+  }
+}
+
+/* Sidebar (fixed) */
+.sidebar {
+  grid-area: sidebar;
+  position: fixed;
+  left: 0;
+  width: 16rem;
+  height: calc(100vh - 5rem);
+  padding: 2rem 1.25rem;
+  background: none !important;
+  transition: all 0.3s ease;
+  z-index: 1;
+  overflow-y: hidden;
+  @media (max-height: 499.99px) {
+    overflow-y: auto;
+  }
+
+  .side-bar-main-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 0 15px var(--shadow);
+    background: var(--surface-variant);
+    color: var(--on-surface);
+  }
+
+  &.collapsed {
+    width: 6.5rem;
+  }
+}
+
+/* Navbar (fixed) */
+.dashboard-navbar {
+  grid-area: navbar;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  transition: all 0.3s ease;
+  z-index: 200; /* above the curtain below */
+  background: linear-gradient(45dge, var(--surface-variant), var(--royal-50));
+}
+
+/* Main scroll area */
+.main-content {
+  grid-area: main;
+  /* Push content visually below fixed navbar */
+  margin-left: 2rem;
+  height: -webkit-fill-available;
+  overflow: auto;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  position: relative; /* for the “curtain” pseudo-element */
+
+  /* === The CURTAIN ===
+     Covers the strip under the navbar so nothing can show above the red line.
+     Sits below the navbar (z-index: 95) but above scrolled content. */
+  &::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5rem; /* must match navbar height */
+    background: var(--surface-variant);
+    z-index: 100; /* lower than navbar(100), higher than content */
+    pointer-events: none; /* don’t block clicks under the navbar */
+  }
+
+  .sub-parent-main {
+    overflow-y: auto;
+    height: auto;
+
+    .main-panel {
+      position: relative;
+      width: 100%;
+      min-height: inherit;
+      border-radius: 20px;
+      transition: all 0.3s ease-in-out;
+      box-shadow: 0 0 15px var(--shadow);
+      padding: 2rem;
+      background: var(--surface-variant);
+      color: var(--on-surface);
+    }
+  }
+}
+
+/* Keep main panel padding reasonable on small screens */
+@media (max-width: 918px) {
+  .main-panel {
+    padding: 3rem 0.5rem 1.5rem 0.5rem !important;
+  }
+}
+
+/* Collapsed sidebar adjustments (desktop) */
+.sidebar.collapsed + .dashboard-navbar {
+  left: 0;
+}
+.sidebar.collapsed ~ .main-content {
+  margin-left: -9rem;
+}
+
+/* =========================================================
+   2) Header bits
+   ========================================================= */
+.user-image-btn {
+  background: transparent;
+  border: none;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 0 15px var(--shadow);
+  transition: all 0.3s ease-in-out;
+
+  &:hover {
+    background: var(--hover-bg);
+  }
+
+  img {
+    width: inherit;
+    height: inherit;
+    object-fit: cover;
+    object-position: center;
+  }
+}
+.logo {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+}
+.menu-icon {
+  display: none;
+} /* mobile shown later */
+
+/* Transparent navbar passthrough (when needed) */
+.navbar {
+  background: transparent !important;
+}
+
+/* =========================================================
+   3) Mobile layout
+   ========================================================= */
+@media (max-width: 918px) and (min-width: 480px) {
+  .menu-icon {
+    display: flex;
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    z-index: 10;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--elevated);
+    color: var(--on-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 6px 10px;
+    box-shadow: 0 6px 18px var(--shadow);
+  }
+
+  /* Single column; scroll only main-content */
+  .dashboard-container {
+    display: block;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+
+    .dashboard-navbar {
+      display: none;
+    } /* hidden on mobile */
+    .sidebar {
+      display: none;
+    }
+
+    .main-content {
+      position: relative;
+      width: 100vw;
+      height: 100dvh;
+      margin: 0;
+      padding: 0rem 0rem calc(0.25rem + env(safe-area-inset-bottom));
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+
+      /* Mobile also needs the curtain because navbar is hidden,
+         but we still want a clean top edge while bouncing. */
+      &::before {
+        height: 12px; /* small top mask to hide overscroll glow/bounce */
+      }
+    }
+  }
+}
+
+@media (max-width: 479.99px) {
+  .menu-icon {
+    display: flex;
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    z-index: 10;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--elevated);
+    color: var(--on-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 6px 10px;
+    box-shadow: 0 6px 18px var(--shadow);
+  }
+
+  /* Single column; scroll only main-content */
+  .dashboard-container {
+    display: block;
+    height: 100dvh;
+    width: 100vw;
+    overflow: hidden;
+
+    .dashboard-navbar {
+      display: none;
+    } /* hidden on mobile */
+    .sidebar {
+      display: none;
+    }
+
+    .main-content {
+      position: relative;
+      width: 100vw;
+      height: 100dvh;
+      margin: 0;
+      padding: 0rem 0rem calc(env(safe-area-inset-bottom));
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+
+      /* Mobile also needs the curtain because navbar is hidden,
+         but we still want a clean top edge while bouncing. */
+      &::before {
+        height: 12px; /* small top mask to hide overscroll glow/bounce */
+      }
+    }
+  }
+}
+
+/* =========================================================
+   4) Theming surfaces (kept separate for clarity)
+   ========================================================= */
+
+/* Gradient accent on the main panel (dark) */
+:host-context(html.dark) .main-panel {
+  background: linear-gradient(
+    145deg,
+    var(--surface-variant),
+    color-mix(in oklab, var(--surface-variant), black 6%)
+  );
+}
+
+/* Gradient accent on the main panel (light) */
+:host-context(html.light) .main-panel {
+  background: linear-gradient(
+    145deg,
+    var(--surface-variant),
+    color-mix(in oklab, var(--surface-variant), white 6%)
+  );
+}

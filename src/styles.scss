@@ -1,94 +1,120 @@
 /* =============================================================================
-   styles.scss (App-wide base styles)
+   styles.scss — App-wide base styles
    -----------------------------------------------------------------------------
-   Purpose
-   - App-wide resets, typography, theming glue, and universal utilities.
-   - Professional recessed scrollbars + themed caret/selection with fallbacks.
-   - Predictable Angular Material + Bootstrap behavior (SSR/Electron-friendly).
-
-   Notes
-   - Authoritative tokens live in src/app/styles/global.scss.
-   - This file provides fallbacks + global glue styles.
-   - Ensure <html> has .light / .dark early (e.g., in index.html).
+   - Angular Material + Bootstrap glue
+   - SSR/Electron-safe variable seeds (no self-references)
+   - Body is the single scroll container (no double indicators)
+   - Themed custom scrollbars (Firefox + WebKit/Electron)
+   - No phantom right-side gutter space in light mode
 ============================================================================= */
 
 /* == 1) Framework imports (order matters) ================================== */
-@use "@angular/material" as mat; /* Angular Material theming API   */
-@use "bootstrap/scss/bootstrap" as *; /* Bootstrap core                 */
+@use "@angular/material" as mat;
+@use "bootstrap/scss/bootstrap" as *;
 
 /* Project fonts (local + optional Google fallback) */
 @use "../src/app/styles/font/Montserrat/Montserrat.scss" as *;
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
 
-/* == 2) Base CSS variables + typography root =============================== */
-:root {
-  --primary-bg: #fdf6e3; /* light background fallback */
-  --text-color: #1f1f1f; /* light text fallback */
-  font-family: "Montserrat", sans-serif;
+/* == 2) Base resets ======================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-/* == 3) Theme tokens (fallbacks) =========================================== */
-/* LIGHT */
-html.light {
-  --surface: var(--surface, #ffffff);
-  --surface-variant: var(--surface-variant, #f6f8fb);
-  --on-surface: var(--on-surface, #14161a);
-  --primary: var(--primary, #2b59ff);
-  --secondary: var(--secondary, #ffcf4a);
-  --shadow-color: var(--shadow-color, rgba(0, 0, 0, 0.16));
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
 
-  /* Pro scrollbar tokens */
-  --scrollbar-gutter: color-mix(in srgb, #0a0f1f 6%, var(--surface));
-  --scrollbar-track: color-mix(in srgb, #0a0f1f 12%, var(--surface));
+/* == 3) Safe boot/SSR seeds (no self-references) =========================== */
+:root {
+  --surface: #ffffff;
+  --surface-variant: #f6f8fb;
+  --on-surface: #14161a;
+
+  /* Page-level (used only by this file) */
+  --primary-bg: #ffffff;
+  --text-color: #14161a;
+
+  --scrollbar-thumb-accent: var(--scrollbar-thumb);
+  --scrollbar-thumb-accent-hover: var(--scrollbar-thumb-hover);
+
+  /* Scrollbar tokens (defaults; themes override) */
+  --scrollbar-gutter: transparent; /* don't reserve space by default */
+  --scrollbar-track: #1a2030;
   --scrollbar-thumb: #cfd6e1;
   --scrollbar-thumb-hover: #b8c2d1;
-  --scrollbar-button: color-mix(in srgb, #000 35%, var(--scrollbar-track));
-  --scrollbar-button-hover: color-mix(
-    in srgb,
-    #000 45%,
-    var(--scrollbar-track)
-  );
+  --scrollbar-button: #121824;
+  --scrollbar-button-hover: #0f1622;
 
-  /* Caret + selection */
+  --caret-color: #2b59ff;
+  --caret-selection-bg: color-mix(in srgb, #2b59ff 15%, #ffffff);
+}
+
+/* == 4) Theme tokens used by THIS file only (not your full design system) == */
+/* You said you only set the class on <html>, so target <html> specifically. */
+html.light:root {
+  --primary-bg: #ffffff;
+  --text-color: #14161a;
+
+  /* Scrollbar gutter (space behind the track) */
+  --scrollbar-gutter: color-mix(in srgb, #e9eef5 75%, #ffffff);
+
+  /* Track (background inside gutter) */
+  --scrollbar-track: color-mix(in srgb, #cfd8e3 65%, #f1f4fa);
+
+  /* Thumb (draggable bar) */
+  --scrollbar-thumb: color-mix(in srgb, #5087d9 80%, #365ea6 20%);
+
+  /* Thumb hover (visible & accessible) */
+  --scrollbar-thumb-hover: color-mix(in srgb, #3d6dc4 65%, #2a4c89 35%);
+
+  /* Accent variant – same family, never gold */
+  --scrollbar-thumb-accent: var(--scrollbar-thumb);
+  --scrollbar-thumb-accent-hover: var(--scrollbar-thumb-hover);
+
+  /* Optional arrow buttons (light transparent navy) */
+  --scrollbar-button: color-mix(in srgb, #dde3ee 60%, #35527c 40%);
+  --scrollbar-button-hover: color-mix(in srgb, #ccd5e3 45%, #2b3d5a 55%);
+
   --caret-color: var(--primary, #2b59ff);
   --caret-selection-bg: color-mix(
     in srgb,
     var(--primary, #2b59ff) 15%,
     #ffffff
   );
+
+  color-scheme: light;
 }
 
-/* DARK */
-html.dark {
-  --surface: var(--surface, #0f1220);
-  --surface-variant: var(--surface-variant, #111628);
-  --on-surface: var(--on-surface, #f4f6fb);
-  --primary: var(--primary, #2b59ff);
-  --secondary: var(--secondary, #ffcf4a);
-  --shadow-color: var(--shadow-color, rgba(0, 0, 0, 0.32));
-
-  /* Pro scrollbar tokens */
-  --scrollbar-gutter: #0d1322; /* deep outer lane */
-  --scrollbar-track: #1a202e; /* recessed channel */
-  --scrollbar-thumb: #bfc5ce; /* light, contrasty */
-  --scrollbar-thumb-hover: #aeb6c2;
-  --scrollbar-button: #121824;
-  --scrollbar-button-hover: #0f1622;
-
-  /* Base page colors for non-tokened areas */
+html.dark:root {
   --primary-bg: #08122f;
   --text-color: #fefefe;
 
-  /* Caret + selection */
+  --scrollbar-gutter: #0d1322;
+  --scrollbar-track: #1a202e;
+  --scrollbar-thumb: #bfc5ce;
+  --scrollbar-thumb-hover: #aeb6c2;
+
+  /* Accent variant – same as base dark thumb */
+  --scrollbar-thumb-accent: var(--scrollbar-thumb);
+  --scrollbar-thumb-accent-hover: var(--scrollbar-thumb-hover);
+
+  --scrollbar-button: #121824;
+  --scrollbar-button-hover: #0f1622;
+
+  /* Gold is still fine for CARET (text selection), not scrollbar */
   --caret-color: var(--secondary, #ffcf4a);
-  --caret-selection-bg: color-mix(
-    in srgb,
-    var(--secondary, #ffcf4a) 30%,
-    #000000
-  );
+  --caret-selection-bg: color-mix(in srgb, var(--secondary, #ffcf4a) 30%, #000);
+
+  color-scheme: dark;
 }
 
-/* == 4) Angular Material global theme include ============================== */
+/* == 5) Angular Material global theme include ============================== */
 html {
   @include mat.theme(
     (
@@ -103,47 +129,92 @@ html {
   );
 }
 
-/* == 5) Universal pro scrollbars (Firefox + WebKit/Electron) =============== */
-/* Firefox (color parity) */
-* {
+/* == 6) One scroll container + no phantom gutter =========================== */
+/* html never scrolls; body handles vertical scroll. Also block stray X. */
+html {
+  overflow: hidden; /* no html scrollbars */
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh; // better for full-height layouts
+  width: 100%;
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-gutter: auto;
+
+  font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.5;
+  font-size: 12pt;
+
+  background-color: var(--primary-bg) !important;
+  color: var(--text-color) !important;
+}
+
+/* == 7) Universal custom scrollbars (Firefox + WebKit/Electron) =========== */
+/* Firefox */
+body {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
-/* WebKit (Chromium/Electron/Safari) */
-*::-webkit-scrollbar {
+/* WebKit (Chromium/Safari/Electron) */
+body::-webkit-scrollbar {
   width: 14px;
   height: 14px;
-  background: var(--scrollbar-gutter); /* faint outer lane */
+  background: var(--scrollbar-gutter);
+  @media (max-width: 768px) {
+    display: none;
+    width: 0px;
+    height: 0px;
+  }
 }
 
-/* Recessed channel */
-*::-webkit-scrollbar-track {
+body::-webkit-scrollbar-track {
   background: var(--scrollbar-track);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04),
     inset 0 0 6px rgba(0, 0, 0, 0.45);
   border-radius: 10px;
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
-/* Pill thumb */
-*::-webkit-scrollbar-thumb {
+body::-webkit-scrollbar-thumb {
   background-color: var(--scrollbar-thumb);
   border-radius: 10px;
-  border: 3px solid var(--scrollbar-track); /* centers thumb in channel */
+  border: 3px solid var(--scrollbar-track);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35),
     0 1px 1px rgba(0, 0, 0, 0.2);
+  @media (max-width: 768px) {
+    display: none;
+    border: none;
+  }
 }
-*::-webkit-scrollbar-thumb:hover {
+body::-webkit-scrollbar-thumb:hover {
   background-color: var(--scrollbar-thumb-hover);
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
-/* Corner (when both axes scroll) */
-*::-webkit-scrollbar-corner {
+body::-webkit-scrollbar-corner {
   background: var(--scrollbar-track);
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
-/* Optional: arrow buttons (Chromium/Electron; ignored by many browsers) */
-*::-webkit-scrollbar-button {
+/* Optional arrow buttons (ignored by many browsers) */
+body::-webkit-scrollbar-button {
   height: 14px;
   background: linear-gradient(
     180deg,
@@ -152,8 +223,12 @@ html {
     var(--scrollbar-button) 59%,
     transparent 60%
   );
+  @media (max-width: 768px) {
+    display: none;
+    height: 0px;
+  }
 }
-*::-webkit-scrollbar-button:vertical:start:decrement {
+body::-webkit-scrollbar-button:vertical:start:decrement {
   background: radial-gradient(
       6px 6px at 50% 55%,
       var(--scrollbar-button) 49%,
@@ -166,8 +241,11 @@ html {
       var(--scrollbar-button) 59%,
       transparent 60%
     );
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
-*::-webkit-scrollbar-button:vertical:end:increment {
+body::-webkit-scrollbar-button:vertical:end:increment {
   background: radial-gradient(
       6px 6px at 50% 45%,
       var(--scrollbar-button) 49%,
@@ -180,17 +258,49 @@ html {
       var(--scrollbar-button) 59%,
       transparent 60%
     );
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
-*::-webkit-scrollbar-button:hover {
+body::-webkit-scrollbar-button:hover {
   background-color: var(--scrollbar-button-hover);
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 
-/* == 6) Base document layout, preloader, typography ======================== */
-html,
-body {
-  height: 100%;
+/* Root specificity (kept light) */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  background: var(--scrollbar-gutter);
 }
 
+/* == 8) CDK Overlays (dialogs/menus/tooltips) — scrollbar parity ========== */
+.cdk-overlay-container,
+.cdk-overlay-pane {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.cdk-overlay-container::-webkit-scrollbar,
+.cdk-overlay-pane::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+  background: var(--scrollbar-gutter);
+}
+.cdk-overlay-container::-webkit-scrollbar-track,
+.cdk-overlay-pane::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 10px;
+}
+.cdk-overlay-container::-webkit-scrollbar-thumb,
+.cdk-overlay-pane::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 10px;
+  border: 3px solid var(--scrollbar-track);
+}
+
+/* == 9) Preloader ========================================================== */
 #app-preloader {
   position: fixed;
   inset: 0;
@@ -203,10 +313,11 @@ body {
 
   .preloader-wrapper {
     text-align: center;
+
     img {
       width: 120px;
       height: auto;
-      animation: pulse 1.5s infinite ease-in-out;
+      animation: pe-pulse 1.5s infinite ease-in-out;
     }
     p {
       color: #d29e00;
@@ -216,7 +327,7 @@ body {
   }
 }
 
-@keyframes pulse {
+@keyframes pe-pulse {
   0% {
     transform: scale(1);
     opacity: 0.8;
@@ -231,23 +342,7 @@ body {
   }
 }
 
-html,
-body {
-  margin: 0;
-  font-family: "Montserrat", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  line-height: 1.5;
-  font-style: normal;
-  font-variant: normal;
-  font-size: 12pt;
-  background-color: var(--primary-bg) !important;
-  color: var(--text-color) !important;
-}
-
-/* == 7) Forms + caret/selection =========================================== */
+/* == 10) Forms + caret/selection ========================================== */
 input[type="number"] {
   &::-webkit-inner-spin-button,
   &::-webkit-outer-spin-button {
@@ -255,10 +350,9 @@ input[type="number"] {
     margin: 0;
   }
   appearance: textfield;
-  -moz-appearance: textfield; /* Firefox */
+  -moz-appearance: textfield;
 }
 
-/* Global caret color */
 html,
 body,
 input,
@@ -268,7 +362,6 @@ select,
   caret-color: var(--caret-color);
 }
 
-/* Themed selection */
 ::selection {
   background-color: var(--caret-selection-bg);
   color: var(--text-color);
@@ -278,7 +371,7 @@ select,
   color: var(--text-color);
 }
 
-/* == 8) Themed scrollbar mixin + utilities (container-scoped) ============== */
+/* == 11) Themed scrollbar mixin + utilities =============================== */
 @mixin themed-scrollbar($accent: false) {
   $thumb: if(
     $accent,
@@ -291,11 +384,9 @@ select,
     var(--scrollbar-thumb-hover)
   );
 
-  /* Firefox */
   scrollbar-width: thin;
   scrollbar-color: #{$thumb} var(--scrollbar-track);
 
-  /* WebKit */
   &::-webkit-scrollbar {
     width: 14px;
     height: 14px;
@@ -322,7 +413,7 @@ select,
   }
 }
 
-/* Utilities */
+/* Opt-in utilities for specific containers */
 .scrollbar-default {
   @include themed-scrollbar(false);
 }
@@ -340,7 +431,15 @@ select,
   }
 }
 
-:host ::ng-deep .cdk-overlay-pane,
-:host ::ng-deep .cdk-overlay-container {
-  @include themed-scrollbar(false);
+/* == 12) Media defaults ==================================================== */
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+}
+.mat-icon:not(.mat-icon-no-symbols) {
+  font-family: "Material Symbols Rounded" !important;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 48;
 }

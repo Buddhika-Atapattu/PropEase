@@ -17,11 +17,12 @@ import {
   BackEndPropertyData
 } from '../../../services/property/property.service';
 import {NotificationDialogComponent} from '../notification/notification.component';
+import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
 
 @Component({
   selector: 'app-share',
   standalone: true,
-  imports: [CommonModule, NotificationDialogComponent],
+  imports: [CommonModule, NotificationDialogComponent, CloseBtnComponent],
   templateUrl: './share.component.html',
   styleUrl: './share.component.scss',
 })
@@ -110,7 +111,7 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   protected shareSocialMedia(type: string): void {
-    const propertyUrl = `http://localhost:4200/dashboard/property-view/${this.property?.id}`; // update accordingly
+    const propertyUrl = `http://localhost:4200/dashboard/properties/property-view/${this.property?.id}`; // update accordingly
 
     const text = `🏠 Check out this property listing!
 📍 Address: ${this.property?.address?.houseNumber}, ${this.property?.address?.street}, ${this.property?.address?.city}, ${this.property?.address?.stateOrProvince}, ${this.property?.address?.country}, ${this.property?.address?.postcode}

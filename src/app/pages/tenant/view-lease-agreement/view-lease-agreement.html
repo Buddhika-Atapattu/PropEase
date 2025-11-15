@@ -10,25 +10,7 @@
     *ngIf="lease && selectedProperty && tenant; else loading"
   >
     <!-- Page Indicators -->
-    <div class="row page-indicator">
-      <span
-        ><button
-          type="button"
-          class="page-indicator-btn"
-          (click)="goToTenantsDashboard()"
-        >
-          TENANT DASHBOARD
-        </button>
-        <i class="fa-solid fa-angle-right my-2"></i>
-        <button type="button" class="page-indicator-btn" (click)="goToTenant()">
-          {{ tenant.name }}
-        </button>
-        <i class="fa-solid fa-angle-right my-2"></i>
-        <button type="button" class="page-indicator-btn" (click)="goLease()">
-          View Lease
-        </button>
-      </span>
-    </div>
+
     <!-- End Page Indicators -->
 
     <!-- user-image row -->

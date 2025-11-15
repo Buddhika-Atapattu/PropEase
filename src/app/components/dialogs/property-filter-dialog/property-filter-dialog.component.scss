@@ -2,6 +2,10 @@
 
 .property-filter-dialog {
   position: relative;
+  padding: 2rem;
+  @media (max-width: 425px) {
+    padding: 0px;
+  }
   .close-btn-container {
     position: absolute;
     right: 1rem;
@@ -63,7 +67,6 @@
 :host-context(html.dark) {
   /* dark mode styles */
   .property-filter-dialog {
-    padding: 2rem;
     background: $dark-primary-color;
   }
 }
@@ -71,7 +74,6 @@
 :host-context(html.light) {
   /* light mode styles */
   .property-filter-dialog {
-    padding: 2rem;
     background: $light-primary-color;
   }
 }

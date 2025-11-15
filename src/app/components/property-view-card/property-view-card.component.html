@@ -1,476 +1,367 @@
-<app-notification></app-notification>
-<!-- List view -->
-<div
-  class="row panel-card"
-  *ngIf="mode !== null && property && isListView"
-  [ngClass]="mode ? 'dark' : 'light'"
->
-  <div class="col-xl-4">
-    <app-skeleton-loader
-      *ngIf="loading"
-      [Mode]="mode"
-      [height]="'200px'"
-      [width]="'100%'"
-      [borderRadius]="'0.5rem'"
-    >
-    </app-skeleton-loader>
-    <div *ngIf="!loading" class="property-image-container">
-      <img
-        [src]="property.images[0].imageURL"
-        alt="property image"
-        class="property-image"
-      />
+@if(property){
+<!-- This view mode is for the row style -->
+<!-- This is desktop view -->
+<div class="desktop">
+  @if(!viewMode){
+  <div class="property property-row">
+    <div class="first">
+      <div class="property-image-container">
+        @if(isLoading){
+        <app-skeleton-loader
+          [width]="'20rem'"
+          [height]="'20rem'"
+        ></app-skeleton-loader>
+        } @else {<img [src]="detectPropertyImage()" alt="property image" />}
+      </div>
+    </div>
+    <div class="second">
+      <div class="top">
+        @if(isLoading){
+        <app-skeleton-loader
+          [width]="'30rem'"
+          [height]="'18pt'"
+        ></app-skeleton-loader>
+        } @else {
+        <h4 class="text-default text-wrap-safe">{{ property.title }}</h4>
+        }
+      </div>
+      <div class="middle">
+        @if(isLoading){
+        <app-skeleton-loader
+          [width]="'100%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'75%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'50%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        } @else {
+        {{ filterPortionOfDescription(property) }}
+        }
+      </div>
+      <div class="bottom">
+        <div class="first">
+          <span>
+            @if (isLoading) {
+            <app-skeleton-loader
+              [width]="'1.5rem'"
+              [height]="'1.5rem'"
+              [borderRadius]="'0.25rem'"
+            ></app-skeleton-loader>
+            } @else {
+            <mat-icon
+              [matTooltip]="makeUppercase(property.type).trim()"
+              matTooltipPosition="above"
+              [class]="`property-chip type-${property.type} cursor-pointer`"
+            >
+              {{ detectTypeIcon(property).trim() }}
+            </mat-icon>
+            }
+          </span>
+        </div>
+        <div class="second">
+          <span class="text-muted">
+            @if (isLoading) {
+            <app-skeleton-loader
+              [width]="'10rem'"
+              [height]="'12pt'"
+              [borderRadius]="'0.25rem'"
+            ></app-skeleton-loader>
+            } @else{ Registered at:
+            {{ property.createdAt | date : "dd/MM/yyyy hh.mm a" }}
+            }
+          </span>
+        </div>
+        <div class="third">
+          <span class="text-muted">
+            @if (isLoading) {
+            <app-skeleton-loader
+              [width]="'10rem'"
+              [height]="'12pt'"
+              [borderRadius]="'0.25rem'"
+            ></app-skeleton-loader>
+            } @else{ @if(property.createdAt !== property.updatedAt){ Updated at:
+            {{ property.updatedAt | date : "dd/MM/yyyy hh.mm a" }}
+            } @else { &nbsp; } }
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="third">
+      <div class="top">
+        <button
+          type="button"
+          matTooltip="View property"
+          matTooltipPosition="above"
+          class="btn btn-view"
+          (click)="viewPropertyFunction()"
+        >
+          <mat-icon>visibility</mat-icon>
+        </button>
+      </div>
+      <div class="middle">
+        <button
+          type="button"
+          matTooltip="Edit property"
+          matTooltipPosition="above"
+          class="btn btn-warning"
+          (click)="editPropertyFunction()"
+        >
+          <mat-icon>create</mat-icon>
+        </button>
+      </div>
+      <div class="bottom">
+        <button
+          type="button"
+          matTooltip="Delete property"
+          matTooltipPosition="above"
+          class="btn btn-danger"
+          (click)="deletePropertyFunction()"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
     </div>
   </div>
-  <div class="col-xl-7">
-    <div class="property-details px-4">
-      <div class="row">
+  }
+  <!-- This view mode type for thee column style -->
+  @else {
+  <div class="property property-card">
+    <div class="first">
+      <div class="property-image-container">
+        @if (isLoading) {
         <app-skeleton-loader
-          *ngIf="loading"
-          [Mode]="mode"
-          [height]="'30px'"
           [width]="'100%'"
-          [borderRadius]="'0.125rem'"
-        >
-        </app-skeleton-loader>
-        <h5 *ngIf="!loading" class="property-title text-capitalize">
+          [height]="'100%'"
+        ></app-skeleton-loader>
+        } @else {
+        <img [src]="detectPropertyImage()" alt="property image" />
+        }
+      </div>
+    </div>
+
+    <div class="second">
+      <div class="top">
+        @if (isLoading) {
+        <app-skeleton-loader
+          [width]="'70%'"
+          [height]="'18pt'"
+        ></app-skeleton-loader>
+        } @else {
+        <h4 class="text-default text-center m-0 text-wrap-safe">
           {{ property.title }}
-        </h5>
+        </h4>
+        }
       </div>
 
-      <div class="row d-flex align-items-center my-2">
-        <div class="col-4 d-flex align-items-center">
-          <app-skeleton-loader
-            *ngIf="loading"
-            [Mode]="mode"
-            [height]="'12pt'"
-            [width]="'100%'"
-            [style]="'width: 100%;'"
-            [borderRadius]="'0.125rem'"
-          >
-          </app-skeleton-loader>
-          <span *ngIf="!loading" class="badge" [ngClass]="property.type">
-            {{ property.type }}
-          </span>
-        </div>
-        <div class="col-4 d-flex align-items-center">
-          <app-skeleton-loader
-            *ngIf="loading"
-            [Mode]="mode"
-            [height]="'12pt'"
-            [width]="'100%'"
-            [style]="'width: 100%;'"
-            [borderRadius]="'0.125rem'"
-          >
-          </app-skeleton-loader>
-          <span *ngIf="!loading" class="badge" [ngClass]="property.listing">
-            {{ property.listing }}
-          </span>
-        </div>
-      </div>
-
-      <div class="row">
+      <div class="middle">
+        @if (isLoading) {
         <app-skeleton-loader
-          *ngIf="loading"
-          [Mode]="mode"
-          [height]="'15px'"
           [width]="'100%'"
-          [borderRadius]="'0.125rem'"
-        >
-        </app-skeleton-loader>
-        <p *ngIf="!loading" class="property-location text-capitalize">
-          {{ property.address.city }}, {{ property.address.stateOrProvince }},
-          {{ property.address.country }}
-        </p>
-      </div>
-
-      <div class="row">
-        <app-skeleton-loader
-          *ngIf="loading"
-          [Mode]="mode"
-          [height]="'15px'"
-          [width]="'100%'"
-          [borderRadius]="'0.125rem'"
-        >
-        </app-skeleton-loader>
-        <p *ngIf="!loading" class="property-price text-uppercase fw-bold h4">
-          {{ property.price.toLocaleString() }} {{ property.currency }}
-        </p>
-      </div>
-
-      <div class="row">
-        <app-skeleton-loader
-          *ngIf="loading"
-          [Mode]="mode"
-          [height]="'15px'"
-          [width]="'100%'"
-          [borderRadius]="'0.125rem'"
-        >
-        </app-skeleton-loader>
-        <p *ngIf="!loading" class="property-features">
-          <i class="fa fa-bed me-2" aria-hidden="true"></i>
-          {{ property.bedrooms }}
-          <i class="fa fa-bath mx-2" aria-hidden="true"></i>
-          {{ property.bathrooms }}
-          <i class="fa-solid fa-chart-area mx-2" aria-hidden="true"></i
-          >{{ property.totalArea }} sqft
-        </p>
-      </div>
-    </div>
-  </div>
-  <div class="col-xl-1">
-    <div class="row action-btn-row d-block">
-      <div class="col-4 my-2 d-flex justify-content-center align-items-center">
-        <button
-          *ngIf="isUserCanViewTheProperty()"
-          class="btn-view"
-          type="button"
-          (click)="gotoTheProperty(property.id)"
-        >
-          <!-- <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon> -->
-          <i class="fa-solid fa-eye"></i>
-        </button>
-      </div>
-      <div class="col-4 my-2 d-flex justify-content-center align-items-center">
-        <button
-          *ngIf="isUserCanEditTheProperty()"
-          class="btn-warning"
-          type="button"
-          (click)="gotoThePropertyEdit(property.id)"
-        >
-          <!-- <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon> -->
-          <i class="fa-solid fa-pen-to-square"></i>
-        </button>
-      </div>
-      <div class="col-4 my-2 d-flex justify-content-center align-items-center">
-        <button
-          *ngIf="isUserCanDeleteTheProperty()"
-          class="btn-danger"
-          type="button"
-          (click)="deleteProperty(property.id)"
-        >
-          <!-- <mat-icon class="mat-icon-rtl-mirror" svgIcon="delete"></mat-icon> -->
-          <i class="fa-solid fa-trash"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- End list view -->
-
-<!-- Column view -->
-<div
-  class="card panel-card"
-  *ngIf="mode !== null && property && isColView"
-  [ngClass]="mode ? 'dark' : 'light'"
->
-  <app-skeleton-loader
-    *ngIf="loading"
-    [Mode]="mode"
-    [height]="'200px'"
-    [width]="'100%'"
-    style="width: 100%"
-    [borderRadius]="'0.5rem'"
-  >
-  </app-skeleton-loader>
-  <div *ngIf="!loading" class="property-image-container">
-    <img
-      [src]="property.images[0].imageURL"
-      alt="property image"
-      class="property-image card-top-img"
-    />
-  </div>
-  <div class="card-body">
-    <div class="row">
-      <app-skeleton-loader
-        *ngIf="loading"
-        [Mode]="mode"
-        [height]="'30px'"
-        [width]="'100%'"
-        style="width: 100%"
-        [borderRadius]="'0.125rem'"
-      >
-      </app-skeleton-loader>
-      <h5 *ngIf="!loading" class="property-title text-capitalize">
-        {{ property.title }}
-      </h5>
-    </div>
-    <div class="row d-flex justify-content-between align-items-center my-2">
-      <div class="col-6">
-        <app-skeleton-loader
-          *ngIf="loading"
-          [Mode]="mode"
           [height]="'12pt'"
-          [width]="'100%'"
-          [style]="'width: 100%;'"
-          [borderRadius]="'0.125rem'"
-        >
-        </app-skeleton-loader>
-        <span *ngIf="!loading" class="badge" [ngClass]="property.type">
-          {{ property.type }}
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'80%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'60%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        } @else {
+        {{ filterPortionOfDescription(property) }}
+        }
+      </div>
+
+      <div class="bottom meta">
+        <span>
+          @if(isLoading){
+          <app-skeleton-loader
+            [width]="'2rem'"
+            [height]="'2rem'"
+            [borderRadius]="'0.25rem'"
+          ></app-skeleton-loader>
+          } @else {
+          <mat-icon
+            [matTooltip]="makeUppercase(property.type).trim()"
+            matTooltipPosition="above"
+            [class]="`property-chip type-${property.type} cursor-pointer`"
+          >
+            {{ detectTypeIcon(property).trim() }}
+          </mat-icon>
+          }
         </span>
-      </div>
-      <div class="col-6 d-flex justify-content-end align-items-center">
-        <app-skeleton-loader
-          *ngIf="loading"
-          [Mode]="mode"
-          [height]="'12pt'"
-          [width]="'100%'"
-          [style]="'width: 100%;'"
-          [borderRadius]="'0.125rem'"
-        >
-        </app-skeleton-loader>
-        <span *ngIf="!loading" class="badge" [ngClass]="property.listing">
-          {{ property.listing }}
+        <span class="text-muted">
+          @if(isLoading){
+          <app-skeleton-loader
+            [width]="'10rem'"
+            [height]="'12pt'"
+            [borderRadius]="'0.25rem'"
+          ></app-skeleton-loader>
+          } @else {
+          {{ property.createdAt | date : "dd/MM/yyyy hh.mm a" }}
+          }
         </span>
       </div>
     </div>
-    <div class="row">
-      <app-skeleton-loader
-        *ngIf="loading"
-        [Mode]="mode"
-        [height]="'15px'"
-        [width]="'100%'"
-        style="width: 100%"
-        [borderRadius]="'0.125rem'"
+
+    <div class="third actions">
+      <button
+        type="button"
+        matTooltip="View property"
+        matTooltipPosition="above"
+        class="btn btn-view"
+        (click)="viewPropertyFunction()"
       >
-      </app-skeleton-loader>
-      <p *ngIf="!loading" class="property-location text-capitalize">
-        {{ property.address.city }}, {{ property.address.stateOrProvince }},
-        {{ property.address.country }}
-      </p>
-    </div>
-    <div class="row">
-      <app-skeleton-loader
-        *ngIf="loading"
-        [Mode]="mode"
-        [height]="'15px'"
-        [width]="'100%'"
-        style="width: 100%"
-        [borderRadius]="'0.125rem'"
+        <mat-icon>visibility</mat-icon>
+      </button>
+      <button
+        type="button"
+        matTooltip="Edit property"
+        matTooltipPosition="above"
+        class="btn btn-warning"
+        (click)="editPropertyFunction()"
       >
-      </app-skeleton-loader>
-      <p *ngIf="!loading" class="property-price text-uppercase fw-bold h4">
-        {{ property.price.toLocaleString() }} {{ property.currency }}
-      </p>
-    </div>
-    <div class="row">
-      <app-skeleton-loader
-        *ngIf="loading"
-        [Mode]="mode"
-        [height]="'15px'"
-        [width]="'100%'"
-        style="width: 100%"
-        [borderRadius]="'0.125rem'"
+        <mat-icon>create</mat-icon>
+      </button>
+      <button
+        type="button"
+        matTooltip="Delete property"
+        matTooltipPosition="above"
+        class="btn btn-danger"
+        (click)="deletePropertyFunction()"
       >
-      </app-skeleton-loader>
-      <p *ngIf="!loading" class="property-features">
-        <i class="fa fa-bed me-2" aria-hidden="true"></i>
-        {{ property.bedrooms }}
-        <i class="fa fa-bath mx-2" aria-hidden="true"></i>
-        {{ property.bathrooms }}
-        <i class="fa-solid fa-chart-area mx-2" aria-hidden="true"></i
-        >{{ property.totalArea }} sqft
-      </p>
+        <mat-icon>delete</mat-icon>
+      </button>
     </div>
   </div>
+  }
+  <!-- End desktop view -->
+</div>
+<div class="mobile">
+  <!-- This is mobile view -->
+  <div class="property property-card">
+    <div class="first">
+      <div class="property-image-container">
+        @if (isLoading) {
+        <app-skeleton-loader
+          [width]="'100%'"
+          [height]="'100%'"
+        ></app-skeleton-loader>
+        } @else {
+        <img [src]="detectPropertyImage()" alt="property image" />
+        }
+      </div>
+    </div>
 
-  <div class="card-footer">
-    <div class="row action-btn-row">
-      <div class="col-4 d-flex justify-content-center align-items-center">
-        <button
-          *ngIf="isUserCanViewTheProperty()"
-          class="btn-view"
-          type="button"
-          (click)="gotoTheProperty(property.id)"
-        >
-          <!-- <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon> -->
-          <i class="fa-solid fa-eye"></i>
-        </button>
+    <div class="second">
+      <div class="top">
+        @if (isLoading) {
+        <app-skeleton-loader
+          [width]="'70%'"
+          [height]="'18pt'"
+        ></app-skeleton-loader>
+        } @else {
+        <h4 class="text-default text-center m-0 text-wrap-safe">
+          {{ property.title }}
+        </h4>
+        }
       </div>
-      <div class="col-4 d-flex justify-content-center align-items-center">
-        <button
-          *ngIf="isUserCanEditTheProperty()"
-          class="btn-warning"
-          type="button"
-          (click)="gotoThePropertyEdit(property.id)"
-        >
-          <!-- <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon> -->
-          <i class="fa-solid fa-pen-to-square"></i>
-        </button>
+
+      <div class="middle">
+        @if (isLoading) {
+        <app-skeleton-loader
+          [width]="'100%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'80%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'60%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        } @else {
+        {{ filterPortionOfDescription(property) }}
+        }
       </div>
-      <div class="col-4 d-flex justify-content-center align-items-center">
-        <button
-          *ngIf="isUserCanDeleteTheProperty()"
-          class="btn-danger"
-          type="button"
-          (click)="deleteProperty(property.id)"
-        >
-          <!-- <mat-icon class="mat-icon-rtl-mirror" svgIcon="delete"></mat-icon> -->
-          <i class="fa-solid fa-trash"></i>
-        </button>
+
+      <div class="bottom meta">
+        <span>
+          @if(isLoading){
+          <app-skeleton-loader
+            [width]="'2rem'"
+            [height]="'2rem'"
+            [borderRadius]="'0.25rem'"
+          ></app-skeleton-loader>
+          } @else {
+          <mat-icon
+            [matTooltip]="makeUppercase(property.type).trim()"
+            matTooltipPosition="above"
+            [class]="`property-chip type-${property.type} cursor-pointer`"
+          >
+            {{ detectTypeIcon(property).trim() }}
+          </mat-icon>
+          }
+        </span>
+        <span class="text-muted">
+          @if(isLoading){
+          <app-skeleton-loader
+            [width]="'10rem'"
+            [height]="'12pt'"
+            [borderRadius]="'0.25rem'"
+          ></app-skeleton-loader>
+          } @else {
+          {{ property.createdAt | date : "dd/MM/yyyy hh.mm a" }}
+          }
+        </span>
       </div>
+    </div>
+
+    <div class="third actions">
+      <button
+        type="button"
+        matTooltip="View property"
+        matTooltipPosition="above"
+        class="btn btn-view"
+        (click)="viewPropertyFunction()"
+      >
+        <mat-icon>visibility</mat-icon>
+      </button>
+      <button
+        type="button"
+        matTooltip="Edit property"
+        matTooltipPosition="above"
+        class="btn btn-warning"
+        (click)="editPropertyFunction()"
+      >
+        <mat-icon>create</mat-icon>
+      </button>
+      <button
+        type="button"
+        matTooltip="Delete property"
+        matTooltipPosition="above"
+        class="btn btn-danger"
+        (click)="deletePropertyFunction()"
+      >
+        <mat-icon>delete</mat-icon>
+      </button>
     </div>
   </div>
 </div>
-<!-- End column view -->
-
-<!-- Mobile view -->
-
-<div
-  *ngIf="mode !== null && property"
-  class="main-panel-mobile"
-  [ngClass]="mode ? 'dark' : 'light'"
->
-  <div class="card panel-card">
-    <app-skeleton-loader
-      *ngIf="loading"
-      [Mode]="mode"
-      [height]="'200px'"
-      [width]="'100%'"
-      [borderRadius]="'0.5rem'"
-    >
-    </app-skeleton-loader>
-    <div *ngIf="!loading" class="property-image-container">
-      <img
-        [src]="property.images[0].imageURL"
-        alt="property image "
-        class="card-img-top"
-      />
-    </div>
-
-    <div class="card-body">
-      <div class="row">
-        <div class="col-sm-12">
-          <app-skeleton-loader
-            *ngIf="loading"
-            [Mode]="mode"
-            [height]="'30px'"
-            [width]="'100%'"
-            [borderRadius]="'0.125rem'"
-          >
-          </app-skeleton-loader>
-          <h5 *ngIf="!loading" class="property-title text-capitalize">
-            {{ property.title }}
-          </h5>
-        </div>
-      </div>
-      <div class="row d-flex justify-content-between align-items-center my-2">
-        <div class="col-6">
-          <app-skeleton-loader
-            *ngIf="loading"
-            [Mode]="mode"
-            [height]="'12pt'"
-            [width]="'100%'"
-            [style]="'width: 100%;'"
-            [borderRadius]="'0.125rem'"
-          >
-          </app-skeleton-loader>
-          <span *ngIf="!loading" class="badge" [ngClass]="property.type">
-            {{ property.type }}
-          </span>
-        </div>
-        <div class="col-6 d-flex justify-content-end align-items-center">
-          <app-skeleton-loader
-            *ngIf="loading"
-            [Mode]="mode"
-            [height]="'12pt'"
-            [width]="'100%'"
-            [style]="'width: 100%;'"
-            [borderRadius]="'0.125rem'"
-          >
-          </app-skeleton-loader>
-          <span *ngIf="!loading" class="badge" [ngClass]="property.listing">
-            {{ property.listing }}
-          </span>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-12">
-          <app-skeleton-loader
-            *ngIf="loading"
-            [Mode]="mode"
-            [height]="'15px'"
-            [width]="'100%'"
-            [borderRadius]="'0.125rem'"
-          >
-          </app-skeleton-loader>
-          <p *ngIf="!loading" class="property-location text-capitalize">
-            {{ property.address.city }}, {{ property.address.stateOrProvince }},
-            {{ property.address.country }}
-          </p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-12">
-          <app-skeleton-loader
-            *ngIf="loading"
-            [Mode]="mode"
-            [height]="'15px'"
-            [width]="'100%'"
-            [borderRadius]="'0.125rem'"
-          >
-          </app-skeleton-loader>
-          <p *ngIf="!loading" class="property-price text-uppercase fw-bold h4">
-            {{ property.price.toLocaleString() }} {{ property.currency }}
-          </p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-12">
-          <app-skeleton-loader
-            *ngIf="loading"
-            [Mode]="mode"
-            [height]="'15px'"
-            [width]="'100%'"
-            [borderRadius]="'0.125rem'"
-          >
-          </app-skeleton-loader>
-          <p *ngIf="!loading" class="property-features">
-            <i class="fa fa-bed me-2" aria-hidden="true"></i>
-            {{ property.bedrooms }}
-            <i class="fa fa-bath mx-2" aria-hidden="true"></i>
-            {{ property.bathrooms }}
-            <i class="fa-solid fa-chart-area mx-2" aria-hidden="true"></i
-            >{{ property.totalArea }} sqft
-          </p>
-        </div>
-      </div>
-      <div class="row action-btn-row">
-        <div class="col-4 d-flex justify-content-center align-items-center">
-          <button
-            *ngIf="isUserCanViewTheProperty()"
-            class="btn-view"
-            type="button"
-            (click)="gotoTheProperty(property.id)"
-          >
-            <!-- <mat-icon class="mat-icon-rtl-mirror" svgIcon="view"></mat-icon> -->
-            <i class="fa-solid fa-eye"></i>
-          </button>
-        </div>
-        <div class="col-4 d-flex justify-content-center align-items-center">
-          <button
-            *ngIf="isUserCanEditTheProperty()"
-            class="btn-warning"
-            type="button"
-            (click)="gotoThePropertyEdit(property.id)"
-          >
-            <!-- <mat-icon class="mat-icon-rtl-mirror" svgIcon="edit"></mat-icon> -->
-            <i class="fa-solid fa-pen-to-square"></i>
-          </button>
-        </div>
-        <div class="col-4 d-flex justify-content-center align-items-center">
-          <button
-            *ngIf="isUserCanDeleteTheProperty()"
-            class="btn-danger"
-            type="button"
-            (click)="deleteProperty(property.id)"
-          >
-            <!-- <mat-icon class="mat-icon-rtl-mirror" svgIcon="delete"></mat-icon> -->
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- End mobile view -->
+}

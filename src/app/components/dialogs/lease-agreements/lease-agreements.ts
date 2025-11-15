@@ -17,7 +17,7 @@ import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 
 import {LeaseWithProperty, TenantService} from '../../../services/tenant/tenant.service';
-import {BaseUser} from '../../../services/APIs/apis.service';
+import {User} from '../../../services/APIs/apis.service';
 import {NotificationDialogComponent} from '../notification/notification.component';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
@@ -25,12 +25,13 @@ import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
 import {NgxExtendedPdfViewerModule} from 'ngx-extended-pdf-viewer';
 import {Router} from '@angular/router';
 import {AuthService} from '../../../services/auth/auth.service';
+import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
 
 // SkeletonLoaderComponent, SafeUrlPipe
 @Component({
   selector: 'app-lease-agreements',
   standalone: true,
-  imports: [CommonModule, NotificationDialogComponent, MatProgressSpinnerModule, NgxExtendedPdfViewerModule],
+  imports: [CommonModule, NotificationDialogComponent, MatProgressSpinnerModule, NgxExtendedPdfViewerModule, CloseBtnComponent],
   templateUrl: './lease-agreements.html',
   styleUrl: './lease-agreements.scss'
 })
@@ -38,7 +39,7 @@ export class LeaseAgreements implements OnInit, OnDestroy, AfterViewInit, OnChan
 
   @ViewChild(NotificationDialogComponent) NotificationDialogComponent!: NotificationDialogComponent;
   protected lease: LeaseWithProperty | null = null;
-  protected tenant: BaseUser | null = null;
+  protected tenant: User | null = null;
   protected isLoading: boolean = false;
   protected isBrowser: boolean;
   protected modeSub: Subscription | null = null;
@@ -71,7 +72,7 @@ export class LeaseAgreements implements OnInit, OnDestroy, AfterViewInit, OnChan
       }
       if(this.data) {
         this.lease = this.data.lease as LeaseWithProperty;
-        this.tenant = this.data.tenant as BaseUser;
+        this.tenant = this.data.tenant as User;
         await this.loadPDF();
       } else {
         this.lease = null;

@@ -274,10 +274,10 @@
                 </div>
                 <div *ngIf="!isLoading">
                   <switch-button
-                    [checked]="element.switchButton"
-                    (checkedChange)="handleSwitchChange($event, element)"
-                    [labelOn]="'On'"
-                    [labelOff]="'Off'"
+                    [checked]="element.switchButton.isActive"
+                    (checkedChange)="handleSwitchChange($event, element, i)"
+                    [labelOn]="element.switchButton.on"
+                    [labelOff]="element.switchButton.off"
                   ></switch-button>
                 </div>
               </ng-container>

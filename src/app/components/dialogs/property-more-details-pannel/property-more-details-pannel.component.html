@@ -3,10 +3,8 @@
   class="main-panel"
   [ngClass]="mode ? 'dark' : 'light'"
 >
+  <close-btn [matDialogRef]="dialogRef"></close-btn>
   <div class="container-fluid position-relative my-4" *ngIf="property">
-    <button type="button" class="pannel-close-btn" (click)="pannelClose()">
-      <i class="fa-solid fa-xmark"></i>
-    </button>
     <!-- tab container -->
     <div class="tab-container">
       <!-- tab indicators -->

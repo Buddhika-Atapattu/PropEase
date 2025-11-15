@@ -1,0 +1,318 @@
+@if(user){
+<!-- This view mode is for the row style -->
+<!-- This is desktop view -->
+<div class="desktop">
+  @if(!viewMode){
+  <div class="user user-row">
+    <div class="first">
+      <div class="user-image-container">
+        @if(isLoading){
+        <app-skeleton-loader
+          [width]="'10rem'"
+          [height]="'10rem'"
+        ></app-skeleton-loader>
+        } @else {<img [src]="detectUserImage()" alt="user image" />}
+      </div>
+    </div>
+    <div class="second">
+      <div class="top">
+        @if(isLoading){
+        <app-skeleton-loader
+          [width]="'30rem'"
+          [height]="'18pt'"
+        ></app-skeleton-loader>
+        } @else {
+        <h4 class="text-default">{{ user.name }}</h4>
+        }
+      </div>
+      <div class="middle">
+        @if(isLoading){
+        <app-skeleton-loader
+          [width]="'100%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'75%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'50%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        } @else {
+        {{ filterPortionOfBio(user) }}
+        }
+      </div>
+      <div class="bottom">
+        <div class="first">
+          <span>
+            <mat-icon
+              [matTooltip]="activeUser ? 'Active' : 'Inactive'"
+              matTooltipPosition="above"
+              [matTooltipClass]="activeUser ? 'bg-success' : 'bg-danger'"
+              [class.text-success]="activeUser"
+              [class.text-danger]="!activeUser"
+              class="cursor-pointer"
+            >
+              {{ activeUser ? "verified_user" : "gpp_bad" }}
+            </mat-icon>
+          </span>
+        </div>
+        <div class="second">
+          <span class="text-muted">
+            Registered at: {{ user.createdAt | date : "dd/MM/yyyy hh.mm a" }}
+          </span>
+        </div>
+        <div class="third">
+          <span class="text-muted">
+            @if(user.createdAt !== user.updatedAt){ Updated at:
+            {{ user.updatedAt | date : "dd/MM/yyyy hh.mm a" }}
+            } @else { &nbsp; }
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="third">
+      <div class="top">
+        <button
+          type="button"
+          matTooltip="View user"
+          matTooltipPosition="above"
+          class="btn btn-view"
+          (click)="viewUserFunction()"
+        >
+          <mat-icon>visibility</mat-icon>
+        </button>
+      </div>
+      <div class="middle">
+        <button
+          type="button"
+          matTooltip="Edit user"
+          matTooltipPosition="above"
+          class="btn btn-warning"
+          (click)="editUserFunction()"
+        >
+          <mat-icon>create</mat-icon>
+        </button>
+      </div>
+      <div class="bottom">
+        <button
+          type="button"
+          matTooltip="Delete user"
+          matTooltipPosition="above"
+          class="btn btn-danger"
+          (click)="deleteUserFunction()"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+  <!-- This view mode type for thee column style -->
+  @else {
+  <div class="user user-card">
+    <div class="first">
+      <div class="user-image-container">
+        @if (isLoading) {
+        <app-skeleton-loader
+          [width]="'8rem'"
+          [height]="'8rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <img [src]="detectUserImage()" alt="user image" />
+        }
+      </div>
+    </div>
+
+    <div class="second">
+      <div class="top">
+        @if (isLoading) {
+        <app-skeleton-loader
+          [width]="'70%'"
+          [height]="'18pt'"
+        ></app-skeleton-loader>
+        } @else {
+        <h4 class="text-default text-center m-0">{{ user.name }}</h4>
+        }
+      </div>
+
+      <div class="middle">
+        @if (isLoading) {
+        <app-skeleton-loader
+          [width]="'100%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'80%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'60%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        } @else {
+        {{ filterPortionOfBio(user) }}
+        }
+      </div>
+
+      <div class="bottom meta">
+        <span>
+          <mat-icon
+            [matTooltip]="activeUser ? 'Active' : 'Inactive'"
+            matTooltipPosition="above"
+            [matTooltipClass]="activeUser ? 'bg-success' : 'bg-danger'"
+            [class.text-success]="activeUser"
+            [class.text-danger]="!activeUser"
+            class="cursor-pointer"
+          >
+            {{ activeUser ? "verified_user" : "gpp_bad" }}
+          </mat-icon>
+        </span>
+        <span class="text-muted">
+          {{ user.createdAt | date : "dd/MM/yyyy hh.mm a" }}
+        </span>
+      </div>
+    </div>
+
+    <div class="third actions">
+      <button
+        type="button"
+        matTooltip="View user"
+        matTooltipPosition="above"
+        class="btn btn-view"
+        (click)="viewUserFunction()"
+      >
+        <mat-icon>visibility</mat-icon>
+      </button>
+      <button
+        type="button"
+        matTooltip="Edit user"
+        matTooltipPosition="above"
+        class="btn btn-warning"
+        (click)="editUserFunction()"
+      >
+        <mat-icon>create</mat-icon>
+      </button>
+      <button
+        type="button"
+        matTooltip="Delete user"
+        matTooltipPosition="above"
+        class="btn btn-danger"
+        (click)="deleteUserFunction()"
+      >
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </div>
+  }
+  <!-- End desktop view -->
+</div>
+<div class="mobile">
+  <!-- This is mobile view -->
+  <div class="user user-card">
+    <div class="first">
+      <div class="user-image-container">
+        @if (isLoading) {
+        <app-skeleton-loader
+          [width]="'8rem'"
+          [height]="'8rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <img [src]="detectUserImage()" alt="user image" />
+        }
+      </div>
+    </div>
+
+    <div class="second">
+      <div class="top">
+        @if (isLoading) {
+        <app-skeleton-loader
+          [width]="'70%'"
+          [height]="'18pt'"
+        ></app-skeleton-loader>
+        } @else {
+        <h4 class="text-default text-center m-0">{{ user.name }}</h4>
+        }
+      </div>
+
+      <div class="middle">
+        @if (isLoading) {
+        <app-skeleton-loader
+          [width]="'100%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'80%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        <app-skeleton-loader
+          [width]="'60%'"
+          [height]="'12pt'"
+          [borderRadius]="'0.25rem'"
+        ></app-skeleton-loader>
+        } @else {
+        {{ filterPortionOfBio(user) }}
+        }
+      </div>
+
+      <div class="bottom meta">
+        <span>
+          <mat-icon
+            [matTooltip]="activeUser ? 'Active' : 'Inactive'"
+            matTooltipPosition="above"
+            [matTooltipClass]="activeUser ? 'bg-success' : 'bg-danger'"
+            [class.text-success]="activeUser"
+            [class.text-danger]="!activeUser"
+            class="cursor-pointer"
+          >
+            {{ activeUser ? "verified_user" : "gpp_bad" }}
+          </mat-icon>
+        </span>
+        <span class="text-muted">
+          {{ user.createdAt | date : "dd/MM/yyyy hh.mm a" }}
+        </span>
+      </div>
+    </div>
+
+    <div class="third actions">
+      <button
+        type="button"
+        matTooltip="View user"
+        matTooltipPosition="above"
+        class="btn btn-view"
+        (click)="viewUserFunction()"
+      >
+        <mat-icon>visibility</mat-icon>
+      </button>
+      <button
+        type="button"
+        matTooltip="Edit user"
+        matTooltipPosition="above"
+        class="btn btn-warning"
+        (click)="editUserFunction()"
+      >
+        <mat-icon>create</mat-icon>
+      </button>
+      <button
+        type="button"
+        matTooltip="Delete user"
+        matTooltipPosition="above"
+        class="btn btn-danger"
+        (click)="deleteUserFunction()"
+      >
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- End mobile view -->
+}

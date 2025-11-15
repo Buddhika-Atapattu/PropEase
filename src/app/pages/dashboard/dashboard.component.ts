@@ -1,111 +1,146 @@
+// Path: src/app/pages/dashboard/dashboard.component.ts
+import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
-  Component,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
   AfterViewInit,
   ChangeDetectorRef,
-  NgZone
+  Component,
+  Inject,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+  ViewChild,
+  type ElementRef,
 } from '@angular/core';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {ListMainPanelComponent} from '../../components/list-main-panel/list-main-panel.component';
-import {CommonModule, isPlatformBrowser} from '@angular/common';
-import {RouterModule, Router} from '@angular/router';
-import {TopProgressBarComponent} from '../../components/top-progress-bar/top-progress-bar.component';
-import {ModeChangerComponent} from '../../components/mode-changer/mode-changer.component';
-import {UserInfoPanelComponent} from '../../components/user-info-panel/user-info-panel.component';
-import {WindowsRefService} from '../../services/windowRef/windowRef.service';
-import {ExpandableService} from '../../services/expandable/expandable.service';
-import {
-  AuthService,
-  LoggedUserType,
-} from '../../services/auth/auth.service';
-import {Subscription} from 'rxjs';
-import {SkeletonLoaderComponent} from '../../components/shared/skeleton-loader/skeleton-loader.component';
-import {ActivityTrackerService} from '../../services/activityTacker/activity-tracker.service';
-import {MatIconModule} from '@angular/material/icon';
-import {MatButtonModule} from '@angular/material/button';
-import {MatBadgeModule} from '@angular/material/badge';
-import {MatTooltipModule} from '@angular/material/tooltip';
-import {MatMenuModule} from '@angular/material/menu';
-import {NotificationComponent} from '../../components/shared/notification/notification';
+import {Router, RouterModule} from '@angular/router';
 
+import {MatBadgeModule} from '@angular/material/badge';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatMenuModule} from '@angular/material/menu';
+import {MatTooltipModule} from '@angular/material/tooltip';
+import {Subscription} from 'rxjs';
+import {BreadcrumbsComponent} from '../../components/shared/breadcrumbs/breadcrumbs.component';
+import {NotificationComponent} from '../../components/shared/notification/notification';
+import {SkeletonLoaderComponent} from '../../components/shared/skeleton-loader/skeleton-loader.component';
+import {TopProgressBarComponent} from '../../components/top-progress-bar/top-progress-bar.component';
+import {UserInfoPanelComponent} from '../../components/user-info-panel/user-info-panel.component';
+import {ActivityTrackerService} from '../../services/activityTacker/activity-tracker.service';
+import {type User} from '../../services/APIs/apis.service';
+import {AssetUrlService} from '../../services/asset/asset-url.service';
+import {AuthService} from '../../services/auth/auth.service';
+import {ExpandableService} from '../../services/expandable/expandable.service';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+
+/* Fullscreen menu */
+import {
+  FullscreenMenuComponent, FullscreenMenuProfile
+} from '../../components/fullscreen-menu/fullscreen-menu.component';
+
+/* list-main-panel only for its static menuLists (shared source) + link type*/
+import {ListMainPanelComponent, type FullscreenMenuLink} from '../../components/list-main-panel/list-main-panel.component';
+
+// ModeChangerComponent,
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule,
-    ListMainPanelComponent,
     RouterModule,
-    ModeChangerComponent,
+
+    /* header + panels */
+
     TopProgressBarComponent,
     UserInfoPanelComponent,
+    NotificationComponent,
+    BreadcrumbsComponent,
+
+    /* list + fullscreen menu */
+    ListMainPanelComponent,
+    FullscreenMenuComponent,
+
+    /* material bits */
     SkeletonLoaderComponent,
     MatIconModule,
     MatButtonModule,
     MatBadgeModule,
     MatTooltipModule,
-    MatMenuModule,
-    NotificationComponent
+    MatMenuModule
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
-  protected menuOpen = false;
+  @ViewChild('userDesktopImage', {static: false})
+  private userimage?: ElementRef<HTMLImageElement>;
+
+  /* UI state */
+  protected menuOpen = false;           // user profile panel
+  protected isMobileMenuOpen = false;   // FULLSCREEN MENU (mobile)
   protected mode: boolean | null = null;
-  protected isBrowser: boolean;
   protected isExpanded = true;
-  private modeSub: Subscription | null = null;
-  private expandSub: Subscription | null = null;
-  protected user: LoggedUserType | null = null;
-  protected isLoading = true;
   protected isMobile = false;
 
-  protected isMobileMenuOpen = false;
+  /* data */
+  protected user: User | null = null;
+  protected isLoading = true;
+  protected currentFullURL = '';
+  protected linkLists: FullscreenMenuLink[] = [];
+  protected userProfileData!: FullscreenMenuProfile;
 
-  // NOTE: public/… paths (no leading slash) for Electron-friendly relative resolution
+  /* env */
+  protected isBrowser: boolean;
+
+  private modeSub: Subscription | null = null;
+  private expandSub: Subscription | null = null;
+
+  protected collapsed: boolean = false;
+
+
+  // Public asset fallbacks (handled by AssetUrlService)
   private readonly DEFAULT_USER_IMAGE = 'Images/user-images/dummy-user/dummy-user.jpg';
   private readonly DEFAULT_COVER_NO_BG_IMAGE = 'Images/company-images/cover-no-bg.webp';
 
-  constructor (
-    private windowRef: WindowsRefService,
-    private authService: AuthService,
-    private expandableService: ExpandableService,
-    private router: Router,
-    private activityTrackerService: ActivityTrackerService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private cd: ChangeDetectorRef,
-    private zone: NgZone,
-    private dom: DomSanitizer
+  public constructor (
+    private readonly windowRef: WindowsRefService,
+    private readonly authService: AuthService,
+    private readonly expandableService: ExpandableService,
+    private readonly router: Router,
+    private readonly activityTrackerService: ActivityTrackerService,
+    @Inject(PLATFORM_ID) private readonly platformId: Object,
+    private readonly cd: ChangeDetectorRef,
+    private readonly zone: NgZone,
+    private readonly dom: DomSanitizer,
+    private readonly assets: AssetUrlService,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
 
+    /* Logged user bootstrap */
     const logged = this.authService.getLoggedUser;
     if(logged) {
       this.user = logged;
-      setTimeout(() => {this.isLoading = false;}, 500);
-      // Normalize any accidental absolute /public/... to public/...
-      if(typeof this.user.image === 'string') {
-        this.user.image = this.normalizePublicPath(this.user.image);
+      this.userProfileData = {
+        name: this.user.name ?? 'User',
+        email: this.user.email ?? '',
+        avatarSrc: this.user.image as string ?? 'Images/user-images/dummy-user/dummy-user.jpg',
       }
+      setTimeout(() => (this.isLoading = false), 300);
     }
+
+    /* Source menu links from ListMainPanelComponent static registry */
+    // Ensure your ListMainPanelComponent exposes: `public static menuLists: FullscreenMenuLink[]`
+    this.linkLists = (ListMainPanelComponent as any).menuLists ?? [];
   }
 
-  async ngOnInit() {
+  async ngOnInit(): Promise<void> {
     if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {this.mode = val;});
-      this.expandSub = this.expandableService.isExpanded$.subscribe((expanded) => {this.isExpanded = expanded;});
-    }
+      this.modeSub = this.windowRef.mode$.subscribe((val) => (this.mode = val));
+      this.expandSub = this.expandableService.isExpanded$.subscribe(
+        (expanded) => (this.isExpanded = expanded),
+      );
 
-    const role = this.authService.getLoggedUser?.role;
-    if(role && this.isBrowser) {
-      await this.authService.sendUserCredentialsAndGetUserData(role);
-      await this.authService.afterUserLoggedInOperatios();
-    }
-
-    if(this.windowRef) {
+      /* mobile detection with resize stream */
       this.windowRef.windowWidth$.subscribe((width) => {
         this.zone.run(() => {
           this.isMobile = width < 768;
@@ -113,90 +148,81 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         });
       });
     }
+
+    /* Ensure user bootstrap */
+    const role = this.authService.getLoggedUser?.role;
+    if(role && this.isBrowser) {
+      await this.authService.sendUserCredentialsAndGetUserData(role);
+      await this.authService.afterUserLoggedInOperatios();
+    }
   }
 
   ngAfterViewInit(): void {}
 
-  protected openMenu(): void {
-    this.menuOpen = !this.menuOpen;
+  /* URLs via AssetUrlService */
+
+  protected detectCollapse(value: boolean): void {
+    this.collapsed = value;
   }
 
-  /** Always returns a SafeUrl for the default local asset in public/. */
-  private get defaultSafeUserImage(): SafeUrl {
-    return this.dom.bypassSecurityTrustUrl(this.DEFAULT_USER_IMAGE);
-  }
-
-  /** Logo from public/. */
   protected get noBGImage(): SafeUrl {
-    return this.dom.bypassSecurityTrustUrl(this.DEFAULT_COVER_NO_BG_IMAGE);
+    const url = this.assets.publicAssetUrl(this.DEFAULT_COVER_NO_BG_IMAGE);
+    return this.dom.bypassSecurityTrustUrl(url);
   }
 
-  /** Ensure paths use "public/…" (no leading slash). */
-  private normalizePublicPath(path: string): string {
-    const trimmed = path.trim();
-    if(!trimmed) return this.DEFAULT_USER_IMAGE;
-    // Turn "/public/..." into "public/..."
-    if(/^\/public\//i.test(trimmed)) return trimmed.replace(/^\/+/, '');
-    return trimmed;
-  }
-
-  /**
-   * Electron-friendly sanitizer for <img [src]>:
-   * - Accepts relative "public/…", "./public/…", "../public/…"
-   * - Accepts http/https/blob and data:image/*
-   * - Rejects javascript: and unknown schemes
-   * - Returns SafeUrl
-   */
   protected sanitizeURL(url: unknown): SafeUrl {
-    if(typeof url !== 'string') return this.defaultSafeUserImage;
+    const raw = (typeof url === 'string' && url.trim())
+      ? url.trim()
+      : this.assets.userAvatar(this.user?.username || (this.user as any)?._id);
 
-    let input = url.trim();
-    if(!input) return this.defaultSafeUserImage;
-
-    // Normalize any /public/... to public/...
-    if(/^\/public\//i.test(input)) input = input.replace(/^\/+/, '');
-
-    const lower = input.toLowerCase();
-    if(lower.startsWith('javascript:')) return this.defaultSafeUserImage;
-
-    // Allow common relative public paths
-    const isRelativePublic =
-      /^(public\/|\.{1,2}\/public\/)/i.test(input);
-
-    if(!isRelativePublic) {
-      // Validate absolute URLs (browser only)
-      if(this.isBrowser) {
-        try {
-          const u = new URL(input);
-          const okProto = ['http:', 'https:', 'blob:', 'data:', 'file:'].includes(u.protocol);
-          if(!okProto) return this.defaultSafeUserImage;
-          if(u.protocol === 'data:' && !/^data:image\//i.test(input)) {
-            return this.defaultSafeUserImage;
-          }
-        } catch {
-          return this.defaultSafeUserImage;
-        }
-      } else {
-        // SSR conservative check
-        const ok = /^(https?:|blob:|data:image\/|file:)/i.test(input);
-        if(!ok) return this.defaultSafeUserImage;
-      }
+    if(/^(https?:|blob:)/i.test(raw)) return this.dom.bypassSecurityTrustUrl(raw);
+    if(/^data:/i.test(raw)) {
+      const safe = /^data:image\//i.test(raw)
+        ? raw
+        : this.assets.publicAssetUrl(this.DEFAULT_USER_IMAGE);
+      return this.dom.bypassSecurityTrustUrl(safe);
     }
-    // At this point it's a known-safe scheme or relative public path.
-    return this.dom.bypassSecurityTrustUrl(input);
+    if(/^javascript:/i.test(raw)) {
+      return this.dom.bypassSecurityTrustUrl(this.assets.publicAssetUrl(this.DEFAULT_USER_IMAGE));
+    }
+
+    const rel = raw.replace(/^\/+/, '');
+    const lower = rel.toLowerCase();
+    const isUploads = lower.startsWith('uploads/') || lower.includes('/uploads/');
+    const isBucket =
+      lower.startsWith('users/') ||
+      lower.startsWith('tenants/') ||
+      lower.startsWith('leases/') ||
+      lower.startsWith('properties/') ||
+      lower.startsWith('richtext/');
+
+    if(isUploads || isBucket) {
+      const abs = this.assets.absoluteMediaUrl(rel);
+      return this.dom.bypassSecurityTrustUrl(abs);
+    }
+
+    const pub = this.assets.publicAssetUrl(rel);
+    return this.dom.bypassSecurityTrustUrl(pub);
   }
 
-  protected onProfilePanelClosed(_closed: boolean) {
+  /* UI handlers */
+
+  protected onProfilePanelClosed(_closed: boolean): void {
     this.menuOpen = false;
-    this.isMobileMenuOpen = false;
   }
 
-  protected mobileMenuOpen(): void {
-    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  protected onImageError(): void {
+    const fallback = this.assets.publicAssetUrl(this.DEFAULT_USER_IMAGE);
+    if(this.userimage?.nativeElement) {
+      this.userimage.nativeElement.src = fallback;
+    }
+    if(this.user) this.user.image = this.DEFAULT_USER_IMAGE;
   }
 
-  protected mobileMenuOpenFromLink(input: boolean): void {
-    this.isMobileMenuOpen = !input;
+  protected onMenuNavigate(e: {p: string | null; c: string | null; g: string | null}): void {
+    if(e.p && e.c && e.g) {this.router.navigate(['/dashboard', e.p, e.c, e.g]); return;}
+    if(e.p && e.c) {this.router.navigate(['/dashboard', e.p, e.c]); return;}
+    if(e.p) {this.router.navigate(['/dashboard', e.p]); return;}
   }
 
   ngOnDestroy(): void {

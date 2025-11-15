@@ -98,7 +98,7 @@ $dark-warning-color: #ffb74d !default;
 $dark-error-color: #ef4444 !default;
 $dark-expand-hover-color: rgba(255, 193, 7, 0.1) !default;
 $dark-btn-save-color: #1ac000 !default;
-$dark-btn-view-color: #00d3b0 !default;
+$dark-btn-view-color: #1f744c !default;
 $dark-btn-warning-color: #e7b017 !default;
 $dark-btn-danger-color: #dc2626 !default;
 $dark-btn-custom-color: #005dae !default;
@@ -120,13 +120,13 @@ $light-divider-color: #dfe6e9 !default;
 $light-item-hover: rgba(61, 90, 254, 0.05) !default;
 $light-item-active: rgba(255, 111, 97, 0.1) !default;
 $light-border-color: #ced4da !default;
-$light-hover-color: #f1f3f5 !default;
+$light-hover-color: #d4e9ff !default;
 $light-shadow-color: rgba(0, 0, 0, 0.2) !default;
 $light-success-color: #28c76f !default;
 $light-warning-color: #ff9f43 !default;
 $light-error-color: #ea5455 !default;
 $light-btn-save-color: #1ac000 !default;
-$light-btn-view-color: #00d3b0 !default;
+$light-btn-view-color: #178a4b !default;
 $light-btn-warning-color: #e7b017 !default;
 $light-btn-danger-color: #dc2626 !default;
 $light-btn-custom-color: #005dae !default;
@@ -176,6 +176,17 @@ html.light {
   --bs-link-hover-color: color-mix(in oklab, var(--primary) 85%, black);
   --bs-card-bg: var(--card);
   --bs-card-border-color: var(--border-color);
+
+  // Side panel sub menu item global styles
+  --bg-side-panel-sub-menu: color-mix(
+    in srgb,
+    var(--surface) 88%,
+    var(--surface-variant) 12%
+  );
+  --border-side-panel-sub-menu: 1px solid
+    color-mix(in srgb, var(--border-color) 50%, transparent);
+  --box-shadow-side-panel-sub-menu: 0 14px 30px
+    color-mix(in srgb, var(--shadow-color) 25%, transparent);
 }
 
 html.dark {
@@ -219,6 +230,17 @@ html.dark {
   --bs-link-hover-color: color-mix(in oklab, var(--primary) 80%, white);
   --bs-card-bg: var(--card);
   --bs-card-border-color: var(--border-color);
+
+  // Side panel sub menu item global styles
+  --bg-side-panel-sub-menu: color-mix(
+    in srgb,
+    var(--surface-variant) 30%,
+    #020617
+  );
+  --border-side-panel-sub-menu: 1px solid
+    color-mix(in srgb, var(--border-color) 70%, transparent);
+  --box-shadow-side-panel-sub-menu: 0 18px 40px
+    color-mix(in srgb, var(--shadow-color) 70%, transparent);
 }
 
 /* Defensive mirrors if theme class is applied on <body> */
@@ -263,6 +285,18 @@ body.light {
   --secondary-700: #b98300;
   --secondary-800: #8f6500;
   --secondary-900: #6b4c00;
+
+  --royal-25: #f9d7fc;
+  --royal-50: #f5bdf9;
+  --royal-100: #ef9df4;
+  --royal-200: #e57ded;
+  --royal-300: #d45ee2;
+  --royal-400: #bc3dcf;
+  --royal-500: #9d20b5; /* anchor tone */
+  --royal-600: #87039d;
+  --royal-700: #7e018a;
+  --royal-800: #66016f;
+  --royal-900: #4d0156;
 
   --accent-25: #eef3ff;
   --accent-50: #e3ecff;
@@ -391,6 +425,24 @@ body.light {
   --chart-10: #e67e22;
   --chart-11: #2ecc71;
   --chart-12: #3498db;
+
+  /* Subtle neutral gradient for “row / inactive” */
+  --grad-row: linear-gradient(
+    90deg,
+    var(--neutral-600, #4b5563),
+    var(--neutral-400, #9ca3af)
+  );
+
+  /* Elegant gold gradient for “column / active” or filters */
+  --grad-col: linear-gradient(
+    90deg,
+    var(--warning-400, #ffca28),
+    var(--warning-500, #f9b208)
+  );
+
+  /* Default track colors for UI toggles or containers */
+  --track-bg: var(--surface-variant, #f6f8fb);
+  --track-border: var(--border-color, #d8dee6);
 }
 
 /* DARK THEME – Extended tokens (paired with light, tuned for contrast) */
@@ -434,6 +486,18 @@ body.dark {
   --secondary-700: #e8be46;
   --secondary-800: #f3d574;
   --secondary-900: #fae8a8;
+
+  --royal-25: #3b003f;
+  --royal-50: #4c0151;
+  --royal-100: #5c0163;
+  --royal-200: #6b0176;
+  --royal-300: #7e018a;
+  --royal-400: #a022b0;
+  --royal-500: #c34ad2;
+  --royal-600: #d773e1;
+  --royal-700: #e79deb;
+  --royal-800: #f2bdf4;
+  --royal-900: #f9d7fc;
 
   --accent-25: #0e1630;
   --accent-50: #132043;
@@ -562,6 +626,193 @@ body.dark {
   --chart-10: #f39c12;
   --chart-11: #2ecc71;
   --chart-12: #3498db;
+
+  --grad-row: linear-gradient(
+    90deg,
+    var(--neutral-800, #374151),
+    var(--neutral-600, #6b7280)
+  );
+
+  --grad-col: linear-gradient(
+    90deg,
+    var(--warning-500, #f9b208),
+    var(--warning-700, #d49000)
+  );
+
+  --track-bg: var(--surface-variant, #1f1f23);
+  --track-border: var(--border-color, #3c3c44);
+}
+
+/* ────────────────────────────────────────────────
+   Property & Listing Type Tokens
+   (Theme adaptive – light/dark compatible)
+   ──────────────────────────────────────────────── */
+/* --- SAFETY DEFAULTS for property/listing tokens (before theme classes) --- */
+:root {
+  /* Property types – light-ish defaults */
+  --property-apartment-bg: #e8f0ff;
+  --property-apartment-text: #1e40af;
+  --property-house-bg: #e3f8e0;
+  --property-house-text: #166534;
+  --property-villa-bg: #fef6e4;
+  --property-villa-text: #92400e;
+  --property-commercial-bg: #e0f2fe;
+  --property-commercial-text: #075985;
+  --property-land-bg: #fef3c7;
+  --property-land-text: #92400e;
+  --property-studio-bg: #f3e8ff;
+  --property-studio-text: #6b21a8;
+  --property-default-bg: #f4f4f5;
+  --property-default-text: #3f3f46;
+
+  /* Listing states – light-ish defaults */
+  --listing-sale-bg: #dcfce7;
+  --listing-sale-text: #166534;
+  --listing-rent-bg: #e0f2fe;
+  --listing-rent-text: #075985;
+  --listing-sold-bg: #fee2e2;
+  --listing-sold-text: #991b1b;
+  --listing-rented-bg: #f3e8ff;
+  --listing-rented-text: #6b21a8;
+  --listing-default-bg: #f4f4f5;
+  --listing-default-text: #3f3f46;
+}
+
+/* --- Light theme scope (support theme on html or body) --- */
+html.light,
+body.light {
+  --property-apartment-bg: #e8f0ff;
+  --property-apartment-text: #1e40af;
+  --property-house-bg: #e3f8e0;
+  --property-house-text: #166534;
+  --property-villa-bg: #fef6e4;
+  --property-villa-text: #92400e;
+  --property-commercial-bg: #e0f2fe;
+  --property-commercial-text: #075985;
+  --property-land-bg: #fef3c7;
+  --property-land-text: #92400e;
+  --property-studio-bg: #f3e8ff;
+  --property-studio-text: #6b21a8;
+  --property-default-bg: #f4f4f5;
+  --property-default-text: #3f3f46;
+
+  --listing-sale-bg: #dcfce7;
+  --listing-sale-text: #166534;
+  --listing-rent-bg: #e0f2fe;
+  --listing-rent-text: #075985;
+  --listing-sold-bg: #fee2e2;
+  --listing-sold-text: #991b1b;
+  --listing-rented-bg: #f3e8ff;
+  --listing-rented-text: #6b21a8;
+  --listing-default-bg: #f4f4f5;
+  --listing-default-text: #3f3f46;
+}
+
+/* --- Dark theme scope (support theme on html or body) --- */
+html.dark,
+body.dark {
+  --property-apartment-bg: #1e3a8a;
+  --property-apartment-text: #c7d2fe;
+  --property-house-bg: #14532d;
+  --property-house-text: #bbf7d0;
+  --property-villa-bg: #78350f;
+  --property-villa-text: #fde68a;
+  --property-commercial-bg: #0c4a6e;
+  --property-commercial-text: #bae6fd;
+  --property-land-bg: #78350f;
+  --property-land-text: #fde68a;
+  --property-studio-bg: #581c87;
+  --property-studio-text: #e9d5ff;
+  --property-default-bg: #27272a;
+  --property-default-text: #f4f4f5;
+
+  --listing-sale-bg: #14532d;
+  --listing-sale-text: #bbf7d0;
+  --listing-rent-bg: #0c4a6e;
+  --listing-rent-text: #bae6fd;
+  --listing-sold-bg: #7f1d1d;
+  --listing-sold-text: #fecaca;
+  --listing-rented-bg: #581c87;
+  --listing-rented-text: #e9d5ff;
+  --listing-default-bg: #27272a;
+  --listing-default-text: #f4f4f5;
+}
+/* ────────────────────────────────────────────────
+   Property Type Badges / Chips
+   ──────────────────────────────────────────────── */
+.property-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 999px;
+  text-transform: capitalize;
+  user-select: none;
+  transition: all 0.25s ease-in-out;
+  &.type-apartment {
+    background: var(--property-apartment-bg);
+    color: var(--property-apartment-text);
+  }
+  &.type-house {
+    background: var(--property-house-bg);
+    color: var(--property-house-text);
+  }
+  &.type-villa {
+    background: var(--property-villa-bg);
+    color: var(--property-villa-text);
+  }
+  &.type-commercial {
+    background: var(--property-commercial-bg);
+    color: var(--property-commercial-text);
+  }
+  &.type-land {
+    background: var(--property-land-bg);
+    color: var(--property-land-text);
+  }
+  &.type-studio {
+    background: var(--property-studio-bg);
+    color: var(--property-studio-text);
+  }
+  &.type-default {
+    background: var(--property-default-bg);
+    color: var(--property-default-text);
+  }
+}
+
+/* ────────────────────────────────────────────────
+   Listing Status Badges
+   ──────────────────────────────────────────────── */
+.listing-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 0.75rem;
+  text-transform: capitalize;
+  &.sale {
+    background: var(--listing-sale-bg);
+    color: var(--listing-sale-text);
+  }
+  &.rent {
+    background: var(--listing-rent-bg);
+    color: var(--listing-rent-text);
+  }
+  &.sold {
+    background: var(--listing-sold-bg);
+    color: var(--listing-sold-text);
+  }
+  &.rented {
+    background: var(--listing-rented-bg);
+    color: var(--listing-rented-text);
+  }
+  &.default {
+    background: var(--listing-default-bg);
+    color: var(--listing-default-text);
+  }
 }
 
 /* =======================================================================================
@@ -587,14 +838,54 @@ body.dark {
   line-height: 1;
 }
 @mixin button-filled($bg, $fg) {
+  /* visual */
   background: $bg;
   color: $fg;
   border: 1px solid color-mix(in oklab, $bg 85%, black);
   border-radius: 0.5rem;
   padding: 0.5rem 1rem;
+
+  /* layout: single line if possible, wrap when tight */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap; // stays one line if there's space; wraps when not
+  max-width: 100%;
+  min-width: 0; // important for flex shrink
+  overflow: hidden; // no spill outside button
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
+
   transition: transform 0.2s ease, box-shadow 0.2s ease,
     background-color 0.2s ease;
+
+  // Optional: make text wrap nicely and avoid weird breaks
+  > .btn-label,
+  > ::ng-deep .mdc-button__label {
+    white-space: normal; // allow wrapping at spaces
+    overflow-wrap: break-word; // prefer breaking at word boundaries
+    word-break: normal; // avoid aggressive mid-word breaks
+    min-width: 0;
+    flex: 1 1 auto; // let label shrink/wrap
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 12pt;
+  }
+
+  // Icons remain fixed-size and don’t wrap
+  ::ng-deep mat-icon,
+  > .btn-icon {
+    flex: 0 0 auto;
+    line-height: 1;
+  }
+
+  > * {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
   &:hover {
     transform: translateY(-1px);
     @include elevate(2);
@@ -606,14 +897,23 @@ body.dark {
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  // keep Material SVGs white when needed
   ::ng-deep mat-icon {
-    svg {
+    svg,
+    path {
       fill: #fff;
-      path {
-        fill: #fff;
-      }
     }
   }
+}
+
+@mixin card-shell-default {
+  @include card-shell(
+    var(--elevated),
+    var(--on-surface),
+    var(--border-color),
+    var(--shadow-color)
+  );
 }
 @mixin card-shell($bg, $fg, $border, $shadow) {
   background: $bg !important;
@@ -666,15 +966,25 @@ body.dark {
    ======================================================================================= */
 :host-context(html.dark) ::ng-deep.text-default {
   color: #fff !important;
-  font-size: 12pt;
   font-weight: 500;
 }
 :host-context(html.light) ::ng-deep.text-default {
   color: #000 !important;
-  font-size: 12pt;
   font-weight: 500;
 }
 
+/* ──────────────────────────────────────────────
+   Text Elements – Safe Wrapping & Overflow Guard
+   Ensures all text stays within its parent box,
+   wrapping at spaces or safe breakpoints.
+────────────────────────────────────────────── */
+.text-wrap-safe {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  min-width: 0;
+  max-width: 100%;
+}
 /* =======================================================================================
    5) CHART VARIABLES + GOOGLE CHARTS CONTAINER
    ======================================================================================= */
@@ -767,14 +1077,78 @@ html.dark {
 /* =======================================================================================
    6) BOOTSTRAP-ALIGNED OVERRIDES
    ======================================================================================= */
+/* ===== Base button behavior (applies to ALL .btn variants) ===== */
 .btn {
+  /* Visual reset */
   border-color: transparent;
-}
-.btn:focus {
-  box-shadow: 0 0 0 0.2rem color-mix(in oklab, var(--primary) 25%, transparent);
+  --bs-btn-border-color: transparent;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+
+  /* layout: single line if possible, wrap when tight */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap; // stays one line if there's space; wraps when not
+  max-width: 100%;
+  min-width: 0; // important for flex shrink
+  overflow: hidden; // no spill outside button
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease;
+
+  // Optional: make text wrap nicely and avoid weird breaks
+  > .btn-label {
+    white-space: normal; // allow wrapping at spaces
+    overflow-wrap: break-word; // prefer breaking at word boundaries
+    word-break: normal; // avoid aggressive mid-word breaks
+    min-width: 0;
+    flex: 1 1 auto; // let label shrink/wrap
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 12pt;
+  }
+
+  // Icons remain fixed-size and don’t wrap
+  ::ng-deep mat-icon,
+  > .btn-icon {
+    flex: 0 0 auto;
+    line-height: 1;
+  }
+
+  > * {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: auto;
+    height: auto;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    @include elevate(2);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  // keep Material SVGs white when needed
+  ::ng-deep mat-icon {
+    svg,
+    path {
+      fill: #fff;
+    }
+  }
 }
 
-/* Custom app buttons (kept) */
+/* ===== Your themed custom buttons (light/dark) using the mixin ===== */
 :host-context(html.light) {
   .btn-save {
     @include button-filled(#{$light-btn-save-color}, #fff);
@@ -795,6 +1169,7 @@ html.dark {
     @include button-filled(#{$light-btn-default-color}, #fff);
   }
 }
+
 :host-context(html.dark) {
   .btn-save {
     @include button-filled(#{$dark-btn-save-color}, #fff);
@@ -816,55 +1191,198 @@ html.dark {
   }
 }
 
-/* Bootstrap buttons via CSS props */
+/* ===== Bootstrap palette parity via CSS props ===== */
 .btn-primary,
 .btn-secondary,
 .btn-success,
 .btn-warning,
 .btn-danger,
 .btn-info {
-  --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
-  --bs-btn-active-border-color: var(--bs-btn-active-bg);
+  // --bs-btn-hover-border-color: var(--bs-btn-hover-bg);
+  // --bs-btn-active-border-color: var(--bs-btn-active-bg);
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+
+  /* layout: single line if possible, wrap when tight */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap; // stays one line if there's space; wraps when not
+  max-width: 100%;
+  min-width: 0; // important for flex shrink
+  overflow: hidden; // no spill outside button
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease;
+
+  // Optional: make text wrap nicely and avoid weird breaks
+  > .btn-label {
+    white-space: normal; // allow wrapping at spaces
+    overflow-wrap: break-word; // prefer breaking at word boundaries
+    word-break: normal; // avoid aggressive mid-word breaks
+    min-width: 0;
+    flex: 1 1 auto; // let label shrink/wrap
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 12pt;
+  }
+
+  // Icons remain fixed-size and don’t wrap
+  ::ng-deep mat-icon,
+  > .btn-icon {
+    flex: 0 0 auto;
+    line-height: 1;
+  }
+
+  > * {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: auto;
+    height: auto;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    @include elevate(2);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  // keep Material SVGs white when needed
+  ::ng-deep mat-icon {
+    svg,
+    path {
+      fill: #fff;
+    }
+  }
 }
+
 .btn {
-  --bs-btn-color: var(--on-primary);
-  --bs-btn-border-color: transparent;
-  --bs-btn-focus-shadow-rgb: 43, 89, 255;
+  --bs-btn-color: var(--on-primary); /* readable text on filled buttons */
+  --bs-btn-focus-shadow-rgb: 43, 89, 255; /* fallback for Bootstrap APIs that use it */
 }
+
 .btn-primary {
   --bs-btn-bg: var(--bs-primary);
   --bs-btn-hover-bg: color-mix(in oklab, var(--bs-primary) 85%, black);
   --bs-btn-active-bg: color-mix(in oklab, var(--bs-primary) 75%, black);
 }
+
 .btn-secondary {
   --bs-btn-bg: var(--bs-secondary);
   --bs-btn-hover-bg: color-mix(in oklab, var(--bs-secondary) 85%, black);
   --bs-btn-active-bg: color-mix(in oklab, var(--bs-secondary) 75%, black);
   --bs-btn-color: var(--on-secondary);
 }
+
 .btn-success {
   --bs-btn-bg: var(--bs-success);
   --bs-btn-hover-bg: color-mix(in oklab, var(--bs-success) 85%, black);
   --bs-btn-active-bg: color-mix(in oklab, var(--bs-success) 75%, black);
 }
+
 .btn-warning {
   --bs-btn-bg: var(--bs-warning);
   --bs-btn-hover-bg: color-mix(in oklab, var(--bs-warning) 85%, black);
   --bs-btn-active-bg: color-mix(in oklab, var(--bs-warning) 75%, black);
-  --bs-btn-color: #000;
+  --bs-btn-color: #000; /* better contrast on yellow/orange */
 }
+
 .btn-danger {
   --bs-btn-bg: var(--bs-danger);
   --bs-btn-hover-bg: color-mix(in oklab, var(--bs-danger) 85%, black);
   --bs-btn-active-bg: color-mix(in oklab, var(--bs-danger) 75%, black);
 }
+
 .btn-info {
   --bs-btn-bg: var(--bs-info);
   --bs-btn-hover-bg: color-mix(in oklab, var(--bs-info) 85%, black);
   --bs-btn-active-bg: color-mix(in oklab, var(--bs-info) 75%, black);
 }
 
-/* Outline buttons */
+/* ===== Outline buttons: lift on hover and invert text to white ===== */
+.btn-outline-primary,
+.btn-outline-secondary,
+.btn-outline-success,
+.btn-outline-warning,
+.btn-outline-danger,
+.btn-outline-info {
+  border: 2px solid;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+
+  /* layout: single line if possible, wrap when tight */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap; // stays one line if there's space; wraps when not
+  max-width: 100%;
+  min-width: 0; // important for flex shrink
+  overflow: hidden; // no spill outside button
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease;
+
+  // Optional: make text wrap nicely and avoid weird breaks
+  > .btn-label {
+    white-space: normal; // allow wrapping at spaces
+    overflow-wrap: break-word; // prefer breaking at word boundaries
+    word-break: normal; // avoid aggressive mid-word breaks
+    min-width: 0;
+    flex: 1 1 auto; // let label shrink/wrap
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 12pt;
+  }
+
+  // Icons remain fixed-size and don’t wrap
+  ::ng-deep mat-icon,
+  > .btn-icon {
+    flex: 0 0 auto;
+    line-height: 1;
+  }
+
+  > * {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: auto;
+    height: auto;
+  }
+  // keep Material SVGs white when needed
+  ::ng-deep mat-icon {
+    svg,
+    path {
+      fill: #fff;
+    }
+  }
+  &:hover {
+    transform: translateY(-1px);
+    @include elevate(2);
+    border: none;
+    /* optional: fill background with border color on hover */
+  }
+  &:active {
+    transform: translateY(0);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
 .btn-outline-primary {
   --bs-btn-color: var(--bs-primary);
   --bs-btn-border-color: var(--bs-primary);
@@ -878,8 +1396,8 @@ html.dark {
   --bs-btn-border-color: var(--bs-success);
 }
 .btn-outline-warning {
+  --bs-btn-color: var(--bs-warning);
   --bs-btn-border-color: var(--bs-warning);
-  --bs-btn-color: #000;
 }
 .btn-outline-danger {
   --bs-btn-color: var(--bs-danger);
@@ -890,6 +1408,11 @@ html.dark {
   --bs-btn-border-color: var(--bs-info);
 }
 
+.icon {
+  margin: 0.25rem 0.5rem;
+  width: 25px;
+  height: 25px;
+}
 /* Text utilities */
 .text-primary {
   color: var(--bs-primary) !important;
@@ -923,35 +1446,43 @@ html.dark {
 }
 
 /* Background utilities */
-.bg-primary {
+.bg-primary,
+.bg-primary.mat-tooltip {
   background-color: var(--bs-primary) !important;
   color: var(--on-primary) !important;
 }
-.bg-secondary {
+.bg-secondary,
+.bg-secondary.mat-tooltip {
   background-color: var(--bs-secondary) !important;
   color: var(--on-secondary) !important;
 }
-.bg-success {
+.bg-success,
+.bg-success.mat-tooltip {
   background-color: var(--bs-success) !important;
   color: #fff !important;
 }
-.bg-warning {
+.bg-warning,
+.bg-warning.mat-tooltip {
   background-color: var(--bs-warning) !important;
   color: #000 !important;
 }
-.bg-danger {
+.bg-danger,
+.bg-danger.mat-tooltip {
   background-color: var(--bs-danger) !important;
   color: #fff !important;
 }
-.bg-info {
+.bg-info,
+.bg-info.mat-tooltip {
   background-color: var(--bs-info) !important;
   color: #fff !important;
 }
-.bg-light {
+.bg-light,
+.bg-light.mat-tooltip {
   background-color: var(--bs-light) !important;
   color: var(--on-surface) !important;
 }
-.bg-dark {
+.bg-dark,
+.bg-dark.mat-tooltip {
   background-color: var(--bs-dark) !important;
   color: #fff !important;
 }
@@ -1160,13 +1691,6 @@ a:hover,
   color: $dark-text-color !important;
 }
 
-/* Responsive panel padding */
-@media (max-width: 768px) {
-  .main-panel {
-    padding: 0.5rem !important;
-  }
-}
-
 /* Submit button */
 .submit-btn {
   width: 7rem;
@@ -1330,19 +1854,155 @@ a:hover,
 }
 
 /* Search input */
-.search-input {
+.search-container {
+  /* ---- Tunables (scale automatically on small screens) ---- */
+  --icon-size: 22px; /* search glyph size            */
+  --icon-pad: 8px; /* pill padding around icon     */
+  --icon-gap: 10px; /* space from container border  */
+  --ring: 4px; /* border thickness (desktop)   */
+
+  position: relative;
   width: 100%;
-  background: #fff;
-  color: #000;
-  border: 0.25rem solid #ffb500;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  min-height: 4rem;
+  background: var(--surface);
+  color: var(--on-surface);
+  border: var(--ring) solid #ffb500;
   border-radius: 50rem;
-  padding: 1rem;
-  box-shadow: inset 0 0 5px 0px #00000066;
-}
-@media (max-width: 768px) {
+  padding: 0.85rem 1rem; /* vertical padding; horizontal handled by input/icon */
+  box-shadow: inset 0 0 5px 0 #00000066;
+
+  /* Input */
   .search-input {
-    border: 5px solid #ffb500;
-    padding: 0.5rem;
+    flex: 1 1 auto;
+    min-height: 12pt;
+    max-height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    align-self: center;
+
+    /* Reserve space for the icon pill on the right */
+    padding-right: calc(
+      (var(--icon-size) + (2 * var(--icon-pad))) + var(--icon-gap) + var(--ring)
+    );
+
+    @media (max-width: 425px) {
+      padding-right: calc(
+        var(--icon-size) * var(--icon-pad) + var(--icon-gap) + var(--ring)
+      );
+    }
+
+    &::placeholder {
+      color: var(--muted);
+      opacity: 0.9;
+    }
+  }
+
+  /* Icon pill button (always right middle) */
+  .search-action {
+    position: absolute;
+    right: calc(var(--icon-gap) + var(--ring));
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    width: calc(var(--icon-size) + (2 * var(--icon-pad)));
+    height: calc(var(--icon-size) + (2 * var(--icon-pad)));
+    border-radius: 999px;
+
+    background: var(--surface-variant);
+    color: var(--on-surface);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px var(--shadow-color);
+    cursor: pointer;
+    z-index: 2; /* above input text */
+
+    mat-icon {
+      font-size: var(--icon-size);
+      width: var(--icon-size);
+      height: var(--icon-size);
+
+      /* ensure SVGs inherit color */
+      ::ng-deep svg,
+      ::ng-deep path {
+        fill: currentColor;
+      }
+    }
+
+    &:hover {
+      filter: brightness(0.97);
+      background: var(--grad-col);
+      color: var(--on-primary);
+    }
+    &:active {
+      transform: translateY(-50%) scale(0.98);
+    }
+  }
+
+  .filter-action {
+    position: absolute;
+    right: calc(
+      (var(--icon-gap) * 2) + (var(--icon-size) + (2 * var(--icon-pad))) +
+        var(--ring)
+    ); /* placed to the left of search icon */
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    width: calc(var(--icon-size) + (2 * var(--icon-pad)));
+    height: calc(var(--icon-size) + (2 * var(--icon-pad)));
+    border-radius: 999px;
+
+    background: var(--surface-variant);
+    color: var(--on-surface);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px var(--shadow-color);
+    cursor: pointer;
+    z-index: 2;
+
+    mat-icon {
+      font-size: var(--icon-size);
+      width: var(--icon-size);
+      height: var(--icon-size);
+
+      ::ng-deep svg,
+      ::ng-deep path {
+        fill: currentColor;
+      }
+    }
+
+    &:hover {
+      filter: brightness(0.97);
+      background: var(--grad-col);
+      color: var(--on-primary);
+    }
+    &:active {
+      transform: translateY(-50%) scale(0.98);
+    }
+  }
+
+  /* Optional: when you need both active */
+  .filter-action.active {
+    background: var(--warning-400);
+    color: var(--on-primary);
+    border-color: transparent;
+    box-shadow: 0 0 6px color-mix(in srgb, var(--warning-500) 50%, transparent);
+  }
+  /* --- Mobile adjustments --- */
+  @media (max-width: 768px) {
+    --icon-size: 20px;
+    --icon-pad: 6px;
+    --icon-gap: 8px;
+    --ring: 5px; /* matches your original mobile border */
+
+    padding: 0.55rem 0.75rem; /* tighter vertical padding */
   }
 }
 
@@ -1409,6 +2069,8 @@ code {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--info-300);
+  color: var(--on-surface);
   img {
     width: 100%;
     height: 100%;
@@ -1474,7 +2136,6 @@ button {
 button:focus:not(:focus-visible) {
   outline: 0;
   border: none;
-  background: none;
   box-shadow: none !important;
 }
 .btn-check:checked + .btn,
@@ -1498,56 +2159,6 @@ button:focus:not(:focus-visible) {
   height: auto !important;
   padding: 0.5rem !important;
   font-size: 12pt !important;
-}
-
-/* Main panel */
-.main-panel {
-  border-radius: 20px;
-  transition: all 0.3s ease-in-out;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  min-height: 25vh;
-  padding: 2rem;
-  background: var(--surface);
-  color: var(--on-surface);
-
-  /* both spellings kept */
-  .page-indicator,
-  .page-indecator {
-    position: absolute;
-    top: 0%;
-    left: 1%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: var(--accent);
-    .page-indicator-btn {
-      background: none;
-      border: none;
-      margin: 0 0.5rem;
-      padding: 0;
-      cursor: pointer;
-      text-transform: uppercase;
-      font-size: 10pt;
-      font-weight: 500;
-      color: var(--accent);
-    }
-  }
-  .drop-down-container {
-    background: linear-gradient(
-      144deg,
-      color-mix(in oklab, var(--secondary) 35%, transparent),
-      color-mix(in oklab, var(--primary) 25%, transparent)
-    );
-    border: 1px solid color-mix(in oklab, var(--primary) 45%, transparent);
-    &.active {
-      background: linear-gradient(
-        144deg,
-        color-mix(in oklab, var(--secondary) 25%, transparent),
-        color-mix(in oklab, var(--primary) 35%, transparent)
-      );
-      border: 1px solid color-mix(in oklab, var(--accent) 45%, transparent);
-    }
-  }
 }
 
 /* Mat Dialog */
@@ -1814,4 +2425,84 @@ $notify-text-light: #2b1d00;
 .main-category.under_review,
 .main-category.archived {
   background-color: #607d8b;
+}
+
+/* =======================================================================================
+   10) GLOBAL TAG STYLE
+   ======================================================================================= */
+:host ::ng-deep img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  object-view-box: inherit;
+}
+
+::ng-deep .column-change-icons:active,
+::ng-deep .column-change-icons:focus,
+::ng-deep .column-change-icons:hover {
+  background: none !important;
+}
+
+::ng-deep mat-icon {
+  width: 100%;
+  height: 100%;
+}
+
+/* =======================================================================================
+   10) GLOBAL CURSOR POINTER
+   ======================================================================================= */
+
+/* ───────────────────────────────────────────────
+   Cursor Utilities — PropEase Standard
+   - Use for consistent cursor behaviors.
+   - All prefixed with `.cursor-` for clarity.
+   - Integrates with your design system tokens.
+   ─────────────────────────────────────────────── */
+
+.cursor-auto {
+  cursor: auto !important;
+}
+
+.cursor-default {
+  cursor: default !important;
+}
+
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+.cursor-wait {
+  cursor: wait !important;
+}
+
+.cursor-text {
+  cursor: text !important;
+}
+
+.cursor-move {
+  cursor: move !important;
+}
+
+.cursor-help {
+  cursor: help !important;
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed !important;
+}
+
+.cursor-grab {
+  cursor: grab !important;
+}
+
+.cursor-grabbing {
+  cursor: grabbing !important;
+}
+
+/* Optional: show disabled appearance when action not permitted */
+.cursor-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6;
+  pointer-events: none;
 }

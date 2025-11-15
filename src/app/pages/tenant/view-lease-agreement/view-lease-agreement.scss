@@ -2,12 +2,6 @@
 @use "sass:color";
 
 .main-panel {
-  border-radius: 20px;
-  transition: all 0.3s ease-in-out;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  min-height: 85vh;
-  padding: 2rem;
-
   .user-image-row {
     position: relative;
     border-radius: 1rem;
@@ -121,13 +115,6 @@
   }
 
   &.dark {
-    background: linear-gradient(
-      145deg,
-      $dark-secondary-color,
-      color.adjust($dark-secondary-color, $lightness: 2%)
-    );
-    color: $dark-text-color;
-
     .user-image-row {
       background: linear-gradient(
         45deg,
@@ -189,13 +176,6 @@
   }
 
   &.light {
-    background: linear-gradient(
-      145deg,
-      $light-primary-color,
-      color.adjust($light-primary-color, $lightness: 2%)
-    );
-    color: $light-text-color;
-
     .user-image-row {
       background: linear-gradient(
         45deg,

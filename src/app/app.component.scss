@@ -1,4 +1,34 @@
 @use "./styles/global.scss" as *;
+@use "sass:color";
 main {
   min-height: 100vh;
+}
+
+.main-panel {
+  border-radius: 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+}
+
+:host-context(html.light) {
+  .main-panel {
+    background: linear-gradient(
+      145deg,
+      $light-primary-color,
+      color.adjust($light-primary-color, $lightness: 2%)
+    );
+    color: $light-text-color;
+  }
+}
+
+:host-context(html.dark) {
+  .main-panel {
+    background: linear-gradient(
+      145deg,
+      $dark-secondary-color,
+      color.adjust($dark-secondary-color, $lightness: 2%)
+    );
+    color: $dark-text-color;
+  }
 }
