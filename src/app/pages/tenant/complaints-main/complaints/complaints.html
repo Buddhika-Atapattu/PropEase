@@ -39,23 +39,16 @@
       <div class="row my-2">
         <div class="col-12">
           <app-custom-table
-            [(isReload)]="tenantIsReloading"
-            [(pageSize)]="tenantPageSize"
-            [(pageSizeOptions)]="tenantPageSizeOptions"
-            [(pageIndex)]="tenantPageIndex"
-            [(pageCount)]="tenantPageCount"
-            [(tableType)]="tenantTableType"
-            [(search)]="tenantSearch"
-            [(buttonAction)]="viewActionButton"
-            [(buttonOperation)]="editOperationButton"
-            [(totalDataCount)]="tenantTotalDataCount"
-            [(buttonActionTrigger)]="tenantButtonActionTrigger"
-            [(buttonOperationTrigger)]="tenantButtonOperationTrigger"
-            [data]="tenantTableData"
+            [(isReload)]="adminIsReloading"
+            [pageSizeOptions]="adminPageSizeOptions"
+            [(index)]="adminPageIndex"
+            [pageSize]="adminPageSize"
+            [pagination]="true"
             [columns]="complaintTableColumns"
-            [loggedUser]="loggedUser"
-            [isLoading]="isLoading"
-            [fullDataCount]="tenantAllData.length"
+            [data]="adminFilteredData"
+            [totalDataCount]="adminAllData.length"
+            [buttons]="actionButtons"
+            (buttonOperation)="handleButtonTrigger($event)"
           ></app-custom-table>
         </div>
       </div>
@@ -123,23 +116,16 @@
       <div class="row my-2">
         <div class="col-12">
           <app-custom-table
-            [(isReload)]="adminIsReloading"
-            [(pageSize)]="adminPageSize"
-            [(pageSizeOptions)]="adminPageSizeOptions"
-            [(pageIndex)]="adminPageIndex"
-            [(pageCount)]="adminPageCount"
-            [(tableType)]="adminTableType"
-            [(search)]="adminSearch"
-            [(buttonAction)]="viewActionButton"
-            [(buttonOperation)]="editOperationButton"
-            [(totalDataCount)]="adminTotalDataCount"
-            [(buttonActionTrigger)]="adminButtonActionTrigger"
-            [(buttonOperationTrigger)]="adminButtonOperationTrigger"
-            [data]="adminTableData"
+            [(isReload)]="tenantIsReloading"
+            [pageSizeOptions]="tenantPageSizeOptions"
+            [(index)]="tenantPageIndex"
+            [pageSize]="tenantPageSize"
+            [pagination]="true"
             [columns]="complaintTableColumns"
-            [loggedUser]="loggedUser"
-            [isLoading]="isLoading"
-            [fullDataCount]="adminAllData.length"
+            [data]="tenantFilteredData"
+            [totalDataCount]="tenantAllData.length"
+            [buttons]="actionButtons"
+            (buttonOperation)="handleButtonTrigger($event)"
           ></app-custom-table>
         </div>
       </div>

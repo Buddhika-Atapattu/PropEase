@@ -252,6 +252,10 @@ export type AccessMap = {
 
 
 export interface MSG {
+  count?: number;
+  start?: number;
+  end?: number;
+  limit?: number;
   success?: boolean;
   status: string;
   message: string;
@@ -260,19 +264,12 @@ export interface MSG {
   user?: User;
 }
 
-export interface MSG_WITH_User {
-  status: string;
-  message: string;
-  user: User;
-  data: any;
-}
-
 export interface validateType {
   status: string;
   user: User;
 }
 
-export interface UDER_DOC_TYPES extends MSG_WITH_User {
+export interface UDER_DOC_TYPES extends MSG {
   originalName: string;
   storedName: string;
   mimeType: string;
@@ -329,42 +326,30 @@ export class APIsService {
   public async updateUser(
     user: FormData,
     username: string
-  ): Promise<MSG | null> {
-    if(username) {
-      const data = await firstValueFrom(
-        this.http.put<MSG>(
-          `${this.baseURL}/${this.userAPI}/user-update/${username}`,
-          user
-        )
-      );
-      return data;
-    } else {
-      return null;
-    }
+  ): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.put<MSG>(
+        `${this.baseURL}/${this.userAPI}/user-update/${username}`,
+        user
+      )
+    );
   }
 
   public async getAllUsersWithPagination(
     start: number,
     limit: number,
     search?: string
-  ): Promise<any> {
+  ): Promise<MSG> {
     let params = new HttpParams();
     if(search !== undefined) {
       params = params.set('search', search.trim());
     }
     return await firstValueFrom(
-      this.http.get<object | null>(
+      this.http.get<MSG>(
         `${this.baseURL}/${this.userAPI}/users-with-pagination/${start}/${limit}`,
         {params}
       )
     )
-      .then((data) => {
-        return data;
-      })
-      .catch((error) => {
-        console.error(error);
-        return null;
-      });
   }
 
   public async getUserByUsername(username: string): Promise<validateType> {
@@ -412,18 +397,18 @@ export class APIsService {
   public async uploadDocuments(
     data: FormData,
     username: string
-  ): Promise<MSG_WITH_User> {
+  ): Promise<MSG> {
     return await firstValueFrom(
-      this.http.post<MSG_WITH_User>(
+      this.http.post<MSG>(
         `${this.baseURL}/${this.userAPI}/user-document-upload/${username}`,
         data
       )
     );
   }
 
-  public async getUserByToken(token: string): Promise<MSG_WITH_User> {
+  public async getUserByToken(token: string): Promise<MSG> {
     return await firstValueFrom(
-      this.http.get<MSG_WITH_User>(
+      this.http.get<MSG>(
         `${this.baseURL}/${this.userAPI}/user-token/${token}`
       )
     );
@@ -439,13 +424,13 @@ export class APIsService {
 
   public async getAllCountryWithCurrency(): Promise<CountryDetails[]> {
     return await firstValueFrom(
-      this.http.get<any>('https://restcountries.com/v3.1/all')
+      this.http.get<CountryDetails[]>('https://restcountries.com/v3.1/all')
     );
   }
 
   public async getCountryByName(name: string): Promise<CountryDetails[]> {
     return await firstValueFrom(
-      this.http.get<any>(
+      this.http.get<CountryDetails[]>(
         `https://restcountries.com/v3.1/name/${name}?fullText=true`
       )
     );

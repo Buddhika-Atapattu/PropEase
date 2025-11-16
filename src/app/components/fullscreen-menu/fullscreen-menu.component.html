@@ -74,7 +74,7 @@
               matRipple
               class="row row-1"
               [class.active]="isActive(p.url)"
-              (click)="p.sub?.length ? toggleTop(i) : go(p.url, null, null)"
+              (click)="p.sub?.length ? toggleTop(i) : go(p)"
               [attr.aria-expanded]="p.sub?.length ? 'true' : null"
               [class.link-active]="this.activeItem(p, null)"
             >
@@ -94,9 +94,7 @@
                     matRipple
                     class="row row-2"
                     [class.active]="isActive(s.url)"
-                    (click)="
-                      s.sub?.length ? toggleSub(i, j) : go(p.url, s.url, null)
-                    "
+                    (click)="s.sub?.length ? toggleSub(i, j) : go(s)"
                     [attr.aria-expanded]="s.sub?.length ? 'true' : null"
                     [class.link-active]="this.activeItem(null, s)"
                   >
@@ -115,7 +113,7 @@
                           matRipple
                           class="row row-3"
                           [class.active]="isActive(g.url)"
-                          (click)="go(p.url, s.url, g.url)"
+                          (click)="go(g)"
                         >
                           <mat-icon
                             class="ic"

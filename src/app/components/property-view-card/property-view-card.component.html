@@ -11,7 +11,11 @@
           [width]="'20rem'"
           [height]="'20rem'"
         ></app-skeleton-loader>
-        } @else {<img [src]="detectPropertyImage()" alt="property image" />}
+        } @else {<img
+          [src]="detectPropertyImage()"
+          (error)="detectImageError($event)"
+          alt="property image"
+        />}
       </div>
     </div>
     <div class="second">
@@ -142,7 +146,11 @@
           [height]="'100%'"
         ></app-skeleton-loader>
         } @else {
-        <img [src]="detectPropertyImage()" alt="property image" />
+        <img
+          [src]="detectPropertyImage()"
+          (error)="detectImageError($event)"
+          alt="property image"
+        />
         }
       </div>
     </div>
@@ -259,7 +267,11 @@
           [height]="'100%'"
         ></app-skeleton-loader>
         } @else {
-        <img [src]="detectPropertyImage()" alt="property image" />
+        <img
+          [src]="detectPropertyImage()"
+          (error)="detectImageError($event)"
+          alt="property image"
+        />
         }
       </div>
     </div>

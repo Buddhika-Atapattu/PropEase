@@ -168,9 +168,6 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     }
   }
 
-  get isPaginationOn(): boolean {
-    return this.totalItems !== this.itemsPerPage;
-  }
 
   protected isUserCanCreateProperty(): boolean {
     return (
@@ -346,7 +343,9 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
   // ───────────────────────────────────────────────
   // Backend pagination core
   // ───────────────────────────────────────────────
-
+  get isPaginationOn(): boolean {
+    return this.totalItems !== this.itemsPerPage;
+  }
   /**
    * Main backend loader.
    * pageIndex is 0-based (0,1,2,...).

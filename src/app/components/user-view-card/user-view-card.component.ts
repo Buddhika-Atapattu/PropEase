@@ -59,8 +59,7 @@ export class UserViewCardComponent implements OnInit, AfterViewInit, OnDestroy {
     'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL =
     'Images/user-images/dummy-user/dummy_woman.jpg';
-
-  private userImage !: string;
+  ;
 
   constructor (
     private readonly authService: AuthService,
@@ -103,10 +102,21 @@ export class UserViewCardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Helper operations
   protected detectUserImage(): string {
-    return this.user.image as string;
+    return this.user.image ? this.user.image as string : this.definedMaleDummyImageURL;
+  }
+  protected detectImageError(event: Event) {
+    const imgElement = event.target as HTMLImageElement;
+
+    // Prevent infinite loop if fallback image also fails
+    if(imgElement.src.includes(this.definedMaleDummyImageURL)) {
+      return;
+    }
+
+    // Apply fallback image
+    imgElement.src = this.definedMaleDummyImageURL
   }
 
-  
+
 
   /**
    * Public API: produce a safe, short, plain-text bio for card bodies.

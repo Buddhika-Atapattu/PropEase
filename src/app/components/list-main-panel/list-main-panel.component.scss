@@ -270,7 +270,7 @@ li > .menu-btn .dropdown-icon.rotate i {
 /* Base panel appearance (CDK panel now has this class) */
 ::ng-deep .cdk-overlay-pane.submenu-flyout {
   min-width: 40px;
-  max-width: 260px;
+  max-width: 300px;
   border-radius: 16px;
   padding: 0.5rem 0.75rem;
   background: var(--bg-side-panel-sub-menu);
@@ -279,7 +279,7 @@ li > .menu-btn .dropdown-icon.rotate i {
   justify-content: stretch;
   align-items: stretch;
   .submenu-list {
-    margin: 0;
+    margin: 0.5rem 0rem;
     padding: 0;
     list-style: none;
     width: 100%;
@@ -290,6 +290,19 @@ li > .menu-btn .dropdown-icon.rotate i {
       border-radius: 10px;
       &:hover {
         background-color: var(--hover-bg);
+      }
+      &.active {
+        background-color: color-mix(
+          in srgb,
+          var(--primary) 18%,
+          var(--surface) 82%
+        );
+        border-color: var(--primary);
+        color: var(--on-surface);
+
+        .menu-btn mat-icon {
+          color: var(--on-surface);
+        }
       }
       .menu-btn {
         position: relative;

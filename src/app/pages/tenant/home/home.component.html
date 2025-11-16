@@ -1,117 +1,114 @@
 <app-notification />
 <app-progress-bar />
 
-<div
-  *ngIf="mode !== null && loggedUser"
-  class="main-panel"
-  [ngClass]="mode ? 'dark' : 'light'"
->
+<div class="main-panel">
   <div class="container-fluid">
+    @if(isAllowed){
     <!-- Tenant Section -->
-    <div class="row mb-4" *ngIf="isLoggedUserHaveLeases">
+    <div class="row mb-4">
       <div class="col-xl-12">
         <h1 class="title">Tenant</h1>
       </div>
     </div>
 
+    @if(leaseTableData.length > 0){
     <app-custom-table
-      *ngIf="isLoggedUserHaveLeases"
       [(isReload)]="leaseTableIsReloading"
-      [(pageSize)]="leaseTablePageSize"
+      [pagination]="true"
+      [pageSize]="leaseTablePageSize"
       [(pageSizeOptions)]="leaseTablePageSizeOptions"
-      [(pageIndex)]="leaseTablePageIndex"
-      [(pageCount)]="leaseTablePageCount"
-      [(tableType)]="leaseTableType"
+      [(index)]="leaseTablePageIndex"
+      [tableTitle]="leaseTableTitle"
       [(search)]="leaseTabletSearch"
-      [(buttonAction)]="leaseTableButtonAction"
-      [(buttonOperation)]="leaseTableButtonOperation"
-      [(totalDataCount)]="leaseTableTotalDataCount"
-      [(buttonActionTrigger)]="leaseTableButtonActionTrigger"
-      [(buttonOperationTrigger)]="leaseTableButtonOperationTrigger"
-      [(notification)]="leaseTableNotification"
-      [fileExportButtonTypeByExtension]="
-        leaseTableFileExportButtonTypeByExtension
-      "
+      [buttons]="leaseActionButtons"
+      [fileExportExtention]="leaseFileExtension"
       (fileExport)="handleExportLeaseTableData($event)"
+      (buttonOperation)="handleLeaseOperations($event)"
       [data]="leaseTableData"
       [columns]="leaseTableColumns"
+      [totalDataCount]="leaseLength"
+    ></app-custom-table>
+    } } @else {
+    <div class="row mb-4">
+      <div class="col-xl-12">
+        <h1 class="title">Admin Operation</h1>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <!-- End Tenant Section -->
+        <hr class="my-5" />
+        <!-- Admin Section -->
+      </div>
+    </div>
+
+    <!-- <app-custom-table
+      *ngIf="noneTenants.length > 0"
+      [(isReload)]="isReloading"
+      [(pageSize)]="noneTenantPageSize"
+      [(pageSizeOptions)]="noneTenantPageSizeOptions"
+      [(pageIndex)]="noneTenantPageIndex"
+      [(pageCount)]="noneTenantPageCount"
+      [(tableType)]="noneTenantTableType"
+      [(search)]="noneTenantName"
+      [(buttonAction)]="noneTenantButtonAction"
+      [(buttonOperation)]="noneTenantButtonOperation"
+      [(totalDataCount)]="noneTenantTotalDataCount"
+      [(buttonActionTrigger)]="noneTenantsButtonActionTrigger"
+      [(buttonOperationTrigger)]="noneTenantsButtonOperationTrigger"
+      [(notification)]="noneTenantsNotification"
+      [fileExportButtonTypeByExtension]="
+        noneTenantFileExportButtonTypeByExtension
+      "
+      [data]="noneTenants"
+      [columns]="columns"
       [loggedUser]="loggedUser"
       [isLoading]="isLoading"
       [mode]="mode"
       [isBrowser]="isBrowser"
       [modeSub]="modeSub"
-      [fullDataCount]="leaseLength"
-    ></app-custom-table>
-    <!-- End Tenant Section -->
-    <hr class="my-5" />
-    <!-- Admin Section -->
-    <ng-container *ngIf="isAdmin()">
-      <!-- Title Row -->
-      <div class="row mb-4">
-        <div class="col-xl-12">
-          <h1 class="title">Admin Operation</h1>
-        </div>
-      </div>
-      <!-- End Title Row -->
+      [fullDataCount]="noneTenantsFull.length"
+      (fileExport)="handleNoneTenantsFileExport($event)"
+    ></app-custom-table> -->
 
-      <app-custom-table
-        *ngIf="noneTenants.length > 0"
-        [(isReload)]="isReloading"
-        [(pageSize)]="noneTenantPageSize"
-        [(pageSizeOptions)]="noneTenantPageSizeOptions"
-        [(pageIndex)]="noneTenantPageIndex"
-        [(pageCount)]="noneTenantPageCount"
-        [(tableType)]="noneTenantTableType"
-        [(search)]="noneTenantName"
-        [(buttonAction)]="noneTenantButtonAction"
-        [(buttonOperation)]="noneTenantButtonOperation"
-        [(totalDataCount)]="noneTenantTotalDataCount"
-        [(buttonActionTrigger)]="noneTenantsButtonActionTrigger"
-        [(buttonOperationTrigger)]="noneTenantsButtonOperationTrigger"
-        [(notification)]="noneTenantsNotification"
-        [fileExportButtonTypeByExtension]="
-          noneTenantFileExportButtonTypeByExtension
-        "
-        [data]="noneTenants"
-        [columns]="columns"
-        [loggedUser]="loggedUser"
-        [isLoading]="isLoading"
-        [mode]="mode"
-        [isBrowser]="isBrowser"
-        [modeSub]="modeSub"
-        [fullDataCount]="noneTenantsFull.length"
-        (fileExport)="handleNoneTenantsFileExport($event)"
-      ></app-custom-table>
-      <hr class="my-5" />
-      <app-custom-table
-        *ngIf="tenants.length > 0"
-        [(isReload)]="isReloading"
-        [(pageSize)]="tenantPageSize"
-        [(pageSizeOptions)]="tenantPageSizeOptions"
-        [(pageIndex)]="tenantPageIndex"
-        [(pageCount)]="tenantPageCount"
-        [(tableType)]="tenantTableType"
-        [(search)]="tenantName"
-        [(buttonAction)]="tenantButtonAction"
-        [(buttonOperation)]="tenantButtonOperation"
-        [(totalDataCount)]="tenantTotalDataCount"
-        [(buttonActionTrigger)]="tenantsButtonActionTrigger"
-        [(buttonOperationTrigger)]="tenantsButtonOperationTrigger"
-        [(notification)]="tenantsNotification"
-        [fileExportButtonTypeByExtension]="
-          tenantFileExportButtonTypeByExtension
-        "
-        [data]="tenants"
-        [columns]="columns"
-        [loggedUser]="loggedUser"
-        [isLoading]="isLoading"
-        [mode]="mode"
-        [isBrowser]="isBrowser"
-        [modeSub]="modeSub"
-        [fullDataCount]="tenantsFull.length"
-        (fileExport)="handleTenantsFileExport($event)"
-      ></app-custom-table>
-    </ng-container>
+    <div class="row">
+      <div class="col-12">
+        <!-- End Tenant Section -->
+        <hr class="my-5" />
+        <!-- Admin Section -->
+      </div>
+    </div>
+    <!-- <app-custom-table
+      *ngIf="tenants.length > 0"
+      [(isReload)]="isReloading"
+      [(pageSize)]="tenantPageSize"
+      [(pageSizeOptions)]="tenantPageSizeOptions"
+      [(pageIndex)]="tenantPageIndex"
+      [(pageCount)]="tenantPageCount"
+      [(tableType)]="tenantTableType"
+      [(search)]="tenantName"
+      [(buttonAction)]="tenantButtonAction"
+      [(buttonOperation)]="tenantButtonOperation"
+      [(totalDataCount)]="tenantTotalDataCount"
+      [(buttonActionTrigger)]="tenantsButtonActionTrigger"
+      [(buttonOperationTrigger)]="tenantsButtonOperationTrigger"
+      [(notification)]="tenantsNotification"
+      [fileExportButtonTypeByExtension]="
+        tenantFileExportButtonTypeByExtension
+      "
+      [data]="tenants"
+      [columns]="columns"
+      [loggedUser]="loggedUser"
+      [isLoading]="isLoading"
+      [mode]="mode"
+      [isBrowser]="isBrowser"
+      [modeSub]="modeSub"
+      [fullDataCount]="tenantsFull.length"
+      (fileExport)="handleTenantsFileExport($event)"
+    ></app-custom-table> -->
+    }
+
     <!-- End Admin Section -->
   </div>
 </div>

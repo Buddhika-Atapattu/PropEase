@@ -276,7 +276,7 @@ export const COMPLAINT_CATEGORIES: readonly ComplaintsCategory[] = [
   'Parking Garage', 'Common Areas', 'Access Keys Locks', 'Cleaning Housekeeping', 'Waste Management',
   'Painting Decor', 'Gas Supply', 'Noise Nuisance', 'Renovation Work', 'Other'
 ] as const;
-
+export const COMPLAINT_PRIORITIES: readonly ComplaintPriority[] = ['high','low','medium','urgent']
 export const COMPLAINT_STATUS: readonly ComplaintStatus[] = ['new', 'triaged', 'in_progress', 'awaiting_tenant', 'resolved', 'closed', 'reopened', 'cancelled'] as const;
 
 export interface ComplaintAttachmentClient {
@@ -288,7 +288,12 @@ export interface ComplaintCommentClient {
   createdAt: string; attachments?: ComplaintAttachmentClient[];
 }
 export interface ComplaintTimelineEventClient {
-  _id?: string; at: string; fromStatus?: ComplaintStatus; toStatus: ComplaintStatus; byUserId: string; note?: string;
+  _id?: string;
+  at: string; // ID
+  fromStatus?: ComplaintStatus; // OLD STATUS
+  toStatus: ComplaintStatus; // NEW STATUS
+  byUserId: string; // WHO DID
+  note?: string; // NOTE
 }
 export interface ComplaintClient {
   _id?: string;

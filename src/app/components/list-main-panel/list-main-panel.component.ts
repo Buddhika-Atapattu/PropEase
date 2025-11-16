@@ -14,49 +14,52 @@
 
 import {
   Component,
-  OnInit,
-  OnDestroy,
+  ElementRef,
+  EventEmitter,
   Inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
   PLATFORM_ID,
   signal,
-  Output,
-  EventEmitter,
-  ElementRef,
-  Input,
   ViewChild,
 } from '@angular/core';
 
 import {
+  CdkConnectedOverlay,
   CdkOverlayOrigin,
   ConnectedPosition,
   OverlayModule,
-  CdkConnectedOverlay,
 } from '@angular/cdk/overlay';
 
 import {CommonModule, isPlatformBrowser} from '@angular/common';
-import {Router, NavigationEnd} from '@angular/router';
+import {NavigationEnd, Router} from '@angular/router';
 import {filter, Subscription} from 'rxjs';
 
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
 import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {DomSanitizer} from '@angular/platform-browser';
 
-import {WindowsRefService} from '../../services/windowRef/windowRef.service';
-import {ExpandableService} from '../../services/expandable/expandable.service';
-import {AuthService} from '../../services/auth/auth.service';
 import {User} from '../../services/APIs/apis.service';
+import {AuthService} from '../../services/auth/auth.service';
+import {ExpandableService} from '../../services/expandable/expandable.service';
+import {WindowsRefService} from '../../services/windowRef/windowRef.service';
 
 /* ----------------------------------------------------------------------------
  * Menu interface
  * ---------------------------------------------------------------------------*/
 export interface FullscreenMenuLink {
-  url: string | null;                    // route segment under /dashboard
-  mat_icon: string;                      // registered MatIcon SVG name
-  icon_text: string;                     // label text
-  toolTip?: string;                      // optional tooltip
-  sub?: FullscreenMenuLink[] | null;     // optional submenu items
+  url: string | null;
+  unit: string;                 // full URL (for active state)
+  mat_icon: string;
+  icon_text: string;
+  toolTip?: string;
+  sub?: FullscreenMenuLink[] | null;
+  commands?: string[] | null;        // router commands after /dashboard
 }
+
 
 /* =============================================================================
  * COMPONENT
@@ -121,6 +124,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
   protected currecntURL: string = '';          // last segment under /dashboard/...
   protected activeParentRoute: string = '';    // parent route segment after /dashboard
   protected currentFullURL: string = '';       // full URL after redirects
+  private currentURLCommand: string[] = []
 
   /** Logged user (to be used later for role-based menus if needed). */
   protected loggedUser: User | null = null;
@@ -184,24 +188,91 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
    * In future this can be generated based on user role (Admin/Tenant/etc.).
    */
   public static menuLists: FullscreenMenuLink[] = [
-    {url: 'home', mat_icon: 'home-icon', icon_text: 'Home', toolTip: 'Home'},
-    {url: 'properties', mat_icon: 'property-icon', icon_text: 'Properties', toolTip: 'Properties'},
-    {url: 'users', mat_icon: 'users-icon', icon_text: 'Users', toolTip: 'Users'},
     {
-      url: 'tenant',
+      url: '/dashboard/home',
+      unit: 'home',
+      commands: ['home'],
+      mat_icon: 'home-icon',
+      icon_text: 'Home',
+      toolTip: 'Home',
+    },
+    {
+      url: '/dashboard/properties/list',
+      unit: 'properties',
+      commands: ['properties', 'list'],
+      mat_icon: 'property-icon',
+      icon_text: 'Properties',
+      toolTip: 'Properties',
+    },
+    {
+      url: '/dashboard/users/list',
+      unit: 'users',
+      commands: ['users', 'list'],
+      mat_icon: 'users-icon',
+      icon_text: 'Users',
+      toolTip: 'Users',
+    },
+    {
+      // parent (segment only) for active state
+      url: null,
+      commands: ['tenant'],
+      unit: 'tenant',
       mat_icon: 'tenant-icon',
       icon_text: 'Tenants',
       toolTip: 'Tenants',
       sub: [
-        {url: 'tenant-home', mat_icon: 'home-icon', icon_text: 'Home', toolTip: 'Tenant Home'},
-        {url: 'complaints', mat_icon: 'complaints-icon', icon_text: 'Complaints', toolTip: 'Complaints'},
+        {
+          url: '/dashboard/tenant/tenant-home',
+          commands: ['tenant', 'tenant-home'],
+          unit: 'tenant-home',
+          mat_icon: 'home-icon',
+          icon_text: 'Home',
+          toolTip: 'Tenant Home',
+        },
+        {
+          url: '/dashboard/tenant/complaints',
+          unit: 'complaints',
+          commands: ['tenant', 'complaints'],
+          mat_icon: 'complaints-icon',
+          icon_text: 'Complaints',
+          toolTip: 'Complaints',
+        },
       ],
     },
-    {url: 'agent', mat_icon: 'agent-icon', icon_text: 'Agents', toolTip: 'Agent'},
-    {url: 'payments', mat_icon: 'payment-icon', icon_text: 'Payments', toolTip: 'Payments'},
-    {url: 'report', mat_icon: 'report-icon', icon_text: 'Reports', toolTip: 'Reports'},
-    {url: 'log', mat_icon: 'certification-icon', icon_text: 'Log', toolTip: 'Log'},
+    {
+      url: '/dashboard/agent/panel',
+      unit: 'agent',
+      commands: ['agent', 'panel'],
+      mat_icon: 'agent-icon',
+      icon_text: 'Agents',
+      toolTip: 'Agent',
+    },
+    {
+      url: '/dashboard/payments',
+      unit: 'payments',
+      commands: ['payments'],
+      mat_icon: 'payment-icon',
+      icon_text: 'Payments',
+      toolTip: 'Payments',
+    },
+    {
+      url: '/dashboard/report',
+      unit: 'report',
+      commands: ['report'],
+      mat_icon: 'report-icon',
+      icon_text: 'Reports',
+      toolTip: 'Reports',
+    },
+    {
+      url: '/dashboard/log',
+      unit: 'log',
+      commands: ['log'],
+      mat_icon: 'certification-icon',
+      icon_text: 'Log',
+      toolTip: 'Log',
+    },
   ];
+
 
   /* =============================================================================
    * CONSTRUCTOR
@@ -245,6 +316,12 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
             ? segments[dashboardIndex + 1]
             : '';
 
+        const commands: string[] = [];
+        this.currentURLCommand = [];
+        segments.forEach((item) => {
+          if(item !== 'dashboard') commands.push(item);
+        })
+        this.currentURLCommand = [...commands];
         this.currecntURL = segments[segments.length - 1] ?? '';
       });
   }
@@ -432,7 +509,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     // No submenu → treat as simple navigation and reset submenu state.
     this.submenuOpen = false;
     this.activeSubmenuIndex = null;
-    this.navigateTo(link.url, null, null);
+    this.navigateTo(link.commands);
   }
 
   /**
@@ -475,42 +552,6 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     this.currentOpenIndex = null;
   }
 
-  /**
-   * Toggle a normal (expanded-mode) dropdown at the given index.
-   * NOTE: This path is separate from the overlay submenu, used when the
-   * sidebar is expanded and submenus are inline.
-   */
-  protected toggleDropdown(index: number): void {
-    const root: HTMLElement = this.elementRef.nativeElement as HTMLElement;
-    const items: NodeListOf<HTMLElement> = root.querySelectorAll(
-      'ul.menu > li'
-    ) as NodeListOf<HTMLElement>;
-
-    const li: HTMLElement | undefined = items[index];
-    if(!li) {
-      return;
-    }
-
-    const wasOpen: boolean = li.classList.contains('open');
-
-    this.closeAllDropdowns();
-
-    if(!wasOpen) {
-      li.classList.add('open');
-
-      li.querySelectorAll('.dropdown-icon i').forEach((icon: Element) => {
-        icon.classList.remove('fa-chevron-down');
-        icon.classList.add('fa-chevron-up');
-      });
-
-      li.querySelectorAll('button').forEach((b: Element) => {
-        b.classList.add('active');
-      });
-
-      this.currentOpenIndex = index;
-    }
-  }
-
   /* =============================================================================
    * ROUTING
    * ===========================================================================*/
@@ -524,65 +565,29 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
    *
    * If parent is null, fall back to /dashboard.
    */
-  protected navigateTo(
-    parent: string | null,
-    child: string | null,
-    subChild: string | null
-  ): void {
-    if(!parent) {
-      this.router.navigate(['/dashboard']);
+  protected navigateTo(commands: string[] | null | undefined): void {
+    if(!commands || commands.length === 0) {
+      this.router.navigate(['/dashboard', 'home']);
       return;
     }
 
-    if(parent && child && subChild) {
-      this.router.navigate(['/dashboard', parent, child, subChild]);
-      return;
-    }
-
-    if(parent && child) {
-      this.router.navigate(['/dashboard', parent, child]);
-      return;
-    }
-
-    if(parent && subChild) {
-      this.router.navigate(['/dashboard', parent, subChild]);
-      return;
-    }
-
-    this.router.navigate(['/dashboard', parent]);
+    this.router.navigate(['dashboard', ...commands]);
+    return;
   }
 
   /* =============================================================================
-   * ACTIVE STATE HELPERS
+   * CHECKING THE ROUTING PATH
    * ===========================================================================*/
 
   /**
-   * Helper used by the template to mark submenu items as active
-   * based on the current URL.
+   * Navigate using the provided segments.
+   * This will check the path of the route then return boolean value
    */
-  protected isSubItemActive(
-    parent: string | null,
-    sub: string | null,
-    child?: string | null
-  ): boolean {
-    if(!parent) {
-      return false;
-    }
-
-    const url: string = this.currentFullURL;
-
-    if(parent && sub && !child) {
-      return url.includes(`/${parent}/${sub}`);
-    }
-
-    if(parent && !sub && child) {
-      return url.includes(`/${parent}/${child}`);
-    }
-
-    if(parent && sub && child) {
-      return url.includes(`/${parent}/${sub}/${child}`);
-    }
-
-    return false;
+  protected checkRoutingPath(item: FullscreenMenuLink): boolean {
+    if(!item) return false;
+    if(this.currentURLCommand.includes(item.unit)) return true;
+    return false
   }
+
+
 }

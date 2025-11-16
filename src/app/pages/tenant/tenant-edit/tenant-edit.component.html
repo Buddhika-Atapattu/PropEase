@@ -770,26 +770,15 @@
         <div class="col-12">
           <app-custom-table
             [(isReload)]="propertyTableIsReloading"
-            [(pageSize)]="propertyTablePageSize"
-            [(pageSizeOptions)]="propertyTablePageSizeOptions"
-            [(pageIndex)]="propertyTablePageIndex"
-            [(pageCount)]="propertyTablePageCount"
-            [(tableType)]="propertyTableType"
+            [pageSize]="propertyTablePageSize"
+            [pageSizeOptions]="propertyTablePageSizeOptions"
+            [index]="propertyTablePageIndex"
+            [pagination]="true"
+            [tableTitle]="propertyTableType"
             [(search)]="propertyTabletSearchText"
-            [(buttonAction)]="propertyTableButtonAction"
-            [(buttonOperation)]="propertyTableButtonOperation"
-            [(totalDataCount)]="propertyTableTotalDataCount"
-            [(buttonActionTrigger)]="propertyTableButtonActionTrigger"
-            [(buttonOperationTrigger)]="propertyTableButtonOperationTrigger"
-            [(notification)]="propertyTableNotification"
+            [totalDataCount]="propertyLength"
             [data]="propertyTableData"
             [columns]="propertyTableColumns"
-            [loggedUser]="loggedUser"
-            [isLoading]="isLoading"
-            [mode]="mode"
-            [isBrowser]="isBrowser"
-            [modeSub]="modeSub"
-            [fullDataCount]="propertyLength"
           ></app-custom-table>
         </div>
       </div>

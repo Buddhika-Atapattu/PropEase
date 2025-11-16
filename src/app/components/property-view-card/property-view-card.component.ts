@@ -65,10 +65,7 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit, OnDestr
 
   // Lifecycles
   async ngOnInit(): Promise<void> {
-    this.isLoading = true;
-    const isImage = await this.imageService.universalImageCheck(this.property.images[0].imageURL);
-    this.propertyImage = isImage ? this.property.images[0].imageURL : this.definedPropertyImage;
-    this.isLoading = false;
+
   }
 
   async ngAfterViewInit(): Promise<void> {
@@ -96,7 +93,19 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit, OnDestr
 
   // Helper operations
   protected detectPropertyImage(): string {
-    return this.propertyImage;
+    return this.property.images[0].imageURL ? this.property.images[0].imageURL : this.definedPropertyImage;
+  }
+
+  protected detectImageError(event: Event) {
+    const imgElement = event.target as HTMLImageElement;
+
+    // Prevent infinite loop if fallback image also fails
+    if(imgElement.src.includes(this.definedPropertyImage)) {
+      return;
+    }
+
+    // Apply fallback image
+    imgElement.src = this.definedPropertyImage
   }
 
 

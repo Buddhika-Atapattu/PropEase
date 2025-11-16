@@ -37,9 +37,9 @@ import {WindowsRefService} from '../../../../services/windowRef/windowRef.servic
 import {NotificationDialogComponent} from '../../../../components/dialogs/notification/notification.component';
 import {ProgressBarComponent} from '../../../../components/dialogs/progress-bar/progress-bar.component';
 import {
-  ButtonDataType,
-  ButtonType,
-  CustomTableColumnType,
+  TableButtonActionConfig,
+  TableButton,
+  TableColumn,
   CustomTableComponent,
 } from '../../../../components/shared/custom-table/custom-table.component';
 // import {EditorComponent} from '@tinymce/tinymce-angular';
@@ -62,8 +62,6 @@ interface PropertyTableData {
   title: string;
   type: string;
   address: Address;
-  action: ButtonType;
-  operation: ButtonType;
 }
 
 /** Internal pair to link a property with its lease */
@@ -130,7 +128,7 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
   // ─────────────────────────────────────────────
   // Table config
   // ─────────────────────────────────────────────
-  protected tableColumns: CustomTableColumnType[] = [
+  protected tableColumns: TableColumn[] = [
     {key: 'image', label: 'Image'},
     {key: 'id', label: 'ID'},
     {key: 'leaseid', label: 'LeaseID'},
@@ -141,28 +139,23 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
     {key: 'operation', label: 'Add'},
   ];
   protected tableType: string = 'Property Selection';
-  protected actionButton: ButtonType = {type: 'view'};
-  protected operationButton: ButtonType = {type: 'add'};
+  protected actionButtons: TableButton[] = [{'action': 'view', 'icon': 'visibility'}, {'action': 'add', 'icon': 'add_circle'}];
 
   // Pagination + data
   private _isReloading: boolean = false;
   private _pageSize: number = 10;
   private _pageSizeOptions: number[] = [5, 10, 25, 50];
   private _pageIndex: number = 0;
-  private _pageCount: number = 0;
   private _search: string = '';
   private _totalDataCount: number = 0;
   private _allData: PropertyTableData[] = [];
-  private _filteredData: PropertyTableData[] = [];
-  private _data: PropertyTableData[] = [];
-  private _actionButtonFunction!: ButtonDataType;
-  private _operationButtonFunction!: ButtonDataType;
+  protected filteredData: PropertyTableData[] = [];
 
   // ─────────────────────────────────────────────
   // Complaint form fields
   // (Use public for template binding; keep internals private)
   // ─────────────────────────────────────────────
-  private tenant!: User;
+  private tenant: User | null = null;
   protected title!: ComplaintClient['title'];
   protected description!: ComplaintClient['description'];
   protected category!: ComplaintClient['category'];
@@ -227,7 +220,7 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
       try {
         const token = item['tenantID'];
         const tokenRes = await this.APIsService.getUserByToken(token);
-        this.tenant = tokenRes.user;
+        this.tenant = tokenRes.user ?? null;
       }
       catch(error) {
         console.error(error)
@@ -285,7 +278,7 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
   set pageSize(value: number) {
     this._pageSize = value;
     this._applyPage(0);
-    this._rebuildPageSizeOptions(this._filteredData.length);
+    this._rebuildPageSizeOptions(this.filteredData.length);
   }
 
   get pageSizeOptions(): number[] {return this._pageSizeOptions;}
@@ -297,41 +290,29 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
     this._applyPage(this._pageIndex);
   }
 
-  get pageCount(): number {return this._pageCount;}
-  set pageCount(value: number) {this._pageCount = value;}
-
   get search(): string {return this._search;}
   set search(value: string) {
     this._search = (value ?? '').trim();
     if(this._search.length === 0) {
-      this._filteredData = [...this._allData];
-      this.totleDataCount = this._filteredData.length;
+      this.filteredData = [...this._allData];
+      this.totleDataCount = this.filteredData.length;
       this._applyPage(0);
-      this._rebuildPageSizeOptions(this._filteredData.length);
+      this._rebuildPageSizeOptions(this.filteredData.length);
       return;
     }
     const q = this._search.toLowerCase();
-    this._filteredData = this._allData.filter(r =>
+    this.filteredData = this._allData.filter(r =>
       r.title.toLowerCase().includes(q) ||
       r.type.toLowerCase().includes(q) ||
       r.id.toLowerCase().includes(q)
     );
-    this.totleDataCount = this._filteredData.length;
+    this.totleDataCount = this.filteredData.length;
     this._applyPage(0);
-    this._rebuildPageSizeOptions(this._filteredData.length);
+    this._rebuildPageSizeOptions(this.filteredData.length);
   }
 
   get totleDataCount(): number {return this._totalDataCount;}
   set totleDataCount(value: number) {this._totalDataCount = value;}
-
-  get data(): PropertyTableData[] {return this._data;}
-  set data(value: PropertyTableData[]) {this._data = value ?? [];}
-
-  get actionButtonFunction(): ButtonDataType {return this._actionButtonFunction;}
-  set actionButtonFunction(value: ButtonDataType) {this._actionButtonFunction = value; this._actionButtonMethod()}
-
-  get operationButtonFunction(): ButtonDataType {return this._operationButtonFunction;}
-  set operationButtonFunction(value: ButtonDataType) {this._operationButtonFunction = value; this._operationButtonMethod()}
 
   // Make public selected property
   get property(): BackEndPropertyData {
@@ -392,12 +373,11 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
 
       // Build master rows
       this._allData = this._buildPropertyRows(this._propertiesWithLease);
-      this._filteredData = [...this._allData];
-      this.totleDataCount = this._filteredData.length;
+      this.totleDataCount = this._allData.length;
 
       // Pagination
       this._applyPage(0);
-      this._rebuildPageSizeOptions(this._filteredData.length);
+      this._rebuildPageSizeOptions(this._allData.length);
       this.isReloading = false;
       return;
     } catch(error) {
@@ -424,8 +404,6 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
         title: pair.property.title ?? 'Untitled',
         type: pair.property.type ?? 'Unknown',
         address: pair.property.address as Address,
-        action: this.actionButton,
-        operation: this.operationButton,
       });
     }
     return rows;
@@ -435,15 +413,14 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
   // Pagination helpers
   // ─────────────────────────────────────────────
   private _applyPage(nextIndex: number): void {
-    const total = this._filteredData.length;
-    this.pageCount = this.pageSize > 0 ? Math.ceil(total / this.pageSize) : 0;
-
-    const safeIndex = Math.max(0, Math.min(nextIndex, Math.max(0, this.pageCount - 1)));
+    const total = this.filteredData.length;
+    const pageCount = this.pageSize > 0 ? Math.ceil(total / this.pageSize) : 0;
+    const safeIndex = Math.max(0, Math.min(nextIndex, Math.max(0, pageCount - 1)));
     this._pageIndex = safeIndex;
 
     const start = safeIndex * this.pageSize;
     const end = start + this.pageSize;
-    this.data = this._filteredData.slice(start, end);
+    this.filteredData = this._allData.slice(start, end);
   }
 
   private _rebuildPageSizeOptions(totalRows: number): void {
@@ -463,41 +440,34 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
   // ─────────────────────────────────────────────
   // Action & Operation buttons function only admin
   // ─────────────────────────────────────────────
-  private async _actionButtonMethod(): Promise<void> {
+  protected async actionButtonOperations(value: TableButtonActionConfig): Promise<void> {
     try {
-      if(!this.actionButtonFunction) throw new Error('Property view button function invalid!');
-      const data = this.actionButtonFunction.data.element;
+      if(!value) throw new Error('Data retrive invalid!');
+      const action: TableButtonActionConfig['action'] = value.action;
+      const data: TableButtonActionConfig['data'] = value.data.element;
+      if(!data) throw new Error('Invalid values!');
       const propertyID = data.id;
-      await this.router.navigate(['/dashboard/properties/property-view/', propertyID]);
+      switch(action) {
+        case 'view':
+          await this.router.navigate(['/dashboard/properties/property-view/', propertyID]);
+          break;
+        case 'add':
+          const property = this.properties.find((p) => p.id === propertyID);
+
+          if(!property) throw new Error('Selected property is empty!');
+          this._selectedProperty = property
+          this._propertyId = property.id;
+          this._propertyName = property.title;
+          this._leaseId = this._leases.find((lease) => lease.propertyID === property.id)?.leaseID ?? '';
+          this._tenantID = this._leases.find((lease) => lease.propertyID === property.id)?.tenantInformation.tenantUsername ?? '';
+          break;
+      }
+
+      return;
     }
     catch(error) {
       console.error(error);
       return;
-    }
-  }
-
-  private async _operationButtonMethod(): Promise<void> {
-    try {
-      if(!this._operationButtonFunction) throw new Error('Property add button function invalid!');
-      if(this.properties.length === 0) throw new Error('Properties are empty!');
-
-      const data = this._operationButtonFunction.data.element;
-      const propertyID = data.id;
-      const property = this.properties.find((p) => p.id === propertyID);
-
-      if(!property) throw new Error('Selected property is empty!');
-      this._selectedProperty = property
-      this._propertyId = property.id;
-      this._propertyName = property.title;
-      this._leaseId = this._leases.find((lease) => lease.propertyID === property.id)?.leaseID ?? '';
-      this._tenantID = this._leases.find((lease) => lease.propertyID === property.id)?.tenantInformation.tenantUsername ?? '';
-      return;
-    }
-    catch(error) {
-      console.error(error);
-      this.notification.notification('error', 'Error occur while adding the property')
-      return;
-
     }
   }
 

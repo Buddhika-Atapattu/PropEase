@@ -14,9 +14,9 @@ import {APIsService, User} from '../../../../services/APIs/apis.service';
 import {NotificationDialogComponent} from '../../../../components/dialogs/notification/notification.component';
 import {ProgressBarComponent} from '../../../../components/dialogs/progress-bar/progress-bar.component';
 import {
-  ButtonDataType,
-  ButtonType,
-  CustomTableColumnType,
+  TableButtonActionConfig,
+  TableButton,
+  TableColumn,
   CustomTableComponent
 } from '../../../../components/shared/custom-table/custom-table.component';
 import {GoogleChartsModule} from 'angular-google-charts';
@@ -30,8 +30,6 @@ interface ComplaintTableRow {
   tenantname: string;
   status: string;
   category: string;
-  action: ButtonType;
-  operation: ButtonType;
 }
 
 @Component({
@@ -74,7 +72,7 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
   // ────────────────────────────────────────────────────────────────────────────
   // Table config (shared)
   // ────────────────────────────────────────────────────────────────────────────
-  protected complaintTableColumns: CustomTableColumnType[] = [
+  protected complaintTableColumns: TableColumn[] = [
     {key: 'id', label: 'Complaint ID'},
     {key: 'propertyid', label: 'Property ID'},
     {key: 'tenantname', label: 'Tenant Name'},
@@ -83,8 +81,7 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
     {key: 'actions', label: 'View'},
     {key: 'operation', label: 'Edit'},
   ];
-  protected viewActionButton: ButtonType = {type: 'view'};
-  protected editOperationButton: ButtonType = {type: 'edit'};
+  protected actionButtons: TableButton[] = [{'action': 'view', 'icon': 'visibility'}, {'action': 'edit', 'icon': 'edit'}];
 
   // ────────────────────────────────────────────────────────────────────────────
   // ADMIN STATE (all via getters/setters; never use _private in operations)
@@ -98,10 +95,8 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
   private _adminSearch = '';
   private _adminPageSize = 10;
   private _adminPageIndex = 0;
-
-  protected adminPageCount = 0;
   protected adminPageSizeOptions: number[] = [5, 10, 25, 50, 100];
-  protected adminIsReloading = false;
+  private _adminIsReloading = false;
 
   // Admin: All data
   get adminAllData(): ComplaintTableRow[] {return this._adminAllData;}
@@ -149,12 +144,13 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
     this._applyAdminPage(v | 0);
   }
 
-  // Admin: table triggers from CustomTable child
-  get adminButtonActionTrigger(): null {return null;}
-  set adminButtonActionTrigger(e: ButtonDataType) {this.handleButtonTrigger(e);}
+  get adminIsReloading(): boolean {
+    return this._adminIsReloading;
+  }
+  set adminIsReloading(value: boolean) {
+    this._adminIsReloading = value;
+  }
 
-  get adminButtonOperationTrigger(): null {return null;}
-  set adminButtonOperationTrigger(e: ButtonDataType) {this.handleButtonTrigger(e);}
 
   // ────────────────────────────────────────────────────────────────────────────
   // TENANT STATE (all via getters/setters; never use _private in operations)
@@ -218,12 +214,7 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
     this._applyTenantPage(v | 0);
   }
 
-  // Tenant: table triggers from CustomTable child
-  get tenantButtonActionTrigger(): null {return null;}
-  set tenantButtonActionTrigger(e: ButtonDataType) {this.handleButtonTrigger(e);}
 
-  get tenantButtonOperationTrigger(): null {return null;}
-  set tenantButtonOperationTrigger(e: ButtonDataType) {this.handleButtonTrigger(e);}
 
   // ────────────────────────────────────────────────────────────────────────────
   // Chart variables
@@ -417,9 +408,7 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
       propertyid: c.propertyId ?? '',
       tenantname: c.tenantName ?? c.tenantId ?? '',
       status: c.status ?? '',
-      category: c.category ?? '',
-      action: this.viewActionButton,
-      operation: this.editOperationButton,
+      category: c.category ?? ''
     }));
   }
 
@@ -450,7 +439,6 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
     const size = Math.max(1, (this.adminPageSize | 0) || 10);
     const count = size > 0 ? Math.ceil(total / size) : 0;
 
-    this.adminPageCount = count;
     const safeIndex = Math.max(0, Math.min(nextIndex, Math.max(0, count - 1)));
     this._adminPageIndex = safeIndex;
 
@@ -549,9 +537,9 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
   // ────────────────────────────────────────────────────────────────────────────
   // Button triggers → route
   // ────────────────────────────────────────────────────────────────────────────
-  private handleButtonTrigger(evt: ButtonDataType): void {
+  protected handleButtonTrigger(evt: TableButtonActionConfig): void {
     if(!evt) return;
-    const type = String(evt.type || '').toLowerCase();
+    const type = String(evt.action || '').toLowerCase();
     const raw = evt.data?.element ?? evt.data?.row ?? evt.data ?? {};
     const id = raw.id ?? raw.code ?? '';
 

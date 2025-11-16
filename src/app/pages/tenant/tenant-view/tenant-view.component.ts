@@ -21,13 +21,12 @@ import {
 import {HttpErrorResponse} from '@angular/common/http';
 import {
   CustomTableComponent,
-  ButtonDataType,
-  ButtonType,
-  CustomTableColumnType,
-  FileExportWithDataAndExtentionType,
+  TableButton,
+  TableButtonActionConfig,
+  TableColumn,
+  FileExport,
   SwitchButtonType,
 } from '../../../components/shared/custom-table/custom-table.component';
-import {FileExportButtonTypeByExtension} from '../../../components/shared/paginator/paginator.component';
 import {BackEndPropertyData, PropertyService} from '../../../services/property/property.service';
 import {AuthService} from '../../../services/auth/auth.service';
 import {MatDialog} from '@angular/material/dialog';
@@ -97,30 +96,22 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   private _leaseTablePageCount: number = 0;
   private _leaseTableType: string = 'lease';
   private _leaseTabletSearch: string = '';
-  private _leaseTableButtonAction: ButtonType = {
-    type: 'add',
-  };
-  private _leaseTableButtonOperation: ButtonType = {
-    type: 'add',
-  };
+  protected leaseTableButtonActions: TableButton[] = [{'action': 'view', 'icon': 'visibility'}, {'action': 'download', 'icon': 'download'}];
   private _leaseTableTotalDataCount: number = 0;
-  private _leaseTableButtonActionTrigger: ButtonDataType = {
-    type: 'add',
-    data: null,
-  };
-  private _leaseTableButtonOperationTrigger: ButtonDataType = {
-    type: 'add',
-    data: null,
-  };
-  private _leaseTableNotification: NotificationType = {
-    type: 'success',
-    message: '',
-  };
-  protected leaseTableFileExportButtonTypeByExtension: FileExportButtonTypeByExtension = {
-    type: 'xlsx',
-  };
+
+  protected leaseTableFileExportButtonTypeByExtension: FileExport['extention'] = 'xlsx';
   private _leaseTableData: LeaseTableDataType[] = [];
-  private _leaseTableColumns: CustomTableColumnType[] = [];
+  protected leaseTableColumns: TableColumn[] = [
+    {label: 'Image', key: 'propertyimage'},
+    {label: 'Lease ID', key: 'leaseid'},
+    {label: 'Date Range', key: 'daterange'},
+    {label: 'Lease Status', key: 'status'},
+    {label: 'Monthly Rent', key: 'monthlyRent'},
+    {label: 'Remaining Days', key: 'remaningDays'},
+    {label: 'View', key: 'actions'},
+    {label: 'Download', key: 'operation'},
+    {label: 'Active', key: 'switchbutton'}
+  ];
   private _leaseSwitchButton: SwitchButtonType = {
     isActive: false,
     index: 0,
@@ -237,21 +228,6 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     this._leaseTabletSearch = value;
   }
 
-  // leaseTableButtonAction
-  get leaseTableButtonAction(): ButtonType {
-    return this._leaseTableButtonAction;
-  }
-  set leaseTableButtonAction(value: ButtonType) {
-    this._leaseTableButtonAction = value;
-  }
-
-  // leaseTableButtonOperation
-  get leaseTableButtonOperation(): ButtonType {
-    return this._leaseTableButtonOperation;
-  }
-  set leaseTableButtonOperation(value: ButtonType) {
-    this._leaseTableButtonOperation = value;
-  }
 
   // leaseTableTotalDataCount
   get leaseTableTotalDataCount(): number {
@@ -261,32 +237,6 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     this._leaseTableTotalDataCount = value;
   }
 
-  // leaseTableButtonActionTrigger
-  get leaseTableButtonActionTrigger(): ButtonDataType {
-    return this._leaseTableButtonActionTrigger;
-  }
-  set leaseTableButtonActionTrigger(value: ButtonDataType) {
-    this._leaseTableButtonActionTrigger = value;
-    // this.handleOpenLeaseAgreement()
-    this.handleLeaseView();
-  }
-
-  // leaseTableButtonOperationTrigger
-  get leaseTableButtonOperationTrigger(): ButtonDataType {
-    return this._leaseTableButtonOperationTrigger;
-  }
-  set leaseTableButtonOperationTrigger(value: ButtonDataType) {
-    this._leaseTableButtonOperationTrigger = value;
-    this.downloadLeaseAgreement();
-  }
-
-  // leaseTableNotification
-  get leaseTableNotification(): NotificationType {
-    return this._leaseTableNotification;
-  }
-  set leaseTableNotification(value: NotificationType) {
-    this._leaseTableNotification = value;
-  }
 
   // leaseTableData
   get leaseTableData(): LeaseTableDataType[] {
@@ -294,14 +244,6 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   set leaseTableData(value: LeaseTableDataType[]) {
     this._leaseTableData = value;
-  }
-
-  // leaseTableColumns
-  get leaseTableColumns(): CustomTableColumnType[] {
-    return this._leaseTableColumns;
-  }
-  set leaseTableColumns(value: CustomTableColumnType[]) {
-    this._leaseTableColumns = value;
   }
 
   //switchButton
@@ -317,7 +259,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   //<========================================================================= END SETTER & GETTER ========================================================================>
 
   //<========================================================================= HANDLERS & OPERATIONALS ========================================================================>
-  protected handleExportLeaseTableData(value: FileExportWithDataAndExtentionType) {
+  protected handleExportLeaseTableData(value: FileExport) {
     try {
       if(this.leases.length === 0) {
         throw new Error('No lease agreements found!');
@@ -343,7 +285,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         throw new Error('No leases with property found!');
       }
 
-      this.exportLeasesDataAsExcel(leasesWithProperty, value.extention.type);
+      this.exportLeasesDataAsExcel(leasesWithProperty, value.extention);
     }
     catch(error) {
       console.error(error);
@@ -444,23 +386,6 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
       this.leaseTablePageCount = Math.ceil(this.leaseLength / this.leaseTablePageSize);
       this.leaseTableType = 'Lease';
 
-      this.leaseTableButtonAction = {type: 'view'};
-      this.leaseTableButtonOperation = {type: 'download'};
-      this.leaseTableTotalDataCount = this.leaseLength;
-      this.leaseTableNotification = {type: 'success', message: ''};
-      this.leaseTableFileExportButtonTypeByExtension = {type: 'xlsx'};
-
-      this.leaseTableColumns = [
-        {label: 'Image', key: 'propertyimage'},
-        {label: 'Lease ID', key: 'leaseid'},
-        {label: 'Date Range', key: 'daterange'},
-        {label: 'Lease Status', key: 'status'},
-        {label: 'Monthly Rent', key: 'monthlyRent'},
-        {label: 'Remaining Days', key: 'remaningDays'},
-        {label: 'View', key: 'actions'},
-        {label: 'Download', key: 'operation'},
-        {label: 'Active', key: 'switchbutton'}
-      ];
 
       // Clear previous table data
       this.leaseTableData = [];
@@ -519,36 +444,63 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private async downloadLeaseAgreement(): Promise<void> {
+  protected async actionButtonsOperation(value: TableButtonActionConfig): Promise<void> {
     try {
-      this.progressBarComponent.start();
-
-      const leaseID = this._leaseTableButtonOperationTrigger.data.element.leaseID;
-      console.log(leaseID)
+      const action = value.action;
+      const data = value.data;
+      if(!action || !data) throw new Error('Invalid action or data from table');
+      const leaseID = data.element.leaseID;
       if(!leaseID) throw new Error("Invalid lease ID");
+      switch(action) {
+        case 'download':
+          try {
+            this.progressBarComponent.start();
 
-      if(this.authService.getLoggedUser === null) throw new Error("User not logged in");
+            if(this.authService.getLoggedUser === null) throw new Error("User not logged in");
 
 
-      // Download PDF blob from backend
-      const blob = await this.tenantService.downloadLeaseAgreement(leaseID, 'download', this.authService.getLoggedUser.username);
+            // Download PDF blob from backend
+            const blob = await this.tenantService.downloadLeaseAgreement(leaseID, 'download', this.authService.getLoggedUser.username);
 
-      const actualName = `${leaseID}-lease-agreement.pdf`;
+            const actualName = `${leaseID}-lease-agreement.pdf`;
 
-      // Create temporary link and trigger download
-      const fileURL = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = fileURL;
-      a.download = actualName;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
+            // Create temporary link and trigger download
+            const fileURL = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = fileURL;
+            a.download = actualName;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
 
-      // Clean up
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(fileURL);
+            // Clean up
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(fileURL);
 
-    } catch(error) {
+          } catch(error) {
+            console.error('Failed to download lease agreement PDF:', error);
+            if(error instanceof HttpErrorResponse) {
+              this.NotificationDialogComponent.notification('error', error.message);
+            }
+            else if(typeof error === 'string') {
+              this.NotificationDialogComponent.notification('error', error);
+            }
+            else if(error instanceof Error) {
+              this.NotificationDialogComponent.notification('error', error.message);
+            }
+            else {
+              this.NotificationDialogComponent.notification('error', 'Failed to download lease agreement PDF.');
+            }
+          } finally {
+            this.progressBarComponent.complete();
+          }
+          break;
+        case 'view':
+          this.router.navigate(['/dashboard/tenant/view-lease', leaseID]);
+          break;
+      }
+    }
+    catch(error) {
       console.error('Failed to download lease agreement PDF:', error);
       if(error instanceof HttpErrorResponse) {
         this.NotificationDialogComponent.notification('error', error.message);
@@ -567,20 +519,6 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-
-  private handleLeaseView() {
-    try {
-      const leaseID = this._leaseTableButtonActionTrigger.data.element.leaseid;
-
-      if(!leaseID) throw new Error('No lease ID found!');
-
-      this.router.navigate(['/dashboard/tenant/view-lease', leaseID]);
-
-    }
-    catch(error) {
-      console.error(error)
-    }
-  }
   //<========================================================================= END HANDLERS & OPERATIONALS ========================================================================>
   //<========================================================================= END LEASE TABLE ========================================================================>
 
@@ -801,7 +739,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private exportLeasesDataAsExcel(
     leases: LeaseWithProperty[],
-    fileExtension: FileExportWithDataAndExtentionType['extention']['type'] = 'xlsx'
+    fileExtension: FileExport['extention'] = 'xlsx'
   ): void {
     if(!Array.isArray(leases) || leases.length === 0) {
       console.warn('No lease data available for export.');

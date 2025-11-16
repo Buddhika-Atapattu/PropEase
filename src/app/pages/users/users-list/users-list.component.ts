@@ -1,7 +1,6 @@
 import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {HttpErrorResponse} from '@angular/common/http';
 import {
-  AfterViewInit,
   Component,
   Inject,
   OnDestroy,
@@ -15,17 +14,27 @@ import {MatDialog} from '@angular/material/dialog';
 import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {DomSanitizer} from '@angular/platform-browser';
-import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
-import {filter, Subscription} from 'rxjs';
+import {Router} from '@angular/router';
+import {Subscription} from 'rxjs';
+
 import {NotificationDialogComponent} from '../../../components/dialogs/notification/notification.component';
 import {LayoutSwitchBtn} from '../../../components/shared/buttons/layout-switch-btn/layout-switch-btn';
 import {ConfirmationComponent} from '../../../components/shared/confirmation/confirmation.component';
 import {UserViewCardComponent} from '../../../components/user-view-card/user-view-card.component';
-import {APIsService, type User} from '../../../services/APIs/apis.service';
+import {APIsService, type User, type MSG} from '../../../services/APIs/apis.service';
 import {AuthService} from '../../../services/auth/auth.service';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 
+
+/**
+ * UsersListComponent
+ * -----------------------------------------------------------------------------
+ * - Displays users in row/column layouts (desktop) + separate mobile layout.
+ * - Backend-driven pagination with variable page size by screen width.
+ * - Live search by name/email/username.
+ * - Role-based actions (view, edit, delete, create).
+ * - Uses NotificationDialogComponent for toast-style notifications.
+ */
 @Component({
   selector: 'app-users',
   standalone: true,
@@ -36,46 +45,98 @@ import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
     FormsModule,
     UserViewCardComponent,
     LayoutSwitchBtn,
-    MatTooltipModule
+    MatTooltipModule,
   ],
   templateUrl: './users-list.component.html',
   styleUrl: './users-list.component.scss',
 })
-export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
-  @ViewChild('searchInput', {static: true}) searchInput!: ElementRef<HTMLInputElement>
+export class UsersListComponent implements OnInit, OnDestroy {
+  /* --------------------------------------------------------------------------
+   * VIEW CHILDREN
+   * ------------------------------------------------------------------------ */
+
+  /** Notification bridge component (used like a toast service). */
+  @ViewChild(NotificationDialogComponent)
+  protected notification!: NotificationDialogComponent;
+
+  /** Search input reference (for search button click). */
+  @ViewChild('searchInput', {static: true})
+  protected searchInput!: ElementRef<HTMLInputElement>;
+
+  /* --------------------------------------------------------------------------
+   * GLOBAL / ENVIRONMENT STATE
+   * ------------------------------------------------------------------------ */
+
+  /** Theme mode (light/dark) pushed by WindowsRefService. */
   protected mode: boolean | null = null;
+
+  /** True when running in browser (SSR-safe check). */
   protected isBrowser: boolean;
+
+  /** Subscriptions to clean up. */
   private modeSub: Subscription | null = null;
+  private windowWidthSub: Subscription | null = null;
+
+  /** Global loading flag for cards & skeletons. */
   protected loading: boolean = true;
 
-  private routeSub: Subscription | null = null;
-  private routerSub: Subscription | null = null;
+  /** Logged-in user (used for permission checks). */
   protected LOGGED_USER: User | null = null;
-  protected LOGGED_USER_ACCESS_MODULE: string[] = [];
-  protected LOGGED_USER_ACCESS_ACTIONS: string[] = [];
+
+  /** Current view layout: false = row list, true = column grid. */
   protected viewMode: boolean = false;
 
-  private users: User[] = [];
-  private readonly limit: number = 12;
-  protected displayingUsers: User[] = [];
-  protected displayPaginationNumberArray: number[] = [];
+  /* --------------------------------------------------------------------------
+   * DATA + SEARCH STATE
+   * ------------------------------------------------------------------------ */
+
+  /** Users currently rendered for this page. */
+  protected users: User[] = [];
+
+  /** ngModel bound search string (for input field). */
   protected search: string = '';
-  protected isNoData: boolean = false;
-  protected currentPageIndex: number = 0;
 
-  // Pagination
-  private itemsPerPage !: number;
+  /** Normalised search string used for backend calls. */
+  private currentSearchTerm: string = '';
 
+  /* --------------------------------------------------------------------------
+   * PAGINATION STATE (backend-driven)
+   * ------------------------------------------------------------------------ */
 
+  /** Items per page - dynamic based on window width. */
+  protected itemsPerPage: number = 12;
 
-  protected readonly definedMaleDummyImageURL =
+  /** Total items from backend. */
+  protected totalItems: number = 0;
+
+  /** Total pages (derived from totalItems / itemsPerPage). */
+  protected pageCount: number = 0;
+
+  /** Current page index (0-based). */
+  protected index: number = 0;
+
+  /** First page index shown in pager (0-based). */
+  protected start: number = 0;
+
+  /** Last page index shown in pager (0-based). */
+  protected end: number = 0;
+
+  /* --------------------------------------------------------------------------
+   * USER IMAGE FALLBACKS
+   * ------------------------------------------------------------------------ */
+
+  protected readonly definedMaleDummyImageURL: string =
     'Images/user-images/dummy-user/dummy-user.jpg';
-  protected readonly definedWomanDummyImageURL =
+
+  protected readonly definedWomanDummyImageURL: string =
     'Images/user-images/dummy-user/dummy_woman.jpg';
+
+  /** The effective image URL that will be used for a given user. */
   protected definedImage: string =
     'Images/user-images/dummy-user/dummy-user.jpg';
-  protected readonly definedImageExtentionArray: string[] = [
+
+  /** Allowed image file extensions for validation. */
+  protected readonly definedImageExtensionArray: string[] = [
     'jpg',
     'webp',
     'jpeg',
@@ -84,60 +145,79 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
     'gif',
   ];
 
+  /* --------------------------------------------------------------------------
+   * CONSTRUCTOR
+   * ------------------------------------------------------------------------ */
+
   constructor (
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private route: ActivatedRoute,
     private authService: AuthService,
     private router: Router,
     private APIsService: APIsService,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
-    private crypto: CryptoService,
     private dialog: MatDialog
   ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+
+    // Cache logged user once for permission checks.
     this.LOGGED_USER = this.authService.getLoggedUser;
 
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    this.iconMaker();
+    // Register SVG icons needed by this feature / child components.
+    this.registerIcons();
   }
 
-  async ngOnInit(): Promise<void> {
+  /* --------------------------------------------------------------------------
+   * LIFECYCLE
+   * ------------------------------------------------------------------------ */
+
+  public async ngOnInit(): Promise<void> {
     if(this.isBrowser) {
+      // Theme mode subscription.
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
 
-      this.windowRef.windowWidth$.subscribe((val) => {
-        if(val <= 599.99) {
-          this.itemsPerPage = 6;
+      // Adapt itemsPerPage based on window width.
+      this.windowWidthSub = this.windowRef.windowWidth$.subscribe((width) => {
+        let newPageSize: number = this.itemsPerPage;
+
+        if(width <= 599.99) {
+          newPageSize = 6;
+        } else if(width >= 600 && width <= 1199.98) {
+          newPageSize = 10;
+        } else if(width >= 1200 && width <= 1999.98) {
+          newPageSize = 12;
+        } else {
+          newPageSize = 20;
         }
-        else if(val >= 600 && val <= 1199.98) {
-          this.itemsPerPage = 10;
+
+        // Only reload if page size actually changed.
+        if(newPageSize !== this.itemsPerPage) {
+          this.itemsPerPage = newPageSize;
+          void this.userInit(0);
         }
-        else if(val >= 1200 && val <= 1999.98) {
-          this.itemsPerPage = 12;
-        }
-        else {
-          this.itemsPerPage = 20;
-        }
-      })
+      });
     }
-    this.routerSub = this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => this.usersDataInit());
 
-    this.routeSub = this.route.url.subscribe((segments) => {
-      const path = segments.map((s) => s.path).join('/');
-    });
-    await this.usersDataInit();
+    // Initial load (page 0).
+    await this.userInit(0);
   }
 
-  ngAfterViewInit(): void {
-
+  public ngOnDestroy(): void {
+    this.modeSub?.unsubscribe();
+    this.windowWidthSub?.unsubscribe();
   }
 
-  private iconMaker() {
+  /* --------------------------------------------------------------------------
+   * ICON REGISTRATION
+   * ------------------------------------------------------------------------ */
+
+  /**
+   * Register SVG icons used in this feature (and child components) once.
+   */
+  private registerIcons(): void {
     const iconMap = [
       {name: 'view', path: 'Images/Icons/view.svg'},
       {name: 'edit', path: 'Images/Icons/pencil-square.svg'},
@@ -149,224 +229,51 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
       {name: 'lineColumns', path: 'Images/Icons/line-columns.svg'},
     ];
 
-    for(let icon of iconMap) {
+    iconMap.forEach((icon) => {
       this.matIconRegistry.addSvgIcon(
-        icon.name.toString(),
-        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path.toString())
+        icon.name,
+        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path)
       );
-    }
+    });
   }
 
+  /* --------------------------------------------------------------------------
+   * LAYOUT / VIEW MODE
+   * ------------------------------------------------------------------------ */
+
+  /**
+   * Handle layout switch (Row / Column) from <app-layout-switch-btn>.
+   */
   protected changeLayout(value: boolean): void {
     try {
-      if(typeof value !== 'boolean') throw new Error('Only Boolean value can accept!');
+      if(typeof value !== 'boolean') {
+        throw new Error('Only boolean values are allowed for layout toggle.');
+      }
       this.viewMode = value;
-    }
-    catch(err) {
+    } catch(err) {
       console.error(err);
-      return;
     }
   }
 
-  //<============================================================ USERS ORGANIZATION AND PAGINATION ============================================================>
-  //<============================================================ INITIAL DATA LOADING ============================================================>
-  protected async usersDataInit() {
-    try {
-      this.loading = true;
-      this.resetData();
-      const users = await this.APIsService.getAllUsers();
-      if(!users) throw new Error("Users not found!");
-      const usersWithoutLoggedUser = users.filter(
-        (user) => user.username !== this.LOGGED_USER?.username
-      );
-      this.users = usersWithoutLoggedUser;
-      this.makePagination(usersWithoutLoggedUser, 0)
-    }
-    catch(error) {
-      console.log(error);
-      if(error instanceof HttpErrorResponse) {
-        if(error.status >= 400 && error.status <= 500) {
-          this.notification.notification("error", error.error.message);
-        }
-        else {
-          this.notification.notification("error", "Something went wrong");
-        }
-      }
-    }
-    finally {
-      setTimeout(() => {
-        this.loading = false;
-      }, 500);
-    }
-  }
-  //<============================================================ END INITIAL DATA LOADING ============================================================>
-
-
-  //<============================================================ USER SEARCH ============================================================>
-  protected async searchBtn(): Promise<void> {
-    try {
-      if(!this.searchInput) throw new Error('Search input invalid!');
-      const text = this.searchInput.nativeElement.value;
-      if(!text) throw new Error('Search text is empty');
-      await this.searchUsers(text);
-      return;
-    }
-    catch(err) {
-      console.error(err);
-      return;
-    }
-  }
-  protected async searchUsers(input: string) {
-    try {
-      this.loading = true;
-      const safeInput = input.trim().toLowerCase();
-      const users = await this.APIsService.getAllUsers();
-      if(!safeInput) {
-        this.usersDataInit();
-        return;
-      }
-      if(!this.users || !users) throw new Error("Users not found!");
-      // const usersWithoutLoggedUser = this.users.filter(
-      //   (user) => user.username !== this.LOGGED_USER?.username
-      // );
-      const filteredUsers = users.filter((user) =>
-        user.name.toLowerCase().includes(safeInput.toLowerCase()) ||
-        user.username.toLowerCase().includes(safeInput.toLowerCase()) ||
-        user.email.toLowerCase().includes(safeInput.toLowerCase())
-      )
-      this.makePagination(filteredUsers, 0)
-    }
-    catch(error) {
-      console.log(error);
-      if(error instanceof HttpErrorResponse) {
-        if(error.status >= 400 && error.status <= 500) {
-          this.notification.notification("error", error.error.message);
-        }
-        else {
-          this.notification.notification("error", "Something went wrong");
-        }
-      }
-    }
-    finally {
-      setTimeout(() => {
-        this.loading = false;
-      }, 500);
-    }
-  }
-  //<============================================================ END USER SEARCH ============================================================>
-
-  //<============================================================ PAGE INDEX OPERATION ============================================================>
-  protected async changePage(number: number): Promise<void> {
-    try {
-      this.loading = true;
-
-      if(!this.users) throw new Error("Users not found!");
-
-      const usersWithoutLoggedUser = this.users.filter(
-        user => user.username !== this.LOGGED_USER?.username
-      );
-
-      const safeIndex = number - 1;
-      console.log(safeIndex)
-
-      this.makePagination(usersWithoutLoggedUser, safeIndex)
-
-    } catch(error) {
-      console.log(error);
-      if(error instanceof HttpErrorResponse) {
-        if(error.status >= 400 && error.status <= 500) {
-          this.notification.notification("error", error.error.message);
-        } else {
-          this.notification.notification("error", "Something went wrong");
-        }
-      }
-    } finally {
-      setTimeout(() => {
-        this.loading = false;
-      }, 500);
-    }
-  }
-  //<============================================================ END PAGE INDEX OPERATION ============================================================>
-
-  //<============================================================ PAGE INDEX THREE PAGES BACKWORD ============================================================>
-  protected async previousPage(): Promise<void> {
-    if(this.currentPageIndex > 0) {
-      this.currentPageIndex = Math.max(0, this.currentPageIndex - 3);
-      this.makePagination(this.users.filter(u => u.username !== this.LOGGED_USER?.username), this.currentPageIndex);
-    }
-  }
-  //<============================================================ END PAGE INDEX THREE PAGES BACKWORD ============================================================>
-
-  //<============================================================ PAGE INDEX THREE PAGES FORWARD ============================================================>
-  protected async nextPage(): Promise<void> {
-    const usersWithoutLoggedUser = this.users.filter(u => u.username !== this.LOGGED_USER?.username);
-    const totalPages = Math.ceil(usersWithoutLoggedUser.length / this.limit);
-
-    if(this.currentPageIndex < totalPages - 1) {
-      this.currentPageIndex = Math.min(totalPages - 1, this.currentPageIndex + 3);
-      this.makePagination(usersWithoutLoggedUser, this.currentPageIndex);
-    }
-  }
-  //<============================================================ END PAGE INDEX THREE PAGES FORWARD ============================================================>
-
-
-  //<============================================================ RESET USERS VALUES ============================================================>
-  private resetData() {
-    this.displayPaginationNumberArray = [];
-    this.users = [];
-    this.displayingUsers = [];
-    this.isNoData = false;
-  }
-  //<============================================================ END RESET USERS VALUES ============================================================>
-
-  //<============================================================ MAKE PAGINATION ============================================================>
-  private makePagination(dataArray: User[], index: number): void {
-    const totalDataCount = dataArray.length;
-    const totalPageCount = Math.ceil(totalDataCount / this.limit);
-
-    this.currentPageIndex = index;
-
-    this.isNoData = totalDataCount === 0;
-
-    // Calculate actual data slice range
-    const startIndex = index * this.limit;
-    const endIndex = startIndex + this.limit;
-
-    // Slice data for current page
-    this.displayingUsers = dataArray.slice(startIndex, endIndex);
-
-    // Create pagination page number array (1-based)
-    this.displayPaginationNumberArray = this.makeNumberArray(index, totalPageCount);
-  }
-  //<============================================================ END MAKE PAGINATION ============================================================>
-
-  //<============================================================ PREPAIRE PAGINATION NUMBER ARRAY ============================================================>
-  private makeNumberArray(currentPage: number, totalPages: number): number[] {
-    const current = currentPage + 1; // Convert to 1-based
-    const start = Math.max(1, current - 2);
-    const end = Math.min(totalPages, current + 2);
-
-    return Array.from({length: end - start + 1}, (_, i) => i + start);
-  }
-  //<============================================================ END PREPAIRE PAGINATION NUMBER ARRAY ============================================================>
-
-  //<============================================================ END USERS ORGANIZATION AND PAGINATION ============================================================>
-
-
-
+  /**
+   * Helper to quickly check if a given username is the logged user.
+   */
   protected isThisLoggedUserProfile(username: string): boolean {
     return this.LOGGED_USER?.username === username;
   }
 
+  /* --------------------------------------------------------------------------
+   * PERMISSIONS (role-based access control)
+   * ------------------------------------------------------------------------ */
 
-
-  // Logged user actions
-
-  //Create user
+  /**
+   * Check if logged user can create new users.
+   */
   protected createUserAvailable(): boolean {
     if(!this.LOGGED_USER) return false;
+
     return (
-      this.LOGGED_USER?.access.permissions.some(
+      this.LOGGED_USER.access?.permissions?.some(
         (permission) =>
           permission.module === 'User Management' &&
           permission.actions.includes('create user')
@@ -374,11 +281,14 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  // View user
+  /**
+   * Check if logged user can view users.
+   */
   protected viewUserAvailable(): boolean {
     if(!this.LOGGED_USER) return false;
+
     return (
-      this.LOGGED_USER?.access.permissions.some(
+      this.LOGGED_USER.access?.permissions?.some(
         (permission) =>
           permission.module === 'User Management' &&
           permission.actions.includes('view users')
@@ -386,11 +296,14 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  // View user
+  /**
+   * Check if logged user can update users.
+   */
   protected updateUserAvailable(): boolean {
     if(!this.LOGGED_USER) return false;
+
     return (
-      this.LOGGED_USER?.access.permissions.some(
+      this.LOGGED_USER.access?.permissions?.some(
         (permission) =>
           permission.module === 'User Management' &&
           permission.actions.includes('update user')
@@ -398,11 +311,14 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  // Delete user
+  /**
+   * Check if logged user can delete users.
+   */
   protected deleteUserAvailable(): boolean {
     if(!this.LOGGED_USER) return false;
+
     return (
-      this.LOGGED_USER?.access.permissions.some(
+      this.LOGGED_USER.access?.permissions?.some(
         (permission) =>
           permission.module === 'User Management' &&
           permission.actions.includes('delete user')
@@ -410,88 +326,134 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
+  /* --------------------------------------------------------------------------
+   * USER IMAGE HANDLING
+   * ------------------------------------------------------------------------ */
 
-
+  /**
+   * Decide which image URL to show for a user:
+   *  - If a valid extension is found → use the provided image.
+   *  - Else → use gender-specific dummy image.
+   */
   protected detectUserImage(image: string, gender: string): string {
     if(typeof image === 'string') {
       const imageArray: string[] = image ? image.split('/') : [];
+
       if(imageArray.length > 0) {
-        if(
-          this.definedImageExtentionArray.includes(
-            imageArray[imageArray.length - 1].split('.')[1]
-          )
-        ) {
+        const filename: string = imageArray[imageArray.length - 1] ?? '';
+        const extension: string = filename.split('.')[1] ?? '';
+
+        // Only accept known extensions
+        if(this.definedImageExtensionArray.includes(extension)) {
           this.definedImage = image;
         } else {
-          if(gender.toLowerCase() === 'male') {
-            this.definedImage = this.definedMaleDummyImageURL;
-          } else if(gender.toLowerCase() === 'female') {
-            this.definedImage = this.definedWomanDummyImageURL;
-          } else {
-            this.definedImage = this.definedMaleDummyImageURL;
-          }
+          this.definedImage = this.getGenderFallbackImage(gender);
         }
+      } else {
+        this.definedImage = this.getGenderFallbackImage(gender);
       }
+    } else {
+      this.definedImage = this.getGenderFallbackImage(gender);
     }
+
     return this.definedImage;
   }
 
-  protected addUser() {
+  /**
+   * Helper to pick a dummy image based on gender string.
+   */
+  private getGenderFallbackImage(gender: string): string {
+    const lowerGender = (gender ?? '').toLowerCase();
+
+    if(lowerGender === 'female') {
+      return this.definedWomanDummyImageURL;
+    }
+
+    // Default to male dummy when in doubt.
+    return this.definedMaleDummyImageURL;
+  }
+
+  /* --------------------------------------------------------------------------
+   * NAVIGATION: CREATE / VIEW / EDIT / DELETE
+   * ------------------------------------------------------------------------ */
+
+  /**
+   * Navigate to the Add User form.
+   */
+  protected addUser(): void {
+    if(!this.createUserAvailable()) {
+      this.notification.notification('error', 'You do not have permission to create users.');
+      return;
+    }
+
     this.router.navigate(['/dashboard/users/add-new-user']);
   }
 
+  /**
+   * Navigate to view user profile (token-based).
+   */
   protected async viewUser(isView: boolean, user: User): Promise<void> {
     try {
-      if(!isView || !this.viewUserAvailable()) throw new Error('Premission is denied!');
+      if(!isView || !this.viewUserAvailable()) {
+        throw new Error('Permission denied to view user.');
+      }
 
-      if(!user) throw new Error('Invalid user!');
+      if(!user || !user.username) {
+        throw new Error('Invalid user / username.');
+      }
 
-      const username = user.username;
+      const res = await this.APIsService.generateToken(user.username);
 
-      if(!username) throw new Error('Invalid username')
-
-      const res = await this.APIsService.generateToken(username);
-
-      if(!res.token) throw new Error('Invalid token!');
+      if(!res.token) {
+        throw new Error('Invalid token returned from server.');
+      }
 
       this.router.navigate(['/dashboard/users/user-profile', res.token]);
-
-      return;
-    }
-    catch(err) {
+    } catch(err) {
       console.error(err);
-      return;
+      this.notification.notification('error', 'Unable to open user profile.');
     }
   }
 
+  /**
+   * Navigate to edit user form (token-based).
+   */
   protected async editUser(isEdit: boolean, user: User): Promise<void> {
     try {
-      if(!isEdit || !this.updateUserAvailable()) throw new Error('Premission is denied!');
+      if(!isEdit || !this.updateUserAvailable()) {
+        throw new Error('Permission denied to edit user.');
+      }
 
-      if(!user) throw new Error('Invalid user!');
-      const username = user.username;
-      if(!username) throw new Error('Invalid username')
+      if(!user || !user.username) {
+        throw new Error('Invalid user / username.');
+      }
 
-      console.log(username)
+      const res = await this.APIsService.generateToken(user.username);
 
-      const res = await this.APIsService.generateToken(username);
-
-      if(!res.token) throw new Error('Invalid token!');
+      if(!res.token) {
+        throw new Error('Invalid token returned from server.');
+      }
 
       this.router.navigate(['/dashboard/users/edit-user', res.token]);
-    }
-    catch(err) {
+    } catch(err) {
       console.error(err);
+      this.notification.notification('error', 'Unable to open edit user screen.');
     }
   }
 
-  protected deleteUser(isDelete: boolean, user: User) {
+  /**
+   * Open confirmation dialog and delete user if confirmed.
+   */
+  protected deleteUser(isDelete: boolean, user: User): void {
     try {
       if(!isDelete) return;
+
       const username = user.username;
       const name = user.name;
-      if(!username) throw new Error('Username cannot be empty!');
-      if(!name) throw new Error('Name cannot be empty!');
+
+      if(!username) throw new Error('Username cannot be empty.');
+      if(!name) throw new Error('Name cannot be empty.');
+
       const dialogRef = this.dialog.open(ConfirmationComponent, {
         width: '400px',
         height: 'auto',
@@ -505,32 +467,230 @@ export class UsersListComponent implements OnInit, AfterViewInit, OnDestroy {
       dialogRef.afterClosed().subscribe(async (result) => {
         try {
           if(!result?.isConfirm) return;
-          if(!this.LOGGED_USER) throw new Error("User must logged into the system");
-          await this.APIsService.deleteUserByUsername(username, this.LOGGED_USER?.username)
+          if(!this.LOGGED_USER) {
+            throw new Error('User must be logged into the system.');
+          }
+
+          await this.APIsService.deleteUserByUsername(
+            username,
+            this.LOGGED_USER.username
+          )
             .then((res) => {
               this.notification.notification(res.status, res.message);
-              this.usersDataInit();
+              // Optional: reload current page
+              void this.userInit(this.index);
             })
             .catch((err: HttpErrorResponse) => {
-              this.notification.notification(err.error.error, err.error.message);
-            })
-        }
-        catch(err) {
-          this.notification.notification('error', err as string);
+              this.notification.notification(err.error?.error ?? 'error', err.error?.message ?? 'Delete failed.');
+            });
+        } catch(err) {
+          this.notification.notification('error', String(err));
         }
       });
+    } catch(error) {
+      this.notification.notification('error', String(error));
     }
-    catch(error) {
-      this.notification.notification('error', error as string);
-    }
-
-
-
   }
 
-  ngOnDestroy(): void {
-    this.modeSub?.unsubscribe();
-    this.routeSub?.unsubscribe();
-    this.routerSub?.unsubscribe();
+  /* --------------------------------------------------------------------------
+   * SEARCH
+   * ------------------------------------------------------------------------ */
+
+  /**
+   * Live search handler (ngModelChange).
+   * Always resets to page 0 on new search.
+   */
+  protected async searchUsers(input: string): Promise<void> {
+    try {
+      const raw: string = (input ?? '').toString();
+      const safeInput: string = raw.trim().toLowerCase();
+
+      this.currentSearchTerm = safeInput;
+
+      // Reset to first page for a new search term.
+      await this.userInit(0);
+    } catch(err) {
+      console.error(err);
+      this.notification.notification('error', 'Failed to process user search.');
+    }
+  }
+
+  /**
+   * Search button handler (uses current input element value).
+   */
+  protected async searchBtn(): Promise<void> {
+    try {
+      const input = this.searchInput.nativeElement.value;
+      await this.searchUsers(input);
+    } catch(err) {
+      console.error(err);
+      this.notification.notification('error', 'User search failed.');
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+   * PAGINATION – CORE
+   * ------------------------------------------------------------------------ */
+
+  /**
+   * Whether pagination controls should be shown.
+   */
+  get isPaginationOn(): boolean {
+    // If items == pageSize, only one page → hide controls
+    return this.totalItems > this.itemsPerPage;
+  }
+
+  /**
+   * Main backend loader.
+   * - Takes a 0-based page index.
+   * - Computes start/end for the backend.
+   * - Normalises search string and updates pagination state.
+   */
+  private async userInit(pageIndex: number): Promise<void> {
+    try {
+      this.loading = true;
+
+      const safeIndex: number = Math.max(0, Math.round(Number(pageIndex)));
+      const limit: number = Math.max(1, this.itemsPerPage);
+
+      const startIdx: number = safeIndex * limit;
+      const endIdx: number = startIdx + limit;
+      const safeSearch: string = this.currentSearchTerm.trim();
+
+      const res = await this.APIsService.getAllUsersWithPagination(
+        startIdx,
+        endIdx,
+        safeSearch
+      );
+
+      if(!res || res.status !== 'success') {
+        throw new Error(res?.message || 'Loading users failed.');
+      }
+
+      const payload = res.data;
+      this.users = Array.isArray(payload) ? payload : [];
+
+      this.totalItems = res.count ?? 0;
+
+      this.pageCount =
+        this.totalItems > 0 ? Math.ceil(this.totalItems / limit) : 0;
+
+      // Clamp current page index in case count shrank.
+      const maxIndex: number = this.pageCount > 0 ? this.pageCount - 1 : 0;
+
+      this.index = Math.min(safeIndex, maxIndex);
+
+      // If requested page is beyond max (e.g. after bulk delete) → reload last page.
+      if(safeIndex > maxIndex && this.pageCount > 0) {
+        await this.userInit(maxIndex);
+        return;
+      }
+
+      // Update page-number window.
+      if(this.pageCount > 0) {
+        this.updateWindow();
+      } else {
+        this.start = 0;
+        this.end = 0;
+      }
+    } catch(err) {
+      console.error('[Failed to process user loading with pagination!]: ', err);
+      this.notification.notification('error', 'Failed to process user loading.');
+      this.users = [];
+      this.totalItems = 0;
+      this.pageCount = 0;
+      this.index = 0;
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  /**
+   * Visible page numbers (0-based internally, +1 in template).
+   */
+  get pageRange(): number[] {
+    if(this.pageCount <= 0) {
+      return [];
+    }
+
+    const totalPages = Math.max(1, this.pageCount);
+    const s = Math.max(0, Math.min(this.start, totalPages - 1));
+    const e = Math.max(s, Math.min(this.end, totalPages - 1));
+
+    return Array.from({length: e - s + 1}, (_, i) => s + i);
+  }
+
+  /**
+   * Validate that a value can be treated as a number.
+   */
+  private isNumberValue(value: unknown): boolean {
+    return (
+      value !== null &&
+      value !== undefined &&
+      value !== '' &&
+      !isNaN(Number(value))
+    );
+  }
+
+  /**
+   * User-clicked pagination handler.
+   * nextIndex is the 0-based page index requested from the UI.
+   */
+  protected async changePage(nextIndex: number): Promise<void> {
+    try {
+      if(!this.isNumberValue(nextIndex)) {
+        throw new Error('Invalid page index.');
+      }
+
+      const totalPages = Math.max(1, this.pageCount);
+      const requested = Math.round(Number(nextIndex));
+
+      // Clamp into valid range.
+      const target = Math.min(Math.max(0, requested), totalPages - 1);
+
+      if(target === this.index) {
+        // Already on that page → no-op.
+        return;
+      }
+
+      await this.userInit(target);
+    } catch(err) {
+      console.error('Pagination failed:', err);
+    }
+  }
+
+  /**
+   * Compute page-number window [start..end] around current index.
+   * Shows up to 5 pages (2 on each side where possible).
+   */
+  private updateWindow(): void {
+    const totalPages = Math.max(1, this.pageCount);
+
+    let current = this.index;
+    if(current < 0) current = 0;
+    if(current > totalPages - 1) current = totalPages - 1;
+    this.index = current;
+
+    if(totalPages <= 5) {
+      this.start = 0;
+      this.end = totalPages - 1;
+      return;
+    }
+
+    let start = current - 2;
+    let end = current + 2;
+
+    if(start < 0) {
+      start = 0;
+      end = 4;
+    }
+
+    if(end > totalPages - 1) {
+      end = totalPages - 1;
+      start = totalPages - 5;
+    }
+
+    this.start = start;
+    this.end = end;
   }
 }

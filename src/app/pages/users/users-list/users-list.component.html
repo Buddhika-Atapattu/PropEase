@@ -53,9 +53,9 @@
       </div>
       <!-- End Layout Style -->
 
-      @if (displayingUsers.length > 0) {
+      @if (users.length > 0) {
       <div class="desktop">
-        @if(!viewMode){ @for (user of displayingUsers; track $index; let i =
+        @if(!viewMode){ @for (user of users; track $index; let i =
         $index) {
         <app-user-view-card
           [user]="user"
@@ -68,7 +68,7 @@
         ></app-user-view-card>
         } } @else {
         <div class="users-grid">
-          @for (user of displayingUsers; track $index) {
+          @for (user of users; track $index) {
           <app-user-view-card
             [user]="user"
             [viewMode]="viewMode"
@@ -87,7 +87,7 @@
       <!-- This for only for the mobile view -->
       <div class="mobile">
         <div class="users-grid">
-          @for (user of displayingUsers; track $index) {
+          @for (user of users; track $index) {
           <app-user-view-card
             [user]="user"
             [viewMode]="viewMode"
@@ -101,7 +101,56 @@
           }
         </div>
       </div>
-      } @else {
+      @if(isPaginationOn){
+      <div class="pagination-row">
+        <!-- Jump back 3 pages -->
+        <button
+          type="button"
+          class="btn-warning"
+          (click)="changePage(index - 3)"
+        >
+          <i class="fa-solid fa-angles-left"></i>
+        </button>
+
+        <!-- Previous page -->
+        <button
+          type="button"
+          class="btn-warning"
+          (click)="changePage(index - 1)"
+        >
+          <i class="fa-solid fa-angle-left"></i>
+        </button>
+
+        <!-- Page numbers -->
+        @for (i of pageRange; track i) {
+        <button
+          [class.btn-warning]="i !== index"
+          [class.btn-primary]="i === index"
+          (click)="changePage(i)"
+        >
+          {{ i + 1 }}
+        </button>
+        }
+
+        <!-- Next page -->
+        <button
+          type="button"
+          class="btn-warning fw-bold d-flex justify-content-center align-items-center"
+          (click)="changePage(index + 1)"
+        >
+          <i class="fa-solid fa-angle-right"></i>
+        </button>
+
+        <!-- Jump forward 3 pages -->
+        <button
+          type="button"
+          class="btn-warning fw-bold"
+          (click)="changePage(index + 3)"
+        >
+          <i class="fa-solid fa-angles-right"></i>
+        </button>
+      </div>
+      } } @else {
       <div class="no-users-container">
         <mat-icon class="no-users-icon" aria-hidden="true">group_off</mat-icon>
         <p class="no-users-text">

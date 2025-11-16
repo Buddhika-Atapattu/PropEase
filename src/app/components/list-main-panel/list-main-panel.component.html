@@ -20,10 +20,7 @@
     @if (link.sub) {
     <li
       class="menu-item m-0 has-children"
-      [class.active]="
-        (currecntURL === link.url && link.url !== '') ||
-        activeParentRoute === link.url
-      "
+      [class.active]="checkRoutingPath(link)"
     >
       <button
         type="button"
@@ -55,14 +52,11 @@
 
     <!-- ───────── Single-level parent (no children) ───────── -->
     @else {
-    <li
-      class="menu-item m-0"
-      [class.active]="currecntURL === link.url && link.url !== ''"
-    >
+    <li class="menu-item m-0" [class.active]="checkRoutingPath(link)">
       <button
         type="button"
         class="menu-btn"
-        (click)="navigateTo(link.url, null, null)"
+        (click)="navigateTo(link.commands)"
         [class.btn-collapse]="collapsed"
       >
         <mat-icon
@@ -94,12 +88,12 @@
   >
     <ul class="submenu-list">
       @for (item of submenuItems; track item) {
-      <li class="submenu-item">
+      <li class="submenu-item" [class.active]="checkRoutingPath(item)">
         <button
           type="button"
           class="menu-btn sub-btn"
           [class.btn-collapse]="collapsed"
-          (click)="navigateTo(activeParentPath, item.url, null); closeSubmenu()"
+          (click)="navigateTo(item.commands); closeSubmenu()"
         >
           <mat-icon
             [svgIcon]="item.mat_icon"

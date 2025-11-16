@@ -30,9 +30,7 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {APIsService} from '../../../services/APIs/apis.service';
 import {CryptoService} from '../../../services/cryptoService/crypto.service';
 
-export interface FileExportButtonTypeByExtension {
-  type:
-  | 'doc'
+export type Extension = 'doc'
   | 'docx'
   | 'dot'
   | 'dotx'
@@ -64,7 +62,6 @@ export interface FileExportButtonTypeByExtension {
   | 'ico'
   | 'svg'
   | 'file';
-}
 
 @Component({
   selector: 'app-paginator',
@@ -92,25 +89,22 @@ export interface FileExportButtonTypeByExtension {
 })
 export class PaginatorComponent
   implements OnInit, OnDestroy, AfterViewInit, OnChanges {
-  @Input() pageCount: number = 0;
-  @Input() pageIndex: number = 0;
-  @Input() pageSize: number = 0;
-  @Input() totalDataCount: number = 0;
+  @Input({required: true}) pageIndex: number = 0;
+  @Input({required: true}) pageSize: number = 0;
+  @Input({required: true}) totalDataCount: number = 0;
   @Input() tableType: string = '';
   @Input() pageSizeOptions: number[] = [];
   @Input() search: string = '';
-  @Input() isPaginationEnabled: boolean = false;
+  @Input({required: true}) pagination: boolean = false;
   @Input() isReload: boolean = false;
-  @Input()
-  fileExportButtonTypeByExtension: FileExportButtonTypeByExtension | null =
-    null;
+  @Input() extension!: Extension;
 
   @Output() pageCountChange = new EventEmitter<number>();
   @Output() pageSizeChange = new EventEmitter<number>();
   @Output() pageIndexChange = new EventEmitter<number>();
   @Output() searchChange = new EventEmitter<string>();
   @Output() isReloadChange = new EventEmitter<boolean>();
-  @Output() fileExport = new EventEmitter<FileExportButtonTypeByExtension>();
+  @Output() fileExport = new EventEmitter<Extension>();
 
   protected name: string = '';
   protected isRefreshFinished: boolean = false;
@@ -268,13 +262,7 @@ export class PaginatorComponent
   }
 
   protected onPageSizeChanged(newSize: number) {
-    this.isPaginationEnabled = newSize < this.totalDataCount;
-    this.pageSize = newSize;
-    this.pageSizeChange.emit(this.pageSize);
-    this.pageCount = Math.ceil(this.totalDataCount / newSize);
-    this.pageCountChange.emit(this.pageCount);
-    this.pageIndex = 0;
-    this.pageIndexChange.emit(this.pageIndex);
+
   }
 
   protected onTenantNameChanged(input: string) {
@@ -298,20 +286,10 @@ export class PaginatorComponent
   }
 
   protected onPageIndexChanged(type: string): void {
-    const delta = this.paginationChecker(type);
-    let newIndex = this.pageIndex + delta;
 
-    // Clamp the value within [0, pageCount - 1]
-    if(newIndex < 0) newIndex = 0;
-    if(newIndex >= this.pageCount) newIndex = this.pageCount - 1;
-
-    if(newIndex !== this.pageIndex) {
-      this.pageIndex = newIndex;
-      this.pageIndexChange.emit(this.pageIndex);
-    }
   }
 
-  protected onFileExport(data: FileExportButtonTypeByExtension) {
+  protected onFileExport(data: Extension) {
     this.fileExport.emit(data);
   }
 

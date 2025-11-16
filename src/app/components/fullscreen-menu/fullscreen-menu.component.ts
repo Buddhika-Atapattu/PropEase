@@ -375,8 +375,9 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
   }
 
   /** Navigate helper that emits to parent; parent can call router */
-  go(parent: string | null, child: string | null, grand: string | null): void {
-    this.navigate.emit({p: parent, c: child, g: grand});
+  go(item: FullscreenMenuLink): void {
+    if(!item.commands) return;
+    this.router.navigate(['dashboard', ...item.commands])
     this.requestClose();
   }
 

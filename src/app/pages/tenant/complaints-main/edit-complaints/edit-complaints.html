@@ -1,1 +1,113 @@
-<p>edit-complaints works!</p>
+<app-notification></app-notification>
+<app-progress-bar></app-progress-bar>
+<div class="container-fluid">
+  <form
+    action=""
+    method="POST"
+    enctype="multipart/form-data"
+    (ngSubmit)="submit()"
+    class="profile-form"
+    autocomplete="off"
+    #comaplaintForm="ngForm"
+  >
+    <div class="row my-3">
+      <div class="col-12">
+        <h3>Complaint ID: {{code}}</h3>
+      </div>
+    </div>
+    <!-- Status indicator -->
+    <div class="row my-3">
+      <div class="col-12">
+        <app-stage-indicator
+          [stages]="STATUS_STAGE"
+          [currentValue]="STATUS_CURRENT_VALUE"
+          [showDisabled]="false"
+        ></app-stage-indicator>
+      </div>
+    </div>
+    <!-- End status indicator -->
+    @if(adminAccess){
+    <div class="row mb-3">
+      <h4>{{title}}</h4>
+    </div>
+    <div class="my-3" [innerHTML]="description"></div>
+
+    <!-- Divider -->
+    <div class="row">
+      <div class="col-12">
+        <hr />
+      </div>
+    </div>
+    <!-- End divider -->
+
+    <!-- Change status and priority -->
+    <div class="row">
+      <div class="col-xl-3 col-md-3">
+        <mat-form-field class="w-100">
+          <mat-label>Change the status</mat-label>
+          <mat-select
+            name="status"
+            [(ngModel)]="status"
+            class="text-capitalize"
+            required
+          >
+            @for (item of DEFINED_STATUS; track item) {
+            <mat-option [value]="item" class="text-capitalize"
+              >{{item}}</mat-option
+            >
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="col-xl-3 col-md-3">
+        <mat-form-field class="w-100">
+          <mat-label>Change the priority</mat-label>
+          <mat-select
+            name="priority"
+            [(ngModel)]="priority"
+            class="text-capitalize"
+            required
+          >
+            @for (item of COMPLAINT_PRIORITIES; track item) {
+            <mat-option [value]="item" class="text-capitalize"
+              >{{item}}</mat-option
+            >
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+    <!-- End changing status and priority -->
+
+    <!-- Making team for the complaint -->
+    <div class="row">
+      <!-- <app-custom-table
+        *ngIf="addData.length > 0"
+        [(isReload)]="isReloading"
+        [pageSize]="addPageSize"
+        [pagination]="true"
+        [pageSizeOptions]="addPageSizeOptions"
+        [(pageIndex)]="addPageIndex"
+        [pageCount]="addPageCount"
+        [tableTitle]="'Make Team'"
+        [(search)]="addSearch"
+        [buttons]="actionBtns"
+        [totalDataCount]="addData.length"
+        [(buttonActionTrigger)]="addActionButtonFunction"
+        [(buttonOperationTrigger)]="addOperationButtonFunction"
+        [data]="addData"
+        [columns]="tableColumns"
+        [fullDataCount]="addTotalDataCount"
+      ></app-custom-table> -->
+    </div>
+    <!-- End making team for the complaint -->
+    } @else { }
+    <div class="row mt-3">
+      <div class="col-12">
+        <ng-container *ngIf="code">
+          <app-comments-list [code]="code" [pageSize]="5"></app-comments-list>
+        </ng-container>
+      </div>
+    </div>
+  </form>
+</div>

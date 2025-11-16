@@ -53,7 +53,7 @@
             [src]="sanitizeURL(user.image)"
             alt="User Profile"
             class="user-image"
-            (error)="onImageError()"
+            (error)="detectImageError($event)"
             aria-label="User profile image"
           />
         </ng-template>

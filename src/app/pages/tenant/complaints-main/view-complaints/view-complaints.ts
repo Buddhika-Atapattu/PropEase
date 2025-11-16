@@ -188,7 +188,7 @@ export class ViewComplaints implements OnInit, AfterViewInit, OnDestroy {
 
   get STATUS_CURRENT_VALUE(): number {
     // 01. Safely extract current complaint status
-    const currentStatus = this.complaint?.code as ComplaintStatus | undefined;
+    const currentStatus = this.complaint?.status as ComplaintStatus | undefined;
 
     // 02. Find its index in the defined status array
     const index = currentStatus
@@ -255,7 +255,7 @@ export class ViewComplaints implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  protected async viewComplaint(): Promise<void> {
+  protected async createComplaint(): Promise<void> {
     try {
       if(!this.loggedUser) throw new Error('Logged user invalid!');
       if(!this.complaint) throw new Error('Generate complaint failed!');

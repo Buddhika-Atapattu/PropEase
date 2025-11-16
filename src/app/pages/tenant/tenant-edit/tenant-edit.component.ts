@@ -88,9 +88,9 @@ import {
 } from '../../../services/property/property.service';
 import {
   CustomTableComponent,
-  ButtonDataType,
-  ButtonType,
-  CustomTableColumnType
+  TableButtonActionConfig,
+  TableButton,
+  TableColumn
 } from '../../../components/shared/custom-table/custom-table.component';
 import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
 import {SignSignature} from '../../../components/dialogs/sign-signature/sign-signature.component';
@@ -395,30 +395,23 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   private _propertyTablePageCount: number = 0;
   private _propertyTableType: string = 'property';
   private _propertyTabletSearchText: string = '';
-  private _propertyTableButtonAction: ButtonType = {
-    type: 'add',
-  };
-
-  private _propertyTableButtonOperation: ButtonType = {
-    type: 'view',
-  };
+  private _propertyTableButtonAction: TableButton[] = [{'action': 'view', 'icon': 'visibility'}, {'action': 'add', 'icon': 'add_circle'}];
   private _propertyTableTotalDataCount: number = 0;
 
-  private _propertyTableButtonActionTrigger: ButtonDataType = {
-    type: 'add',
-    data: null,
-  };
-
-  private _propertyTableButtonOperationTrigger: ButtonDataType = {
-    type: 'add',
-    data: null,
-  };
-  private _propertyTableNotification: NotificationType = {
-    type: 'success',
-    message: '',
-  };
   private _propertyTableData: PropertyCustomTableDataType[] = [];
-  private _propertyTableColumns: CustomTableColumnType[] = [];
+  protected propertyTableColumns: TableColumn[] = [
+    {key: 'propertyimage', label: 'Image'},
+    {key: 'type', label: 'Type'},
+    {key: 'listing', label: 'Listing'},
+    {key: 'furnishingStatus', label: 'Furnishing Status'},
+    {key: 'developerName', label: 'Developer Name'},
+    {key: 'projectName', label: 'Project Name'},
+    {key: 'title', label: 'Title'},
+    {key: 'builtYear', label: 'Built Year'},
+    {key: 'address', label: 'Address'},
+    {key: 'actions', label: 'View'},
+    {key: 'operation', label: 'Add'},
+  ];
   private _propertyLength: number = 0;
   // End Custom tabl variables
 
@@ -826,7 +819,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
       //Property Information
       this.propertyId = this.lease.propertyID ?? '';
-      this.handlePropertyTableOperationTrigger(this.propertyId);
+      this.handleButtonsOperations({'action': 'add', 'data': this.propertyId});
 
       // Lease Agreement
       this.startDate = new Date(this.lease.leaseAgreement.startDate);
@@ -1596,22 +1589,6 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     this.handlePropertySearch();
   }
 
-  get propertyTableButtonAction(): ButtonType {
-    return this._propertyTableButtonAction;
-  }
-
-  set propertyTableButtonAction(value: ButtonType) {
-    this._propertyTableButtonAction = value;
-  }
-
-  get propertyTableButtonOperation(): ButtonType {
-    return this._propertyTableButtonOperation;
-  }
-
-  set propertyTableButtonOperation(value: ButtonType) {
-    this._propertyTableButtonOperation = value;
-  }
-
   get propertyTableTotalDataCount(): number {
     return this._propertyTableTotalDataCount;
   }
@@ -1620,46 +1597,12 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     this._propertyTableTotalDataCount = value;
   }
 
-  get propertyTableButtonActionTrigger(): ButtonDataType {
-    return this._propertyTableButtonActionTrigger;
-  }
-
-  set propertyTableButtonActionTrigger(value: ButtonDataType) {
-    this._propertyTableButtonActionTrigger = value;
-    this.handlePropertyTableActionTrigger();
-  }
-
-  get propertyTableButtonOperationTrigger(): ButtonDataType {
-    return this._propertyTableButtonOperationTrigger;
-  }
-
-  set propertyTableButtonOperationTrigger(value: ButtonDataType) {
-    this._propertyTableButtonOperationTrigger = value;
-    this.handlePropertyTableOperationTrigger(this._propertyTableButtonOperationTrigger);
-  }
-
-  get propertyTableNotification(): NotificationType {
-    return this._propertyTableNotification;
-  }
-
-  set propertyTableNotification(value: NotificationType) {
-    this._propertyTableNotification = value;
-  }
-
   get propertyTableData(): PropertyCustomTableDataType[] {
     return this._propertyTableData;
   }
 
   set propertyTableData(value: PropertyCustomTableDataType[]) {
     this._propertyTableData = value;
-  }
-
-  get propertyTableColumns(): CustomTableColumnType[] {
-    return this._propertyTableColumns;
-  }
-
-  set propertyTableColumns(value: CustomTableColumnType[]) {
-    this._propertyTableColumns = value;
   }
 
   get propertyLength(): number {
@@ -1711,42 +1654,48 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     this.makePropertyTablePagination(pageIndex, pageSize);
   }
 
-  private handlePropertyTableActionTrigger() {
-    const propertyID = this._propertyTableButtonActionTrigger.data.element.id;
-    this.gotoTheProperty(propertyID);
-  }
-
-  private async handlePropertyTableOperationTrigger(input: any) {
+  protected async handleButtonsOperations(value: TableButtonActionConfig): Promise<void> {
     try {
-      const propertyID = typeof input === 'string' ? input :
-        this._propertyTableButtonOperationTrigger.data.element.id;
+      if(!value) throw new Error('Invalid data!');
+      const propertyID = typeof value.data === 'string' ? value.data : value.data.element.id;
+      const action = value.action;
+      if(!action || !propertyID) throw new Error('Invalid property ID or action!');
+      switch(action) {
+        case 'view':
+          this.gotoTheProperty(propertyID);
+          break;
+        case 'add':
+          try {
+            const leaseResponse = await this.tenantService.getAllLeases();
 
-      if(!propertyID) throw new Error('Could not found property ID!')
+            if(leaseResponse.status !== 'success') throw new Error('Could not found leases!');
 
-      const leaseResponse = await this.tenantService.getAllLeases();
+            const leases = leaseResponse.data as Lease[];
 
-      if(leaseResponse.status !== 'success') throw new Error('Could not found leases!');
+            const isPropertySelected = leases.some(
+              (lease: Lease) => lease.propertyID === propertyID && lease.leaseID !== this.leaseID
+            );
 
-      const leases = leaseResponse.data as Lease[];
+            if(isPropertySelected) throw new Error('Property is already selected!');
 
-      const isPropertySelected = leases.some(
-        (lease: Lease) => lease.propertyID === propertyID && lease.leaseID !== this.leaseID
-      );
+            const selectedProperty = this.properties.find((property: BackEndPropertyData) => property.id === propertyID);
 
-      if(isPropertySelected) throw new Error('Property is already selected!');
+            if(!selectedProperty) throw new Error('Could not found property!');
 
-      const selectedProperty = this.properties.find((property: BackEndPropertyData) => property.id === propertyID);
-
-      if(!selectedProperty) throw new Error('Could not found property!');
-
-      this.registerProperty(selectedProperty);
+            this.registerProperty(selectedProperty);
+          }
+          catch(error) {
+            if(error instanceof HttpErrorResponse) this.notification.notification('error', error.error.message);
+            else if(typeof error === 'string') this.notification.notification('error', error);
+            else if(error instanceof Error) this.notification.notification('error', error.message);
+            else this.notification.notification('error', 'Unknown error occurred!');
+            return;
+          }
+          break;
+      }
     }
-    catch(error) {
-      if(error instanceof HttpErrorResponse) this.notification.notification('error', error.error.message);
-      else if(typeof error === 'string') this.notification.notification('error', error);
-      else if(error instanceof Error) this.notification.notification('error', error.message);
-      else this.notification.notification('error', 'Unknown error occurred!');
-      return;
+    catch(err) {
+      console.error(err);
     }
   }
 
@@ -1865,13 +1814,6 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     // Defined tabal type and name
     this.propertyTableType = 'Property';
 
-    // Defined button types
-    this.propertyTableButtonAction = {
-      type: 'view',
-    };
-    this.propertyTableButtonOperation = {
-      type: 'add',
-    };
 
     this.propertyTablePageSize = pageSize;
 
@@ -1905,20 +1847,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     // Defined total table data count of data
     this.propertyTableTotalDataCount = allData.length;
 
-    // Defined the table columns
-    this.propertyTableColumns = [
-      {key: 'propertyimage', label: 'Image'},
-      {key: 'type', label: 'Type'},
-      {key: 'listing', label: 'Listing'},
-      {key: 'furnishingStatus', label: 'Furnishing Status'},
-      {key: 'developerName', label: 'Developer Name'},
-      {key: 'projectName', label: 'Project Name'},
-      {key: 'title', label: 'Title'},
-      {key: 'builtYear', label: 'Built Year'},
-      {key: 'address', label: 'Address'},
-      {key: 'actions', label: 'View'},
-      {key: 'operation', label: 'Add'},
-    ];
+    // Defined the table column
 
     // Defined the total data count (full array length)
     this.propertyLength = allData.length;

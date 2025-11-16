@@ -37,6 +37,10 @@
   border: 1px solid var(--surface-variant) !important;
 }
 
+:host ::ng-deep .tox .tox-toolbar__group {
+  margin: 0.125rem 0.25rem !important;
+}
+
 :host-context(html.light) ::ng-deep .tox .tox-toolbar,
 :host-context(html.light) ::ng-deep .tox .tox-toolbar__overflow,
 :host-context(html.light) ::ng-deep .tox .tox-toolbar__primary {

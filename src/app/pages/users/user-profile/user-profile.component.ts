@@ -44,7 +44,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
   private token: string = '';
-  private user!: User;
+  private user: User | null = null;
   protected isLoading: boolean = true;
   protected readonly definedMaleDummyImageURL =
     'Images/user-images/dummy-user/dummy-user.jpg';
@@ -108,7 +108,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  get userData(): User {
+  get userData(): User | null {
     return this.user;
   }
 
@@ -155,7 +155,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       this.isLoading = true;
       if(!this.token) throw new Error('Invalid user token');
       const res = await this.APIs.getUserByToken(this.token);
-      this.user = res.user;
+      this.user = res.user ?? null;
       if(!this.user) throw new Error('Invalid user!');
       this.isUserCanEdit = this.user.username === this.LOGGED_USER?.username;
     }

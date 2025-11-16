@@ -91,9 +91,9 @@ import {
 } from '../../../services/property/property.service';
 import {
   CustomTableComponent,
-  ButtonDataType,
-  ButtonType,
-  CustomTableColumnType
+  TableButton,
+  TableButtonActionConfig,
+  TableColumn
 } from '../../../components/shared/custom-table/custom-table.component';
 import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
 import {SignSignature} from '../../../components/dialogs/sign-signature/sign-signature.component';
@@ -395,37 +395,30 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   // Custom tabl variables
   private _propertyTableIsReloading: boolean = false;
-  private _propertyTablePageSize: number = 1;
-  private _propertyTablePageSizeOptions: number[] = [5, 10, 25, 100];
+  protected propertyTablePageSize: number = 5;
+  protected propertyTablePageSizeOptions: number[] = [5, 10, 25, 100];
   private _propertyTablePageIndex: number = 0;
-  private _propertyTablePageCount: number = 0;
-  private _propertyTableType: string = 'property';
+  protected propertyTableTitle: string = 'Properties';
   private _propertyTabletSearchText: string = '';
-  private _propertyTableButtonAction: ButtonType = {
-    type: 'add',
-  };
-
-  private _propertyTableButtonOperation: ButtonType = {
-    type: 'view',
-  };
-  private _propertyTableTotalDataCount: number = 0;
-
-  private _propertyTableButtonActionTrigger: ButtonDataType = {
-    type: 'add',
-    data: null,
-  };
-
-  private _propertyTableButtonOperationTrigger: ButtonDataType = {
-    type: 'add',
-    data: null,
-  };
-  private _propertyTableNotification: NotificationType = {
-    type: 'success',
-    message: '',
-  };
-  private _propertyTableData: PropertyCustomTableDataType[] = [];
-  private _propertyTableColumns: CustomTableColumnType[] = [];
-  private _propertyLength: number = 0;
+  protected propertyTableTotalDataCount: number = 0;
+  protected propertyTableButtons: TableButton[] = [
+    {'action': 'view', 'icon': 'visibility'},
+    {'action': 'add', 'icon': 'add_circle'},
+  ]
+  protected propertyTableData: PropertyCustomTableDataType[] = [];
+  protected propertyTableColumns: TableColumn[] = [
+    {key: 'propertyimage', label: 'Image'},
+    {key: 'type', label: 'Type'},
+    {key: 'listing', label: 'Listing'},
+    {key: 'furnishingStatus', label: 'Furnishing Status'},
+    {key: 'developerName', label: 'Developer Name'},
+    {key: 'projectName', label: 'Project Name'},
+    {key: 'title', label: 'Title'},
+    {key: 'builtYear', label: 'Built Year'},
+    {key: 'address', label: 'Address'},
+    {key: 'actions', label: 'View'},
+    {key: 'operation', label: 'Add'},
+  ];
   // End Custom tabl variables
 
   // <=============================== End Property Informations ===============================>
@@ -589,9 +582,8 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       this.registerCustomIcons();
       await this.getAllCountries();
       await this.getCountryCodes();
-      await this.getAllProperties();
       await this.makeCurrenciesList();
-      this.makePropertyTablePagination(0, 2);
+      await this.makePropertyTablePagination(0);
       this.isLoading = false;
     }
   }
@@ -1428,36 +1420,6 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== End Eemergency Contact ===========================>
 
   //<=========================== Property Infomations ===========================>
-  //<=========================== Get All Properties From API ===========================>
-  private async getAllProperties() {
-    try {
-      this.isLoading = true;
-      const response = await this.propertyService.getAllProperties();
-      if(response.status === 'success') {
-        this.properties = response.data as BackEndPropertyData[];
-      }
-      else {
-        throw new Error("Unexpected error occurred. Please try again later.");
-      }
-    }
-    catch(error) {
-      console.error(error);
-      if(error instanceof HttpErrorResponse) {
-        this.notification.notification('error', error.error.message);
-      }
-      else if(typeof error === 'string') {
-        this.notification.notification('error', error);
-      }
-      else if(error instanceof Error) {
-        this.notification.notification('error', error.message);
-      }
-    }
-    finally {
-      this.isLoading = false;
-      this.cdr.detectChanges();
-    }
-  }
-  //<=========================== End Get All Properties From API ===========================>
 
   //<=========================== Property Table Getters And Setters ===========================>
   get propertyTableIsReloading(): boolean {
@@ -1469,21 +1431,6 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     this.handlePropertyTableReloading();
   }
 
-  get propertyTablePageSize(): number {
-    return this._propertyTablePageSize;
-  }
-
-  set propertyTablePageSize(value: number) {
-    this._propertyTablePageSize = value;
-  }
-
-  get propertyTablePageSizeOptions(): number[] {
-    return this._propertyTablePageSizeOptions;
-  }
-
-  set propertyTablePageSizeOptions(value: number[]) {
-    this._propertyTablePageSizeOptions = value;
-  }
 
   get propertyTablePageIndex(): number {
     return this._propertyTablePageIndex;
@@ -1491,24 +1438,9 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   set propertyTablePageIndex(value: number) {
     this._propertyTablePageIndex = value;
-    this.handelPageIndex();
+    this.makePropertyTablePagination(this._propertyTablePageIndex);
   }
 
-  get propertyTablePageCount(): number {
-    return this._propertyTablePageCount;
-  }
-
-  set propertyTablePageCount(value: number) {
-    this._propertyTablePageCount = value;
-  }
-
-  get propertyTableType(): string {
-    return this._propertyTableType;
-  }
-
-  set propertyTableType(value: string) {
-    this._propertyTableType = value;
-  }
 
   get propertyTabletSearchText(): string {
     return this._propertyTabletSearchText;
@@ -1516,83 +1448,8 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   set propertyTabletSearchText(value: string) {
     this._propertyTabletSearchText = value;
-    this.handlePropertySearch();
+    this.makePropertyTablePagination(0);
   }
-
-  get propertyTableButtonAction(): ButtonType {
-    return this._propertyTableButtonAction;
-  }
-
-  set propertyTableButtonAction(value: ButtonType) {
-    this._propertyTableButtonAction = value;
-  }
-
-  get propertyTableButtonOperation(): ButtonType {
-    return this._propertyTableButtonOperation;
-  }
-
-  set propertyTableButtonOperation(value: ButtonType) {
-    this._propertyTableButtonOperation = value;
-  }
-
-  get propertyTableTotalDataCount(): number {
-    return this._propertyTableTotalDataCount;
-  }
-
-  set propertyTableTotalDataCount(value: number) {
-    this._propertyTableTotalDataCount = value;
-  }
-
-  get propertyTableButtonActionTrigger(): ButtonDataType {
-    return this._propertyTableButtonActionTrigger;
-  }
-
-  set propertyTableButtonActionTrigger(value: ButtonDataType) {
-    this._propertyTableButtonActionTrigger = value;
-    this.handlePropertyTableActionTrigger();
-  }
-
-  get propertyTableButtonOperationTrigger(): ButtonDataType {
-    return this._propertyTableButtonOperationTrigger;
-  }
-
-  set propertyTableButtonOperationTrigger(value: ButtonDataType) {
-    this._propertyTableButtonOperationTrigger = value;
-    this.handlePropertyTableOperationTrigger();
-  }
-
-  get propertyTableNotification(): NotificationType {
-    return this._propertyTableNotification;
-  }
-
-  set propertyTableNotification(value: NotificationType) {
-    this._propertyTableNotification = value;
-  }
-
-  get propertyTableData(): PropertyCustomTableDataType[] {
-    return this._propertyTableData;
-  }
-
-  set propertyTableData(value: PropertyCustomTableDataType[]) {
-    this._propertyTableData = value;
-  }
-
-  get propertyTableColumns(): CustomTableColumnType[] {
-    return this._propertyTableColumns;
-  }
-
-  set propertyTableColumns(value: CustomTableColumnType[]) {
-    this._propertyTableColumns = value;
-  }
-
-  get propertyLength(): number {
-    return this._propertyLength;
-  }
-
-  set propertyLength(value: number) {
-    this._propertyLength = value;
-  }
-
   //<=========================== End Property Table Getters And Setters ===========================>
 
   //<=========================== Property Common Handlers ===========================>
@@ -1621,84 +1478,90 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== Handle Property Table Getters And Setters ===========================>
   private async handlePropertyTableReloading() {
     if(this._propertyTableIsReloading) {
-      await this.getAllProperties();
-      this._propertyTableIsReloading = false;
+      await this.makePropertyTablePagination(0);
+      this.propertyTableIsReloading = false;
     } else {
       return;
     }
   }
 
-  private handelPageIndex() {
-    this.makePropertyTablePagination(this._propertyTablePageIndex, this.propertyTablePageSize);
-  }
-
-  private handlePropertyTableActionTrigger() {
-    const propertyID = this._propertyTableButtonActionTrigger.data.element.id;
-    this.gotoTheProperty(propertyID);
-  }
-
-  private async handlePropertyTableOperationTrigger() {
+  protected async tableButtonOperationForProperties(data: TableButtonActionConfig): Promise<void> {
     try {
-      console.log(this._propertyTableButtonOperationTrigger.data)
-      const propertyID =
-        this._propertyTableButtonOperationTrigger.data.element.id;
-      console.log(propertyID)
+      if(!this.loggedUser) throw new Error('Invalid login!');
+      if(!data) throw new Error('Invalid table data');
+      console.log(data.data);
+      const safeAction = data.action.trim();
+      const safeData = data.data.trim();
+      if(!safeAction) throw new Error('Invalid action!');
+      const propertyID = safeData.element.id;
+      if(!propertyID) throw new Error('Invalid Property ID!');
 
-      if(!propertyID) throw new Error('Could not found property ID!')
+      switch(safeAction) {
+        case 'view':
+          this.gotoTheProperty(propertyID);
+          break;
+        case 'add':
+          try {
+            const propertyID = '';
 
-      const leaseResponse = await this.tenantService.getAllLeases();
+            if(!propertyID) throw new Error('Could not found property ID!')
 
-      if(leaseResponse.status !== 'success') throw new Error('Could not found leases!');
+            const leaseResponse = await this.tenantService.getAllLeases();
 
-      const leases = leaseResponse.data as Lease[];
+            if(leaseResponse.status !== 'success') throw new Error('Could not found leases!');
 
-      const isPropertySelected = leases.some((lease: Lease) => lease.propertyID === propertyID);
+            const leases = leaseResponse.data as Lease[];
 
-      if(isPropertySelected) throw new Error('Property is already selected!');
+            const isPropertySelected = leases.some((lease: Lease) => lease.propertyID === propertyID);
 
-      const selectedProperty = this.properties.find((property: BackEndPropertyData) => property.id === propertyID);
+            if(isPropertySelected) throw new Error('Property is already selected!');
 
-      if(!selectedProperty) throw new Error('Could not found property!');
+            const selectedProperty = this.properties.find((property: BackEndPropertyData) => property.id === propertyID);
 
-      this.registerProperty(selectedProperty);
+            if(!selectedProperty) throw new Error('Could not found property!');
+
+            this.registerProperty(selectedProperty);
+
+          }
+          catch(error) {
+            console.error(error);
+            if(error instanceof HttpErrorResponse) this.notification.notification('error', error.error.message);
+            else if(typeof error === 'string') this.notification.notification('error', error);
+            else if(error instanceof Error) this.notification.notification('error', error.message);
+            else this.notification.notification('error', 'An error occurred!');
+            return;
+          }
+          break;
+
+      }
 
     }
-    catch(error) {
-      console.error(error);
-      if(error instanceof HttpErrorResponse) this.notification.notification('error', error.error.message);
-      else if(typeof error === 'string') this.notification.notification('error', error);
-      else if(error instanceof Error) this.notification.notification('error', error.message);
-      else this.notification.notification('error', 'An error occurred!');
+    catch(err) {
+      console.error('Error:', err);
       return;
     }
+
   }
 
-  private handlePropertySearch(): void {
-    const filterValue = this._propertyTabletSearchText.toLowerCase().trim();
+  private async makePropertyTablePagination(index: number): Promise<void> {
+    try {
+      // Make the data reload before start
+      this.propertyTableIsReloading = true;
 
-    if(filterValue) {
-      this.propertyTableData = [];
+      if(typeof index !== 'number') throw new Error('Index is not type of number!');
 
-      const filterData = this.properties.filter((item) => {
-        return (
-          item.listing.toLowerCase().includes(filterValue) ||
-          item.furnishingStatus.toLowerCase().includes(filterValue) ||
-          item.projectName?.toLowerCase().includes(filterValue) ||
-          item.title?.toLowerCase().includes(filterValue) ||
-          item.developerName?.toLowerCase().includes(filterValue) ||
-          item.type?.toLowerCase().includes(filterValue) ||
-          item.builtYear?.toString().includes(filterValue) ||
-          item.description?.toLowerCase().includes(filterValue) ||
-          item.address.city?.toLowerCase().includes(filterValue) ||
-          item.address.country?.toLowerCase().includes(filterValue) ||
-          item.address.street?.toLowerCase().includes(filterValue) ||
-          item.address.stateOrProvince?.toLowerCase().includes(filterValue)
-        );
-      });
+      const safeIndex: number = Number.isFinite(index) && index >= 0 ? Math.floor(index) : 0;
+      const safeStart = safeIndex * this.propertyTablePageSize;
+      const safeEnd = safeStart + this.propertyTablePageSize;
+      const filterValue = this.propertyTabletSearchText.toLowerCase().trim();
 
-      const data: PropertyCustomTableDataType[] = [];
+      const res = await this.propertyService.getPropertiesWithPaginationAndFilter(safeStart, safeEnd, filterValue);
+      if(res.status !== 'success') throw new Error('Property loading failed!');
 
-      filterData.forEach((item) => {
+      const data = res.data;
+
+      const organizedData: PropertyCustomTableDataType[] = [];
+      data.forEach((item: BackEndPropertyData) => {
         const property: PropertyCustomTableDataType = {
           image: item.images[0].imageURL,
           id: item.id,
@@ -1710,149 +1573,23 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
           builtYear: item.builtYear,
           projectName: item.projectName,
           address: `No.${item.address.houseNumber},<br/>
-            ${item.address.street},<br/>
-            ${item.address.city},<br/>
-            ${item.address.stateOrProvince},<br/>
-            ${item.address.country},<br/>
-            ${item.address.postcode}`,
-        };
-        data.push(property);
-      });
-
-      if(data.length > 0) {
-        const pageOptions: number[] = [];
-
-        for(let i = 1; i < data.length; i++) {
-          if(i % this.propertyTablePageSize !== 0) continue;
-          pageOptions.push(i);
-        }
-
-        if(pageOptions.length === 0) {
-          pageOptions.push(data.length);
-        }
-
-        // Defined page size options
-        this.propertyTablePageSizeOptions = pageOptions;
-
-        // Defined table page count
-        this.propertyTablePageCount = Math.ceil(
-          data.length / this.propertyTablePageSize
-        );
-
-        this.propertyLength = data.length;
-
-        // Assign data to the table that will be displayed
-        const tableData = data.slice(
-          this.propertyTablePageSize * 0,
-          this.propertyTablePageSize * (0 + 1)
-        );
-
-        this.propertyTableData = tableData;
-
-        this.cdr.detectChanges();
-      } else {
-        this.notification.notification('warning', 'No data found!');
-      }
-    } else {
-      this.makePropertyTablePagination(
-        this.propertyTablePageIndex,
-        this.propertyTablePageSize
-      );
-    }
-  }
-
-  private makePropertyTablePagination(index: number, pageSize: number): void {
-    // Make the data reload before start
-    this.propertyTableIsReloading = true;
-
-    // Assign the all properties to the variable
-    const allData = this.properties;
-
-    if(this.propertyTablePageSizeOptions.length !== 0) {
-      // Process the page size options
-      const pageOptions: number[] = [];
-      for(let i = 1; i < allData.length; i++) {
-        if(i % pageSize !== 0) continue;
-        pageOptions.push(i);
-      }
-
-      if(pageOptions.length === 0) {
-        pageOptions.push(allData.length);
-      }
-
-      // Defined page size options
-      this.propertyTablePageSizeOptions = pageOptions;
-
-    }
-
-    // Defined table page count
-    this.propertyTablePageCount = Math.ceil(allData.length / pageSize);
-
-    // Defined tabal type and name
-    this.propertyTableType = 'Property';
-
-    // Defined button types
-    this.propertyTableButtonAction = {
-      type: 'view',
-    };
-    this.propertyTableButtonOperation = {
-      type: 'add',
-    };
-
-    // Define the page size
-    this.propertyTablePageSize = pageSize;
-
-
-    // Assign data to the table that will be displayed
-    const data = allData.slice(pageSize * index, pageSize * (index + 1));
-
-    //Organize data
-    const organizedData: PropertyCustomTableDataType[] = [];
-    data.forEach((item) => {
-      const property: PropertyCustomTableDataType = {
-        image: item.images[0].imageURL,
-        id: item.id,
-        type: item.type,
-        listing: item.listing,
-        furnishingStatus: item.furnishingStatus,
-        developerName: item.developerName,
-        title: item.title,
-        builtYear: item.builtYear,
-        projectName: item.projectName,
-        address: `No.${item.address.houseNumber},<br/>
         ${item.address.street},<br/>
         ${item.address.city},<br/>
         ${item.address.stateOrProvince},<br/>
         ${item.address.country},<br/>
         ${item.address.postcode}`,
-      };
-      organizedData.push(property);
-    });
+        };
+        organizedData.push(property);
+      });
 
-    this.propertyTableData = organizedData;
-    // Defined total table data count of data
-    this.propertyTableTotalDataCount = allData.length;
-
-    // Defined the table columns
-    this.propertyTableColumns = [
-      {key: 'propertyimage', label: 'Image'},
-      {key: 'type', label: 'Type'},
-      {key: 'listing', label: 'Listing'},
-      {key: 'furnishingStatus', label: 'Furnishing Status'},
-      {key: 'developerName', label: 'Developer Name'},
-      {key: 'projectName', label: 'Project Name'},
-      {key: 'title', label: 'Title'},
-      {key: 'builtYear', label: 'Built Year'},
-      {key: 'address', label: 'Address'},
-      {key: 'actions', label: 'View'},
-      {key: 'operation', label: 'Add'},
-    ];
-
-    // Defined the total data count (full array length)
-    this.propertyLength = allData.length;
-
-    this.propertyTableIsReloading = false;
-    this.cdr.detectChanges();
+      this.propertyTableData = organizedData;
+      this.propertyTableIsReloading = false;
+      this.cdr.detectChanges();
+    }
+    catch(err) {
+      console.error(err);
+      return
+    }
   }
   //<=========================== End Handle Property Table Getters And Setters ===========================>
 

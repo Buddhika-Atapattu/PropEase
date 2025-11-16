@@ -1,3 +1,4 @@
+// Path: src/app/components/shared/custom-table/custom-table.component.ts
 import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
   AfterViewInit,
@@ -11,38 +12,26 @@ import {
   Output,
   PLATFORM_ID,
   SimpleChanges,
-  ViewChild,
 } from '@angular/core';
-import {Subscription} from 'rxjs';
 
-import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
+import {MatIconModule} from '@angular/material/icon';
 import {MatSortModule, Sort} from '@angular/material/sort';
 import {MatTableDataSource, MatTableModule} from '@angular/material/table';
 import {MatTooltipModule} from '@angular/material/tooltip';
 
 import {User} from '../../../services/APIs/apis.service';
-import {TenantService} from '../../../services/tenant/tenant.service';
+import {AuthService} from '../../../services/auth/auth.service';
 import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
 
 import {SwitchButton} from '../../../components/shared/buttons/switch-button/switch-button.component';
-import {NotificationDialogComponent, NotificationType} from '../../dialogs/notification/notification.component';
-import {ProgressBarComponent} from '../../dialogs/progress-bar/progress-bar.component';
-import {FileExportButtonTypeByExtension, PaginatorComponent} from '../paginator/paginator.component';
+import {type Extension, PaginatorComponent} from '../paginator/paginator.component';
 import {SkeletonLoaderComponent} from '../skeleton-loader/skeleton-loader.component';
 
-/**
- * Button click payload for row actions/operations
- */
-export interface ButtonDataType {
-  type: string;
-  data: any;
-}
+/* ──────────────────────────────────────────────────────────────────
+   1) Action / icon types + mapping
+   ────────────────────────────────────────────────────────────────── */
 
-/**
- * Allowed button types in Action/Operation columns
- */
-export interface ButtonType {
-  type:
+export type ActionId =
   | 'add'
   | 'delete'
   | 'remove'
@@ -56,23 +45,75 @@ export interface ButtonType {
   | 'edit'
   | 'reset'
   | 'search';
+
+export type ActionIcon =
+  | 'add_circle'
+  | 'delete'
+  | 'remove_circle'
+  | 'visibility'
+  | 'download'
+  | 'check_circle'
+  | 'cancel'
+  | 'toggle_on'
+  | 'toggle_off'
+  | 'upload'
+  | 'edit'
+  | 'restart_alt'
+  | 'search';
+
+export const ACTION_ICONS: Record<ActionId, ActionIcon> = {
+  add: 'add_circle',
+  delete: 'delete',
+  remove: 'remove_circle',
+  view: 'visibility',
+  download: 'download',
+  approve: 'check_circle',
+  reject: 'cancel',
+  activate: 'toggle_on',
+  deactivate: 'toggle_off',
+  upload: 'upload',
+  edit: 'edit',
+  reset: 'restart_alt',
+  search: 'search',
+};
+
+/**
+ * Per-button config used in the table:
+ * - action: emitted to parent (e.g. 'view', 'download')
+ * - icon: material icon name
+ * - label: human-readable (tooltip, optional text)
+ */
+export interface TableButton {
+  action: ActionId;
+  icon: ActionIcon;
+  label?: string;
 }
 
+/** Payload emitted when a button is clicked in any row */
+export interface TableButtonActionConfig {
+  action: ActionId;
+  data: any;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   2) Column / file export / events / switch types
+   ────────────────────────────────────────────────────────────────── */
+
 /** Column descriptor for dynamic tables */
-export interface CustomTableColumnType {
+export interface TableColumn {
   key: string;   // must match a key on each row object
   label: string; // header text
 }
 
 /** File export payload bubbled to parent */
-export interface FileExportWithDataAndExtentionType {
+export interface FileExport {
   data: any[];
-  extention: FileExportButtonTypeByExtension;
+  extention: Extension;
 }
 
+export type fileExt = Extension;
 
-
-/** Normalized event types so parents can listen to one stream */
+/** Normalized event types (currently unused, but kept for future extension) */
 export type TableEventType =
   | 'action'
   | 'operation'
@@ -88,7 +129,7 @@ export interface TableEvent<T = any> {
   meta?: Record<string, any>;
 }
 
-/** Optional per-row visibility predicates for action/operation buttons */
+/** Optional per-row visibility predicates for action/operation buttons (not wired yet) */
 export interface ButtonVisibility {
   action?: (row: any) => boolean;
   operation?: (row: any) => boolean;
@@ -103,285 +144,422 @@ export interface SwitchButtonType {
   data?: any;
 }
 
+/* ──────────────────────────────────────────────────────────────────
+   3) Component
+   ────────────────────────────────────────────────────────────────── */
+
 @Component({
   selector: 'app-custom-table',
   standalone: true,
   imports: [
     CommonModule,
     MatTableModule,
-    MatPaginatorModule,
     MatSortModule,
     MatTooltipModule,
-
+    MatIconModule,
     SkeletonLoaderComponent,
     PaginatorComponent,
-    NotificationDialogComponent,
-    ProgressBarComponent,
     SwitchButton,
   ],
   templateUrl: './custom-table.component.html',
-  styleUrls: ['./custom-table.component.scss'], // NOTE: plural is correct
+  styleUrls: ['./custom-table.component.scss'],
 })
 export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   // ─────────────────────────────────────────────────────────────
-  // Inputs from parent (BEGINNER TIP: think of these as "props")
+  // Inputs from parent (think of these as "props")
   // ─────────────────────────────────────────────────────────────
-  @Input() loggedUser: User | null = null;
-  @Input() isLoading = false;
-  @Input() isBrowser = false;
-  @Input() mode: boolean | null = null;
-  @Input() modeSub: Subscription | null = null;
-  @Input() isRemoving = false;
 
-  @Input() fullDataCount = 0;
-  @Input() totalDataCount = 0; @Output() totalDataCountChange = new EventEmitter<number>();
+  @Input({required: true}) totalDataCount = 0;
   @Input({required: true}) data: any[] = [];
-  @Input({required: true}) columns: CustomTableColumnType[] = [];
+  @Input({required: true}) columns: TableColumn[] = [];
 
-  @Input() paginationEnable = false; @Output() paginationEnableChange = new EventEmitter<boolean>();
-  @Input() pageSize = 2; @Output() pageSizeChange = new EventEmitter<number>();
-  @Input() pageSizeOptions: number[] = [2, 4, 6]; @Output() pageSizeOptionsChange = new EventEmitter<number[]>();
-  @Input() pageIndex = 0; @Output() pageIndexChange = new EventEmitter<number>();
-  @Input() pageCount = 0; @Output() pageCountChange = new EventEmitter<number>();
-  @Input() tableType = ''; @Output() tableTypeChange = new EventEmitter<string>();
-  @Input() search = ''; @Output() searchChange = new EventEmitter<string>();
-  @Input() isReload = false; @Output() isReloadChange = new EventEmitter<boolean>();
+  @Input({required: true}) pagination = false;
+  @Input({required: true}) pageSize = 2;
 
-  @Input() fileExportButtonTypeByExtension!: FileExportButtonTypeByExtension;
-  @Output() fileExport = new EventEmitter<FileExportWithDataAndExtentionType>();
+  @Input() pageSizeOptions: number[] = [];
+  @Output() pageSizeOptionsChange: EventEmitter<number[]> = new EventEmitter<number[]>();
 
-  @Input() buttonAction: ButtonType = {type: 'add'}; @Output() buttonActionChange = new EventEmitter<ButtonType>();
-  @Input() buttonOperation: ButtonType = {type: 'view'}; @Output() buttonOperationChange = new EventEmitter<ButtonType>();
+  @Input({required: true}) index = 0;
+  @Output() indexChange: EventEmitter<number> = new EventEmitter<number>();
 
-  @Input() buttonActionTrigger: ButtonDataType | null = null; @Output() buttonActionTriggerChange = new EventEmitter<ButtonDataType | null>();
-  @Input() buttonOperationTrigger: ButtonDataType | null = null; @Output() buttonOperationTriggerChange = new EventEmitter<ButtonDataType | null>();
-  @Input() buttonActionTriggerStarted = false; @Output() buttonActionTriggerStartedChange = new EventEmitter<boolean>();
-  @Input() buttonOperationTriggerStarted = false; @Output() buttonOperationTriggerStartedChange = new EventEmitter<boolean>();
+  @Input() tableTitle = '';
+
+  @Input() search!: string;
+  @Output() searchChange: EventEmitter<string> = new EventEmitter<string>();
+
+  @Input() isReload: boolean = false;
+  @Output() isReloadChange: EventEmitter<boolean> = new EventEmitter<boolean>();
+
+  @Input() fileExportExtention!: Extension;
+  @Output() fileExport: EventEmitter<FileExport> = new EventEmitter<FileExport>();
+
+  /**
+   * Optional explicit button configs from parent.
+   * These are used:
+   * - for a generic 'buttons' column (multi-button)
+   * - OR to override auto-detected button configs per action
+   */
+  @Input() buttons!: TableButton[];
+  @Output() buttonOperation: EventEmitter<TableButtonActionConfig> =
+    new EventEmitter<TableButtonActionConfig>();
 
   @Input() switchButton!: SwitchButtonType;
-  @Output() switchButtonChange = new EventEmitter<SwitchButtonType>();
+  @Output() switchButtonChange: EventEmitter<SwitchButtonType> =
+    new EventEmitter<SwitchButtonType>();
 
-  @Input() notification: NotificationType = {type: '', message: ''};
-  @Output() notificationChange = new EventEmitter<NotificationType>();
-
-  // Edit feature flags
-  @Input() editable = false;
-  @Input() editMode: 'inline' | 'side-panel' | 'modal' = 'side-panel';
-  @Input() rowIdKey = 'id';
-
-  // Button visibility toggles
+  // Button visibility toggles (not fully wired yet; kept for extension)
   @Input() showButtons: 'none' | 'action' | 'operation' | 'both' = 'both';
   @Input() buttonVisibility: ButtonVisibility = {};
-
-  // Normalized event stream for parent
-  @Output() tableEvent = new EventEmitter<TableEvent>();
-  @Output() editRequested = new EventEmitter<any>();
-  @Output() editSaved = new EventEmitter<any>();
-  @Output() editCancelled = new EventEmitter<any>();
-
-  // ─────────────────────────────────────────────────────────────
-  // View children
-  // ─────────────────────────────────────────────────────────────
-  @ViewChild(ProgressBarComponent, {static: true}) progress!: ProgressBarComponent;
-  @ViewChild(NotificationDialogComponent, {static: true}) NotificationDialogComponent!: NotificationDialogComponent;
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   // ─────────────────────────────────────────────────────────────
   // Internal state used by the table
   // ─────────────────────────────────────────────────────────────
+
+  private isBrowser!: boolean;
+  protected loggedUser!: User | null;
+
+  /** Keys used by MatTable for header/row defs */
   protected displayedColumnKeys: string[] = [];
-  protected dataSource = new MatTableDataSource<any>();
+
+  /** DataSource wrapper used by MatTable */
+  protected dataSource: MatTableDataSource<any> = new MatTableDataSource<any>();
+
   protected tableButtonAction = '';
   protected tableButtonOperation = '';
   protected tableStatus = '';
   protected isTableVisible = true;
-  protected dataCount: number = 0;
+  protected dataCount = 0;
+  protected isArrayOfData = false;
 
   // Default images used as fallbacks
   protected readonly definedMaleDummyImageURL = 'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL = 'Images/user-images/dummy-user/dummy_woman.jpg';
   protected definedImage = 'Images/System-images/noImage.jpeg';
 
-  // Editing state
-  private editingRowId: string | null = null;
-  private editingDraft: any = null;
-
-  // Cached per-row visibilities (avoid calling functions in template)
+  // Cached per-row visibilities (not used yet, but kept)
   protected canShowActionForRow: Map<string, boolean> = new Map();
   protected canShowOperationForRow: Map<string, boolean> = new Map();
 
+  /**
+   * Map of "button-like" column keys → button config.
+   * Example:
+   *  - column key "viewButton"  → action "view", icon "visibility", label "View" (or column label)
+   *  - column key "downloadBtn" → action "download", icon "download", label "Download"
+   *
+   * The key is stored in lowercase for easy lookup.
+   */
+  protected buttonColumns: Map<string, TableButton> = new Map<string, TableButton>();
+
   // ─────────────────────────────────────────────────────────────
-  // DI
+  // Dependency Injection
   // ─────────────────────────────────────────────────────────────
+
   public constructor (
     private readonly windowRef: WindowsRefService,
+    private readonly authService: AuthService,
     @Inject(PLATFORM_ID) private readonly platformId: Object,
-    private readonly tenantService: TenantService
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
+    this.loggedUser = this.authService.getLoggedUser ?? null;
   }
 
   // ─────────────────────────────────────────────────────────────
   // Lifecycle
   // ─────────────────────────────────────────────────────────────
+
   public async ngOnInit(): Promise<void> {
-    // Subscribe to theme/mode only in browser
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {this.mode = val;});
-    }
+    // Simple flag to show "no data" state
+    this.isArrayOfData = Array.isArray(this.data) && this.data.length > 0;
   }
 
   public ngAfterViewInit(): void {
-    // Tie "loading" to parent-controlled isReload flag (for skeletons)
-    setTimeout(() => {
-      this.isLoading = this.isReload;
-    }, 500)
-  }
-
-  /**
- * Normalizes any status string to a CSS-friendly class and returns:
- *  "main-category <normalized>"
- * - lowercases
- * - trims
- * - replaces spaces with underscores (so 'under review' -> 'under_review')
- * - leaves complaint statuses like 'in_progress' as-is
- */
-  protected statusClass(status: string | null | undefined): string {
-    const norm = String(status ?? '')
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '_');   // spaces → underscores
-
-    // If nothing sensible, just return base.
-    if(!norm) return 'main-category';
-
-    return `main-category ${norm}`;
-  }
-
-  public ngOnChanges(changes: SimpleChanges): void {
-    if(changes['data']) {
-      this.tableButtonAction = this.buttonAction.type.trim().toLowerCase();
-      this.tableButtonOperation = this.buttonOperation.type.trim().toLowerCase();
-
-      // guard + copy to trigger MatTable change detection
-      const rows = Array.isArray(this.data) ? this.data : [];
-      this.dataCount = rows.length;
-      this.dataSource.data = [...rows];
-
-      this.computeButtonVisibility(this.dataSource.data);
-
-      setTimeout(() => {
-        this.isTableVisible = this.fullDataCount > 0;
-      }, 0);
-    }
-
-    if(changes['columns']) {
-      this.displayedColumnKeys = (this.columns ?? []).map(c => c.key);
-      this.tableStatus = (this.columns.find(c => c.key.toLowerCase() === 'status')?.key || '').toLowerCase();
-    }
+    // Reserved for future logic (e.g. tie skeletons to isReload more tightly)
   }
 
   public ngOnDestroy(): void {
-    this.modeSub?.unsubscribe();
+    // No subscriptions yet; placeholder for future cleanup
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Helpers (BEGINNER TIP: keep template simple; compute in TS)
-  // ─────────────────────────────────────────────────────────────
+  public ngOnChanges(changes: SimpleChanges): void {
+    // When data changes → refresh MatTable source
+    if(changes['data']) {
+      const rows: any[] = Array.isArray(this.data) ? this.data : [];
+      this.dataCount = rows.length;
+      this.dataSource.data = [...rows];
 
-  /** Expose a safe string converter for the template (instead of global String(...)) */
-  protected toStr(v: unknown): string {return String(v ?? '');}
+      setTimeout((): void => {
+        this.isTableVisible = this.totalDataCount > 0;
+      }, 0);
+    }
 
-  /** Compute per-row visibility for action/operation buttons and cache in maps */
-  private computeButtonVisibility(rows: any[]): void {
-    this.canShowActionForRow.clear();
-    this.canShowOperationForRow.clear();
-
-    const showAction = this.showButtons === 'action' || this.showButtons === 'both';
-    const showOperation = this.showButtons === 'operation' || this.showButtons === 'both';
-
-    const hasActionPred = typeof this.buttonVisibility.action === 'function';
-    const hasOperationPred = typeof this.buttonVisibility.operation === 'function';
-
-    for(const row of rows) {
-      const rowId = this.toStr(row?.[this.rowIdKey]);
-      const allowAction = showAction && (!hasActionPred || !!this.buttonVisibility.action!(row));
-      const allowOperation = showOperation && (!hasOperationPred || !!this.buttonVisibility.operation!(row));
-      this.canShowActionForRow.set(rowId, allowAction);
-      this.canShowOperationForRow.set(rowId, allowOperation);
+    // When columns change → normalize keys and detect button columns
+    if(changes['columns']) {
+      this.normalizeColumnsAndDetectButtons();
     }
   }
 
-  // Two-way binding proxies
-  get userPageCount(): number {return this.pageCount;}
-  set userPageCount(value: number) {this.pageCount = value; this.pageCountChange.emit(this.pageCount);}
+  // ─────────────────────────────────────────────────────────────
+  // Column / button column normalization
+  // ─────────────────────────────────────────────────────────────
 
-  get userPageIndex(): number {return this.pageIndex;}
-  set userPageIndex(value: number) {this.pageIndex = value; this.pageIndexChange.emit(this.pageIndex);}
+  /**
+   * Normalizes columns:
+   *  - removes empty/duplicate keys (prevents MatTable duplicate column error)
+   *  - rebuilds displayedColumnKeys
+   *  - detects "button columns" by key (viewButton, downloadBtn, approve_button, etc.)
+   *  - for each button column, builds a TableButton config (action, icon, label)
+   */
+  private normalizeColumnsAndDetectButtons(): void {
+    this.buttonColumns.clear();
 
-  get userPageSize(): number {return this.pageSize;}
-  set userPageSize(value: number) {this.pageSize = value; this.pageSizeChange.emit(this.pageSize);}
+    const rawColumns: TableColumn[] = Array.isArray(this.columns) ? this.columns : [];
+    const normalized: TableColumn[] = [];
+    const seenKeys: Set<string> = new Set<string>();
 
-  get searchValue(): string {return this.search;}
-  set searchValue(value: string) {this.search = value; this.searchChange.emit(this.search);}
+    // 1) Deduplicate + ignore invalid keys
+    for(const col of rawColumns) {
+      const key: string = (col.key || '').trim();
+      if(!key) {
+        continue;
+      }
+      if(seenKeys.has(key)) {
+        console.warn('[CustomTable] Dropping duplicate column key:', key);
+        continue;
+      }
+      seenKeys.add(key);
+      normalized.push(col);
+    }
 
-  get isReloading(): boolean {return this.isReload;}
-  set isReloading(value: boolean) {this.isReload = value; this.isReloadChange.emit(this.isReload);}
+    // Store normalized columns back
+    this.columns = normalized;
+    this.displayedColumnKeys = normalized.map((c: TableColumn) => c.key);
 
-  get userTotalDataCount(): number {return this.totalDataCount;}
-  set userTotalDataCount(value: number) {this.totalDataCount = value; this.totalDataCountChange.emit(this.totalDataCount);}
+    // Track if there's a 'status' column (for CSS helpers)
+    this.tableStatus =
+      (normalized.find((c: TableColumn) => c.key.toLowerCase() === 'status')?.key || '')
+        .toLowerCase();
 
-  get userTableType(): string {return this.tableType;}
-  set userTableType(value: string) {this.tableType = value; this.tableTypeChange.emit(this.tableType);}
+    // 2) Detect button-like columns and build per-column button configs
+    for(const col of normalized) {
+      const keyRaw: string = (col.key || '').trim();
+      if(!keyRaw) {
+        continue;
+      }
 
-  get userPageSizeOptions(): number[] {return this.pageSizeOptions;}
-  set userPageSizeOptions(value: number[]) {this.pageSizeOptions = value; this.pageSizeOptionsChange.emit(this.pageSizeOptions);}
+      const keyLower: string = keyRaw.toLowerCase();
 
-  get userIsPaginationEnabled(): boolean {return this.paginationEnable;}
-  set userIsPaginationEnabled(value: boolean) {this.paginationEnable = value; this.paginationEnableChange.emit(this.paginationEnable);}
+      // A "button column" is defined as any column whose key contains 'btn', 'button', or 'buttons'
+      if(
+        keyLower.includes('btn') ||
+        keyLower.includes('button') ||
+        keyLower.includes('buttons')
+      ) {
+        const action: ActionId | null = this.deriveActionFromColumn(col);
+        if(!action) {
+          // If we can't derive a known action from the key/label, skip it silently
+          console.warn('[CustomTable] Could not derive action from button column:', col);
+          continue;
+        }
 
-  // Toolbar: export
-  protected handleFileExport(ext: FileExportButtonTypeByExtension): void {
-    this.fileExport.emit({data: this.dataSource.data, extention: ext});
+        // If parent provided explicit buttons, try to match by action first
+        const override: TableButton | null = this.findButtonConfig(action);
+
+        const label: string =
+          col.label || override?.label || this.buildButtonLabelFromAction(action);
+
+        const icon: ActionIcon = override?.icon || ACTION_ICONS[action];
+
+        const buttonConfig: TableButton = {
+          action,
+          icon,
+          label,
+        };
+
+        this.buttonColumns.set(keyLower, buttonConfig);
+      }
+    }
   }
 
-  // Toolbar: action button change (optional)
-  protected handleActionButton(btn: ButtonType): void {
-    this.buttonAction = btn;
-    this.buttonActionChange.emit(this.buttonAction);
+  /** Returns true if a given column key is detected as a button column. */
+  protected isButtonColumn(columnKey: string): boolean {
+    const keyLower: string = (columnKey || '').trim().toLowerCase();
+    return this.buttonColumns.has(keyLower);
+  }
+
+  /**
+   * Returns the TableButton config for a given column key (if it is a button column),
+   * otherwise null.
+   */
+  protected getButtonForColumn(columnKey: string): TableButton | null {
+    const keyLower: string = (columnKey || '').trim().toLowerCase();
+    return this.buttonColumns.get(keyLower) ?? null;
+  }
+
+  /**
+   * Searches in explicitly provided [buttons] input for a given action.
+   * Used to override auto detection (icon/label) when parent wants full control.
+   */
+  private findButtonConfig(action: ActionId): TableButton | null {
+    if(!Array.isArray(this.buttons) || this.buttons.length === 0) {
+      return null;
+    }
+    const found: TableButton | undefined = this.buttons.find(
+      (btn: TableButton) => btn.action === action,
+    );
+    return found ?? null;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Status / style helpers
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Normalizes any status string to a CSS-friendly class and returns:
+   *  "main-category <normalized>"
+   * - lowercases
+   * - trims
+   * - replaces spaces with underscores (so 'under review' -> 'under_review')
+   * - leaves complaint statuses like 'in_progress' as-is
+   */
+  protected statusClass(status: string | null | undefined): string {
+    const norm: string = String(status ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_');
+
+    if(!norm) {
+      return 'main-category';
+    }
+    return `main-category ${norm}`;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Button helpers (action derive, labels, BG color)
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Derives an ActionId from a column definition using its key/label.
+   * Examples:
+   *  - key 'viewBtn'       → 'view'
+   *  - key 'download_btn'  → 'download'
+   *  - label 'Approve'     → 'approve'
+   */
+  private deriveActionFromColumn(col: TableColumn): ActionId | null {
+    const rawSource: string =
+      (col.key || col.label || '').toString().toLowerCase().trim();
+
+    let cleaned: string = rawSource
+      .replace(/buttons?/g, '')
+      .replace(/btn/g, '')
+      .replace(/[_\-\s]+/g, '')
+      .trim();
+
+    const possibleActions: ActionId[] = [
+      'add',
+      'delete',
+      'remove',
+      'view',
+      'download',
+      'approve',
+      'reject',
+      'activate',
+      'deactivate',
+      'upload',
+      'edit',
+      'reset',
+      'search',
+    ];
+
+    const match: ActionId | undefined = possibleActions.find(
+      (id: ActionId) => id === cleaned,
+    );
+    return match ?? null;
+  }
+
+  /** Simple TitleCase label generator based on the action id. */
+  private buildButtonLabelFromAction(action: ActionId): string {
+    const text: string = action.toString();
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  // Background color helpers (Bootstrap-style btn classes)
+  protected checkButtonBGforDanger(action: string): boolean {
+    const danger: string[] = ['delete', 'remove', 'reject', 'deactivate'];
+    const safeAction: string = action.toLowerCase().trim();
+    return danger.includes(safeAction);
+  }
+
+  protected checkButtonBGforGood(action: string): boolean {
+    const good: string[] = ['add', 'view', 'approve', 'activate'];
+    const safeAction: string = action.toLowerCase().trim();
+    return good.includes(safeAction);
+  }
+
+  protected checkButtonBGforNormal(action: string): boolean {
+    const normal: string[] = ['download', 'upload', 'edit', 'reset', 'search'];
+    const safeAction: string = action.toLowerCase().trim();
+    return normal.includes(safeAction);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Paginator bindings
+  // ─────────────────────────────────────────────────────────────
+
+  get userPageIndex(): number {
+    return this.index;
+  }
+  set userPageIndex(value: number) {
+    this.index = value;
+    this.indexChange.emit(this.index);
+  }
+
+  get searchValue(): string {
+    return this.search;
+  }
+  set searchValue(value: string) {
+    this.search = value;
+    this.searchChange.emit(this.search);
+  }
+
+  get isReloading(): boolean {
+    return this.isReload;
+  }
+  set isReloading(value: boolean) {
+    this.isReload = value;
+    this.isReloadChange.emit(this.isReload);
+  }
+
+  // Toolbar: export
+  protected handleFileExport(extention: Extension, data: any): void {
+    // NOTE: you already have fileExportHandle below doing the real work
+    this.fileExport.emit();
   }
 
   // Row toggle
-  protected handleSwitchChange(isActive: SwitchButtonType['isActive'], input: SwitchButtonType['data'], index: number): void {
+  protected handleSwitchChange(
+    isActive: SwitchButtonType['isActive'],
+    input: SwitchButtonType['data'],
+    index: number,
+  ): void {
     this.switchButton = {isActive, index, data: input};
     this.switchButtonChange.emit(this.switchButton);
   }
 
-  // Sorting (null-safe)
-  protected sortData(sort: Sort, data?: any[]): void {
-    // If not a tenant array, fall back to generic sort
-    if(!this.tenantService.isTenantArray(this.dataSource.data)) {
-      const src = (data || this.dataSource.data).slice();
-      if(!sort.active || sort.direction === '') {
-        this.dataSource.data = src;
-        return;
-      }
-      const isAsc = sort.direction === 'asc';
-      this.dataSource.data = src.sort((a, b) => this.universalCompare(a?.[sort.active], b?.[sort.active], isAsc));
-      return;
-    }
+  // ─────────────────────────────────────────────────────────────
+  // Sorting
+  // ─────────────────────────────────────────────────────────────
 
-    // Tenant data path
-    const sourceData = (data || this.dataSource.data).slice();
-    const isAsc = sort.direction === 'asc';
+  protected sortData(sort: Sort, data?: any[]): void {
+    const sourceData: any[] = (data || this.dataSource.data).slice();
+    const isAsc: boolean = sort.direction === 'asc';
 
     if(!sort.active || sort.direction === '') {
       this.dataSource.data = sourceData;
       return;
     }
 
-    this.dataSource.data = sourceData.sort((a, b) =>
-      this.universalCompare(a[sort.active], b[sort.active], isAsc)
+    this.dataSource.data = sourceData.sort((a: any, b: any) =>
+      this.universalCompare(a[sort.active], b[sort.active], isAsc),
     );
   }
 
@@ -396,14 +574,17 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
     return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
   }
 
+  // ─────────────────────────────────────────────────────────────
   // Image helpers
+  // ─────────────────────────────────────────────────────────────
+
   protected imageGenerator(image: string, type: string, gender?: string): string {
     switch(type.toLowerCase().trim()) {
       case 'userimage': {
-        const imagetype = image.split('.')[1];
+        const imagetype: string | undefined = image.split('.')[1];
         if(imagetype) return image;
-        if(gender?.toLocaleLowerCase() === 'male') return this.definedMaleDummyImageURL;
-        if(gender?.toLocaleLowerCase() === 'female') return this.definedWomanDummyImageURL;
+        if(gender?.toLowerCase() === 'male') return this.definedMaleDummyImageURL;
+        if(gender?.toLowerCase() === 'female') return this.definedWomanDummyImageURL;
         return this.definedImage;
       }
       case 'propertyimage':
@@ -414,13 +595,16 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
     }
   }
 
+  // ─────────────────────────────────────────────────────────────
   // Formatting helpers
+  // ─────────────────────────────────────────────────────────────
+
   protected formatDateRange(start: Date, end: Date): string {
     const formatWithSuffix = (date: Date): string => {
-      const day = date.getDate();
-      const suffix = this.getOrdinalSuffix(day);
-      const month = date.toLocaleString('default', {month: 'long'});
-      const year = date.getFullYear();
+      const day: number = date.getDate();
+      const suffix: string = this.getOrdinalSuffix(day);
+      const month: string = date.toLocaleString('default', {month: 'long'});
+      const year: number = date.getFullYear();
       return `${day}${suffix} of ${month} ${year}`;
     };
     return `${formatWithSuffix(start)} to ${formatWithSuffix(end)}`;
@@ -439,42 +623,45 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   /** Pretty-print JSON or trim plain text safely */
   protected trimText(text: any): string {
     try {
-      const stringValue = typeof text === 'string' ? text.trim() : JSON.stringify(text).trim();
-      const parsed = JSON.parse(stringValue);
+      const stringValue: string =
+        typeof text === 'string' ? text.trim() : JSON.stringify(text).trim();
+      const parsed: any = JSON.parse(stringValue);
       if(typeof parsed === 'object' && parsed !== null) {
         return Object.entries(parsed)
-          .map(([key, value]) => key.includes('_') ? '' : `${key} : ${value}`)
+          .map(([key, value]) => (key.includes('_') ? '' : `${key} : ${value}`))
           .filter(Boolean)
           .join('<br>');
       }
       return String(parsed);
     } catch {
-      const safeText = String(text ?? '').trim();
+      const safeText: string = String(text ?? '').trim();
       return safeText.length > 30 ? safeText.slice(0, 30) + '...' : safeText;
     }
   }
 
   /**
    * Capitalize every word, preserving inline HTML.
-   * BEGINNER TIP: DOMParser is browser-only; we guard with isBrowser.
+   * Uses DOMParser (browser-only).
    */
   protected makeCapitalize(text: any): string {
-    const stringValue = typeof text === 'string' ? text : String(text ?? '').trim();
-    if(!this.isBrowser) return stringValue; // SSR/Electron guard
+    const stringValue: string =
+      typeof text === 'string' ? text : String(text ?? '').trim();
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(`<div>${stringValue}</div>`, 'text/html');
-    const container = doc.body.firstChild as HTMLElement;
+    const parser: DOMParser = new DOMParser();
+    const doc: Document = parser.parseFromString(`<div>${stringValue}</div>`, 'text/html');
+    const container: HTMLElement = doc.body.firstChild as HTMLElement;
 
     function capitalizeTextNodes(node: Node): void {
       if(node.nodeType === Node.TEXT_NODE) {
-        const originalText = node.nodeValue || '';
+        const originalText: string = node.nodeValue || '';
         node.nodeValue = originalText
           .split(' ')
-          .map(word => word ? (word.charAt(0).toUpperCase() + word.slice(1)) : '')
+          .map((word: string) =>
+            word ? word.charAt(0).toUpperCase() + word.slice(1) : '',
+          )
           .join(' ');
       } else if(node.nodeType === Node.ELEMENT_NODE && node.childNodes) {
-        node.childNodes.forEach(child => capitalizeTextNodes(child));
+        node.childNodes.forEach((child: Node) => capitalizeTextNodes(child));
       }
     }
 
@@ -482,68 +669,43 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
     return container.innerHTML;
   }
 
-  // Edit lifecycle
-  protected onEditStart(row: any): void {
-    if(!this.editable) return;
-    const rowId = this.toStr(row?.[this.rowIdKey]);
-    this.editingRowId = rowId;
-    this.editingDraft = {...row};
+  // ─────────────────────────────────────────────────────────────
+  // File export
+  // ─────────────────────────────────────────────────────────────
 
-    this.editRequested.emit({id: rowId, row: {...row}});
-    this.tableEvent.emit({type: 'edit:start', payload: {id: rowId, row}});
+  protected fileExportHandle(extention: Extension): void {
+    try {
+      if(!Array.isArray(this.data)) {
+        throw new Error('Data is not type of array');
+      }
+      const payload: FileExport = {
+        extention,
+        data: this.data,
+      };
+      this.fileExport.emit(payload);
+    } catch(error) {
+      console.error('[File exporting error]: ', error);
+      return;
+    }
   }
 
-  protected onEditDraftChange(patch: Partial<any>): void {
-    if(!this.editable || !this.editingDraft) return;
-    this.editingDraft = {...this.editingDraft, ...patch};
-  }
+  // ─────────────────────────────────────────────────────────────
+  // Button click → emit to parent
+  // ─────────────────────────────────────────────────────────────
 
-  protected onEditSave(): void {
-    if(!this.editable || !this.editingDraft) return;
-
-    const rowId = this.toStr(this.editingDraft?.[this.rowIdKey] ?? this.editingRowId ?? '');
-    const payload = {id: rowId, row: {...this.editingDraft}};
-
-    this.editSaved.emit(payload);
-    this.tableEvent.emit({type: 'edit:save', payload});
-
-    this.editingRowId = null;
-    this.editingDraft = null;
-  }
-
-  protected onEditCancel(): void {
-    if(!this.editable) return;
-    const payload = {id: this.editingRowId};
-    this.editCancelled.emit(payload);
-    this.tableEvent.emit({type: 'edit:cancel', payload});
-
-    this.editingRowId = null;
-    this.editingDraft = null;
-  }
-
-  protected isRowEditing(row: any): boolean {
-    const rowId = this.toStr(row?.[this.rowIdKey]);
-    return !!this.editingRowId && this.editingRowId === rowId;
-  }
-
-  // Normalized button triggers
-  protected handleOperationButtonTrigger(data: ButtonDataType | null): void {
-    if(!data) return;
-    this.buttonOperationTrigger = data;
-    this.buttonOperationTriggerChange.emit(this.buttonOperationTrigger);
-    this.buttonOperationTriggerStarted = true;
-    this.buttonOperationTriggerStartedChange.emit(this.buttonOperationTriggerStarted);
-
-    this.tableEvent.emit({type: 'operation', payload: data, meta: {column: 'operation'}});
-  }
-
-  protected handleActionButtonTrigger(data: ButtonDataType | null): void {
-    if(!data) return;
-    this.buttonActionTrigger = data as ButtonDataType;
-    this.buttonActionTriggerChange.emit(this.buttonActionTrigger);
-    this.buttonActionTriggerStarted = true;
-    this.buttonActionTriggerStartedChange.emit(this.buttonActionTriggerStarted);
-
-    this.tableEvent.emit({type: 'action', payload: data, meta: {column: 'actions'}});
+  protected handleButtonOperations(action: TableButton['action'], data: any): void {
+    try {
+      if(typeof action !== 'string' || !action) {
+        throw new Error('Button ID is invalid!');
+      }
+      const assemble: TableButtonActionConfig = {
+        action,
+        data,
+      };
+      this.buttonOperation.emit(assemble);
+    } catch(err) {
+      console.error('[Table action button error]' + `Action: ${action}`, ' Error: ', err);
+      return;
+    }
   }
 }

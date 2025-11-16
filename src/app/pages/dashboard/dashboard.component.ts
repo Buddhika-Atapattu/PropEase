@@ -170,6 +170,18 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.dom.bypassSecurityTrustUrl(url);
   }
 
+  protected detectImageError(event: Event) {
+    const imgElement = event.target as HTMLImageElement;
+
+    // Prevent infinite loop if fallback image also fails
+    if(imgElement.src.includes(this.DEFAULT_USER_IMAGE)) {
+      return;
+    }
+
+    // Apply fallback image
+    imgElement.src = this.DEFAULT_USER_IMAGE
+  }
+
   protected sanitizeURL(url: unknown): SafeUrl {
     const raw = (typeof url === 'string' && url.trim())
       ? url.trim()
@@ -211,13 +223,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.menuOpen = false;
   }
 
-  protected onImageError(): void {
-    const fallback = this.assets.publicAssetUrl(this.DEFAULT_USER_IMAGE);
-    if(this.userimage?.nativeElement) {
-      this.userimage.nativeElement.src = fallback;
-    }
-    if(this.user) this.user.image = this.DEFAULT_USER_IMAGE;
-  }
 
   protected onMenuNavigate(e: {p: string | null; c: string | null; g: string | null}): void {
     if(e.p && e.c && e.g) {this.router.navigate(['/dashboard', e.p, e.c, e.g]); return;}

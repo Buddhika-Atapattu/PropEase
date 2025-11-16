@@ -50,7 +50,6 @@ export class TenantComponent implements OnInit, OnDestroy {
         this.mode = val;
       });
     }
-    this.router.navigate(['/dashboard/tenant/tenant-home'])
   }
 
   ngOnDestroy(): void {

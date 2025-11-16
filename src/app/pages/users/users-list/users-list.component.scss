@@ -115,19 +115,13 @@
       }
     }
 
-    .pagination-list-group {
-      display: inline-flex;
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      .pagination-list-group-item {
-        .pagination-btn {
-          padding: 0.5rem 1rem;
-          margin: 0.5rem;
-          border-radius: 0.5rem;
-          border: none;
-          font-weight: 700;
-        }
+    .pagination-row {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      margin: 5rem 0rem 0rem 0rem;
+      > * {
+        margin: 0rem 0.25rem;
       }
     }
   }

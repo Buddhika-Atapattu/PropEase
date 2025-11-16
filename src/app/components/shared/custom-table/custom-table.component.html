@@ -1,877 +1,228 @@
-<!-- Notification + Progress (re-usable UI helpers) -->
-<app-notification />
-<app-progress-bar />
-
-<!-- Table title -->
+@if(loggedUser && isArrayOfData){
 <div class="row mt-5">
   <div class="col-xl-12">
-    <h5 class="title">{{ userTableType + ":" }}</h5>
+    <h5 class="title">{{ tableTitle }}</h5>
   </div>
 </div>
 
-<!-- Show table only if there's data; else show NoDataTemplate -->
-<div class="row" *ngIf="isTableVisible; else NoDataTemplate">
-  <div class="col-xl-12">
-    <!-- Top paginator / toolbar -->
+<!-- Pagination -->
+<div class="row my-2">
+  <div class="col-12">
     <app-paginator
-      [(pageCount)]="userPageCount"
       [(pageIndex)]="userPageIndex"
-      [(pageSize)]="userPageSize"
+      [pageSize]="pageSize"
       [(search)]="searchValue"
       [(isReload)]="isReloading"
-      [totalDataCount]="userTotalDataCount"
-      [tableType]="userTableType"
-      [pageSizeOptions]="userPageSizeOptions"
-      [isPaginationEnabled]="userIsPaginationEnabled"
-      [fileExportButtonTypeByExtension]="fileExportButtonTypeByExtension"
-      (fileExport)="handleFileExport($event)"
+      [totalDataCount]="totalDataCount"
+      [pageSizeOptions]="pageSizeOptions"
+      [pagination]="pagination"
+      [extension]="fileExportExtention"
+      (fileExport)="fileExportHandle($event)"
     ></app-paginator>
-
-    <!-- Material table container -->
-    <div
-      class="table-responsive mat-elevation-z8"
-      *ngIf="dataCount > 0; else NoDataTemplate"
-    >
-      <table
-        mat-table
-        [dataSource]="dataSource"
-        matSort
-        (matSortChange)="sortData($event)"
-      >
-        <!-- Column loop -->
-        <ng-container
-          *ngFor="let column of columns"
-          [matColumnDef]="column.key"
-        >
-          <!-- Header cell -->
-          <th
-            mat-header-cell
-            *matHeaderCellDef
-            [mat-sort-header]="column.key"
-            class="w-50 text-default text-center"
-          >
-            <div *ngIf="isLoading">
-              <app-skeleton-loader
-                [Mode]="mode"
-                [width]="'5rem'"
-                [height]="'1.5rem'"
-                [borderRadius]="'0.159rem'"
-              ></app-skeleton-loader>
-            </div>
-            <div *ngIf="!isLoading">
-              {{ column.label }}
-            </div>
-          </th>
-
-          <!-- Data cell -->
-          <td mat-cell *matCellDef="let element; let i = index">
-            <!-- Switch on column key (lower-cased for safety) -->
-            <ng-container [ngSwitch]="column.key.toLocaleLowerCase()">
-              <!-- User Image -->
-              <ng-container *ngSwitchCase="'userimage'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'5rem'"
-                    [height]="'5rem'"
-                    [borderRadius]="'10rem'"
-                  ></app-skeleton-loader>
-                </div>
-                <div *ngIf="!isLoading">
-                  <img
-                    [src]="
-                      imageGenerator(element.image, 'userimage', element.gender)
-                    "
-                    alt="User image"
-                    class="table-user-image"
-                  />
-                </div>
-              </ng-container>
-
-              <!-- Property Image -->
-              <ng-container *ngSwitchCase="'propertyimage'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'7rem'"
-                    [height]="'5rem'"
-                    [borderRadius]="'0.5rem'"
-                  ></app-skeleton-loader>
-                </div>
-                <div *ngIf="!isLoading">
-                  <img
-                    [src]="imageGenerator(element.image, 'propertyImage')"
-                    alt="Property image"
-                    class="table-property-image"
-                  />
-                </div>
-              </ng-container>
-
-              <!-- Generic Image -->
-              <ng-container *ngSwitchCase="'image'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'7rem'"
-                    [height]="'5rem'"
-                    [borderRadius]="'0.5rem'"
-                  ></app-skeleton-loader>
-                </div>
-                <div *ngIf="!isLoading">
-                  <img
-                    [src]="imageGenerator(element.image, 'Image')"
-                    alt="Image"
-                    class="table-property-image"
-                  />
-                </div>
-              </ng-container>
-
-              <!-- Name (tooltips show “You” for self) -->
-              <ng-container *ngSwitchCase="'name'">
-                <ng-container *ngIf="loggedUser as lu">
-                  <div *ngIf="isLoading">
-                    <app-skeleton-loader
-                      [Mode]="mode"
-                      [width]="'5rem'"
-                      [height]="'1.5rem'"
-                      [borderRadius]="'0.159rem'"
-                    ></app-skeleton-loader>
-                  </div>
-                  <div *ngIf="!isLoading">
-                    <p
-                      class="m-0 p-0"
-                      matTooltip="{{
-                        lu.name.toLocaleLowerCase() ===
-                        element.name.toLocaleLowerCase()
-                          ? 'You'
-                          : element.name
-                      }}"
-                      matTooltipPosition="above"
-                      matTooltipPositionAtOrigin="left"
-                    >
-                      {{
-                        lu.name.toLocaleLowerCase() ===
-                        element.name.toLocaleLowerCase()
-                          ? "You"
-                          : element.name
-                      }}
-                    </p>
-                  </div>
-                </ng-container>
-              </ng-container>
-
-              <!-- Contact Number -->
-              <ng-container *ngSwitchCase="'contact number'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'5rem'"
-                    [height]="'1.5rem'"
-                    [borderRadius]="'0.159rem'"
-                  ></app-skeleton-loader>
-                </div>
-                <div *ngIf="!isLoading">
-                  {{ element.contactNumber }}
-                </div>
-              </ng-container>
-
-              <!-- Email -->
-              <ng-container *ngSwitchCase="'email'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'5rem'"
-                    [height]="'1.5rem'"
-                    [borderRadius]="'0.159rem'"
-                  ></app-skeleton-loader>
-                </div>
-                <div *ngIf="!isLoading">
-                  {{ element.email }}
-                </div>
-              </ng-container>
-
-              <!-- Gender -->
-              <ng-container *ngSwitchCase="'gender'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'5rem'"
-                    [height]="'2.5rem'"
-                    [borderRadius]="'0.159rem'"
-                  ></app-skeleton-loader>
-                </div>
-                <div *ngIf="!isLoading" class="text-capitalize">
-                  {{ element.gender }}
-                </div>
-              </ng-container>
-
-              <!-- Date Range -->
-              <ng-container *ngSwitchCase="'daterange'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'5rem'"
-                    [height]="'1.5rem'"
-                    [borderRadius]="'0.159rem'"
-                  ></app-skeleton-loader>
-                </div>
-                <div
-                  *ngIf="!isLoading"
-                  [ngClass]="element.notify ? 'bg-danger' : ''"
-                >
-                  {{
-                    formatDateRange(
-                      element.dateRange.start,
-                      element.dateRange.end
-                    )
-                  }}
-                </div>
-              </ng-container>
-
-              <!-- Date -->
-              <ng-container *ngSwitchCase="'date'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'5rem'"
-                    [height]="'1.5rem'"
-                    [borderRadius]="'0.159rem'"
-                  ></app-skeleton-loader>
-                </div>
-                <div *ngIf="!isLoading">
-                  {{ element.date | date : "dd/MM/yyyy" }}
-                </div>
-              </ng-container>
-
-              <!-- Type badge -->
-              <ng-container *ngSwitchCase="'type'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'5rem'"
-                    [height]="'1.5rem'"
-                    [borderRadius]="'0.159rem'"
-                  ></app-skeleton-loader>
-                </div>
-                <div
-                  *ngIf="!isLoading"
-                  [class]="element.type"
-                  class="text-center text-capitalize rounded px-2 badge"
-                >
-                  {{ element.type }}
-                </div>
-              </ng-container>
-
-              <!-- Switch Button -->
-              <ng-container *ngSwitchCase="'switchbutton'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'5rem'"
-                    [height]="'1.5rem'"
-                    [borderRadius]="'0.159rem'"
-                  ></app-skeleton-loader>
-                </div>
-                <div *ngIf="!isLoading">
-                  <switch-button
-                    [checked]="element.switchButton.isActive"
-                    (checkedChange)="handleSwitchChange($event, element, i)"
-                    [labelOn]="element.switchButton.on"
-                    [labelOff]="element.switchButton.off"
-                  ></switch-button>
-                </div>
-              </ng-container>
-
-              <!-- Status (colored chips) -->
-              <ng-container *ngSwitchCase="'status'">
-                <ng-container *ngIf="element.status">
-                  <div *ngIf="isLoading">
-                    <app-skeleton-loader
-                      [Mode]="mode"
-                      [width]="'5rem'"
-                      [height]="'1.5rem'"
-                      [borderRadius]="'0.159rem'"
-                    ></app-skeleton-loader>
-                  </div>
-
-                  <div *ngIf="!isLoading">
-                    <div
-                      class="main-category"
-                      [ngClass]="statusClass(element.status)"
-                    >
-                      {{ makeCapitalize(element.status) }}
-                    </div>
-                  </div>
-                </ng-container>
-              </ng-container>
-
-              <!-- Operation Buttons (row-level) -->
-              <ng-container *ngSwitchCase="'operation'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'5rem'"
-                    [height]="'1.5rem'"
-                    [borderRadius]="'0.159rem'"
-                  ></app-skeleton-loader>
-                </div>
-
-                <div
-                  *ngIf="
-                    !isLoading &&
-                    tableButtonOperation &&
-                    canShowOperationForRow.get(toStr(element[rowIdKey]))
-                  "
-                >
-                  <ng-container [ngSwitch]="tableButtonOperation">
-                    <ng-container *ngSwitchCase="'add'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Add"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'add',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-plus"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'view'">
-                      <button
-                        type="button"
-                        class="btn-view"
-                        matTooltip="View"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'view',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-eye"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'remove'">
-                      <button
-                        type="button"
-                        class="btn-danger"
-                        matTooltip="Remove"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'remove',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-xmark"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'delete'">
-                      <button
-                        type="button"
-                        class="btn-danger"
-                        matTooltip="Delete"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'delete',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-trash"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'download'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Download"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'download',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-download"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'approve'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Approve"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'approve',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-thumbs-up"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'reject'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Reject"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'reject',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-thumbs-down"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'activate'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Activate"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'reject',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-circle text-success"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'deactivate'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Deactivate"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'deactivate',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-circle text-danger"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'upload'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Upload"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'upload',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-upload"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'edit'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Edit"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'edit',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'reset'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Reset"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'reset',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-arrows-rotate"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'search'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Search"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'search',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchDefault>
-                      <button
-                        type="button"
-                        class="btn-custom"
-                        matTooltip="Custom Button"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleOperationButtonTrigger({
-                            type: 'default',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-bolt"></i>
-                      </button>
-                    </ng-container>
-                  </ng-container>
-                </div>
-              </ng-container>
-
-              <!-- Action Buttons (row-level) -->
-              <ng-container *ngSwitchCase="'actions'">
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'5rem'"
-                    [height]="'1.5rem'"
-                    [borderRadius]="'0.159rem'"
-                  ></app-skeleton-loader>
-                </div>
-
-                <div
-                  *ngIf="
-                    !isLoading &&
-                    tableButtonAction &&
-                    canShowActionForRow.get(toStr(element[rowIdKey]))
-                  "
-                >
-                  <ng-container [ngSwitch]="tableButtonAction">
-                    <ng-container *ngSwitchCase="'add'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Add"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'add',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-plus"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'view'">
-                      <button
-                        type="button"
-                        class="btn-view"
-                        matTooltip="View"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'view',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-eye"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'remove'">
-                      <button
-                        type="button"
-                        class="btn-danger"
-                        matTooltip="Remove"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'remove',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-xmark"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'delete'">
-                      <button
-                        type="button"
-                        class="btn-danger"
-                        matTooltip="Delete"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'delete',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-trash"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'download'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Download"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'download',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-download"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'approve'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Approve"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'approve',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-thumbs-up"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'reject'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Reject"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'reject',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-thumbs-down"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'activate'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Activate"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'reject',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-circle text-success"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'deactivate'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Deactivate"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'deactivate',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-circle text-danger"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'upload'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Upload"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'upload',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-upload"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'edit'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Edit"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'edit',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-pen"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'reset'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Reset"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'reset',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-arrows-rotate"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchCase="'search'">
-                      <button
-                        type="button"
-                        class="btn-warning"
-                        matTooltip="Search"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'search',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                      </button>
-                    </ng-container>
-
-                    <ng-container *ngSwitchDefault>
-                      <button
-                        type="button"
-                        class="btn-custom"
-                        matTooltip="Custom Button"
-                        matTooltipPosition="above"
-                        (click)="
-                          handleActionButtonTrigger({
-                            type: 'default',
-                            data: { element }
-                          })
-                        "
-                      >
-                        <i class="fa-solid fa-bolt"></i>
-                      </button>
-                    </ng-container>
-                  </ng-container>
-                </div>
-              </ng-container>
-
-              <!-- Default cell rendering (text/JSON pretty) -->
-              <ng-container *ngSwitchDefault>
-                <div *ngIf="isLoading">
-                  <app-skeleton-loader
-                    [Mode]="mode"
-                    [width]="'5rem'"
-                    [height]="'2.5rem'"
-                    [borderRadius]="'0.159rem'"
-                  ></app-skeleton-loader>
-                </div>
-                <div *ngIf="!isLoading" class="text-capitalize">
-                  <div [innerHTML]="trimText(element[column.key])"></div>
-                </div>
-              </ng-container>
-            </ng-container>
-          </td>
-        </ng-container>
-
-        <!-- Header & rows -->
-        <tr
-          mat-header-row
-          *matHeaderRowDef="displayedColumnKeys"
-          class="text-default border-bottom-custom"
-        ></tr>
-        <tr
-          mat-row
-          *matRowDef="let row; columns: displayedColumnKeys"
-          class="text-default border-bottom-custom"
-        ></tr>
-      </table>
-    </div>
   </div>
 </div>
+<!-- End Pagination -->
 
-<!-- No data fallback -->
-<ng-template #NoDataTemplate>
-  <div class="row">
-    <div class="col-xl-12 text-center py-5">
-      <span class="text-center text-style my-3 h3 text-capitalize">
-        No {{ userTableType }} data available.
-      </span>
-      <div class="no-data-image-container">
+<div class="table-responsive mat-elevation-z8">
+  <!-- Table -->
+  <table
+    mat-table
+    [dataSource]="dataSource"
+    matSort
+    (matSortChange)="sortData($event)"
+  >
+    <ng-container *ngFor="let column of columns" [matColumnDef]="column.key">
+      <!-- Table headers -->
+      <th
+        mat-header-cell
+        *matHeaderCellDef
+        [mat-sort-header]="isButtonColumn(column.key) ? null : column.key"
+        class="w-50 text-default text-center"
+      >
+        @if(isReload){
+        <app-skeleton-loader
+          [width]="'5rem'"
+          [height]="'1.5rem'"
+          [borderRadius]="'0.159rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <span>{{ column.label }}</span>
+        }
+      </th>
+      <!-- End table headers -->
+
+      <!-- Table data for the columns -->
+      <td mat-cell *matCellDef="let element; let i = index">
+        @if (isButtonColumn(column.key)) {
+        <!-- ───────── Button-only columns (viewButton, downloadBtn, etc.) ───────── -->
+        @let btn = getButtonForColumn(column.key); @if (btn) { @if (isReload) {
+        <app-skeleton-loader
+          [width]="'5rem'"
+          [height]="'1.5rem'"
+          [borderRadius]="'0.159rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <button
+          type="button"
+          class="btn"
+          [class.btn-danger]="checkButtonBGforDanger(btn.action)"
+          [class.btn-success]="checkButtonBGforGood(btn.action)"
+          [class.btn-warning]="checkButtonBGforNormal(btn.action)"
+          (click)="handleButtonOperations(btn.action, element)"
+          [matTooltip]="btn.label || ''"
+          matTooltipPosition="above"
+        >
+          <mat-icon>{{ btn.icon }}</mat-icon>
+        </button>
+        } } } @else {
+        <!-- ───────── Normal data columns (image, name, status, etc.) ───────── -->
+        @switch (column.key.toLowerCase()) { @case ('userimage') { @if
+        (isReload) {
+        <app-skeleton-loader
+          [width]="'5rem'"
+          [height]="'5rem'"
+          [borderRadius]="'10rem'"
+        ></app-skeleton-loader>
+        } @else {
         <img
-          src="Images/System-images/noDataFound.jpg"
-          alt="no activities image"
+          [src]="imageGenerator(element.image, 'userimage', element.gender)"
+          alt="User image"
+          class="table-user-image"
         />
-      </div>
-    </div>
-  </div>
-</ng-template>
+        } } @case ('propertyimage') { @if (isReload) {
+        <app-skeleton-loader
+          [width]="'7rem'"
+          [height]="'5rem'"
+          [borderRadius]="'0.5rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <div class="image-container">
+          <img
+            [src]="imageGenerator(element.image, 'propertyImage')"
+            alt="Property image"
+            class="table-property-image"
+          />
+        </div>
+        } } @case ('image') { @if (isReload) {
+        <app-skeleton-loader
+          [width]="'7rem'"
+          [height]="'5rem'"
+          [borderRadius]="'0.5rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <div class="image-container">
+          <img
+            [src]="imageGenerator(element.image, 'propertyImage')"
+            alt="Image"
+            class="table-property-image"
+          />
+        </div>
+        } } @case ('name') { @if (isReload) {
+        <app-skeleton-loader
+          [width]="'5rem'"
+          [height]="'1.5rem'"
+          [borderRadius]="'0.159rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <p
+          class="m-0 p-0"
+          matTooltip="{{
+            loggedUser.name.toLocaleLowerCase() ===
+            element.name.toLocaleLowerCase()
+              ? 'You'
+              : element.name
+          }}"
+          matTooltipPosition="above"
+          matTooltipPositionAtOrigin="left"
+        >
+          {{
+            loggedUser.name.toLocaleLowerCase() ===
+            element.name.toLocaleLowerCase()
+              ? "You"
+              : element.name
+          }}
+        </p>
+        } } @case ('daterange') { @if (isReload) {
+        <app-skeleton-loader
+          [width]="'5rem'"
+          [height]="'1.5rem'"
+          [borderRadius]="'0.159rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <p [class.bg-danger]="element.notify">
+          {{ formatDateRange(element.dateRange.start, element.dateRange.end) }}
+        </p>
+        } } @case ('date') { @if (isReload) {
+        <app-skeleton-loader
+          [width]="'5rem'"
+          [height]="'1.5rem'"
+          [borderRadius]="'0.159rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <p>
+          {{ element.date | date : "dd/MM/yyyy" }}
+        </p>
+        } } @case ('switchbutton') { @if (isReload) {
+        <app-skeleton-loader
+          [width]="'5rem'"
+          [height]="'1.5rem'"
+          [borderRadius]="'0.159rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <switch-button
+          [checked]="element.switchButton.isActive"
+          (checkedChange)="handleSwitchChange($event, element, i)"
+          [labelOn]="element.switchButton.on"
+          [labelOff]="element.switchButton.off"
+        ></switch-button>
+        } } @case ('status') { @if (isReload) {
+        <app-skeleton-loader
+          [width]="'5rem'"
+          [height]="'1.5rem'"
+          [borderRadius]="'0.159rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <div class="main-category" [ngClass]="statusClass(element.status)">
+          {{ makeCapitalize(element.status) }}
+        </div>
+        } } @default { @if (isReload) {
+        <app-skeleton-loader
+          [width]="'5rem'"
+          [height]="'2.5rem'"
+          [borderRadius]="'0.159rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <div [innerHTML]="trimText(element[column.key])"></div>
+        } } } }
+      </td>
+
+      <!-- End table data for the columns -->
+    </ng-container>
+
+    <tr
+      mat-header-row
+      *matHeaderRowDef="displayedColumnKeys"
+      class="text-default border-bottom-custom"
+    ></tr>
+    <tr
+      mat-row
+      *matRowDef="let row; columns: displayedColumnKeys"
+      class="text-default border-bottom-custom"
+    ></tr>
+  </table>
+  <!-- End Table -->
+</div>
+
+} @else {
+
+<div class="no-users-container">
+  <mat-icon class="no-users-icon" aria-hidden="true">report_problem</mat-icon>
+  <p class="no-users-text">
+    {{
+      search.length === 0
+        ? "Data currently not available!"
+        : "Search data not found!"
+    }}
+  </p>
+</div>
+}

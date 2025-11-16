@@ -1,0 +1,184 @@
+<form>
+  <div class="row">
+    <!-- Table Title -->
+    <div
+      [ngClass]="
+        extension
+          ? 'col-xl-2 col-md-12 col-sm-12 col-12 my-2 d-flex justify-content-start align-items-center'
+          : 'col-xl-3 col-md-12 col-sm-12 col-12 my-2 d-flex justify-content-start align-items-center'
+      "
+    >
+      <p class="text-style text-capitalize">
+        Table data count: {{ totalDataCount }}
+      </p>
+    </div>
+    <!-- End Table Title -->
+
+    <!-- User Search -->
+    <div
+      [ngClass]="
+        extension
+          ? 'col-xl-3 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-center align-items-center'
+          : 'col-xl-3 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-center align-items-center'
+      "
+    >
+      <mat-form-field class="w-100">
+        <mat-label>Search</mat-label>
+        <input
+          matInput
+          type="text"
+          [(ngModel)]="search"
+          name="search"
+          placeholder="Search..."
+          (ngModelChange)="onTenantNameChanged($event)"
+        />
+      </mat-form-field>
+    </div>
+    <!-- End User Search -->
+
+    <!-- Page Size Options -->
+    <div
+      [ngClass]="
+        extension
+          ? 'col-xl-2 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-center align-items-center'
+          : 'col-xl-2 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-center align-items-center'
+      "
+    >
+      <mat-form-field class="w-100">
+        <mat-label>Page Size</mat-label>
+        <input
+          type="number"
+          placeholder="Page Size..."
+          aria-label="pageSize"
+          name="pageSize"
+          matInput
+          (ngModelChange)="onPageSizeChanged($event)"
+          [(ngModel)]="selectedPageSize"
+          [matAutocomplete]="typeAuto"
+          class="text-capitalize"
+        />
+        <mat-autocomplete #typeAuto="matAutocomplete">
+          <mat-option
+            *ngFor="let option of pageSizeOptions"
+            [value]="option"
+            class="text-capitalize"
+          >
+            {{ option }}
+          </mat-option>
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+    <!-- End Page Size Options -->
+
+    <!-- Pagination Button -->
+    <div
+      [ngClass]="
+        extension
+          ? 'col-xl-3 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-start align-items-center button-container'
+          : 'col-xl-3 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-start align-items-center button-container'
+      "
+    >
+      <div class="row w-100">
+        <div
+          class=""
+          [ngClass]="
+            extension
+              ? 'col-12 d-flex justify-content-start align-items-center button-container'
+              : 'col-12 d-flex justify-content-start align-items-center button-container'
+          "
+        >
+          <!-- Double Backward -->
+          <button
+            *ngIf="totalDataCount > pageSize"
+            type="button"
+            class="btn-warning"
+            matTooltip="Backward"
+            matTooltipPosition="above"
+            (click)="onPageIndexChanged('doubleBackword')"
+          >
+            <i class="fa-solid fa-angles-left"></i>
+          </button>
+
+          <!-- Backward -->
+          <button
+            *ngIf="totalDataCount > pageSize"
+            type="button"
+            class="btn-warning"
+            matTooltip="Previous"
+            matTooltipPosition="above"
+            (click)="onPageIndexChanged('backward')"
+          >
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+
+          <!-- Forward -->
+          <button
+            *ngIf="totalDataCount > pageSize"
+            type="button"
+            class="btn-warning"
+            matTooltip="Next"
+            matTooltipPosition="above"
+            (click)="onPageIndexChanged('forward')"
+          >
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+
+          <!-- Double Forward -->
+          <button
+            *ngIf="totalDataCount > pageSize"
+            type="button"
+            class="btn-warning"
+            matTooltip="Forward"
+            matTooltipPosition="above"
+            (click)="onPageIndexChanged('doubleForward')"
+          >
+            <i class="fa-solid fa-angles-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- End Pagination Button -->
+
+    <!-- Refresh And Export Button -->
+    <div
+      class=""
+      [ngClass]="
+        extension
+          ? 'col-xl-2 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-end align-items-center button-container'
+          : 'col-xl-1 col-md-6 col-sm-12 col-12 my-2 d-flex justify-content-end align-items-center button-container'
+      "
+    >
+      <div
+        class="d-flex justify-content-between align-items-center button-container"
+      >
+        <button
+          type="button"
+          class="btn-custom"
+          matTooltip="Refresh"
+          matTooltipPosition="above"
+          [ngClass]="isRefreshFinished ? 'refresh' : ''"
+          (click)="refreshPage()"
+        >
+          <i class="fa-solid fa-arrows-spin"></i>
+        </button>
+
+        <button
+          *ngIf="extension"
+          type="button"
+          class="btn-warning"
+          matTooltip="Export"
+          matTooltipPosition="above"
+          (click)="onFileExport(extension)"
+        >
+          <mat-icon
+            aria-hidden="false"
+            aria-label="Example home icon"
+            class="excel"
+            svgIcon="fileExcel"
+          ></mat-icon>
+        </button>
+      </div>
+    </div>
+    <!-- End Refresh And Export Button -->
+  </div>
+</form>

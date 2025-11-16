@@ -109,7 +109,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild(ImageCropperComponent) imageCropper!: ImageCropperComponent;
   @ViewChild(CameraBoxComponent) cameraBox!: CameraBoxComponent;
 
-  protected user!: User;
+  protected user: User | null = null;
   private token !: string;
   protected isLoading: boolean = true;
   protected readonly definedMaleDummyImageURL =
@@ -354,15 +354,15 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   //<==================== End User Validation Operations ====================>
 
   //<==================== Load Data ====================>
-  get userData(): User {
-    return this.user;
+  get userData(): User | null {
+    return this.user ?? null;
   }
 
   private async loadData() {
     try {
       if(!this.token) throw new Error('Invalid user token');
       const res = await this.API.getUserByToken(this.token);
-      this.user = res.user;
+      this.user = res.user ?? null;
       if(!this.user) throw new Error('Invalid user!')
       this.assignValues();
     }

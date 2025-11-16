@@ -1,8 +1,11 @@
 <div #container class="stage-indicator-container">
-  <div class="stage-row" *ngFor="let row of rows; trackBy: trackRow">
+  <div
+    class="stage-row"
+    *ngFor="let row of rows; trackBy: trackRow"
+    [class.single]="row.items.length === 1"
+  >
     <!-- Base line + GOLD FILL as a real element -->
     <div class="stage-line">
-      <!-- absolute child; width bound as a string -->
       <div class="stage-fill" [style.width]="rowFillPercent(row) + '%'"></div>
     </div>
 
@@ -16,11 +19,10 @@
     >
       <div class="point-marker"></div>
 
-      <!-- Button = focusable, reliable tooltip target -->
-
       <button
         type="button"
         class="point-bubble"
+        [style.maxWidth.px]="bubbleMaxWidthPx"
         [matTooltip]="item.label"
         matTooltipPosition="above"
       >
