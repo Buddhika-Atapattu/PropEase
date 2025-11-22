@@ -1,11 +1,12 @@
-<app-notification></app-notification>
+<app-notification-dialog></app-notification-dialog>
 <close-btn [matDialogRef]="dialogRef"></close-btn>
 
 <div class="container-fluid h-100" *ngIf="tenant && lease">
   <!-- Lease Agreement PDF Viewer -->
   <ng-container *ngIf="isLoading; else pdfViewer">
     <div class="d-flex justify-content-center align-items-center h-100">
-      <mat-spinner></mat-spinner>
+      <!-- <mat-spinner></mat-spinner> -->
+      <app-preloader></app-preloader>
       <p class="ms-3">Loading lease agreement...</p>
     </div>
   </ng-container>

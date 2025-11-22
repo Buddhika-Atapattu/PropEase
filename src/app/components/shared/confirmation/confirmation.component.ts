@@ -11,13 +11,13 @@ import {
   AfterViewInit,
   CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
-import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
+import {isPlatformBrowser, CommonModule, AsyncPipe} from '@angular/common';
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
 } from '@angular/material/dialog';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { Subscription } from 'rxjs';
+import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import {Subscription} from 'rxjs';
 
 @Component({
   selector: 'app-confirmation',
@@ -31,47 +31,36 @@ export class ConfirmationComponent implements OnInit, OnDestroy, AfterViewInit {
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
 
-  protected isDelete: boolean = false;
   protected title: string = '';
-  protected message: string = '';
+  protected body: string = '';
 
-  constructor(
+  constructor (
     @Inject(MAT_DIALOG_DATA) public data: any = {},
     private windowRef: WindowsRefService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private dialogRef: MatDialogRef<ConfirmationComponent>
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    if (this.isBrowser) {
+    if(this.isBrowser) {
       this.modeSub = this.windowRef.mode$.subscribe((val) => {
         this.mode = val;
       });
     }
-
-    this.isDelete = this.data.isConfirm;
     this.title = this.data.title;
-    this.message = this.data.message;
+    this.body = this.data.message ?? this.data.body;
   }
 
   protected cancel() {
-    this.isDelete = false;
-    const data = {
-      isConfirm: this.isDelete
-    }
-    this.dialogRef.close(data)
+    this.dialogRef.close(false)
   }
 
   protected confirm() {
-    this.isDelete = true;
-    const data = {
-      isConfirm: this.isDelete
-    }
-    this.dialogRef.close(data)
+    this.dialogRef.close(true)
   }
 
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
-  ngAfterViewInit(): void { }
+  ngAfterViewInit(): void {}
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {}
 }

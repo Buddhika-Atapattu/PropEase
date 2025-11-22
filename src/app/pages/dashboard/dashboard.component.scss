@@ -99,8 +99,10 @@
   .dashboard-navbar {
     margin: 0;
     grid-area: header;
+    max-height: 70px;
     overflow: hidden;
     align-items: stretch;
+    align-self: center;
     display: grid;
     grid-template-areas: "logo empty notification userimage";
     grid-template-columns: 10% 75% 5% 10%;
@@ -155,6 +157,8 @@
       align-items: center;
       justify-self: end;
       cursor: pointer;
+      height: 70px;
+      width: auto;
 
       img {
         object-fit: contain;

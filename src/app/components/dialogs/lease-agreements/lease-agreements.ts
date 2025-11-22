@@ -10,34 +10,35 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
-import {Subscription} from 'rxjs';
-import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Subscription } from 'rxjs';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import {LeaseWithProperty, TenantService} from '../../../services/tenant/tenant.service';
-import {User} from '../../../services/APIs/apis.service';
-import {NotificationDialogComponent} from '../notification/notification.component';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
-import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
-import {NgxExtendedPdfViewerModule} from 'ngx-extended-pdf-viewer';
-import {Router} from '@angular/router';
-import {AuthService} from '../../../services/auth/auth.service';
-import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
+import { LeaseWithProperty, TenantService } from '../../../services/tenant/tenant.service';
+import { User } from '../../../services/APIs/apis.service';
+import { NotificationDialogComponent } from '../notification/notificationBar.component';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+import { SkeletonLoaderComponent } from '../../../components/shared/skeleton-loader/skeleton-loader.component';
+import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
+import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
+import { Router } from '@angular/router';
+import { AuthService } from '../../../services/auth/auth.service';
+import { CloseBtnComponent } from '../../shared/buttons/close-btn/close-btn';
+import { PreloaderComponent } from '../../shared/preloader/preloader.component';
 
 // SkeletonLoaderComponent, SafeUrlPipe
-@Component({
+@Component( {
   selector: 'app-lease-agreements',
   standalone: true,
-  imports: [CommonModule, NotificationDialogComponent, MatProgressSpinnerModule, NgxExtendedPdfViewerModule, CloseBtnComponent],
+  imports: [ CommonModule, NotificationDialogComponent, MatProgressSpinnerModule, NgxExtendedPdfViewerModule, CloseBtnComponent, PreloaderComponent ],
   templateUrl: './lease-agreements.html',
   styleUrl: './lease-agreements.scss'
-})
+} )
 export class LeaseAgreements implements OnInit, OnDestroy, AfterViewInit, OnChanges {
 
-  @ViewChild(NotificationDialogComponent) NotificationDialogComponent!: NotificationDialogComponent;
+  @ViewChild( NotificationDialogComponent ) NotificationDialogComponent!: NotificationDialogComponent;
   protected lease: LeaseWithProperty | null = null;
   protected tenant: User | null = null;
   protected isLoading: boolean = false;
@@ -49,12 +50,12 @@ export class LeaseAgreements implements OnInit, OnDestroy, AfterViewInit, OnChan
   protected readonly definedMaleDummyImageURL = 'Images/user-images/dummy-user/dummy-user.jpg';
   protected readonly definedWomanDummyImageURL = 'Images/user-images/dummy-user/dummy_woman.jpg';
   protected definedImage: string = 'Images/user-images/dummy-user/dummy-user.jpg';
-  protected readonly definedImageExtentionArray: string[] = ['jpg', 'webp', 'jpeg', 'png', 'ico', 'gif'];
+  protected readonly definedImageExtentionArray: string[] = [ 'jpg', 'webp', 'jpeg', 'png', 'ico', 'gif' ];
 
   constructor (
     private tenantService: TenantService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    @Inject(MAT_DIALOG_DATA) public data: any = {},
+    @Inject( PLATFORM_ID ) private platformId: Object,
+    @Inject( MAT_DIALOG_DATA ) public data: any = {},
     public dialogRef: MatDialogRef<LeaseAgreements>,
     private cdr: ChangeDetectorRef,
     private windowRef: WindowsRefService,
@@ -62,38 +63,38 @@ export class LeaseAgreements implements OnInit, OnDestroy, AfterViewInit, OnChan
     private router: Router,
     private authService: AuthService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
   }
 
   async ngOnInit(): Promise<void> {
     try {
-      if(this.isBrowser) {
-        this.modeSub = this.windowRef.mode$.subscribe((val) => {});
+      if ( this.isBrowser ) {
+        this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {} );
       }
-      if(this.data) {
+      if ( this.data ) {
         this.lease = this.data.lease as LeaseWithProperty;
         this.tenant = this.data.tenant as User;
         await this.loadPDF();
       } else {
         this.lease = null;
         this.tenant = null;
-        throw new Error('No data found!');
+        throw new Error( 'No data found!' );
       }
-    } catch(error) {
-      console.error(error);
+    } catch ( error ) {
+      console.error( error );
       this.dialogRef.close();
     }
   }
 
-  ngOnChanges(changes: SimpleChanges): void {}
+  ngOnChanges( changes: SimpleChanges ): void {}
 
   ngAfterViewInit(): void {}
 
   ngOnDestroy(): void {
-    if(this.PDFURL) {
+    if ( this.PDFURL ) {
       this.PDFURL = null;
     }
-    if(this.modeSub) {
+    if ( this.modeSub ) {
       this.modeSub.unsubscribe();
     }
   }
@@ -101,41 +102,41 @@ export class LeaseAgreements implements OnInit, OnDestroy, AfterViewInit, OnChan
   private async loadPDF(): Promise<void> {
     try {
       this.isLoading = true;
-      if(!this.lease) throw new Error('No lease found!');
+      if ( !this.lease ) throw new Error( 'No lease found!' );
       const leaseID = this.lease.leaseID;
-      if(!leaseID) throw new Error('No lease ID found!');
-      if(this.authService.getLoggedUser === null) throw new Error('User not authenticated')
+      if ( !leaseID ) throw new Error( 'No lease ID found!' );
+      if ( this.authService.getLoggedUser === null ) throw new Error( 'User not authenticated' );
 
-      const blob = await this.tenantService.downloadLeaseAgreement(leaseID, 'view', this.authService.getLoggedUser.username);
+      const blob = await this.tenantService.downloadLeaseAgreement( leaseID, 'view', this.authService.getLoggedUser.username );
 
       const isPDF = blob.type === 'application/pdf' && blob.size > 1000;
-      if(!isPDF) {
+      if ( !isPDF ) {
         const text = await blob.text();
-        throw new Error(`Expected PDF blob, got text: ${text}`);
+        throw new Error( `Expected PDF blob, got text: ${ text }` );
       }
 
 
-      const objectUrl = URL.createObjectURL(blob);
+      const objectUrl = URL.createObjectURL( blob );
       this.pdfBlob = objectUrl;
-      this.PDFURL = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
+      this.PDFURL = this.sanitizer.bypassSecurityTrustResourceUrl( objectUrl );
 
-    } catch(error) {
-      console.error('Failed to load PDF:', error);
+    } catch ( error ) {
+      console.error( 'Failed to load PDF:', error );
       this.PDFURL = null;
     } finally {
       this.isLoading = false;
     }
   }
 
-  protected generateTenantImage(image: string, gender: string): string {
+  protected generateTenantImage( image: string, gender: string ): string {
     try {
-      const imageArray: string[] = image ? image.split('/') : [];
+      const imageArray: string[] = image ? image.split( '/' ) : [];
 
-      if(imageArray.length > 0) {
-        const lastSegment = imageArray[imageArray.length - 1];
-        const extension = lastSegment.split('.').pop()?.toLowerCase();
+      if ( imageArray.length > 0 ) {
+        const lastSegment = imageArray[ imageArray.length - 1 ];
+        const extension = lastSegment.split( '.' ).pop()?.toLowerCase();
 
-        if(extension && this.definedImageExtentionArray.includes(extension)) {
+        if ( extension && this.definedImageExtentionArray.includes( extension ) ) {
           this.definedImage = image;
         } else {
           this.definedImage = gender.toLowerCase() === 'male'
@@ -149,8 +150,8 @@ export class LeaseAgreements implements OnInit, OnDestroy, AfterViewInit, OnChan
       }
 
       return this.definedImage;
-    } catch(error) {
-      console.error('Error generating tenant image:', error);
+    } catch ( error ) {
+      console.error( 'Error generating tenant image:', error );
       return gender.toLowerCase() === 'male'
         ? this.definedMaleDummyImageURL
         : this.definedWomanDummyImageURL;
@@ -159,11 +160,11 @@ export class LeaseAgreements implements OnInit, OnDestroy, AfterViewInit, OnChan
 
   protected onEditLease(): void {
     this.pannelClose();
-    this.router.navigate(['/dashboard/tenant/tenant-lease', this.lease?.leaseID]);
+    this.router.navigate( [ '/dashboard/tenant/tenant-lease', this.lease?.leaseID ] );
   }
 
   protected pannelClose() {
-    if(this.PDFURL) {
+    if ( this.PDFURL ) {
       this.PDFURL = null;
     }
     this.dialogRef.close();

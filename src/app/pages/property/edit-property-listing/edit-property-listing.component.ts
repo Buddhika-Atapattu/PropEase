@@ -24,30 +24,30 @@ import {
   FormsModule,
   ReactiveFormsModule
 } from '@angular/forms';
-import {MatAutocompleteModule, MatAutocompleteSelectedEvent} from '@angular/material/autocomplete';
-import {MatButtonModule} from '@angular/material/button';
-import {MatCheckboxModule} from '@angular/material/checkbox';
-import {MatNativeDateModule} from '@angular/material/core';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {MatInputModule} from '@angular/material/input';
-import {MatRadioModule} from '@angular/material/radio';
-import {MatSelectModule} from '@angular/material/select';
-import {MatStepperModule} from '@angular/material/stepper';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatSelectModule } from '@angular/material/select';
+import { MatStepperModule } from '@angular/material/stepper';
 import * as table from '@angular/material/table';
-import {DomSanitizer} from '@angular/platform-browser';
-import {ActivatedRoute, Router, RouterModule} from '@angular/router';
-import {EditorComponent} from '@tinymce/tinymce-angular';
-import {Observable, Subscription, of} from 'rxjs';
-import {map, startWith} from 'rxjs/operators';
+import { DomSanitizer } from '@angular/platform-browser';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { EditorComponent } from '@tinymce/tinymce-angular';
+import { Observable, Subscription, of } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 import {
   NotificationDialogComponent
-} from '../../../components/dialogs/notification/notification.component';
-import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
-import {MapComponent} from '../../../components/shared/map/map.component';
-import {TextEditorComponent} from '../../../components/shared/textEditor/text-editor';
-import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
+} from '../../../components/dialogs/notification/notificationBar.component';
+import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
+import { MapComponent } from '../../../components/shared/map/map.component';
+import { TextEditorComponent } from '../../../components/shared/textEditor/text-editor';
+import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 import {
   APIsService,
   Country,
@@ -55,8 +55,8 @@ import {
   CountryDetailsCustomType,
   User
 } from '../../../services/APIs/apis.service';
-import {AuthService} from '../../../services/auth/auth.service';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
+import { AuthService } from '../../../services/auth/auth.service';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import {
   AddedBy,
   Address,
@@ -67,7 +67,7 @@ import {
   propertyDocBackend,
   propertyDocPreview, propertyImages
 } from '../../../services/property/property.service';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 
 interface propertyImagePreview {
   URL: string;
@@ -76,7 +76,7 @@ interface propertyImagePreview {
   height: number;
 }
 
-@Component({
+@Component( {
   selector: 'app-edit-property-listing',
   standalone: true,
   imports: [
@@ -107,14 +107,14 @@ interface propertyImagePreview {
   ],
   templateUrl: './edit-property-listing.component.html',
   styleUrl: './edit-property-listing.component.scss',
-})
+} )
 export class EditPropertyListingComponent
   implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('propertyImages') propertyImages!: ElementRef<HTMLInputElement>;
-  @ViewChild('propertyDocs') propertyDocs!: ElementRef<HTMLInputElement>;
-  @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
-  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
-  @ViewChild(MapComponent) map!: MapComponent;
+  @ViewChild( 'propertyImages' ) propertyImages!: ElementRef<HTMLInputElement>;
+  @ViewChild( 'propertyDocs' ) propertyDocs!: ElementRef<HTMLInputElement>;
+  @ViewChild( ProgressBarComponent ) progress!: ProgressBarComponent;
+  @ViewChild( NotificationDialogComponent ) notification!: NotificationDialogComponent;
+  @ViewChild( MapComponent ) map!: MapComponent;
 
   protected isFormError: boolean = false;
   protected isFormErrorText: string = '';
@@ -128,39 +128,39 @@ export class EditPropertyListingComponent
   protected istabOpenButtonActive: boolean = false;
 
   //01. <================== Basic Property Details ==================>
-  protected id: Property['id'] = '';
-  protected title: Property['title'] = '';
-  protected type: Property['type'] = '';
-  protected listing: Property['listing'] = '';
-  protected description: Property['description'] = '';
+  protected id: Property[ 'id' ] = '';
+  protected title: Property[ 'title' ] = '';
+  protected type: Property[ 'type' ] = '';
+  protected listing: Property[ 'listing' ] = '';
+  protected description: Property[ 'description' ] = '';
   //<================== End Basic Property Details ==================>
 
   //02. <================== Location Details ==================>
 
   // ******* Counrty Details *******
-  protected country: Property['countryDetails'] | null = null;
+  protected country: Property[ 'countryDetails' ] | null = null;
   // ******* Address *******
-  protected AddressHouseNumber: Address['houseNumber'] = '';
-  protected AddressStreet: Address['street'] = '';
-  protected AddressCity: Address['city'] = '';
-  protected AddressStateOrProvince: Address['stateOrProvince'] = '';
-  protected AddressPostcode: Address['postcode'] = '';
+  protected AddressHouseNumber: Address[ 'houseNumber' ] = '';
+  protected AddressStreet: Address[ 'street' ] = '';
+  protected AddressCity: Address[ 'city' ] = '';
+  protected AddressStateOrProvince: Address[ 'stateOrProvince' ] = '';
+  protected AddressPostcode: Address[ 'postcode' ] = '';
   //This one gets the detailed country object
 
   //Country detection of Address
   protected AddressCountry: Country | string = '';
   protected AddressFilteredCountries!: Observable<Country[]>;
   protected AddressCountries: Country[] = [];
-  protected AddressCountryControl: FormControl = new FormControl('');
+  protected AddressCountryControl: FormControl = new FormControl( '' );
   protected countryMissMatch: boolean = false;
   private typeAddressCountry: string = '';
 
   // ******* Location *******
-  protected mapLocationLat: GoogleMapLocation['lat'] = 0;
-  protected mapLocationLng: GoogleMapLocation['lng'] = 0;
-  protected GoogleMapLocationEmbeddedUrl: GoogleMapLocation['embeddedUrl'] = '';
+  protected mapLocationLat: GoogleMapLocation[ 'lat' ] = 0;
+  protected mapLocationLng: GoogleMapLocation[ 'lng' ] = 0;
+  protected GoogleMapLocationEmbeddedUrl: GoogleMapLocation[ 'embeddedUrl' ] = '';
 
-  private location: Property['location'] = {
+  private location: Property[ 'location' ] = {
     lat: this.mapLocationLat,
     lng: this.mapLocationLng,
     embeddedUrl: this.GoogleMapLocationEmbeddedUrl,
@@ -169,30 +169,30 @@ export class EditPropertyListingComponent
   //<================== End Location Details ==================>
 
   //03. <================== Property Specifications ==================>
-  protected totalArea: Property['totalArea'] = 0;
-  protected builtInArea: Property['builtInArea'] = 0;
-  protected livingRooms: Property['livingRooms'] = 0;
-  protected balconies: Property['balconies'] = 0;
-  protected kitchen: Property['kitchen'] = 0;
-  protected bedrooms: Property['bedrooms'] = 0;
-  protected bathrooms: Property['bathrooms'] = 0;
-  protected maidrooms: Property['maidrooms'] = 0;
-  protected driverRooms: Property['driverRooms'] = 0;
-  protected furnishingStatus: Property['furnishingStatus'] = 'Unfurnished';
-  protected totalFloors: Property['totalFloors'] = 0;
-  protected numberOfParking: Property['numberOfParking'] = 0;
+  protected totalArea: Property[ 'totalArea' ] = 0;
+  protected builtInArea: Property[ 'builtInArea' ] = 0;
+  protected livingRooms: Property[ 'livingRooms' ] = 0;
+  protected balconies: Property[ 'balconies' ] = 0;
+  protected kitchen: Property[ 'kitchen' ] = 0;
+  protected bedrooms: Property[ 'bedrooms' ] = 0;
+  protected bathrooms: Property[ 'bathrooms' ] = 0;
+  protected maidrooms: Property[ 'maidrooms' ] = 0;
+  protected driverRooms: Property[ 'driverRooms' ] = 0;
+  protected furnishingStatus: Property[ 'furnishingStatus' ] = 'Unfurnished';
+  protected totalFloors: Property[ 'totalFloors' ] = 0;
+  protected numberOfParking: Property[ 'numberOfParking' ] = 0;
   //<================== End Property Specifications ==================>
 
   //04. <================== Construction & Age ==================>
-  protected builtYear: Property['builtYear'] = 0;
-  protected propertyCondition: Property['propertyCondition'] = 'New';
-  protected developerName: Property['developerName'] = '';
-  protected projectName: Property['projectName'] = '';
-  protected ownerShipType: Property['ownerShipType'] = 'Freehold';
+  protected builtYear: Property[ 'builtYear' ] = 0;
+  protected propertyCondition: Property[ 'propertyCondition' ] = 'New';
+  protected developerName: Property[ 'developerName' ] = '';
+  protected projectName: Property[ 'projectName' ] = '';
+  protected ownerShipType: Property[ 'ownerShipType' ] = 'Freehold';
   //<================== End Construction & Age ==================>
 
   //05. <================== Financial Details ==================>
-  protected price: Property['price'] = 0;
+  protected price: Property[ 'price' ] = 0;
   /*
 
     05.1. isPriceCurrencyPanelOpen -> open pannel
@@ -207,7 +207,7 @@ export class EditPropertyListingComponent
 
     */
   protected isPriceCurrencyPanelOpen: boolean = false;
-  protected countryControlWithCurrency: FormControl = new FormControl('');
+  protected countryControlWithCurrency: FormControl = new FormControl( '' );
   protected filteredCountriesWithCurrency!: Observable<
     CountryDetailsCustomType[]
   >;
@@ -218,19 +218,19 @@ export class EditPropertyListingComponent
   protected countryOfCurrencySelectedError: boolean = false;
 
   protected countryActualCurrency: string = '';
-  protected pricePerSqurFeet: Property['pricePerSqurFeet'] = 0;
-  protected expectedRentYearly: Property['expectedRentYearly'] = 0;
-  protected expectedRentQuartely: Property['expectedRentQuartely'] = 0;
-  protected expectedRentMonthly: Property['expectedRentMonthly'] = 0;
-  protected expectedRentDaily: Property['expectedRentDaily'] = 0;
-  protected maintenanceFees: Property['maintenanceFees'] = 0;
-  protected serviceCharges: Property['serviceCharges'] = 0;
-  protected transferFees: Property['transferFees'] = 0;
-  protected availabilityStatus: Property['availabilityStatus'] = '';
+  protected pricePerSqurFeet: Property[ 'pricePerSqurFeet' ] = 0;
+  protected expectedRentYearly: Property[ 'expectedRentYearly' ] = 0;
+  protected expectedRentQuartely: Property[ 'expectedRentQuartely' ] = 0;
+  protected expectedRentMonthly: Property[ 'expectedRentMonthly' ] = 0;
+  protected expectedRentDaily: Property[ 'expectedRentDaily' ] = 0;
+  protected maintenanceFees: Property[ 'maintenanceFees' ] = 0;
+  protected serviceCharges: Property[ 'serviceCharges' ] = 0;
+  protected transferFees: Property[ 'transferFees' ] = 0;
+  protected availabilityStatus: Property[ 'availabilityStatus' ] = '';
   //<================== End Financial Details ==================>
 
   //06. <================== Features & Amenities ==================>
-  protected featureAmenities: Property['featuresAndAmenities'] = [];
+  protected featureAmenities: Property[ 'featuresAndAmenities' ] = [];
   protected featureAmenity: string = '';
   protected isAmenitiesNotIncluded: boolean = false;
   protected amenitiesNotIncludedText: string = '';
@@ -292,8 +292,8 @@ export class EditPropertyListingComponent
     'text/plain',
   ];
 
-  protected videoTour: Property['videoTour'] = '';
-  protected virtualTour: Property['virtualTour'] = '';
+  protected videoTour: Property[ 'videoTour' ] = '';
+  protected virtualTour: Property[ 'virtualTour' ] = '';
   protected isIframeEmbed: boolean = false;
 
   protected videoPreviewURL: string = '';
@@ -302,20 +302,20 @@ export class EditPropertyListingComponent
   //<================== End Media ==================>
 
   //.08 <================== Listing Management ==================>
-  protected listingDate: Property['listingDate'] = new Date();
-  protected availabilityDate: Property['availabilityDate'] = new Date();
-  protected listingExpiryDate: Property['listingExpiryDate'] = new Date();
+  protected listingDate: Property[ 'listingDate' ] = new Date();
+  protected availabilityDate: Property[ 'availabilityDate' ] = new Date();
+  protected listingExpiryDate: Property[ 'listingExpiryDate' ] = new Date();
 
   // Added by agent
   protected agentName: string = '';
-  protected AddedByUsername: AddedBy['username'] = '';
-  protected AddedByName: AddedBy['name'] = '';
-  protected AddedByEmail: AddedBy['email'] = '';
-  protected AddedByRole: AddedBy['role'] = '';
-  protected AddedByContactNumber: AddedBy['contactNumber'] = '';
-  protected AddedByAddedAt: AddedBy['addedAt'] = new Date();
-  protected AddesByAddedAtOld: AddedBy['addedAt'] = new Date();
-  private AddedBy: Property['addedBy'] = {
+  protected AddedByUsername: AddedBy[ 'username' ] = '';
+  protected AddedByName: AddedBy[ 'name' ] = '';
+  protected AddedByEmail: AddedBy[ 'email' ] = '';
+  protected AddedByRole: AddedBy[ 'role' ] = '';
+  protected AddedByContactNumber: AddedBy[ 'contactNumber' ] = '';
+  protected AddedByAddedAt: AddedBy[ 'addedAt' ] = new Date();
+  protected AddesByAddedAtOld: AddedBy[ 'addedAt' ] = new Date();
+  private AddedBy: Property[ 'addedBy' ] = {
     username: this.AddedByUsername,
     name: this.AddedByName,
     email: this.AddedByEmail,
@@ -338,24 +338,24 @@ export class EditPropertyListingComponent
   protected filterOwners: User[] = [];
   protected isOwnerNotSelected: boolean = false;
 
-  protected rentedDate: Property['rentedDate'] | undefined = undefined;
-  protected soldDate: Property['soldDate'] | null = null;
+  protected rentedDate: Property[ 'rentedDate' ] | undefined = undefined;
+  protected soldDate: Property[ 'soldDate' ] | null = null;
 
   //<================== End Listing Management ==================>
 
   //09. <================== Administrative & Internal Use ==================>
-  protected referenceCode: Property['referenceCode'] = '';
-  protected verificationStatus: Property['verificationStatus'] = 'Pending';
-  protected priority: Property['priority'] = 'Medium';
-  protected status: Property['status'] = 'Draft';
-  protected internalNote: Property['internalNote'] = '';
+  protected referenceCode: Property[ 'referenceCode' ] = '';
+  protected verificationStatus: Property[ 'verificationStatus' ] = 'Pending';
+  protected priority: Property[ 'priority' ] = 'Medium';
+  protected status: Property[ 'status' ] = 'Draft';
+  protected internalNote: Property[ 'internalNote' ] = '';
 
   //<================== End Administrative & Internal Use ==================>
 
   //Predefined variables for suggests
 
   //01. Property listing
-  protected listingOptions: string[] = ['Sale', 'Rent', 'Sold', 'Rented'];
+  protected listingOptions: string[] = [ 'Sale', 'Rent', 'Sold', 'Rented' ];
   protected filterListingOptions: string[] = [];
 
   //02. Property type
@@ -401,7 +401,7 @@ export class EditPropertyListingComponent
   protected filterPropertyAvailabilityStatusOptions: string[] = [];
 
   //07. Property Priority Options
-  protected propertyPriorityOptions: string[] = ['High', 'Medium', 'Low'];
+  protected propertyPriorityOptions: string[] = [ 'High', 'Medium', 'Low' ];
   protected filterPropertyPriorityOptions: string[] = [];
 
   //08. Property Verification Status
@@ -430,7 +430,7 @@ export class EditPropertyListingComponent
   protected filterOwnerShipTypeOptions: string[] = [];
 
   //Text editor
-  init: EditorComponent['init'] = {
+  init: EditorComponent[ 'init' ] = {
     plugins: 'lists link image table code help wordcount',
   };
 
@@ -448,14 +448,14 @@ export class EditPropertyListingComponent
   ];
 
   protected tabIndicatorsActive: boolean = false;
-  @ViewChildren('tabElement', {read: ElementRef})
+  @ViewChildren( 'tabElement', { read: ElementRef } )
   tabElements!: QueryList<ElementRef>;
   protected currentIndex = 0;
-  protected indicatorStyle: {width?: string; transform?: string} = {};
+  protected indicatorStyle: { width?: string; transform?: string; } = {};
 
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private route: ActivatedRoute,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
@@ -465,10 +465,10 @@ export class EditPropertyListingComponent
     private crypto: CryptoService,
     private router: Router
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    this.route.url.subscribe((segments) => {
-      const path = segments.map((s) => s.path).join('/');
-    });
+    this.isBrowser = isPlatformBrowser( this.platformId );
+    this.route.url.subscribe( ( segments ) => {
+      const path = segments.map( ( s ) => s.path ).join( '/' );
+    } );
 
     //Assign the values to logged user
     this.loggedUser = this.authService.getLoggedUser;
@@ -477,38 +477,38 @@ export class EditPropertyListingComponent
     this.registerCustomIcons();
     // this.id = this.propertyService.generatePropertyId();
     // this.propertyService.amenityIconMaker();
-    this.route.params.subscribe((params) => {
-      this.id = params['propertyID'];
-    });
+    this.route.params.subscribe( ( params ) => {
+      this.id = params[ 'propertyID' ];
+    } );
   }
 
   async ngOnInit(): Promise<void> {
-    if(this.isBrowser) {
+    if ( this.isBrowser ) {
       this.callTheAPI();
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
+      } );
 
-      window.addEventListener('dragover', this.preventDefault, {
+      window.addEventListener( 'dragover', this.preventDefault, {
         passive: false,
-      });
+      } );
 
-      window.addEventListener('drop', this.preventDefault, {
+      window.addEventListener( 'drop', this.preventDefault, {
         passive: false,
-      });
+      } );
     }
   }
 
   ngAfterViewInit(): void {
-    if(this.isBrowser) {
-      setTimeout(() => this.updateIndicatorPosition(this.currentIndex));
+    if ( this.isBrowser ) {
+      setTimeout( () => this.updateIndicatorPosition( this.currentIndex ) );
     }
   }
 
   ngOnDestroy(): void {
-    if(this.isBrowser) {
-      window.removeEventListener('dragover', this.preventDefault);
-      window.removeEventListener('drop', this.preventDefault);
+    if ( this.isBrowser ) {
+      window.removeEventListener( 'dragover', this.preventDefault );
+      window.removeEventListener( 'drop', this.preventDefault );
     }
 
     this.modeSub?.unsubscribe();
@@ -518,9 +518,9 @@ export class EditPropertyListingComponent
   protected isUserCanAssignAgentToTheProperty(): boolean {
     return (
       this.loggedUser?.access.permissions.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'Property Management' &&
-          permission.actions.includes('assign agent')
+          permission.actions.includes( 'assign agent' )
       ) ?? false
     );
   }
@@ -528,9 +528,9 @@ export class EditPropertyListingComponent
   protected isUserCanUploadDocumentsToTheProperty(): boolean {
     return (
       this.loggedUser?.access.permissions.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'Property Management' &&
-          permission.actions.includes('upload documents')
+          permission.actions.includes( 'upload documents' )
       ) ?? false
     );
   }
@@ -538,9 +538,9 @@ export class EditPropertyListingComponent
   protected isUserCanManageAmenitiesToTheProperty(): boolean {
     return (
       this.loggedUser?.access.permissions.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'Property Management' &&
-          permission.actions.includes('manage amenities')
+          permission.actions.includes( 'manage amenities' )
       ) ?? false
     );
   }
@@ -548,9 +548,9 @@ export class EditPropertyListingComponent
   protected isUserCanChangeListingStatusOfTheProperty(): boolean {
     return (
       this.loggedUser?.access.permissions.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'Property Management' &&
-          permission.actions.includes('change status')
+          permission.actions.includes( 'change status' )
       ) ?? false
     );
   }
@@ -564,27 +564,27 @@ export class EditPropertyListingComponent
   //<==================== End Mobile Tab Open Button ====================>
 
   //<==================== Tab Make ====================>
-  protected tabMaker(index: number, tabName: string) {
-    if(!this.isBrowser) return;
+  protected tabMaker( index: number, tabName: string ) {
+    if ( !this.isBrowser ) return;
     this.currentIndex = index;
-    setTimeout(() => this.updateIndicatorPosition(index));
+    setTimeout( () => this.updateIndicatorPosition( index ) );
   }
 
-  private updateIndicatorPosition(index: number): void {
-    const tabEl = this.tabElements.get(index)?.nativeElement;
+  private updateIndicatorPosition( index: number ): void {
+    const tabEl = this.tabElements.get( index )?.nativeElement;
 
-    if(tabEl) {
-      const {offsetLeft, offsetWidth} = tabEl;
+    if ( tabEl ) {
+      const { offsetLeft, offsetWidth } = tabEl;
 
       const newStyle = {
-        width: `${offsetWidth}px`,
-        transform: `translateX(${offsetLeft}px)`,
+        width: `${ offsetWidth }px`,
+        transform: `translateX(${ offsetLeft }px)`,
       };
 
       // Only update if it has changed
-      if(
-        this.indicatorStyle['width'] !== newStyle.width ||
-        this.indicatorStyle['transform'] !== newStyle.transform
+      if (
+        this.indicatorStyle[ 'width' ] !== newStyle.width ||
+        this.indicatorStyle[ 'transform' ] !== newStyle.transform
       ) {
         this.indicatorStyle = newStyle;
       }
@@ -592,18 +592,18 @@ export class EditPropertyListingComponent
       this.istabOpenButtonActive = false;
     }
 
-    if(this.map && this.currentIndex === 1) {
-      this.map.MapCenterMaker(this.mapLocationLat, this.mapLocationLng, 15);
+    if ( this.map && this.currentIndex === 1 ) {
+      this.map.MapCenterMaker( this.mapLocationLat, this.mapLocationLng, 15 );
     }
   }
   //<==================== End tab Make ====================>
 
   //<==================== Page Go Back ====================>
   protected goBack() {
-    if(this.currentIndex > 0) {
+    if ( this.currentIndex > 0 ) {
       this.tabMaker(
         this.currentIndex - 1,
-        this.tabIndicators[this.currentIndex - 1]
+        this.tabIndicators[ this.currentIndex - 1 ]
       );
     }
   }
@@ -611,10 +611,10 @@ export class EditPropertyListingComponent
 
   //<==================== Page Go Next ====================>
   protected goNext() {
-    if(this.currentIndex < this.tabIndicators.length - 1) {
+    if ( this.currentIndex < this.tabIndicators.length - 1 ) {
       this.tabMaker(
         this.currentIndex + 1,
-        this.tabIndicators[this.currentIndex + 1]
+        this.tabIndicators[ this.currentIndex + 1 ]
       );
     }
   }
@@ -622,16 +622,16 @@ export class EditPropertyListingComponent
 
   //<==================== Call the API to collect the data ====================>
   private async callTheAPI() {
-    if(this.id) {
+    if ( this.id ) {
       await this.propertyService
-        .getPropertyById(this.id)
-        .then(async (response) => {
+        .getPropertyById( this.id )
+        .then( async ( response ) => {
           // Basic Property Details
           this.title = response.data.title;
-          this.type = this.capitalize(response.data.type);
-          this.filterTypeOperation(this.type);
-          this.listing = this.capitalize(response.data.listing);
-          this.filterListingOperation(this.listing);
+          this.type = this.capitalize( response.data.type );
+          this.filterTypeOperation( this.type );
+          this.listing = this.capitalize( response.data.listing );
+          this.filterListingOperation( this.listing );
           this.description = response.data.description;
           // End Basic Property Details
 
@@ -642,7 +642,7 @@ export class EditPropertyListingComponent
           this.AddressCity = response.data.address.city;
           this.AddressStateOrProvince = response.data.address.stateOrProvince;
           this.AddressPostcode = response.data.address.postcode;
-          await this.addressMainFilterCountries(response.data.address.country);
+          await this.addressMainFilterCountries( response.data.address.country );
           this.AddressCountry = response.data.address.country;
           this.typeAddressCountry = response.data.address.country;
           this.location = response.data.location;
@@ -676,13 +676,13 @@ export class EditPropertyListingComponent
           );
           this.developerName = response.data.developerName;
           this.projectName = response.data.projectName;
-          this.ownerShipType = this.capitalize(response.data.ownerShipType);
+          this.ownerShipType = this.capitalize( response.data.ownerShipType );
 
-          await this.filterOwnerThroughAllUsers(response.data.owner);
+          await this.filterOwnerThroughAllUsers( response.data.owner );
 
-          if(this.filterOwners.length === 1) {
+          if ( this.filterOwners.length === 1 ) {
             this.isOwnerNotSelected = false;
-            this.selectedOwner = this.filterOwners[0];
+            this.selectedOwner = this.filterOwners[ 0 ];
             this.ownerUsername = this.selectedOwner.username;
             this.ownerName = this.selectedOwner.name;
           } else {
@@ -725,34 +725,34 @@ export class EditPropertyListingComponent
           this.uploadedDocuments = response.data.documents;
           this.uploadImageReorganizingOperation();
           this.videoTour = response.data.videoTour;
-          this.propertyVideoUrl(this.videoTour ?? '');
+          this.propertyVideoUrl( this.videoTour ?? '' );
           this.virtualTour = response.data.virtualTour;
-          this.updateVirtualTourUrl(this.virtualTour ?? '');
+          this.updateVirtualTourUrl( this.virtualTour ?? '' );
           // End Media
 
           // Listing Management
-          this.listingDate = this.toValidDate(response.data.listingDate);
+          this.listingDate = this.toValidDate( response.data.listingDate );
           this.availabilityDate = this.toValidDate(
             response.data.availabilityDate
           );
           this.listingExpiryDate = this.toValidDate(
             response.data.listingExpiryDate
           );
-          if(response.data.addedBy) {
-            await this.filterAgentThroughAllUsers(response.data.addedBy.name);
+          if ( response.data.addedBy ) {
+            await this.filterAgentThroughAllUsers( response.data.addedBy.name );
             this.AddedBy = response.data.addedBy;
             this.AddedByUsername = response.data.addedBy.username;
             this.AddedByName = response.data.addedBy.name;
             this.AddedByEmail = response.data.addedBy.email;
             this.AddedByRole = response.data.addedBy.role;
             this.AddedByContactNumber = response.data.addedBy.contactNumber;
-            this.AddedByAddedAt = new Date(response.data.addedBy.addedAt);
-            this.AddesByAddedAtOld = new Date(response.data.addedBy.addedAt);
+            this.AddedByAddedAt = new Date( response.data.addedBy.addedAt );
+            this.AddesByAddedAtOld = new Date( response.data.addedBy.addedAt );
             this.agentName = response.data.addedBy.name;
           }
 
-          this.rentedDate = this.toValidDate(response.data.rentedDate);
-          this.soldDate = this.toValidDate(response.data.soldDate);
+          this.rentedDate = this.toValidDate( response.data.rentedDate );
+          this.soldDate = this.toValidDate( response.data.soldDate );
 
           // End Listing Management
 
@@ -760,30 +760,30 @@ export class EditPropertyListingComponent
           this.referenceCode = response.data.referenceCode;
           this.verificationStatus = this.capitalize(
             response.data.verificationStatus
-          ) as Property['verificationStatus'];
+          ) as Property[ 'verificationStatus' ];
           this.priority = this.capitalize(
             response.data.priority
-          ) as Property['priority'];
+          ) as Property[ 'priority' ];
           this.status = this.capitalize(
             response.data.status
-          ) as Property['status'];
+          ) as Property[ 'status' ];
           this.internalNote = response.data.internalNote;
           // End Administrative & Internal Use
-        });
+        } );
     }
   }
   //<==================== End Call the API to collect the data ====================>
 
   //<==================== Make Capitalizing =========================>
-  private capitalize(str: string): string {
-    return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+  private capitalize( str: string ): string {
+    return str ? str.charAt( 0 ).toUpperCase() + str.slice( 1 ) : '';
   }
   //<==================== End Make Capitalizing =========================>
 
   //<==================== Validate the Date =========================>
-  private toValidDate(dateStr: string | null | undefined): Date | null {
-    const date = dateStr ? new Date(dateStr) : null;
-    return date instanceof Date && !isNaN(date.getTime()) ? date : null;
+  private toValidDate( dateStr: string | null | undefined ): Date | null {
+    const date = dateStr ? new Date( dateStr ) : null;
+    return date instanceof Date && !isNaN( date.getTime() ) ? date : null;
   }
   //<==================== End Validate the Date =========================>
 
@@ -791,115 +791,115 @@ export class EditPropertyListingComponent
 
   //01. Property listing
   protected propertyListingSort(): string[] {
-    if(this.filterListingOptions.length === 0) {
-      return this.listingOptions.sort((a, b) => a.localeCompare(b));
+    if ( this.filterListingOptions.length === 0 ) {
+      return this.listingOptions.sort( ( a, b ) => a.localeCompare( b ) );
     } else {
-      return this.filterListingOptions.sort((a, b) => a.localeCompare(b));
+      return this.filterListingOptions.sort( ( a, b ) => a.localeCompare( b ) );
     }
   }
 
   //02. Property type
   protected propertyTypeSort(): string[] {
-    if(this.filterTypeOptions.length === 0) {
-      return this.typeOptions.sort((a, b) => a.localeCompare(b));
+    if ( this.filterTypeOptions.length === 0 ) {
+      return this.typeOptions.sort( ( a, b ) => a.localeCompare( b ) );
     } else {
-      return this.filterTypeOptions.sort((a, b) => a.localeCompare(b));
+      return this.filterTypeOptions.sort( ( a, b ) => a.localeCompare( b ) );
     }
   }
 
   //03. Property amenities
   protected propertyAmenitiesSort(): string[] {
-    if(this.filterFeatureAmenity.length === 0) {
-      return this.definedFeatureAmenity.sort((a, b) => a.localeCompare(b));
+    if ( this.filterFeatureAmenity.length === 0 ) {
+      return this.definedFeatureAmenity.sort( ( a, b ) => a.localeCompare( b ) );
     } else {
-      return this.filterFeatureAmenity.sort((a, b) => a.localeCompare(b));
+      return this.filterFeatureAmenity.sort( ( a, b ) => a.localeCompare( b ) );
     }
   }
 
   //04. Furnishing Status
   protected propertyFurnishingStatusOptionsSort() {
-    if(this.filterFurnishingStatusOptions.length === 0) {
-      return this.furnishingStatusOptions.sort((a, b) => a.localeCompare(b));
+    if ( this.filterFurnishingStatusOptions.length === 0 ) {
+      return this.furnishingStatusOptions.sort( ( a, b ) => a.localeCompare( b ) );
     } else {
-      return this.filterFurnishingStatusOptions.sort((a, b) =>
-        a.localeCompare(b)
+      return this.filterFurnishingStatusOptions.sort( ( a, b ) =>
+        a.localeCompare( b )
       );
     }
   }
 
   //05. Property Condition
   protected propertyConditionOptionsSort() {
-    if(this.filterPropertyConditionOptions.length === 0) {
-      return this.propertyConditionOptions.sort((a, b) => a.localeCompare(b));
+    if ( this.filterPropertyConditionOptions.length === 0 ) {
+      return this.propertyConditionOptions.sort( ( a, b ) => a.localeCompare( b ) );
     } else {
-      return this.filterPropertyConditionOptions.sort((a, b) =>
-        a.localeCompare(b)
+      return this.filterPropertyConditionOptions.sort( ( a, b ) =>
+        a.localeCompare( b )
       );
     }
   }
 
   //06. Property Availability Status
   protected propertyAvailabilityStatusOptionsSort() {
-    if(this.filterPropertyAvailabilityStatusOptions.length === 0) {
-      return this.propertyAvailabilityStatusOptions.sort((a, b) =>
-        a.localeCompare(b)
+    if ( this.filterPropertyAvailabilityStatusOptions.length === 0 ) {
+      return this.propertyAvailabilityStatusOptions.sort( ( a, b ) =>
+        a.localeCompare( b )
       );
     } else {
-      return this.filterPropertyAvailabilityStatusOptions.sort((a, b) =>
-        a.localeCompare(b)
+      return this.filterPropertyAvailabilityStatusOptions.sort( ( a, b ) =>
+        a.localeCompare( b )
       );
     }
   }
 
   //07. Property Priority Options
   protected propertyPriorityOptionsSort() {
-    if(this.filterPropertyPriorityOptions.length === 0) {
-      return this.propertyPriorityOptions.sort((a, b) => a.localeCompare(b));
+    if ( this.filterPropertyPriorityOptions.length === 0 ) {
+      return this.propertyPriorityOptions.sort( ( a, b ) => a.localeCompare( b ) );
     } else {
-      return this.filterPropertyPriorityOptions.sort((a, b) =>
-        a.localeCompare(b)
+      return this.filterPropertyPriorityOptions.sort( ( a, b ) =>
+        a.localeCompare( b )
       );
     }
   }
 
   //08. Property Verification Status
   protected propertyVerificationStatusOptionsSort() {
-    if(this.filterPropertyVerificationStatusOptions.length === 0) {
-      return this.propertyVerificationStatusOptions.sort((a, b) =>
-        a.localeCompare(b)
+    if ( this.filterPropertyVerificationStatusOptions.length === 0 ) {
+      return this.propertyVerificationStatusOptions.sort( ( a, b ) =>
+        a.localeCompare( b )
       );
     } else {
-      return this.filterPropertyVerificationStatusOptions.sort((a, b) =>
-        a.localeCompare(b)
+      return this.filterPropertyVerificationStatusOptions.sort( ( a, b ) =>
+        a.localeCompare( b )
       );
     }
   }
 
   //09. Status of property
   protected propertyStatusOptionsSort() {
-    if(this.filterPropertyStatusOptions.length === 0) {
-      return this.propertyStatusOptions.sort((a, b) => a.localeCompare(b));
+    if ( this.filterPropertyStatusOptions.length === 0 ) {
+      return this.propertyStatusOptions.sort( ( a, b ) => a.localeCompare( b ) );
     } else {
-      return this.filterPropertyStatusOptions.sort((a, b) =>
-        a.localeCompare(b)
+      return this.filterPropertyStatusOptions.sort( ( a, b ) =>
+        a.localeCompare( b )
       );
     }
   }
 
   //10. Ownership type
   protected ownerShipTypeOptionsSort() {
-    if(this.filterOwnerShipTypeOptions.length === 0) {
-      return this.ownerShipTypeOptions.sort((a, b) => a.localeCompare(b));
+    if ( this.filterOwnerShipTypeOptions.length === 0 ) {
+      return this.ownerShipTypeOptions.sort( ( a, b ) => a.localeCompare( b ) );
     } else {
-      return this.filterOwnerShipTypeOptions.sort((a, b) => a.localeCompare(b));
+      return this.filterOwnerShipTypeOptions.sort( ( a, b ) => a.localeCompare( b ) );
     }
   }
 
   //<==================== End Making sort ====================>
 
   //<==================== Amenity Icon Maker ====================>
-  protected amenityIconMaker(amenity: string): string {
-    return this.propertyService.investigateTheAmenityIcon(amenity);
+  protected amenityIconMaker( amenity: string ): string {
+    return this.propertyService.investigateTheAmenityIcon( amenity );
   }
   //<==================== End Amenity Icon Maker ====================>
 
@@ -932,11 +932,11 @@ export class EditPropertyListingComponent
       close: 'wrong.svg',
     };
 
-    for(const [name, path] of Object.entries(iconMap)) {
+    for ( const [ name, path ] of Object.entries( iconMap ) ) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `Images/Icons/${path}`
+          `Images/Icons/${ path }`
         )
       );
     }
@@ -944,8 +944,8 @@ export class EditPropertyListingComponent
   //<==================== End mat icons maker ====================>
 
   //<==================== Choose the correct icon for the file type ====================>
-  protected chooceIcon(type: string): string {
-    switch(type) {
+  protected chooceIcon( type: string ): string {
+    switch ( type ) {
       case 'doc':
         return 'word';
       case 'docx':
@@ -1019,7 +1019,7 @@ export class EditPropertyListingComponent
    * This is used to stop the browser from opening dropped files or other unintended actions.
    * @param event The event to be prevented.
    */
-  private preventDefault(event: Event): void {
+  private preventDefault( event: Event ): void {
     event.preventDefault();
     event.stopPropagation();
   }
@@ -1029,9 +1029,9 @@ export class EditPropertyListingComponent
    * Useful after successfully creating or updating a property.
    */
   protected goToProperties(): void {
-    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
-      this.router.navigate(['/dashboard/properties']);
-    });
+    this.router.navigateByUrl( '/', { skipLocationChange: true } ).then( () => {
+      this.router.navigate( [ '/dashboard/properties' ] );
+    } );
   }
 
   /**
@@ -1039,9 +1039,9 @@ export class EditPropertyListingComponent
    * Useful for quickly reloading the form or returning after a navigation away.
    */
   protected goToListingEdit(): void {
-    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
-      this.router.navigate(['/dashboard/property-listing']);
-    });
+    this.router.navigateByUrl( '/', { skipLocationChange: true } ).then( () => {
+      this.router.navigate( [ '/dashboard/property-listing' ] );
+    } );
   }
 
   //<==================== Property Images ====================>
@@ -1056,64 +1056,64 @@ export class EditPropertyListingComponent
   }
 
   // Handle property images paste
-  protected handlePastePropertyImage(event: ClipboardEvent): void {
+  protected handlePastePropertyImage( event: ClipboardEvent ): void {
     event.preventDefault();
 
     const items = event.clipboardData?.items;
-    if(!items) return;
+    if ( !items ) return;
 
-    for(const item of items) {
-      if(item.kind === 'file') {
+    for ( const item of items ) {
+      if ( item.kind === 'file' ) {
         const file = item.getAsFile();
-        if(file) {
-          this.processPastedPropertyImage(file);
+        if ( file ) {
+          this.processPastedPropertyImage( file );
         }
       }
     }
   }
 
   //Process property images paste
-  protected processPastedPropertyImage(file: File) {
+  protected processPastedPropertyImage( file: File ) {
     const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
+    dataTransfer.items.add( file );
 
     const input = this.propertyImages.nativeElement;
     input.files = dataTransfer.files;
 
     // Trigger the same file selection logic
-    this.onFileSelectedPropertyImage({target: input} as any);
+    this.onFileSelectedPropertyImage( { target: input } as any );
   }
 
   //Process property image drop
-  protected onDropPropertyImage(event: DragEvent): void {
+  protected onDropPropertyImage( event: DragEvent ): void {
     event.preventDefault();
     this.isPropertyImageDragOver = false;
 
     const files = event.dataTransfer?.files;
-    if(files) {
-      this.propertyImagePreviewMaker(files);
+    if ( files ) {
+      this.propertyImagePreviewMaker( files );
     }
   }
 
   //Process property image drag over
-  protected onDragOverPropertyImage(event: DragEvent): void {
+  protected onDragOverPropertyImage( event: DragEvent ): void {
     event.preventDefault(); // Crucial to allow drop
     event.stopPropagation();
-    if(event.currentTarget === event.target) {
+    if ( event.currentTarget === event.target ) {
       this.isPropertyImageDragOver = true;
     }
   }
 
   //Process property image drap leave
-  protected onDragLeavePropertyImage(event: DragEvent) {
+  protected onDragLeavePropertyImage( event: DragEvent ) {
     event.preventDefault();
     this.isPropertyImageDragOver = false;
   }
 
   //Process property image select
-  protected onFileSelectedPropertyImage(event: any): void {
+  protected onFileSelectedPropertyImage( event: any ): void {
     const files = event.target.files;
-    this.propertyImagePreviewMaker(files);
+    this.propertyImagePreviewMaker( files );
   }
 
   /**
@@ -1122,27 +1122,27 @@ export class EditPropertyListingComponent
     * Property images push into the selected property images array
 
     **/
-  private propertyImagePreviewMaker(files: FileList): void {
+  private propertyImagePreviewMaker( files: FileList ): void {
     // Loop through images of property
 
-    for(let file of Array.from(files)) {
+    for ( let file of Array.from( files ) ) {
       // Check if file is an image
-      if(!this.allowedImageTypes.includes(file.type)) {
+      if ( !this.allowedImageTypes.includes( file.type ) ) {
         this.isPropertyImageTypeMissMatched = true;
-        this.propertyErrorText = `Error: ${file.name} type ${file.type} not matched!`;
+        this.propertyErrorText = `Error: ${ file.name } type ${ file.type } not matched!`;
         return;
       }
 
       //Define data for selcetedPropertyImages
 
       // Push the data to the selcetedPropertyImages
-      this.selcetedPropertyImages.push(file);
+      this.selcetedPropertyImages.push( file );
 
       // Define reader
       const reader = new FileReader();
 
       // Call reader onload function
-      reader.onload = (e: any) => {
+      reader.onload = ( e: any ) => {
         //Define canva image
         const img = new Image();
 
@@ -1155,30 +1155,30 @@ export class EditPropertyListingComponent
             name: file.name,
           };
 
-          this.propertyImagePreview.push(data);
+          this.propertyImagePreview.push( data );
         };
 
         img.src = e.target.result;
       };
 
-      reader.readAsDataURL(file);
+      reader.readAsDataURL( file );
     }
   }
 
   //Remove image from arrays
-  protected removePropertyImage(index: number) {
-    this.propertyImagePreview.splice(index, 1);
-    this.selcetedPropertyImages.splice(index, 1);
+  protected removePropertyImage( index: number ) {
+    this.propertyImagePreview.splice( index, 1 );
+    this.selcetedPropertyImages.splice( index, 1 );
   }
 
   //Remove uploaded images from the array
-  protected removePropertyUploadedImage(index: number) {
-    const removerImage = this.uploadedImages.splice(index, 1)[0];
-    this.removeImages.push(removerImage);
+  protected removePropertyUploadedImage( index: number ) {
+    const removerImage = this.uploadedImages.splice( index, 1 )[ 0 ];
+    this.removeImages.push( removerImage );
   }
 
   //Upload images reorganizing
-  protected uploadImageReorganizing(event: CdkDragDrop<any[]>) {
+  protected uploadImageReorganizing( event: CdkDragDrop<any[]> ) {
     moveItemInArray(
       this.uploadedImages,
       event.previousIndex,
@@ -1200,18 +1200,18 @@ export class EditPropertyListingComponent
   /**
    * Handles the file select event.
    */
-  protected onPropertyDocsSelect(event: any) {
-    this.propertyDocsPreviewMaker(event.target.files);
+  protected onPropertyDocsSelect( event: any ) {
+    this.propertyDocsPreviewMaker( event.target.files );
   }
 
   /**
    * Handles the drag over event when files are dragged over the drop zone.
    * Prevents default behavior to allow dropping.
    */
-  protected onDragOverPropertyDocs(event: DragEvent): void {
+  protected onDragOverPropertyDocs( event: DragEvent ): void {
     event.preventDefault();
     event.stopPropagation();
-    if(event.currentTarget === event.target) {
+    if ( event.currentTarget === event.target ) {
       this.isPropertyDocsDragOver = true;
     }
   }
@@ -1220,20 +1220,20 @@ export class EditPropertyListingComponent
    * Handles when files are dropped into the drop zone.
    * Validates and processes the dropped files.
    */
-  protected onDropPropertyDocs(event: DragEvent): void {
+  protected onDropPropertyDocs( event: DragEvent ): void {
     event.preventDefault();
     this.isPropertyDocsDragOver = false;
 
     const files = event.dataTransfer?.files;
-    if(files) {
-      this.propertyDocsPreviewMaker(files);
+    if ( files ) {
+      this.propertyDocsPreviewMaker( files );
     }
   }
 
   /**
    * Handles the drag leave event from the drop zone.
    */
-  protected onDragLeavePropertyDocs(event: DragEvent): void {
+  protected onDragLeavePropertyDocs( event: DragEvent ): void {
     event.preventDefault();
     this.isPropertyDocsDragOver = false;
   }
@@ -1242,17 +1242,17 @@ export class EditPropertyListingComponent
    * Handles the paste event to support pasting documents directly.
    * Extracts files from clipboard items and processes them.
    */
-  protected handlePastePropertyDocs(event: ClipboardEvent): void {
+  protected handlePastePropertyDocs( event: ClipboardEvent ): void {
     event.preventDefault();
 
     const items = event.clipboardData?.items;
-    if(!items) return;
+    if ( !items ) return;
 
-    for(const item of items) {
-      if(item.kind === 'file') {
+    for ( const item of items ) {
+      if ( item.kind === 'file' ) {
         const file = item.getAsFile();
-        if(file) {
-          this.processPastedPropertyDocs(file);
+        if ( file ) {
+          this.processPastedPropertyDocs( file );
         }
       }
     }
@@ -1262,126 +1262,126 @@ export class EditPropertyListingComponent
    * Helper method to process a file pasted via clipboard.
    * Wraps file into a FileList and reuses the existing logic.
    */
-  protected processPastedPropertyDocs(file: File): void {
+  protected processPastedPropertyDocs( file: File ): void {
     const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
+    dataTransfer.items.add( file );
 
     const input = this.propertyDocs.nativeElement;
     input.files = dataTransfer.files;
 
     // Trigger the same selection handler
-    this.propertyDocsPreviewMaker(input.files!);
+    this.propertyDocsPreviewMaker( input.files! );
   }
 
   /**
    * Processes and validates selected or dropped document files.
    * Generates previews for allowed document types.
    */
-  private async propertyDocsPreviewMaker(files: FileList): Promise<void> {
-    for(let file of Array.from(files)) {
-      if(!this.propertyFormallowedDocs.includes(file.type)) {
+  private async propertyDocsPreviewMaker( files: FileList ): Promise<void> {
+    for ( let file of Array.from( files ) ) {
+      if ( !this.propertyFormallowedDocs.includes( file.type ) ) {
         await this.notification.notification(
           'error',
-          `Error: ${file.name} type ${file.type} is not allowed!`
+          `Error: ${ file.name } type ${ file.type } is not allowed!`
         );
         return;
       }
 
       const reader = new FileReader();
 
-      reader.onload = (item) => {
+      reader.onload = ( item ) => {
         const fileContent = item.target?.result as string;
         const fileName = file.name;
-        const fileExtension = file.name.split('.').pop() as string;
+        const fileExtension = file.name.split( '.' ).pop() as string;
 
         const data: propertyDocPreview = {
           name: fileName,
           type: fileExtension,
-          icon: this.chooceIcon(fileExtension),
+          icon: this.chooceIcon( fileExtension ),
         };
-        this.propertyDocsPreview.push(data);
+        this.propertyDocsPreview.push( data );
       };
 
-      this.propertyDocuments.push(file);
+      this.propertyDocuments.push( file );
 
-      reader.readAsDataURL(file);
+      reader.readAsDataURL( file );
     }
   }
 
-  protected removeDocs(index: number) {
-    this.propertyDocsPreview.splice(index, 1)[0];
-    this.propertyDocuments.splice(index, 1);
+  protected removeDocs( index: number ) {
+    this.propertyDocsPreview.splice( index, 1 )[ 0 ];
+    this.propertyDocuments.splice( index, 1 );
   }
 
-  protected removeDocsFromUploaded(index: number) {
-    this.uploadedDucumentsPreview.splice(index, 1);
-    const removeDocument = this.uploadedDocuments.splice(index, 1)[0];
-    this.removeDocuments.push(removeDocument);
+  protected removeDocsFromUploaded( index: number ) {
+    this.uploadedDucumentsPreview.splice( index, 1 );
+    const removeDocument = this.uploadedDocuments.splice( index, 1 )[ 0 ];
+    this.removeDocuments.push( removeDocument );
   }
 
   //Uploaded image organization operation
   private uploadImageReorganizingOperation() {
-    this.uploadedDocuments.forEach((item) => {
+    this.uploadedDocuments.forEach( ( item ) => {
       const dataArray = {
         name: '',
         type: '',
         icon: '',
       };
       dataArray.name = item.originalname;
-      dataArray.type = item.originalname.split('.').pop() as string;
-      dataArray.icon = this.chooceIcon(dataArray.type);
-      this.uploadedDucumentsPreview.push(dataArray);
-    });
+      dataArray.type = item.originalname.split( '.' ).pop() as string;
+      dataArray.icon = this.chooceIcon( dataArray.type );
+      this.uploadedDucumentsPreview.push( dataArray );
+    } );
   }
 
   //<==================== End Property Docs ====================>
 
   //<==================== Filter Property Type ====================>
-  protected filterTypeOperation(data: string): void {
-    this.filterTypeOptions = this.typeOptions.filter((option) =>
-      option.toLowerCase().includes(data.toLowerCase())
+  protected filterTypeOperation( data: string ): void {
+    this.filterTypeOptions = this.typeOptions.filter( ( option ) =>
+      option.toLowerCase().includes( data.toLowerCase() )
     );
   }
   //<==================== End Filter Property Type ====================>
 
   //<==================== Filter Property Status ====================>
-  protected filterListingOperation(data: string): void {
-    this.filterListingOptions = this.listingOptions.filter((option) =>
-      option.toLowerCase().includes(data.toLowerCase())
+  protected filterListingOperation( data: string ): void {
+    this.filterListingOptions = this.listingOptions.filter( ( option ) =>
+      option.toLowerCase().includes( data.toLowerCase() )
     );
   }
   //<==================== End Filter Property Status ====================>
 
   //<==================== Filter Property Amenities ====================>
-  protected filterFeatureAmenityOperation(data: string): void {
-    if(!this.definedFeatureAmenity.includes(data)) {
+  protected filterFeatureAmenityOperation( data: string ): void {
+    if ( !this.definedFeatureAmenity.includes( data ) ) {
       this.isAmenitiesNotIncluded = true;
       this.amenitiesNotIncludedText = data;
     }
-    this.filterFeatureAmenity = this.definedFeatureAmenity.filter((option) =>
-      option.toLowerCase().includes(data.toLowerCase())
+    this.filterFeatureAmenity = this.definedFeatureAmenity.filter( ( option ) =>
+      option.toLowerCase().includes( data.toLowerCase() )
     );
   }
 
   protected addNewAminity() {
     this.isAmenitiesNotIncluded = false;
-    this.featureAmenities.push(this.amenitiesNotIncludedText);
+    this.featureAmenities.push( this.amenitiesNotIncludedText );
   }
   //<==================== End Filter Property Amenities ====================>
 
   //<==================== Filter address section country ====================>
   protected async addressMainFilterCountries(
-    data: string | {name: string}
+    data: string | { name: string; }
   ): Promise<void> {
     // Normalize the country input to string
-    if(
+    if (
       typeof data === 'object' &&
       data &&
       'name' in data &&
       typeof data.name === 'string'
     ) {
       this.typeAddressCountry = data.name.toLowerCase();
-    } else if(typeof data === 'string') {
+    } else if ( typeof data === 'string' ) {
       this.typeAddressCountry = data.toLowerCase();
     } else {
       this.typeAddressCountry = '';
@@ -1389,14 +1389,14 @@ export class EditPropertyListingComponent
 
     const countries: Country[] = await this.APIs.getCountries();
 
-    if(!Array.isArray(countries)) return;
+    if ( !Array.isArray( countries ) ) return;
 
     this.AddressCountries = countries;
 
     this.AddressFilteredCountries =
       this.AddressCountryControl.valueChanges.pipe(
-        startWith(this.typeAddressCountry),
-        map((value: string | Country | null) => {
+        startWith( this.typeAddressCountry ),
+        map( ( value: string | Country | null ) => {
           const name =
             typeof value === 'string'
               ? value.toLowerCase()
@@ -1405,20 +1405,20 @@ export class EditPropertyListingComponent
                 : '';
 
           return name
-            ? this.addressFilterCountries(name)
+            ? this.addressFilterCountries( name )
             : this.AddressCountries.slice();
-        })
+        } )
       );
   }
 
-  protected addressFilterCountries(name: string): Country[] {
+  protected addressFilterCountries( name: string ): Country[] {
     const filterValue = name.toLowerCase();
-    return this.AddressCountries.filter((c) =>
-      c.name.toLowerCase().includes(filterValue)
+    return this.AddressCountries.filter( ( c ) =>
+      c.name.toLowerCase().includes( filterValue )
     );
   }
 
-  protected addressDisplayFlag(country: Country): string {
+  protected addressDisplayFlag( country: Country ): string {
     return typeof country === 'string' ? country : country?.name ?? '';
   }
 
@@ -1432,12 +1432,12 @@ export class EditPropertyListingComponent
     this.countryActualCurrency = '';
     this.selectedCountryWithCurrency = null;
     this.allCountriesWithCurrency = [];
-    this.filteredCountriesWithCurrency = of([]);
+    this.filteredCountriesWithCurrency = of( [] );
     this.isCountryOfCurrencySelected = false;
   }
 
   protected closeCurrency() {
-    if(this.isCountryOfCurrencySelected) {
+    if ( this.isCountryOfCurrencySelected ) {
       this.isPriceCurrencyPanelOpen = false;
       this.countryOfCurrencySelectedError = false;
     } else {
@@ -1445,25 +1445,25 @@ export class EditPropertyListingComponent
     }
   }
 
-  protected async selectCountriesWithCurrencies(input: string): Promise<void> {
+  protected async selectCountriesWithCurrencies( input: string ): Promise<void> {
     const countries = await this.APIs.getCustomCountryDetails();
 
-    if(!Array.isArray(countries)) return;
+    if ( !Array.isArray( countries ) ) return;
 
     this.filteredCountriesWithCurrency =
       this.countryControlWithCurrency.valueChanges.pipe(
-        startWith(input),
-        map((value: string | CountryDetails) => {
+        startWith( input ),
+        map( ( value: string | CountryDetails ) => {
           const name =
             typeof value === 'string'
               ? value.toLowerCase()
               : value?.name?.common?.toLowerCase() ?? '';
           return name
-            ? countries.filter((country) =>
-              country?.name?.common?.toLowerCase().includes(name)
+            ? countries.filter( ( country ) =>
+              country?.name?.common?.toLowerCase().includes( name )
             )
             : countries.slice();
-        })
+        } )
       );
   }
 
@@ -1477,21 +1477,21 @@ export class EditPropertyListingComponent
       countryName
     );
 
-    if(!Array.isArray(country) || country.length === 0) {
-      console.error('Country did not find!');
+    if ( !Array.isArray( country ) || country.length === 0 ) {
+      console.error( 'Country did not find!' );
       return;
     }
 
-    this.country = country[0];
+    this.country = country[ 0 ];
 
     const currencySymbol = this.country?.currencies
-      ? Object.keys(this.country?.currencies ?? {})[0]
+      ? Object.keys( this.country?.currencies ?? {} )[ 0 ]
       : '';
 
     this.isCurrencySelected = true;
     this.countryActualCurrency = currencySymbol;
 
-    if(this.countryActualCurrency) {
+    if ( this.countryActualCurrency ) {
       this.isCountryOfCurrencySelected = true;
       this.countryOfCurrencySelectedError = false;
     }
@@ -1505,23 +1505,23 @@ export class EditPropertyListingComponent
   //<==================== End currency Controller ====================>
 
   //<==================== Agent Infor ====================>
-  protected async filterAgentThroughAllUsers(input: string): Promise<void> {
+  protected async filterAgentThroughAllUsers( input: string ): Promise<void> {
     this.isAgentNotSelected = true;
 
     const users = await this.APIs.getAllUsers();
-    if(users) {
+    if ( users ) {
       this.allUsers = users;
-      this.filterAgents = users.filter((user) =>
-        user.name.toLowerCase().includes(input.toLowerCase())
+      this.filterAgents = users.filter( ( user ) =>
+        user.name.toLowerCase().includes( input.toLowerCase() )
       );
     }
 
-    if(this.filterAgents.length === 1) {
-      this.AddedByName = this.filterAgents[0].name;
-      this.AddedByEmail = this.filterAgents[0].email;
-      this.AddedByUsername = this.filterAgents[0].username;
-      this.AddedByRole = this.filterAgents[0].role;
-      this.AddedByContactNumber = this.filterAgents[0].phoneNumber;
+    if ( this.filterAgents.length === 1 ) {
+      this.AddedByName = this.filterAgents[ 0 ].name;
+      this.AddedByEmail = this.filterAgents[ 0 ].email;
+      this.AddedByUsername = this.filterAgents[ 0 ].username;
+      this.AddedByRole = this.filterAgents[ 0 ].role;
+      this.AddedByContactNumber = this.filterAgents[ 0 ].phoneNumber;
       this.AddedByAddedAt = new Date();
       this.isAgentNotSelected = false;
       this.AddedBy = {
@@ -1535,16 +1535,16 @@ export class EditPropertyListingComponent
     }
   }
 
-  protected getTheSelectedAgent(input: MatAutocompleteSelectedEvent): void {
+  protected getTheSelectedAgent( input: MatAutocompleteSelectedEvent ): void {
     const selectedAgent = input.option.value;
-    if(selectedAgent) {
+    if ( selectedAgent ) {
       this.isAgentNotSelected = false;
       this.selectedAgent =
-        this.allUsers.find((data) => {
+        this.allUsers.find( ( data ) => {
           const findingUserName = data.name.toLowerCase();
           const typingUserName = selectedAgent.toLowerCase();
           return findingUserName === typingUserName;
-        }) || null;
+        } ) || null;
     } else {
       this.isAgentNotSelected = true;
     }
@@ -1552,60 +1552,60 @@ export class EditPropertyListingComponent
   //<==================== End Agent Infor ====================>
 
   //<==================== Property owner infor ====================>
-  protected async filterOwnerThroughAllUsers(input: string): Promise<void> {
+  protected async filterOwnerThroughAllUsers( input: string ): Promise<void> {
     this.isOwnerNotSelected = true;
     const users = await this.APIs.getAllUsers();
-    if(users) {
+    if ( users ) {
       this.allUsers = users;
       this.filterOwners = users.filter(
-        (user) =>
-          user.name.toLowerCase().includes(input.toLowerCase()) ||
-          user.username.toLowerCase().includes(input.toLowerCase())
+        ( user ) =>
+          user.name.toLowerCase().includes( input.toLowerCase() ) ||
+          user.username.toLowerCase().includes( input.toLowerCase() )
       );
 
-      if(this.filterOwners.length === 1) {
+      if ( this.filterOwners.length === 1 ) {
         this.isOwnerNotSelected = false;
-        this.selectedOwner = this.filterOwners[0];
+        this.selectedOwner = this.filterOwners[ 0 ];
         this.ownerUsername = this.selectedOwner.username;
       }
     }
   }
 
-  protected getTheSelectedOwner(input: MatAutocompleteSelectedEvent): void {
+  protected getTheSelectedOwner( input: MatAutocompleteSelectedEvent ): void {
     const selectedOwner = input.option.value;
 
-    if(selectedOwner) {
+    if ( selectedOwner ) {
       this.isOwnerNotSelected = false;
       this.selectedOwner =
-        this.allUsers.find((data) => {
+        this.allUsers.find( ( data ) => {
           const findingUserName = data.name.toLowerCase();
           const typingUserName = selectedOwner.toLowerCase();
           return findingUserName === typingUserName;
-        }) || null;
+        } ) || null;
     } else {
       this.isOwnerNotSelected = true;
     }
 
-    if(this.selectedOwner) this.ownerUsername = this.selectedOwner.username;
+    if ( this.selectedOwner ) this.ownerUsername = this.selectedOwner.username;
   }
   //<==================== End Property owner infor ====================>
 
   //<==================== featureAmenity ====================>
 
-  protected addFeaturesAmenity(event: MatAutocompleteSelectedEvent) {
-    if(!this.featureAmenities.includes(event.option.value)) {
-      this.featureAmenities.push(event.option.value);
+  protected addFeaturesAmenity( event: MatAutocompleteSelectedEvent ) {
+    if ( !this.featureAmenities.includes( event.option.value ) ) {
+      this.featureAmenities.push( event.option.value );
     }
   }
 
-  protected cancelAmenty(number: number) {
-    this.featureAmenities.splice(number, 1);
+  protected cancelAmenty( number: number ) {
+    this.featureAmenities.splice( number, 1 );
   }
 
-  protected addFeaturesAmenityEnter(event: Event) {
+  protected addFeaturesAmenityEnter( event: Event ) {
     const keyboardEvent = event as KeyboardEvent;
-    if(keyboardEvent.key === 'Enter' && this.featureAmenity !== '') {
-      this.featureAmenities.push(this.featureAmenity);
+    if ( keyboardEvent.key === 'Enter' && this.featureAmenity !== '' ) {
+      this.featureAmenities.push( this.featureAmenity );
     }
   }
 
@@ -1613,10 +1613,10 @@ export class EditPropertyListingComponent
 
   //<==================== Map ====================>
 
-  protected onLocationPicked(event: {lat: number; lng: number}) {
+  protected onLocationPicked( event: { lat: number; lng: number; } ) {
     this.mapLocationLat = event.lat;
     this.mapLocationLng = event.lng;
-    this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps?q=${this.mapLocationLat},${this.mapLocationLng}&hl=en&z=14&output=embed`;
+    this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps?q=${ this.mapLocationLat },${ this.mapLocationLng }&hl=en&z=14&output=embed`;
     // this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps/embed/v1/view?key=AIzaSyDtyUEKZAgXCBiuteyZVvaAaV0OVm-Wydc&center=${this.mapLocationLat},${this.mapLocationLng}&zoom=14`;
     // this.GoogleMapLocationEmbeddedUrl = `https://www.google.com/maps?q=${this.mapLocationLat},${this.mapLocationLng}&hl=es;z=14&output=embed`;
     this.location = {
@@ -1629,27 +1629,27 @@ export class EditPropertyListingComponent
   //<==================== End Map ====================>
 
   //<==================== Property Video Preview ====================>
-  protected propertyVideoUrl(input: string): void {
+  protected propertyVideoUrl( input: string ): void {
     const youtubeMatch = input.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/
     );
-    const vimeoMatch = input.match(/vimeo\.com\/(\d+)/);
-    const driveMatch = input.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+    const vimeoMatch = input.match( /vimeo\.com\/(\d+)/ );
+    const driveMatch = input.match( /drive\.google\.com\/file\/d\/([^/]+)/ );
 
-    if(youtubeMatch) {
-      const videoId = youtubeMatch[1];
-      this.videoPreviewURL = `https://www.youtube.com/embed/${videoId}`;
+    if ( youtubeMatch ) {
+      const videoId = youtubeMatch[ 1 ];
+      this.videoPreviewURL = `https://www.youtube.com/embed/${ videoId }`;
       this.isIframeEmbed = true;
-    } else if(vimeoMatch) {
-      const videoId = vimeoMatch[1];
-      this.videoPreviewURL = `https://player.vimeo.com/video/${videoId}`;
+    } else if ( vimeoMatch ) {
+      const videoId = vimeoMatch[ 1 ];
+      this.videoPreviewURL = `https://player.vimeo.com/video/${ videoId }`;
       this.isIframeEmbed = true;
-    } else if(driveMatch) {
-      const fileId = driveMatch[1];
-      this.videoPreviewURL = `https://drive.google.com/file/d/${fileId}/preview`;
+    } else if ( driveMatch ) {
+      const fileId = driveMatch[ 1 ];
+      this.videoPreviewURL = `https://drive.google.com/file/d/${ fileId }/preview`;
       this.isIframeEmbed = true;
-    } else if(input.includes('dropbox.com')) {
-      this.videoPreviewURL = input.replace('?dl=0', '?raw=1');
+    } else if ( input.includes( 'dropbox.com' ) ) {
+      this.videoPreviewURL = input.replace( '?dl=0', '?raw=1' );
       this.isIframeEmbed = false;
     } else {
       this.videoPreviewURL = input;
@@ -1659,7 +1659,7 @@ export class EditPropertyListingComponent
   //<==================== End Property Video Preview ====================>
 
   //<==================== 360° Virtual Preview ====================>
-  protected updateVirtualTourUrl(input: string): void {
+  protected updateVirtualTourUrl( input: string ): void {
     this.virtualPreviewURL = input; // trust the embed URL or transform if needed
   }
   //<==================== End 360° Virtual Preview ====================>
@@ -1668,13 +1668,13 @@ export class EditPropertyListingComponent
   protected async submit() {
     try {
 
-      if(this.loggedUser === null) throw new Error('User need to login to the system before property update')
+      if ( this.loggedUser === null ) throw new Error( 'User need to login to the system before property update' );
       // Assemble the Address
       const Address: Address = {
         houseNumber: this.AddressHouseNumber.trim(),
-        street: (this.AddressStreet ?? '').trim(),
+        street: ( this.AddressStreet ?? '' ).trim(),
         city: this.AddressCity.trim(),
-        stateOrProvince: (this.AddressStateOrProvince ?? '').trim(),
+        stateOrProvince: ( this.AddressStateOrProvince ?? '' ).trim(),
         postcode: this.AddressPostcode.trim(),
         country: this.typeAddressCountry.trim(),
       };
@@ -1682,164 +1682,164 @@ export class EditPropertyListingComponent
       const formData = new FormData();
 
       // Error validation
-      if(
+      if (
         !this.isUserCanAssignAgentToTheProperty() &&
         !this.isUserCanUploadDocumentsToTheProperty() &&
         !this.isUserCanManageAmenitiesToTheProperty() &&
         !this.isUserCanChangeListingStatusOfTheProperty()
       ) {
-        throw new Error('User does not have permission to perform the action.');
+        throw new Error( 'User does not have permission to perform the action.' );
       }
 
       // Basic Property Details
-      if(!this.title) {
-        throw new Error('Title is required!');
+      if ( !this.title ) {
+        throw new Error( 'Title is required!' );
       }
-      if(!this.type) {
-        throw new Error('Type is required!');
+      if ( !this.type ) {
+        throw new Error( 'Type is required!' );
       }
-      if(!this.listing) {
-        throw new Error('Listing is required!');
+      if ( !this.listing ) {
+        throw new Error( 'Listing is required!' );
       }
-      if(!this.description) {
-        throw new Error('Discription is required!');
+      if ( !this.description ) {
+        throw new Error( 'Discription is required!' );
       }
       // End Basic Property Details
 
       // Location Details
-      if(!this.AddressHouseNumber) {
-        throw new Error('House number is required!');
+      if ( !this.AddressHouseNumber ) {
+        throw new Error( 'House number is required!' );
       }
 
-      if(!this.AddressStreet) {
-        throw new Error('Address streat is required!');
+      if ( !this.AddressStreet ) {
+        throw new Error( 'Address streat is required!' );
       }
 
-      if(!this.AddressCity) {
-        throw new Error('Address city is required!');
+      if ( !this.AddressCity ) {
+        throw new Error( 'Address city is required!' );
       }
 
-      if(!this.AddressStateOrProvince) {
-        throw new Error('Address state or province is required!');
+      if ( !this.AddressStateOrProvince ) {
+        throw new Error( 'Address state or province is required!' );
       }
 
-      if(!this.AddressPostcode) {
-        throw new Error('Address postcode is required!');
+      if ( !this.AddressPostcode ) {
+        throw new Error( 'Address postcode is required!' );
       }
 
-      if(!this.typeAddressCountry) {
-        throw new Error('Country is required!');
+      if ( !this.typeAddressCountry ) {
+        throw new Error( 'Country is required!' );
       }
       // End Location Details
 
       // Property Specifications
-      if(this.totalArea !== 0 && !this.totalArea) {
-        throw new Error('Total area is required!');
+      if ( this.totalArea !== 0 && !this.totalArea ) {
+        throw new Error( 'Total area is required!' );
       }
 
-      if(this.builtInArea !== 0 && !this.builtInArea) {
-        throw new Error('Built in area is required!');
+      if ( this.builtInArea !== 0 && !this.builtInArea ) {
+        throw new Error( 'Built in area is required!' );
       }
 
-      if(this.balconies == null || this.balconies === undefined) {
-        throw new Error('Balconies is required!');
+      if ( this.balconies == null || this.balconies === undefined ) {
+        throw new Error( 'Balconies is required!' );
       }
 
-      if(this.kitchen == null || this.kitchen === undefined) {
-        throw new Error('Kitchen is required!');
+      if ( this.kitchen == null || this.kitchen === undefined ) {
+        throw new Error( 'Kitchen is required!' );
       }
 
-      if(this.bedrooms == null || this.bedrooms === undefined) {
-        throw new Error('Bedrooms is required!');
+      if ( this.bedrooms == null || this.bedrooms === undefined ) {
+        throw new Error( 'Bedrooms is required!' );
       }
 
-      if(this.bathrooms == null || this.bathrooms === undefined) {
-        throw new Error('Bathrooms is required!');
+      if ( this.bathrooms == null || this.bathrooms === undefined ) {
+        throw new Error( 'Bathrooms is required!' );
       }
 
-      if(this.maidrooms === null || this.maidrooms === undefined) {
-        throw new Error('Maidrooms is required!');
+      if ( this.maidrooms === null || this.maidrooms === undefined ) {
+        throw new Error( 'Maidrooms is required!' );
       }
 
-      if(this.driverRooms == null || this.driverRooms === undefined) {
-        throw new Error('Driver rooms is required!');
+      if ( this.driverRooms == null || this.driverRooms === undefined ) {
+        throw new Error( 'Driver rooms is required!' );
       }
 
-      if(
+      if (
         !this.furnishingStatus &&
-        !this.furnishingStatusOptions.includes(this.furnishingStatus)
+        !this.furnishingStatusOptions.includes( this.furnishingStatus )
       ) {
-        throw new Error('Select the furnishing status!');
+        throw new Error( 'Select the furnishing status!' );
       }
 
-      if(!this.totalFloors) {
-        throw new Error('Number of floors is required!');
+      if ( !this.totalFloors ) {
+        throw new Error( 'Number of floors is required!' );
       }
 
-      if(!this.numberOfParking) {
-        throw new Error('Number of parking is required!');
+      if ( !this.numberOfParking ) {
+        throw new Error( 'Number of parking is required!' );
       }
       // End Property Specifications
 
       // Construction & Age
-      if(!this.builtYear && this.builtYear !== 0) {
-        throw new Error('Built year is required!');
+      if ( !this.builtYear && this.builtYear !== 0 ) {
+        throw new Error( 'Built year is required!' );
       }
 
-      if(
+      if (
         !this.propertyCondition &&
-        !this.propertyConditionOptions.includes(this.propertyCondition)
+        !this.propertyConditionOptions.includes( this.propertyCondition )
       ) {
-        throw new Error('Select the property condition!');
+        throw new Error( 'Select the property condition!' );
       }
 
-      if(!this.developerName) {
-        throw new Error('Developer name is required!');
+      if ( !this.developerName ) {
+        throw new Error( 'Developer name is required!' );
       }
 
-      if(!this.ownerShipType) {
-        throw new Error('Owner ship type is required!');
+      if ( !this.ownerShipType ) {
+        throw new Error( 'Owner ship type is required!' );
       }
 
-      if(!this.selectedOwner) {
-        throw new Error('Owner is required!');
+      if ( !this.selectedOwner ) {
+        throw new Error( 'Owner is required!' );
       }
       // End Construction & Age
 
       // Financial Details
-      if(!this.price) {
-        throw new Error('Price is required!');
+      if ( !this.price ) {
+        throw new Error( 'Price is required!' );
       }
 
-      if(!this.countryActualCurrency) {
-        throw new Error('Currency is required!');
+      if ( !this.countryActualCurrency ) {
+        throw new Error( 'Currency is required!' );
       }
 
-      if(!this.pricePerSqurFeet) {
-        throw new Error('Price per squr feet is required!');
+      if ( !this.pricePerSqurFeet ) {
+        throw new Error( 'Price per squr feet is required!' );
       }
 
-      if(!this.maintenanceFees) {
-        throw new Error('Maintenance fees is required!');
+      if ( !this.maintenanceFees ) {
+        throw new Error( 'Maintenance fees is required!' );
       }
 
-      if(!this.serviceCharges) {
-        throw new Error('Service charges is required!');
+      if ( !this.serviceCharges ) {
+        throw new Error( 'Service charges is required!' );
       }
 
-      if(
+      if (
         !this.availabilityStatus &&
         !this.propertyAvailabilityStatusOptions.includes(
           this.availabilityStatus
         )
       ) {
-        throw new Error('Property availability status is required!');
+        throw new Error( 'Property availability status is required!' );
       }
       // End Financial Details
 
       // Features & Amenities
-      if(this.featureAmenities.length === 0) {
-        throw new Error('Feature amenities is required!');
+      if ( this.featureAmenities.length === 0 ) {
+        throw new Error( 'Feature amenities is required!' );
       }
       // End Features & Amenities
 
@@ -1854,21 +1854,21 @@ export class EditPropertyListingComponent
       // End Media
 
       // Listing Management
-      if(!this.listingDate) {
-        throw new Error('Property listing date is required!');
+      if ( !this.listingDate ) {
+        throw new Error( 'Property listing date is required!' );
       }
 
-      if(!this.AddedBy) {
-        throw new Error('Select the agent of the property!');
+      if ( !this.AddedBy ) {
+        throw new Error( 'Select the agent of the property!' );
       }
       // End Listing Management
 
       // Administrative & Internal Use
-      if(!this.listingDate) {
-        throw new Error('Property listing date is required!');
+      if ( !this.listingDate ) {
+        throw new Error( 'Property listing date is required!' );
       }
 
-      if(
+      if (
         !this.verificationStatus &&
         !this.propertyVerificationStatusOptions.includes(
           this.verificationStatus
@@ -1879,19 +1879,19 @@ export class EditPropertyListingComponent
         );
       }
 
-      if(
+      if (
         !this.priority &&
-        !this.propertyPriorityOptions.includes(this.priority)
+        !this.propertyPriorityOptions.includes( this.priority )
       ) {
-        throw new Error('Property priority is required, select from the list!');
+        throw new Error( 'Property priority is required, select from the list!' );
       }
 
-      if(!this.status && !this.propertyStatusOptions.includes(this.priority)) {
-        throw new Error('Property status is required, select from the list!');
+      if ( !this.status && !this.propertyStatusOptions.includes( this.priority ) ) {
+        throw new Error( 'Property status is required, select from the list!' );
       }
 
-      if(!this.internalNote) {
-        throw new Error('Internal note is required!');
+      if ( !this.internalNote ) {
+        throw new Error( 'Internal note is required!' );
       }
       // End Administrative & Internal Use
 
@@ -1903,34 +1903,34 @@ export class EditPropertyListingComponent
       //Start Form Append
 
       // Basic Property Details
-      formData.append('id', this.id.trim());
-      formData.append('title', this.title.trim());
-      formData.append('type', this.type.trim());
-      formData.append('listing', this.listing.trim());
-      formData.append('description', this.description.trim());
+      formData.append( 'id', this.id.trim() );
+      formData.append( 'title', this.title.trim() );
+      formData.append( 'type', this.type.trim() );
+      formData.append( 'listing', this.listing.trim() );
+      formData.append( 'description', this.description.trim() );
       // End Basic Property Details
 
       // Location Details
-      formData.append('countryDetails', JSON.stringify(this.country).trim());
-      formData.append('address', JSON.stringify(Address).trim());
-      formData.append('location', JSON.stringify(this.location).trim());
+      formData.append( 'countryDetails', JSON.stringify( this.country ).trim() );
+      formData.append( 'address', JSON.stringify( Address ).trim() );
+      formData.append( 'location', JSON.stringify( this.location ).trim() );
       // End Location Details
 
       // Property Specifications
-      formData.append('totalArea', this.totalArea.toString().trim());
-      formData.append('builtInArea', this.builtInArea.toString().trim());
-      formData.append('livingRooms', this.livingRooms.toString().trim());
-      formData.append('balconies', this.balconies.toString().trim());
-      formData.append('kitchen', this.kitchen.toString().trim());
-      formData.append('bedrooms', this.bedrooms.toString().trim());
-      formData.append('bathrooms', this.bathrooms.toString().trim());
-      formData.append('maidrooms', this.maidrooms.toString().trim());
-      formData.append('driverRooms', this.driverRooms.toString().trim());
+      formData.append( 'totalArea', this.totalArea.toString().trim() );
+      formData.append( 'builtInArea', this.builtInArea.toString().trim() );
+      formData.append( 'livingRooms', this.livingRooms.toString().trim() );
+      formData.append( 'balconies', this.balconies.toString().trim() );
+      formData.append( 'kitchen', this.kitchen.toString().trim() );
+      formData.append( 'bedrooms', this.bedrooms.toString().trim() );
+      formData.append( 'bathrooms', this.bathrooms.toString().trim() );
+      formData.append( 'maidrooms', this.maidrooms.toString().trim() );
+      formData.append( 'driverRooms', this.driverRooms.toString().trim() );
       formData.append(
         'furnishingStatus',
         this.furnishingStatus.toString().trim()
       );
-      formData.append('totalFloors', this.totalFloors.toString().trim());
+      formData.append( 'totalFloors', this.totalFloors.toString().trim() );
       formData.append(
         'numberOfParking',
         this.numberOfParking.toString().trim()
@@ -1938,22 +1938,22 @@ export class EditPropertyListingComponent
       // End Property Specifications
 
       // Construction & Age
-      formData.append('builtYear', this.builtYear.toString().trim());
+      formData.append( 'builtYear', this.builtYear.toString().trim() );
       formData.append(
         'propertyCondition',
         this.propertyCondition.toString().trim()
       );
-      formData.append('developerName', this.developerName.toString().trim());
+      formData.append( 'developerName', this.developerName.toString().trim() );
       formData.append(
         'projectName',
         this.projectName ? this.projectName.toString().trim() : ''
       );
-      formData.append('ownerShipType', this.ownerShipType.toString().trim());
+      formData.append( 'ownerShipType', this.ownerShipType.toString().trim() );
       // End Construction & Age
 
       // Financial Details
-      formData.append('price', this.price.toString().trim());
-      formData.append('currency', this.countryActualCurrency.toString().trim());
+      formData.append( 'price', this.price.toString().trim() );
+      formData.append( 'currency', this.countryActualCurrency.toString().trim() );
       formData.append(
         'pricePerSqurFeet',
         this.pricePerSqurFeet.toString().trim()
@@ -1982,7 +1982,7 @@ export class EditPropertyListingComponent
         'maintenanceFees',
         this.maintenanceFees.toString().trim()
       );
-      formData.append('serviceCharges', this.serviceCharges.toString().trim());
+      formData.append( 'serviceCharges', this.serviceCharges.toString().trim() );
       formData.append(
         'transferFees',
         this.transferFees ? this.transferFees.toString().trim() : ''
@@ -1996,39 +1996,39 @@ export class EditPropertyListingComponent
       // Features & Amenities
       formData.append(
         'featuresAndAmenities',
-        JSON.stringify(this.featureAmenities).trim()
+        JSON.stringify( this.featureAmenities ).trim()
       );
       // End Features & Amenities
 
       // Media
       // Append each property image file individually
-      for(let file of this.selcetedPropertyImages) {
-        formData.append('images', file, file.name);
+      for ( let file of this.selcetedPropertyImages ) {
+        formData.append( 'images', file, file.name );
       }
       // Append each property document file individually
-      this.propertyDocuments.forEach((file, idx) => {
-        formData.append('documents', file, file.name);
-      });
+      this.propertyDocuments.forEach( ( file, idx ) => {
+        formData.append( 'documents', file, file.name );
+      } );
 
       //Uploaded Images
       formData.append(
         'existingImages',
-        JSON.stringify(this.uploadedImages).trim()
+        JSON.stringify( this.uploadedImages ).trim()
       );
 
       //Uploaded Documents
       formData.append(
         'existingDocuments',
-        JSON.stringify(this.uploadedDocuments).trim()
+        JSON.stringify( this.uploadedDocuments ).trim()
       );
 
       // Remove Images
-      formData.append('removeImages', JSON.stringify(this.removeImages).trim());
+      formData.append( 'removeImages', JSON.stringify( this.removeImages ).trim() );
 
       // Remove Documents
       formData.append(
         'removeDocuments',
-        JSON.stringify(this.removeDocuments).trim()
+        JSON.stringify( this.removeDocuments ).trim()
       );
 
       formData.append(
@@ -2042,7 +2042,7 @@ export class EditPropertyListingComponent
       // End Media
 
       // Listing Management
-      formData.append('listingDate', this.listingDate.toISOString().trim());
+      formData.append( 'listingDate', this.listingDate.toISOString().trim() );
       formData.append(
         'availabilityDate',
         this.availabilityDate ? this.availabilityDate.toISOString().trim() : ''
@@ -2053,7 +2053,7 @@ export class EditPropertyListingComponent
           ? this.listingExpiryDate.toISOString().trim()
           : ''
       );
-      formData.append('addedBy', JSON.stringify(this.AddedBy).trim());
+      formData.append( 'addedBy', JSON.stringify( this.AddedBy ).trim() );
       formData.append(
         'owner',
         this.selectedOwner?.username ? this.selectedOwner?.username : ''
@@ -2062,14 +2062,14 @@ export class EditPropertyListingComponent
       // End Listing Management
 
       // Administrative & Internal Use
-      formData.append('referenceCode', this.referenceCode.toString().trim());
+      formData.append( 'referenceCode', this.referenceCode.toString().trim() );
       formData.append(
         'verificationStatus',
         this.verificationStatus.toString().trim()
       );
-      formData.append('priority', this.priority.toString().trim());
-      formData.append('status', this.status.toString().trim());
-      formData.append('internalNote', this.internalNote.toString().trim());
+      formData.append( 'priority', this.priority.toString().trim() );
+      formData.append( 'status', this.status.toString().trim() );
+      formData.append( 'internalNote', this.internalNote.toString().trim() );
       formData.append(
         'rentedDate',
         this.rentedDate ? this.rentedDate.toISOString().trim() : ''
@@ -2079,33 +2079,33 @@ export class EditPropertyListingComponent
         this.soldDate ? this.soldDate.toISOString().trim() : ''
       );
 
-      formData.append('updator', this.loggedUser?.username)
+      formData.append( 'updator', this.loggedUser?.username );
       // End Administrative & Internal Use
 
       // API calling
       await this.propertyService
-        .updateProperty(formData, this.id)
-        .then((res) => {
-          this.notification.notification(res.status, res.message);
-        })
-        .catch((error) => {
-          if(error) {
+        .updateProperty( formData, this.id )
+        .then( ( res ) => {
+          this.notification.notification( res.status, res.message );
+        } )
+        .catch( ( error ) => {
+          if ( error ) {
             this.notification.notification(
               error.error.status,
               error.error.message
             );
             this.progress.error();
           }
-        })
-        .finally(() => {
+        } )
+        .finally( () => {
           this.progress.complete();
-          setTimeout(() => {
-            this.router.navigate(['/dashboard/properties']);
-          }, 2000);
-        });
-    } catch(error) {
-      if(error) {
-        this.notification.notification('error', error as string);
+          setTimeout( () => {
+            this.router.navigate( [ '/dashboard/properties' ] );
+          }, 2000 );
+        } );
+    } catch ( error ) {
+      if ( error ) {
+        this.notification.notification( 'error', error as string );
       }
     }
   }

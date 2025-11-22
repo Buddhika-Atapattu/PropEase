@@ -5,9 +5,6 @@
 /* Root panel */
 .user-info-panel {
   position: fixed; /* pin to viewport for reliable placement over navbar */
-  top: 72px; /* align just under your navbar */
-  right: 24px;
-  width: min(360px, 92vw);
   border-radius: 16px;
   padding: 16px;
   z-index: 1000;
@@ -18,7 +15,9 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-
+  width: min(360px, 92vw);
+  top: 72px; /* align just under your navbar */
+  right: 24px;
   &.light {
     background: rgba(255, 255, 255, 0.86);
     color: $light-text-color;
@@ -27,6 +26,23 @@
   &.dark {
     background: rgba(21, 21, 28, 0.72);
     color: $dark-text-color;
+  }
+  @media (max-width: 1023.98px) {
+    position: sticky !important;
+  }
+  @media (max-width: 1023.98px) {
+    right: auto !important;
+    left: auto !important;
+  }
+  @media (max-width: 1023.98px) {
+    width: min(92vw) !important;
+  }
+  @media (max-width: 1023.98px) {
+    box-shadow: none !important;
+  }
+  @media (max-width: 1023.98px) {
+    border: none !important;
+    background: none !important;
   }
 }
 
@@ -48,6 +64,12 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
+  @media (max-width: 1023.98px) {
+    display: none !important;
+    width: 0%;
+    height: 0%;
+    opacity: 0;
+  }
 }
 
 .uip-avatar {

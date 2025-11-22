@@ -70,7 +70,7 @@
     <link
       rel="icon"
       type="image/x-icon"
-      href="Images/company-images/LogoIcon.ico"
+      href="Images/company-images/logo/win/without-bg-and-letters.ico"
     />
     <link rel="apple-touch-icon" href="Images/company-images/logo128.png" />
     <link rel="manifest" href="manifest.webmanifest" />
@@ -98,86 +98,250 @@
         --bg-color: #fdf6e3;
         --second-bg-color: #9c9171;
         --text-color: #08122f;
-        --logo-glow: rgba(255, 215, 0, 0.8);
+        --logo-gold-main: #f7c948;
+        --logo-gold-soft: #ffe8a3;
+        --logo-glow: rgba(255, 215, 0, 0.9);
       }
+
       @media (prefers-color-scheme: dark) {
         :root {
           --bg-color: #08122f;
           --second-bg-color: #000000;
           --text-color: #fdf6e3;
-          --logo-glow: rgba(255, 215, 0, 0.8);
+          --logo-gold-main: #f7c948;
+          --logo-gold-soft: #fff5bf;
+          --logo-glow: rgba(255, 215, 0, 0.95);
         }
       }
+
+      /* Fullscreen preloader shell */
       #app-preloader {
         position: fixed;
         inset: 0;
         z-index: 9999;
         overflow: hidden;
-        background: linear-gradient(
-          135deg,
-          var(--bg-color) 0%,
-          var(--second-bg-color) 100%
+        background: radial-gradient(
+          circle at top,
+          var(--bg-color) 0,
+          var(--second-bg-color) 55%,
+          #000 100%
         );
-        transition: background 0.5s ease-in-out;
+        transition: opacity 0.6s ease, visibility 0.6s ease,
+          background 0.5s ease-in-out;
       }
+
+      /* Golden dust canvas */
       #preloader-container {
         position: absolute;
-        top: 0;
-        left: 0;
+        inset: 0;
         width: 100%;
         height: 100%;
         display: block;
         z-index: 1;
       }
+
+      /* Center block for logo + loading text */
       .logo-wrapper {
         position: absolute;
-        top: 50%;
-        left: 50%;
+        inset: 50% auto auto 50%;
         transform: translate(-50%, -50%);
         text-align: center;
         z-index: 2;
         color: var(--text-color);
         font-family: "Roboto", sans-serif;
-        animation: fadeIn 1s ease-in-out forwards;
+        animation: wrapperFadeIn 0.8s ease-out forwards;
+        border-radius: 2rem;
+        padding: 1.5rem 2.5rem;
+        backdrop-filter: blur(6px);
+        background: linear-gradient(
+          135deg,
+          rgba(0, 0, 0, 0.25),
+          rgba(255, 255, 255, 0.03)
+        );
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
       }
-      .preloader-logo {
-        width: 200px;
-        height: auto;
-        border-radius: 5rem;
-        box-shadow: 0 0 25px var(--logo-glow);
-        animation: float 4s ease-in-out infinite,
-          pulse 2.5s ease-in-out infinite;
+
+      /* The logo mask container */
+      .logo-container {
+        position: relative;
+        width: 220px;
+        height: 220px;
+        margin: 0 auto;
+        overflow: hidden;
+
+        /* Apply the logo shape as mask */
+        mask-image: url("Images/company-images/logo/logo/logo-without-text.png");
+        mask-mode: alpha;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        mask-size: contain;
+
+        -webkit-mask-image: url("Images/company-images/logo/logo/logo-without-text.png");
+        -webkit-mask-mode: alpha;
+        -webkit-mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        -webkit-mask-size: contain;
+
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 30% 0%,
+          #ffffff 0,
+          var(--logo-gold-soft) 34%,
+          var(--logo-gold-main) 60%,
+          #8b6b2e 100%
+        );
+        box-shadow: 0 0 18px rgba(0, 0, 0, 0.8), 0 0 40px var(--logo-glow),
+          0 0 80px rgba(255, 223, 128, 0.5);
+        animation: glowPulse 2.6s ease-in-out infinite;
       }
-      @keyframes pulse {
-        0%,
-        100% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.05);
-        }
+
+      /* Moving gold streak inside the mask */
+      .logo-gold-fill {
+        position: absolute;
+        inset: -20%;
+        background: linear-gradient(
+          120deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.02) 10%,
+          var(--logo-gold-soft) 35%,
+          #ffffff 48%,
+          var(--logo-gold-main) 60%,
+          rgba(0, 0, 0, 0.3) 80%,
+          transparent 100%
+        );
+        background-size: 220% 100%;
+        mix-blend-mode: screen;
+        animation: shineSweep 2.4s linear infinite;
       }
-      @keyframes float {
-        0%,
-        100% {
-          transform: translate(-50%, -48%);
-        }
-        50% {
-          transform: translate(-50%, -52%);
-        }
+
+      /* Optional subtle logo image behind mask (for safety) */
+      .logo-container img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        opacity: 0.12; /* very low so gold dominates */
+        pointer-events: none;
       }
-      @keyframes fadeIn {
+
+      /* Loading text + ring */
+      .loading-meta {
+        margin-top: 1.75rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .loading-ring {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 215, 0, 0.15);
+        border-top-color: rgba(255, 215, 0, 0.9);
+        border-right-color: rgba(255, 215, 0, 0.7);
+        box-shadow: 0 0 16px rgba(0, 0, 0, 0.6);
+        animation: spinRing 0.85s linear infinite;
+      }
+
+      .loading-text {
+        font-size: 0.9rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.15rem;
+        opacity: 0.92;
+      }
+
+      .loading-text span.dots {
+        display: inline-flex;
+        margin-left: 0.25rem;
+      }
+
+      .loading-text span.dots span {
+        display: inline-block;
+        animation: dotBlink 1.2s infinite steps(1);
+      }
+
+      .loading-text span.dots span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .loading-text span.dots span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      /* Keyframes */
+      @keyframes wrapperFadeIn {
         from {
-          opacity: 0.3;
+          opacity: 0;
+          transform: translate(-50%, -45%);
         }
         to {
           opacity: 1;
+          transform: translate(-50%, -50%);
         }
       }
+
+      @keyframes shineSweep {
+        0% {
+          background-position: -150% 0;
+        }
+        50% {
+          background-position: 25% 0;
+        }
+        100% {
+          background-position: 150% 0;
+        }
+      }
+
+      @keyframes glowPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 16px rgba(0, 0, 0, 0.8),
+            0 0 30px rgba(255, 215, 0, 0.65), 0 0 60px rgba(255, 225, 150, 0.4);
+        }
+        50% {
+          box-shadow: 0 0 22px rgba(0, 0, 0, 0.9),
+            0 0 55px rgba(255, 235, 160, 1), 0 0 90px rgba(255, 245, 190, 0.8);
+        }
+      }
+
+      @keyframes spinRing {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes dotBlink {
+        0%,
+        20% {
+          opacity: 0.15;
+        }
+        21%,
+        100% {
+          opacity: 1;
+        }
+      }
+
+      /* Keep your Google Places web component sane */
       gmpx-place-autocomplete {
         display: block;
         width: 100%;
         max-width: 500px;
+      }
+
+      @media (max-width: 480px) {
+        .logo-wrapper {
+          width: min(90vw, 360px);
+          padding: 1.25rem 1.75rem;
+        }
+
+        .logo-container {
+          width: 180px;
+          height: 180px;
+        }
       }
     </style>
 
@@ -194,12 +358,28 @@
     <!-- Preloader -->
     <div id="app-preloader">
       <canvas id="preloader-container"></canvas>
+
       <div class="logo-wrapper">
-        <img
-          src="Images/company-images/company-logo-animated.gif"
-          alt="Company Logo"
-          class="preloader-logo"
-        />
+        <div class="logo-container">
+          <!-- Shimmering gold fill (masked by logo shape) -->
+          <div class="logo-gold-fill"></div>
+
+          <!-- Optional faint base logo image -->
+          <img
+            src="Images/company-images/logo/logo/logo-without-text.png"
+            alt="COMPANY LOGO WITHOUT TEXT"
+          />
+        </div>
+
+        <div class="loading-meta">
+          <div class="loading-ring"></div>
+          <div class="loading-text">
+            Loading PropEase
+            <span class="dots">
+              <span>.</span><span>.</span><span>.</span>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -214,62 +394,175 @@
     ></script>
 
     <!-- Preloader particles + auto-hide when page fully loaded -->
+    <!-- Preloader particles + auto-hide when page fully loaded -->
     <script>
       (function () {
-        document.addEventListener("DOMContentLoaded", function () {
-          var canvas = document.getElementById("preloader-container");
-          if (!canvas) return;
-          var ctx = canvas.getContext("2d");
-          function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-          }
-          resize();
-          window.addEventListener("resize", resize);
+        class PropEasePreloader {
+          /**
+           * @param {string} canvasId     - ID of the <canvas> for golden dust
+           * @param {string} preloaderId  - ID of the preloader container
+           */
+          constructor(canvasId, preloaderId) {
+            /** @type {HTMLCanvasElement | null} */
+            this.canvas = document.getElementById(canvasId);
+            /** @type {HTMLDivElement | null} */
+            this.preloader = document.getElementById(preloaderId);
+            /** @type {CanvasRenderingContext2D | null} */
+            this.ctx = this.canvas ? this.canvas.getContext("2d") : null;
 
-          var particles = [];
-          var numParticles = 100;
+            this.particles = [];
+            this.numParticles = 110;
+            this.animationFrameId = 0;
 
-          function Particle() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.radius = Math.random() * 1.8 + 0.5;
-            this.color = "rgba(255, 215, 0, 0.8)";
-            this.speedX = (Math.random() - 0.5) * 0.6;
-            this.speedY = (Math.random() - 0.5) * 0.6;
-          }
-          Particle.prototype.update = function () {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-            if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
-          };
-          Particle.prototype.draw = function () {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
-            ctx.shadowColor = "gold";
-            ctx.shadowBlur = 10;
-            ctx.fill();
-          };
+            // Bind methods so we can safely add/remove listeners
+            this.handleResize = this.handleResize.bind(this);
+            this.animate = this.animate.bind(this);
 
-          for (var i = 0; i < numParticles; i++) particles.push(new Particle());
+            if (!this.canvas || !this.ctx) {
+              return;
+            }
 
-          function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(function (p) {
-              p.update();
-              p.draw();
+            // Initial setup
+            this.handleResize();
+            window.addEventListener("resize", this.handleResize);
+
+            this.initParticles();
+            this.animationFrameId = requestAnimationFrame(this.animate);
+
+            // Fade out when the whole window (Angular + assets) is loaded
+            window.addEventListener("load", () => {
+              this.fadeOut();
             });
-            requestAnimationFrame(animate);
           }
-          animate();
-        });
 
-        // Hide preloader once everything (including Angular bundles) is loaded
-        window.addEventListener("load", function () {
-          var pre = document.getElementById("app-preloader");
-          if (pre) pre.style.display = "none";
+          /** Keep canvas in sync with viewport size */
+          handleResize() {
+            if (!this.canvas) return;
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+          }
+
+          /** Create initial particle set */
+          initParticles() {
+            this.particles = [];
+            for (let i = 0; i < this.numParticles; i++) {
+              this.particles.push(this.createParticle());
+            }
+          }
+
+          /** Create a single golden dust particle, biased towards center */
+          createParticle() {
+            const w = this.canvas.width;
+            const h = this.canvas.height;
+
+            // Cluster more around the center area
+            const centerX = w * 0.5;
+            const centerY = h * 0.45;
+
+            const spreadX = w * 0.6;
+            const spreadY = h * 0.4;
+
+            return {
+              x: centerX + (Math.random() - 0.5) * spreadX,
+              y: centerY + (Math.random() - 0.5) * spreadY,
+              radius: Math.random() * 1.8 + 0.8,
+              speedX: (Math.random() - 0.5) * 0.35,
+              speedY: (Math.random() - 0.5) * 0.35,
+              life: 0,
+              maxLife: 250 + Math.random() * 250,
+            };
+          }
+
+          /** Update particle movement + lightweight respawn */
+          updateParticle(particle) {
+            particle.x += particle.speedX;
+            particle.y += particle.speedY;
+            particle.life++;
+
+            const w = this.canvas.width;
+            const h = this.canvas.height;
+
+            // Soft bounce from edges to keep dust in view
+            if (particle.x < 0 || particle.x > w) {
+              particle.speedX *= -1;
+            }
+            if (particle.y < 0 || particle.y > h) {
+              particle.speedY *= -1;
+            }
+
+            // Respawn after certain "lifetime" to keep movement organic
+            if (particle.life > particle.maxLife) {
+              const fresh = this.createParticle();
+              particle.x = fresh.x;
+              particle.y = fresh.y;
+              particle.radius = fresh.radius;
+              particle.speedX = fresh.speedX;
+              particle.speedY = fresh.speedY;
+              particle.life = 0;
+              particle.maxLife = fresh.maxLife;
+            }
+          }
+
+          /** Draw a single particle */
+          drawParticle(particle) {
+            const ctx = this.ctx;
+            if (!ctx) return;
+
+            ctx.beginPath();
+            ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255, 215, 0, 0.85)";
+            ctx.shadowColor = "rgba(255, 215, 0, 0.95)";
+            ctx.shadowBlur = 16;
+            ctx.fill();
+          }
+
+          /** Main animation loop */
+          animate() {
+            if (!this.ctx || !this.canvas) {
+              return;
+            }
+
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+            for (let i = 0; i < this.particles.length; i++) {
+              const p = this.particles[i];
+              this.updateParticle(p);
+              this.drawParticle(p);
+            }
+
+            this.animationFrameId = requestAnimationFrame(this.animate);
+          }
+
+          /** Smoothly hide + clean up preloader */
+          fadeOut() {
+            if (!this.preloader) {
+              return;
+            }
+
+            // Only fade once
+            if (this.preloader.dataset["faded"] === "true") {
+              return;
+            }
+            this.preloader.dataset["faded"] = "true";
+
+            this.preloader.style.opacity = "0";
+            this.preloader.style.visibility = "hidden";
+
+            window.setTimeout(() => {
+              if (this.preloader && this.preloader.parentNode) {
+                this.preloader.parentNode.removeChild(this.preloader);
+              }
+              window.removeEventListener("resize", this.handleResize);
+              if (this.animationFrameId) {
+                cancelAnimationFrame(this.animationFrameId);
+              }
+            }, 700);
+          }
+        }
+
+        /* Initialise once DOM is ready */
+        document.addEventListener("DOMContentLoaded", function () {
+          new PropEasePreloader("preloader-container", "app-preloader");
         });
       })();
     </script>

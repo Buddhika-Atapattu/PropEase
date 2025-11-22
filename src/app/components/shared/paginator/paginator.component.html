@@ -1,22 +1,205 @@
+@if (pagination) {
 <form action="" #pagination>
-  <div class="row">
-    <div class="col-xl-3 col-md-3 col-12">Total: {{ totalDataCount }}</div>
-    <div class="col-xl-6 col-md-6 col-12">
+  <div class="pagination">
+    <!-- Total count -->
+    <div class="total">Total: {{ totalDataCount }}</div>
+
+    <!-- Search or Date Range (one pill area) -->
+    <div class="filter-container">
+      @if (isDateRageActive && dateRangeToggleEnable) {
+      <!-- Date range pill (styled like search) -->
+      <div class="date-range-shell">
+        <div class="search-container">
+          <mat-date-range-input
+            [formGroup]="dateRangeForm"
+            [rangePicker]="rangePicker"
+            class="search-input"
+          >
+            <input matStartDate placeholder="Start" formControlName="start" />
+            <span class="range-separator">–</span>
+            <input matEndDate placeholder="End" formControlName="end" />
+          </mat-date-range-input>
+
+          <button
+            type="button"
+            class="filter-action"
+            [matTooltip]="dateRangeToggleEnable ? 'Toggle to search' : ''"
+            matTooltipPosition="above"
+            (click)="toggleInputState()"
+          >
+            <mat-icon>swap_vert</mat-icon>
+          </button>
+
+          <button
+            type="button"
+            class="search-action"
+            [matTooltip]="'Date picker'"
+            matTooltipPosition="above"
+            (click)="rangePicker.open()"
+          >
+            <mat-icon>calendar_month</mat-icon>
+          </button>
+        </div>
+
+        <mat-date-range-picker touchUi #rangePicker></mat-date-range-picker>
+      </div>
+      } @else {
+      <!-- Search pill -->
       <div class="search-container">
         <input
           type="text"
           name="search"
-          id="search"
           [(ngModel)]="search"
           class="search-input"
+          placeholder="Search..."
         />
-        <button type="button" class="search-action">
+        @if(isDateRageActive){
+        <button
+          type="button"
+          class="filter-action"
+          [matTooltip]="!dateRangeToggleEnable ? 'Toggle to date range' : ''"
+          matTooltipPosition="above"
+          (click)="toggleInputState()"
+        >
+          <mat-icon>swap_vert</mat-icon>
+        </button>
+        }
+        <button
+          type="button"
+          class="search-action"
+          [matTooltip]="'Search'"
+          matTooltipPosition="above"
+          (click)="onSearchClick()"
+        >
           <mat-icon>search</mat-icon>
         </button>
       </div>
+      }
     </div>
-    <div class="col-xl-3 col-md-3 col-12 action-buttons">
-      
+
+    <!-- Page size -->
+    <div
+      class="page-size-container"
+      cdkOverlayOrigin
+      #pageOptionOrigin="cdkOverlayOrigin"
+    >
+      @if (pageSizeOptions && pageSizeOptions.length > 0) {
+      <input
+        #pageSizeInput
+        type="number"
+        name="pageSize"
+        id="pageSize"
+        class="size-input"
+        [(ngModel)]="pageSize"
+        (ngModelChange)="onPageSizeChanged($event)"
+        (focus)="openPageOption()"
+        (click)="openPageOption()"
+      />
+
+      <ng-template
+        cdkConnectedOverlay
+        #pageOptionOverlay="cdkConnectedOverlay"
+        [cdkConnectedOverlayOrigin]="pageOptionOrigin"
+        [cdkConnectedOverlayOpen]="isPageOptionOpen"
+        [cdkConnectedOverlayPositions]="overlayPositions"
+        [cdkConnectedOverlayHasBackdrop]="true"
+        [cdkConnectedOverlayBackdropClass]="'transparent-backdrop'"
+        [cdkConnectedOverlayWidth]="pageSizeOverlayWidth || 'auto'"
+        cdkConnectedOverlayPanelClass="pageOption-flyout"
+        (backdropClick)="closePageOption()"
+        (detach)="closePageOption()"
+      >
+        <ul class="menu">
+          @for (item of pageSizeOptions; track item; let i = $index) {
+          <li class="menu-item" [class.active]="item === pageSize">
+            <button
+              type="button"
+              class="item-btn"
+              (click)="onPageSizeChanged(item)"
+            >
+              {{ item }}
+            </button>
+          </li>
+          }
+        </ul>
+      </ng-template>
+      } @else {
+      <input
+        type="number"
+        name="pageSize"
+        id="pageSize"
+        [(ngModel)]="pageSize"
+        (ngModelChange)="onPageSizeChanged($event)"
+        class="size-input"
+      />
+      }
+    </div>
+
+    <!-- Pagination buttons -->
+    <div class="pagination-btns">
+      <button
+        type="button"
+        class="btn btn-outline-warning"
+        matTooltip="Skip Backward"
+        matTooltipPosition="above"
+        (click)="onPageIndexChanged(pageIndex - 3)"
+      >
+        <i class="fa-solid fa-angles-left"></i>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-outline-warning"
+        matTooltip="Backward"
+        matTooltipPosition="above"
+        (click)="onPageIndexChanged(pageIndex - 1)"
+      >
+        <i class="fa-solid fa-angle-left"></i>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-outline-warning"
+        matTooltip="Forward"
+        matTooltipPosition="above"
+        (click)="onPageIndexChanged(pageIndex + 1)"
+      >
+        <i class="fa-solid fa-angle-right"></i>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-outline-warning"
+        matTooltip="Skip forward"
+        matTooltipPosition="above"
+        (click)="onPageIndexChanged(pageIndex + 3)"
+      >
+        <i class="fa-solid fa-angles-right"></i>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-outline-warning"
+        [class.refresh]="isReload"
+        (click)="refreshPage()"
+        matTooltip="Refresh"
+        matTooltipPosition="above"
+      >
+        <i class="fa-solid fa-arrows-rotate"></i>
+      </button>
+
+      @if (extension) {
+      <button
+        type="button"
+        class="btn btn-outline-warning"
+        [matTooltip]="'Export ' + extension"
+        matTooltipPosition="above"
+        (click)="onFileExport(extension)"
+      >
+        <mat-icon>{{ chooseIcon(extension) }}</mat-icon>
+      </button>
+      }
     </div>
   </div>
 </form>
+}

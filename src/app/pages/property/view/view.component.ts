@@ -24,7 +24,7 @@ import {
   MatDialog, MatDialogModule
 } from '@angular/material/dialog';
 import {ViewPropertyImagesComponent} from '../../../components/dialogs/view-property-images/view-property-images.component';
-import {APIsService, User, MSG} from '../../../services/APIs/apis.service';
+import {APIsService, User, MSG, type validateType} from '../../../services/APIs/apis.service';
 import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
 import {PropertyMoreDetailsPannelComponent} from '../../../components/dialogs/property-more-details-pannel/property-more-details-pannel.component';
 import {ShareComponent} from '../../../components/dialogs/share/share.component';
@@ -322,42 +322,32 @@ export class ViewComponent
 
   //<==================== Get the owner details by calling the api ====================>
   private async getOwnerDetails() {
-    if(
-      this.property &&
-      this.property.addedBy &&
-      this.property.addedBy.username
-    ) {
-      await this.propertyService
-        .getUserData(this.property.owner)
-        .then((response: MSG) => {
-          this.owner = response.data as User;
-        })
-        .catch((error: MSG) => {
-          console.error(error);
-        });
-    } else {
-      console.warn('Property or owner information is missing.');
+    try {
+      if(!this.property ||
+        !this.property.addedBy ||
+        !this.property.addedBy.username) throw new Error('Invalid data!');
+      const res: validateType = await this.apiService.getUserByUsername(this.property.owner);
+      if(res.status !== 'success') throw new Error('Invalid owner!');
+      this.owner = res.user;
+    }
+    catch(err) {
+      console.error(err);
     }
   }
   //<==================== End get the owner details by calling the api ====================>
 
   //<==================== Get the agent details by calling the api ====================>
   private async getAgentDetails() {
-    if(
-      this.property &&
-      this.property.addedBy &&
-      this.property.addedBy.username
-    ) {
-      await this.propertyService
-        .getUserData(this.property.addedBy.username)
-        .then((response: MSG) => {
-          this.agent = response.data as User;
-        })
-        .catch((error: MSG) => {
-          console.error(error);
-        });
-    } else {
-      console.warn('Property or owner information is missing.');
+    try {
+      if(!this.property ||
+        !this.property.addedBy ||
+        !this.property.addedBy.username) throw new Error('Invalid data!');
+      const res: validateType = await this.apiService.getUserByUsername(this.property.addedBy.username);
+      if(res.status !== 'success') throw new Error('Invalid owner!');
+      this.agent = res.user;
+    }
+    catch(err) {
+      console.error(err);
     }
   }
   //<==================== End get the agent details by calling the api ====================>

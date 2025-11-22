@@ -1,4 +1,5 @@
-<app-notification />
+<app-notification-dialog></app-notification-dialog>
+
 <app-progress-bar />
 <app-camera-box
   *ngIf="isCameraOpen"
@@ -8,7 +9,6 @@
 </app-camera-box>
 <div *ngIf="mode !== null" class="main-panel">
   <div class="container-fluid overflow-hidden">
-
     <form
       action=""
       method="POST"

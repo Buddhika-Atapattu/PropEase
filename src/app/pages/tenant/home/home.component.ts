@@ -1,5 +1,14 @@
-import {CommonModule, isPlatformBrowser} from '@angular/common';
-import {HttpErrorResponse} from '@angular/common/http';
+// Path: src/app/pages/tenant/home/home.component.ts
+
+import {
+  CommonModule,
+  isPlatformBrowser,
+} from '@angular/common';
+
+import {
+  HttpErrorResponse,
+} from '@angular/common/http';
+
 import {
   Component,
   Inject,
@@ -8,19 +17,46 @@ import {
   PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
-import {MatBadgeModule} from '@angular/material/badge';
-import {MatButtonModule} from '@angular/material/button';
-import {MatDialog} from '@angular/material/dialog';
-import {ActivatedRoute, Router, RouterModule} from '@angular/router';
+
+import {
+  MatBadgeModule,
+} from '@angular/material/badge';
+
+import {
+  MatButtonModule,
+} from '@angular/material/button';
+
+import {
+  MatDialog,
+} from '@angular/material/dialog';
+
+import {
+  ActivatedRoute,
+  Router,
+  RouterModule,
+} from '@angular/router';
+
+import {
+  Subscription,
+  firstValueFrom
+} from 'rxjs';
+
 import * as FileSaver from 'file-saver';
-import {Subscription} from 'rxjs';
 import * as XLSX from 'xlsx';
-import {ConfirmationComponent} from '../../../components/shared/confirmation/confirmation.component';
+
+import {
+  ConfirmationComponent,
+} from '../../../components/shared/confirmation/confirmation.component';
+
 import {
   NotificationDialogComponent,
   NotificationType,
-} from '../../../components/dialogs/notification/notification.component';
-import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
+} from '../../../components/dialogs/notification/notificationBar.component';
+
+import {
+  ProgressBarComponent,
+} from '../../../components/dialogs/progress-bar/progress-bar.component';
+
 import {
   CustomTableComponent,
   SwitchButtonType,
@@ -29,17 +65,44 @@ import {
   TableButtonActionConfig,
   TableColumn,
 } from '../../../components/shared/custom-table/custom-table.component';
-import {APIsService, User} from '../../../services/APIs/apis.service';
-import {AuthService} from '../../../services/auth/auth.service';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {Lease, LeaseWithProperty, TenantService} from '../../../services/tenant/tenant.service';
-import {BackEndPropertyData, PropertyService} from '../../../services/property/property.service';
 
-export interface TenantTableElement {
+import {
+  APIsService,
+  User,
+} from '../../../services/APIs/apis.service';
+
+import {
+  AuthService,
+} from '../../../services/auth/auth.service';
+
+import {
+  WindowsRefService,
+} from '../../../services/windowRef/windowRef.service';
+
+import {
+  Lease,
+  LeaseWithProperty,
+  TenantService,
+} from '../../../services/tenant/tenant.service';
+
+import {
+  BackEndPropertyData,
+  PropertyService,
+} from '../../../services/property/property.service';
+
+import {
+  PaginationUtil,
+} from '../../../source/utility/pagination.utils';
+
+/* ========================================================================
+   INTERFACES
+   ======================================================================== */
+
+export interface AdminTableElement {
   username?: string;
   name: string;
-  image: string | File | undefined;
-  contactNumber: string | undefined;
+  image: string;
+  contactNumber: string;
   email: string;
   gender: string;
   addedBy?: string;
@@ -59,19 +122,26 @@ export interface TenantHomeButtonDataType {
 interface LeaseTableDataType {
   image: string;
   leaseid: string;
+
   dateRange: {
-    start: Date,
-    end: Date
+    start: Date;
+    end: Date;
   };
+
   status: string;
   monthlyRent: string;
   remaningDays: number;
   notify: boolean;
-  viewButton: TableButton,
-  downloadButton: TableButton
+
+  viewButton: TableButton;
+  downloadButton: TableButton;
 }
 
-@Component({
+/* ========================================================================
+   COMPONENT
+   ======================================================================== */
+
+@Component( {
   selector: 'app-home',
   standalone: true,
   imports: [
@@ -85,412 +155,1589 @@ interface LeaseTableDataType {
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
-})
+} )
 export class HomeComponent implements OnInit, OnDestroy {
 
-  //<======================= Foreign Components =======================>
-  @ViewChild(ProgressBarComponent, {static: true})
-  progressBarComponent!: ProgressBarComponent;
-  @ViewChild(NotificationDialogComponent, {static: true})
-  NotificationDialogComponent!: NotificationDialogComponent;
-  //<======================= End Foreign Components =======================>
+  /* ======================================================================
+     VIEW CHILDREN (DIALOGS / PROGRESS)
+     ====================================================================== */
 
-  //<======================= Common Variables =======================>
+  @ViewChild( ProgressBarComponent, { static: true } )
+  progressBarComponent!: ProgressBarComponent;
+
+  @ViewChild( NotificationDialogComponent, { static: true } )
+  notificationDialog!: NotificationDialogComponent;
+
+  /* ======================================================================
+     COMMON / SHARED STATE
+     ====================================================================== */
+
+  // Loading flag used to show global spinner in template
   private _isLoading: boolean = false;
+
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
+
   protected loggedUser: User | null = null;
+
   protected allUsers: User[] | null = [];
 
-  // Table Data for all users
-  protected columns: TableColumn[] = [
-    {label: 'Image', key: 'userimage'},
-    {label: 'Name', key: 'name'},
-    {label: 'Email', key: 'email'},
-    {label: 'Contact Number', key: 'contactNumber'},
-    {label: 'Gender', key: 'gender'},
-    {label: 'View', key: 'viewButton'},
-    {label: 'Download', key: 'downloadButton'},
-  ];
+  // All properties (not only for leases) – currently unused but kept for future
   private properties!: BackEndPropertyData[];
-  //<======================= End Common Variables =======================>
 
-  //<======================= None Tenants Variables | Section 01 =======================>
-  private _noneTenantPageSize: number = 2;
-  private _noneTenantPageSizeOptions: number[] = [2, 4, 6];
-  private _noneTenantPageIndex: number = 0;
-  private _noneTenantPageCount: number = 0;
-  private _noneTenantTableType: string = '';
-  private _noneTenantName: string = '';
-  private _noneTenantTotalDataCount: number = 0;
-  private _noneTenants: TenantTableElement[] = [];
-  protected noneTenantActionButtons: TableButton[] = [
-    {'action': 'view', 'icon': 'visibility'},
-    {'action': 'add', 'icon': 'add_circle'}
-  ]
-  protected noneTenantsFull: TenantTableElement[] = [];
-  public noneTenantFileExportButtonTypeByExtension: FileExport['extention'] = 'xlsx';
-  //<======================= End None Tenants Variables =======================>
+  // Properties that belong to leases of the logged-in user (used in export)
+  private leaseProperties: BackEndPropertyData[] = [];
 
-  //<======================= Tenants Variables | Section 02 =======================>
-  private _tenantPageSize: number = 2;
-  private _tenantPageSizeOptions: number[] = [2, 4, 6];
-  private _tenantPageIndex: number = 0;
-  private _tenantPageCount: number = 0;
-  private _tenantTableType: string = '';
-  private _tenantName: string = '';
-  private _tenantTotalDataCount: number = 0;
-  private _tenants: TenantTableElement[] = [];
-  protected tenantActionButtons: TableButton[] = [
-    {'action': 'view', 'icon': 'visibility'},
-    {'action': 'remove', 'icon': 'remove_circle'}
-  ]
-  protected tenantsFull: TenantTableElement[] = [];
-  protected tenantFileExportButtonTypeByExtension: FileExport['extention'] = 'xlsx';
-  //<======================= End Tenants Variables =======================>
+  private readonly defaultUserImage: string =
+    'Images/user-images/dummy-user/dummy-user.jpg';
 
-  //<============================================= LEASE TABLE VARIABLES | Section 03 =============================================>
-  protected userLeases: Lease[] = []
-  private leaseProperties: BackEndPropertyData[] = []
-  private allLeasesUnderLoggedUser: LeaseTableDataType[] = []
-  private _leaseTableIsReloading: boolean = false;
-  protected leaseTablePageSize: number = 2;
-  private _leaseTablePageSizeOptions: number[] = [];
-  private _leaseTablePageIndex: number = 0;
-  protected leaseTableTitle: string = 'Tenant Leases';
-  private _leaseTabletSearch: string = '';
-  protected leaseFileExtension: FileExport['extention'] = 'xlsx';
-  protected leaseActionButtons: TableButton[] = [
-    {'action': 'view', 'icon': 'visibility'},
-    {'action': 'download', 'icon': 'download'}
-  ]
-  protected leaseTableData: LeaseTableDataType[] = [];
-  protected leaseTableColumns: TableColumn[] = [
-    {label: 'Image', key: 'propertyimage'},
-    {label: 'Lease ID', key: 'leaseid'},
-    {label: 'Date Range', key: 'daterange'},
-    {label: 'Lease Status', key: 'status'},
-    {label: 'Monthly Rent', key: 'monthlyRent'},
-    {label: 'Remaining Days', key: 'remaningDays'},
-    {label: 'View', key: 'viewButton'},
-    {label: 'Download', key: 'downloadButton'},
+  // Fixed "today" for remaining days calculation
+  private readonly today: Date = new Date();
+
+  /* ======================================================================
+     SECTION 01 — ADMIN / NON-TENANTS TABLE
+     ====================================================================== */
+
+  protected adminTableDisplay: boolean = false;
+
+  private _adminPageSize: number = 2;
+  private _adminPageSizeOptions: number[] = [ 2, 4, 6 ];
+  private _adminPageIndex: number = 0;
+  private _adminSearch: string = '';
+
+  protected adminTableTitle: string = 'Non-Tenants Table';
+  protected adminTotalDataCount: number = 0;
+
+  protected adminData: AdminTableElement[] = [];
+  protected adminsFull: AdminTableElement[] = [];
+
+  protected adminColumns: TableColumn[] = [
+    { label: 'Image', key: 'userimage' },
+    { label: 'Name', key: 'name' },
+    { label: 'Email', key: 'email' },
+    { label: 'Contact Number', key: 'contactNumber' },
+    { label: 'Gender', key: 'gender' },
+    { label: 'View', key: 'viewButton' },
+    { label: 'Add', key: 'addButton' },
   ];
-  private _leaseSwitchButton: SwitchButtonType = {
-    isActive: false,
-    index: null,
-    data: null
-  };
-  protected leaseLength: number = 0;
-  private today: Date = new Date();
-  //<============================================= END LEASE TABLE VARIABLES =============================================>
+
+  protected adminActionButtons: TableButton[] = [
+    { action: 'view', icon: 'visibility', label: 'View' },
+    { action: 'add', icon: 'add_circle', label: 'Add' },
+  ];
+
+  public adminFileExportExtension: FileExport[ 'extention' ] = 'xlsx';
+
+  /* ======================================================================
+     SECTION 02 — TENANTS TABLE
+     ====================================================================== */
+
+  protected tenantTableDisplay: boolean = false;
+
+  private _tenantPageSize: number = 2;
+  private _tenantPageSizeOptions: number[] = [ 2, 4, 6 ];
+  private _tenantPageIndex: number = 0;
+  private _tenantSearch: string = '';
+
+  protected tenantTableTitle: string = 'Tenants Table';
+  protected tenantTotalDataCount: number = 0;
+
+  protected tenantData: AdminTableElement[] = [];
+  protected tenantsFull: AdminTableElement[] = [];
+
+  protected tenantColumns: TableColumn[] = [
+    { label: 'Image', key: 'userimage' },
+    { label: 'Name', key: 'name' },
+    { label: 'Email', key: 'email' },
+    { label: 'Contact Number', key: 'contactNumber' },
+    { label: 'Gender', key: 'gender' },
+    { label: 'View', key: 'viewButton' },
+    { label: 'Remove', key: 'removeButton' },
+  ];
+
+  protected tenantActionButtons: TableButton[] = [
+    { action: 'view', icon: 'visibility', label: 'View' },
+    { action: 'remove', icon: 'remove_circle', label: 'Remove' },
+  ];
+
+  protected tenantFileExportExtension: FileExport[ 'extention' ] = 'xlsx';
+
+  /* ======================================================================
+     SECTION 03 — LEASE TABLE (TENANT LEASES)
+     ====================================================================== */
+
+  protected userLeases: Lease[] = [];
+
+  // Full list of lease rows, before pagination
+  private allLeasesUnderLoggedUser: LeaseTableDataType[] = [];
+
+  protected leaseTableDisplay: boolean = false;
+  protected leaseTotalDataCount: number = 0;
+
+  private _leaseTableIsReloading: boolean = false;
+  private _leaseTablePageIndex: number = 0;
+  private _leaseTabletSearch: string = '';
+
+  private _leaseTablePageSize: number = 2;
+  private _leaseTablePageSizeOptions: number[] = [ 2, 4, 6 ];
+
+  protected leaseTableTitle: string = 'Tenant Leases';
+  protected leaseFileExtension: FileExport[ 'extention' ] = 'xlsx';
+
+  protected leaseActionButtons: TableButton[] = [
+    { action: 'view', icon: 'visibility' },
+    { action: 'download', icon: 'download' },
+  ];
+
+  protected leaseTableData: LeaseTableDataType[] = [];
+
+  protected leaseTableColumns: TableColumn[] = [
+    { label: 'Image', key: 'propertyimage' },
+    { label: 'Lease ID', key: 'leaseid' },
+    { label: 'Date Range', key: 'daterange' },
+    { label: 'Lease Status', key: 'status' },
+    { label: 'Monthly Rent', key: 'monthlyRent' },
+    { label: 'Remaining Days', key: 'remaningDays' },
+    { label: 'View', key: 'viewButton' },
+    { label: 'Download', key: 'downloadButton' },
+  ];
+
+  /* ======================================================================
+     CONSTRUCTOR / LIFECYCLE
+     ====================================================================== */
+
+  private routeSubscription?: Subscription;
+
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+
+    @Inject( PLATFORM_ID )
+    private platformId: Object,
+
     private route: ActivatedRoute,
     private authService: AuthService,
     private router: Router,
     private apiService: APIsService,
     private dialog: MatDialog,
     private tenantService: TenantService,
-    private propertyService: PropertyService
+    private propertyService: PropertyService,
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    this.route.url.subscribe((segments) => {
-    });
+    this.isBrowser = isPlatformBrowser( this.platformId );
+
+    // Keep subscription reference to clean up later
+    this.routeSubscription = this.route.url.subscribe( () => {
+      // Placeholder: handle URL segments if needed
+    } );
 
     this.loggedUser = this.authService.getLoggedUser;
   }
 
+  /**
+   * ngOnInit
+   *  - Load all three sections: Admin (non-tenants), Tenants, and Leases.
+   */
   async ngOnInit(): Promise<void> {
+    try {
+      this._isLoading = true;
 
+      // SECTION 01: Non-tenants (Admin table)
+      await this.organiseAdmintable( 0, this._adminPageSize );
 
-    // Section 03 data load
-    await this.loggeUserLeases()
+      // SECTION 02: Tenants table
+      await this.organisTenantTable( 0, this._tenantPageSize );
+
+      // SECTION 03: Logged user leases
+      await this.loggeUserLeases();
+
+    } finally {
+      this._isLoading = false;
+    }
   }
 
+  /**
+   * ngOnDestroy
+   *  - Clean up subscriptions.
+   */
   ngOnDestroy(): void {
-
+    if ( this.routeSubscription ) {
+      this.routeSubscription.unsubscribe();
+    }
   }
 
-  //<============================================= COMMON GETTER AND SETTER =============================================>
+  /* ======================================================================
+     COMMON GETTERS / SETTERS
+     ====================================================================== */
+
   protected get isLoading(): boolean {
     return this._isLoading;
   }
-  protected set isLoading(value: boolean) {
+
+  // IMPORTANT:
+  //  - Setter now ONLY sets the flag.
+  //  - It does NOT trigger any reload to avoid recursive calls.
+  protected set isLoading( value: boolean ) {
     this._isLoading = value;
-  }
-  //<============================================= END COMMON GETTER AND SETTER =============================================>
+    if ( this._isLoading ) {
+      // SECTION 01: Non-tenants (Admin table)
+      this.organiseAdmintable( 0, this._adminPageSize );
+      this.adminSearch = '';
 
-  //<============================================= COMMON OPERATIONS =============================================>
+      // SECTION 02: Tenants table
+      this.organisTenantTable( 0, this._tenantPageSize );
+      this.tenantSearch = '';
+
+      // SECTION 03: Logged user leases
+      this.loggeUserLeases();
+    }
+    else {
+      this._isLoading = false;
+    }
+  }
+
+  /* ======================================================================
+     COMMON OPERATIONS (USED BY MULTIPLE SECTIONS)
+     ====================================================================== */
+
+  /**
+   * isAllowed
+   *  - Returns true if the logged user has any of the elevated roles.
+   */
   protected get isAllowed(): boolean {
-    if(!this.loggedUser) return false
-    const roles: string[] = ['admin', 'operator', 'manager'];
-    return roles.includes(this.loggedUser.role)
-  }
-  //<============================================= END COMMON OPERATIONS =============================================>
+    if ( !this.loggedUser ) {
+      return false;
+    }
 
-  //<============================================= SECTION 03 ========================================================>
-  //<============================================= Logged User Lease View ============================================>
+    const roles: string[] = [ 'admin', 'operator', 'manager' ];
+    return roles.includes( this.loggedUser.role );
+  }
+
+  /**
+   * handleFileExport
+   *  - Handles export requests triggered from the Admin table.
+   */
+  protected handleFileExport(
+    value: FileExport,
+    type: string,
+  ): void {
+    try {
+      if ( !type || typeof type !== 'string' ) {
+        throw new Error( 'Invalid export name type!' );
+      }
+
+      if ( !value ) {
+        throw new Error( 'Invalid export data!' );
+      }
+
+      if ( this.adminData.length === 0 ) {
+        throw new Error( 'No admin users found to export!' );
+      }
+
+      this.exportTableData( value, type );
+    } catch ( error ) {
+      console.error( error );
+      this.handleError( error, 'Failed to load file data.' );
+    }
+  }
+
+  /**
+   * exportTableData
+   *  - Generic table export helper for Admin / Tenant tables.
+   *  - Builds a normalized JSON array and generates an Excel/CSV file.
+   */
+  private exportTableData(
+    data: FileExport,
+    typeOfTenant: string,
+  ): void {
+    const fileExtention = data.extention;
+    const fileData = data.data;
+
+    if ( !Array.isArray( fileData ) || fileData.length === 0 ) {
+      console.warn( 'No data to export.' );
+      return;
+    }
+
+    // Collect unique keys from all items
+    const rawColumns: string[] = Array.from(
+      new Set(
+        fileData.flatMap( ( item ) => Object.keys( item ) ),
+      ),
+    );
+
+    // Map raw keys → Display labels
+    const keyMap: Record<string, string> = {};
+    rawColumns.forEach( ( key: string ): void => {
+      keyMap[ key ] = key.charAt( 0 ).toUpperCase() + key.slice( 1 );
+    } );
+
+    const columns: string[] = Object.values( keyMap );
+
+    // Normalize each row to use display labels
+    const exportData: Record<string, any>[] = fileData.map( ( item ) => {
+      const normalizedRow: Record<string, any> = {};
+
+      for ( const rawKey in keyMap ) {
+        const displayKey = keyMap[ rawKey ];
+        normalizedRow[ displayKey ] = item[ rawKey ] ?? '';
+      }
+
+      return normalizedRow;
+    } );
+
+    // Only handle Excel-compatible types here
+    if ( this.isExcel( fileExtention ) ) {
+      const worksheet = XLSX.utils.json_to_sheet( exportData );
+
+      // Auto column widths
+      worksheet[ '!cols' ] = columns.map( ( col ) => ( {
+        wch: col.length + 10,
+      } ) );
+
+      const workbook: XLSX.WorkBook = {
+        Sheets: { Export: worksheet },
+        SheetNames: [ 'Export' ],
+      };
+
+      const bookTypeMap: { [ key: string ]: XLSX.BookType; } = {
+        xls: 'xls',
+        xlsx: 'xlsx',
+        xlsm: 'xlsm',
+        xltx: 'xlsx',
+        ods: 'ods',
+        csv: 'csv',
+        tsv: 'csv',
+      };
+
+      const safeExt: string = fileExtention.toLowerCase().trim();
+      const bookType: XLSX.BookType = bookTypeMap[ safeExt ] || 'xlsx';
+
+      const excelBuffer: ArrayBuffer = XLSX.write(
+        workbook,
+        {
+          bookType,
+          type: 'array',
+        },
+      );
+
+      const mimeMap: { [ key: string ]: string; } = {
+        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        xls: 'application/vnd.ms-excel',
+        csv: 'text/csv',
+        ods: 'application/vnd.oasis.opendocument.spreadsheet',
+      };
+
+      const mimeType: string = mimeMap[ safeExt ] || mimeMap[ 'xlsx' ];
+
+      const blob: Blob = new Blob(
+        [ excelBuffer ],
+        { type: mimeType },
+      );
+
+      FileSaver.saveAs(
+        blob,
+        `${ typeOfTenant }_Export_${ new Date().toISOString() }.${ fileExtention }`,
+      );
+    }
+  }
+
+  /**
+   * isExcel
+   *  - Returns true if the provided extension is supported for Excel export.
+   */
+  private isExcel( type: string ): boolean {
+    switch ( type.toLowerCase().trim() ) {
+      case 'xls':
+      case 'xlsx':
+      case 'xlsm':
+      case 'xlt':
+      case 'xltx':
+      case 'ods':
+      case 'csv':
+      case 'tsv':
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /* ======================================================================
+     SECTION 01 — ADMIN (NON-TENANTS) GETTERS / SETTERS
+     ====================================================================== */
+
+  get adminPageSize(): number {
+    return this._adminPageSize;
+  }
+
+  set adminPageSize( value: number ) {
+    this._adminPageSize = value;
+    this.organiseAdmintable(
+      this._adminPageIndex,
+      this._adminPageSize,
+      this._adminSearch,
+    );
+  }
+
+  get adminPageSizeOptions(): number[] {
+    return this._adminPageSizeOptions;
+  }
+
+  set adminPageSizeOptions( value: number[] ) {
+    this._adminPageSizeOptions = value;
+  }
+
+  get adminPageIndex(): number {
+    return this._adminPageIndex;
+  }
+
+  set adminPageIndex( value: number ) {
+    this._adminPageIndex = value;
+    this.organiseAdmintable(
+      this._adminPageIndex,
+      this._adminPageSize,
+      this._adminSearch,
+    );
+  }
+
+  get adminSearch(): string {
+    return this._adminSearch;
+  }
+
+  set adminSearch( value: string ) {
+    this._adminSearch = value;
+    this.organiseAdmintable(
+      this._adminPageIndex,
+      this._adminPageSize,
+      this._adminSearch,
+    );
+  }
+
+  /* ======================================================================
+     SECTION 01 — ADMIN (NON-TENANTS) METHODS
+     ====================================================================== */
+
+  /**
+   * organiseAdmintable
+   *  - Fetches and prepares paginated user data for the Admin / Non-tenants table.
+   */
+  private async organiseAdmintable(
+    index: number,
+    size: number,
+    search?: string,
+  ): Promise<void> {
+    try {
+      this.adminTableDisplay = false;
+      this._isLoading = true;
+
+      // Reset current page data
+      this.adminData = [];
+
+      // 1) Validate and sanitize index
+      if (
+        Number.isNaN( index ) ||
+        !Number.isFinite( index ) ||
+        !Number.isInteger( index )
+      ) {
+        throw new Error( 'Invalid index' );
+      }
+
+      // 2) Normalize search query
+      let safeSearch: string | undefined = undefined;
+
+      if ( typeof search === 'string' ) {
+        const trimmed: string = search.trim();
+
+        if ( trimmed.length > 0 ) {
+          safeSearch = trimmed.toLowerCase();
+        }
+      }
+
+      // 3) Fetch total user count
+      const countRes = await this.tenantService.getAllNoneTenantsCount();
+
+      if ( countRes.status !== 'success' ) {
+        throw new Error( 'Failed to count total users' );
+      }
+
+      const count: number = Number( countRes.data );
+
+      if (
+        Number.isNaN( count ) ||
+        !Number.isFinite( count ) ||
+        !Number.isInteger( count ) ||
+        count < 0
+      ) {
+        throw new Error( 'Invalid count' );
+      }
+
+      this.adminTotalDataCount = count;
+
+      // 4) Pagination calculations
+      const safeIndex: number = PaginationUtil.safeIndex(
+        index,
+        count,
+      );
+
+      const safeLimit: number = PaginationUtil.safeLimit(
+        size,
+        count,
+      );
+
+      const safeStart: number = safeIndex * safeLimit;
+
+      // 5) Fetch paginated user list
+      const res = await this.tenantService.getAllNoneTenantsWithPagination(
+        safeStart,
+        safeLimit,
+        safeSearch,
+      );
+
+      if ( res.status !== 'success' || !Array.isArray( res.data.users ) ) {
+        throw new Error( 'Failed to process user fetching in admin table' );
+      }
+
+      const users = res.data.users;
+
+      if ( users.length === 0 ) {
+        // No users for this page; table remains empty
+        return;
+      }
+
+      // 6) Transform raw users → table rows
+      for ( const user of users ) {
+        const rawGender: string = String( user.gender ?? '' ).toLowerCase();
+
+        const gender: string =
+          rawGender === 'male' || rawGender === 'female'
+            ? rawGender
+            : 'unknown';
+
+        const namePrefix: string =
+          gender === 'male' ? 'Mr.' : 'Ms.';
+
+        const name: string = namePrefix
+          ? `${ namePrefix } ${ user.name }`
+          : user.name;
+
+        const image: string = String( user.image ?? this.defaultUserImage );
+        const contactNumber: string = String( user.phoneNumber ?? '' );
+        const email: string = String( user.email ?? '' );
+        const username: string = String( user.username ?? '' );
+
+        const viewButton: TableButton = {
+          action: 'view',
+          icon: 'visibility',
+          label: 'View',
+        };
+
+        const addButton: TableButton = {
+          action: 'add',
+          icon: 'add_circle',
+          label: 'Add',
+        };
+
+        const row: AdminTableElement & {
+          viewButton: TableButton;
+          addButton: TableButton;
+        } = {
+          image,
+          name,
+          gender,
+          email,
+          contactNumber,
+          username,
+          addedBy: user.creator,
+          viewButton,
+          addButton,
+        };
+
+        this.adminData.push( row );
+      }
+    } catch ( error ) {
+      console.error( 'Error organizing users table data:', error );
+    } finally {
+      this.adminTableDisplay = true;
+      setTimeout( (): void => {
+        this._isLoading = false;
+      }, 500 );
+    }
+  }
+
+  /**
+   * adminActionButtonCenter
+   *  - Central handler for Admin table actions (view / add).
+   */
+  protected async adminActionButtonCenter(
+    value: TableButtonActionConfig,
+  ): Promise<void> {
+    try {
+      if ( !value ) {
+        throw new Error( 'Invalid admin button data' );
+      }
+
+      const action: string = value.action.trim().toLowerCase();
+      const data = value.data;
+
+      if ( !action ) {
+        throw new Error( 'Invalid admin button action' );
+      }
+
+      if ( !Array.isArray( this.adminData ) || !this.adminData ) {
+        throw new Error( 'Invalid user data!' );
+      }
+
+      switch ( action ) {
+        case 'view': {
+          try {
+            const username: string | undefined = data.username;
+
+            if ( !username || typeof username !== 'string' ) {
+              throw new Error( 'Invalid username!' );
+            }
+
+            const resView = await this.apiService.generateToken( username );
+            const token = resView.token;
+
+            if ( !token || typeof token !== 'string' ) {
+              throw new Error( 'Invalid token!' );
+            }
+
+            await this.router.navigate( [ '/dashboard/users/user-profile', token ] );
+          } catch ( error ) {
+            console.error( error );
+          }
+          break;
+        }
+
+        case 'add': {
+          await this.addTenant( data );
+          break;
+        }
+
+        default:
+          return;
+      }
+    } catch ( error ) {
+      console.error( error );
+      this.handleError( error, 'Failed to load user data.' );
+    }
+  }
+
+  /**
+   * addTenant
+   *  - Converts a non-tenant user into a tenant (insertTenant API call).
+   */
+  protected async addTenant(
+    data: AdminTableElement,
+  ): Promise<void> {
+    try {
+      if ( !data ) {
+        throw new Error( 'Invalid tenant data in insertion!' );
+      }
+
+      this._isLoading = true;
+      this.progressBarComponent.start();
+
+      const formData: FormData = new FormData();
+
+      formData.append( 'username', data.username as string );
+      formData.append( 'name', data.name );
+      formData.append( 'image', data.image as string );
+      formData.append( 'phoneNumber', data.contactNumber );
+      formData.append( 'email', data.email );
+      formData.append( 'gender', data.gender );
+      formData.append( 'addedBy', data.addedBy as string );
+
+      const res = await this.tenantService.insertTenant( formData );
+
+      if ( res.status.toLowerCase() !== 'success' ) {
+        throw new Error( 'Tenant insertion failed!' );
+      }
+
+      // Reload both admin and tenant tables
+      await this.organiseAdmintable( this._adminPageIndex, this._adminPageSize, this._adminSearch );
+      await this.organisTenantTable( this._tenantPageIndex, this._tenantPageSize, this._tenantSearch );
+    } catch ( error ) {
+      console.error( error );
+      this.progressBarComponent.stop();
+      this.handleError( error, 'Failed to load tenant data.' );
+    } finally {
+      this.progressBarComponent.complete();
+
+      setTimeout( (): void => {
+        this._isLoading = false;
+      }, 500 );
+    }
+  }
+
+  /* ======================================================================
+     SECTION 02 — TENANTS GETTERS / SETTERS
+     ====================================================================== */
+
+  get tenantPageSize(): number {
+    return this._tenantPageSize;
+  }
+
+  set tenantPageSize( value: number ) {
+    this._tenantPageSize = value;
+
+    this.organisTenantTable(
+      this._tenantPageIndex,
+      this._tenantPageSize,
+      this._tenantSearch,
+    );
+  }
+
+  get tenantPageSizeOptions(): number[] {
+    return this._tenantPageSizeOptions;
+  }
+
+  set tenantPageSizeOptions( value: number[] ) {
+    this._tenantPageSizeOptions = value;
+  }
+
+  get tenantPageIndex(): number {
+    return this._tenantPageIndex;
+  }
+
+  set tenantPageIndex( value: number ) {
+    this._tenantPageIndex = value;
+
+    this.organisTenantTable(
+      this._tenantPageIndex,
+      this._tenantPageSize,
+      this._tenantSearch,
+    );
+  }
+
+  get tenantSearch(): string {
+    return this._tenantSearch;
+  }
+
+  set tenantSearch( value: string ) {
+    this._tenantSearch = value;
+
+    this.organisTenantTable(
+      this._tenantPageIndex,
+      this._tenantPageSize,
+      this._tenantSearch,
+    );
+  }
+
+  /* ======================================================================
+     SECTION 02 — TENANTS METHODS
+     ====================================================================== */
+
+  /**
+   * organisTenantTable
+   *  - Fetches and prepares paginated tenant data.
+   */
+  private async organisTenantTable(
+    index: number,
+    limit: number,
+    search?: string,
+  ): Promise<void> {
+    try {
+      this.tenantTableDisplay = false;
+      this._isLoading = true;
+
+      this.tenantData = [];
+
+      // 1) Normalize search
+      let safeSearch: string | undefined = undefined;
+
+      if ( typeof search === 'string' ) {
+        const trimmed: string = search.trim();
+
+        if ( trimmed.length > 0 ) {
+          safeSearch = trimmed.toLowerCase();
+        }
+      }
+
+      // 2) Get total tenant count
+      const resTotal = await this.tenantService.getAllTenantsCount();
+
+      if ( resTotal.status !== 'success' ) {
+        throw new Error( 'Process tenant total count failed!' );
+      }
+
+      const totalRaw = resTotal.data;
+      const total: number = Number( totalRaw );
+
+      if (
+        Number.isNaN( total ) ||
+        !Number.isFinite( total ) ||
+        !Number.isInteger( total ) ||
+        total < 0
+      ) {
+        throw new Error( 'Invalid total tenant count' );
+      }
+
+      this.tenantTotalDataCount = total;
+
+      // 3) Pagination
+      const safeIndex: number = PaginationUtil.safeIndex(
+        index,
+        this.tenantTotalDataCount,
+      );
+
+      const safeLimit: number = PaginationUtil.safeLimit(
+        limit,
+        this.tenantTotalDataCount,
+      );
+
+      const safeStart: number = safeIndex * safeLimit;
+
+      if ( this.tenantTotalDataCount === 0 ) {
+        // No tenants at all
+        return;
+      }
+
+      // 4) Fetch paginated tenants
+      const res = await this.tenantService.getAllTenantsWithPagination(
+        safeStart,
+        safeLimit,
+        safeSearch,
+      );
+
+      if ( res.status !== 'success' || !Array.isArray( res.data.tenants ) ) {
+        throw new Error( 'Tenant data process failed!' );
+      }
+
+      const tenants = res.data.tenants;
+
+      if ( !Array.isArray( tenants ) ) {
+        throw new Error( 'Invalid tenant list received from server!' );
+      }
+
+      if ( tenants.length === 0 ) {
+        // No tenants for this page / filter
+        return;
+      }
+
+      // 5) Build table rows
+      for ( const user of tenants ) {
+        const rawGender: string = String( user.gender ?? '' ).toLowerCase();
+
+        const gender: string =
+          rawGender === 'male' || rawGender === 'female'
+            ? rawGender
+            : 'unknown';
+
+        const namePrefix: string =
+          gender === 'male'
+            ? 'Mr.'
+            : gender === 'female'
+              ? 'Ms.'
+              : '';
+
+        const name: string = namePrefix
+          ? `${ namePrefix } ${ user.name }`
+          : user.name;
+
+        const image: string = String( user.image ?? this.defaultUserImage );
+        const contactNumber: string = String( user.phoneNumber ?? '' );
+        const email: string = String( user.email ?? '' );
+        const username: string = String( user.username ?? '' );
+
+        const viewButton: TableButton = {
+          action: 'view',
+          icon: 'visibility',
+          label: 'View',
+        };
+
+        const removeButton: TableButton = {
+          action: 'remove',
+          icon: 'remove_circle',
+          label: 'Remove',
+        };
+
+        const row: AdminTableElement & {
+          viewButton: TableButton;
+          removeButton: TableButton;
+        } = {
+          image,
+          name,
+          gender,
+          email,
+          contactNumber,
+          username,
+          addedBy: user.addedBy,
+          viewButton,
+          removeButton,
+        };
+
+        this.tenantData.push( row );
+      }
+    } catch ( error ) {
+      console.error( error );
+
+      this.progressBarComponent.stop();
+      this.handleError( error, 'Failed to load tenant data.' );
+    } finally {
+      this.tenantTableDisplay = true;
+
+      setTimeout( (): void => {
+        this._isLoading = false;
+      }, 500 );
+    }
+  }
+
+  /**
+   * tenantActionButtonCenter
+   *  - Central handler for Tenant table actions (view / remove).
+   */
+  protected async tenantActionButtonCenter(
+    value: TableButtonActionConfig,
+  ): Promise<void> {
+    try {
+      if ( !value ) {
+        throw new Error( 'Invalid tenant button data' );
+      }
+
+      const action: string = value.action.trim().toLowerCase();
+      const data = value.data;
+
+      if ( !action ) {
+        throw new Error( 'Invalid tenant button action' );
+      }
+
+      // IMPORTANT: use tenantData here (not adminData)
+      if ( !Array.isArray( this.tenantData ) || !this.tenantData ) {
+        throw new Error( 'Invalid tenant data!' );
+      }
+
+      switch ( action ) {
+        case 'view': {
+          try {
+            const username = data.username;
+
+            if ( !username || typeof username !== 'string' ) {
+              throw new Error( 'Invalid username!' );
+            }
+
+            const resView = await this.apiService.generateToken( username );
+            const token = resView.token;
+
+            if ( !token || typeof token !== 'string' ) {
+              throw new Error( 'Invalid token!' );
+            }
+
+            await this.router.navigate( [ '/dashboard/tenant/tenant-view', token ] );
+          } catch ( error ) {
+            console.error( error );
+          }
+          break;
+        }
+
+        case 'remove': {
+          await this.removeTenant( data );
+          break;
+        }
+
+        default:
+          return;
+      }
+    } catch ( error ) {
+      console.error( error );
+      this.progressBarComponent.stop();
+      this.handleError( error, 'Failed to load tenant data.' );
+    }
+  }
+
+  /**
+   * removeTenant
+   *  - Removes a tenant assigned to the system (deleteTenant API call).
+   */
+  private async removeTenant(
+    data: AdminTableElement,
+  ): Promise<void> {
+    try {
+      const dialogRef = this.dialog.open( ConfirmationComponent, {
+        width: '400px',
+        height: 'auto',
+        data: {
+          title: `Do you wish to remove this tenant`,
+          body: `All related activities and leases will be deleted!`
+        }
+      } );
+
+      // Wait for the dialog result (true/false)
+      const isConfirmed: boolean = await firstValueFrom(
+        dialogRef.afterClosed()
+      );
+
+      if ( !isConfirmed.valueOf() ) return;
+
+      this._isLoading = true;
+      this.progressBarComponent.start();
+
+      if ( !this.loggedUser ) {
+        throw new Error( 'Invalid login!' );
+      }
+
+      const loggedUsername: string = this.loggedUser.username.trim();
+
+      if ( !loggedUsername || typeof loggedUsername !== 'string' ) {
+        throw new Error( 'Invalid username' );
+      }
+
+      const tenantUsername: string | undefined = data.username?.trim();
+
+      if ( !tenantUsername || typeof tenantUsername !== 'string' ) {
+        throw new Error( 'Invalid tenant username' );
+      }
+
+      const res = await this.tenantService.deleteTenant(
+        tenantUsername,
+        loggedUsername,
+      );
+
+
+      if ( res.status !== 'success' ) {
+        throw new Error( 'Failed to process tenant delete' );
+      }
+
+      this.notificationDialog.notification(
+        'success',
+        'Tenant deleted successful!',
+      );
+
+      await this.organiseAdmintable( this._adminPageIndex, this._adminPageSize, this._adminSearch );
+      await this.organisTenantTable( this._tenantPageIndex, this._tenantPageSize, this._tenantSearch );
+
+    } catch ( error ) {
+      console.error( error );
+
+      this.progressBarComponent.stop();
+      this.handleError( error, 'Failed to load tenant data.' );
+    } finally {
+      this.progressBarComponent.complete();
+
+      setTimeout( (): void => {
+        this._isLoading = false;
+      }, 500 );
+    }
+  }
+
+  /* ======================================================================
+     SECTION 03 — LEASES (TENANT LEASE VIEW)
+     ====================================================================== */
+
+  /**
+   * loggeUserLeases
+   *  - Loads all leases associated with the logged-in user and
+   *    prepares initial lease table data.
+   */
   protected async loggeUserLeases(): Promise<void> {
     try {
-      if(!this.loggedUser) throw new Error("Please login first!");
+      if ( !this.loggedUser ) {
+        throw new Error( 'Please login first!' );
+      }
 
-      const response = await this.tenantService.getAllLeaseAgreementsByUsername(this.loggedUser.username);
+      const response = await this.tenantService.getAllLeaseAgreementsByUsername(
+        this.loggedUser.username,
+      );
 
+      if ( response.status !== 'success' ) {
+        throw new Error( response.message );
+      }
 
-      if(response.status !== 'success') throw new Error(response.message)
-
-      if(response.data.length === 0) throw new Error("You don't have any leases!");
+      if ( response.data.length === 0 ) {
+        throw new Error( "You don't have any leases!" );
+      }
 
       const leases: Lease[] = response.data;
 
-      this.userLeases = [...leases];
-      if(Array.isArray(this.userLeases) && this.userLeases.length > 0) this.organizeLeaseTableData(0);
-    }
-    catch(error) {
-      console.error(error);
-      this.userLeases = []
+      this.userLeases = [ ...leases ];
+
+      if ( Array.isArray( this.userLeases ) && this.userLeases.length > 0 ) {
+        await this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
+      }
+    } catch ( error ) {
+      console.error( error );
+      this.userLeases = [];
+      // Optional: show notification here if you want
     }
   }
 
-  //<============================================= SETTER & GETTER | SECTION 03 =========================================>
-  // 01. leaseTableIsReloading
-  get leaseTableIsReloading(): boolean {
-    return this._leaseTableIsReloading;
-  }
-  set leaseTableIsReloading(value: boolean) {
-    this._leaseTableIsReloading = value;
-    if(this._leaseTableIsReloading) {
-      this.organizeLeaseTableData(this._leaseTablePageIndex)
-    }
+  /* ----------------------------------------------------------------------
+     SECTION 03 — GETTERS / SETTERS
+     ---------------------------------------------------------------------- */
+
+  get leaseTablePageSize(): number {
+    return this._leaseTablePageSize;
   }
 
-  // 02. leaseTablePageIndex
+  set leaseTablePageSize( value: number ) {
+    this._leaseTablePageSize = value;
+    this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
+  }
+
   get leaseTablePageIndex(): number {
     return this._leaseTablePageIndex;
   }
-  set leaseTablePageIndex(value: number) {
+
+  set leaseTablePageIndex( value: number ) {
     this._leaseTablePageIndex = value;
+    this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
   }
 
-  // 03. leaseTabletSearch
   get leaseTabletSearch(): string {
     return this._leaseTabletSearch;
   }
-  set leaseTabletSearch(value: string) {
+
+  set leaseTabletSearch( value: string ) {
     this._leaseTabletSearch = value;
+    this.leaseSearch( this._leaseTabletSearch );
   }
 
   get leaseTablePageSizeOptions(): number[] {
     return this._leaseTablePageSizeOptions;
   }
-  set leaseTablePageSizeOptions(value: number[]) {
-    this._leaseTablePageSizeOptions = value
-  }
-  //<============================================= END SETTER & GETTER | SECTION 03 ============================================>
 
-  //<============================================= HANGLERS | SECTION 03 =======================================================>
-  private async organizeLeaseTableData(index: number): Promise<void> {
+  set leaseTablePageSizeOptions( value: number[] ) {
+    this._leaseTablePageSizeOptions = value;
+  }
+
+  /* ----------------------------------------------------------------------
+     SECTION 03 — LEASE HANDLERS
+     ---------------------------------------------------------------------- */
+
+  /**
+   * organizeLeaseTableData
+   *  - Builds full lease table rows from user leases and property data,
+   *    then applies pagination.
+   */
+  private async organizeLeaseTableData(
+    index: number,
+    size: number,
+  ): Promise<void> {
     try {
-      if(!this.loggedUser) {
-        throw new Error('Invalid logged user!');
+      this.leaseTableDisplay = false;
+      this._isLoading = true;
+
+      if ( !this.loggedUser ) {
+        throw new Error( 'Invalid logged user!' );
       }
 
-      if(!Array.isArray(this.userLeases) || this.userLeases.length === 0) {
-        throw new Error("You don't have any leases!");
+      if (
+        Number.isNaN( index ) ||
+        !Number.isFinite( index ) ||
+        !Number.isInteger( index )
+      ) {
+        throw new Error( 'Invalid index' );
+      }
+
+      if (
+        Number.isNaN( size ) ||
+        !Number.isFinite( size ) ||
+        !Number.isInteger( size )
+      ) {
+        throw new Error( 'Invalid size' );
+      }
+
+      if ( !Array.isArray( this.userLeases ) || this.userLeases.length === 0 ) {
+        throw new Error( "You don't have any leases!" );
       }
 
       const username: string = this.loggedUser.username?.trim() ?? '';
-      if(!username) {
-        throw new Error('Invalid username!');
+      if ( !username ) {
+        throw new Error( 'Invalid username!' );
       }
 
-      // ─────────────────────────────────────────────
-      // Build all rows in parallel (and wait for them)
-      // ─────────────────────────────────────────────
+      // Reset leaseProperties (will be refilled)
+      this.leaseProperties = [];
+
+      // Build lease rows in parallel
       const rowPromises: Array<Promise<LeaseTableDataType | null>> =
-        this.userLeases.map(async (lease: Lease): Promise<LeaseTableDataType | null> => {
-          try {
-            const propertyID: string | undefined = lease.propertyID;
-            if(!propertyID) {
-              throw new Error('Invalid property ID!');
+        this.userLeases.map(
+          async ( lease: Lease ): Promise<LeaseTableDataType | null> => {
+            try {
+              const propertyID: string | undefined = lease.propertyID;
+
+              if ( !propertyID ) {
+                throw new Error( 'Invalid property ID!' );
+              }
+
+              const propertyRes = await this.propertyService.getPropertyById( propertyID );
+
+              if ( !propertyRes || propertyRes.status !== 'success' ) {
+                throw new Error( 'Failed to process property fetch!' );
+              }
+
+              const property: BackEndPropertyData = propertyRes.data;
+
+              if ( !property ) {
+                throw new Error( 'Invalid property!' );
+              }
+
+              // Store property for later Excel export (avoid duplicates by id)
+              const alreadyExists = this.leaseProperties.some(
+                ( p ) => p.id === property.id,
+              );
+              if ( !alreadyExists ) {
+                this.leaseProperties.push( property );
+              }
+
+              const propertyImageURL: LeaseTableDataType[ 'image' ] =
+                property.images?.[ 0 ]?.imageURL || '';
+
+              const leaseID: LeaseTableDataType[ 'leaseid' ] = lease.leaseID;
+
+              const dateRange: LeaseTableDataType[ 'dateRange' ] = {
+                start: new Date( lease.leaseAgreement.startDate ),
+                end: new Date( lease.leaseAgreement.endDate ),
+              };
+
+              const status: LeaseTableDataType[ 'status' ] =
+                lease.systemMetadata.validationStatus.toLocaleLowerCase();
+
+              const monthlyRent: LeaseTableDataType[ 'monthlyRent' ] =
+                `${ lease.leaseAgreement.monthlyRent } ${ lease.leaseAgreement.currency.currency }`;
+
+              const endTime: number = dateRange.end.getTime();
+              const todayTime: number = this.today.getTime();
+              const diffMs: number = endTime - todayTime;
+
+              const remaningDays: LeaseTableDataType[ 'remaningDays' ] =
+                Math.ceil( diffMs / ( 1000 * 60 * 60 * 24 ) );
+
+              const notify: LeaseTableDataType[ 'notify' ] = remaningDays < 30;
+
+              const viewButton: TableButton = {
+                action: 'view',
+                icon: 'visibility',
+                label: 'View',
+              };
+
+              const downloadButton: TableButton = {
+                action: 'download',
+                icon: 'download',
+                label: 'Download',
+              };
+
+              const data: LeaseTableDataType = {
+                image: propertyImageURL,
+                leaseid: leaseID,
+                dateRange,
+                status,
+                monthlyRent,
+                remaningDays,
+                notify,
+                viewButton,
+                downloadButton,
+              };
+
+              return data;
+            } catch ( error ) {
+              console.error( 'Error building lease row:', error );
+              return null;
             }
+          },
+        );
 
-            // Assuming this.propertyService.getPropertyById returns a Promise
-            const propertyRes = await this.propertyService.getPropertyById(propertyID);
-            if(!propertyRes || propertyRes.status !== 'success') {
-              throw new Error('Failed to process property fetch!');
-            }
+      const rowsWithNulls: Array<LeaseTableDataType | null> =
+        await Promise.all( rowPromises );
 
-            const property: BackEndPropertyData = propertyRes.data;
-            if(!property) {
-              throw new Error('Invalid property!');
-            }
-
-            const propertyImageURL: LeaseTableDataType['image'] =
-              property.images?.[0]?.imageURL || '';
-
-            const leaseID: LeaseTableDataType['leaseid'] = lease.leaseID;
-
-            const dateRange: LeaseTableDataType['dateRange'] = {
-              start: new Date(lease.leaseAgreement.startDate),
-              end: new Date(lease.leaseAgreement.endDate),
-            };
-
-            const status: LeaseTableDataType['status'] =
-              lease.systemMetadata.validationStatus.toLocaleLowerCase();
-
-            const monthlyRent: LeaseTableDataType['monthlyRent'] =
-              `${lease.leaseAgreement.monthlyRent} ${lease.leaseAgreement.currency.currency}`;
-
-            const endTime: number = dateRange.end.getTime();
-            const todayTime: number = this.today.getTime();
-            const diffMs: number = endTime - todayTime;
-            const remaningDays: LeaseTableDataType['remaningDays'] =
-              Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-            const notify: LeaseTableDataType['notify'] = remaningDays < 30;
-            const viewButton: TableButton = {'action': 'view', 'icon': 'visibility', 'label': 'View'};
-            const downloadButton: TableButton = {'action': 'download', 'icon': 'download', 'label': 'Download'}
-            const data: LeaseTableDataType = {
-              image: propertyImageURL,
-              leaseid: leaseID,
-              dateRange,
-              status,
-              monthlyRent,
-              remaningDays,
-              notify,
-              viewButton,
-              downloadButton
-            };
-
-            return data;
-          } catch(error) {
-            console.error('Error building lease row:', error);
-            // Return null so Promise.all still resolves
-            return null;
-          }
-        });
-
-      const rowsWithNulls: Array<LeaseTableDataType | null> = await Promise.all(rowPromises);
-
-      // Filter out failed rows
       const leaseTableRows: LeaseTableDataType[] = rowsWithNulls.filter(
-        (row): row is LeaseTableDataType => row !== null,
+        ( row ): row is LeaseTableDataType => row !== null,
       );
 
-      if(leaseTableRows.length === 0) {
-        throw new Error('Leases not found under the user!');
+      if ( leaseTableRows.length === 0 ) {
+        throw new Error( 'Leases not found under the user!' );
       }
 
-      // Assign to your table data source (assuming this is your backing array)
       this.allLeasesUnderLoggedUser = leaseTableRows;
+      this.leaseTotalDataCount = this.allLeasesUnderLoggedUser.length;
 
-      // Now build the visible page
-      this.makeLeasePagination(index);
-      return;
-    } catch(error) {
-      console.error('Error organizing lease table data:', error);
-      this.NotificationDialogComponent.notification('error', (error as Error).message);
-      return;
+      this.makeLeasePagination( index, size );
+    } catch ( error ) {
+      console.error( 'Error organizing lease table data:', error );
+
+      this.notificationDialog.notification(
+        'error',
+        ( error as Error ).message,
+      );
     } finally {
-      setTimeout((): void => {
-        this.isLoading = false;
-      }, 500);
+      this.leaseTableDisplay = true;
+
+      setTimeout( (): void => {
+        this._isLoading = false;
+      }, 500 );
     }
   }
 
-
-  private makeLeasePagination(index: number): void {
+  /**
+   * makeLeasePagination
+   *  - Creates the visible page of leases from the full list.
+   */
+  private makeLeasePagination(
+    index: number,
+    size: number,
+  ): void {
     try {
-      this.leaseTableData = [];
-      if(this.allLeasesUnderLoggedUser.length === 0) throw new Error('Leases not found under the user!');
-      const pageSize = this.leaseTablePageSize;
-      const total = this.allLeasesUnderLoggedUser.length;
-      const safeIndex = Math.max(0, Math.min(Math.floor(index), Math.ceil(total / pageSize) - 1));
-      const safeStart = safeIndex * pageSize;
-      const safeEnd = Math.min(safeStart + pageSize, total);
-      const data: LeaseTableDataType[] = this.allLeasesUnderLoggedUser.slice(safeStart, safeEnd);
-      this.leaseTableData = [...data];
-      return;
-    }
-    catch(error) {
-      console.error(error);
-      return;
-    }
-  }
-
-  protected handleLeaseOperations(value: TableButtonActionConfig) {}
-
-  protected handleExportLeaseTableData(value: FileExport) {
-    try {
-      if(this.userLeases.length === 0) {
-        throw new Error('No lease agreements found!');
+      if (
+        Number.isNaN( index ) ||
+        !Number.isFinite( index ) ||
+        !Number.isInteger( index )
+      ) {
+        throw new Error( 'Invalid index' );
       }
 
-      if(this.leaseProperties.length === 0) {
-        throw new Error('No properties found!');
+      if (
+        Number.isNaN( size ) ||
+        !Number.isFinite( size ) ||
+        !Number.isInteger( size )
+      ) {
+        throw new Error( 'Invalid size' );
+      }
+
+      this.leaseTableData = [];
+
+      if ( this.allLeasesUnderLoggedUser.length === 0 ) {
+        throw new Error( 'Leases not found under the user!' );
+      }
+
+      const total: number = Number( this.allLeasesUnderLoggedUser.length );
+
+      const pageSize: number = PaginationUtil.safeLimit( Number( size ), total );
+
+      const safeIndex: number = PaginationUtil.safeIndex( Number( index ), total );
+
+      const safeStart: number = safeIndex * pageSize;
+      const safeEnd: number = Math.min( safeStart + pageSize, total );
+
+      const data: LeaseTableDataType[] = this.allLeasesUnderLoggedUser.slice(
+        safeStart,
+        safeEnd,
+      );
+
+      this.leaseTableData = [ ...data ];
+    } catch ( error ) {
+      console.error( error );
+    }
+  }
+
+  /**
+   * handleLeaseOperations
+   *  - Central handler for lease table actions (view / download).
+   */
+  protected async handleLeaseOperations(
+    value: TableButtonActionConfig,
+  ): Promise<void> {
+    try {
+      if ( this.authService.getLoggedUser === null ) {
+        throw new Error( 'Please login first!' );
+      }
+
+      if ( !value ) {
+        throw new Error( 'Invalid Button Operation' );
+      }
+
+      const buttonAction: string = value.action.toLocaleLowerCase().trim();
+      const leaseID: string = value.data.leaseid.trim();
+
+      if ( !leaseID ) {
+        throw new Error( 'No lease ID found!' );
+      }
+
+      switch ( buttonAction ) {
+        case 'view':
+          await this.viewLease( leaseID );
+          break;
+
+        case 'download':
+          await this.downloadLease( leaseID );
+          break;
+
+        default:
+          return;
+      }
+    } catch ( error ) {
+      console.error( error );
+      this.notificationDialog.notification( 'error', String( error ) );
+    }
+  }
+
+  /**
+   * viewLease
+   *  - Navigates to the lease view page for the given leaseId.
+   */
+  private async viewLease(
+    leaseId: string,
+  ): Promise<void> {
+    try {
+      if ( !leaseId ) {
+        throw new Error( 'Invalid lease ID!' );
+      }
+
+      await this.router.navigate( [ '/dashboard/tenant/view-lease', leaseId ] );
+    } catch ( err ) {
+      console.error( 'Failed to view lease agreement:', err );
+      this.handleError( err, 'Failed to open lease agreement.' );
+    }
+  }
+
+  /**
+   * leaseSearch
+   *  - Filters leases by ID or status. Falls back to current page when empty.
+   */
+  private leaseSearch(
+    search: string,
+  ): void {
+    try {
+      const safeSearch: string = search.trim().toLowerCase();
+
+      if ( !safeSearch ) {
+        this.makeLeasePagination( this._leaseTablePageIndex, this._leaseTablePageSize );
+        return;
+      }
+
+      // Use filter to support multiple results
+      const searchData: LeaseTableDataType[] =
+        this.allLeasesUnderLoggedUser.filter(
+          ( lease ) =>
+            lease.leaseid.toLowerCase().includes( safeSearch ) ||
+            lease.status.toLowerCase().includes( safeSearch ),
+        );
+
+      if ( Array.isArray( searchData ) && searchData.length > 0 ) {
+        this.leaseTableData = [ ...searchData ];
+      } else {
+        this.makeLeasePagination( this._leaseTablePageIndex, this._leaseTablePageSize );
+      }
+    } catch ( err ) {
+      console.error( 'Failed to search lease data:', err );
+      this.handleError( err, 'Failed to search lease data.' );
+    }
+  }
+
+  /**
+   * downloadLease
+   *  - Downloads a lease agreement PDF for the given leaseId.
+   */
+  private async downloadLease(
+    leaseId: string,
+  ): Promise<void> {
+    try {
+      if ( this.authService.getLoggedUser === null ) {
+        throw new Error( 'Please login first!' );
+      }
+
+      if ( !leaseId ) {
+        throw new Error( 'Invalid lease ID!' );
+      }
+
+      this.progressBarComponent.start();
+
+      const blob: Blob = await this.tenantService.downloadLeaseAgreement(
+        leaseId,
+        'download',
+        this.authService.getLoggedUser.username,
+      );
+
+      const actualName: string = `${ leaseId }-lease-agreement.pdf`;
+
+      const fileURL: string = window.URL.createObjectURL( blob );
+
+      const a: HTMLAnchorElement = document.createElement( 'a' );
+      a.href = fileURL;
+      a.download = actualName;
+      a.style.display = 'none';
+
+      document.body.appendChild( a );
+      a.click();
+      document.body.removeChild( a );
+
+      window.URL.revokeObjectURL( fileURL );
+    } catch ( err ) {
+      console.error( 'Failed to download lease agreement PDF:', err );
+      this.handleError( err, 'Failed to download lease agreement PDF.' );
+    } finally {
+      this.progressBarComponent.complete();
+    }
+  }
+
+  /**
+   * handleExportLeaseTableData
+   *  - Exports lease data together with property data as an Excel/CSV file.
+   */
+  protected handleExportLeaseTableData(
+    value: FileExport,
+  ): void {
+    try {
+      if ( this.userLeases.length === 0 ) {
+        throw new Error( 'No lease agreements found!' );
+      }
+
+      if ( this.leaseProperties.length === 0 ) {
+        throw new Error( 'No properties found!' );
       }
 
       const leasesWithProperty: LeaseWithProperty[] = [];
 
-      this.userLeases.forEach((lease) => {
-        const property = this.leaseProperties.find(p => p.id === lease.propertyID);
-        if(!property) throw new Error('Property not found!');
+      this.userLeases.forEach( ( lease ) => {
+        const property = this.leaseProperties.find(
+          ( p ) => p.id === lease.propertyID,
+        );
+
+        if ( !property ) {
+          throw new Error( 'Property not found!' );
+        }
+
         const leaseWithProperty: LeaseWithProperty = {
           ...lease,
-          property
+          property,
         };
-        leasesWithProperty.push(leaseWithProperty);
-      });
 
-      if(leasesWithProperty.length === 0) {
-        throw new Error('No leases with property found!');
+        leasesWithProperty.push( leaseWithProperty );
+      } );
+
+      if ( leasesWithProperty.length === 0 ) {
+        throw new Error( 'No leases with property found!' );
       }
 
-      this.exportLeasesDataAsExcel(leasesWithProperty, value.extention);
-    }
-    catch(error) {
-      console.error(error);
-      if(error instanceof HttpErrorResponse) this.NotificationDialogComponent.notification('error', error.message);
-      else if(typeof error === 'string') this.NotificationDialogComponent.notification('error', error);
-      else if(error instanceof Error) this.NotificationDialogComponent.notification('error', error.message);
-      else this.NotificationDialogComponent.notification('error', 'Failed to load tenant data.');
+      this.exportLeasesDataAsExcel(
+        leasesWithProperty,
+        value.extention,
+      );
+    } catch ( error ) {
+      console.error( error );
+      this.handleError( error, 'Failed to load tenant data.' );
     }
   }
 
-
+  /**
+   * exportLeasesDataAsExcel
+   *  - Converts LeaseWithProperty[] to a flattened structure and exports as Excel.
+   */
   private exportLeasesDataAsExcel(
     leases: LeaseWithProperty[],
-    fileExtension: FileExport['extention'] = 'xlsx'
+    fileExtension: FileExport[ 'extention' ] = 'xlsx',
   ): void {
-    if(!Array.isArray(leases) || leases.length === 0) {
-      console.warn('No lease data available for export.');
+    if ( !Array.isArray( leases ) || leases.length === 0 ) {
+      console.warn( 'No lease data available for export.' );
       return;
     }
 
-    const exportData: Record<string, any>[] = leases.map((lease) => {
+    const exportData: Record<string, any>[] = leases.map( ( lease ) => {
       const addr = lease.property?.address;
 
       return {
-        'leaseID': lease.leaseID,
+        leaseID: lease.leaseID,
         'Tenant name': lease.tenantInformation?.fullName ?? '',
         'Tenant email': lease.tenantInformation?.email ?? '',
         'Tenant contact': lease.tenantInformation?.phoneNumber ?? '',
-
         'Co-Tenant name': lease.coTenant?.fullName ?? '',
         'Co-Tenant relationship': lease.coTenant?.relationship ?? '',
-
         'Property title': lease.property?.title ?? '',
         'Property address':
-          (addr?.houseNumber ?? '') + ' ' +
-          (addr?.street ?? '') + ', ' +
-          (addr?.city ?? '') + ', ' +
-          (addr?.stateOrProvince ?? '') + ', ' +
-          (addr?.country ?? ''),
-
-        'Started date': new Date(lease.leaseAgreement.startDate).toISOString(),
-        'End date': new Date(lease.leaseAgreement.endDate).toISOString(),
+          ( addr?.houseNumber ?? '' ) + ' ' +
+          ( addr?.street ?? '' ) + ', ' +
+          ( addr?.city ?? '' ) + ', ' +
+          ( addr?.stateOrProvince ?? '' ) + ', ' +
+          ( addr?.country ?? '' ),
+        'Started date': new Date( lease.leaseAgreement.startDate ).toISOString(),
+        'End date': new Date( lease.leaseAgreement.endDate ).toISOString(),
         'Monthly rent': lease.leaseAgreement.monthlyRent,
         'Rent currency': lease.leaseAgreement.currency?.currency ?? '',
         'Payment frequency': lease.leaseAgreement.paymentFrequency?.name ?? '',
@@ -498,55 +1745,92 @@ export class HomeComponent implements OnInit, OnDestroy {
         'Deposit': lease.leaseAgreement.securityDeposit?.name ?? '',
         'Rent due date': lease.leaseAgreement.rentDueDate?.label ?? '',
         'Notice period': lease.leaseAgreement.noticePeriodDays?.label ?? '',
-
-        'Late penalties': lease.leaseAgreement.latePaymentPenalties?.map(p => p.label).join(',\n') ?? '',
-        'Utility responsibilities': lease.leaseAgreement.utilityResponsibilities?.map(u => u.utility + ': ' + u.paidBy).join(',\n') ?? '',
-
-        'Rules and regulations': lease.rulesAndRegulations?.map(r => r.rule).join(';\n') ?? '',
-
-        'Tenant signature URL': (lease.signatures.tenantSignature as any)?.URL ?? '',
-        'Landlord signature URL': (lease.signatures.landlordSignature as any)?.URL ?? '',
-        'Signed At': new Date(lease.signatures.signedAt).toISOString(),
+        'Late penalties': lease.leaseAgreement.latePaymentPenalties
+          ?.map( ( p ) => p.label )
+          .join( ',\n' ) ?? '',
+        'Utility responsibilities': lease.leaseAgreement.utilityResponsibilities
+          ?.map( ( u ) => u.utility + ': ' + u.paidBy )
+          .join( ',\n' ) ?? '',
+        'Rules and regulations': lease.rulesAndRegulations
+          ?.map( ( r ) => r.rule )
+          .join( ';\n' ) ?? '',
+        'Tenant signature URL': ( lease.signatures.tenantSignature as any )?.URL ?? '',
+        'Landlord signature URL': ( lease.signatures.landlordSignature as any )?.URL ?? '',
+        'Signed At': new Date( lease.signatures.signedAt ).toISOString(),
         'Signed By': lease.signatures.userAgent?.name ?? '',
         'ip Address': lease.signatures.ipAddress ?? '',
-
-        'ocrStatus': lease.systemMetadata.ocrAutoFillStatus ? 'Yes' : 'No',
-        'validationStatus': lease.systemMetadata.validationStatus,
-        'leaseTemplateVersion': lease.systemMetadata.leaseTemplateVersion,
-        'lastUpdated': lease.systemMetadata.lastUpdated,
+        ocrStatus: lease.systemMetadata.ocrAutoFillStatus ? 'Yes' : 'No',
+        validationStatus: lease.systemMetadata.validationStatus,
+        leaseTemplateVersion: lease.systemMetadata.leaseTemplateVersion,
+        lastUpdated: lease.systemMetadata.lastUpdated,
       };
-    });
+    } );
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    worksheet['!cols'] = Object.keys(exportData[0]).map((key) => ({
-      wch: key.length + 10
-    }));
+    const worksheet = XLSX.utils.json_to_sheet( exportData );
+
+    worksheet[ '!cols' ] = Object.keys( exportData[ 0 ] ).map( ( key ) => ( {
+      wch: key.length + 10,
+    } ) );
 
     const workbook: XLSX.WorkBook = {
-      Sheets: {LeaseData: worksheet},
-      SheetNames: ['LeaseData']
+      Sheets: { LeaseData: worksheet },
+      SheetNames: [ 'LeaseData' ],
     };
 
     const mimeMap: Record<string, string> = {
       xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       xls: 'application/vnd.ms-excel',
       csv: 'text/csv',
-      ods: 'application/vnd.oasis.opendocument.spreadsheet'
+      ods: 'application/vnd.oasis.opendocument.spreadsheet',
     };
 
     const bookType: XLSX.BookType = fileExtension as XLSX.BookType;
-    const mimeType = mimeMap[fileExtension] || mimeMap['xlsx'];
+    const mimeType: string = mimeMap[ fileExtension ] || mimeMap[ 'xlsx' ];
 
-    const excelBuffer = XLSX.write(workbook, {
-      bookType,
-      type: 'array'
-    });
+    const excelBuffer: ArrayBuffer = XLSX.write(
+      workbook,
+      {
+        bookType,
+        type: 'array',
+      },
+    );
 
-    const blob = new Blob([excelBuffer], {type: mimeType});
-    FileSaver.saveAs(blob, `Lease_Batch_Export_${new Date().toISOString()}.${fileExtension}`);
+    const blob: Blob = new Blob(
+      [ excelBuffer ],
+      { type: mimeType },
+    );
+
+    FileSaver.saveAs(
+      blob,
+      `Lease_Batch_Export_${ new Date().toISOString() }.${ fileExtension }`,
+    );
   }
-  //<========================================================================= END HANDLERS ========================================================================>
 
+  /* ======================================================================
+     SHARED ERROR HANDLER
+     ====================================================================== */
 
-  //<============================================= END SECTION 03 =============================================>
+  /**
+   * handleError
+   *  - Centralised error → notification mapping.
+   *  - Keeps catch blocks shorter and more readable.
+   */
+  private handleError(
+    error: unknown,
+    fallbackMessage: string,
+  ): void {
+    if ( error instanceof HttpErrorResponse ) {
+      this.notificationDialog.notification( 'error', error.message );
+    } else if ( typeof error === 'string' ) {
+      this.notificationDialog.notification( 'error', error );
+    } else if ( error instanceof Error ) {
+      this.notificationDialog.notification( 'error', error.message );
+    } else {
+      this.notificationDialog.notification( 'error', fallbackMessage );
+    }
+  }
+
+  /* ======================================================================
+     END COMPONENT
+     ====================================================================== */
 }

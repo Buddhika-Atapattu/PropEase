@@ -1,87 +1,86 @@
 <!-- login.component.html -->
-<app-notification></app-notification>
+<app-notification-dialog></app-notification-dialog>
 
-<div
-  class="container-fluid min-vh-100 d-flex align-items-center justify-content-center p-0"
->
-  <div class="row w-100 min-vh-100 p-0 main-row">
-    <!-- Left Panel: Company Logo -->
-    <div
-      class="col-md-6 d-flex justify-content-center align-items-center p-0 image-col"
-    >
-      <div class="main-container">
-        <div class="image-container">
-          <img
-            src="Images/company-images/company-logo-animated.gif"
-            alt="Animated Company Logo"
-          />
-        </div>
-      </div>
+<div class="login-container">
+  <!-- Left: Logo / Hero -->
+  <div class="image-col">
+    <div class="image-container">
+      <img
+        src="Images/company-images/logo/logo/animation.gif"
+        class="img-fluid logo-gif"
+        alt="Animated PropEase shield logo"
+      />
     </div>
+  </div>
 
-    <!-- Right Panel: Login Form -->
-    <div class="col-md-6 d-flex justify-content-center align-items-center">
-      <div class="login-form-container">
-        <form
-          class="form"
-          (ngSubmit)="login()"
-          action=""
-          method="POST"
-          autocomplete="off"
-          #loginForm="ngForm"
-        >
-          <h2 class="login-title text-center">Welcome to PropEase</h2>
-          <p class="login-subtitle text-center">Your property, our priority</p>
+  <!-- Right: Login form -->
+  <div class="login-col">
+    <div class="login-card">
+      <form
+        class="form"
+        (ngSubmit)="login()"
+        method="POST"
+        autocomplete="off"
+        #loginForm="ngForm"
+        novalidate
+      >
+        <header class="login-header text-center">
+          <h2 class="login-title">Welcome to PropEase</h2>
+          <p class="login-subtitle">Your property, our priority</p>
+        </header>
 
-          <mat-form-field appearance="fill" class="form-field">
-            <mat-label>Username / Email</mat-label>
-            <input
-              matInput
-              type="text"
-              [(ngModel)]="username"
-              [disabled]="isUserSaved"
-              name="username"
-              required
-              placeholder="Enter your username or email"
-            />
-          </mat-form-field>
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>Username / Email</mat-label>
+          <input
+            matInput
+            type="text"
+            [(ngModel)]="username"
+            [disabled]="isUserSaved"
+            name="username"
+            required
+            placeholder="Enter your username or email"
+          />
+        </mat-form-field>
 
-          <mat-form-field appearance="fill" class="form-field">
-            <mat-label>Password</mat-label>
-            <input
-              matInput
-              [type]="hidePassword ? 'password' : 'text'"
-              [(ngModel)]="password"
-              [disabled]="isUserSaved"
-              name="password"
-              required
-              placeholder="Enter your password"
-            />
-            <button
-              type="button"
-              mat-icon-button
-              matSuffix
-              (click)="hidePassword = !hidePassword"
-              aria-label="Toggle password visibility"
-              [attr.aria-pressed]="!hidePassword"
-            >
-              <mat-icon>{{
-                hidePassword ? "visibility_off" : "visibility"
-              }}</mat-icon>
-            </button>
-          </mat-form-field>
-
-          <div
-            class="form-footer d-flex justify-content-between align-items-center"
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            [type]="hidePassword ? 'password' : 'text'"
+            [(ngModel)]="password"
+            [disabled]="isUserSaved"
+            name="password"
+            required
+            placeholder="Enter your password"
+          />
+          <button
+            type="button"
+            mat-icon-button
+            matSuffix
+            (click)="hidePassword = !hidePassword"
+            aria-label="Toggle password visibility"
+            [attr.aria-pressed]="!hidePassword"
           >
-            <mat-checkbox
-              [(ngModel)]="rememberMe"
-              name="rememberMe"
-              class="remember-me-checkbox"
-            >
-              Remember me
-            </mat-checkbox>
+            <mat-icon>
+              {{ hidePassword ? "visibility_off" : "visibility" }}
+            </mat-icon>
+          </button>
+        </mat-form-field>
 
+        <div class="form-footer">
+          <mat-checkbox
+            [(ngModel)]="rememberMe"
+            name="rememberMe"
+            class="remember-me-checkbox"
+          >
+            Remember me
+          </mat-checkbox>
+
+          <div class="footer-actions">
+            <!-- You can wire this later to your forgot-password route -->
+            <!-- <a routerLink="/auth/forgot-password" class="forgot-link"
+              >Forgot password?</a
+            > -->
             <button
               mat-raised-button
               class="login-button"
@@ -91,8 +90,8 @@
               Login
             </button>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   </div>
 </div>

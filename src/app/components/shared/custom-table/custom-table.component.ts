@@ -1,5 +1,5 @@
 // Path: src/app/components/shared/custom-table/custom-table.component.ts
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -14,18 +14,18 @@ import {
   SimpleChanges,
 } from '@angular/core';
 
-import {MatIconModule} from '@angular/material/icon';
-import {MatSortModule, Sort} from '@angular/material/sort';
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
-import {MatTooltipModule} from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSortModule, Sort } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
-import {User} from '../../../services/APIs/apis.service';
-import {AuthService} from '../../../services/auth/auth.service';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import { User } from '../../../services/APIs/apis.service';
+import { AuthService } from '../../../services/auth/auth.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 
-import {SwitchButton} from '../../../components/shared/buttons/switch-button/switch-button.component';
-import {type Extension, PaginatorComponent} from '../paginator/paginator.component';
-import {SkeletonLoaderComponent} from '../skeleton-loader/skeleton-loader.component';
+import { SwitchButton } from '../../../components/shared/buttons/switch-button/switch-button.component';
+import { type Extension, PaginatorComponent, DateRange } from '../paginator/paginator.component';
+import { SkeletonLoaderComponent } from '../skeleton-loader/skeleton-loader.component';
 
 /* ──────────────────────────────────────────────────────────────────
    1) Action / icon types + mapping
@@ -87,6 +87,7 @@ export interface TableButton {
   action: ActionId;
   icon: ActionIcon;
   label?: string;
+  disabled?: boolean;
 }
 
 /** Payload emitted when a button is clicked in any row */
@@ -131,8 +132,8 @@ export interface TableEvent<T = any> {
 
 /** Optional per-row visibility predicates for action/operation buttons (not wired yet) */
 export interface ButtonVisibility {
-  action?: (row: any) => boolean;
-  operation?: (row: any) => boolean;
+  action?: ( row: any ) => boolean;
+  operation?: ( row: any ) => boolean;
 }
 
 /** Switch button (toggle) value contract */
@@ -144,11 +145,12 @@ export interface SwitchButtonType {
   data?: any;
 }
 
+
 /* ──────────────────────────────────────────────────────────────────
    3) Component
    ────────────────────────────────────────────────────────────────── */
 
-@Component({
+@Component( {
   selector: 'app-custom-table',
   standalone: true,
   imports: [
@@ -162,24 +164,25 @@ export interface SwitchButtonType {
     SwitchButton,
   ],
   templateUrl: './custom-table.component.html',
-  styleUrls: ['./custom-table.component.scss'],
-})
+  styleUrls: [ './custom-table.component.scss' ],
+} )
 export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   // ─────────────────────────────────────────────────────────────
   // Inputs from parent (think of these as "props")
   // ─────────────────────────────────────────────────────────────
 
-  @Input({required: true}) totalDataCount = 0;
-  @Input({required: true}) data: any[] = [];
-  @Input({required: true}) columns: TableColumn[] = [];
+  @Input( { required: true } ) totalDataCount = 0;
+  @Input( { required: true } ) data: any[] = [];
+  @Input( { required: true } ) columns: TableColumn[] = [];
 
-  @Input({required: true}) pagination = false;
-  @Input({required: true}) pageSize = 2;
+  @Input( { required: true } ) pagination = false;
+
+  @Input( { required: true } ) pageSize = 2;
+  @Output() pageSizeChange: EventEmitter<number> = new EventEmitter<number>();
 
   @Input() pageSizeOptions: number[] = [];
-  @Output() pageSizeOptionsChange: EventEmitter<number[]> = new EventEmitter<number[]>();
 
-  @Input({required: true}) index = 0;
+  @Input( { required: true } ) index = 0;
   @Output() indexChange: EventEmitter<number> = new EventEmitter<number>();
 
   @Input() tableTitle = '';
@@ -193,6 +196,11 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   @Input() fileExportExtention!: Extension;
   @Output() fileExport: EventEmitter<FileExport> = new EventEmitter<FileExport>();
 
+  @Input() isDateRageActive: boolean = false;
+  @Input() dateRange!: DateRange;
+  @Output() dateRangeChange: EventEmitter<DateRange> = new EventEmitter<DateRange>();
+  @Output() rangeChange: EventEmitter<DateRange> = new EventEmitter<DateRange>();
+
   /**
    * Optional explicit button configs from parent.
    * These are used:
@@ -203,13 +211,17 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   @Output() buttonOperation: EventEmitter<TableButtonActionConfig> =
     new EventEmitter<TableButtonActionConfig>();
 
-  @Input() switchButton!: SwitchButtonType;
-  @Output() switchButtonChange: EventEmitter<SwitchButtonType> =
+  @Input() switch!: SwitchButtonType;
+  @Output() switchChange: EventEmitter<SwitchButtonType> =
     new EventEmitter<SwitchButtonType>();
 
-  // Button visibility toggles (not fully wired yet; kept for extension)
-  @Input() showButtons: 'none' | 'action' | 'operation' | 'both' = 'both';
-  @Input() buttonVisibility: ButtonVisibility = {};
+
+
+
+  // Ask parent to fetch data (table-driven loading)
+  @Output() fetchData: EventEmitter<void> = new EventEmitter<void>();
+
+
 
   // ─────────────────────────────────────────────────────────────
   // Internal state used by the table
@@ -250,6 +262,12 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
    */
   protected buttonColumns: Map<string, TableButton> = new Map<string, TableButton>();
 
+  // Retry logic for "wait for API"
+  private fetchAttempts = 0;
+  private readonly maxFetchAttempts = 3;
+  private readonly fetchRetryDelayMs = 400;
+  private fetchRetryTimerId: ReturnType<typeof setTimeout> | null = null;
+
   // ─────────────────────────────────────────────────────────────
   // Dependency Injection
   // ─────────────────────────────────────────────────────────────
@@ -257,9 +275,9 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   public constructor (
     private readonly windowRef: WindowsRefService,
     private readonly authService: AuthService,
-    @Inject(PLATFORM_ID) private readonly platformId: Object,
+    @Inject( PLATFORM_ID ) private readonly platformId: Object,
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
     this.loggedUser = this.authService.getLoggedUser ?? null;
   }
 
@@ -269,7 +287,10 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
 
   public async ngOnInit(): Promise<void> {
     // Simple flag to show "no data" state
-    this.isArrayOfData = Array.isArray(this.data) && this.data.length > 0;
+    this.isArrayOfData = Array.isArray( this.data ) && this.data.length > 0;
+
+    // On first init, decide whether we need to ask parent for data
+    this.scheduleDataFetchIfNeeded();
   }
 
   public ngAfterViewInit(): void {
@@ -278,25 +299,35 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
 
   public ngOnDestroy(): void {
     // No subscriptions yet; placeholder for future cleanup
+    this.resetFetchAttempts();
   }
 
-  public ngOnChanges(changes: SimpleChanges): void {
-    // When data changes → refresh MatTable source
-    if(changes['data']) {
-      const rows: any[] = Array.isArray(this.data) ? this.data : [];
-      this.dataCount = rows.length;
-      this.dataSource.data = [...rows];
+  public ngOnChanges( changes: SimpleChanges ): void {
+    let dataChanged = false;
 
-      setTimeout((): void => {
-        this.isTableVisible = this.totalDataCount > 0;
-      }, 0);
+    // When data changes → refresh MatTable source
+    if ( changes[ 'data' ] ) {
+      const rows: any[] = Array.isArray( this.data ) ? this.data : [];
+      this.dataCount = rows.length;
+      this.dataSource.data = [ ...rows ];
+      this.isArrayOfData = rows.length > 0;
+      dataChanged = true;
     }
 
     // When columns change → normalize keys and detect button columns
-    if(changes['columns']) {
+    if ( changes[ 'columns' ] ) {
       this.normalizeColumnsAndDetectButtons();
     }
+
+    // When total count or data changes → drive retry / visibility logic
+    if ( changes[ 'totalDataCount' ] || dataChanged ) {
+      // Use microtask to avoid ExpressionChanged errors
+      setTimeout( (): void => {
+        this.scheduleDataFetchIfNeeded();
+      }, 0 );
+    }
   }
+
 
   // ─────────────────────────────────────────────────────────────
   // Column / button column normalization
@@ -312,62 +343,62 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   private normalizeColumnsAndDetectButtons(): void {
     this.buttonColumns.clear();
 
-    const rawColumns: TableColumn[] = Array.isArray(this.columns) ? this.columns : [];
+    const rawColumns: TableColumn[] = Array.isArray( this.columns ) ? this.columns : [];
     const normalized: TableColumn[] = [];
     const seenKeys: Set<string> = new Set<string>();
 
     // 1) Deduplicate + ignore invalid keys
-    for(const col of rawColumns) {
-      const key: string = (col.key || '').trim();
-      if(!key) {
+    for ( const col of rawColumns ) {
+      const key: string = ( col.key || '' ).trim();
+      if ( !key ) {
         continue;
       }
-      if(seenKeys.has(key)) {
-        console.warn('[CustomTable] Dropping duplicate column key:', key);
+      if ( seenKeys.has( key ) ) {
+        console.warn( '[CustomTable] Dropping duplicate column key:', key );
         continue;
       }
-      seenKeys.add(key);
-      normalized.push(col);
+      seenKeys.add( key );
+      normalized.push( col );
     }
 
     // Store normalized columns back
     this.columns = normalized;
-    this.displayedColumnKeys = normalized.map((c: TableColumn) => c.key);
+    this.displayedColumnKeys = normalized.map( ( c: TableColumn ) => c.key );
 
     // Track if there's a 'status' column (for CSS helpers)
     this.tableStatus =
-      (normalized.find((c: TableColumn) => c.key.toLowerCase() === 'status')?.key || '')
+      ( normalized.find( ( c: TableColumn ) => c.key.toLowerCase() === 'status' )?.key || '' )
         .toLowerCase();
 
     // 2) Detect button-like columns and build per-column button configs
-    for(const col of normalized) {
-      const keyRaw: string = (col.key || '').trim();
-      if(!keyRaw) {
+    for ( const col of normalized ) {
+      const keyRaw: string = ( col.key || '' ).trim();
+      if ( !keyRaw ) {
         continue;
       }
 
       const keyLower: string = keyRaw.toLowerCase();
 
       // A "button column" is defined as any column whose key contains 'btn', 'button', or 'buttons'
-      if(
-        keyLower.includes('btn') ||
-        keyLower.includes('button') ||
-        keyLower.includes('buttons')
+      if (
+        keyLower.includes( 'btn' ) ||
+        keyLower.includes( 'button' ) ||
+        keyLower.includes( 'buttons' )
       ) {
-        const action: ActionId | null = this.deriveActionFromColumn(col);
-        if(!action) {
+        const action: ActionId | null = this.deriveActionFromColumn( col );
+        if ( !action ) {
           // If we can't derive a known action from the key/label, skip it silently
-          console.warn('[CustomTable] Could not derive action from button column:', col);
+          console.warn( '[CustomTable] Could not derive action from button column:', col );
           continue;
         }
 
         // If parent provided explicit buttons, try to match by action first
-        const override: TableButton | null = this.findButtonConfig(action);
+        const override: TableButton | null = this.findButtonConfig( action );
 
         const label: string =
-          col.label || override?.label || this.buildButtonLabelFromAction(action);
+          col.label || override?.label || this.buildButtonLabelFromAction( action );
 
-        const icon: ActionIcon = override?.icon || ACTION_ICONS[action];
+        const icon: ActionIcon = override?.icon || ACTION_ICONS[ action ];
 
         const buttonConfig: TableButton = {
           action,
@@ -375,36 +406,36 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
           label,
         };
 
-        this.buttonColumns.set(keyLower, buttonConfig);
+        this.buttonColumns.set( keyLower, buttonConfig );
       }
     }
   }
 
   /** Returns true if a given column key is detected as a button column. */
-  protected isButtonColumn(columnKey: string): boolean {
-    const keyLower: string = (columnKey || '').trim().toLowerCase();
-    return this.buttonColumns.has(keyLower);
+  protected isButtonColumn( columnKey: string ): boolean {
+    const keyLower: string = ( columnKey || '' ).trim().toLowerCase();
+    return this.buttonColumns.has( keyLower );
   }
 
   /**
    * Returns the TableButton config for a given column key (if it is a button column),
    * otherwise null.
    */
-  protected getButtonForColumn(columnKey: string): TableButton | null {
-    const keyLower: string = (columnKey || '').trim().toLowerCase();
-    return this.buttonColumns.get(keyLower) ?? null;
+  protected getButtonForColumn( columnKey: string ): TableButton | null {
+    const keyLower: string = ( columnKey || '' ).trim().toLowerCase();
+    return this.buttonColumns.get( keyLower ) ?? null;
   }
 
   /**
    * Searches in explicitly provided [buttons] input for a given action.
    * Used to override auto detection (icon/label) when parent wants full control.
    */
-  private findButtonConfig(action: ActionId): TableButton | null {
-    if(!Array.isArray(this.buttons) || this.buttons.length === 0) {
+  private findButtonConfig( action: ActionId ): TableButton | null {
+    if ( !Array.isArray( this.buttons ) || this.buttons.length === 0 ) {
       return null;
     }
     const found: TableButton | undefined = this.buttons.find(
-      (btn: TableButton) => btn.action === action,
+      ( btn: TableButton ) => btn.action === action,
     );
     return found ?? null;
   }
@@ -421,16 +452,16 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
    * - replaces spaces with underscores (so 'under review' -> 'under_review')
    * - leaves complaint statuses like 'in_progress' as-is
    */
-  protected statusClass(status: string | null | undefined): string {
-    const norm: string = String(status ?? '')
+  protected statusClass( status: string | null | undefined ): string {
+    const norm: string = String( status ?? '' )
       .trim()
       .toLowerCase()
-      .replace(/\s+/g, '_');
+      .replace( /\s+/g, '_' );
 
-    if(!norm) {
+    if ( !norm ) {
       return 'main-category';
     }
-    return `main-category ${norm}`;
+    return `main-category ${ norm }`;
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -444,14 +475,14 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
    *  - key 'download_btn'  → 'download'
    *  - label 'Approve'     → 'approve'
    */
-  private deriveActionFromColumn(col: TableColumn): ActionId | null {
+  private deriveActionFromColumn( col: TableColumn ): ActionId | null {
     const rawSource: string =
-      (col.key || col.label || '').toString().toLowerCase().trim();
+      ( col.key || col.label || '' ).toString().toLowerCase().trim();
 
     let cleaned: string = rawSource
-      .replace(/buttons?/g, '')
-      .replace(/btn/g, '')
-      .replace(/[_\-\s]+/g, '')
+      .replace( /buttons?/g, '' )
+      .replace( /btn/g, '' )
+      .replace( /[_\-\s]+/g, '' )
       .trim();
 
     const possibleActions: ActionId[] = [
@@ -471,120 +502,141 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
     ];
 
     const match: ActionId | undefined = possibleActions.find(
-      (id: ActionId) => id === cleaned,
+      ( id: ActionId ) => id === cleaned,
     );
     return match ?? null;
   }
 
   /** Simple TitleCase label generator based on the action id. */
-  private buildButtonLabelFromAction(action: ActionId): string {
+  private buildButtonLabelFromAction( action: ActionId ): string {
     const text: string = action.toString();
-    return text.charAt(0).toUpperCase() + text.slice(1);
+    return text.charAt( 0 ).toUpperCase() + text.slice( 1 );
   }
 
   // Background color helpers (Bootstrap-style btn classes)
-  protected checkButtonBGforDanger(action: string): boolean {
-    const danger: string[] = ['delete', 'remove', 'reject', 'deactivate'];
+  protected checkButtonBGforDanger( action: string ): boolean {
+    const danger: string[] = [ 'delete', 'remove', 'reject', 'deactivate' ];
     const safeAction: string = action.toLowerCase().trim();
-    return danger.includes(safeAction);
+    return danger.includes( safeAction );
   }
 
-  protected checkButtonBGforGood(action: string): boolean {
-    const good: string[] = ['add', 'view', 'approve', 'activate'];
+  protected checkButtonBGforGood( action: string ): boolean {
+    const good: string[] = [ 'add', 'view', 'approve', 'activate' ];
     const safeAction: string = action.toLowerCase().trim();
-    return good.includes(safeAction);
+    return good.includes( safeAction );
   }
 
-  protected checkButtonBGforNormal(action: string): boolean {
-    const normal: string[] = ['download', 'upload', 'edit', 'reset', 'search'];
+  protected checkButtonBGforNormal( action: string ): boolean {
+    const normal: string[] = [ 'download', 'upload', 'edit', 'reset', 'search' ];
     const safeAction: string = action.toLowerCase().trim();
-    return normal.includes(safeAction);
+    return normal.includes( safeAction );
   }
 
   // ─────────────────────────────────────────────────────────────
   // Paginator bindings
   // ─────────────────────────────────────────────────────────────
 
-  get userPageIndex(): number {
+  get tablePageIndex(): number {
     return this.index;
   }
-  set userPageIndex(value: number) {
+  set tablePageIndex( value: number ) {
     this.index = value;
-    this.indexChange.emit(this.index);
+    this.indexChange.emit( this.index );
   }
 
-  get searchValue(): string {
+  get tableSearchValue(): string {
     return this.search;
   }
-  set searchValue(value: string) {
+  set tableSearchValue( value: string ) {
     this.search = value;
-    this.searchChange.emit(this.search);
+    this.searchChange.emit( this.search );
   }
 
-  get isReloading(): boolean {
+  get tableIsReload(): boolean {
     return this.isReload;
   }
-  set isReloading(value: boolean) {
+  set tableIsReload( value: boolean ) {
     this.isReload = value;
-    this.isReloadChange.emit(this.isReload);
+    this.search = '';
+    this.searchChange.emit( this.search );
+    this.isReloadChange.emit( this.isReload );
   }
 
+  get tablePageSize(): number {
+    return this.pageSize;
+  }
+  set tablePageSize( value: number ) {
+    this.pageSize = value;
+    this.pageSizeChange.emit( this.pageSize );
+  }
+
+  protected onDateRangeChange( dateRange: DateRange ): void {
+    this.dateRange = dateRange;
+    this.dateRangeChange.emit( this.dateRange );
+  }
+
+  protected onRangeChange( dataRange: DateRange ): void {
+    this.rangeChange.emit( dataRange );
+  }
+
+
+
   // Toolbar: export
-  protected handleFileExport(extention: Extension, data: any): void {
+  protected handleFileExport( extention: Extension, data: any ): void {
     // NOTE: you already have fileExportHandle below doing the real work
     this.fileExport.emit();
   }
 
   // Row toggle
   protected handleSwitchChange(
-    isActive: SwitchButtonType['isActive'],
-    input: SwitchButtonType['data'],
+    isActive: SwitchButtonType[ 'isActive' ],
+    input: SwitchButtonType[ 'data' ],
     index: number,
   ): void {
-    this.switchButton = {isActive, index, data: input};
-    this.switchButtonChange.emit(this.switchButton);
+    this.switch = { isActive, index, data: input };
+    this.switchChange.emit( this.switch );
   }
 
   // ─────────────────────────────────────────────────────────────
   // Sorting
   // ─────────────────────────────────────────────────────────────
 
-  protected sortData(sort: Sort, data?: any[]): void {
-    const sourceData: any[] = (data || this.dataSource.data).slice();
+  protected sortData( sort: Sort, data?: any[] ): void {
+    const sourceData: any[] = ( data || this.dataSource.data ).slice();
     const isAsc: boolean = sort.direction === 'asc';
 
-    if(!sort.active || sort.direction === '') {
+    if ( !sort.active || sort.direction === '' ) {
       this.dataSource.data = sourceData;
       return;
     }
 
-    this.dataSource.data = sourceData.sort((a: any, b: any) =>
-      this.universalCompare(a[sort.active], b[sort.active], isAsc),
+    this.dataSource.data = sourceData.sort( ( a: any, b: any ) =>
+      this.universalCompare( a[ sort.active ], b[ sort.active ], isAsc ),
     );
   }
 
-  private universalCompare(a: any, b: any, isAsc: boolean): number {
-    if(a == null && b != null) return isAsc ? -1 : 1;
-    if(a != null && b == null) return isAsc ? 1 : -1;
-    if(a == null && b == null) return 0;
+  private universalCompare( a: any, b: any, isAsc: boolean ): number {
+    if ( a == null && b != null ) return isAsc ? -1 : 1;
+    if ( a != null && b == null ) return isAsc ? 1 : -1;
+    if ( a == null && b == null ) return 0;
 
-    if(typeof a === 'string' && typeof b === 'string') {
-      return a.localeCompare(b) * (isAsc ? 1 : -1);
+    if ( typeof a === 'string' && typeof b === 'string' ) {
+      return a.localeCompare( b ) * ( isAsc ? 1 : -1 );
     }
-    return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
+    return ( a < b ? -1 : a > b ? 1 : 0 ) * ( isAsc ? 1 : -1 );
   }
 
   // ─────────────────────────────────────────────────────────────
   // Image helpers
   // ─────────────────────────────────────────────────────────────
 
-  protected imageGenerator(image: string, type: string, gender?: string): string {
-    switch(type.toLowerCase().trim()) {
+  protected imageGenerator( image: string, type: string, gender?: string ): string {
+    switch ( type.toLowerCase().trim() ) {
       case 'userimage': {
-        const imagetype: string | undefined = image.split('.')[1];
-        if(imagetype) return image;
-        if(gender?.toLowerCase() === 'male') return this.definedMaleDummyImageURL;
-        if(gender?.toLowerCase() === 'female') return this.definedWomanDummyImageURL;
+        const imagetype: string | undefined = image.split( '.' )[ 1 ];
+        if ( imagetype ) return image;
+        if ( gender?.toLowerCase() === 'male' ) return this.definedMaleDummyImageURL;
+        if ( gender?.toLowerCase() === 'female' ) return this.definedWomanDummyImageURL;
         return this.definedImage;
       }
       case 'propertyimage':
@@ -599,20 +651,20 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   // Formatting helpers
   // ─────────────────────────────────────────────────────────────
 
-  protected formatDateRange(start: Date, end: Date): string {
-    const formatWithSuffix = (date: Date): string => {
+  protected formatDateRange( start: Date, end: Date ): string {
+    const formatWithSuffix = ( date: Date ): string => {
       const day: number = date.getDate();
-      const suffix: string = this.getOrdinalSuffix(day);
-      const month: string = date.toLocaleString('default', {month: 'long'});
+      const suffix: string = this.getOrdinalSuffix( day );
+      const month: string = date.toLocaleString( 'default', { month: 'long' } );
       const year: number = date.getFullYear();
-      return `${day}${suffix} of ${month} ${year}`;
+      return `${ day }${ suffix } of ${ month } ${ year }`;
     };
-    return `${formatWithSuffix(start)} to ${formatWithSuffix(end)}`;
+    return `${ formatWithSuffix( start ) } to ${ formatWithSuffix( end ) }`;
   }
 
-  private getOrdinalSuffix(day: number): string {
-    if(day >= 11 && day <= 13) return 'th';
-    switch(day % 10) {
+  private getOrdinalSuffix( day: number ): string {
+    if ( day >= 11 && day <= 13 ) return 'th';
+    switch ( day % 10 ) {
       case 1: return 'st';
       case 2: return 'nd';
       case 3: return 'rd';
@@ -621,21 +673,21 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   }
 
   /** Pretty-print JSON or trim plain text safely */
-  protected trimText(text: any): string {
+  protected trimText( text: any ): string {
     try {
       const stringValue: string =
-        typeof text === 'string' ? text.trim() : JSON.stringify(text).trim();
-      const parsed: any = JSON.parse(stringValue);
-      if(typeof parsed === 'object' && parsed !== null) {
-        return Object.entries(parsed)
-          .map(([key, value]) => (key.includes('_') ? '' : `${key} : ${value}`))
-          .filter(Boolean)
-          .join('<br>');
+        typeof text === 'string' ? text.trim() : JSON.stringify( text ).trim();
+      const parsed: any = JSON.parse( stringValue );
+      if ( typeof parsed === 'object' && parsed !== null ) {
+        return Object.entries( parsed )
+          .map( ( [ key, value ] ) => ( key.includes( '_' ) ? '' : `${ key } : ${ value }` ) )
+          .filter( Boolean )
+          .join( '<br>' );
       }
-      return String(parsed);
+      return String( parsed );
     } catch {
-      const safeText: string = String(text ?? '').trim();
-      return safeText.length > 30 ? safeText.slice(0, 30) + '...' : safeText;
+      const safeText: string = String( text ?? '' ).trim();
+      return safeText.length > 30 ? safeText.slice( 0, 30 ) + '...' : safeText;
     }
   }
 
@@ -643,29 +695,29 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
    * Capitalize every word, preserving inline HTML.
    * Uses DOMParser (browser-only).
    */
-  protected makeCapitalize(text: any): string {
+  protected makeCapitalize( text: any ): string {
     const stringValue: string =
-      typeof text === 'string' ? text : String(text ?? '').trim();
+      typeof text === 'string' ? text : String( text ?? '' ).trim();
 
     const parser: DOMParser = new DOMParser();
-    const doc: Document = parser.parseFromString(`<div>${stringValue}</div>`, 'text/html');
+    const doc: Document = parser.parseFromString( `<div>${ stringValue }</div>`, 'text/html' );
     const container: HTMLElement = doc.body.firstChild as HTMLElement;
 
-    function capitalizeTextNodes(node: Node): void {
-      if(node.nodeType === Node.TEXT_NODE) {
+    function capitalizeTextNodes( node: Node ): void {
+      if ( node.nodeType === Node.TEXT_NODE ) {
         const originalText: string = node.nodeValue || '';
         node.nodeValue = originalText
-          .split(' ')
-          .map((word: string) =>
-            word ? word.charAt(0).toUpperCase() + word.slice(1) : '',
+          .split( ' ' )
+          .map( ( word: string ) =>
+            word ? word.charAt( 0 ).toUpperCase() + word.slice( 1 ) : '',
           )
-          .join(' ');
-      } else if(node.nodeType === Node.ELEMENT_NODE && node.childNodes) {
-        node.childNodes.forEach((child: Node) => capitalizeTextNodes(child));
+          .join( ' ' );
+      } else if ( node.nodeType === Node.ELEMENT_NODE && node.childNodes ) {
+        node.childNodes.forEach( ( child: Node ) => capitalizeTextNodes( child ) );
       }
     }
 
-    capitalizeTextNodes(container);
+    capitalizeTextNodes( container );
     return container.innerHTML;
   }
 
@@ -673,18 +725,18 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   // File export
   // ─────────────────────────────────────────────────────────────
 
-  protected fileExportHandle(extention: Extension): void {
+  protected fileExportHandle( extention: Extension ): void {
     try {
-      if(!Array.isArray(this.data)) {
-        throw new Error('Data is not type of array');
+      if ( !Array.isArray( this.data ) ) {
+        throw new Error( 'Data is not type of array' );
       }
       const payload: FileExport = {
         extention,
         data: this.data,
       };
-      this.fileExport.emit(payload);
-    } catch(error) {
-      console.error('[File exporting error]: ', error);
+      this.fileExport.emit( payload );
+    } catch ( error ) {
+      console.error( '[File exporting error]: ', error );
       return;
     }
   }
@@ -693,19 +745,75 @@ export class CustomTableComponent implements OnInit, AfterViewInit, OnDestroy, O
   // Button click → emit to parent
   // ─────────────────────────────────────────────────────────────
 
-  protected handleButtonOperations(action: TableButton['action'], data: any): void {
+  protected handleButtonOperations( action: TableButton[ 'action' ], data: any ): void {
     try {
-      if(typeof action !== 'string' || !action) {
-        throw new Error('Button ID is invalid!');
+      if ( typeof action !== 'string' || !action ) {
+        throw new Error( 'Button ID is invalid!' );
       }
       const assemble: TableButtonActionConfig = {
         action,
         data,
       };
-      this.buttonOperation.emit(assemble);
-    } catch(err) {
-      console.error('[Table action button error]' + `Action: ${action}`, ' Error: ', err);
+      this.buttonOperation.emit( assemble );
+    } catch ( err ) {
+      console.error( '[Table action button error]' + `Action: ${ action }`, ' Error: ', err );
       return;
     }
   }
+
+  /**
+   * Clear retry timer and reset attempt counter.
+   */
+  private resetFetchAttempts(): void {
+    this.fetchAttempts = 0;
+
+    if ( this.fetchRetryTimerId !== null ) {
+      clearTimeout( this.fetchRetryTimerId );
+      this.fetchRetryTimerId = null;
+    }
+  }
+
+  /**
+   * Central place that decides:
+   *  - data arrived → show table, stop retrying
+   *  - data not here yet → ask parent up to 3 times before treating as "truly empty"
+   */
+  private scheduleDataFetchIfNeeded(): void {
+    const hasRows: boolean = Array.isArray( this.data ) && this.data.length > 0;
+    const hasTotalCount: boolean =
+      typeof this.totalDataCount === 'number' && this.totalDataCount > 0;
+
+    // ── Case 1: We definitely have data or a count ─────────────────────────
+    if ( hasRows || hasTotalCount ) {
+      this.isArrayOfData = hasRows;
+      this.isTableVisible = true; // show table or "no rows but count > 0" state
+      this.resetFetchAttempts();
+      return;
+    }
+
+    // At this point: totalDataCount === 0 AND data is empty or not an array.
+
+    // ── Case 2: We already tried enough times → treat as truly empty ───────
+    if ( this.fetchAttempts >= this.maxFetchAttempts ) {
+      this.isArrayOfData = false;
+      this.isTableVisible = true; // allow "No data found" message to render
+      return;
+    }
+
+    // ── Case 3: Ask parent again ───────────────────────────────────────────
+    this.fetchAttempts += 1;
+
+    // Emit event so parent can trigger API call
+    this.fetchData.emit();
+
+    // While retrying, keep table hidden so skeleton / loader can be shown
+    this.isArrayOfData = false;
+    this.isTableVisible = false;
+
+    // Schedule the next check (if parent still hasn't provided anything)
+    this.fetchRetryTimerId = setTimeout( () => {
+      this.scheduleDataFetchIfNeeded();
+    }, this.fetchRetryDelayMs );
+  }
+
 }

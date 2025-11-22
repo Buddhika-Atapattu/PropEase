@@ -249,8 +249,6 @@ export type AccessMap = {
   [module: string]: string[]; // list of actions allowed
 };
 
-
-
 export interface MSG {
   count?: number;
   start?: number;
@@ -348,6 +346,14 @@ export class APIsService {
       this.http.get<MSG>(
         `${this.baseURL}/${this.userAPI}/users-with-pagination/${start}/${limit}`,
         {params}
+      )
+    )
+  }
+
+  public async getAllUserCount(): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.get<MSG>(
+        `${this.baseURL}/${this.userAPI}/users-count`,
       )
     )
   }

@@ -1,5 +1,5 @@
-import {AsyncPipe, CommonModule, isPlatformBrowser} from '@angular/common';
-import {HttpErrorResponse} from '@angular/common/http';
+import { AsyncPipe, CommonModule, isPlatformBrowser } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   AfterViewInit,
   Component,
@@ -11,33 +11,33 @@ import {
   PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
-import {FormControl, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   MatMomentDateModule
 } from '@angular/material-moment-adapter';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {MatButtonModule} from '@angular/material/button';
-import {MatCheckboxModule} from '@angular/material/checkbox';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MatDialogModule} from '@angular/material/dialog';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {MatInputModule} from '@angular/material/input';
-import {MatProgressBarModule} from '@angular/material/progress-bar';
-import {MatSelectModule} from '@angular/material/select';
-import {DomSanitizer} from '@angular/platform-browser';
-import {ActivatedRoute, Router} from '@angular/router';
-import {EditorComponent} from '@tinymce/tinymce-angular';
-import {ImageCroppedEvent, ImageCropperComponent} from 'ngx-image-cropper';
-import {Observable, Subscription} from 'rxjs';
-import {map, startWith} from 'rxjs/operators';
-import {CameraBoxComponent} from '../../../components/dialogs/camera-box/camera-box.component';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
+import { DomSanitizer } from '@angular/platform-browser';
+import { ActivatedRoute, Router } from '@angular/router';
+import { EditorComponent } from '@tinymce/tinymce-angular';
+import { ImageCroppedEvent, ImageCropperComponent } from 'ngx-image-cropper';
+import { Observable, Subscription } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
+import { CameraBoxComponent } from '../../../components/dialogs/camera-box/camera-box.component';
 import {
   NotificationDialogComponent
-} from '../../../components/dialogs/notification/notification.component';
-import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
-import {TextEditorComponent} from '../../../components/shared/textEditor/text-editor';
+} from '../../../components/dialogs/notification/notificationBar.component';
+import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
+import { TextEditorComponent } from '../../../components/shared/textEditor/text-editor';
 import {
   APIsService,
   User,
@@ -53,9 +53,9 @@ import {
   DEFAULT_ROLE_ACCESS,
   Role,
 } from '../../../services/auth/auth.service';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
-import {UserControllerService} from '../../../services/userController/user-controller.service';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
+import { UserControllerService } from '../../../services/userController/user-controller.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 
 interface userAccessType {
   access: string[];
@@ -72,7 +72,7 @@ interface MODEL_CHECK {
   action: string;
 }
 
-@Component({
+@Component( {
   selector: 'app-edit-user',
   imports: [
     CommonModule,
@@ -100,14 +100,14 @@ interface MODEL_CHECK {
   standalone: true,
   templateUrl: './edit-user.component.html',
   styleUrl: './edit-user.component.scss',
-})
+} )
 export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild( 'fileInput' ) fileInput!: ElementRef<HTMLInputElement>;
 
-  @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
-  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
-  @ViewChild(ImageCropperComponent) imageCropper!: ImageCropperComponent;
-  @ViewChild(CameraBoxComponent) cameraBox!: CameraBoxComponent;
+  @ViewChild( ProgressBarComponent ) progress!: ProgressBarComponent;
+  @ViewChild( NotificationDialogComponent ) notification!: NotificationDialogComponent;
+  @ViewChild( ImageCropperComponent ) imageCropper!: ImageCropperComponent;
+  @ViewChild( CameraBoxComponent ) cameraBox!: CameraBoxComponent;
 
   protected user: User | null = null;
   private token !: string;
@@ -136,7 +136,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected search: string = '';
   protected loading: boolean = true;
   protected userUploadedImage: string = '';
-  protected countryControl = new FormControl<string>('');
+  protected countryControl = new FormControl<string>( '' );
 
   protected countries: Country[] = [];
   protected filteredCountries!: Observable<Country[]>;
@@ -149,18 +149,18 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected usernameMatchPattern: boolean = true;
   protected passwordMatchPattern: boolean = true;
   protected isEmailError: boolean = false;
-  protected emailErrorMessage: string = ''
+  protected emailErrorMessage: string = '';
   private readonly emailPattern: RegExp =
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   private readonly phonePattern: RegExp = /^\+?[0-9\s\-()]{10,15}$/;
   protected isPhoneError: boolean = false;
   protected phoneErrorMessage: string = '';
-  protected readonly definedGender: string[] = ['Male', 'Female', 'Other'];
+  protected readonly definedGender: string[] = [ 'Male', 'Female', 'Other' ];
   protected accessOptions = ACCESS_OPTIONS;
   protected selectedPermissions: {
-    [module: string]: {[action: string]: boolean};
+    [ module: string ]: { [ action: string ]: boolean; };
   } = {};
-  protected allSelected: {[module: string]: boolean} = {};
+  protected allSelected: { [ module: string ]: boolean; } = {};
   protected autoSelectedRoleAccess: Record<Role, AccessMap> =
     DEFAULT_ROLE_ACCESS;
   protected isCameraOpen: boolean = false;
@@ -230,7 +230,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected showCropper = false;
   protected croppedImage: any = '';
 
-  init: EditorComponent['init'] = {
+  init: EditorComponent[ 'init' ] = {
     plugins: 'lists link image table code help wordcount',
   };
 
@@ -238,7 +238,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private activatedRouter: ActivatedRoute,
     private router: Router,
     private API: APIsService,
@@ -248,28 +248,28 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     private authService: AuthService,
     private userControlService: UserControllerService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    this.activatedRouter.url.subscribe((segments) => {});
+    this.isBrowser = isPlatformBrowser( this.platformId );
+    this.activatedRouter.url.subscribe( ( segments ) => {} );
     this.iconCreator();
     this.loggedUser = this.authService.getLoggedUser;
     this.updator = this.loggedUser !== null ? this.loggedUser.username : '';
 
-    this.activatedRouter.params.subscribe((param) => {
-      this.token = param['token'];
-    });
+    this.activatedRouter.params.subscribe( ( param ) => {
+      this.token = param[ 'token' ];
+    } );
   }
 
   async ngOnInit(): Promise<void> {
-    if(this.isBrowser) {
+    if ( this.isBrowser ) {
       // Prevent default drag/drop behavior globally
-      window.addEventListener('dragover', this.preventDefault, {
+      window.addEventListener( 'dragover', this.preventDefault, {
         passive: false,
-      });
-      window.addEventListener('drop', this.preventDefault, {passive: false});
+      } );
+      window.addEventListener( 'drop', this.preventDefault, { passive: false } );
 
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
+      } );
       await this.loadData();
     }
   }
@@ -278,23 +278,23 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private iconCreator() {
     const icons = [
-      {name: 'camera', path: 'Images/Icons/camera.svg'},
-      {name: 'upload', path: 'Images/Icons/upload.svg'},
-      {name: 'insert', path: 'Images/Icons/user-plus.svg'},
+      { name: 'camera', path: 'Images/Icons/camera.svg' },
+      { name: 'upload', path: 'Images/Icons/upload.svg' },
+      { name: 'insert', path: 'Images/Icons/user-plus.svg' },
     ];
 
-    for(let icon of icons) {
+    for ( let icon of icons ) {
       this.matIconRegistry.addSvgIcon(
         icon.name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path)
+        this.domSanitizer.bypassSecurityTrustResourceUrl( icon.path )
       );
     }
   }
 
-  protected detectGender(value: string) {
-    if(value === 'Male') {
+  protected detectGender( value: string ) {
+    if ( value === 'Male' ) {
       this.definedImage = this.definedMaleDummyImageURL;
-    } else if(value === 'Female') {
+    } else if ( value === 'Female' ) {
       this.definedImage = this.definedWomanDummyImageURL;
     } else {
       this.definedImage = this.definedMaleDummyImageURL;
@@ -305,9 +305,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected isUserCanChangeTheUserName(): boolean {
     return (
       this.loggedUser?.access.permissions.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('change username')
+          permission.actions.includes( 'change username' )
       ) ?? false
     );
   }
@@ -315,9 +315,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected isUserCanResetThePassword(): boolean {
     return (
       this.loggedUser?.access.permissions.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('reset password')
+          permission.actions.includes( 'reset password' )
       ) ?? false
     );
   }
@@ -325,9 +325,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected isUserCanMakeUserActivate(): boolean {
     return (
       this.loggedUser?.access.permissions.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('activate')
+          permission.actions.includes( 'activate' )
       ) ?? false
     );
   }
@@ -335,9 +335,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected isUserCanMakeUserDeactivate(): boolean {
     return (
       this.loggedUser?.access.permissions.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('deactivate')
+          permission.actions.includes( 'deactivate' )
       ) ?? false
     );
   }
@@ -345,9 +345,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   protected isUserCanAssignUserRoles(): boolean {
     return (
       this.loggedUser?.access.permissions.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('assign roles')
+          permission.actions.includes( 'assign roles' )
       ) ?? false
     );
   }
@@ -360,41 +360,41 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private async loadData() {
     try {
-      if(!this.token) throw new Error('Invalid user token');
-      const res = await this.API.getUserByToken(this.token);
+      if ( !this.token ) throw new Error( 'Invalid user token' );
+      const res = await this.API.getUserByToken( this.token );
       this.user = res.user ?? null;
-      if(!this.user) throw new Error('Invalid user!')
+      if ( !this.user ) throw new Error( 'Invalid user!' );
       this.assignValues();
     }
-    catch(err) {
-      console.error(err);
-      this.notification.notification('error', 'Loading user data failed!');
-      setTimeout(() => {this.router.navigate(['/dashboard/unauthorized']);}, 500);
+    catch ( err ) {
+      console.error( err );
+      this.notification.notification( 'error', 'Loading user data failed!' );
+      setTimeout( () => { this.router.navigate( [ '/dashboard/unauthorized' ] ); }, 500 );
       return;
     }
   }
 
   private assignValues(): void {
     try {
-      if(!this.user) throw new Error('Invalid user!');
+      if ( !this.user ) throw new Error( 'Invalid user!' );
 
       // Assising the user all data
       this.fullname = this.user.name;
       this.userGender =
-        this.user.gender.charAt(0).toUpperCase() + this.user.gender.slice(1);
-      this.detectGender(this.userGender);
+        this.user.gender.charAt( 0 ).toUpperCase() + this.user.gender.slice( 1 );
+      this.detectGender( this.userGender );
       this.username = this.user.username;
       this.email = this.user.email;
       this.oldEmail = this.user.email;
       this.phone = this.user.phoneNumber ?? '';
-      this.dateOfBirth = new Date(this.user.dateOfBirth ?? '');
+      this.dateOfBirth = new Date( this.user.dateOfBirth ?? '' );
       this.age = this.user.age;
       this.isValidAge = this.user.age >= 18;
       this.isActive = this.user.isActive;
       this.role = this.user.role;
       this.userBio = this.user.bio;
-      this.updatedAt = new Date(this.user.updatedAt ?? '');
-      this.createdAt = new Date(this.user.createdAt ?? '');
+      this.updatedAt = new Date( this.user.updatedAt ?? '' );
+      this.createdAt = new Date( this.user.createdAt ?? '' );
       this.creator = this.user.creator ?? '';
       this.updator = this.user.updator ?? '';
 
@@ -404,48 +404,48 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
       this.city = this.user.address.city;
       this.stateOrProvince = this.user.address.stateOrProvince ?? '';
       this.postcode = this.user.address.postcode;
-      this.countryControl.setValue(this.user.address.country ?? '');
+      this.countryControl.setValue( this.user.address.country ?? '' );
       this.typedCountry = this.user.address.country ?? '';
-      this.onCountryChange(this.user.address.country ?? '');
+      this.onCountryChange( this.user.address.country ?? '' );
 
       this.userAccess = this.user.access;
-      this.setPermissionsByRole(this.user.role as Role);
+      this.setPermissionsByRole( this.user.role as Role );
 
-      this.userAccess.permissions.forEach((permission) => {
-        this.hasModel(permission.module);
-        this.toggleModule(true, permission.module);
-        permission.actions.forEach((action) => {
-          this.hasAccess(action, permission.module);
-          this.toggleAccess(true, permission.module, action);
-        });
-      });
+      this.userAccess.permissions.forEach( ( permission ) => {
+        this.hasModel( permission.module );
+        this.toggleModule( true, permission.module );
+        permission.actions.forEach( ( action ) => {
+          this.hasAccess( action, permission.module );
+          this.toggleAccess( true, permission.module, action );
+        } );
+      } );
       this.updateAllSelectedStates();
 
       // Assising the user image
       this.userExistedImage = this.user.image as string;
-      setTimeout(() => {
+      setTimeout( () => {
         this.isLoading = false;
-      }, 500);
+      }, 500 );
     }
-    catch(err) {
-      console.error(err);
-      this.notification.notification('error', 'Invalid user data!')
+    catch ( err ) {
+      console.error( err );
+      this.notification.notification( 'error', 'Invalid user data!' );
       return;
     }
   }
 
-  protected detectUserImage(image: string, gender: string): string {
-    if(typeof image === 'string') {
-      const imageArray: string[] = image ? image.split('/') : [];
-      if(imageArray.length > 0) {
-        if(
+  protected detectUserImage( image: string, gender: string ): string {
+    if ( typeof image === 'string' ) {
+      const imageArray: string[] = image ? image.split( '/' ) : [];
+      if ( imageArray.length > 0 ) {
+        if (
           this.definedImageExtentionArray.includes(
-            imageArray[imageArray.length - 1].split('.')[1]
+            imageArray[ imageArray.length - 1 ].split( '.' )[ 1 ]
           )
         ) {
           return image;
         } else {
-          if(gender === 'male') {
+          if ( gender === 'male' ) {
             return this.definedMaleDummyImageURL;
           } else {
             return this.definedWomanDummyImageURL;
@@ -473,14 +473,14 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isCameraOpen = false;
   }
 
-  protected handleImage(imageData: string) {
+  protected handleImage( imageData: string ) {
     this.userUploadedImage = imageData;
-    this.userimage = this.convertToTheBlob(imageData);
+    this.userimage = this.convertToTheBlob( imageData );
     this.isCameraOpen = false;
 
-    const file = this.convertToTheBlob(imageData);
+    const file = this.convertToTheBlob( imageData );
     const dt = new DataTransfer();
-    dt.items.add(file);
+    dt.items.add( file );
 
     const simulatedEvent = {
       target: {
@@ -488,32 +488,32 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     };
 
-    this.onFileSelected(simulatedEvent);
+    this.onFileSelected( simulatedEvent );
   }
 
-  protected convertToTheBlob(data: string): File {
-    const byteString = atob(data.split(',')[1]); // decode base64
-    const byteArray = new Uint8Array(byteString.length);
-    for(let i = 0; i < byteString.length; i++) {
-      byteArray[i] = byteString.charCodeAt(i);
+  protected convertToTheBlob( data: string ): File {
+    const byteString = atob( data.split( ',' )[ 1 ] ); // decode base64
+    const byteArray = new Uint8Array( byteString.length );
+    for ( let i = 0; i < byteString.length; i++ ) {
+      byteArray[ i ] = byteString.charCodeAt( i );
     }
-    const blob = new Blob([byteArray], {type: 'image/png'});
-    return new File([blob], 'image.png', {type: 'image/png'});
+    const blob = new Blob( [ byteArray ], { type: 'image/png' } );
+    return new File( [ blob ], 'image.png', { type: 'image/png' } );
   }
 
   //<=========== End Capture the image and upload the image ============>
 
   //<=========== Image Past On File Input ============>
 
-  @HostListener('document:paste', ['$event'])
-  protected handlePaste(event: ClipboardEvent): void {
+  @HostListener( 'document:paste', [ '$event' ] )
+  protected handlePaste( event: ClipboardEvent ): void {
     const target = event.target as HTMLElement;
 
     // Allow default behavior for text inputs and editable fields
-    if(
+    if (
       target.tagName === 'INPUT' ||
       target.tagName === 'TEXTAREA' ||
-      target.hasAttribute('contenteditable')
+      target.hasAttribute( 'contenteditable' )
     ) {
       return; // Don't block default paste
     }
@@ -523,68 +523,68 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Custom paste handling for image files
     const items = event.clipboardData?.items;
-    if(!items) return;
+    if ( !items ) return;
 
-    for(const item of items) {
-      if(item.kind === 'file') {
+    for ( const item of items ) {
+      if ( item.kind === 'file' ) {
         const file = item.getAsFile();
-        if(file) {
-          this.processPastedFile(file);
+        if ( file ) {
+          this.processPastedFile( file );
         }
       }
     }
   }
 
-  protected processPastedFile(file: File) {
+  protected processPastedFile( file: File ) {
     const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
+    dataTransfer.items.add( file );
 
     const input = this.fileInput.nativeElement;
     input.files = dataTransfer.files;
 
     // Trigger the same file selection logic
-    this.onFileSelected({target: input} as any);
+    this.onFileSelected( { target: input } as any );
   }
 
   //<=========== End Image Past On File Input ============>
 
   //<=========== Image Drag and Dropt ============>
 
-  protected onDragOver(event: DragEvent): void {
+  protected onDragOver( event: DragEvent ): void {
     event.preventDefault(); // Crucial to allow drop
     this.isDragOver = true;
   }
 
-  protected onDragLeave(event: DragEvent): void {
+  protected onDragLeave( event: DragEvent ): void {
     event.preventDefault();
     this.isDragOver = false;
   }
 
-  protected onDrop(event: DragEvent): void {
+  protected onDrop( event: DragEvent ): void {
     event.preventDefault();
     this.isDragOver = false;
 
     const files = event.dataTransfer?.files;
-    if(files && files.length > 0) {
-      const file = files[0];
-      if(file.type.startsWith('image/')) {
-        this.processDroppedFile(file);
+    if ( files && files.length > 0 ) {
+      const file = files[ 0 ];
+      if ( file.type.startsWith( 'image/' ) ) {
+        this.processDroppedFile( file );
       }
     }
   }
 
-  protected processDroppedFile(file: File) {
+  protected processDroppedFile( file: File ) {
     const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
+    dataTransfer.items.add( file );
 
     const input = this.fileInput.nativeElement;
     input.files = dataTransfer.files;
 
     // Trigger your upload handler
-    this.onFileSelected({target: input} as any);
+    this.onFileSelected( { target: input } as any );
   }
 
-  private preventDefault(event: Event): void {
+  private preventDefault( event: Event ): void {
     event.preventDefault();
     event.stopPropagation();
   }
@@ -593,22 +593,22 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   //<=========== Image Upload with Cropper ============>
   protected triggerFileInput() {
-    document.querySelector<HTMLInputElement>('#fileInput')?.click();
+    document.querySelector<HTMLInputElement>( '#fileInput' )?.click();
   }
 
-  protected onFileSelected(event: any): void {
+  protected onFileSelected( event: any ): void {
     this.selectedImageChangedEvent = event;
     this.showCropper = true;
   }
 
-  protected imageCropped(event: ImageCroppedEvent): void {
+  protected imageCropped( event: ImageCroppedEvent ): void {
     this.croppedImageBase64 = event.objectUrl as string;
     this.croppedImage = event;
   }
 
   protected saveCroppedImage(): void {
     this.userUploadedImage = this.croppedImageBase64;
-    this.detectUserImage(this.userUploadedImage, this.userGender);
+    this.detectUserImage( this.userUploadedImage, this.userGender );
     this.userimage = this.croppedImage.blob;
     this.showCropper = false;
     this.resetCropper();
@@ -630,36 +630,36 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
 
   //<=========== Page indicator ============>
   protected goToUsers() {
-    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
-      this.router.navigate(['/dashboard/users']);
-    });
+    this.router.navigateByUrl( '/', { skipLocationChange: true } ).then( () => {
+      this.router.navigate( [ '/dashboard/users' ] );
+    } );
   }
 
   protected async goToUser() {
-    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
-      this.router.navigate(['/dashboard/add-new-user']);
-    });
+    this.router.navigateByUrl( '/', { skipLocationChange: true } ).then( () => {
+      this.router.navigate( [ '/dashboard/add-new-user' ] );
+    } );
   }
   //<=========== End Page indicator ============>
 
   //<=========== Check the Age ============>
 
-  protected checkAge(value: string | number) {
-    const age = Number(value);
+  protected checkAge( value: string | number ) {
+    const age = Number( value );
     this.isValidAge = age >= 18;
   }
 
   //<=========== End Check the Age ============>
 
   //<=========== Validating the Date of birth ============>
-  protected validateDateOfBirth(value: Date | string): void {
-    if(!value) {
+  protected validateDateOfBirth( value: Date | string ): void {
+    if ( !value ) {
       this.isValidAge = false;
       this.age = 0;
       return;
     }
 
-    const dateOfBirth = new Date(value);
+    const dateOfBirth = new Date( value );
     const today = new Date();
 
     // Calculate age precisely, accounting for month/day
@@ -667,60 +667,60 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     const monthDiff = today.getMonth() - dateOfBirth.getMonth();
     const dayDiff = today.getDate() - dateOfBirth.getDate();
 
-    if(monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+    if ( monthDiff < 0 || ( monthDiff === 0 && dayDiff < 0 ) ) {
       age--;
     }
     this.isValidAge = age >= 18;
   }
 
-  protected async onCountryChange(value: string): Promise<void> {
+  protected async onCountryChange( value: string ): Promise<void> {
     this.typedCountry = value;
     this.countries = await this.mainFilterCountries();
   }
 
   private async mainFilterCountries(): Promise<Country[]> {
     const countries: Country[] = await this.API.getCountries();
-    if(!Array.isArray(countries)) return [];
+    if ( !Array.isArray( countries ) ) return [];
 
-    if(countries) {
+    if ( countries ) {
       this.countries = countries;
       this.filteredCountries = this.countryControl.valueChanges.pipe(
-        startWith(this.typedCountry),
-        map((value: string | Country | null) => {
+        startWith( this.typedCountry ),
+        map( ( value: string | Country | null ) => {
           const name = typeof value === 'string' ? value : value?.name;
-          return name ? this._filterCountries(name) : this.countries.slice();
-        })
+          return name ? this._filterCountries( name ) : this.countries.slice();
+        } )
       );
     }
     return this.countries;
   }
 
-  private _filterCountries(name: string): Country[] {
+  private _filterCountries( name: string ): Country[] {
     const filterValue = name.toLowerCase();
-    return this.countries.filter((c) =>
-      c.name.toLowerCase().includes(filterValue)
+    return this.countries.filter( ( c ) =>
+      c.name.toLowerCase().includes( filterValue )
     );
   }
 
-  protected displayFn(country: Country): string {
+  protected displayFn( country: Country ): string {
     return typeof country === 'string' ? country : country?.name ?? '';
   }
   //<=========== End Country selector ============>
 
   //<=========== Checking the username ============>
-  protected async checkUsername(event: Event): Promise<void> {
+  protected async checkUsername( event: Event ): Promise<void> {
     this.usernameMatchPattern = false;
     const input = event.target as HTMLInputElement;
-    if(this.usernamePattern.test(input.value)) {
+    if ( this.usernamePattern.test( input.value ) ) {
       this.usernameMatchPattern = true;
     } else {
       this.usernameMatchPattern = false;
     }
-    if(this.usernameMatchPattern) {
+    if ( this.usernameMatchPattern ) {
       const checking: validateType = await this.API.getUserByUsername(
         input.value
       );
-      if(checking.status === 'true') {
+      if ( checking.status === 'true' ) {
         this.isUsernameExist = true;
       } else {
         this.isUsernameExist = false;
@@ -730,11 +730,11 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   //<=========== End Checking the username ============>
 
   //<=========== Checking the password ============>
-  protected checkPassword(event: Event) {
+  protected checkPassword( event: Event ) {
     this.passwordMatchPattern = false;
     const input = event.target as HTMLInputElement;
     const password = input.value;
-    if(this.strongPasswordPattern.test(password)) {
+    if ( this.strongPasswordPattern.test( password ) ) {
       this.passwordMatchPattern = true;
     } else {
       this.passwordMatchPattern = false;
@@ -743,18 +743,18 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
   //<=========== End Checking the password ============>
 
   //<=========== Checking the email ============>
-  protected async checkEmail(input: string): Promise<void> {
+  protected async checkEmail( input: string ): Promise<void> {
     try {
-      if(this.emailPattern.test(input)) {
-        const checking = await this.userControlService.emailValidator(input);
-        if(checking.status === 'success') {
+      if ( this.emailPattern.test( input ) ) {
+        const checking = await this.userControlService.emailValidator( input );
+        if ( checking.status === 'success' ) {
           this.isEmailError = checking.data.validation;
           this.emailErrorMessage = checking.message;
-          const existEmail = await this.API.getUserByEmail(input);
-          if(existEmail.status === 'true') {
+          const existEmail = await this.API.getUserByEmail( input );
+          if ( existEmail.status === 'true' ) {
             this.isEmailError = true;
             this.emailErrorMessage = 'Email already exist';
-            throw new Error('Email already exist');
+            throw new Error( 'Email already exist' );
           }
           else {
             this.isEmailError = false;
@@ -764,7 +764,7 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
         else {
           this.isEmailError = true;
           this.emailErrorMessage = 'Invalid email';
-          throw new Error('Invalid email');
+          throw new Error( 'Invalid email' );
         }
       }
       else {
@@ -772,49 +772,49 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
         this.emailErrorMessage = 'Invalid email format';
       }
     }
-    catch(error) {
-      console.error(error);
-      if(error instanceof HttpErrorResponse) {
-        this.notification.notification('error', error.error.message);
+    catch ( error ) {
+      console.error( error );
+      if ( error instanceof HttpErrorResponse ) {
+        this.notification.notification( 'error', error.error.message );
       }
       else {
-        this.notification.notification('error', error as string);
+        this.notification.notification( 'error', error as string );
       }
     }
   }
   //<=========== End Checking the password ============>
 
-  protected async checkPhone(input: string): Promise<void> {
+  protected async checkPhone( input: string ): Promise<void> {
     try {
       const safeInput = input.trim();
-      const checking = await this.userControlService.isPhoneNumberValid(safeInput);
-      const isExistChecking = await this.API.getUserByPhone(safeInput);
-      if(isExistChecking.status === 'error') {
-        if(!checking) {
+      const checking = await this.userControlService.isPhoneNumberValid( safeInput );
+      const isExistChecking = await this.API.getUserByPhone( safeInput );
+      if ( isExistChecking.status === 'error' ) {
+        if ( !checking ) {
           this.isPhoneError = true;
           this.phoneErrorMessage = 'Invalid phone number';
-          throw new Error('Invalid phone number');
+          throw new Error( 'Invalid phone number' );
         }
         else {
           this.isPhoneError = false;
           this.phoneErrorMessage = '';
         }
       }
-      else if(isExistChecking.status === 'success') {
+      else if ( isExistChecking.status === 'success' ) {
         this.isPhoneError = true;
         this.phoneErrorMessage = isExistChecking.message;
-        throw new Error(isExistChecking.message);
+        throw new Error( isExistChecking.message );
       }
     }
-    catch(error) {
-      console.error(error);
-      if(error instanceof HttpErrorResponse) {
+    catch ( error ) {
+      console.error( error );
+      if ( error instanceof HttpErrorResponse ) {
         this.isPhoneError = true;
         this.phoneErrorMessage = error.error.message;
-        this.notification.notification('error', error.error.message);
+        this.notification.notification( 'error', error.error.message );
       }
       else {
-        this.notification.notification('error', error as string);
+        this.notification.notification( 'error', error as string );
       }
     }
   }
@@ -825,10 +825,10 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * @param model - The module name to check.
    * @returns true if the module exists under the current role's access; otherwise, false.
    */
-  protected hasModel(model: string): boolean {
-    if(
+  protected hasModel( model: string ): boolean {
+    if (
       this.role in this.autoSelectedRoleAccess &&
-      model in this.autoSelectedRoleAccess[this.role as Role]
+      model in this.autoSelectedRoleAccess[ this.role as Role ]
     ) {
       return true;
     }
@@ -841,11 +841,11 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * @param model - The module in which the permission should be checked.
    * @returns true if the permission exists; otherwise, false.
    */
-  protected hasAccess(access: string, model: string): boolean {
-    if(
+  protected hasAccess( access: string, model: string ): boolean {
+    if (
       this.role in this.autoSelectedRoleAccess &&
-      model in this.autoSelectedRoleAccess[this.role as Role] &&
-      this.autoSelectedRoleAccess[this.role as Role][model].includes(access)
+      model in this.autoSelectedRoleAccess[ this.role as Role ] &&
+      this.autoSelectedRoleAccess[ this.role as Role ][ model ].includes( access )
     ) {
       return true;
     }
@@ -864,30 +864,30 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     module: string,
     action: string
   ): void {
-    if(!(this.role in this.autoSelectedRoleAccess)) return;
+    if ( !( this.role in this.autoSelectedRoleAccess ) ) return;
 
-    const accessMap = this.autoSelectedRoleAccess[this.role as Role];
+    const accessMap = this.autoSelectedRoleAccess[ this.role as Role ];
 
-    if(isChecked) {
+    if ( isChecked ) {
       // Create the module entry if it doesn't exist
-      if(!accessMap[module]) {
-        accessMap[module] = [];
+      if ( !accessMap[ module ] ) {
+        accessMap[ module ] = [];
       }
 
       // Add the action if it isn't already present
-      if(!accessMap[module].includes(action)) {
-        accessMap[module].push(action);
+      if ( !accessMap[ module ].includes( action ) ) {
+        accessMap[ module ].push( action );
       }
     } else {
       // Remove the action if it exists
-      const index = accessMap[module]?.indexOf(action);
-      if(index !== -1) {
-        accessMap[module].splice(index, 1);
+      const index = accessMap[ module ]?.indexOf( action );
+      if ( index !== -1 ) {
+        accessMap[ module ].splice( index, 1 );
       }
 
       // If the module has no more actions, remove the module key itself
-      if(accessMap[module]?.length === 0) {
-        delete accessMap[module];
+      if ( accessMap[ module ]?.length === 0 ) {
+        delete accessMap[ module ];
       }
     }
   }
@@ -897,17 +897,17 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * @param isChecked - True if all actions are selected, false if they are to be removed.
    * @param module - The module whose permissions are being toggled.
    */
-  protected toggleModule(isChecked: boolean, module: string): void {
-    if(!(this.role in this.autoSelectedRoleAccess)) return;
+  protected toggleModule( isChecked: boolean, module: string ): void {
+    if ( !( this.role in this.autoSelectedRoleAccess ) ) return;
 
-    const accessMap = this.autoSelectedRoleAccess[this.role as Role];
+    const accessMap = this.autoSelectedRoleAccess[ this.role as Role ];
 
-    if(isChecked) {
+    if ( isChecked ) {
       const fullActions =
-        ACCESS_OPTIONS.find((opt) => opt.module === module)?.actions || [];
-      accessMap[module] = [...fullActions];
+        ACCESS_OPTIONS.find( ( opt ) => opt.module === module )?.actions || [];
+      accessMap[ module ] = [ ...fullActions ];
     } else {
-      delete accessMap[module]; // Removes entire module permission entry
+      delete accessMap[ module ]; // Removes entire module permission entry
     }
   }
 
@@ -916,8 +916,8 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * Loads default permissions associated with the selected role.
    * @param role - The role whose default permissions are to be loaded.
    */
-  protected setPermissionsByRole(role: Role) {
-    this.selectedPermissions = this.authService.getDefaultAccessByRole(role);
+  protected setPermissionsByRole( role: Role ) {
+    this.selectedPermissions = this.authService.getDefaultAccessByRole( role );
     this.updateAllSelectedStates();
   }
 
@@ -926,11 +926,11 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * Used to control "select all" checkboxes at the module level.
    */
   protected updateAllSelectedStates() {
-    for(const mod of this.accessOptions) {
+    for ( const mod of this.accessOptions ) {
       const allTrue = mod.actions.every(
-        (act) => this.selectedPermissions[mod.module]?.[act]
+        ( act ) => this.selectedPermissions[ mod.module ]?.[ act ]
       );
-      this.allSelected[mod.module] = allTrue;
+      this.allSelected[ mod.module ] = allTrue;
     }
   }
 
@@ -940,9 +940,9 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * @param module - Module name to be toggled.
    * @param isChecked - State to apply to all actions (true = checked).
    */
-  protected toggleAllActions(module: string, isChecked: boolean) {
-    for(const action in this.selectedPermissions[module]) {
-      this.selectedPermissions[module][action] = isChecked;
+  protected toggleAllActions( module: string, isChecked: boolean ) {
+    for ( const action in this.selectedPermissions[ module ] ) {
+      this.selectedPermissions[ module ][ action ] = isChecked;
     }
     this.updateAllSelectedStates();
   }
@@ -962,17 +962,17 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
     const role = this.role;
     const permissions: PermissionEntry[] = [];
 
-    if(role in this.autoSelectedRoleAccess) {
-      const modules = this.autoSelectedRoleAccess[role as Role];
+    if ( role in this.autoSelectedRoleAccess ) {
+      const modules = this.autoSelectedRoleAccess[ role as Role ];
 
-      for(const [module, actions] of Object.entries(modules)) {
-        if(actions.length > 0) {
-          permissions.push({module, actions});
+      for ( const [ module, actions ] of Object.entries( modules ) ) {
+        if ( actions.length > 0 ) {
+          permissions.push( { module, actions } );
         }
       }
     }
 
-    return {role, permissions};
+    return { role, permissions };
   }
 
   // <======= End Role Access Autocomplete Section =======>
@@ -985,174 +985,174 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
       const now = new Date();
 
       const oneMonth = new Date(
-        new Date(now.setMonth(now.getMonth() + 1)).getTime()
+        new Date( now.setMonth( now.getMonth() + 1 ) ).getTime()
       );
 
-      if(
+      if (
         !this.isUserCanMakeUserActivate() &&
         !this.isUserCanMakeUserDeactivate() &&
         !this.isUserCanAssignUserRoles()
       ) {
-        throw new Error('User does not have permission to perform the action.');
+        throw new Error( 'User does not have permission to perform the action.' );
       }
 
-      if(!this.fullname) {
-        throw new Error('User full name is required');
+      if ( !this.fullname ) {
+        throw new Error( 'User full name is required' );
       }
-      if(!this.userGender) {
-        throw new Error('User gender is required');
+      if ( !this.userGender ) {
+        throw new Error( 'User gender is required' );
       }
-      if(!this.email) {
-        throw new Error('User email is required');
+      if ( !this.email ) {
+        throw new Error( 'User email is required' );
       }
-      if(!this.phone) {
-        throw new Error('User phone is required');
+      if ( !this.phone ) {
+        throw new Error( 'User phone is required' );
       }
-      if(!this.houseNumber) {
-        throw new Error('User house number is required');
+      if ( !this.houseNumber ) {
+        throw new Error( 'User house number is required' );
       }
-      if(!this.street) {
-        throw new Error('User street is required');
+      if ( !this.street ) {
+        throw new Error( 'User street is required' );
       }
-      if(!this.city) {
-        throw new Error('User city is required');
+      if ( !this.city ) {
+        throw new Error( 'User city is required' );
       }
-      if(!this.postcode) {
-        throw new Error('User postcode is required');
+      if ( !this.postcode ) {
+        throw new Error( 'User postcode is required' );
       }
-      if(!this.countryControl.value) {
-        throw new Error('User country is required');
+      if ( !this.countryControl.value ) {
+        throw new Error( 'User country is required' );
       }
-      if(!this.dateOfBirth) {
-        throw new Error('User date of birth is required');
+      if ( !this.dateOfBirth ) {
+        throw new Error( 'User date of birth is required' );
       }
-      if(!this.age) {
-        throw new Error('User age is required');
+      if ( !this.age ) {
+        throw new Error( 'User age is required' );
       }
-      if(!this.isValidAge) {
-        throw new Error('User age is not valid');
+      if ( !this.isValidAge ) {
+        throw new Error( 'User age is not valid' );
       }
-      if(!this.isActive) {
-        throw new Error('User active status is required');
+      if ( !this.isActive ) {
+        throw new Error( 'User active status is required' );
       }
-      if(!this.userBio) {
-        throw new Error('User bio is required');
+      if ( !this.userBio ) {
+        throw new Error( 'User bio is required' );
       }
-      if(!this.role) {
-        throw new Error('User role is required');
+      if ( !this.role ) {
+        throw new Error( 'User role is required' );
       }
-      if(!this.getRoleAccessPayload()) {
-        throw new Error('User access is required');
-      }
-
-      if(this.isEmailError) {
-        throw new Error(this.emailErrorMessage);
+      if ( !this.getRoleAccessPayload() ) {
+        throw new Error( 'User access is required' );
       }
 
-      if(this.isPhoneError) {
-        throw new Error(this.phoneErrorMessage);
+      if ( this.isEmailError ) {
+        throw new Error( this.emailErrorMessage );
       }
 
-      if(this.isUsernameExist) {
-        throw new Error('Username already exist');
+      if ( this.isPhoneError ) {
+        throw new Error( this.phoneErrorMessage );
       }
 
-      if(!this.passwordMatchPattern) {
-        throw new Error('Password does not match the pattern');
+      if ( this.isUsernameExist ) {
+        throw new Error( 'Username already exist' );
       }
 
-      if(!this.usernameMatchPattern) {
-        throw new Error('Username does not match the pattern');
+      if ( !this.passwordMatchPattern ) {
+        throw new Error( 'Password does not match the pattern' );
+      }
+
+      if ( !this.usernameMatchPattern ) {
+        throw new Error( 'Username does not match the pattern' );
       }
 
 
-      if(!this.isValidAge) {
-        throw new Error('User does not fit the age criteria');
+      if ( !this.isValidAge ) {
+        throw new Error( 'User does not fit the age criteria' );
       }
 
       const formData: FormData = new FormData();
       this.progress.start();
-      formData.append('username', this.username.trim());
-      formData.append('password', this.password.trim());
-      formData.append('name', this.fullname.trim());
-      formData.append('email', this.email.trim());
-      formData.append('oldEmail', this.oldEmail.trim());
-      formData.append('dateOfBirth', this.dateOfBirth.toISOString().trim());
-      formData.append('age', this.age.toString().trim());
+      formData.append( 'username', this.username.trim() );
+      formData.append( 'password', this.password.trim() );
+      formData.append( 'name', this.fullname.trim() );
+      formData.append( 'email', this.email.trim() );
+      formData.append( 'oldEmail', this.oldEmail.trim() );
+      formData.append( 'dateOfBirth', this.dateOfBirth.toISOString().trim() );
+      formData.append( 'age', this.age.toString().trim() );
       formData.append(
         'gender',
         this.userGender.toString().toLowerCase().trim()
       );
-      formData.append('bio', this.userBio.trim());
-      formData.append('phoneNumber', this.phone.toString().trim());
+      formData.append( 'bio', this.userBio.trim() );
+      formData.append( 'phoneNumber', this.phone.toString().trim() );
 
-      if(this.userimage !== null) {
-        console.log('Image not null');
+      if ( this.userimage !== null ) {
+        console.log( 'Image not null' );
         formData.append(
           'userimage',
           this.userimage as File,
-          `${this.username}_image.png`
+          `${ this.username }_image.png`
         );
       } else {
-        console.log('Image null: ', this.userExistedImage);
-        formData.append('userimage', this.userExistedImage);
+        console.log( 'Image null: ', this.userExistedImage );
+        formData.append( 'userimage', this.userExistedImage );
       }
-      formData.append('role', this.role);
-      formData.append('isActive', this.isActive.toString());
-      formData.append('street', this.street.trim());
-      formData.append('houseNumber', this.houseNumber.toString().trim());
-      formData.append('city', this.city.trim());
-      formData.append('stateOrProvince', this.stateOrProvince.trim());
-      formData.append('postcode', this.postcode.toString().trim());
-      formData.append('country', this.countryControl.value.trim());
+      formData.append( 'role', this.role );
+      formData.append( 'isActive', this.isActive.toString() );
+      formData.append( 'street', this.street.trim() );
+      formData.append( 'houseNumber', this.houseNumber.toString().trim() );
+      formData.append( 'city', this.city.trim() );
+      formData.append( 'stateOrProvince', this.stateOrProvince.trim() );
+      formData.append( 'postcode', this.postcode.toString().trim() );
+      formData.append( 'country', this.countryControl.value.trim() );
       formData.append(
         'access',
-        JSON.stringify(this.getRoleAccessPayload()).trim()
+        JSON.stringify( this.getRoleAccessPayload() ).trim()
       );
-      formData.append('otpToken', JSON.stringify(verifyEmail).trim());
+      formData.append( 'otpToken', JSON.stringify( verifyEmail ).trim() );
       formData.append(
         'otpValidTime',
-        JSON.stringify({
+        JSON.stringify( {
           otpValidTime: oneMonth,
-        })
+        } )
       );
-      formData.append('updatedAt', this.updatedAt.toString());
-      formData.append('creator', this.creator as string);
-      formData.append('updator', this.updator as string);
+      formData.append( 'updatedAt', this.updatedAt.toString() );
+      formData.append( 'creator', this.creator as string );
+      formData.append( 'updator', this.updator as string );
 
-      await this.API.updateUser(formData, this.username)
-        .then((res) => {
-          console.log(res);
-          if(res && res.status === 'success') {
-            this.notification.notification(res.status, res.message);
+      await this.API.updateUser( formData, this.username )
+        .then( ( res ) => {
+          console.log( res );
+          if ( res && res.status === 'success' ) {
+            this.notification.notification( res.status, res.message );
           } else {
-            this.notification.notification('Error', 'User update failed');
+            this.notification.notification( 'Error', 'User update failed' );
           }
-        })
-        .catch((res) => {
-          if(res && res.status === 'error') {
-            this.notification.notification(res.status, res.message);
+        } )
+        .catch( ( res ) => {
+          if ( res && res.status === 'error' ) {
+            this.notification.notification( res.status, res.message );
           } else {
-            this.notification.notification('Error', 'User update failed');
+            this.notification.notification( 'Error', 'User update failed' );
           }
-        })
-        .finally(() => {
+        } )
+        .finally( () => {
           this.progress.complete();
-          setTimeout(() => {
-            this.router.navigate(['/dashboard/users']);
-          }, 1000);
-        });
-    } catch(error) {
-      if(error) {
-        this.notification.notification('error', error as string);
+          setTimeout( () => {
+            this.router.navigate( [ '/dashboard/users' ] );
+          }, 1000 );
+        } );
+    } catch ( error ) {
+      if ( error ) {
+        this.notification.notification( 'error', error as string );
       }
     }
   }
 
   ngOnDestroy(): void {
-    if(this.isBrowser) {
-      window.removeEventListener('dragover', this.preventDefault);
-      window.removeEventListener('drop', this.preventDefault);
+    if ( this.isBrowser ) {
+      window.removeEventListener( 'dragover', this.preventDefault );
+      window.removeEventListener( 'drop', this.preventDefault );
     }
 
     this.modeSub?.unsubscribe();

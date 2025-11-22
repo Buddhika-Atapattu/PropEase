@@ -1,34 +1,226 @@
 @use "../../../styles/global.scss" as *;
+@use "sass:color";
 
-.refresh {
-  i {
-    animation: refresh 1s infinite;
-    @keyframes refresh {
-      0% {
-        transform: rotate(0deg);
+/* Ensure the paginator root acts as a normal block container */
+:host {
+  display: block;
+}
+
+/* ─────────────────────────────────────────────
+   Pagination Shell (Grid Layout)
+   ───────────────────────────────────────────── */
+.pagination {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  grid-template-areas: "total search size buttons";
+  grid-template-columns: 1fr 4fr 1fr 2fr;
+  grid-gap: 0.5rem;
+  justify-self: start;
+  align-self: stretch;
+  align-items: center;
+
+  --icon-size: 22px;
+  --icon-pad: 8px;
+  --icon-gap: 10px;
+  --ring: 4px;
+
+  @media (min-width: 1300px) {
+    grid-template-areas: "total  search size   buttons";
+    grid-template-columns: 1fr 7fr 1fr 2fr;
+    grid-gap: 0.5rem;
+  }
+
+  @media (max-width: 1024px) and (min-width: 768.98px) {
+    grid-template-areas: "total  search size   buttons";
+    grid-template-columns: 1fr 4fr 1fr 2fr;
+    grid-gap: 0.5rem;
+  }
+
+  @media (max-width: 768px) and (min-width: 500px) {
+    grid-template-areas:
+      "total  search"
+      "size   buttons";
+    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 7fr;
+    grid-gap: 1rem;
+  }
+
+  @media (max-width: 499.98px) {
+    grid-template-areas:
+      "total"
+      "search"
+      "size"
+      "buttons";
+    grid-template-rows: auto;
+    grid-template-columns: auto;
+    grid-gap: 1rem;
+  }
+
+  /* Total label */
+  .total {
+    grid-area: total;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+    min-width: 0;
+    flex: 1 1 auto;
+    text-transform: uppercase;
+    font-weight: 500;
+    font-size: 12pt;
+    justify-self: start;
+
+    @media (max-width: 499.98px) {
+      justify-self: stretch;
+    }
+  }
+
+  /* ─────────────────────────────────────────
+     Date-range pill (when date mode is active)
+     ───────────────────────────────────────── */
+  .date-range-shell {
+    grid-area: search;
+  }
+
+  /* ─────────────────────────────────────────
+     Search pill (when text search is active)
+     ───────────────────────────────────────── */
+  .search-container {
+    grid-area: search;
+  }
+
+  /* ─────────────────────────────────────────
+     Page-Size Container
+     ───────────────────────────────────────── */
+  .page-size-container {
+    grid-area: size;
+
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    min-height: 4rem;
+
+    background: var(--surface);
+    color: var(--on-surface);
+    border: var(--ring) solid #ffb500;
+    border-radius: 0.5rem;
+
+    padding: 0.85rem 0.5rem;
+    box-shadow: inset 0 0 5px 0 #00000066;
+
+    @media (max-width: 499.98px) {
+      justify-self: stretch;
+    }
+
+    .size-input {
+      flex: 1 1 auto;
+      min-height: 12pt;
+      max-height: 100%;
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      align-self: center;
+
+      &::placeholder {
+        color: var(--muted);
+        opacity: 0.9;
       }
-      100% {
-        transform: rotate(360deg);
+    }
+  }
+
+  /* ─────────────────────────────────────────
+     Pagination Buttons
+     ───────────────────────────────────────── */
+  .pagination-btns {
+    grid-area: buttons;
+    display: grid;
+    grid-template-columns: repeat(6, 2rem);
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    justify-self: end;
+
+    @media (max-width: 499.98px) {
+      justify-self: stretch;
+    }
+
+    button {
+      width: 2rem;
+      height: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+
+      mat-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
       }
     }
   }
 }
 
-mat-icon {
-  width: 20px !important;
-  height: 20px !important;
-  ::ng-deep svg{
-    fill: #fff !important;
-    stroke: none !important;
-    path{
-      fill: #fff !important;
-      stroke: none !important;
-    }
-  }
-}
+/* ─────────────────────────────────────────
+   CDK overlay panel for page size options
+   ───────────────────────────────────────── */
+::ng-deep .cdk-overlay-pane.pageOption-flyout {
+  min-width: 40px;
+  max-width: 500px;
+  border-radius: 9px;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-side-panel-sub-menu);
+  border: var(--border-side-panel-sub-menu);
+  box-shadow: var(--box-shadow-side-panel-sub-menu);
+  width: 100%;
 
-@media (max-width: 500px){
-  .button-container{
-    justify-content: center !important;
+  .menu {
+    margin: 0.5rem 0rem;
+    padding: 0;
+    list-style: none;
+    width: 100%;
+
+    .menu-item {
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: transparent;
+      border: none;
+      outline: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      button {
+        position: relative;
+        width: 100%;
+        border-radius: 10px;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        font: inherit;
+        color: inherit;
+        white-space: nowrap;
+      }
+
+      &:hover {
+        background-color: var(--hover-bg);
+      }
+
+      &.active {
+        background-color: color-mix(
+          in srgb,
+          var(--primary) 18%,
+          var(--surface) 82%
+        );
+        border-color: var(--primary);
+        color: var(--on-surface);
+      }
+    }
   }
 }

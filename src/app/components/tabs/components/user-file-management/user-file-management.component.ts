@@ -1,4 +1,4 @@
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -10,33 +10,33 @@ import {
   PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {DomSanitizer} from '@angular/platform-browser';
-import {Subscription} from 'rxjs';
-import {ActivityTrackerService} from '../../../../services/activityTacker/activity-tracker.service';
-import {User} from '../../../../services/APIs/apis.service';
-import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
-import {NotificationDialogComponent} from '../../../dialogs/notification/notification.component';
-import {ProgressBarComponent} from '../../../dialogs/progress-bar/progress-bar.component';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
+import { Subscription } from 'rxjs';
+import { ActivityTrackerService } from '../../../../services/activityTacker/activity-tracker.service';
+import { User } from '../../../../services/APIs/apis.service';
+import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
+import { NotificationDialogComponent } from '../../../dialogs/notification/notificationBar.component';
+import { ProgressBarComponent } from '../../../dialogs/progress-bar/progress-bar.component';
 
-import {MatDialogModule} from '@angular/material/dialog';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatSelectModule} from '@angular/material/select';
-import {MatTooltipModule} from '@angular/material/tooltip';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatMomentDateModule} from '@angular/material-moment-adapter';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {MatButtonModule} from '@angular/material/button';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatInputModule} from '@angular/material/input';
-import {MatPaginatorModule} from '@angular/material/paginator';
-import {MatSortModule, Sort} from '@angular/material/sort';
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatMomentDateModule } from '@angular/material-moment-adapter';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule, Sort } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
-import {SkeletonLoaderComponent} from '../../../shared/skeleton-loader/skeleton-loader.component';
+import { SkeletonLoaderComponent } from '../../../shared/skeleton-loader/skeleton-loader.component';
 
 interface Data {
   URL: string;
@@ -52,7 +52,7 @@ interface Data {
   username: string;
 }
 
-@Component({
+@Component( {
   selector: 'app-user-file-management',
   imports: [
     CommonModule,
@@ -79,12 +79,12 @@ interface Data {
   standalone: true,
   templateUrl: './user-file-management.component.html',
   styleUrl: './user-file-management.component.scss',
-})
+} )
 export class UserFileManagementComponent
   implements OnInit, OnChanges, AfterViewInit, OnDestroy {
-  @ViewChild(ProgressBarComponent, {static: true})
+  @ViewChild( ProgressBarComponent, { static: true } )
   progress!: ProgressBarComponent;
-  @ViewChild(NotificationDialogComponent, {static: true})
+  @ViewChild( NotificationDialogComponent, { static: true } )
   notification!: NotificationDialogComponent;
 
   @Input() user: User | null = null;
@@ -122,17 +122,17 @@ export class UserFileManagementComponent
 
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
     private activityTrackerService: ActivityTrackerService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
     this.registerCustomIcons();
   }
 
   async ngOnInit(): Promise<void> {
-    this.apiCall(this.start, this.limit);
+    this.apiCall( this.start, this.limit );
   }
 
   ngOnChanges(): void {}
@@ -141,11 +141,11 @@ export class UserFileManagementComponent
 
   ngOnDestroy(): void {}
 
-  public async refresh(username: string): Promise<void> {
+  public async refresh( username: string ): Promise<void> {
     this.username = username;
     this.currentPage = 1;
     const offset = 0;
-    await this.apiCall(offset, this.limit);
+    await this.apiCall( offset, this.limit );
   }
 
   private registerCustomIcons(): void {
@@ -175,18 +175,18 @@ export class UserFileManagementComponent
       image: 'file-types/image.svg',
     };
 
-    for(const [name, path] of Object.entries(iconMap)) {
+    for ( const [ name, path ] of Object.entries( iconMap ) ) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `Images/Icons/${path}`
+          `Images/Icons/${ path }`
         )
       );
     }
   }
 
-  protected chooceIcon(type: string): string {
-    switch(type) {
+  protected chooceIcon( type: string ): string {
+    switch ( type ) {
       case 'doc':
         return 'word';
       case 'docx':
@@ -270,7 +270,7 @@ export class UserFileManagementComponent
           startDate,
           endDate
         )
-        .then((data) => {
+        .then( ( data ) => {
           this.totalRecords = data.data.totalCount;
           this.isPaginationDisabled = this.totalRecords < this.limit;
 
@@ -281,24 +281,24 @@ export class UserFileManagementComponent
           this.isTableEmpty = this.dataSource.data.length === 0;
           this.isLoading = false;
           // this.paginate();
-        })
-        .catch((error) => {
-          if(error) {
+        } )
+        .catch( ( error ) => {
+          if ( error ) {
             this.isTableEmpty = true;
             this.isLoading = true;
-            throw new Error(error);
+            throw new Error( error );
           }
-        });
-    } catch(error) {
-      if(error) {
+        } );
+    } catch ( error ) {
+      if ( error ) {
         this.isLoading = true;
-        console.error('API ERROR: ', error);
+        console.error( 'API ERROR: ', error );
       }
     }
   }
 
-  protected generateColData(data: string, element: any) {
-    switch(data) {
+  protected generateColData( data: string, element: any ) {
+    switch ( data ) {
       case 'No':
         return element.rowNumber;
 
@@ -309,7 +309,7 @@ export class UserFileManagementComponent
         return element.uploader;
 
       case 'UploadDate':
-        return this.formatDate(element.uploadDate);
+        return this.formatDate( element.uploadDate );
 
       case 'Username':
         return element.username;
@@ -319,17 +319,17 @@ export class UserFileManagementComponent
     }
   }
 
-  protected sortData(sort: Sort): void {
+  protected sortData( sort: Sort ): void {
     const data = this.dataSource.data.slice();
     const isAsc = sort.direction === 'asc';
 
-    if(!sort.active || sort.direction === '') {
+    if ( !sort.active || sort.direction === '' ) {
       this.dataSource.data = data;
       return;
     }
 
     // Mapping displayed columns to actual Data interface keys
-    const columnFieldMap: {[key: string]: keyof Data} = {
+    const columnFieldMap: { [ key: string ]: keyof Data; } = {
       'Original Name': 'originalName',
       Uploader: 'uploader',
       UploadDate: 'uploadDate',
@@ -337,35 +337,35 @@ export class UserFileManagementComponent
       // 'Download' intentionally excluded
     };
 
-    const field = columnFieldMap[sort.active];
+    const field = columnFieldMap[ sort.active ];
 
-    if(field) {
-      this.dataSource.data = data.sort((a, b) =>
-        this.compare(a[field], b[field], isAsc)
+    if ( field ) {
+      this.dataSource.data = data.sort( ( a, b ) =>
+        this.compare( a[ field ], b[ field ], isAsc )
       );
     }
   }
 
-  private compare(a: any, b: any, isAsc: boolean): number {
-    if(a == null && b != null) return isAsc ? -1 : 1;
-    if(a != null && b == null) return isAsc ? 1 : -1;
-    if(a == null && b == null) return 0;
+  private compare( a: any, b: any, isAsc: boolean ): number {
+    if ( a == null && b != null ) return isAsc ? -1 : 1;
+    if ( a != null && b == null ) return isAsc ? 1 : -1;
+    if ( a == null && b == null ) return 0;
 
-    if(typeof a === 'string' && typeof b === 'string') {
-      return a.localeCompare(b) * (isAsc ? 1 : -1);
+    if ( typeof a === 'string' && typeof b === 'string' ) {
+      return a.localeCompare( b ) * ( isAsc ? 1 : -1 );
     }
 
-    return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
+    return ( a < b ? -1 : a > b ? 1 : 0 ) * ( isAsc ? 1 : -1 );
   }
 
   // Called when user triggers a search (e.g., clicks "Search" button)
   protected async search(): Promise<void> {
     this.currentPage = 1; // Reset to first page
-    const offset = (this.currentPage - 1) * this.limit;
+    const offset = ( this.currentPage - 1 ) * this.limit;
 
-    if(this.startDate && this.endDate) {
+    if ( this.startDate && this.endDate ) {
       // Call API with current filters
-      await this.apiCall(offset, this.limit, this.startDate, this.endDate);
+      await this.apiCall( offset, this.limit, this.startDate, this.endDate );
     }
   }
 
@@ -376,56 +376,56 @@ export class UserFileManagementComponent
     this.currentPage = 1;
     const offset = 0;
 
-    await this.apiCall(offset, this.limit);
+    await this.apiCall( offset, this.limit );
   }
 
   //<=========== Pagination ===========>
   // Called when user clicks a specific page number
-  protected async setCurrentPage(index: number): Promise<void> {
+  protected async setCurrentPage( index: number ): Promise<void> {
     // index is based on visible range, so we normalize it
     this.currentPage = this.getActualStart() + index;
 
     // Calculate offset and call paginated API
-    const offset = (this.currentPage - 1) * this.limit;
-    await this.paginate(offset, this.limit);
+    const offset = ( this.currentPage - 1 ) * this.limit;
+    await this.paginate( offset, this.limit );
   }
 
   // Calculates the total number of pages
   protected totalPages(): number {
-    return Math.ceil(this.totalRecords / this.limit);
+    return Math.ceil( this.totalRecords / this.limit );
   }
 
   // Calculate visible start page number (e.g., currentPage = 5 → show from 3)
   protected getActualStart(): number {
-    return Math.max(1, this.currentPage - 2);
+    return Math.max( 1, this.currentPage - 2 );
   }
 
   // Calculate visible end page number (e.g., currentPage = 5 → show to 7)
   protected getActualEnd(): number {
-    return Math.min(this.totalPages(), this.currentPage + 2);
+    return Math.min( this.totalPages(), this.currentPage + 2 );
   }
 
   // Jump back by 2 pages
   protected async goTwoPagesBack(): Promise<void> {
-    if(this.currentPage > 1) {
-      this.currentPage = Math.max(1, this.currentPage - 2);
-      const offset = (this.currentPage - 1) * this.limit;
-      await this.paginate(offset, this.limit);
+    if ( this.currentPage > 1 ) {
+      this.currentPage = Math.max( 1, this.currentPage - 2 );
+      const offset = ( this.currentPage - 1 ) * this.limit;
+      await this.paginate( offset, this.limit );
     }
   }
 
   // Jump forward by 2 pages
   protected async goTwoPagesForward(): Promise<void> {
     const totalPages = this.totalPages();
-    if(this.currentPage < totalPages) {
-      this.currentPage = Math.min(totalPages, this.currentPage + 2);
-      const offset = (this.currentPage - 1) * this.limit;
-      await this.paginate(offset, this.limit);
+    if ( this.currentPage < totalPages ) {
+      this.currentPage = Math.min( totalPages, this.currentPage + 2 );
+      const offset = ( this.currentPage - 1 ) * this.limit;
+      await this.paginate( offset, this.limit );
     }
   }
 
   // Pagination trigger wrapper that calls your API
-  protected async paginate(start: number, limit: number): Promise<void> {
+  protected async paginate( start: number, limit: number ): Promise<void> {
     this.start = start; // store offset
     await this.apiCall(
       start,
@@ -435,9 +435,9 @@ export class UserFileManagementComponent
     );
   }
 
-  protected formatDate(date: Date): string {
-    if(!date) return '';
-    const d = new Date(date);
+  protected formatDate( date: Date ): string {
+    if ( !date ) return '';
+    const d = new Date( date );
     const options: Intl.DateTimeFormatOptions = {
       year: 'numeric',
       month: 'long',
@@ -447,16 +447,16 @@ export class UserFileManagementComponent
       second: '2-digit',
       hour12: false,
     };
-    return d.toLocaleString('en-US', options);
+    return d.toLocaleString( 'en-US', options );
   }
 
-  protected download(url: string) {
-    window.open(url, '_blank');
+  protected download( url: string ) {
+    window.open( url, '_blank' );
   }
 
   protected exportToExcel(): void {
     // Convert dataSource (MatTableDataSource) to a plain array
-    const exportData = this.dataSource.data.map((row) => ({
+    const exportData = this.dataSource.data.map( ( row ) => ( {
       'Original Name': row.originalName,
       'Stored Name': row.storedName,
       'Mime Type': row.mimeType,
@@ -466,28 +466,28 @@ export class UserFileManagementComponent
       URL: row.URL,
       Download: row.download,
       Uploader: row.uploader,
-      'Upload Date': new Date(row.uploadDate).toLocaleString(),
+      'Upload Date': new Date( row.uploadDate ).toLocaleString(),
       Username: row.username,
-    }));
+    } ) );
 
-    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet( exportData );
     const workbook: XLSX.WorkBook = {
-      Sheets: {'User Files': worksheet},
-      SheetNames: ['User Files'],
+      Sheets: { 'User Files': worksheet },
+      SheetNames: [ 'User Files' ],
     };
 
-    const excelBuffer: any = XLSX.write(workbook, {
+    const excelBuffer: any = XLSX.write( workbook, {
       bookType: 'xlsx',
       type: 'array',
-    });
+    } );
 
-    const blobData: Blob = new Blob([excelBuffer], {
+    const blobData: Blob = new Blob( [ excelBuffer ], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    });
+    } );
 
     FileSaver.saveAs(
       blobData,
-      `User_File_Export_${new Date().toISOString()}.xlsx`
+      `User_File_Export_${ new Date().toISOString() }.xlsx`
     );
   }
 }

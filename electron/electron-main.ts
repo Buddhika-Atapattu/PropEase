@@ -1,11 +1,11 @@
 // electron-main.ts
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import {app, BrowserWindow, ipcMain, dialog} from 'electron';
 import * as url from 'url';
 import * as path from 'path';
 import * as usb from 'usb';
-import { USBScannerService } from './services/USBScannerService';
-import { WIFIScannerService } from './services/WIFIScannerService';
-import { execSync } from 'child_process';
+import {USBScannerService} from './services/USBScannerService';
+import {WIFIScannerService} from './services/WIFIScannerService';
+import {execSync} from 'child_process';
 
 export interface USBDeviceInfo {
   vendorId: number;
@@ -40,17 +40,17 @@ ipcMain.handle('scan-document', async (_event, device) => {
   console.log(device);
   try {
     // USB device scan
-    if (device.vendorId && device.productId) {
+    if(device.vendorId && device.productId) {
       return await USBScannerService.scan(device); // You need to define this method
     }
 
     // Wi-Fi device scan
-    if (device.ip) {
+    if(device.ip) {
       return await WIFIScannerService.scan(device); // You need to define this method too
     }
 
     throw new Error('Unsupported device type');
-  } catch (err) {
+  } catch(err) {
     console.error('Scan failed:', err);
     throw err;
   }
@@ -58,7 +58,7 @@ ipcMain.handle('scan-document', async (_event, device) => {
 
 ipcMain.handle('refresh-scanners', async () => {
   await preloadScanners();
-  return { success: true };
+  return {success: true};
 });
 
 async function preloadScanners() {
@@ -76,7 +76,7 @@ class ElectronApp {
   private mainWindow: BrowserWindow | null = null;
   private scanners: string[] = [];
 
-  constructor() {
+  constructor () {
     this.initializeApp();
     this.setupReloadIfNeeded();
   }
@@ -93,7 +93,7 @@ class ElectronApp {
 
     app.on('window-all-closed', this.handleAllWindowsClosed);
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) this.createWindow();
+      if(BrowserWindow.getAllWindows().length === 0) this.createWindow();
     });
   }
 
@@ -101,10 +101,10 @@ class ElectronApp {
     const platform = process.platform;
 
     try {
-      if (platform === 'darwin') {
-        execSync('which imagesnap', { stdio: 'ignore' });
-      } else if (platform === 'linux') {
-        execSync('which scanimage', { stdio: 'ignore' });
+      if(platform === 'darwin') {
+        execSync('which imagesnap', {stdio: 'ignore'});
+      } else if(platform === 'linux') {
+        execSync('which scanimage', {stdio: 'ignore'});
       }
     } catch {
       dialog.showMessageBox({
@@ -128,8 +128,9 @@ class ElectronApp {
         'public',
         'Images',
         'company-images',
-        'ICO',
-        'PropEaseLogo.ico'
+        'logo',
+        'win',
+        'without-bg-and-letters.ico'
       ),
       webPreferences: {
         nodeIntegration: false,
@@ -138,7 +139,7 @@ class ElectronApp {
       },
     });
 
-    if (!app.isPackaged) {
+    if(!app.isPackaged) {
       this.mainWindow.loadURL('http://localhost:4200');
       this.mainWindow.webContents.openDevTools();
     } else {
@@ -157,7 +158,7 @@ class ElectronApp {
   }
 
   private setupReloadIfNeeded() {
-    if (!app.isPackaged) {
+    if(!app.isPackaged) {
       try {
         require('electron-reload')(__dirname, {
           electron: require(path.join(
@@ -170,14 +171,14 @@ class ElectronApp {
           hardResetMethod: 'exit',
         });
         console.log('[electron-reload] Watching for changes...');
-      } catch (err) {
+      } catch(err) {
         console.warn('electron-reload failed to initialize:', err);
       }
     }
   }
 
   private handleAllWindowsClosed() {
-    if (process.platform !== 'darwin') {
+    if(process.platform !== 'darwin') {
       app.quit();
       console.log('Electron and Angular apps closed. Have nice day!');
     }

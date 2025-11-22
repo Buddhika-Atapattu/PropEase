@@ -1,5 +1,5 @@
-import {CommonModule, isPlatformBrowser} from '@angular/common';
-import {HttpErrorResponse} from '@angular/common/http';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   Component,
   Inject,
@@ -9,21 +9,21 @@ import {
   ViewChild,
   type ElementRef,
 } from '@angular/core';
-import {FormsModule} from '@angular/forms';
-import {MatDialog} from '@angular/material/dialog';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {MatTooltipModule} from '@angular/material/tooltip';
-import {DomSanitizer} from '@angular/platform-browser';
-import {Router} from '@angular/router';
-import {Subscription} from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { DomSanitizer } from '@angular/platform-browser';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
-import {NotificationDialogComponent} from '../../../components/dialogs/notification/notification.component';
-import {LayoutSwitchBtn} from '../../../components/shared/buttons/layout-switch-btn/layout-switch-btn';
-import {ConfirmationComponent} from '../../../components/shared/confirmation/confirmation.component';
-import {UserViewCardComponent} from '../../../components/user-view-card/user-view-card.component';
-import {APIsService, type User, type MSG} from '../../../services/APIs/apis.service';
-import {AuthService} from '../../../services/auth/auth.service';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import { NotificationDialogComponent } from '../../../components/dialogs/notification/notificationBar.component';
+import { LayoutSwitchBtn } from '../../../components/shared/buttons/layout-switch-btn/layout-switch-btn';
+import { ConfirmationComponent } from '../../../components/shared/confirmation/confirmation.component';
+import { UserViewCardComponent } from '../../../components/user-view-card/user-view-card.component';
+import { APIsService, type User, type MSG } from '../../../services/APIs/apis.service';
+import { AuthService } from '../../../services/auth/auth.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 
 
 /**
@@ -35,7 +35,7 @@ import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
  * - Role-based actions (view, edit, delete, create).
  * - Uses NotificationDialogComponent for toast-style notifications.
  */
-@Component({
+@Component( {
   selector: 'app-users',
   standalone: true,
   imports: [
@@ -49,18 +49,18 @@ import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
   ],
   templateUrl: './users-list.component.html',
   styleUrl: './users-list.component.scss',
-})
+} )
 export class UsersListComponent implements OnInit, OnDestroy {
   /* --------------------------------------------------------------------------
    * VIEW CHILDREN
    * ------------------------------------------------------------------------ */
 
   /** Notification bridge component (used like a toast service). */
-  @ViewChild(NotificationDialogComponent)
+  @ViewChild( NotificationDialogComponent )
   protected notification!: NotificationDialogComponent;
 
   /** Search input reference (for search button click). */
-  @ViewChild('searchInput', {static: true})
+  @ViewChild( 'searchInput', { static: true } )
   protected searchInput!: ElementRef<HTMLInputElement>;
 
   /* --------------------------------------------------------------------------
@@ -151,7 +151,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
 
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private authService: AuthService,
     private router: Router,
     private APIsService: APIsService,
@@ -159,7 +159,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
     private domSanitizer: DomSanitizer,
     private dialog: MatDialog
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
 
     // Cache logged user once for permission checks.
     this.LOGGED_USER = this.authService.getLoggedUser;
@@ -173,36 +173,36 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * ------------------------------------------------------------------------ */
 
   public async ngOnInit(): Promise<void> {
-    if(this.isBrowser) {
+    if ( this.isBrowser ) {
       // Theme mode subscription.
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
+      } );
 
       // Adapt itemsPerPage based on window width.
-      this.windowWidthSub = this.windowRef.windowWidth$.subscribe((width) => {
+      this.windowWidthSub = this.windowRef.windowWidth$.subscribe( ( width ) => {
         let newPageSize: number = this.itemsPerPage;
 
-        if(width <= 599.99) {
+        if ( width <= 599.99 ) {
           newPageSize = 6;
-        } else if(width >= 600 && width <= 1199.98) {
+        } else if ( width >= 600 && width <= 1199.98 ) {
           newPageSize = 10;
-        } else if(width >= 1200 && width <= 1999.98) {
+        } else if ( width >= 1200 && width <= 1999.98 ) {
           newPageSize = 12;
         } else {
           newPageSize = 20;
         }
 
         // Only reload if page size actually changed.
-        if(newPageSize !== this.itemsPerPage) {
+        if ( newPageSize !== this.itemsPerPage ) {
           this.itemsPerPage = newPageSize;
-          void this.userInit(0);
+          void this.userInit( 0 );
         }
-      });
+      } );
     }
 
     // Initial load (page 0).
-    await this.userInit(0);
+    await this.userInit( 0 );
   }
 
   public ngOnDestroy(): void {
@@ -219,22 +219,22 @@ export class UsersListComponent implements OnInit, OnDestroy {
    */
   private registerIcons(): void {
     const iconMap = [
-      {name: 'view', path: 'Images/Icons/view.svg'},
-      {name: 'edit', path: 'Images/Icons/pencil-square.svg'},
-      {name: 'delete', path: 'Images/Icons/delete.svg'},
-      {name: 'add-new-user', path: 'Images/Icons/add-new-user.svg'},
-      {name: 'search', path: 'Images/Icons/search.svg'},
-      {name: 'filter', path: 'Images/Icons/filter.svg'},
-      {name: 'list', path: 'Images/Icons/list.svg'},
-      {name: 'lineColumns', path: 'Images/Icons/line-columns.svg'},
+      { name: 'view', path: 'Images/Icons/view.svg' },
+      { name: 'edit', path: 'Images/Icons/pencil-square.svg' },
+      { name: 'delete', path: 'Images/Icons/delete.svg' },
+      { name: 'add-new-user', path: 'Images/Icons/add-new-user.svg' },
+      { name: 'search', path: 'Images/Icons/search.svg' },
+      { name: 'filter', path: 'Images/Icons/filter.svg' },
+      { name: 'list', path: 'Images/Icons/list.svg' },
+      { name: 'lineColumns', path: 'Images/Icons/line-columns.svg' },
     ];
 
-    iconMap.forEach((icon) => {
+    iconMap.forEach( ( icon ) => {
       this.matIconRegistry.addSvgIcon(
         icon.name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path)
+        this.domSanitizer.bypassSecurityTrustResourceUrl( icon.path )
       );
-    });
+    } );
   }
 
   /* --------------------------------------------------------------------------
@@ -244,21 +244,21 @@ export class UsersListComponent implements OnInit, OnDestroy {
   /**
    * Handle layout switch (Row / Column) from <app-layout-switch-btn>.
    */
-  protected changeLayout(value: boolean): void {
+  protected changeLayout( value: boolean ): void {
     try {
-      if(typeof value !== 'boolean') {
-        throw new Error('Only boolean values are allowed for layout toggle.');
+      if ( typeof value !== 'boolean' ) {
+        throw new Error( 'Only boolean values are allowed for layout toggle.' );
       }
       this.viewMode = value;
-    } catch(err) {
-      console.error(err);
+    } catch ( err ) {
+      console.error( err );
     }
   }
 
   /**
    * Helper to quickly check if a given username is the logged user.
    */
-  protected isThisLoggedUserProfile(username: string): boolean {
+  protected isThisLoggedUserProfile( username: string ): boolean {
     return this.LOGGED_USER?.username === username;
   }
 
@@ -270,13 +270,13 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * Check if logged user can create new users.
    */
   protected createUserAvailable(): boolean {
-    if(!this.LOGGED_USER) return false;
+    if ( !this.LOGGED_USER ) return false;
 
     return (
       this.LOGGED_USER.access?.permissions?.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('create user')
+          permission.actions.includes( 'create user' )
       ) ?? false
     );
   }
@@ -285,13 +285,13 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * Check if logged user can view users.
    */
   protected viewUserAvailable(): boolean {
-    if(!this.LOGGED_USER) return false;
+    if ( !this.LOGGED_USER ) return false;
 
     return (
       this.LOGGED_USER.access?.permissions?.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('view users')
+          permission.actions.includes( 'view users' )
       ) ?? false
     );
   }
@@ -300,13 +300,13 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * Check if logged user can update users.
    */
   protected updateUserAvailable(): boolean {
-    if(!this.LOGGED_USER) return false;
+    if ( !this.LOGGED_USER ) return false;
 
     return (
       this.LOGGED_USER.access?.permissions?.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('update user')
+          permission.actions.includes( 'update user' )
       ) ?? false
     );
   }
@@ -315,13 +315,13 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * Check if logged user can delete users.
    */
   protected deleteUserAvailable(): boolean {
-    if(!this.LOGGED_USER) return false;
+    if ( !this.LOGGED_USER ) return false;
 
     return (
       this.LOGGED_USER.access?.permissions?.some(
-        (permission) =>
+        ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes('delete user')
+          permission.actions.includes( 'delete user' )
       ) ?? false
     );
   }
@@ -335,25 +335,25 @@ export class UsersListComponent implements OnInit, OnDestroy {
    *  - If a valid extension is found → use the provided image.
    *  - Else → use gender-specific dummy image.
    */
-  protected detectUserImage(image: string, gender: string): string {
-    if(typeof image === 'string') {
-      const imageArray: string[] = image ? image.split('/') : [];
+  protected detectUserImage( image: string, gender: string ): string {
+    if ( typeof image === 'string' ) {
+      const imageArray: string[] = image ? image.split( '/' ) : [];
 
-      if(imageArray.length > 0) {
-        const filename: string = imageArray[imageArray.length - 1] ?? '';
-        const extension: string = filename.split('.')[1] ?? '';
+      if ( imageArray.length > 0 ) {
+        const filename: string = imageArray[ imageArray.length - 1 ] ?? '';
+        const extension: string = filename.split( '.' )[ 1 ] ?? '';
 
         // Only accept known extensions
-        if(this.definedImageExtensionArray.includes(extension)) {
+        if ( this.definedImageExtensionArray.includes( extension ) ) {
           this.definedImage = image;
         } else {
-          this.definedImage = this.getGenderFallbackImage(gender);
+          this.definedImage = this.getGenderFallbackImage( gender );
         }
       } else {
-        this.definedImage = this.getGenderFallbackImage(gender);
+        this.definedImage = this.getGenderFallbackImage( gender );
       }
     } else {
-      this.definedImage = this.getGenderFallbackImage(gender);
+      this.definedImage = this.getGenderFallbackImage( gender );
     }
 
     return this.definedImage;
@@ -362,10 +362,10 @@ export class UsersListComponent implements OnInit, OnDestroy {
   /**
    * Helper to pick a dummy image based on gender string.
    */
-  private getGenderFallbackImage(gender: string): string {
-    const lowerGender = (gender ?? '').toLowerCase();
+  private getGenderFallbackImage( gender: string ): string {
+    const lowerGender = ( gender ?? '' ).toLowerCase();
 
-    if(lowerGender === 'female') {
+    if ( lowerGender === 'female' ) {
       return this.definedWomanDummyImageURL;
     }
 
@@ -381,114 +381,113 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * Navigate to the Add User form.
    */
   protected addUser(): void {
-    if(!this.createUserAvailable()) {
-      this.notification.notification('error', 'You do not have permission to create users.');
+    if ( !this.createUserAvailable() ) {
+      this.notification.notification( 'error', 'You do not have permission to create users.' );
       return;
     }
 
-    this.router.navigate(['/dashboard/users/add-new-user']);
+    this.router.navigate( [ '/dashboard/users/add-new-user' ] );
   }
 
   /**
    * Navigate to view user profile (token-based).
    */
-  protected async viewUser(isView: boolean, user: User): Promise<void> {
+  protected async viewUser( isView: boolean, user: User ): Promise<void> {
     try {
-      if(!isView || !this.viewUserAvailable()) {
-        throw new Error('Permission denied to view user.');
+      if ( !isView || !this.viewUserAvailable() ) {
+        throw new Error( 'Permission denied to view user.' );
       }
 
-      if(!user || !user.username) {
-        throw new Error('Invalid user / username.');
+      if ( !user || !user.username ) {
+        throw new Error( 'Invalid user / username.' );
       }
 
-      const res = await this.APIsService.generateToken(user.username);
+      const res = await this.APIsService.generateToken( user.username );
 
-      if(!res.token) {
-        throw new Error('Invalid token returned from server.');
+      if ( !res.token ) {
+        throw new Error( 'Invalid token returned from server.' );
       }
 
-      this.router.navigate(['/dashboard/users/user-profile', res.token]);
-    } catch(err) {
-      console.error(err);
-      this.notification.notification('error', 'Unable to open user profile.');
+      this.router.navigate( [ '/dashboard/users/user-profile', res.token ] );
+    } catch ( err ) {
+      console.error( err );
+      this.notification.notification( 'error', 'Unable to open user profile.' );
     }
   }
 
   /**
    * Navigate to edit user form (token-based).
    */
-  protected async editUser(isEdit: boolean, user: User): Promise<void> {
+  protected async editUser( isEdit: boolean, user: User ): Promise<void> {
     try {
-      if(!isEdit || !this.updateUserAvailable()) {
-        throw new Error('Permission denied to edit user.');
+      if ( !isEdit || !this.updateUserAvailable() ) {
+        throw new Error( 'Permission denied to edit user.' );
       }
 
-      if(!user || !user.username) {
-        throw new Error('Invalid user / username.');
+      if ( !user || !user.username ) {
+        throw new Error( 'Invalid user / username.' );
       }
 
-      const res = await this.APIsService.generateToken(user.username);
+      const res = await this.APIsService.generateToken( user.username );
 
-      if(!res.token) {
-        throw new Error('Invalid token returned from server.');
+      if ( !res.token ) {
+        throw new Error( 'Invalid token returned from server.' );
       }
 
-      this.router.navigate(['/dashboard/users/edit-user', res.token]);
-    } catch(err) {
-      console.error(err);
-      this.notification.notification('error', 'Unable to open edit user screen.');
+      this.router.navigate( [ '/dashboard/users/edit-user', res.token ] );
+    } catch ( err ) {
+      console.error( err );
+      this.notification.notification( 'error', 'Unable to open edit user screen.' );
     }
   }
 
   /**
    * Open confirmation dialog and delete user if confirmed.
    */
-  protected deleteUser(isDelete: boolean, user: User): void {
+  protected deleteUser( isDelete: boolean, user: User ): void {
     try {
-      if(!isDelete) return;
+      if ( !isDelete ) return;
 
       const username = user.username;
       const name = user.name;
 
-      if(!username) throw new Error('Username cannot be empty.');
-      if(!name) throw new Error('Name cannot be empty.');
+      if ( !username ) throw new Error( 'Username cannot be empty.' );
+      if ( !name ) throw new Error( 'Name cannot be empty.' );
 
-      const dialogRef = this.dialog.open(ConfirmationComponent, {
+      const dialogRef = this.dialog.open( ConfirmationComponent, {
         width: '400px',
         height: 'auto',
         data: {
-          title: `Delete ${name}`,
-          message: `Are you sure you want to delete ${name}?`,
-          isConfirm: true,
+          title: `Delete ${ name }`,
+          message: `Are you sure you want to delete ${ name }?`,
         },
-      });
+      } );
 
-      dialogRef.afterClosed().subscribe(async (result) => {
+      dialogRef.afterClosed().subscribe( async ( result ) => {
         try {
-          if(!result?.isConfirm) return;
-          if(!this.LOGGED_USER) {
-            throw new Error('User must be logged into the system.');
+          if ( !result ) return;
+          if ( !this.LOGGED_USER ) {
+            throw new Error( 'User must be logged into the system.' );
           }
 
           await this.APIsService.deleteUserByUsername(
             username,
             this.LOGGED_USER.username
           )
-            .then((res) => {
-              this.notification.notification(res.status, res.message);
+            .then( ( res ) => {
+              this.notification.notification( res.status, res.message );
               // Optional: reload current page
-              void this.userInit(this.index);
-            })
-            .catch((err: HttpErrorResponse) => {
-              this.notification.notification(err.error?.error ?? 'error', err.error?.message ?? 'Delete failed.');
-            });
-        } catch(err) {
-          this.notification.notification('error', String(err));
+              void this.userInit( this.index );
+            } )
+            .catch( ( err: HttpErrorResponse ) => {
+              this.notification.notification( err.error?.error ?? 'error', err.error?.message ?? 'Delete failed.' );
+            } );
+        } catch ( err ) {
+          this.notification.notification( 'error', String( err ) );
         }
-      });
-    } catch(error) {
-      this.notification.notification('error', String(error));
+      } );
+    } catch ( error ) {
+      this.notification.notification( 'error', String( error ) );
     }
   }
 
@@ -500,18 +499,18 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * Live search handler (ngModelChange).
    * Always resets to page 0 on new search.
    */
-  protected async searchUsers(input: string): Promise<void> {
+  protected async searchUsers( input: string ): Promise<void> {
     try {
-      const raw: string = (input ?? '').toString();
+      const raw: string = ( input ?? '' ).toString();
       const safeInput: string = raw.trim().toLowerCase();
 
       this.currentSearchTerm = safeInput;
 
       // Reset to first page for a new search term.
-      await this.userInit(0);
-    } catch(err) {
-      console.error(err);
-      this.notification.notification('error', 'Failed to process user search.');
+      await this.userInit( 0 );
+    } catch ( err ) {
+      console.error( err );
+      this.notification.notification( 'error', 'Failed to process user search.' );
     }
   }
 
@@ -521,10 +520,10 @@ export class UsersListComponent implements OnInit, OnDestroy {
   protected async searchBtn(): Promise<void> {
     try {
       const input = this.searchInput.nativeElement.value;
-      await this.searchUsers(input);
-    } catch(err) {
-      console.error(err);
-      this.notification.notification('error', 'User search failed.');
+      await this.searchUsers( input );
+    } catch ( err ) {
+      console.error( err );
+      this.notification.notification( 'error', 'User search failed.' );
     }
   }
 
@@ -546,12 +545,12 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * - Computes start/end for the backend.
    * - Normalises search string and updates pagination state.
    */
-  private async userInit(pageIndex: number): Promise<void> {
+  private async userInit( pageIndex: number ): Promise<void> {
     try {
       this.loading = true;
 
-      const safeIndex: number = Math.max(0, Math.round(Number(pageIndex)));
-      const limit: number = Math.max(1, this.itemsPerPage);
+      const safeIndex: number = Math.max( 0, Math.round( Number( pageIndex ) ) );
+      const limit: number = Math.max( 1, this.itemsPerPage );
 
       const startIdx: number = safeIndex * limit;
       const endIdx: number = startIdx + limit;
@@ -563,39 +562,39 @@ export class UsersListComponent implements OnInit, OnDestroy {
         safeSearch
       );
 
-      if(!res || res.status !== 'success') {
-        throw new Error(res?.message || 'Loading users failed.');
+      if ( !res || res.status !== 'success' ) {
+        throw new Error( res?.message || 'Loading users failed.' );
       }
 
       const payload = res.data;
-      this.users = Array.isArray(payload) ? payload : [];
+      this.users = Array.isArray( payload ) ? payload : [];
 
       this.totalItems = res.count ?? 0;
 
       this.pageCount =
-        this.totalItems > 0 ? Math.ceil(this.totalItems / limit) : 0;
+        this.totalItems > 0 ? Math.ceil( this.totalItems / limit ) : 0;
 
       // Clamp current page index in case count shrank.
       const maxIndex: number = this.pageCount > 0 ? this.pageCount - 1 : 0;
 
-      this.index = Math.min(safeIndex, maxIndex);
+      this.index = Math.min( safeIndex, maxIndex );
 
       // If requested page is beyond max (e.g. after bulk delete) → reload last page.
-      if(safeIndex > maxIndex && this.pageCount > 0) {
-        await this.userInit(maxIndex);
+      if ( safeIndex > maxIndex && this.pageCount > 0 ) {
+        await this.userInit( maxIndex );
         return;
       }
 
       // Update page-number window.
-      if(this.pageCount > 0) {
+      if ( this.pageCount > 0 ) {
         this.updateWindow();
       } else {
         this.start = 0;
         this.end = 0;
       }
-    } catch(err) {
-      console.error('[Failed to process user loading with pagination!]: ', err);
-      this.notification.notification('error', 'Failed to process user loading.');
+    } catch ( err ) {
+      console.error( '[Failed to process user loading with pagination!]: ', err );
+      this.notification.notification( 'error', 'Failed to process user loading.' );
       this.users = [];
       this.totalItems = 0;
       this.pageCount = 0;
@@ -609,26 +608,26 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * Visible page numbers (0-based internally, +1 in template).
    */
   get pageRange(): number[] {
-    if(this.pageCount <= 0) {
+    if ( this.pageCount <= 0 ) {
       return [];
     }
 
-    const totalPages = Math.max(1, this.pageCount);
-    const s = Math.max(0, Math.min(this.start, totalPages - 1));
-    const e = Math.max(s, Math.min(this.end, totalPages - 1));
+    const totalPages = Math.max( 1, this.pageCount );
+    const s = Math.max( 0, Math.min( this.start, totalPages - 1 ) );
+    const e = Math.max( s, Math.min( this.end, totalPages - 1 ) );
 
-    return Array.from({length: e - s + 1}, (_, i) => s + i);
+    return Array.from( { length: e - s + 1 }, ( _, i ) => s + i );
   }
 
   /**
    * Validate that a value can be treated as a number.
    */
-  private isNumberValue(value: unknown): boolean {
+  private isNumberValue( value: unknown ): boolean {
     return (
       value !== null &&
       value !== undefined &&
       value !== '' &&
-      !isNaN(Number(value))
+      !isNaN( Number( value ) )
     );
   }
 
@@ -636,26 +635,26 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * User-clicked pagination handler.
    * nextIndex is the 0-based page index requested from the UI.
    */
-  protected async changePage(nextIndex: number): Promise<void> {
+  protected async changePage( nextIndex: number ): Promise<void> {
     try {
-      if(!this.isNumberValue(nextIndex)) {
-        throw new Error('Invalid page index.');
+      if ( !this.isNumberValue( nextIndex ) ) {
+        throw new Error( 'Invalid page index.' );
       }
 
-      const totalPages = Math.max(1, this.pageCount);
-      const requested = Math.round(Number(nextIndex));
+      const totalPages = Math.max( 1, this.pageCount );
+      const requested = Math.round( Number( nextIndex ) );
 
       // Clamp into valid range.
-      const target = Math.min(Math.max(0, requested), totalPages - 1);
+      const target = Math.min( Math.max( 0, requested ), totalPages - 1 );
 
-      if(target === this.index) {
+      if ( target === this.index ) {
         // Already on that page → no-op.
         return;
       }
 
-      await this.userInit(target);
-    } catch(err) {
-      console.error('Pagination failed:', err);
+      await this.userInit( target );
+    } catch ( err ) {
+      console.error( 'Pagination failed:', err );
     }
   }
 
@@ -664,14 +663,14 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * Shows up to 5 pages (2 on each side where possible).
    */
   private updateWindow(): void {
-    const totalPages = Math.max(1, this.pageCount);
+    const totalPages = Math.max( 1, this.pageCount );
 
     let current = this.index;
-    if(current < 0) current = 0;
-    if(current > totalPages - 1) current = totalPages - 1;
+    if ( current < 0 ) current = 0;
+    if ( current > totalPages - 1 ) current = totalPages - 1;
     this.index = current;
 
-    if(totalPages <= 5) {
+    if ( totalPages <= 5 ) {
       this.start = 0;
       this.end = totalPages - 1;
       return;
@@ -680,12 +679,12 @@ export class UsersListComponent implements OnInit, OnDestroy {
     let start = current - 2;
     let end = current + 2;
 
-    if(start < 0) {
+    if ( start < 0 ) {
       start = 0;
       end = 4;
     }
 
-    if(end > totalPages - 1) {
+    if ( end > totalPages - 1 ) {
       end = totalPages - 1;
       start = totalPages - 5;
     }

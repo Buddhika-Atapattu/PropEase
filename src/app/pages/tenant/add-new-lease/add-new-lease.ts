@@ -10,57 +10,57 @@ import {
   HostListener,
   ChangeDetectorRef,
 } from '@angular/core';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {of, Subscription} from 'rxjs';
-import {ActivatedRoute, Router} from '@angular/router';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
+import { of, Subscription } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   APIsService,
   User,
   Country,
   CountryCodes, ROLE_ACCESS_MAP
 } from '../../../services/APIs/apis.service';
-import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
-import {MatInputModule} from '@angular/material/input';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatButtonModule} from '@angular/material/button';
-import {MatExpansionModule} from '@angular/material/expansion';
+import { SkeletonLoaderComponent } from '../../../components/shared/skeleton-loader/skeleton-loader.component';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatButtonModule } from '@angular/material/button';
+import { MatExpansionModule } from '@angular/material/expansion';
 import {
   MatAutocompleteModule,
   MatAutocompleteSelectedEvent,
 } from '@angular/material/autocomplete';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {MatDatepickerModule} from '@angular/material/datepicker';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import {
   MatMomentDateModule
 } from '@angular/material-moment-adapter';
-import {MatSelectModule} from '@angular/material/select';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatCheckboxModule} from '@angular/material/checkbox';
-import {MatTooltipModule} from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   AuthService,
 } from '../../../services/auth/auth.service';
-import {Observable} from 'rxjs';
-import {map} from 'rxjs/operators';
-import {DomSanitizer} from '@angular/platform-browser';
-import {MatDialog, MatDialogModule} from '@angular/material/dialog';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { DomSanitizer } from '@angular/platform-browser';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import {
   NotificationDialogComponent,
   NotificationType,
-} from '../../../components/dialogs/notification/notification.component';
-import {MatProgressBarModule} from '@angular/material/progress-bar';
-import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
-import {ImageCropperComponent} from 'ngx-image-cropper';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
-import {CameraBoxComponent} from '../../../components/dialogs/camera-box/camera-box.component';
-import {EditorComponent} from '@tinymce/tinymce-angular';
-import {FormBuilder} from '@angular/forms';
-import {FileScanner} from '../../../components/dialogs/file-scanner/file-scanner';
-import {ScanService} from '../../../services/scan/scan.service';
-import {TokenService} from '../../../services/token/token.service';
-import {FileViewer} from '../../../components/dialogs/file-viewer/file-viewer';
+} from '../../../components/dialogs/notification/notificationBar.component';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
+import { ImageCropperComponent } from 'ngx-image-cropper';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
+import { CameraBoxComponent } from '../../../components/dialogs/camera-box/camera-box.component';
+import { EditorComponent } from '@tinymce/tinymce-angular';
+import { FormBuilder } from '@angular/forms';
+import { FileScanner } from '../../../components/dialogs/file-scanner/file-scanner';
+import { ScanService } from '../../../services/scan/scan.service';
+import { TokenService } from '../../../services/token/token.service';
+import { FileViewer } from '../../../components/dialogs/file-viewer/file-viewer';
 import {
   BASE_SECURITY_DEPOSIT_OPTIONS, DEFAULT_COMPANY_POLICY,
   DEFAULT_RULES_AND_REGULATIONS,
@@ -95,11 +95,11 @@ import {
   TableButtonActionConfig,
   TableColumn
 } from '../../../components/shared/custom-table/custom-table.component';
-import {SafeUrlPipe} from '../../../pipes/safe-url.pipe';
-import {SignSignature} from '../../../components/dialogs/sign-signature/sign-signature.component';
-import {UserControllerService} from '../../../services/userController/user-controller.service';
-import {HttpErrorResponse} from '@angular/common/http';
-import {SwitchButton} from '../../../components/shared/buttons/switch-button/switch-button.component';
+import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
+import { SignSignature } from '../../../components/dialogs/sign-signature/sign-signature.component';
+import { UserControllerService } from '../../../services/userController/user-controller.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { SwitchButton } from '../../../components/shared/buttons/switch-button/switch-button.component';
 
 // EditorComponent,CameraBoxComponent,
 
@@ -138,24 +138,24 @@ interface ScannedFileRecordJSON {
 }
 
 interface TenantScannedFilesDataJSON {
-  [tenantUsername: string]: ScannedFileRecordJSON[];
+  [ tenantUsername: string ]: ScannedFileRecordJSON[];
 }
 
 interface PropertyCustomTableDataType {
   image: string;
-  id: BackEndPropertyData['id'];
-  type: BackEndPropertyData['type'];
-  title: BackEndPropertyData['title'];
-  listing: BackEndPropertyData['listing'];
-  furnishingStatus: BackEndPropertyData['furnishingStatus'];
-  developerName: BackEndPropertyData['developerName'];
-  projectName: BackEndPropertyData['projectName'];
-  builtYear: BackEndPropertyData['builtYear'];
+  id: BackEndPropertyData[ 'id' ];
+  type: BackEndPropertyData[ 'type' ];
+  title: BackEndPropertyData[ 'title' ];
+  listing: BackEndPropertyData[ 'listing' ];
+  furnishingStatus: BackEndPropertyData[ 'furnishingStatus' ];
+  developerName: BackEndPropertyData[ 'developerName' ];
+  projectName: BackEndPropertyData[ 'projectName' ];
+  builtYear: BackEndPropertyData[ 'builtYear' ];
   address: string;
 }
 
 
-@Component({
+@Component( {
   selector: 'app-add-new-lease',
   imports: [
     CommonModule,
@@ -185,15 +185,15 @@ interface PropertyCustomTableDataType {
   standalone: true,
   templateUrl: './add-new-lease.html',
   styleUrl: './add-new-lease.scss'
-})
+} )
 export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=============================== COMPONENT PROPERTIES ===============================>
-  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild( 'fileInput' ) fileInput!: ElementRef<HTMLInputElement>;
 
-  @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
-  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
-  @ViewChild(ImageCropperComponent) imageCropper!: ImageCropperComponent;
-  @ViewChild(CameraBoxComponent) cameraBox!: CameraBoxComponent;
+  @ViewChild( ProgressBarComponent ) progress!: ProgressBarComponent;
+  @ViewChild( NotificationDialogComponent ) notification!: NotificationDialogComponent;
+  @ViewChild( ImageCropperComponent ) imageCropper!: ImageCropperComponent;
+  @ViewChild( CameraBoxComponent ) cameraBox!: CameraBoxComponent;
 
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
@@ -216,7 +216,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     'gif',
   ];
 
-  protected init: EditorComponent['init'] = {
+  protected init: EditorComponent[ 'init' ] = {
     plugins: 'lists link image table code help wordcount',
   };
 
@@ -372,62 +372,62 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   // <=============================== Property Informations ===============================>
   protected properties: BackEndPropertyData[] = [];
   private selectedProperty: BackEndPropertyData | null = null;
-  protected propertyId: BackEndPropertyData['id'] = '';
-  protected propertyTitle: BackEndPropertyData['title'] = '';
-  protected location: BackEndPropertyData['location'] | undefined = undefined;
+  protected propertyId: BackEndPropertyData[ 'id' ] = '';
+  protected propertyTitle: BackEndPropertyData[ 'title' ] = '';
+  protected location: BackEndPropertyData[ 'location' ] | undefined = undefined;
   protected propertylocaaationLat: number = 0;
   protected propertylocaaationLng: number = 0;
   protected propertyGeoLocation: string = ''; // for map
-  protected propertyHouserNumber: Address['houseNumber'] = '';
-  protected propertyStreet: Address['street'] = '';
-  protected propertyCity: Address['city'] = '';
-  protected propertyStateOrProvince: Address['stateOrProvince'] = '';
-  protected propertyPostalCode: Address['postcode'] = '';
-  protected propertyCountry: Address['country'] = '';
-  protected propertyType: BackEndPropertyData['listing'] = '';
-  protected propertyBuiltYear: BackEndPropertyData['builtYear'] = 0;
-  protected furnishingStatus: BackEndPropertyData['furnishingStatus'] = '';
-  protected includedAmenities: BackEndPropertyData['featuresAndAmenities'] = [];
-  protected parkingSpots: BackEndPropertyData['numberOfParking'] = 0;
-  protected propertyDeveloperName: BackEndPropertyData['developerName'] = '';
-  protected propertyProjectName: BackEndPropertyData['projectName'] = '';
+  protected propertyHouserNumber: Address[ 'houseNumber' ] = '';
+  protected propertyStreet: Address[ 'street' ] = '';
+  protected propertyCity: Address[ 'city' ] = '';
+  protected propertyStateOrProvince: Address[ 'stateOrProvince' ] = '';
+  protected propertyPostalCode: Address[ 'postcode' ] = '';
+  protected propertyCountry: Address[ 'country' ] = '';
+  protected propertyType: BackEndPropertyData[ 'listing' ] = '';
+  protected propertyBuiltYear: BackEndPropertyData[ 'builtYear' ] = 0;
+  protected furnishingStatus: BackEndPropertyData[ 'furnishingStatus' ] = '';
+  protected includedAmenities: BackEndPropertyData[ 'featuresAndAmenities' ] = [];
+  protected parkingSpots: BackEndPropertyData[ 'numberOfParking' ] = 0;
+  protected propertyDeveloperName: BackEndPropertyData[ 'developerName' ] = '';
+  protected propertyProjectName: BackEndPropertyData[ 'projectName' ] = '';
   protected isPropertySelected: boolean = false;
 
   // Custom tabl variables
   private _propertyTableIsReloading: boolean = false;
   protected propertyTablePageSize: number = 5;
-  protected propertyTablePageSizeOptions: number[] = [5, 10, 25, 100];
+  protected propertyTablePageSizeOptions: number[] = [ 5, 10, 25, 100 ];
   private _propertyTablePageIndex: number = 0;
   protected propertyTableTitle: string = 'Properties';
   private _propertyTabletSearchText: string = '';
   protected propertyTableTotalDataCount: number = 0;
   protected propertyTableButtons: TableButton[] = [
-    {'action': 'view', 'icon': 'visibility'},
-    {'action': 'add', 'icon': 'add_circle'},
-  ]
+    { 'action': 'view', 'icon': 'visibility' },
+    { 'action': 'add', 'icon': 'add_circle' },
+  ];
   protected propertyTableData: PropertyCustomTableDataType[] = [];
   protected propertyTableColumns: TableColumn[] = [
-    {key: 'propertyimage', label: 'Image'},
-    {key: 'type', label: 'Type'},
-    {key: 'listing', label: 'Listing'},
-    {key: 'furnishingStatus', label: 'Furnishing Status'},
-    {key: 'developerName', label: 'Developer Name'},
-    {key: 'projectName', label: 'Project Name'},
-    {key: 'title', label: 'Title'},
-    {key: 'builtYear', label: 'Built Year'},
-    {key: 'address', label: 'Address'},
-    {key: 'actions', label: 'View'},
-    {key: 'operation', label: 'Add'},
+    { key: 'propertyimage', label: 'Image' },
+    { key: 'type', label: 'Type' },
+    { key: 'listing', label: 'Listing' },
+    { key: 'furnishingStatus', label: 'Furnishing Status' },
+    { key: 'developerName', label: 'Developer Name' },
+    { key: 'projectName', label: 'Project Name' },
+    { key: 'title', label: 'Title' },
+    { key: 'builtYear', label: 'Built Year' },
+    { key: 'address', label: 'Address' },
+    { key: 'actions', label: 'View' },
+    { key: 'operation', label: 'Add' },
   ];
   // End Custom tabl variables
 
   // <=============================== End Property Informations ===============================>
 
   // <=============================== Lease Agreement ===============================>
-  protected _startDate: LeaseAgreement['startDate'] = new Date();
-  protected _endDate: LeaseAgreement['endDate'] = new Date();
-  protected _durationMonths: LeaseAgreement['durationMonths'] = 0;
-  protected monthlyRent: LeaseAgreement['monthlyRent'] = 0;
+  protected _startDate: LeaseAgreement[ 'startDate' ] = new Date();
+  protected _endDate: LeaseAgreement[ 'endDate' ] = new Date();
+  protected _durationMonths: LeaseAgreement[ 'durationMonths' ] = 0;
+  protected monthlyRent: LeaseAgreement[ 'monthlyRent' ] = 0;
 
   // currency
   protected currencyLeaseAgreement: string = '';
@@ -495,8 +495,8 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   // <=============================== End Lease Agreement ===============================>
   // <=============================== Rule And Regulation ===============================>
-  protected rulesAndRegulation: RulesAndRegulations['rule'] = '';
-  protected ulesAndRegulationDescription: RulesAndRegulations['description'] =
+  protected rulesAndRegulation: RulesAndRegulations[ 'rule' ] = '';
+  protected ulesAndRegulationDescription: RulesAndRegulations[ 'description' ] =
     '';
   private _rulesAndRegulation: RulesAndRegulations | null = null;
   protected readonly rulesAndRegulationsOptions: RulesAndRegulations[] =
@@ -513,27 +513,27 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   // <=============================== End Company Policy ===============================>
 
   // <=============================== Signatures ===============================>
-  protected tenantSignature: Signatures['tenantSignature'] | null = null;
+  protected tenantSignature: Signatures[ 'tenantSignature' ] | null = null;
   protected tenantPreviewImageData: string = '';
-  protected landlordSignature: Signatures['landlordSignature'] | null = null;
+  protected landlordSignature: Signatures[ 'landlordSignature' ] | null = null;
   protected landloadPreviewImageData: string = '';
-  protected signedAt: Signatures['signedAt'] = this.today;
+  protected signedAt: Signatures[ 'signedAt' ] = this.today;
   private ipAddress: string = '';
   protected userAgent: AddedBy | null = null;
   // <=============================== End Signatures ===============================>
 
   // <=============================== System Metadata ===============================>
-  private ocrAutoFillStatus: SystemMetadata['ocrAutoFillStatus'] = false;
-  private validationStatus: SystemMetadata['validationStatus'] = 'pending';
-  private language: SystemMetadata['language'] = 'en';
-  private leaseTemplateVersion: SystemMetadata['leaseTemplateVersion'] =
+  private ocrAutoFillStatus: SystemMetadata[ 'ocrAutoFillStatus' ] = false;
+  private validationStatus: SystemMetadata[ 'validationStatus' ] = 'pending';
+  private language: SystemMetadata[ 'language' ] = 'en';
+  private leaseTemplateVersion: SystemMetadata[ 'leaseTemplateVersion' ] =
     '1.0.0';
-  private lastUpdated: SystemMetadata['lastUpdated'] = this.today.toISOString();
+  private lastUpdated: SystemMetadata[ 'lastUpdated' ] = this.today.toISOString();
   // <=============================== End System Metadata ===============================>
 
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private route: ActivatedRoute,
     private router: Router,
     private apiService: APIsService,
@@ -550,9 +550,9 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     private tenantService: TenantService,
     private userControllerService: UserControllerService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
     this.loggedUser = this.authService.getLoggedUser;
-    if(this.loggedUser)
+    if ( this.loggedUser )
       this.userAgent = {
         name: this.loggedUser?.name,
         email: this.loggedUser?.email,
@@ -561,29 +561,29 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
         username: this.loggedUser?.username,
       };
 
-    this.route.url.subscribe((segments) => {
-      const path = segments.map((s) => s.path).join('/');
-    });
+    this.route.url.subscribe( ( segments ) => {
+      const path = segments.map( ( s ) => s.path ).join( '/' );
+    } );
 
-    this.route.params.subscribe(async (params) => {
-      this.tenantID = params['tenantID'];
-      await this.apiService.getCountryCodes().then((res) => {
+    this.route.params.subscribe( async ( params ) => {
+      this.tenantID = params[ 'tenantID' ];
+      await this.apiService.getCountryCodes().then( ( res ) => {
         this.commonCountryCodes = res;
-      });
+      } );
       await this.loadData();
-    });
+    } );
   }
 
   async ngOnInit(): Promise<void> {
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+    if ( this.isBrowser ) {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
+      } );
       this.registerCustomIcons();
       await this.getAllCountries();
       await this.getCountryCodes();
       await this.makeCurrenciesList();
-      await this.makePropertyTablePagination(0);
+      await this.makePropertyTablePagination( 0 );
       this.isLoading = false;
     }
   }
@@ -596,9 +596,9 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   protected onReload(): void {
     const currentUrl = this.router.url;
-    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
-      this.router.navigate([currentUrl]);
-    });
+    this.router.navigateByUrl( '/', { skipLocationChange: true } ).then( () => {
+      this.router.navigate( [ currentUrl ] );
+    } );
   }
 
   //<=========================== Check The Logged User Privileges ===========================>
@@ -614,19 +614,19 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       'track expiry',
     ];
 
-    const permissions: ROLE_ACCESS_MAP['permissions'] =
+    const permissions: ROLE_ACCESS_MAP[ 'permissions' ] =
       this.loggedUser?.access?.permissions ?? [];
 
     const leasePermissions = permissions.find(
-      (perm) => perm.module.toLowerCase() === requiredModule.toLowerCase()
+      ( perm ) => perm.module.toLowerCase() === requiredModule.toLowerCase()
     );
 
-    if(!leasePermissions) {
+    if ( !leasePermissions ) {
       return false;
     }
 
-    return requiredActions.every((action) =>
-      leasePermissions.actions.includes(action)
+    return requiredActions.every( ( action ) =>
+      leasePermissions.actions.includes( action )
     );
   }
   //<=========================== End Check The Logged User Privileges ===========================>
@@ -654,11 +654,11 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       image: 'file-types/image.svg',
     };
 
-    for(const [name, path] of Object.entries(iconMap)) {
+    for ( const [ name, path ] of Object.entries( iconMap ) ) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `Images/Icons/${path}`
+          `Images/Icons/${ path }`
         )
       );
     }
@@ -666,8 +666,8 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== End Icon Register ===========================>
 
   //<=========================== Icon Chooser ===========================>
-  protected chooceIcon(type: string): string {
-    switch(type) {
+  protected chooceIcon( type: string ): string {
+    switch ( type ) {
       case 'doc':
         return 'word';
       case 'docx':
@@ -740,23 +740,23 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   private async loadData() {
     try {
       this.isLoading = true;
-      const response = await this.apiService.getUserByToken(this.tenantID);
-      if(response.status === 'success') {
+      const response = await this.apiService.getUserByToken( this.tenantID );
+      if ( response.status === 'success' ) {
         this.tenant = response.user as User;
         this.tenantUsername = this.tenant.username;
         this.tenantFullName = this.tenant.name;
         this.tenantEmail = this.tenant.email;
-        this.onTenantEmailChange(this.tenantEmail);
+        this.onTenantEmailChange( this.tenantEmail );
         this.tenantDateOfBirth = this.tenant.dateOfBirth
-          ? new Date(this.tenant.dateOfBirth)
+          ? new Date( this.tenant.dateOfBirth )
           : new Date();
         this.tenantPhoneCodeDetails = this.autoAssigningThePhoneCodeIfItIsEmpty(
           this.tenant.address.country ?? ''
         );
         this.tenantPhoneCodeId = this.tenantPhoneCodeDetails.code !== ''
-          ? this.tenantPhoneCodeDetails.code : this.extractCountryCodeAndPhone(this.tenant.phoneNumber ?? '').code;
+          ? this.tenantPhoneCodeDetails.code : this.extractCountryCodeAndPhone( this.tenant.phoneNumber ?? '' ).code;
 
-        this.tenantPhoneNumber = this.extractCountryCodeAndPhone(this.tenant.phoneNumber ?? '').number;
+        this.tenantPhoneNumber = this.extractCountryCodeAndPhone( this.tenant.phoneNumber ?? '' ).number;
 
         this.tenantGender = this.tenant.gender.toLowerCase();
 
@@ -768,24 +768,24 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
         this.tenantCountry = this.tenant.address.country ?? '';
       }
     }
-    catch(error) {
-      console.error(error);
-      if(error instanceof HttpErrorResponse) {
+    catch ( error ) {
+      console.error( error );
+      if ( error instanceof HttpErrorResponse ) {
         this.notification.notification(
           error.error.status,
           error.error.message
         );
       }
-      else if(typeof error === 'string') {
-        this.notification.notification('error', error);
+      else if ( typeof error === 'string' ) {
+        this.notification.notification( 'error', error );
       }
-      else if(error instanceof Error) {
-        this.notification.notification('error', error.message);
+      else if ( error instanceof Error ) {
+        this.notification.notification( 'error', error.message );
       }
       else {
-        setTimeout(() => {
-          this.router.navigate(['/dashboard/tenant/tenant-home/']);
-        }, 1000)
+        setTimeout( () => {
+          this.router.navigate( [ '/dashboard/tenant/tenant-home/' ] );
+        }, 1000 );
       }
     }
     finally {
@@ -796,41 +796,41 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== End Load Initial Tenant Data ===========================>
 
   //<=========================== Extract Country Code ===========================>
-  private extractCountryCodeAndPhone(phoneNumber: string): {
+  private extractCountryCodeAndPhone( phoneNumber: string ): {
     code: string;
     number: string;
   } {
     try {
-      if(!phoneNumber || typeof phoneNumber !== 'string') {
-        throw new Error('Invalid input');
+      if ( !phoneNumber || typeof phoneNumber !== 'string' ) {
+        throw new Error( 'Invalid input' );
       }
 
       const regex = /^\+?\d{1,4}[\s\-\.]?\(?\d{1,4}\)?[\s\-\.]?\d{1,4}[\s\-\.]?\d{1,9}$/;
-      if(!regex.test(phoneNumber)) {
-        throw new Error('Invalid phone number format');
+      if ( !regex.test( phoneNumber ) ) {
+        throw new Error( 'Invalid phone number format' );
       }
 
       // Normalize: remove spaces, dashes, parentheses
-      const normalized = phoneNumber.replace(/[\s\-\(\)\.]/g, '');
+      const normalized = phoneNumber.replace( /[\s\-\(\)\.]/g, '' );
 
       // Ensure it starts with +
-      const withPlus = normalized.startsWith('+') ? normalized : '+' + normalized;
+      const withPlus = normalized.startsWith( '+' ) ? normalized : '+' + normalized;
 
       // Sort codes from longest to shortest (e.g., +971 before +94)
-      const sortedCodes = this.phoneCodes.sort((a, b) => b.code.length - a.code.length);
+      const sortedCodes = this.phoneCodes.sort( ( a, b ) => b.code.length - a.code.length );
 
-      for(const code of sortedCodes.map(item => item.code)) {
-        if(withPlus.startsWith(code)) {
-          const number = withPlus.slice(code.length);
-          return {code, number};
+      for ( const code of sortedCodes.map( item => item.code ) ) {
+        if ( withPlus.startsWith( code ) ) {
+          const number = withPlus.slice( code.length );
+          return { code, number };
         }
       }
 
-      throw new Error('Country code not found');
+      throw new Error( 'Country code not found' );
 
     }
-    catch(error) {
-      console.error(error)
+    catch ( error ) {
+      console.error( error );
       return {
         code: '',
         number: '',
@@ -840,55 +840,55 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== End Extract Country Code ===========================>
 
   //<=========================== Is Phone Number Valid Number ===========================>
-  protected phoneNumberValid(phoneNumber: string): boolean {
+  protected phoneNumberValid( phoneNumber: string ): boolean {
     return phoneNumber.trim().length > 0
-      ? this.userControllerService.isPhoneNumberValid(phoneNumber)
+      ? this.userControllerService.isPhoneNumberValid( phoneNumber )
       : true;
   }
   //<=========================== End Is Phone Number Valid Number ===========================>
 
   //<=========================== Tenant Email Verification ===========================>
-  protected async onTenantEmailChange(email: string) {
+  protected async onTenantEmailChange( email: string ) {
     await this.userControllerService
-      .emailValidator(email)
-      .then((res) => {
-        if(res.status === 'success') {
+      .emailValidator( email )
+      .then( ( res ) => {
+        if ( res.status === 'success' ) {
           this.isTenantEmailValid = res.data.validation;
         } else {
           this.isTenantEmailValid = false;
         }
-      })
-      .catch((error: HttpErrorResponse) => {
-        if(error.status === 400 || error.status === 500) {
+      } )
+      .catch( ( error: HttpErrorResponse ) => {
+        if ( error.status === 400 || error.status === 500 ) {
           this.isTenantEmailValid = false;
         }
-      });
+      } );
   }
   //<=========================== Tenant Email Verification ===========================>
 
   //<=========================== Auto Assigning The Phone Code If It Is Empty ===========================>
-  private autoAssigningThePhoneCodeIfItIsEmpty(country: string): CountryCodes {
+  private autoAssigningThePhoneCodeIfItIsEmpty( country: string ): CountryCodes {
     return (
-      (this.commonCountryCodes.find(
-        (item) => item.name.toLowerCase() === country.toLowerCase()
-      ) as CountryCodes) ?? undefined
+      ( this.commonCountryCodes.find(
+        ( item ) => item.name.toLowerCase() === country.toLowerCase()
+      ) as CountryCodes ) ?? undefined
     );
   }
 
   //<=========================== End Auto Assigning The Phone Code If It Is Empty ===========================>
 
   //<=========================== Generate The Tenant Image Based On The Tenant Gender ===========================>
-  protected generateTenantImage(image: string, gender: string): string {
-    const imageArray: string[] = image ? image.split('/') : [];
-    if(Array.isArray(imageArray) && imageArray.length > 0) {
-      if(
+  protected generateTenantImage( image: string, gender: string ): string {
+    const imageArray: string[] = image ? image.split( '/' ) : [];
+    if ( Array.isArray( imageArray ) && imageArray.length > 0 ) {
+      if (
         this.definedImageExtentionArray.includes(
-          imageArray[imageArray.length - 1].split('.')[1]
+          imageArray[ imageArray.length - 1 ].split( '.' )[ 1 ]
         )
       ) {
         this.definedImage = image;
       } else {
-        if(gender.toLowerCase() === 'male') {
+        if ( gender.toLowerCase() === 'male' ) {
           this.definedImage = this.definedMaleDummyImageURL;
         } else {
           this.definedImage = this.definedWomanDummyImageURL;
@@ -901,48 +901,48 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   //<=========================== Page Indicator For The Tenant Dashboard ===========================>
   protected goToTenants() {
-    this.router.navigateByUrl('/', {skipLocationChange: true}).then(() => {
-      this.router.navigate(['/dashboard/tenant/tenant-home/']);
-    });
+    this.router.navigateByUrl( '/', { skipLocationChange: true } ).then( () => {
+      this.router.navigate( [ '/dashboard/tenant/tenant-home/' ] );
+    } );
   }
   //<=========================== End Page Indicator For The Tenant Dashboard ===========================>
 
   //<=========================== Page Indicator For The Tenant View ===========================>
   protected async goLease() {
-    if(this.tenant) {
-      const tokenResult = await this.apiService.generateToken(this.tenant?.username);
-      this.router.navigate(['/dashboard/tenant/create-lease', tokenResult.token]);
+    if ( this.tenant ) {
+      const tokenResult = await this.apiService.generateToken( this.tenant?.username );
+      this.router.navigate( [ '/dashboard/tenant/create-lease', tokenResult.token ] );
     }
   }
   //<=========================== Page Indicator For The Tenant View ===========================>
 
   //<=========================== Page Indicator For The Tenant Profile ===========================>
   protected async goToTenant() {
-    if(this.tenant) {
-      const tenant = await this.apiService.generateToken(this.tenant?.username);
-      if(tenant)
+    if ( this.tenant ) {
+      const tenant = await this.apiService.generateToken( this.tenant?.username );
+      if ( tenant )
         this.router
-          .navigateByUrl('/', {skipLocationChange: true})
-          .then(() => {
-            this.router.navigate([
+          .navigateByUrl( '/', { skipLocationChange: true } )
+          .then( () => {
+            this.router.navigate( [
               '/dashboard/tenant/tenant-view/',
               tenant.token,
-            ]);
-          });
+            ] );
+          } );
     }
   }
   //<=========================== End Page Indicator For The Tenant Profile ===========================>
 
   //<=========================== Processing The File Past Of The Tenant Identification Document Upload ===========================>
-  @HostListener('document:paste', ['$event'])
-  protected identificationFileHandlePaste(event: ClipboardEvent): void {
+  @HostListener( 'document:paste', [ '$event' ] )
+  protected identificationFileHandlePaste( event: ClipboardEvent ): void {
     const target = event.target as HTMLElement;
 
     // Allow default behavior for text inputs and editable fields
-    if(
+    if (
       target.tagName === 'INPUT' ||
       target.tagName === 'TEXTAREA' ||
-      target.hasAttribute('contenteditable')
+      target.hasAttribute( 'contenteditable' )
     ) {
       return; // Don't block default paste
     }
@@ -952,68 +952,68 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
     // Custom paste handling for image files
     const items = event.clipboardData?.items;
-    if(!items) return;
+    if ( !items ) return;
 
-    for(const item of items) {
-      if(item.kind === 'file') {
+    for ( const item of items ) {
+      if ( item.kind === 'file' ) {
         const file = item.getAsFile();
-        if(file) {
-          this.processIdentificationFilePasted(file);
+        if ( file ) {
+          this.processIdentificationFilePasted( file );
         }
       }
     }
   }
 
-  protected processIdentificationFilePasted(file: File) {
+  protected processIdentificationFilePasted( file: File ) {
     const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
+    dataTransfer.items.add( file );
 
     const input = this.fileInput.nativeElement;
     input.files = dataTransfer.files;
 
     // Trigger the same file selection logic
-    this.onIdentificationFileSelectionChange({target: input} as any);
+    this.onIdentificationFileSelectionChange( { target: input } as any );
   }
   //<=========================== End Processing The File Past Of The Tenant Identification Document Upload ===========================>
 
   //<=========================== Documant Drag And Drop Section ===========================>
-  protected onIdentificationFileDragOver(event: DragEvent): void {
+  protected onIdentificationFileDragOver( event: DragEvent ): void {
     event.preventDefault(); // Crucial to allow drop
     this.isDragOver = true;
   }
 
-  protected onIdentificationFileDragLeave(event: DragEvent): void {
+  protected onIdentificationFileDragLeave( event: DragEvent ): void {
     event.preventDefault();
     this.isDragOver = false;
   }
 
-  protected onIdentificationFileDrop(event: DragEvent): void {
+  protected onIdentificationFileDrop( event: DragEvent ): void {
     event.preventDefault();
     this.isDragOver = false;
 
     const files = event.dataTransfer?.files;
-    if(files && files.length > 0) {
-      const file = files[0];
-      if(file.type.startsWith('image/')) {
-        this.processIdentificationFileDropped(file);
+    if ( files && files.length > 0 ) {
+      const file = files[ 0 ];
+      if ( file.type.startsWith( 'image/' ) ) {
+        this.processIdentificationFileDropped( file );
       }
     }
   }
 
-  protected processIdentificationFileDropped(file: File) {
+  protected processIdentificationFileDropped( file: File ) {
     const dataTransfer = new DataTransfer();
-    dataTransfer.items.add(file);
+    dataTransfer.items.add( file );
 
     const input = this.fileInput.nativeElement;
     input.files = dataTransfer.files;
 
     // Trigger your upload handler
-    this.onIdentificationFileSelectionChange({target: input} as any);
+    this.onIdentificationFileSelectionChange( { target: input } as any );
   }
   //<=========================== End Documant Drag And Drop Section ===========================>
 
   //<=========================== Preventing The Default Behaviour Of The Browser When The File Past Or Drag And Drop ===========================>
-  protected preventDefault(event: Event): void {
+  protected preventDefault( event: Event ): void {
     event.preventDefault();
     event.stopPropagation();
   }
@@ -1021,43 +1021,43 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   //<=========================== Trigger The File Input ===========================>
   protected triggerTenantIdentificationFileInput() {
-    document.querySelector<HTMLInputElement>('#fileInput')?.click();
+    document.querySelector<HTMLInputElement>( '#fileInput' )?.click();
   }
   //<=========================== End Trigger The File Input ===========================>
 
   //<=========================== On Identification File Selection And Process ===========================>
-  protected onIdentificationFileSelectionChange(event: any): void {
-    if(event.target.files && event.target.files.length > 0) {
+  protected onIdentificationFileSelectionChange( event: any ): void {
+    if ( event.target.files && event.target.files.length > 0 ) {
       const files = event.target.files as File[];
-      this.tenantScanedDocuments.push(...files);
+      this.tenantScanedDocuments.push( ...files );
 
-      for(let i = 0; i < files.length; i++) {
-        const file = files[i];
+      for ( let i = 0; i < files.length; i++ ) {
+        const file = files[ i ];
         const fileSize = file.size;
         const name = file.name;
         const type = file.type;
-        const fileExtensionPart = file.name.split('.').pop();
+        const fileExtensionPart = file.name.split( '.' ).pop();
         const fileExtension = fileExtensionPart
           ? fileExtensionPart.toLowerCase()
           : '';
         const data = {
-          icon: this.chooceIcon(fileExtension),
+          icon: this.chooceIcon( fileExtension ),
           name: name,
           size: fileSize,
           type: type,
           token: '',
         };
-        this.tenantScaannedDocumentPreview.push(data);
+        this.tenantScaannedDocumentPreview.push( data );
       }
     } else {
-      this.notification.notification('warning', 'No files selected.');
+      this.notification.notification( 'warning', 'No files selected.' );
     }
   }
   //<=========================== End On Identification File Selection And Process ===========================>
 
   //<=========================== Identification File Upload Choose Section And Process ===========================>
   protected onIdentificationFileSelection() {
-    switch(this.identificationFileSelectionOption) {
+    switch ( this.identificationFileSelectionOption ) {
       case 'file-selection':
         return this.triggerTenantIdentificationFileInput();
       case 'drag-and-drop':
@@ -1071,45 +1071,45 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== End Identification File Upload Choose Section And Process ===========================>
 
   //<=========================== File Process To View ===========================>
-  protected processFileToView(file: any): void {
-    console.log(file);
+  protected processFileToView( file: any ): void {
+    console.log( file );
   }
   //<=========================== End File Process To View ===========================>
 
   //<=========================== Remove Scanned Document From The List ===========================>
-  protected async removeScannedDocument(document: any) {
+  protected async removeScannedDocument( document: any ) {
     try {
       // uploadedIdentificationFileRemoved
       const file = this.tenantScanedDocuments.find(
-        (item) => item.name === document.name
+        ( item ) => item.name === document.name
       );
 
       const uploadedFile = this.tenantUploadedScanedDocuments.find(
-        (item) => item.token === document.token
+        ( item ) => item.token === document.token
       );
 
-      if(file) {
-        const index = this.tenantScanedDocuments.indexOf(file);
-        this.tenantScanedDocuments.splice(index, 1);
-        this.tenantScaannedDocumentPreview.splice(index, 1);
-      } else if(uploadedFile) {
-        const index = this.tenantUploadedScanedDocuments.indexOf(uploadedFile);
-        this.tenantUploadedScanedDocuments.splice(index, 1);
-        this.tenantUploadedScanedDocumentsRemoved.push(uploadedFile);
+      if ( file ) {
+        const index = this.tenantScanedDocuments.indexOf( file );
+        this.tenantScanedDocuments.splice( index, 1 );
+        this.tenantScaannedDocumentPreview.splice( index, 1 );
+      } else if ( uploadedFile ) {
+        const index = this.tenantUploadedScanedDocuments.indexOf( uploadedFile );
+        this.tenantUploadedScanedDocuments.splice( index, 1 );
+        this.tenantUploadedScanedDocumentsRemoved.push( uploadedFile );
       } else {
-        throw new Error('File not found in the list.');
+        throw new Error( 'File not found in the list.' );
       }
 
       this.cdr.detectChanges();
-    } catch(error) {
-      this.notification.notification('error', String(error));
+    } catch ( error ) {
+      this.notification.notification( 'error', String( error ) );
     }
   }
   //<=========================== End Remove Scanned Document From The List ===========================>
 
   //<=========================== Open File Scanner Section ===========================>
   protected triggerScanner() {
-    const fileScanner = this.dialog.open(FileScanner, {
+    const fileScanner = this.dialog.open( FileScanner, {
       width: 'auto',
       height: 'auto',
       minWidth: '50vw',
@@ -1119,12 +1119,12 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       data: {
         tenantUsername: this.tenantUsername,
       },
-    });
+    } );
 
-    fileScanner.afterClosed().subscribe(async (result) => {
-      if(result) this.mobileFileUploadToken = result.token;
-      if(this.mobileFileUploadToken) this.getMobileUploadedFile();
-    });
+    fileScanner.afterClosed().subscribe( async ( result ) => {
+      if ( result ) this.mobileFileUploadToken = result.token;
+      if ( this.mobileFileUploadToken ) this.getMobileUploadedFile();
+    } );
   }
   //<=========================== End Open File Scanner Section ===========================>
 
@@ -1133,77 +1133,77 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   private async getMobileUploadedFile() {
     try {
       this.isLoading = true;
-      if(!this.tenantUsername) throw new Error('Tenant username is missing');
+      if ( !this.tenantUsername ) throw new Error( 'Tenant username is missing' );
       await this.scanService
-        .getReasonFileUploadsByTenantUsername(this.tenantUsername)
-        .then((res) => {
-          if(res.status === 'success') {
+        .getReasonFileUploadsByTenantUsername( this.tenantUsername )
+        .then( ( res ) => {
+          if ( res.status === 'success' ) {
             const data = res.data as ScannedFileRecordJSON[];
             this.tenantUploadedScanedDocuments = data;
 
-            this.tenantUploadedScanedDocuments.forEach((item) => {
-              item.files.forEach((fileItem) => {
+            this.tenantUploadedScanedDocuments.forEach( ( item ) => {
+              item.files.forEach( ( fileItem ) => {
                 const extention =
                   fileItem.file.originalname
-                    .split('.')
+                    .split( '.' )
                     .pop()
                     ?.toLocaleLowerCase() ?? '';
-                const icon = this.chooceIcon(extention);
+                const icon = this.chooceIcon( extention );
                 const URL = fileItem.file.URL;
                 const name = fileItem.file.filename;
                 const size = fileItem.file.size;
                 const type = fileItem.file.mimetype;
                 const token = fileItem.token;
-                console.log(item.token === fileItem.token);
-                this.tenantScaannedDocumentPreview.push({
+                console.log( item.token === fileItem.token );
+                this.tenantScaannedDocumentPreview.push( {
                   icon: icon,
                   name: name,
                   size: size,
                   type: type,
                   token: token,
                   URL: URL,
-                });
-              });
-            });
-            console.log(this.tenantUploadedScanedDocuments);
+                } );
+              } );
+            } );
+            console.log( this.tenantUploadedScanedDocuments );
           } else {
-            throw new Error(res.message);
+            throw new Error( res.message );
           }
-        })
-        .catch((error: HttpErrorResponse) => {
-          console.error(error);
-          throw new Error(error.error.message || 'Failed to fetch uploaded files');
-        });
+        } )
+        .catch( ( error: HttpErrorResponse ) => {
+          console.error( error );
+          throw new Error( error.error.message || 'Failed to fetch uploaded files' );
+        } );
 
       this.isLoading = false;
-    } catch(error) {
-      console.error(error);
+    } catch ( error ) {
+      console.error( error );
       const status = 'error';
       let messsage: string;
-      if(error instanceof Error) {
+      if ( error instanceof Error ) {
         messsage = error.message;
-      } else if(
+      } else if (
         typeof error === 'object' &&
         error !== null &&
         'error' in error &&
-        typeof (error as any).error === 'object' &&
-        (error as any).error !== null &&
-        'message' in (error as any).error
+        typeof ( error as any ).error === 'object' &&
+        ( error as any ).error !== null &&
+        'message' in ( error as any ).error
       ) {
-        messsage = (error as any).error.message as string;
+        messsage = ( error as any ).error.message as string;
       } else {
         messsage = 'An unknown error occurred';
       }
-      this.notification.notification(status, messsage);
+      this.notification.notification( status, messsage );
     }
   }
 
   //<=========================== End Get The Mobile Uploaded File Section ===========================>
 
   //<=========================== Open Dialog For The Document To View ===========================>
-  protected viewScannedDocument(document: string) {
-    if(document) {
-      const fileViewer = this.dialog.open(FileViewer, {
+  protected viewScannedDocument( document: string ) {
+    if ( document ) {
+      const fileViewer = this.dialog.open( FileViewer, {
         width: 'auto',
         height: 'auto',
         minWidth: '50vw',
@@ -1214,53 +1214,53 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
           document: document,
           token: this.mobileFileUploadToken,
         },
-      });
+      } );
 
-      fileViewer.afterClosed().subscribe((result) => {
-        if(result) {
-          console.log(result);
+      fileViewer.afterClosed().subscribe( ( result ) => {
+        if ( result ) {
+          console.log( result );
         }
-      });
+      } );
     }
   }
   //<=========================== End Open Dialog For The Document To View ===========================>
 
   //<=========================== Address Country Detection ===========================>
   private async getAllCountries() {
-    await this.apiService.getCountries().then((res: Country[]) => {
+    await this.apiService.getCountries().then( ( res: Country[] ) => {
       this.tenantCountries = res;
-    });
+    } );
   }
 
-  protected onTenantCountryChange(input: string): Country[] {
+  protected onTenantCountryChange( input: string ): Country[] {
     let filterValue = '';
 
-    if(typeof input === 'string') {
+    if ( typeof input === 'string' ) {
       filterValue = input.toLowerCase().trim();
-    } else if(input && typeof input === 'object' && 'currency' in input) {
-      filterValue = (input as Country).name.toLowerCase();
+    } else if ( input && typeof input === 'object' && 'currency' in input ) {
+      filterValue = ( input as Country ).name.toLowerCase();
     } else {
       filterValue = '';
     }
 
-    if(
+    if (
       filterValue &&
       this.tenantCountries &&
-      Array.isArray(this.tenantCountries)
+      Array.isArray( this.tenantCountries )
     ) {
       this.filterTenantCountries = of(
-        this.tenantCountries.filter((option) => {
-          return option.name.toLowerCase().includes(filterValue);
-        })
+        this.tenantCountries.filter( ( option ) => {
+          return option.name.toLowerCase().includes( filterValue );
+        } )
       );
 
-      this.filterTenantCountries.subscribe((countries: Country[]) => {
-        if(countries.length === 1) {
-          const country = countries[0];
+      this.filterTenantCountries.subscribe( ( countries: Country[] ) => {
+        if ( countries.length === 1 ) {
+          const country = countries[ 0 ];
           this.tenantCountry = country.name;
           this._tenantCountry = country;
         }
-      })
+      } );
     }
     return this.tenantCountries;
   }
@@ -1273,11 +1273,11 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     this._tenantCountry = value;
   }
 
-  protected displayFn(country: Country): string {
+  protected displayFn( country: Country ): string {
     return typeof country === 'string' ? country : country?.name ?? '';
   }
 
-  protected displayPhoneCode(country: CountryCodes): string {
+  protected displayPhoneCode( country: CountryCodes ): string {
     return typeof country === 'string' ? country : country?.code ?? '';
   }
   //<=========================== End Address Country Detection ===========================>
@@ -1286,37 +1286,37 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   private async getCountryCodes() {
     this.apiService
       .getCountryCodes()
-      .then((res) => {
+      .then( ( res ) => {
         this.phoneCodes = res;
-      })
-      .catch((error: HttpErrorResponse) => {
-        console.error(error);
-        if(error.status === 404) {
-          this.notification.notification('error', 'Country codes not found.');
+      } )
+      .catch( ( error: HttpErrorResponse ) => {
+        console.error( error );
+        if ( error.status === 404 ) {
+          this.notification.notification( 'error', 'Country codes not found.' );
         }
         else {
-          this.notification.notification('error', 'Failed to load country codes.');
+          this.notification.notification( 'error', 'Failed to load country codes.' );
         }
-      });
+      } );
   }
   //<=========================== End Get Country Code ===========================>
 
   //<=========================== Tenant Phone Code Change ===========================>
-  protected onTenantPhoneCodeChange(input: any): void {
+  protected onTenantPhoneCodeChange( input: any ): void {
     let filterValue = '';
 
-    if(typeof input === 'string') {
+    if ( typeof input === 'string' ) {
       filterValue = input.toLowerCase().trim();
-    } else if(input && typeof input === 'object' && 'currency' in input) {
-      filterValue = (input as CountryCodes).code.toLowerCase();
+    } else if ( input && typeof input === 'object' && 'currency' in input ) {
+      filterValue = ( input as CountryCodes ).code.toLowerCase();
     } else {
       filterValue = '';
     }
 
     this.filterTenantPhoneCodes = of(
-      this.phoneCodes.filter((item) => {
-        return item.code.toLowerCase().includes(filterValue.toLowerCase());
-      })
+      this.phoneCodes.filter( ( item ) => {
+        return item.code.toLowerCase().includes( filterValue.toLowerCase() );
+      } )
     );
   }
 
@@ -1330,42 +1330,42 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== End Tenant Phone Code Change ===========================>
 
   //<=========================== Co-Tenant Email Change ===========================>
-  protected async onCoTenantEmailChange(email: string) {
+  protected async onCoTenantEmailChange( email: string ) {
     await this.userControllerService
-      .emailValidator(email)
-      .then((res) => {
-        console.log(res);
-        if(res.status === 'success') {
+      .emailValidator( email )
+      .then( ( res ) => {
+        console.log( res );
+        if ( res.status === 'success' ) {
           this.isCoTenantEmailValid = res.data.validation;
         } else {
           this.isCoTenantEmailValid = false;
         }
-      })
-      .catch((error: HttpErrorResponse) => {
-        if(error.status === 400 || error.status === 500) {
+      } )
+      .catch( ( error: HttpErrorResponse ) => {
+        if ( error.status === 400 || error.status === 500 ) {
           this.isCoTenantEmailValid = false;
         }
 
-      });
+      } );
   }
   //<=========================== End Co-Tenant Email Change ===========================>
 
   //<=========================== Co-Tenant Phone Code Change ===========================>
-  protected onCoTenantPhoneCodeChange(input: any): void {
+  protected onCoTenantPhoneCodeChange( input: any ): void {
     let filterValue = '';
 
-    if(typeof input === 'string') {
+    if ( typeof input === 'string' ) {
       filterValue = input.toLowerCase().trim();
-    } else if(input && typeof input === 'object' && 'currency' in input) {
-      filterValue = (input as CountryCodes).code.toLowerCase();
+    } else if ( input && typeof input === 'object' && 'currency' in input ) {
+      filterValue = ( input as CountryCodes ).code.toLowerCase();
     } else {
       filterValue = '';
     }
 
     this.filterCoTenantPhoneCodes = of(
-      this.phoneCodes.filter((item) => {
-        return item.code.toLowerCase().includes(filterValue.toLowerCase());
-      })
+      this.phoneCodes.filter( ( item ) => {
+        return item.code.toLowerCase().includes( filterValue.toLowerCase() );
+      } )
     );
   }
 
@@ -1379,35 +1379,35 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== End Co-Tenant Phone Code Change ===========================>
 
   //<=========================== Eemergency Contact ===========================>
-  protected async emergencyContactChange(input: string) {
+  protected async emergencyContactChange( input: string ) {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isMatched = emailRegex.test(input.trim());
-    if(isMatched) {
-      await this.userControllerService.emailValidator(input.trim()).then((res) => {
-        if(res.status === 'success') {
+    const isMatched = emailRegex.test( input.trim() );
+    if ( isMatched ) {
+      await this.userControllerService.emailValidator( input.trim() ).then( ( res ) => {
+        if ( res.status === 'success' ) {
           this.isEmergencyContactValid = res.data.validation;
           this.emergencyContactSpanMessage = res.data.message;
         } else {
           this.isEmergencyContactValid = false;
         }
-      }).catch((error: HttpErrorResponse) => {
-        if(error.status >= 400 && error.status < 500) {
+      } ).catch( ( error: HttpErrorResponse ) => {
+        if ( error.status >= 400 && error.status < 500 ) {
           this.isEmergencyContactValid = false;
           this.emergencyContactSpanMessage = error.error.message || 'Invalid email format.';
         }
-        else if(error.status === 500) {
+        else if ( error.status === 500 ) {
           this.isEmergencyContactValid = false;
           this.emergencyContactSpanMessage = 'Internal server error. Please try again later.';
         } else {
           this.isEmergencyContactValid = false;
           this.emergencyContactSpanMessage = 'An unexpected error occurred.';
         }
-      });
+      } );
 
     } else {
-      const isPhoneValid = await this.phoneNumberValid(input.trim());
-      if(isPhoneValid) {
+      const isPhoneValid = await this.phoneNumberValid( input.trim() );
+      if ( isPhoneValid ) {
         this.isEmergencyContactValid = true;
         this.emergencyContactSpanMessage = 'Valid phone number.';
       } else {
@@ -1426,7 +1426,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     return this._propertyTableIsReloading;
   }
 
-  set propertyTableIsReloading(value: boolean) {
+  set propertyTableIsReloading( value: boolean ) {
     this._propertyTableIsReloading = value;
     this.handlePropertyTableReloading();
   }
@@ -1436,9 +1436,9 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     return this._propertyTablePageIndex;
   }
 
-  set propertyTablePageIndex(value: number) {
+  set propertyTablePageIndex( value: number ) {
     this._propertyTablePageIndex = value;
-    this.makePropertyTablePagination(this._propertyTablePageIndex);
+    this.makePropertyTablePagination( this._propertyTablePageIndex );
   }
 
 
@@ -1446,89 +1446,89 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     return this._propertyTabletSearchText;
   }
 
-  set propertyTabletSearchText(value: string) {
+  set propertyTabletSearchText( value: string ) {
     this._propertyTabletSearchText = value;
-    this.makePropertyTablePagination(0);
+    this.makePropertyTablePagination( 0 );
   }
   //<=========================== End Property Table Getters And Setters ===========================>
 
   //<=========================== Property Common Handlers ===========================>
-  protected gotoTheProperty(propertyID: string) {
-    if(this.isBrowser) {
-      this.router.navigate(['/dashboard/properties/property-view', propertyID]);
+  protected gotoTheProperty( propertyID: string ) {
+    if ( this.isBrowser ) {
+      this.router.navigate( [ '/dashboard/properties/property-view', propertyID ] );
     }
   }
 
   // Make each word first letter capitalize
-  protected makeCapitalize(text: string): string {
+  protected makeCapitalize( text: string ): string {
     const data = text
-      .split(' ')
+      .split( ' ' )
       .map(
-        (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ( word ) => word.charAt( 0 ).toUpperCase() + word.slice( 1 ).toLowerCase()
       );
 
-    return data.join(' ');
+    return data.join( ' ' );
   }
 
-  protected makeIcon(icon: string): string {
-    return this.propertyService.investigateTheAmenityIcon(icon);
+  protected makeIcon( icon: string ): string {
+    return this.propertyService.investigateTheAmenityIcon( icon );
   }
   //<=========================== End Property Common Handlers ===========================>
 
   //<=========================== Handle Property Table Getters And Setters ===========================>
   private async handlePropertyTableReloading() {
-    if(this._propertyTableIsReloading) {
-      await this.makePropertyTablePagination(0);
+    if ( this._propertyTableIsReloading ) {
+      await this.makePropertyTablePagination( 0 );
       this.propertyTableIsReloading = false;
     } else {
       return;
     }
   }
 
-  protected async tableButtonOperationForProperties(data: TableButtonActionConfig): Promise<void> {
+  protected async tableButtonOperationForProperties( data: TableButtonActionConfig ): Promise<void> {
     try {
-      if(!this.loggedUser) throw new Error('Invalid login!');
-      if(!data) throw new Error('Invalid table data');
-      console.log(data.data);
+      if ( !this.loggedUser ) throw new Error( 'Invalid login!' );
+      if ( !data ) throw new Error( 'Invalid table data' );
+      console.log( data.data );
       const safeAction = data.action.trim();
       const safeData = data.data.trim();
-      if(!safeAction) throw new Error('Invalid action!');
+      if ( !safeAction ) throw new Error( 'Invalid action!' );
       const propertyID = safeData.element.id;
-      if(!propertyID) throw new Error('Invalid Property ID!');
+      if ( !propertyID ) throw new Error( 'Invalid Property ID!' );
 
-      switch(safeAction) {
+      switch ( safeAction ) {
         case 'view':
-          this.gotoTheProperty(propertyID);
+          this.gotoTheProperty( propertyID );
           break;
         case 'add':
           try {
             const propertyID = '';
 
-            if(!propertyID) throw new Error('Could not found property ID!')
+            if ( !propertyID ) throw new Error( 'Could not found property ID!' );
 
-            const leaseResponse = await this.tenantService.getAllLeases();
+            const leaseResponse = await this.tenantService.getAllLeases( 0, 5 );
 
-            if(leaseResponse.status !== 'success') throw new Error('Could not found leases!');
+            if ( leaseResponse.status !== 'success' ) throw new Error( 'Could not found leases!' );
 
             const leases = leaseResponse.data as Lease[];
 
-            const isPropertySelected = leases.some((lease: Lease) => lease.propertyID === propertyID);
+            const isPropertySelected = leases.some( ( lease: Lease ) => lease.propertyID === propertyID );
 
-            if(isPropertySelected) throw new Error('Property is already selected!');
+            if ( isPropertySelected ) throw new Error( 'Property is already selected!' );
 
-            const selectedProperty = this.properties.find((property: BackEndPropertyData) => property.id === propertyID);
+            const selectedProperty = this.properties.find( ( property: BackEndPropertyData ) => property.id === propertyID );
 
-            if(!selectedProperty) throw new Error('Could not found property!');
+            if ( !selectedProperty ) throw new Error( 'Could not found property!' );
 
-            this.registerProperty(selectedProperty);
+            this.registerProperty( selectedProperty );
 
           }
-          catch(error) {
-            console.error(error);
-            if(error instanceof HttpErrorResponse) this.notification.notification('error', error.error.message);
-            else if(typeof error === 'string') this.notification.notification('error', error);
-            else if(error instanceof Error) this.notification.notification('error', error.message);
-            else this.notification.notification('error', 'An error occurred!');
+          catch ( error ) {
+            console.error( error );
+            if ( error instanceof HttpErrorResponse ) this.notification.notification( 'error', error.error.message );
+            else if ( typeof error === 'string' ) this.notification.notification( 'error', error );
+            else if ( error instanceof Error ) this.notification.notification( 'error', error.message );
+            else this.notification.notification( 'error', 'An error occurred!' );
             return;
           }
           break;
@@ -1536,34 +1536,34 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       }
 
     }
-    catch(err) {
-      console.error('Error:', err);
+    catch ( err ) {
+      console.error( 'Error:', err );
       return;
     }
 
   }
 
-  private async makePropertyTablePagination(index: number): Promise<void> {
+  private async makePropertyTablePagination( index: number ): Promise<void> {
     try {
       // Make the data reload before start
       this.propertyTableIsReloading = true;
 
-      if(typeof index !== 'number') throw new Error('Index is not type of number!');
+      if ( typeof index !== 'number' ) throw new Error( 'Index is not type of number!' );
 
-      const safeIndex: number = Number.isFinite(index) && index >= 0 ? Math.floor(index) : 0;
+      const safeIndex: number = Number.isFinite( index ) && index >= 0 ? Math.floor( index ) : 0;
       const safeStart = safeIndex * this.propertyTablePageSize;
       const safeEnd = safeStart + this.propertyTablePageSize;
       const filterValue = this.propertyTabletSearchText.toLowerCase().trim();
 
-      const res = await this.propertyService.getPropertiesWithPaginationAndFilter(safeStart, safeEnd, filterValue);
-      if(res.status !== 'success') throw new Error('Property loading failed!');
+      const res = await this.propertyService.getPropertiesWithPaginationAndFilter( safeStart, safeEnd, filterValue );
+      if ( res.status !== 'success' ) throw new Error( 'Property loading failed!' );
 
       const data = res.data;
 
       const organizedData: PropertyCustomTableDataType[] = [];
-      data.forEach((item: BackEndPropertyData) => {
+      data.forEach( ( item: BackEndPropertyData ) => {
         const property: PropertyCustomTableDataType = {
-          image: item.images[0].imageURL,
+          image: item.images[ 0 ].imageURL,
           id: item.id,
           type: item.type,
           listing: item.listing,
@@ -1572,30 +1572,30 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
           title: item.title,
           builtYear: item.builtYear,
           projectName: item.projectName,
-          address: `No.${item.address.houseNumber},<br/>
-        ${item.address.street},<br/>
-        ${item.address.city},<br/>
-        ${item.address.stateOrProvince},<br/>
-        ${item.address.country},<br/>
-        ${item.address.postcode}`,
+          address: `No.${ item.address.houseNumber },<br/>
+        ${ item.address.street },<br/>
+        ${ item.address.city },<br/>
+        ${ item.address.stateOrProvince },<br/>
+        ${ item.address.country },<br/>
+        ${ item.address.postcode }`,
         };
-        organizedData.push(property);
-      });
+        organizedData.push( property );
+      } );
 
       this.propertyTableData = organizedData;
       this.propertyTableIsReloading = false;
       this.cdr.detectChanges();
     }
-    catch(err) {
-      console.error(err);
-      return
+    catch ( err ) {
+      console.error( err );
+      return;
     }
   }
   //<=========================== End Handle Property Table Getters And Setters ===========================>
 
-  private registerProperty(property: BackEndPropertyData) {
+  private registerProperty( property: BackEndPropertyData ) {
     try {
-      if(!property) {this.resetProperty(); throw new Error("Could not find the property!");}
+      if ( !property ) { this.resetProperty(); throw new Error( "Could not find the property!" ); }
 
       // Assigning the property
       this.selectedProperty = property;
@@ -1605,7 +1605,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
       // Basic identification
       this.propertyId = property.id;
-      this.propertyTitle = this.makeCapitalize(property.title);
+      this.propertyTitle = this.makeCapitalize( property.title );
 
       // Location (Geographic coordinates and map)
       this.location = property.location;
@@ -1620,41 +1620,41 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       this.propertyStreet = this.makeCapitalize(
         property.address.street as string
       );
-      this.propertyCity = this.makeCapitalize(property.address.city);
+      this.propertyCity = this.makeCapitalize( property.address.city );
       this.propertyStateOrProvince = this.makeCapitalize(
         property.address.stateOrProvince as string
       );
       this.propertyPostalCode = property.address.postcode;
-      this.propertyCountry = this.makeCapitalize(property.address.country);
+      this.propertyCountry = this.makeCapitalize( property.address.country );
 
       // Classification and listing
-      this.propertyType = this.makeCapitalize(property.listing);
-      this.furnishingStatus = this.makeCapitalize(property.furnishingStatus);
+      this.propertyType = this.makeCapitalize( property.listing );
+      this.furnishingStatus = this.makeCapitalize( property.furnishingStatus );
 
       // Developer/project metadata
-      this.propertyDeveloperName = this.makeCapitalize(property.developerName);
+      this.propertyDeveloperName = this.makeCapitalize( property.developerName );
       this.propertyProjectName = this.makeCapitalize(
         property.projectName as string
       );
       this.propertyBuiltYear = property.builtYear;
 
       // Features and amenities
-      property.featuresAndAmenities.forEach((item) => {
-        const amenity = this.makeCapitalize(item);
-        this.includedAmenities.push(amenity);
-      });
+      property.featuresAndAmenities.forEach( ( item ) => {
+        const amenity = this.makeCapitalize( item );
+        this.includedAmenities.push( amenity );
+      } );
 
       this.parkingSpots = property.numberOfParking;
       this.isPropertySelected = true;
     }
-    catch(error) {
-      console.log(error);
-      if(typeof error === "string") this.notification.notification('error', error);
-      if(error instanceof Error) this.notification.notification('error', error.message);
+    catch ( error ) {
+      console.log( error );
+      if ( typeof error === "string" ) this.notification.notification( 'error', error );
+      if ( error instanceof Error ) this.notification.notification( 'error', error.message );
       return;
     }
     finally {
-      this.cdr.detectChanges()
+      this.cdr.detectChanges();
     }
   }
 
@@ -1703,7 +1703,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     return this._startDate;
   }
 
-  set startDate(value: Date) {
+  set startDate( value: Date ) {
     this._startDate = value;
     this.handleStartDate();
   }
@@ -1712,7 +1712,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     return this._endDate;
   }
 
-  set endDate(value: Date) {
+  set endDate( value: Date ) {
     this._endDate = value;
     this.handleEndDate();
   }
@@ -1721,7 +1721,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     return this._durationMonths;
   }
 
-  set durationMonths(value: number) {
+  set durationMonths( value: number ) {
     this._durationMonths = value;
     this.handleDurationMonths();
   }
@@ -1732,15 +1732,15 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   //<=========================== Handle The Start Date Operation ===========================>
   private handleStartDate(): void {
-    if(this._durationMonths > 0) {
-      const start = new Date(this._startDate);
-      const newEnd = new Date(start);
-      newEnd.setMonth(start.getMonth() + this._durationMonths);
+    if ( this._durationMonths > 0 ) {
+      const start = new Date( this._startDate );
+      const newEnd = new Date( start );
+      newEnd.setMonth( start.getMonth() + this._durationMonths );
       this._endDate = newEnd;
-    } else if(this._endDate) {
-      const start = new Date(this._startDate);
-      const end = new Date(this._endDate);
-      const months = this.calculateMonthDiff(start, end);
+    } else if ( this._endDate ) {
+      const start = new Date( this._startDate );
+      const end = new Date( this._endDate );
+      const months = this.calculateMonthDiff( start, end );
       this._durationMonths = months;
     }
   }
@@ -1748,15 +1748,15 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   //<=========================== Handle The End Date Operation ===========================>
   private handleEndDate(): void {
-    if(this._startDate) {
-      const start = new Date(this._startDate);
-      const end = new Date(this._endDate);
-      const months = this.calculateMonthDiff(start, end);
+    if ( this._startDate ) {
+      const start = new Date( this._startDate );
+      const end = new Date( this._endDate );
+      const months = this.calculateMonthDiff( start, end );
       this._durationMonths = months;
-    } else if(this._durationMonths > 0) {
-      const end = new Date(this._endDate);
-      const newStart = new Date(end);
-      newStart.setMonth(end.getMonth() - this._durationMonths);
+    } else if ( this._durationMonths > 0 ) {
+      const end = new Date( this._endDate );
+      const newStart = new Date( end );
+      newStart.setMonth( end.getMonth() - this._durationMonths );
       this._startDate = newStart;
     }
   }
@@ -1764,89 +1764,89 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   //<=========================== Handle The Duration Months Operation ===========================>
   private handleDurationMonths(): void {
-    if(this._startDate) {
-      const start = new Date(this._startDate);
-      const newEnd = new Date(start);
-      newEnd.setMonth(start.getMonth() + this._durationMonths);
+    if ( this._startDate ) {
+      const start = new Date( this._startDate );
+      const newEnd = new Date( start );
+      newEnd.setMonth( start.getMonth() + this._durationMonths );
       this._endDate = newEnd;
-    } else if(this._endDate) {
-      const end = new Date(this._endDate);
-      const newStart = new Date(end);
-      newStart.setMonth(end.getMonth() - this._durationMonths);
+    } else if ( this._endDate ) {
+      const end = new Date( this._endDate );
+      const newStart = new Date( end );
+      newStart.setMonth( end.getMonth() - this._durationMonths );
       this._startDate = newStart;
     }
   }
   //<=========================== End Handle The Duration Months Operation ===========================>
 
   //<=========================== Handle Currency Change Operation ===========================>
-  protected handleCurrencyFilterChange(input: string): void {
+  protected handleCurrencyFilterChange( input: string ): void {
     let filterValue = '';
 
-    if(typeof input === 'string') {
+    if ( typeof input === 'string' ) {
       filterValue = input.toLowerCase().trim();
-    } else if(input && typeof input === 'object' && 'currency' in input) {
-      filterValue = (input as CurrencyFormat).currency.toLowerCase();
+    } else if ( input && typeof input === 'object' && 'currency' in input ) {
+      filterValue = ( input as CurrencyFormat ).currency.toLowerCase();
     } else {
       filterValue = '';
     }
 
-    this.filterCurrencies$ = of(this.currencies).pipe(
-      map((items: CurrencyFormat[]) =>
+    this.filterCurrencies$ = of( this.currencies ).pipe(
+      map( ( items: CurrencyFormat[] ) =>
         items.filter(
-          (item) =>
-            item.country.toLowerCase().includes(filterValue) ||
-            item.currency.toLowerCase().includes(filterValue)
+          ( item ) =>
+            item.country.toLowerCase().includes( filterValue ) ||
+            item.currency.toLowerCase().includes( filterValue )
         )
       )
     );
 
-    this.filterCurrencies$.subscribe((currencies) => {
-      if(currencies.length === 1) this._currency = currencies[0];
+    this.filterCurrencies$.subscribe( ( currencies ) => {
+      if ( currencies.length === 1 ) this._currency = currencies[ 0 ];
       else this._currency = null;
-    });
+    } );
   }
 
-  protected onCurrencySelectionChange(input: MatAutocompleteSelectedEvent): void {
+  protected onCurrencySelectionChange( input: MatAutocompleteSelectedEvent ): void {
     const value = input.option.value as CurrencyFormat;
     this.currencyLeaseAgreement = value.currency;
     this._currency = value;
   }
 
-  protected displayCurrency(currency: CurrencyFormat): string {
-    if(!currency) return '';
+  protected displayCurrency( currency: CurrencyFormat ): string {
+    if ( !currency ) return '';
     return typeof currency === 'string' ? currency : currency?.currency ?? '';
   }
   //<=========================== End Handle Currency Change Operation ===========================>
 
   //<=========================== Handle Payment Frequency Change Operation ===========================>
-  protected handlePaymentFrequencyFilterChange(input: string): void {
+  protected handlePaymentFrequencyFilterChange( input: string ): void {
     let filterValue = '';
-    if(typeof input === 'string') {
+    if ( typeof input === 'string' ) {
       filterValue = input.toLowerCase().trim();
-    } else if(input && typeof input === 'object' && 'name' in input) {
-      filterValue = (input as PaymentFrequency).name.toLowerCase();
+    } else if ( input && typeof input === 'object' && 'name' in input ) {
+      filterValue = ( input as PaymentFrequency ).name.toLowerCase();
     } else {
       filterValue = '';
     }
 
-    this.filterPaymentFrequencies$ = of(this.paymentFrequencies).pipe(
-      map((items: PaymentFrequency[]) =>
+    this.filterPaymentFrequencies$ = of( this.paymentFrequencies ).pipe(
+      map( ( items: PaymentFrequency[] ) =>
         items.filter(
-          (item) =>
-            item.name.toLowerCase().includes(filterValue) ||
-            (item.unit && item.unit.toLowerCase().includes(filterValue))
+          ( item ) =>
+            item.name.toLowerCase().includes( filterValue ) ||
+            ( item.unit && item.unit.toLowerCase().includes( filterValue ) )
         )
       )
     );
 
-    this.filterPaymentFrequencies$.subscribe((paymentFrequencies) => {
-      if(paymentFrequencies.length === 1)
-        this.paymentFrequency = paymentFrequencies[0];
+    this.filterPaymentFrequencies$.subscribe( ( paymentFrequencies ) => {
+      if ( paymentFrequencies.length === 1 )
+        this.paymentFrequency = paymentFrequencies[ 0 ];
       else this.paymentFrequency = null;
-    });
+    } );
   }
 
-  protected onPaymentFrequencySelectionChange(input: MatAutocompleteSelectedEvent): void {
+  protected onPaymentFrequencySelectionChange( input: MatAutocompleteSelectedEvent ): void {
     const value = input.option.value as PaymentFrequency;
     this.paymentFrequencyLeaseAgreement = value.name;
     this.paymentFrequency = value;
@@ -1855,7 +1855,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   protected displayPaymentFrequency(
     paymentFrequency: PaymentFrequency
   ): string {
-    if(!paymentFrequency) return '';
+    if ( !paymentFrequency ) return '';
     return typeof paymentFrequency === 'string'
       ? paymentFrequency
       : paymentFrequency?.name ?? '';
@@ -1863,43 +1863,43 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== End Handle Payment Frequency Change Operation ===========================>
 
   //<=========================== End Handle Payment Frequency Change Operation ===========================>
-  protected handlePaymentMethodFilterChange(input: string): void {
+  protected handlePaymentMethodFilterChange( input: string ): void {
     let filterValue = '';
-    if(typeof input === 'string') {
+    if ( typeof input === 'string' ) {
       filterValue = input.toLowerCase().trim();
-    } else if(input && typeof input === 'object' && 'name' in input) {
-      filterValue = (input as PaymentMethod).name.toLowerCase();
+    } else if ( input && typeof input === 'object' && 'name' in input ) {
+      filterValue = ( input as PaymentMethod ).name.toLowerCase();
     } else {
       filterValue = '';
     }
 
-    this.filterPaymentMethods$ = of(this.paymentMethods).pipe(
-      map((items: PaymentMethod[]) =>
+    this.filterPaymentMethods$ = of( this.paymentMethods ).pipe(
+      map( ( items: PaymentMethod[] ) =>
         items.filter(
-          (item) =>
-            item.name.toLowerCase().includes(filterValue) ||
-            (item.category && item.category.toLowerCase().includes(filterValue))
+          ( item ) =>
+            item.name.toLowerCase().includes( filterValue ) ||
+            ( item.category && item.category.toLowerCase().includes( filterValue ) )
         )
       )
     );
 
-    this.filterPaymentMethods$.subscribe((paymentMethods) => {
-      if(paymentMethods.length === 1) {
-        this.paymentMethodLeaseAgreement = paymentMethods[0].name;
-        this.paymentMethod = paymentMethods[0]
+    this.filterPaymentMethods$.subscribe( ( paymentMethods ) => {
+      if ( paymentMethods.length === 1 ) {
+        this.paymentMethodLeaseAgreement = paymentMethods[ 0 ].name;
+        this.paymentMethod = paymentMethods[ 0 ];
       }
-      else {this.paymentMethod = null};
-    });
+      else { this.paymentMethod = null; };
+    } );
   }
 
-  protected onPaymentMethodSelectionChange(input: MatAutocompleteSelectedEvent): void {
+  protected onPaymentMethodSelectionChange( input: MatAutocompleteSelectedEvent ): void {
     const value = input.option.value as PaymentMethod;
     this.paymentMethodLeaseAgreement = value.name;
     this.paymentMethod = value;
   }
 
-  protected displayPaymentMethod(paymentMethod: PaymentMethod): string {
-    if(!paymentMethod) return '';
+  protected displayPaymentMethod( paymentMethod: PaymentMethod ): string {
+    if ( !paymentMethod ) return '';
     return typeof paymentMethod === 'string'
       ? paymentMethod
       : paymentMethod.name ?? '';
@@ -1907,29 +1907,29 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== End Handle Payment Frequency Change Operation ===========================>
 
   //<=========================== Handle Security Deposit Change Operation ===========================>
-  protected handleSecurityDepositFilterChange(input: string): void {
+  protected handleSecurityDepositFilterChange( input: string ): void {
     let filterValue = '';
-    if(typeof input === 'string') {
+    if ( typeof input === 'string' ) {
       filterValue = input.toLowerCase().trim();
-    } else if(input && typeof input === 'object' && 'type' in input) {
-      filterValue = (input as SecurityDeposit).name.toLowerCase();
+    } else if ( input && typeof input === 'object' && 'type' in input ) {
+      filterValue = ( input as SecurityDeposit ).name.toLowerCase();
     } else {
       filterValue = '';
     }
 
-    this.filterSecurityDeposits$ = of(this.securityDeposits).pipe(
-      map((items: SecurityDeposit[]) =>
-        items.filter((item) => item.name.toLowerCase().includes(filterValue))
+    this.filterSecurityDeposits$ = of( this.securityDeposits ).pipe(
+      map( ( items: SecurityDeposit[] ) =>
+        items.filter( ( item ) => item.name.toLowerCase().includes( filterValue ) )
       )
     );
 
-    this.filterSecurityDeposits$.subscribe((securityDeposits) => {
-      if(securityDeposits.length === 1) {
-        const selected = securityDeposits[0];
+    this.filterSecurityDeposits$.subscribe( ( securityDeposits ) => {
+      if ( securityDeposits.length === 1 ) {
+        const selected = securityDeposits[ 0 ];
         const data: SecurityDeposit = {
           id: selected.id,
           name: selected.name,
-          description: `${selected.name} deposit (${selected.refundable ? 'refundable' : 'non-refundable'
+          description: `${ selected.name } deposit (${ selected.refundable ? 'refundable' : 'non-refundable'
             }).`,
           refundable: selected.refundable,
           isEditable: false
@@ -1939,7 +1939,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       } else {
         this.securityDeposit = null;
       }
-    });
+    } );
   }
 
   protected onSecurityDepositSelectionChange(
@@ -1950,7 +1950,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     const data: SecurityDeposit = {
       id: value.id,
       name: value.name,
-      description: `${value.name} deposit (${value.refundable ? 'refundable' : 'non-refundable'
+      description: `${ value.name } deposit (${ value.refundable ? 'refundable' : 'non-refundable'
         }).`,
       refundable: value.refundable,
     };
@@ -1960,7 +1960,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   protected displaySecurityDeposit(
     securityDeposit: SecurityDeposit
   ): string {
-    if(!securityDeposit) return '';
+    if ( !securityDeposit ) return '';
     return typeof securityDeposit === 'string'
       ? securityDeposit
       : securityDeposit.name;
@@ -1969,26 +1969,26 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== End Handle Security Deposit Change Operation ===========================>
 
   //<=========================== Handle Rent Due Date Change Operation ===========================>
-  protected handleRentDueDateFilterChange(input: string): void {
+  protected handleRentDueDateFilterChange( input: string ): void {
     let filterValue = '';
-    if(typeof input === 'string') {
+    if ( typeof input === 'string' ) {
       filterValue = input.toLowerCase().trim();
-    } else if(input && typeof input === 'object' && 'label' in input) {
-      filterValue = (input as RentDueDate).label.toLowerCase();
+    } else if ( input && typeof input === 'object' && 'label' in input ) {
+      filterValue = ( input as RentDueDate ).label.toLowerCase();
     } else {
       filterValue = '';
     }
 
-    this.filterRentDueDates$ = of(this.rentDueDates).pipe(
-      map((items: RentDueDate[]) =>
-        items.filter((item) => item.label.toLowerCase().includes(filterValue))
+    this.filterRentDueDates$ = of( this.rentDueDates ).pipe(
+      map( ( items: RentDueDate[] ) =>
+        items.filter( ( item ) => item.label.toLowerCase().includes( filterValue ) )
       )
     );
 
-    this.filterRentDueDates$.subscribe((rentDueDates) => {
-      if(rentDueDates.length === 1) this.rentDueDate = rentDueDates[0];
+    this.filterRentDueDates$.subscribe( ( rentDueDates ) => {
+      if ( rentDueDates.length === 1 ) this.rentDueDate = rentDueDates[ 0 ];
       else this.rentDueDate = null;
-    });
+    } );
   }
 
   protected onRentDueDateSelectionChange(
@@ -1999,40 +1999,40 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     this.rentDueDate = value;
   }
 
-  protected displayRentDueDate(rentDueDate: RentDueDate): string {
-    if(!rentDueDate) return '';
+  protected displayRentDueDate( rentDueDate: RentDueDate ): string {
+    if ( !rentDueDate ) return '';
     return typeof rentDueDate === 'string' ? rentDueDate : rentDueDate.label;
   }
   //<=========================== End Handle Rent Due Date Change Operation ===========================>
 
   //<=========================== Handle Late Payment Penalty Change Operation ===========================>
-  protected handleLatePaymentPenaltyFilterChange(input: string): void {
+  protected handleLatePaymentPenaltyFilterChange( input: string ): void {
     try {
       const text = input.trim();
-      if(this.isValidPenaltyFormat(text)) {
-        const label: LatePaymentPenalty['label'] = text;
-        const type: LatePaymentPenalty['type'] = text
-          .split('-')[0]
-          .trim() as LatePaymentPenalty['type'];
-        const afterType: string = text.split('-')[1].trim();
-        if(!this.containsNumber(afterType)) {
-          throw new Error('Add the number as percentage or fixed fee!');
+      if ( this.isValidPenaltyFormat( text ) ) {
+        const label: LatePaymentPenalty[ 'label' ] = text;
+        const type: LatePaymentPenalty[ 'type' ] = text
+          .split( '-' )[ 0 ]
+          .trim() as LatePaymentPenalty[ 'type' ];
+        const afterType: string = text.split( '-' )[ 1 ].trim();
+        if ( !this.containsNumber( afterType ) ) {
+          throw new Error( 'Add the number as percentage or fixed fee!' );
         }
-        const numbers = this.extractAllNumbers(afterType);
-        const value: LatePaymentPenalty['value'] = numbers[0];
-        let description: LatePaymentPenalty['description'] = ``;
+        const numbers = this.extractAllNumbers( afterType );
+        const value: LatePaymentPenalty[ 'value' ] = numbers[ 0 ];
+        let description: LatePaymentPenalty[ 'description' ] = ``;
 
-        const contrastType = type.split(' ');
+        const contrastType = type.split( ' ' );
 
-        switch(contrastType[0].toLowerCase()) {
+        switch ( contrastType[ 0 ].toLowerCase() ) {
           case 'fixed':
-            description = `A fixed penalty of ${value} will be charged for any late payment, regardless of the amount or duration.`;
+            description = `A fixed penalty of ${ value } will be charged for any late payment, regardless of the amount or duration.`;
             break;
           case 'percentage':
-            description = `A penalty of ${value}% will be applied to the overdue amount for late payments.`;
+            description = `A penalty of ${ value }% will be applied to the overdue amount for late payments.`;
             break;
           case 'per-day':
-            description = `A penalty of ${value} will be charged for each day the payment is overdue.`;
+            description = `A penalty of ${ value } will be charged for each day the payment is overdue.`;
             break;
           default:
             description = 'A penalty will be applied for late payments.';
@@ -2046,33 +2046,33 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
           isEditable: false,
         };
 
-        this.latePaymentPenaltyLeaseAgreement = data.label
+        this.latePaymentPenaltyLeaseAgreement = data.label;
         this._latePaymentPenalty = data;
       } else {
-        throw new Error('Follow the format!');
+        throw new Error( 'Follow the format!' );
       }
-    } catch(error) {
-      this.notification.notification('error', error as string);
+    } catch ( error ) {
+      this.notification.notification( 'error', error as string );
     }
   }
 
   protected addULatePaymentPenalties() {
     try {
-      if(!this._latePaymentPenalty)
-        throw new Error('Invalid late payment penalty!');
-      if(
+      if ( !this._latePaymentPenalty )
+        throw new Error( 'Invalid late payment penalty!' );
+      if (
         this.checkLatePaymentPenaltiesExist(
           this.selectedLatePaymentPenalties,
           this._latePaymentPenalty
         )
       )
-        throw new Error('Penalty already exist!');
+        throw new Error( 'Penalty already exist!' );
 
-      this.selectedLatePaymentPenalties.push(this._latePaymentPenalty);
+      this.selectedLatePaymentPenalties.push( this._latePaymentPenalty );
       this._latePaymentPenalty = null;
       this.latePaymentPenaltyLeaseAgreement = '';
-    } catch(error) {
-      this.notification.notification('warning', String(error));
+    } catch ( error ) {
+      this.notification.notification( 'warning', String( error ) );
     }
   }
 
@@ -2080,51 +2080,51 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     item: LatePaymentPenalty,
     index: number
   ) {
-    this.selectedLatePaymentPenalties.splice(index, 1);
-    this.notification.notification('info', 'Penalty removed!');
+    this.selectedLatePaymentPenalties.splice( index, 1 );
+    this.notification.notification( 'info', 'Penalty removed!' );
   }
 
   private checkLatePaymentPenaltiesExist(
     array: LatePaymentPenalty[],
     data: LatePaymentPenalty
   ): boolean {
-    return array.some((item) => {
+    return array.some( ( item ) => {
       item.label.toLowerCase() === data.label.toLowerCase() ||
         item.type.toLowerCase() === data.type.toLowerCase();
-    });
+    } );
   }
 
-  private containsNumber(input: string): boolean {
-    return /\d/.test(input);
+  private containsNumber( input: string ): boolean {
+    return /\d/.test( input );
   }
 
-  private extractAllNumbers(input: string): number[] {
-    const matches = input.match(/\d{1,3}(,\d{3})*(\.\d+)?|\d+(\.\d+)?/g);
-    return matches ? matches.map((n) => parseFloat(n.replace(/,/g, ''))) : [];
+  private extractAllNumbers( input: string ): number[] {
+    const matches = input.match( /\d{1,3}(,\d{3})*(\.\d+)?|\d+(\.\d+)?/g );
+    return matches ? matches.map( ( n ) => parseFloat( n.replace( /,/g, '' ) ) ) : [];
   }
 
-  private isValidPenaltyFormat(input: string): boolean {
+  private isValidPenaltyFormat( input: string ): boolean {
     const currencyPattern = '[A-Z]{3}'; // Matches 3-letter currency codes like USD, LKR, INR
     const amountPattern = '\\d{1,3}(,\\d{3})*(\\.\\d{1,2})?|\\d+(\\.\\d{1,2})?'; // Supports both 1,000.50 and 1000.50
 
     const fixedFeeRegex = new RegExp(
-      `^Fixed\\s+Fee\\s+-\\s+${currencyPattern}\\s+(${amountPattern})$`,
+      `^Fixed\\s+Fee\\s+-\\s+${ currencyPattern }\\s+(${ amountPattern })$`,
       'i'
     );
 
     const percentageRegex = /^Percentage\s+-\s+\d+(\.\d+)?%\s+of\s+Due\s+Amount$/i;
 
     const perDayRegex = new RegExp(
-      `^Per\\s+Day\\s+-\\s+${currencyPattern}\\s+(${amountPattern})\\/day$`,
+      `^Per\\s+Day\\s+-\\s+${ currencyPattern }\\s+(${ amountPattern })\\/day$`,
       'i'
     );
 
     const trimmedInput = input.trim();
 
     return (
-      fixedFeeRegex.test(trimmedInput) ||
-      percentageRegex.test(trimmedInput) ||
-      perDayRegex.test(trimmedInput)
+      fixedFeeRegex.test( trimmedInput ) ||
+      percentageRegex.test( trimmedInput ) ||
+      perDayRegex.test( trimmedInput )
     );
   }
 
@@ -2132,37 +2132,37 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     const currency = this.getCurrency();
     return `Please type the penalty in one of the following formats:<br/>
     <ul class="hint m-0">
-    <li>Fixed Fee - ${currency} 1000</li>
+    <li>Fixed Fee - ${ currency } 1000</li>
     <li>Percentage - 5% of Due Amount</li>
-    <li>Per Day - ${currency} 200/day</li>
+    <li>Per Day - ${ currency } 200/day</li>
     </ul>`;
   }
 
   private getCurrency(): string {
-    if(typeof this.currencyLeaseAgreement === 'string') {
+    if ( typeof this.currencyLeaseAgreement === 'string' ) {
       return this.currencyLeaseAgreement;
     }
-    if(
+    if (
       this.currencyLeaseAgreement &&
       typeof this.currencyLeaseAgreement === 'object' &&
       'currency' in this.currencyLeaseAgreement &&
-      typeof (this.currencyLeaseAgreement as any).currency === 'string'
+      typeof ( this.currencyLeaseAgreement as any ).currency === 'string'
     ) {
-      return (this.currencyLeaseAgreement as {currency: string}).currency;
+      return ( this.currencyLeaseAgreement as { currency: string; } ).currency;
     }
     return 'USD';
   }
   //<=========================== End Handle Late Payment Penalty Change Operation ===========================>
 
   //<=========================== Handle Utility Responsibilities Change Operation ===========================>
-  protected handleUtilityResponsibilitiesFilterChange(input: string): void {
+  protected handleUtilityResponsibilitiesFilterChange( input: string ): void {
     try {
       const text = input.trim();
 
-      if(this.checkUtilityRegex(text)) {
-        const dataArray = text.split('-');
-        const utility = dataArray[0].trim().toLowerCase();
-        const responsibleParty = dataArray[1].trim().toLowerCase();
+      if ( this.checkUtilityRegex( text ) ) {
+        const dataArray = text.split( '-' );
+        const utility = dataArray[ 0 ].trim().toLowerCase();
+        const responsibleParty = dataArray[ 1 ].trim().toLowerCase();
         const responsiblePartyArray: string[] = [
           'landlord',
           'tenant',
@@ -2170,38 +2170,38 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
           'real estate company',
         ];
 
-        if(!utility) {
-          throw new Error('Invalid utility');
+        if ( !utility ) {
+          throw new Error( 'Invalid utility' );
         }
 
-        if(!responsiblePartyArray.includes(responsibleParty)) {
-          throw new Error('Invalid responsible party');
+        if ( !responsiblePartyArray.includes( responsibleParty ) ) {
+          throw new Error( 'Invalid responsible party' );
         }
 
-        const id = `${this.makeCapitalize(utility)}-${this.makeCapitalize(
+        const id = `${ this.makeCapitalize( utility ) }-${ this.makeCapitalize(
           responsibleParty
-        )}-${new Date().toISOString()}`;
+        ) }-${ new Date().toISOString() }`;
 
-        const description = `${this.makeCapitalize(
+        const description = `${ this.makeCapitalize(
           utility
-        )} has to pay by ${this.makeCapitalize(responsibleParty)}`;
+        ) } has to pay by ${ this.makeCapitalize( responsibleParty ) }`;
 
         const paidByValue = responsibleParty
           .toLowerCase()
-          .trim() as UtilityResponsibility['paidBy'];
+          .trim() as UtilityResponsibility[ 'paidBy' ];
 
         const data: UtilityResponsibility = {
           id,
-          utility: this.makeCapitalize(utility),
+          utility: this.makeCapitalize( utility ),
           paidBy: paidByValue,
           description,
           isEditable: false,
         };
 
-        if(
-          !this.checkIsUtilityExist(this.selectedUtilityResponsibilities, data)
+        if (
+          !this.checkIsUtilityExist( this.selectedUtilityResponsibilities, data )
         ) {
-          this.utilityResponsibilitiesLeaseAgreement = text
+          this.utilityResponsibilitiesLeaseAgreement = text;
           this._utilityResponsibility = data;
         }
       } else {
@@ -2209,25 +2209,25 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
           'Follow the format -> "Utility Name - Responsible Party"'
         );
       }
-    } catch(error) {
-      this.notification.notification('warning', String(error));
+    } catch ( error ) {
+      this.notification.notification( 'warning', String( error ) );
     }
   }
 
   protected addUtilities() {
     try {
-      if(!this._utilityResponsibility) throw new Error('Invalid utility!');
-      this.selectedUtilityResponsibilities.push(this._utilityResponsibility);
+      if ( !this._utilityResponsibility ) throw new Error( 'Invalid utility!' );
+      this.selectedUtilityResponsibilities.push( this._utilityResponsibility );
       this.utilityResponsibilitiesLeaseAgreement = '';
       this._utilityResponsibility = null;
-    } catch(error) {
-      this.notification.notification('warning', String(error));
+    } catch ( error ) {
+      this.notification.notification( 'warning', String( error ) );
     }
   }
 
-  protected removeUtility(item: UtilityResponsibility, index: number) {
-    this.selectedUtilityResponsibilities.splice(index, 1);
-    this.notification.notification('info', 'Utility removed!');
+  protected removeUtility( item: UtilityResponsibility, index: number ) {
+    this.selectedUtilityResponsibilities.splice( index, 1 );
+    this.notification.notification( 'info', 'Utility removed!' );
   }
 
   private checkIsUtilityExist(
@@ -2235,15 +2235,15 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     utility: UtilityResponsibility
   ): boolean {
     return utilities.some(
-      (item) =>
+      ( item ) =>
         item.utility.toLowerCase() === utility.utility.toLowerCase() &&
         item.paidBy.toLowerCase() === utility.paidBy.toLowerCase()
     );
   }
 
-  private checkUtilityRegex(text: string): boolean {
+  private checkUtilityRegex( text: string ): boolean {
     const utilityRegex = /^[A-Za-z\s]+-\s*[A-Za-z\s]+$/;
-    return utilityRegex.test(text);
+    return utilityRegex.test( text );
   }
 
   protected hintUtilityResponsibilities(): string {
@@ -2253,37 +2253,37 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== End Handle Utility Responsibilities Change Operation ===========================>
 
   //<=========================== Handle Notice Period Days Change Operation ===========================>
-  protected handleNoticePeriodDaysFilterChange(input: string): void {
+  protected handleNoticePeriodDaysFilterChange( input: string ): void {
     let filterValue = '';
-    if(typeof input === 'string') {
+    if ( typeof input === 'string' ) {
       filterValue = input.toLowerCase().trim();
-    } else if(input && typeof input === 'object' && 'label' in input) {
-      filterValue = (input as NoticePeriod).label.toLowerCase();
+    } else if ( input && typeof input === 'object' && 'label' in input ) {
+      filterValue = ( input as NoticePeriod ).label.toLowerCase();
     } else {
       filterValue = '';
     }
 
-    this.filterNoticePeriodOptions$ = of(this.NoticePeriods).pipe(
-      map((NoticePeriods) =>
-        NoticePeriods.filter((option) => {
-          return option.label.toLowerCase().includes(filterValue);
-        })
+    this.filterNoticePeriodOptions$ = of( this.NoticePeriods ).pipe(
+      map( ( NoticePeriods ) =>
+        NoticePeriods.filter( ( option ) => {
+          return option.label.toLowerCase().includes( filterValue );
+        } )
       )
     );
 
-    this.filterNoticePeriodOptions$.subscribe((noticePeriodOptions) => {
-      if(noticePeriodOptions.length === 1) {
-        this.noticePeriodDays = noticePeriodOptions[0];
-        this.noticePeriodDaysLeaseAgreement = noticePeriodOptions[0].label;
+    this.filterNoticePeriodOptions$.subscribe( ( noticePeriodOptions ) => {
+      if ( noticePeriodOptions.length === 1 ) {
+        this.noticePeriodDays = noticePeriodOptions[ 0 ];
+        this.noticePeriodDaysLeaseAgreement = noticePeriodOptions[ 0 ].label;
       }
-      else {this.noticePeriodDays = null;}
-    });
+      else { this.noticePeriodDays = null; }
+    } );
   }
 
   protected onNotificationPeriodDaysSelectionChange(
     input: MatAutocompleteSelectedEvent
   ): void {
-    if(input.option.value) {
+    if ( input.option.value ) {
       const data = input.option.value as NoticePeriod;
       this.noticePeriodDaysLeaseAgreement = data.label;
       this.noticePeriodDays = data;
@@ -2291,45 +2291,45 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   }
 
 
-  protected displayNotificationPeriodDays(input: NoticePeriod): string {
-    if(!input) return '';
+  protected displayNotificationPeriodDays( input: NoticePeriod ): string {
+    if ( !input ) return '';
     return typeof input === 'string' ? input : input.label;
   }
 
   //<=========================== End Handle Notice Period Days Change Operation ===========================>
 
   //<=========================== Handle Rules And Regulations Change Operation ===========================>
-  protected handleRulesAndRegulationsFilterChange(input: string): void {
+  protected handleRulesAndRegulationsFilterChange( input: string ): void {
     let filterValue = '';
-    if(typeof input === 'string') {
+    if ( typeof input === 'string' ) {
       filterValue = input.toLowerCase().trim();
-    } else if(input && typeof input === 'object' && 'rule' in input) {
-      filterValue = (input as RulesAndRegulations).rule.toLowerCase();
+    } else if ( input && typeof input === 'object' && 'rule' in input ) {
+      filterValue = ( input as RulesAndRegulations ).rule.toLowerCase();
     } else {
       filterValue = '';
     }
 
-    this.filterRulesAndRegulations$ = of(this.rulesAndRegulationsOptions).pipe(
-      map((ruleAndRegulation) =>
-        ruleAndRegulation.filter((option) => {
-          return option.rule.toLowerCase().includes(filterValue);
-        })
+    this.filterRulesAndRegulations$ = of( this.rulesAndRegulationsOptions ).pipe(
+      map( ( ruleAndRegulation ) =>
+        ruleAndRegulation.filter( ( option ) => {
+          return option.rule.toLowerCase().includes( filterValue );
+        } )
       )
     );
 
     this.filterRulesAndRegulations$.subscribe(
-      (filtered: RulesAndRegulations[]) => {
-        if(filtered.length === 1) {
+      ( filtered: RulesAndRegulations[] ) => {
+        if ( filtered.length === 1 ) {
           // Exact or close match found — select it
-          this._rulesAndRegulation = filtered[0];
+          this._rulesAndRegulation = filtered[ 0 ];
           this._rulesAndRegulation.isEditable = false;
-        } else if(filterValue.length > 0) {
+        } else if ( filterValue.length > 0 ) {
           // No match — create new entry
           this.notification.notification(
             'info',
             'No existing match found. A new rule will be created when added.'
           );
-          const capitalizedRule = this.makeCapitalize(filterValue);
+          const capitalizedRule = this.makeCapitalize( filterValue );
           const newRule: RulesAndRegulations = {
             rule: capitalizedRule,
             description: 'Custom rule. Click edit to modify the description.',
@@ -2345,32 +2345,32 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   protected handleRulesAndRegulationsAdd(): void {
     try {
-      if(!this._rulesAndRegulation) {
-        throw new Error('Invalid rules and regulations!');
+      if ( !this._rulesAndRegulation ) {
+        throw new Error( 'Invalid rules and regulations!' );
       }
 
       const isInTheArray = this.selectedRuleAndRegulations.some(
-        (item) =>
+        ( item ) =>
           this._rulesAndRegulation &&
           item.rule.toLowerCase() ===
           this._rulesAndRegulation.rule.toLowerCase()
       );
 
-      if(!isInTheArray) {
-        this.selectedRuleAndRegulations.push(this._rulesAndRegulation);
+      if ( !isInTheArray ) {
+        this.selectedRuleAndRegulations.push( this._rulesAndRegulation );
         this._rulesAndRegulation = null;
         this.rulesAndRegulation = '';
-        this.filterRulesAndRegulations$ = of([]);
+        this.filterRulesAndRegulations$ = of( [] );
       } else {
         this.notification.notification(
           'warning',
           'Rule already exists in the list'
         );
       }
-    } catch(error) {
+    } catch ( error ) {
       this.notification.notification(
         'error',
-        error instanceof Error ? error.message : String(error)
+        error instanceof Error ? error.message : String( error )
       );
     }
   }
@@ -2383,8 +2383,8 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     this._rulesAndRegulation = data;
   }
 
-  protected displayRulesAndRegulations(input: RulesAndRegulations): string {
-    if(!input) return '';
+  protected displayRulesAndRegulations( input: RulesAndRegulations ): string {
+    if ( !input ) return '';
     return typeof input === 'string' ? input : input.rule;
   }
 
@@ -2392,8 +2392,8 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     input: RulesAndRegulations,
     index: number
   ): void {
-    this.selectedRuleAndRegulations.splice(index, 1);
-    this.notification.notification('info', 'Rule And Regulation removed!');
+    this.selectedRuleAndRegulations.splice( index, 1 );
+    this.notification.notification( 'info', 'Rule And Regulation removed!' );
   }
   //<=========================== End Handle Rules And Regulations Change Operation ===========================>
 
@@ -2401,7 +2401,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   protected handleAddTenantSignature() {
     this.tenantSignature = null;
     this.tenantPreviewImageData = '';
-    const tenantSignature = this.dialog.open(SignSignature, {
+    const tenantSignature = this.dialog.open( SignSignature, {
       width: 'auto',
       height: 'auto',
       minWidth: '50vw',
@@ -2412,26 +2412,26 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
         signature: this.tenantSignature,
         type: 'Tenant',
       },
-    });
+    } );
 
-    tenantSignature.afterClosed().subscribe((result) => {
-      if(result) {
+    tenantSignature.afterClosed().subscribe( ( result ) => {
+      if ( result ) {
         this.tenantSignature = result;
-        this.makeImagePreview(result).then((dataUri) => {
+        this.makeImagePreview( result ).then( ( dataUri ) => {
           this.tenantPreviewImageData = dataUri;
-        });
+        } );
       } else {
         this.notification.notification(
           'warning',
           'Tenant signature is required!'
         );
       }
-    });
+    } );
   }
   protected handleAddLandlordSignature() {
     this.landlordSignature = null;
     this.landloadPreviewImageData = '';
-    const landloadSignature = this.dialog.open(SignSignature, {
+    const landloadSignature = this.dialog.open( SignSignature, {
       width: 'auto',
       height: 'auto',
       minWidth: '50vw',
@@ -2442,52 +2442,52 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
         signature: this.landlordSignature,
         type: 'Landload',
       },
-    });
+    } );
 
-    landloadSignature.afterClosed().subscribe((result) => {
-      if(result) {
+    landloadSignature.afterClosed().subscribe( ( result ) => {
+      if ( result ) {
         this.landlordSignature = result;
-        this.makeImagePreview(result).then((dataUri) => {
+        this.makeImagePreview( result ).then( ( dataUri ) => {
           this.landloadPreviewImageData = dataUri;
-        });
+        } );
       } else {
         this.notification.notification(
           'warning',
           'Landload signature is required!'
         );
       }
-    });
+    } );
   }
 
-  private makeImagePreview(input: File): Promise<string> {
-    return new Promise((resolve, reject) => {
+  private makeImagePreview( input: File ): Promise<string> {
+    return new Promise( ( resolve, reject ) => {
       const reader = new FileReader();
 
       reader.onload = () => {
-        resolve(reader.result as string);
+        resolve( reader.result as string );
       };
 
-      reader.onerror = (error) => {
-        reject(error);
+      reader.onerror = ( error ) => {
+        reject( error );
       };
 
-      reader.readAsDataURL(input);
-    });
+      reader.readAsDataURL( input );
+    } );
   }
   //<=========================== End Handle Tenant Signature Change Operation ===========================>
 
   //<=========================== End Handlers ===========================>
 
   //<=========================== Utility ===========================>
-  private calculateMonthDiff(start: Date, end: Date): number {
+  private calculateMonthDiff( start: Date, end: Date ): number {
     return (
-      (end.getFullYear() - start.getFullYear()) * 12 +
-      (end.getMonth() - start.getMonth())
+      ( end.getFullYear() - start.getFullYear() ) * 12 +
+      ( end.getMonth() - start.getMonth() )
     );
   }
 
-  protected disablePastDates(date: Date | null): boolean {
-    if(date === null) return false;
+  protected disablePastDates( date: Date | null ): boolean {
+    if ( date === null ) return false;
     const today = new Date();
     return date < today;
   }
@@ -2496,85 +2496,85 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     try {
       await this.apiService
         .getCustomCountryDetails()
-        .then((res) => {
+        .then( ( res ) => {
           const responsData = res;
           const data: CurrencyFormat[] = [];
-          responsData.forEach((item) => {
+          responsData.forEach( ( item ) => {
             const country = item.name.common || item.name.official;
             let currency = '';
             let symbol = '';
-            if(item.currencies && typeof item.currencies === 'object') {
-              const currencyKeys = Object.keys(item.currencies);
-              if(currencyKeys.length > 0) {
-                currencyKeys.forEach((currency) => {
-                  if(item.currencies && item.currencies[currency]) {
+            if ( item.currencies && typeof item.currencies === 'object' ) {
+              const currencyKeys = Object.keys( item.currencies );
+              if ( currencyKeys.length > 0 ) {
+                currencyKeys.forEach( ( currency ) => {
+                  if ( item.currencies && item.currencies[ currency ] ) {
                     const organizedData: CurrencyFormat = {
                       country: country,
-                      currency: Object.keys(item.currencies)[0],
-                      symbol: item.currencies[currency].symbol,
+                      currency: Object.keys( item.currencies )[ 0 ],
+                      symbol: item.currencies[ currency ].symbol,
                       flags: item.flags,
                     };
-                    if(!data.includes(organizedData)) {
-                      data.push(organizedData);
+                    if ( !data.includes( organizedData ) ) {
+                      data.push( organizedData );
                     }
                   }
-                });
+                } );
               }
             }
-          });
+          } );
           this.currencies = data;
           this.sortCurrency();
-        })
-        .catch((error: HttpErrorResponse) => {
-          if(error.status >= 400 && error.status < 500) {
-            this.notification.notification("error", "Failed to fetch currency data. Please check your network connection or try again later.");
+        } )
+        .catch( ( error: HttpErrorResponse ) => {
+          if ( error.status >= 400 && error.status < 500 ) {
+            this.notification.notification( "error", "Failed to fetch currency data. Please check your network connection or try again later." );
           }
-          else if(error.status === 404) {
-            this.notification.notification("error", "Currency data not found, please try again later.");
+          else if ( error.status === 404 ) {
+            this.notification.notification( "error", "Currency data not found, please try again later." );
           }
-          else if(error.status === 500) {
-            this.notification.notification("error", "Internal server error, please try again later.");
+          else if ( error.status === 500 ) {
+            this.notification.notification( "error", "Internal server error, please try again later." );
           }
           else {
-            this.notification.notification("error", "An unexpected error occurred, please try again later.");
+            this.notification.notification( "error", "An unexpected error occurred, please try again later." );
           }
-        });
-    } catch(error) {
-      console.error(error);
+        } );
+    } catch ( error ) {
+      console.error( error );
     }
   }
 
   private sortCurrency(): CurrencyFormat[] {
-    return this.currencies.sort((a, b) => {
-      if(a.country < b.country) {
+    return this.currencies.sort( ( a, b ) => {
+      if ( a.country < b.country ) {
         return -1;
-      } else if(a.country > b.country) {
+      } else if ( a.country > b.country ) {
         return 1;
       } else {
         return 0;
       }
-    });
+    } );
   }
 
-  private makeLeaseID(length: number = 40): string {
+  private makeLeaseID( length: number = 40 ): string {
     const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const prefix = 'LEASEID';
 
     // Generate safe date string: YYYYMMDD_HHMMSS
     const now = new Date();
     const datePart = now.toISOString()
-      .replace(/[-:.TZ]/g, '')      // Remove symbols
-      .slice(0, 15)                 // Get YYYYMMDDTHHMMSS
-      .replace('T', '_');           // Replace T with underscore (e.g. 20250718_142355)
+      .replace( /[-:.TZ]/g, '' )      // Remove symbols
+      .slice( 0, 15 )                 // Get YYYYMMDDTHHMMSS
+      .replace( 'T', '_' );           // Replace T with underscore (e.g. 20250718_142355)
 
     const fixedPart = prefix + datePart; // e.g., LEASEID20250718_142355
-    const remainingLength = Math.max(0, length - fixedPart.length);
+    const remainingLength = Math.max( 0, length - fixedPart.length );
 
     // Generate the random alphanumeric suffix
-    const randomBytes = crypto.getRandomValues(new Uint8Array(remainingLength));
-    const randomPart = Array.from(randomBytes, b => charset[b % charset.length]).join('');
+    const randomBytes = crypto.getRandomValues( new Uint8Array( remainingLength ) );
+    const randomPart = Array.from( randomBytes, b => charset[ b % charset.length ] ).join( '' );
 
-    return (fixedPart + randomPart).slice(0, length);
+    return ( fixedPart + randomPart ).slice( 0, length );
   }
   //<=========================== End Utility ===========================>
 
@@ -2582,161 +2582,161 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   //<=========================== Making The Lease Agreement By Submitting ===========================>
   protected async submitLeaseAgreement(): Promise<void> {
     try {
-      const scannedDocuments = [...this.tenantScanedDocuments, ...this.tenantUploadedScanedDocuments];
+      const scannedDocuments = [ ...this.tenantScanedDocuments, ...this.tenantUploadedScanedDocuments ];
       const leaseID = this.makeLeaseID();
       // Is user privilege to make lease agreement
-      if(!leaseID) throw new Error("Lease ID is required!");
+      if ( !leaseID ) throw new Error( "Lease ID is required!" );
 
-      if(!this.hasFullLeaseManagementPrivileges())
-        throw new Error("You don't have full lease management privileges!");
+      if ( !this.hasFullLeaseManagementPrivileges() )
+        throw new Error( "You don't have full lease management privileges!" );
 
       // Tenant information
-      if(!this.tenantID) throw new Error('Tenant ID is required!');
+      if ( !this.tenantID ) throw new Error( 'Tenant ID is required!' );
 
-      if(!this.tenantFullName) throw new Error('Tenant fullname is required!');
+      if ( !this.tenantFullName ) throw new Error( 'Tenant fullname is required!' );
 
-      if(!this.tenantEmail) throw new Error('Tenant email is required!');
+      if ( !this.tenantEmail ) throw new Error( 'Tenant email is required!' );
 
-      if(!this.isTenantEmailValid) throw new Error('Invalid tenant email!');
+      if ( !this.isTenantEmailValid ) throw new Error( 'Invalid tenant email!' );
 
-      if(!this.tenantPhoneCodeDetails)
-        throw new Error('Tenant phone code is required!');
+      if ( !this.tenantPhoneCodeDetails )
+        throw new Error( 'Tenant phone code is required!' );
 
-      if(!this.tenantPhoneCodeId)
-        throw new Error('Tenant phone code is required!');
+      if ( !this.tenantPhoneCodeId )
+        throw new Error( 'Tenant phone code is required!' );
 
-      if(!this.tenantPhoneNumber)
-        throw new Error('Tenant phone number is required!');
+      if ( !this.tenantPhoneNumber )
+        throw new Error( 'Tenant phone number is required!' );
 
-      if(!this.tenantGender) throw new Error('Tenant gender is required!');
+      if ( !this.tenantGender ) throw new Error( 'Tenant gender is required!' );
 
-      if(!this.tenantNationality)
-        throw new Error('Tenant nationality is required!');
+      if ( !this.tenantNationality )
+        throw new Error( 'Tenant nationality is required!' );
 
-      if(scannedDocuments.length === 0)
-        throw new Error('Tenant scanned documents is required!');
+      if ( scannedDocuments.length === 0 )
+        throw new Error( 'Tenant scanned documents is required!' );
 
-      if(!this.tenantNicOrPassport)
-        throw new Error('Tenant NIC or passport is required!');
+      if ( !this.tenantNicOrPassport )
+        throw new Error( 'Tenant NIC or passport is required!' );
 
       // Tenant Address
-      if(!this.tenantHouseNumber)
-        throw new Error('Tenant address house number is required!');
+      if ( !this.tenantHouseNumber )
+        throw new Error( 'Tenant address house number is required!' );
 
-      if(!this.tenantStreet)
-        throw new Error('Tenant address street is required!');
+      if ( !this.tenantStreet )
+        throw new Error( 'Tenant address street is required!' );
 
-      if(!this.tenantCity) throw new Error('Tenant address city is required!');
+      if ( !this.tenantCity ) throw new Error( 'Tenant address city is required!' );
 
-      if(!this.tenantStateOrProvince)
-        throw new Error('Tenant address state or privince is required!');
+      if ( !this.tenantStateOrProvince )
+        throw new Error( 'Tenant address state or privince is required!' );
 
-      if(!this._tenantCountry)
-        throw new Error('Tenant address country is required!');
+      if ( !this._tenantCountry )
+        throw new Error( 'Tenant address country is required!' );
 
-      if(!this.tenantPostalCode)
-        throw new Error('Tenant address postcode is required!');
+      if ( !this.tenantPostalCode )
+        throw new Error( 'Tenant address postcode is required!' );
 
-      if(!this.tenantPostalCode)
-        throw new Error('Tenant address postcode is required!');
+      if ( !this.tenantPostalCode )
+        throw new Error( 'Tenant address postcode is required!' );
 
       // Emergency contact
-      if(!this.emergencyContactName)
-        throw new Error('Emergency contact person name is required!');
+      if ( !this.emergencyContactName )
+        throw new Error( 'Emergency contact person name is required!' );
 
-      if(!this.emergencyContactRelationship)
-        throw new Error('Emergency contact person relationship is required!');
+      if ( !this.emergencyContactRelationship )
+        throw new Error( 'Emergency contact person relationship is required!' );
 
-      if(!this.emergencyContactContact)
-        throw new Error('Emergency contact is required!');
+      if ( !this.emergencyContactContact )
+        throw new Error( 'Emergency contact is required!' );
 
-      if(!this.isEmergencyContactValid) throw new Error('Provide valid contact email or phone number!');
+      if ( !this.isEmergencyContactValid ) throw new Error( 'Provide valid contact email or phone number!' );
 
       // Property information
-      if(!this.selectedProperty)
-        throw new Error('Property is required, please select a property!');
+      if ( !this.selectedProperty )
+        throw new Error( 'Property is required, please select a property!' );
 
-      if(!this.propertyId)
-        throw new Error('Property ID is required, please select a property!');
+      if ( !this.propertyId )
+        throw new Error( 'Property ID is required, please select a property!' );
 
-      if(!this.propertyTitle)
+      if ( !this.propertyTitle )
         throw new Error(
           'Property title is required, please select a property!'
         );
 
-      if(!this.propertyType)
-        throw new Error('Property type is required, please select a property!');
+      if ( !this.propertyType )
+        throw new Error( 'Property type is required, please select a property!' );
 
-      if(!this.furnishingStatus)
+      if ( !this.furnishingStatus )
         throw new Error(
           'Property furnishing status is required, please select a property!'
         );
 
-      if(!this.propertyBuiltYear)
+      if ( !this.propertyBuiltYear )
         throw new Error(
           'Property build year is required, please select a property!'
         );
 
-      if(!this.propertyGeoLocation)
+      if ( !this.propertyGeoLocation )
         throw new Error(
           'Property location is required, please select a property!'
         );
 
-      if(!this.includedAmenities)
+      if ( !this.includedAmenities )
         throw new Error(
           'Property amenities is required, please select a property!'
         );
 
       // Lease Agreement
-      if(!this.startDate) throw new Error('Lease starting date is required!');
+      if ( !this.startDate ) throw new Error( 'Lease starting date is required!' );
 
-      if(!this.endDate) throw new Error('Lease ending date is required!');
+      if ( !this.endDate ) throw new Error( 'Lease ending date is required!' );
 
-      if(!this.durationMonths)
-        throw new Error('Lease duration in months is required!');
+      if ( !this.durationMonths )
+        throw new Error( 'Lease duration in months is required!' );
 
-      if(!this.monthlyRent) throw new Error('Lease monthly rent is required!');
+      if ( !this.monthlyRent ) throw new Error( 'Lease monthly rent is required!' );
 
-      if(!this.currencyLeaseAgreement)
-        throw new Error('Lease currency is required!');
+      if ( !this.currencyLeaseAgreement )
+        throw new Error( 'Lease currency is required!' );
 
-      if(!this._currency) throw new Error('Lease currency is required!');
+      if ( !this._currency ) throw new Error( 'Lease currency is required!' );
 
-      if(!this.paymentFrequencyLeaseAgreement)
-        throw new Error('Lease payment frequency is required!');
+      if ( !this.paymentFrequencyLeaseAgreement )
+        throw new Error( 'Lease payment frequency is required!' );
 
-      if(!this.paymentMethodLeaseAgreement)
-        throw new Error('Lease payment method is required!');
+      if ( !this.paymentMethodLeaseAgreement )
+        throw new Error( 'Lease payment method is required!' );
 
-      if(!this.securityDepositLeaseAgreement)
-        throw new Error('Lease security deposit is required!');
+      if ( !this.securityDepositLeaseAgreement )
+        throw new Error( 'Lease security deposit is required!' );
 
-      if(!this.rentDueDateLeaseAgreement)
-        throw new Error('Lease rent due date is required!');
+      if ( !this.rentDueDateLeaseAgreement )
+        throw new Error( 'Lease rent due date is required!' );
 
-      if(this.selectedLatePaymentPenalties.length === 0)
-        throw new Error('Lease late payment penalties are required!');
+      if ( this.selectedLatePaymentPenalties.length === 0 )
+        throw new Error( 'Lease late payment penalties are required!' );
 
-      if(this.selectedUtilityResponsibilities.length === 0)
-        throw new Error('Lease utility responsibilities are required!');
+      if ( this.selectedUtilityResponsibilities.length === 0 )
+        throw new Error( 'Lease utility responsibilities are required!' );
 
-      if(!this.noticePeriodDaysLeaseAgreement)
-        throw new Error('Lease notice period days are required!');
+      if ( !this.noticePeriodDaysLeaseAgreement )
+        throw new Error( 'Lease notice period days are required!' );
 
       // Rule and regulations
-      if(this.selectedRuleAndRegulations.length === 0)
-        throw new Error('Lease rule and regulations are required!');
+      if ( this.selectedRuleAndRegulations.length === 0 )
+        throw new Error( 'Lease rule and regulations are required!' );
 
       // Is company policy read
-      if(!this.isReadTheCompanyPolicy)
-        throw new Error('Please read the company policy and confirm!');
+      if ( !this.isReadTheCompanyPolicy )
+        throw new Error( 'Please read the company policy and confirm!' );
 
       // Signatures
-      if(!this.tenantSignature)
-        throw new Error('Tenant signature is required!');
+      if ( !this.tenantSignature )
+        throw new Error( 'Tenant signature is required!' );
 
-      if(!this.landlordSignature)
-        throw new Error('Landlord signature is required!');
+      if ( !this.landlordSignature )
+        throw new Error( 'Landlord signature is required!' );
 
       const formData: FormData = new FormData();
 
@@ -2771,13 +2771,13 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
       // Lease ID
 
-      formData.append('leaseID', leaseID);
+      formData.append( 'leaseID', leaseID );
 
       // Tenant Information
-      formData.append('tenantUsername', this.tenant?.username.trim() ?? '');
-      formData.append('tenantFullName', this.tenantFullName.trim());
-      formData.append('tenantEmail', this.tenantEmail.trim());
-      formData.append('tenantNationality', this.tenantNationality.trim());
+      formData.append( 'tenantUsername', this.tenant?.username.trim() ?? '' );
+      formData.append( 'tenantFullName', this.tenantFullName.trim() );
+      formData.append( 'tenantEmail', this.tenantEmail.trim() );
+      formData.append( 'tenantNationality', this.tenantNationality.trim() );
 
       formData.append(
         'tenantDateOfBirth',
@@ -2786,111 +2786,111 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
       formData.append(
         'tenantPhoneCodeDetails',
-        JSON.stringify(this.tenantPhoneCodeDetails)
+        JSON.stringify( this.tenantPhoneCodeDetails )
       );
       formData.append(
         'tenantPhoneNumber', this.tenantPhoneNumber.trim()
       );
-      formData.append('tenantGender', this.tenantGender.trim());
-      formData.append('tenantNICOrPassport', this.tenantNicOrPassport.trim());
+      formData.append( 'tenantGender', this.tenantGender.trim() );
+      formData.append( 'tenantNICOrPassport', this.tenantNicOrPassport.trim() );
 
       // Tenant scanned documents section
-      if(this.tenantScanedDocuments.length > 0) {
-        this.tenantScanedDocuments.forEach((item) => {
-          formData.append('tenantScanedDocuments', item);
-        });
+      if ( this.tenantScanedDocuments.length > 0 ) {
+        this.tenantScanedDocuments.forEach( ( item ) => {
+          formData.append( 'tenantScanedDocuments', item );
+        } );
       }
       formData.append(
         'tenantUploadedScanedDocuments',
-        JSON.stringify(this.tenantUploadedScanedDocuments)
+        JSON.stringify( this.tenantUploadedScanedDocuments )
       );
       formData.append(
         'tenantUploadedScanedDocumentsRemoved',
-        JSON.stringify(this.tenantUploadedScanedDocumentsRemoved)
+        JSON.stringify( this.tenantUploadedScanedDocumentsRemoved )
       );
 
       // Address
-      formData.append('tenantAddress', JSON.stringify(tenantAddress));
+      formData.append( 'tenantAddress', JSON.stringify( tenantAddress ) );
 
       // Emergency contact
-      formData.append('emergencyContact', JSON.stringify(emergencyContact));
+      formData.append( 'emergencyContact', JSON.stringify( emergencyContact ) );
 
       // Co-Tenant
-      formData.append('coTenantFullname', this.coTenantFullName.trim());
-      formData.append('coTenantEmail', this.coTenantEmail.trim());
-      formData.append('coTenantPhoneCodeId', this.coTenantPhoneCodeId.trim());
+      formData.append( 'coTenantFullname', this.coTenantFullName.trim() );
+      formData.append( 'coTenantEmail', this.coTenantEmail.trim() );
+      formData.append( 'coTenantPhoneCodeId', this.coTenantPhoneCodeId.trim() );
       formData.append(
         'coTenantPhoneNumber', this.coTenantPhoneNumber.trim()
       );
-      formData.append('coTenantGender', this.coTenantGender.trim());
+      formData.append( 'coTenantGender', this.coTenantGender.trim() );
       formData.append(
         'coTenantNicOrPassport',
         this.coTenantNicOrPassport.trim()
       );
-      formData.append('coTenantAge', String(this.coTenantAge).trim());
-      formData.append('coTenantRelationship', this.coTenantRelationship.trim());
+      formData.append( 'coTenantAge', String( this.coTenantAge ).trim() );
+      formData.append( 'coTenantRelationship', this.coTenantRelationship.trim() );
 
       // Property Information
       formData.append(
         'selectedProperty',
-        JSON.stringify(this.selectedProperty)
+        JSON.stringify( this.selectedProperty )
       );
 
       // Lease Agreement
-      formData.append('startDate', this.startDate.toISOString().trim());
-      formData.append('endDate', this.endDate.toISOString().trim());
-      formData.append('durationMonths', String(this.durationMonths).trim());
-      formData.append('monthlyRent', String(this.monthlyRent).trim());
-      formData.append('currency', JSON.stringify(this._currency));
+      formData.append( 'startDate', this.startDate.toISOString().trim() );
+      formData.append( 'endDate', this.endDate.toISOString().trim() );
+      formData.append( 'durationMonths', String( this.durationMonths ).trim() );
+      formData.append( 'monthlyRent', String( this.monthlyRent ).trim() );
+      formData.append( 'currency', JSON.stringify( this._currency ) );
       formData.append(
         'paymentFrequency',
-        JSON.stringify(this.paymentFrequency)
+        JSON.stringify( this.paymentFrequency )
       );
-      formData.append('paymentMethod', JSON.stringify(this.paymentMethod));
-      formData.append('securityDeposit', JSON.stringify(this.securityDeposit));
-      formData.append('rentDueDate', JSON.stringify(this.rentDueDate));
+      formData.append( 'paymentMethod', JSON.stringify( this.paymentMethod ) );
+      formData.append( 'securityDeposit', JSON.stringify( this.securityDeposit ) );
+      formData.append( 'rentDueDate', JSON.stringify( this.rentDueDate ) );
       formData.append(
         'selectedLatePaymentPenalties',
-        JSON.stringify(this.selectedLatePaymentPenalties)
+        JSON.stringify( this.selectedLatePaymentPenalties )
       );
       formData.append(
         'selectedUtilityResponsibilities',
-        JSON.stringify(this.selectedUtilityResponsibilities)
+        JSON.stringify( this.selectedUtilityResponsibilities )
       );
       formData.append(
         'noticePeriodDays',
-        JSON.stringify(this.noticePeriodDays)
+        JSON.stringify( this.noticePeriodDays )
       );
 
       // Rules and regulations
       formData.append(
         'selectedRuleAndRegulations',
-        JSON.stringify(this.selectedRuleAndRegulations)
+        JSON.stringify( this.selectedRuleAndRegulations )
       );
 
       // Check whether user read the company policy
       formData.append(
         'isReadTheCompanyPolicy',
-        String(this.isReadTheCompanyPolicy)
+        String( this.isReadTheCompanyPolicy )
       );
 
       // Tenant signature
-      formData.append('tenantSignature', this.tenantSignature as File);
+      formData.append( 'tenantSignature', this.tenantSignature as File );
       // Landlord signature
-      formData.append('landlordSignature', this.landlordSignature as File);
+      formData.append( 'landlordSignature', this.landlordSignature as File );
 
-      formData.append('signedAt', this.signedAt.toISOString().trim());
-      formData.append('ipAddress', this.ipAddress.trim());
-      formData.append('userAgent', JSON.stringify(this.userAgent));
+      formData.append( 'signedAt', this.signedAt.toISOString().trim() );
+      formData.append( 'ipAddress', this.ipAddress.trim() );
+      formData.append( 'userAgent', JSON.stringify( this.userAgent ) );
 
       // System meta data ocrAutoFillStatus
-      formData.append('systemMetaData', JSON.stringify(systemMetaData));
+      formData.append( 'systemMetaData', JSON.stringify( systemMetaData ) );
 
       // Call the api
       await this.tenantService
-        .registerLeaseAgreement(formData, leaseID)
-        .then((res) => {
-          if(res.status === 'success') {
+        .registerLeaseAgreement( formData, leaseID )
+        .then( ( res ) => {
+          if ( res.status === 'success' ) {
             this.notification.notification(
               res.status,
               res.message
@@ -2901,47 +2901,47 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
               res.message
             );
           }
-          setTimeout(() => {
+          setTimeout( () => {
             this.goToTenant();
-          }, 1000);
-        })
-        .catch((error: HttpErrorResponse) => {
-          console.error(error);
-          if(error.status >= 400 && error.status < 500) {
-            this.notification.notification("error", "Failed to submit lease agreement. Please check your input and try again.");
+          }, 1000 );
+        } )
+        .catch( ( error: HttpErrorResponse ) => {
+          console.error( error );
+          if ( error.status >= 400 && error.status < 500 ) {
+            this.notification.notification( "error", "Failed to submit lease agreement. Please check your input and try again." );
           }
-          else if(error.status === 404) {
-            this.notification.notification("error", "Lease agreement not found, please try again later.");
+          else if ( error.status === 404 ) {
+            this.notification.notification( "error", "Lease agreement not found, please try again later." );
           }
-          else if(error.status === 500) {
-            this.notification.notification("error", "Internal server error, please try again later.");
+          else if ( error.status === 500 ) {
+            this.notification.notification( "error", "Internal server error, please try again later." );
           }
           else {
-            this.notification.notification("error", "An unexpected error occurred, please try again later.");
+            this.notification.notification( "error", "An unexpected error occurred, please try again later." );
           }
-        })
-        .finally(() => {
+        } )
+        .finally( () => {
           this.progress.complete();
-        });
-    } catch(error) {
-      console.error(error);
+        } );
+    } catch ( error ) {
+      console.error( error );
       const status = 'error';
       let messsage: string;
-      if(error instanceof Error) {
+      if ( error instanceof Error ) {
         messsage = error.message;
-      } else if(
+      } else if (
         typeof error === 'object' &&
         error !== null &&
         'error' in error &&
-        typeof (error as any).error === 'object' &&
-        (error as any).error !== null &&
-        'message' in (error as any).error
+        typeof ( error as any ).error === 'object' &&
+        ( error as any ).error !== null &&
+        'message' in ( error as any ).error
       ) {
-        messsage = (error as any).error.message as string;
+        messsage = ( error as any ).error.message as string;
       } else {
         messsage = 'An unknown error occurred';
       }
-      this.notification.notification(status, messsage);
+      this.notification.notification( status, messsage );
     }
   }
   //<=========================== End Making The Lease Agreement By Submitting ===========================>

@@ -1,4 +1,4 @@
-<app-notification></app-notification>
+<app-notification-dialog></app-notification-dialog>
 <app-progress-bar></app-progress-bar>
 <form action="">
   <div
@@ -26,7 +26,7 @@
             ></app-skeleton-loader>
             <img
               *ngIf="!isLoading"
-              [src]="generateTenantImage((typeof tenant.image === 'string' ? tenant.image : '') || '', tenant.gender)"
+              [src]="tenant.image"
               class="user-image"
               alt="user image"
             />
@@ -34,21 +34,6 @@
         </div>
       </div>
       <!-- end user-image row -->
-
-      <div class="row my-3">
-        <div class="col-12 d-flex justify-content-end align-items-center">
-          <button
-            type="button"
-            class="btn-custom"
-            (click)="goLease()"
-            matTooltip="Page reload"
-            matTooltipPosition="above"
-            aria-label="Button for page reload"
-          >
-            <i class="fa-solid fa-rotate"></i>
-          </button>
-        </div>
-      </div>
 
       <!-- tenant details title -->
       <div class="row mt-4">
@@ -146,9 +131,7 @@
 
         <!-- Phone Number -->
         <div class="col-xl-4 col-md-4 col-sm-12 col-12 position-relative">
-          <span
-            *ngIf="!phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)"
-            class="span-text-danger"
+          <span *ngIf="!isValidTenantPhoneNumber" class="span-text-danger"
             >Phone number is not valid</span
           >
 
@@ -160,25 +143,21 @@
               <input
                 matInput
                 type="text"
-                [(ngModel)]="tenantPhoneCodeId"
-                name="tenantPhoneCodeId"
+                [(ngModel)]="tenantPhoneCodeDetails"
+                name="tenantPhoneCodeIdInput"
                 placeholder="+1"
                 required
                 [matAutocomplete]="phoneCodeAutoComplete"
-                (ngModelChange)="onTenantPhoneCodeChange($event)"
-                [ngClass]="
-                  phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
-                    ? ''
-                    : 'text-danger'
-                "
+                (ngModelChange)="onPhoneCodeChange($event, 'tenant')"
+                [class.text-danger]="!isValidTenantPhoneNumber"
               />
               <mat-autocomplete
                 #phoneCodeAutoComplete="matAutocomplete"
-                (optionSelected)="onTenantPhoneCodeSelectionChange($event)"
+                (optionSelected)="onPhoneCodeSelectionChange($event, 'tenant')"
                 [displayWith]="displayPhoneCode"
               >
                 <mat-option
-                  *ngFor="let option of filterTenantPhoneCodes | async"
+                  *ngFor="let option of filterPhoneCodes | async"
                   [value]="option"
                 >
                   <img
@@ -203,11 +182,7 @@
                 name="tenantPhoneNumber"
                 placeholder="Phone Number..."
                 required
-                [ngClass]="
-                  phoneNumberValid(tenantPhoneCodeId + tenantPhoneNumber)
-                    ? ''
-                    : 'text-danger'
-                "
+                [class.text-danger]="!isValidCoTenantPhoneNumber"
               />
             </mat-form-field>
           </div>
@@ -332,7 +307,6 @@
         >
           <div
             class="row document-preview-row"
-            (click)="processFileToView(document)"
           >
             <div class="col-2 d-flex justify-content-center align-items-center">
               <mat-icon
@@ -601,86 +575,62 @@
 
         <!-- Phone Number -->
         <div class="col-xl-4 col-md-4 col-sm-12 col-12 position-relative">
-          <span
-            *ngIf="!phoneNumberValid(coTenantPhoneCodeId + coTenantPhoneNumber)"
-            class="span-text-danger"
+          <span *ngIf="!isValidCoTenantPhoneNumber" class="span-text-danger"
             >Phone number is not valid</span
           >
-          <div class="row">
-            <div class="col-3 pe-0-2-5">
-              <mat-form-field
-                appearance="fill"
-                class="form-field me-3 w-100"
-                floatLabel="auto"
-              >
-                <mat-label
-                  [ngClass]="
-                    phoneNumberValid(coTenantPhoneCodeId + coTenantPhoneNumber)
-                      ? ''
-                      : 'text-danger'
-                  "
-                  >Code</mat-label
-                >
-                <input
-                  matInput
-                  type="text"
-                  [(ngModel)]="coTenantPhoneCodeId"
-                  class="example-right-align"
-                  [ngClass]="
-                    phoneNumberValid(coTenantPhoneCodeId + coTenantPhoneNumber)
-                      ? ''
-                      : 'text-danger'
-                  "
-                  name="coTenantPhoneCodeId"
-                  placeholder="+1"
-                  [matAutocomplete]="phoneCodeAutoCompleteCoTenant"
-                  (ngModelChange)="onCoTenantPhoneCodeChange($event)"
-                />
 
-                <mat-autocomplete
-                  #phoneCodeAutoCompleteCoTenant="matAutocomplete"
-                  [displayWith]="displayPhoneCode"
-                  (optionSelected)="onCoTenantPhoneCodeSelectionChange($event)"
-                >
-                  <mat-option
-                    *ngFor="let option of filterCoTenantPhoneCodes | async"
-                    [value]="option"
-                    class="d-flex justify-content-start align-items-center"
-                  >
-                    <img
-                      [src]="option.flags.png"
-                      width="22"
-                      height="14"
-                      style="margin-right: 8px"
-                      alt="{{ option.flags.alt }}"
-                    />
-                    {{ option.code }}
-                  </mat-option>
-                </mat-autocomplete>
-              </mat-form-field>
-            </div>
-            <div class="col-9 ps-0-2-5">
-              <mat-form-field
-                appearance="fill"
-                class="form-field me-3 w-100"
-                floatLabel="auto"
+          <div class="d-flex gap-2 align-items-start">
+            <!-- Country Code Field -->
+            <!-- style="min-width: 50px" -->
+            <mat-form-field appearance="fill" class="flex-grow-0 w-50">
+              <mat-label>Code</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="coTenantPhoneCodeDetails"
+                name="coTenantPhoneCodeDetailsInput"
+                placeholder="+1"
+                required
+                [matAutocomplete]="coTenantPhoneCodeAutoComplete"
+                (ngModelChange)="onPhoneCodeChange($event, 'co-tenant')"
+                [class.text-danger]="!isValidCoTenantPhoneNumber"
+              />
+              <mat-autocomplete
+                #coTenantPhoneCodeAutoComplete="matAutocomplete"
+                (optionSelected)="
+                  onPhoneCodeSelectionChange($event, 'co-tenant')
+                "
+                [displayWith]="displayPhoneCode"
               >
-                <mat-label>Phone Number</mat-label>
-                <input
-                  matInput
-                  type="text"
-                  [(ngModel)]="coTenantPhoneNumber"
-                  [ngClass]="
-                    phoneNumberValid(coTenantPhoneCodeId + coTenantPhoneNumber)
-                      ? ''
-                      : 'text-danger'
-                  "
-                  class="example-right-align"
-                  name="coTenantPhoneNumber"
-                  placeholder="Phone Number..."
-                />
-              </mat-form-field>
-            </div>
+                <mat-option
+                  *ngFor="let option of filterPhoneCodes | async"
+                  [value]="option"
+                >
+                  <img
+                    [src]="option.flags.png"
+                    width="22"
+                    height="14"
+                    style="margin-right: 8px"
+                    alt="{{ option.flags.alt }}"
+                  />
+                  {{ option.code }}
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+
+            <!-- Phone Number Field -->
+            <mat-form-field appearance="fill" class="flex-grow-1 w-100">
+              <mat-label>Phone Number</mat-label>
+              <input
+                matInput
+                type="text"
+                [(ngModel)]="coTenantPhoneNumber"
+                name="coTenantPhoneNumberInput"
+                placeholder="Phone Number..."
+                required
+                [class.text-danger]="!isValidCoTenantPhoneNumber"
+              />
+            </mat-form-field>
           </div>
         </div>
         <!-- End Phone Number -->
@@ -770,15 +720,17 @@
         <div class="col-12">
           <app-custom-table
             [(isReload)]="propertyTableIsReloading"
-            [pageSize]="propertyTablePageSize"
-            [pageSizeOptions]="propertyTablePageSizeOptions"
-            [index]="propertyTablePageIndex"
-            [pagination]="true"
-            [tableTitle]="propertyTableType"
+            [(pageSize)]="propertyTablePageSize"
+            [(index)]="propertyTablePageIndex"
             [(search)]="propertyTabletSearchText"
-            [totalDataCount]="propertyLength"
+            [pagination]="true"
+            [tableTitle]="propertyTableTitle"
+            [totalDataCount]="propertyTableTotalCount"
             [data]="propertyTableData"
             [columns]="propertyTableColumns"
+            [buttons]="propertyTableButtonAction"
+            (buttonOperation)="handleButtonsOperations($event)"
+            (fetchData)="fetchPropertyTableData()"
           ></app-custom-table>
         </div>
       </div>
@@ -788,7 +740,7 @@
       <ng-container *ngIf="isPropertySelected">
         <div class="row mt-4">
           <div class="col-12">
-            <h5 class="title">Basic Information:</h5>
+            <h5 class="title">Selected Property Information:</h5>
           </div>
         </div>
 

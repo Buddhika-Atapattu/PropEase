@@ -1,94 +1,125 @@
-import {Component, Input, Output, ElementRef, HostListener, EventEmitter, AfterViewInit, OnInit, ViewChild, isDevMode, ChangeDetectorRef, OnChanges, SimpleChanges} from '@angular/core';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
+import {CommonModule} from '@angular/common';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnInit,
+  Output,
+  SimpleChanges,
+  ViewChild
+} from '@angular/core';
 import {FormsModule} from '@angular/forms';
-import {NotificationDialogComponent} from '../../../dialogs/notification/notification.component';
 
 @Component({
   selector: 'switch-button',
   standalone: true,
-  imports: [CommonModule, FormsModule, NotificationDialogComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './switch-button.component.html',
-  styleUrls: ['./switch-button.component.scss'],
-
+  styleUrls: ['./switch-button.component.scss']
 })
 export class SwitchButton implements AfterViewInit, OnInit, OnChanges {
-  @ViewChild(NotificationDialogComponent) NotificationDialogComponent!: NotificationDialogComponent;
-  @ViewChild('checkBox', {static: true}) checkBox!: ElementRef<HTMLInputElement>
+  @ViewChild('checkBox', {static: true})
+  checkBox!: ElementRef<HTMLInputElement>;
+
+  // hidden measurers (NOT the visual labels)
+  @ViewChild('measureOn', {static: true})
+  measureOnElement!: ElementRef<HTMLSpanElement>;
+
+  @ViewChild('measureOff', {static: true})
+  measureOffElement!: ElementRef<HTMLSpanElement>;
+
   @Input({required: true}) checked: boolean = false;
   @Input() labelOn: string = 'ON';
   @Input() labelOff: string = 'OFF';
   @Input() disabled: boolean = false;
-  @Output() checkedChange = new EventEmitter<boolean>();
 
-  private _labelOn: string = 'ON';
-  private _labelOff: string = 'OFF';
-  protected localCheck!: boolean;
+  @Output() checkedChange: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  constructor (private el: ElementRef, private cdr: ChangeDetectorRef) {}
+  protected localCheck: boolean = false;
+  protected switchWidth: number = 64; // initial fallback
 
-  ngOnInit() {
-    // Initialization logic here
-    this.localCheck = this.checked;
+  constructor (
+    private readonly el: ElementRef<HTMLElement>,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.localCheck = !!this.checked;
+    this.labelOn = this.makeUpperCase(this.labelOn.trim());
+    this.labelOff = this.makeUpperCase(this.labelOff.trim());
   }
 
-  ngAfterViewInit() {
-    // try {
-    //   if(this.labelOn.length > 3) {
-    //     throw new Error('Label "ON" should be less than or equal to 3 characters');
-    //   }
-    //   if(this.labelOff.length > 3) {
-    //     throw new Error('Label "OFF" should be less than or equal to 3 characters');
-    //   }
-    // }
-    // catch(error) {
-    //   console.error(error);
-    //   this.NotificationDialogComponent.notification("warning", error as string)
-    // }
+  ngAfterViewInit(): void {
+    setTimeout((): void => {
+      this.updateSwitchWidth();
+      this.cdr.detectChanges();
+    }, 0);
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if(changes['checked'] && !changes['checked'].firstChange) {
+      this.localCheck = !!changes['checked'].currentValue;
+      if(this.checkBox?.nativeElement) {
+        this.checkBox.nativeElement.checked = this.localCheck;
+      }
+      this.cdr.markForCheck();
+    }
+
+    if(changes['labelOn'] || changes['labelOff']) {
+      if(!changes['labelOn']?.firstChange || !changes['labelOff']?.firstChange) {
+        setTimeout((): void => {
+          this.updateSwitchWidth();
+          this.cdr.detectChanges();
+        }, 0);
+      }
+    }
   }
 
   onToggle(): void {
     try {
-      if(this.disabled) return;
-      this.checkedChange.emit(this.checkBox.nativeElement.checked);
-    }
-    catch(err) {
+      if(this.disabled) {
+        return;
+      }
+
+      const nextChecked: boolean = this.checkBox.nativeElement.checked;
+
+      this.localCheck = nextChecked;
+      this.checked = nextChecked;
+
+      this.checkedChange.emit(nextChecked);
+      this.cdr.markForCheck();
+    } catch(err) {
       console.error(err);
       return;
     }
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if(changes['checked']) {
-
+  private updateSwitchWidth(): void {
+    if(!this.measureOnElement || !this.measureOffElement) {
+      return;
     }
+
+    const onRect: DOMRect = this.measureOnElement.nativeElement.getBoundingClientRect();
+    const offRect: DOMRect = this.measureOffElement.nativeElement.getBoundingClientRect();
+
+    const maxLabelWidth: number = Math.max(onRect.width, offRect.width);
+
+    // Thumb is 26px wide, plus about 12px breathing space (6 each side)
+    const thumbWidth: number = 26;
+    const spacing: number = 12;
+    const minWidth: number = 64;
+    const marginSet = 16;
+
+    const computedWidth: number = Math.ceil(maxLabelWidth + thumbWidth + spacing + marginSet);
+
+    this.switchWidth = Math.max(minWidth, computedWidth);
   }
-
-  // @Input()
-  // set labelOn(value: string) {
-  //   if(isDevMode() && value.length > 3) {
-  //     console.warn(`[SwitchButton] 'labelOn' should not exceed 3 characters.`);
-  //   }
-  //   const upperCaseValue = this.makeUpperCase(value);
-  //   this._labelOn = upperCaseValue.length > 3 ? upperCaseValue.slice(0, 3) : upperCaseValue;
-  // }
-  // get labelOn() {
-  //   return this._labelOn;
-  // }
-
-  // @Input()
-  // set labelOff(value: string) {
-  //   if(isDevMode() && value.length > 3) {
-  //     console.warn(`[SwitchButton] 'labelOff' should not exceed 3 characters.`);
-  //   }
-  //   const upperCaseValue = this.makeUpperCase(value);
-  //   this._labelOff = upperCaseValue.length > 3 ? upperCaseValue.slice(0, 3) : upperCaseValue;
-  // }
-  // get labelOff() {
-  //   return this._labelOff;
-  // }
 
   private makeUpperCase(str: string): string {
     return str.toUpperCase();
   }
-
 }

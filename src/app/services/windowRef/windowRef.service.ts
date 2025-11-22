@@ -19,6 +19,7 @@ export class WindowsRefService implements OnDestroy {
   // Track screen width
   private windowWidthSubject = new BehaviorSubject<number>(0);
   private resizeSub: Subscription | null = null;
+  private localImageStorage: string = 'Images/company-images/company-logo-animation/animation.js'
 
   constructor (@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);

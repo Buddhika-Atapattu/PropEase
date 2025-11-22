@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 import {
   Component,
   OnInit,
@@ -6,13 +6,15 @@ import {
   Inject,
   PLATFORM_ID,
 } from '@angular/core';
-import {firstValueFrom, Subscription, pipe, take} from 'rxjs';
-import {CryptoService} from '../cryptoService/crypto.service';
-import {HttpClient, HttpParams} from '@angular/common/http';
-import {isPlatformBrowser} from '@angular/common';
-import {DomSanitizer} from '@angular/platform-browser';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {MSG} from '../APIs/apis.service'
+import { firstValueFrom, Subscription, pipe, take } from 'rxjs';
+import { CryptoService } from '../cryptoService/crypto.service';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { isPlatformBrowser } from '@angular/common';
+import { DomSanitizer } from '@angular/platform-browser';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { MSG } from '../APIs/apis.service';
+import { environment } from '../../../environments/environment';
+
 
 export interface Property {
   // Basic Property Details
@@ -131,7 +133,7 @@ export interface CountryDetailsCustomType {
     common: string; // Commonly used name (e.g., "Eritrea")
     official: string; // Official full name
     nativeName?: {
-      [langCode: string]: {
+      [ langCode: string ]: {
         official: string;
         common: string;
       };
@@ -139,7 +141,7 @@ export interface CountryDetailsCustomType {
   };
 
   currencies?: {
-    [code: string]: {
+    [ code: string ]: {
       name: string; // Currency name (e.g., "Eritrean nakfa")
       symbol: string; // Currency symbol (e.g., "Nfk")
     };
@@ -174,7 +176,7 @@ export interface CountryDetails {
     common: string; // Commonly used name (e.g., "Eritrea")
     official: string; // Official full name
     nativeName?: {
-      [langCode: string]: {
+      [ langCode: string ]: {
         official: string;
         common: string;
       };
@@ -190,7 +192,7 @@ export interface CountryDetails {
   unMember?: boolean;
 
   currencies?: {
-    [code: string]: {
+    [ code: string ]: {
       name: string; // Currency name (e.g., "Eritrean nakfa")
       symbol: string; // Currency symbol (e.g., "Nfk")
     };
@@ -207,21 +209,21 @@ export interface CountryDetails {
   subregion?: string; // Subregion (e.g., "Eastern Africa")
 
   languages?: {
-    [langCode: string]: string; // Language map (e.g., { "eng": "English" })
+    [ langCode: string ]: string; // Language map (e.g., { "eng": "English" })
   };
 
-  latlng: [number, number]; // Latitude and longitude
+  latlng: [ number, number ]; // Latitude and longitude
   landlocked?: boolean;
   borders?: string[]; // Bordering country codes
   area: number; // Total area in square kilometers
 
   demonyms?: {
-    eng: {m: string; f: string}; // Demonyms in English
-    [langCode: string]: {m: string; f: string};
+    eng: { m: string; f: string; }; // Demonyms in English
+    [ langCode: string ]: { m: string; f: string; };
   };
 
   translations?: {
-    [langCode: string]: {
+    [ langCode: string ]: {
       official: string;
       common: string;
     };
@@ -257,7 +259,7 @@ export interface CountryDetails {
   startOfWeek?: string; // "monday", "sunday", etc.
 
   capitalInfo?: {
-    latlng: [number, number];
+    latlng: [ number, number ];
   };
 
   postalCode?: {
@@ -295,6 +297,8 @@ export interface GoogleMapLocation {
   lng: number;
   embeddedUrl: string;
 }
+
+export type PropertySections = keyof Property;
 
 export const FEATURES_AMENITIES: string[] = [
   // Common
@@ -418,13 +422,13 @@ export interface BackEndPropertyData
   images: propertyImages[];
 }
 
-@Injectable({
+@Injectable( {
   providedIn: 'root',
-})
+} )
 export class PropertyService {
   private isBrowser: boolean;
 
-  private iconsMap: {[key: string]: string} = {
+  private iconsMap: { [ key: string ]: string; } = {
     // Common
     AirConditioning: 'amenities/air-conditioning.svg',
     Heating: 'amenities/heating.svg',
@@ -487,44 +491,47 @@ export class PropertyService {
     Defalt: 'amenities/default.svg',
   };
 
+  private rootAPI: string = environment.apiOrigin;
+  private propertyAPI: string = `${ this.rootAPI }/api-property`;
+
   constructor (
     private http: HttpClient,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private cryptoService: CryptoService,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
     this.amenityIconMaker();
   }
 
   public generatePropertyId(): string {
     const prefix = 'PROP';
     const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 100000);
-    return `${prefix}-${timestamp}-${random.toString().padStart(5, '0')}`;
+    const random = Math.floor( Math.random() * 100000 );
+    return `${ prefix }-${ timestamp }-${ random.toString().padStart( 5, '0' ) }`;
   }
 
   // Amenities icon maker
   private amenityIconMaker() {
-    for(const [name, path] of Object.entries(this.iconsMap)) {
+    for ( const [ name, path ] of Object.entries( this.iconsMap ) ) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `Images/Icons/${path}`
+          `Images/Icons/${ path }`
         )
       );
     }
   }
 
-  public investigateTheAmenityIcon(amenity: string): string {
-    const cleaned = amenity.replace(/[^a-zA-Z0-9]/g, '');
+  public investigateTheAmenityIcon( amenity: string ): string {
+    const cleaned = amenity.replace( /[^a-zA-Z0-9]/g, '' );
     const cleanedText = cleaned.trim().toLowerCase();
-    const matchedKey = Object.keys(this.iconsMap).find(
-      (key) => key.toLowerCase() === cleanedText
+    const matchedKey = Object.keys( this.iconsMap ).find(
+      ( key ) => key.toLowerCase() === cleanedText
     );
 
-    if(matchedKey) {
+    if ( matchedKey ) {
       return matchedKey;
     } else {
       return 'Defalt';
@@ -533,11 +540,11 @@ export class PropertyService {
 
   //<==================== API ====================>
   //Insert a property
-  public async createProperties(data: FormData, id: string): Promise<MSG> {
-    console.log(data);
+  public async createProperties( data: FormData, id: string ): Promise<MSG> {
+    console.log( data );
     return firstValueFrom(
       this.http.post<MSG>(
-        ` http://localhost:3000/api-property/insert-property/${id}`,
+        `${ this.propertyAPI }/insert-property/${ id }`,
         data
       )
     );
@@ -554,48 +561,48 @@ export class PropertyService {
     filter?: string
   ): Promise<MSG> {
     let params = new HttpParams();
-    if(search !== undefined && search !== '' && search !== null) {
-      params = params.append('search', search);
+    if ( search !== undefined && search !== '' && search !== null ) {
+      params = params.append( 'search', search );
     }
-    if(filter !== undefined && filter !== '' && filter !== null) {
-      params = params.append('filter', filter);
+    if ( filter !== undefined && filter !== '' && filter !== null ) {
+      params = params.append( 'filter', filter );
     }
     return firstValueFrom(
       this.http.get<MSG>(
-        `http://localhost:3000/api-property/get-all-properties-with-pagination/${start}/${end}`,
-        {params}
+        `${ this.propertyAPI }/get-all-properties-with-pagination/${ start }/${ end }`,
+        { params }
       )
     );
   }
 
   //This will gets property by id
-  public async getPropertyById(id: string): Promise<MSG> {
+  public async getPropertyById( id: string ): Promise<MSG> {
     return firstValueFrom(
       this.http.get<MSG>(
-        `http://localhost:3000/api-property/get-single-property-by-id/${id}`
+        `${ this.propertyAPI }/get-single-property-by-id/${ id }`
       )
     );
   }
 
-  public async getUserData(username: string): Promise<MSG> {
-    return firstValueFrom(
-      this.http.get<MSG>(`http://localhost:3000/api-user/user-data/${username}`)
-    );
-  }
+  // public async getUserData(username: string): Promise<MSG> {
+  //   return firstValueFrom(
+  //     this.http.get<MSG>(`http://localhost:3000/api-user/user-data/${username}`)
+  //   );
+  // }
 
   // Delete the property
-  public async deleteProperty(id: string, username: string): Promise<MSG> {
+  public async deleteProperty( id: string, username: string ): Promise<MSG> {
     return firstValueFrom(
       this.http.delete<MSG>(
-        `http://localhost:3000/api-property/delete-property/${id.trim()}/${username.trim()}`,
+        `${ this.propertyAPI }/delete-property/${ id.trim() }/${ username.trim() }`,
       )
     );
   }
 
-  public async updateProperty(data: FormData, id: string): Promise<MSG> {
+  public async updateProperty( data: FormData, id: string ): Promise<MSG> {
     return firstValueFrom(
       this.http.put<MSG>(
-        `http://localhost:3000/api-property/update-property/${id}`,
+        `${ this.propertyAPI }/update-property/${ id }`,
         data
       )
     );
@@ -604,10 +611,62 @@ export class PropertyService {
   public async getAllProperties(): Promise<MSG> {
     return firstValueFrom(
       this.http.get<MSG>(
-        `http://localhost:3000/api-property/get-all-properties`
+        `${ this.propertyAPI }/get-all-properties`
       )
     );
   }
 
+  public async getAllPropertiesCount(): Promise<MSG> {
+    return firstValueFrom(
+      this.http.get<MSG>(
+        `${ this.propertyAPI }/get-all-properties-count`
+      )
+    );
+  }
+
+  public async getPropertySectionById( propertyID: Property[ 'id' ], section: PropertySections ) {
+    const params: HttpParams = this.toParams( { section } );
+    return firstValueFrom(
+      this.http.get<MSG>(
+        `${ this.propertyAPI }/get-single-property-section-by-id/${ propertyID }`,
+        { params }
+      )
+    );
+  }
   //<==================== END API ====================>
+
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Private utils
+  // ───────────────────────────────────────────────────────────────────────────
+  private safeSeg( value: string ): string { return encodeURIComponent( ( value || '' ).trim() ); }
+  private toParams( record: Record<string, string | number | boolean | undefined | null> ): HttpParams {
+    let p = new HttpParams();
+    Object.entries( record ).forEach( ( [ k, v ] ) => { if ( v != null ) p = p.set( k, String( v ) ); } );
+    return p;
+  }
+  private mapError( e: unknown ): MSG {
+    const fallback: MSG = { status: 'error', message: 'Unexpected error', data: e as any };
+    if ( typeof e === 'string' ) return { status: 'error', message: e, data: null };
+    if ( e && typeof e === 'object' ) {
+      const anyE = e as { error?: any; message?: string; };
+      if ( anyE?.error && typeof anyE.error === 'object' ) {
+        const emsg = ( anyE.error as any ).message || anyE.message || 'Request failed';
+        return { status: 'error', message: emsg, data: anyE.error };
+      }
+      if ( anyE?.message ) return { status: 'error', message: anyE.message, data: anyE };
+    }
+    return fallback;
+  }
+  private normalizeToMSG( raw: unknown ): MSG {
+    const r = raw as { success?: boolean; status?: string; message?: string; data?: unknown; };
+    if ( typeof r?.message === 'string' ) {
+      const status = typeof r.success === 'boolean'
+        ? ( r.success ? 'success' : 'error' )
+        : ( typeof r.status === 'string' ? r.status : 'success' );
+      return { status, message: r.message, data: ( r.data ?? null ) as any };
+    }
+    return { status: 'success', message: 'OK', data: raw as any };
+  }
+
 }

@@ -1,10 +1,11 @@
-import {Component, OnInit, OnDestroy, ViewChild} from '@angular/core';
-import {CommonModule} from '@angular/common';
-import {MatMenuModule, MatMenuTrigger} from '@angular/material/menu';
-import {MatIconModule} from '@angular/material/icon';
-import {MatBadgeModule} from '@angular/material/badge';
-import {MatButtonModule} from '@angular/material/button';
-import {Observable, Subject, timer, fromEvent} from 'rxjs';
+// src/app/components/shared/notification/notification.ts
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
+import { MatIconModule } from '@angular/material/icon';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatButtonModule } from '@angular/material/button';
+import { Observable, Subject, timer, fromEvent } from 'rxjs';
 import {
   map,
   takeUntil,
@@ -15,26 +16,26 @@ import {
   scan,
   delayWhen,
 } from 'rxjs/operators';
-import {Router} from '@angular/router';
+import { Router } from '@angular/router';
 
 import {
   NotificationService,
   Notification,
 } from '../../../services/notifications/notification-service';
-import {AuthService} from '../../../services/auth/auth.service';
+import { AuthService } from '../../../services/auth/auth.service';
+import { NotificationsRoutingService } from '../../../services/notificationRouting/notifications-routing-service';
+import { NotificationDialogComponent } from '../../dialogs/notification/notificationBar.component';
 
-// ✅ make sure the import path matches your file name/location exactly
-import {NotificationsRoutingService} from '../../../services/notificationRouting/notifications-routing-service';
-
-@Component({
+@Component( {
   selector: 'app-notification',
   standalone: true,
-  imports: [CommonModule, MatMenuModule, MatIconModule, MatBadgeModule, MatButtonModule],
+  imports: [ CommonModule, MatMenuModule, MatIconModule, MatBadgeModule, MatButtonModule, NotificationDialogComponent ],
   templateUrl: './notification.html',
-  styleUrls: ['./notification.scss'],
-})
+  styleUrls: [ './notification.scss' ],
+} )
 export class NotificationComponent implements OnInit, OnDestroy {
-  @ViewChild('menuTrigger', {static: false}) menuTrigger!: MatMenuTrigger;
+  @ViewChild( 'menuTrigger', { static: false } ) menuTrigger!: MatMenuTrigger;
+  @ViewChild( NotificationDialogComponent, { static: true } ) notificationBar !: NotificationDialogComponent;
 
   protected notifications$!: Observable<Notification[]>;
   protected unreadCount$!: Observable<number>;
@@ -67,19 +68,19 @@ export class NotificationComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Streams
+    // Core streams
     this.notifications$ = this.notificationService.items$;
     this.unreadCount$ = this.notificationService.unreadCount$();
     this.connected$ = this.notificationService.connected$;
 
-    // Auth
+    // Auth context
     this.isLoggedIn = this.authService.isUserLoggedIn;
     const me = this.authService.getLoggedUser;
     this.username = me?.username || '';
     this.role = me?.role || '';
 
     // Predicates
-    const isDirect = (n: Notification) => {
+    const isDirect = ( n: Notification ) => {
       const names = n.audience?.usernames ?? [];
       const roles = n.audience?.roles ?? [];
       const modeOk =
@@ -87,13 +88,16 @@ export class NotificationComponent implements OnInit, OnDestroy {
         n.audience?.mode === 'user' ||
         n.audience?.mode === 'role';
 
-      const includesMeByName = names.includes(this.username);
-      const includesMeByRole = !!this.role && roles.includes(this.role as Exclude<typeof this.role, ''>);
-      return modeOk && (includesMeByName || includesMeByRole);
+      const includesMeByName = names.includes( this.username );
+      const includesMeByRole =
+        !!this.role && roles.includes( this.role as Exclude<typeof this.role, ''> );
+
+      return modeOk && ( includesMeByName || includesMeByRole );
     };
 
-    const isOverall = (n: Notification) => {
-      if(this.role !== 'admin') return false;
+    const isOverall = ( n: Notification ) => {
+      if ( this.role !== 'admin' ) return false;
+
       const names = n.audience?.usernames ?? [];
       const roles = n.audience?.roles ?? [];
       const modeOk =
@@ -101,63 +105,68 @@ export class NotificationComponent implements OnInit, OnDestroy {
         n.audience?.mode === 'user' ||
         n.audience?.mode === 'role';
 
-      const targetsMeByName = names.includes(this.username);
-      const targetsMeByRole = !!this.role && roles.includes(this.role as Exclude<typeof this.role, ''>);
-      return modeOk && !(targetsMeByName || targetsMeByRole);
+      const targetsMeByName = names.includes( this.username );
+      const targetsMeByRole =
+        !!this.role && roles.includes( this.role as Exclude<typeof this.role, ''> );
+
+      // "Overall" = visible to admin, but not explicitly targeting them
+      return modeOk && !( targetsMeByName || targetsMeByRole );
     };
 
     // Split views
-    this.directNotifications$ = this.notifications$.pipe(map(list => list.filter(isDirect)));
-    this.overallNotifications$ = this.notifications$.pipe(map(list => list.filter(isOverall)));
+    this.directNotifications$ = this.notifications$.pipe( map( list => list.filter( isDirect ) ) );
+    this.overallNotifications$ = this.notifications$.pipe( map( list => list.filter( isOverall ) ) );
 
-    // Initial fetch
-    this.notificationService.load({limit: 30}).catch((error) => {
-      console.error('[notif] initial load failed', error);
-    });
+    // NOTE: Initial REST load is done by AuthService.initRealtimeIfNeeded().
+    // We do NOT call load() here again to avoid duplicate calls.
 
-    // Optional real-time
-    const maybeOnNew = (this.notificationService as any).onNew?.bind(this.notificationService);
-    if(typeof maybeOnNew === 'function') {
-      maybeOnNew()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (n: Notification) => this.notificationService.upsert?.(n),
-          error: () => { /* ignore; polling handles resilience */},
-        });
-    }
+    // Realtime stream (sound handled inside NotificationService.onNew(true))
+    this.notificationService
+      .onNew( true )
+      .pipe( takeUntil( this.destroy$ ) )
+      .subscribe( {
+        next: ( n: Notification ) => {
+          // Service already upserts; this is just for debugging / extra effects
+          console.log( '[NotificationComponent] new notification received:', n._id );
+        },
+        error: ( err ) => {
+          console.error( '[NotificationComponent] realtime notifications error', err );
+        },
+      } );
 
-    // Visibility-aware polling with backoff
-    const visible$ = fromEvent(document, 'visibilitychange').pipe(
-      map(() => document.visibilityState === 'visible'),
-      startWith(document.visibilityState === 'visible'),
+    // Visibility-aware polling with backoff (fallback if WS fails or misses some)
+    const visible$ = fromEvent( document, 'visibilitychange' ).pipe(
+      map( () => document.visibilityState === 'visible' ),
+      startWith( document.visibilityState === 'visible' ),
       distinctUntilChanged()
     );
 
     visible$
       .pipe(
-        switchMap((isVisible) => {
+        switchMap( ( isVisible ) => {
           const intervalMs = isVisible ? 30_000 : 180_000; // 30s vs 3min
-          return timer(intervalMs, intervalMs).pipe(map(() => undefined));
-        }),
-        switchMap(() =>
-          this.notificationService.load$?.({limit: 30}) ??
-          new Observable<void>((sub) => {
+          return timer( intervalMs, intervalMs ).pipe( map( () => undefined ) );
+        } ),
+        switchMap( () =>
+          // Use observable version if available, else wrap Promise
+          this.notificationService.load$?.( { limit: 30 } ) ??
+          new Observable<void>( ( sub ) => {
             this.notificationService
-              .load({limit: 30})
-              .then(() => {
+              .load( { limit: 30 } )
+              .then( () => {
                 sub.next();
                 sub.complete();
-              })
-              .catch((e) => sub.error(e));
-          })
+              } )
+              .catch( ( e ) => sub.error( e ) );
+          } )
         ),
-        retryWhen((errors) =>
+        retryWhen( ( errors ) =>
           errors.pipe(
-            scan((acc: number) => Math.min(acc ? acc * 3 : 5000, 300000), 0),
-            delayWhen((ms: number) => timer(ms))
+            scan( ( acc: number ) => Math.min( acc ? acc * 3 : 5000, 300000 ), 0 ),
+            delayWhen( ( ms: number ) => timer( ms ) )
           )
         ),
-        takeUntil(this.destroy$)
+        takeUntil( this.destroy$ )
       )
       .subscribe();
   }
@@ -167,49 +176,40 @@ export class NotificationComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /** Refresh when menu opens */
+  /** Refresh when menu opens (manual refresh on demand) */
   protected onOpenMenu(): void {
-    this.notificationService.load({limit: 30}).catch(() => {});
+    this.notificationService.load( { limit: 30 } ).catch( () => {} );
   }
 
-  protected setTab(tab: 'direct' | 'overall', ev?: MouseEvent) {
+  protected setTab( tab: 'direct' | 'overall', ev?: MouseEvent ) {
     ev?.stopPropagation();
     this.activeTab = tab;
   }
 
-  /**
-   * FIX: Actually navigate.
-   * We use the routing service’s convenience method which builds the UrlTree and navigates.
-   * Then we mark as read and close the menu.
-   */
-  protected async markOneRead(notification: Notification, ev?: MouseEvent) {
+  /** Navigate + mark single notification as read */
+  protected async markOneRead( notification: Notification, ev?: MouseEvent ) {
     ev?.stopPropagation();
     ev?.preventDefault();
 
     try {
-      // Navigate to the appropriate page for this notification
-      const ok = await this.notificationsRoutingService.navigateToAny(notification);
-
-      // Mark as read after attempting navigation (or before, if you prefer)
-      await this.notificationService.markRead(notification._id);
-
-      // Close the menu (often auto-closes on nav, but this is safe)
-      if(ok) this.closeMenu();
-    } catch(e) {
-      console.error('[notif] markOneRead failed', e);
+      const ok = await this.notificationsRoutingService.navigateToAny( notification );
+      await this.notificationService.markRead( notification._id );
+      if ( ok ) this.closeMenu();
+    } catch ( e ) {
+      console.error( '[notif] markOneRead failed', e );
     }
   }
 
   protected async markAllAsRead() {
     try {
       await this.notificationService.markAllRead();
-    } catch(e) {
-      console.error('[notif] markAllAsRead failed', e);
+    } catch ( e ) {
+      console.error( '[notif] markAllAsRead failed', e );
     }
   }
 
-  protected iconFor(n: Notification): string {
-    switch(n.severity) {
+  protected iconFor( n: Notification ): string {
+    switch ( n.severity ) {
       case 'success': return 'check_circle';
       case 'warning': return 'warning';
       case 'error': return 'error';
@@ -222,12 +222,12 @@ export class NotificationComponent implements OnInit, OnDestroy {
   }
 
   protected viewAllNotifications(): void {
-    if(!this.isLoggedIn) return;
+    if ( !this.isLoggedIn ) return;
     this.closeMenu();
-    this.router.navigate(['/dashboard/notifications/all-notifications']);
+    this.router.navigate( [ '/dashboard/notifications/all-notifications' ] );
   }
 
-  protected trackById(_: number, item: Notification) {
+  protected trackById( _: number, item: Notification ) {
     return item._id;
   }
 }

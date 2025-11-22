@@ -1,4 +1,4 @@
-<app-notification></app-notification>
+<app-notification-dialog></app-notification-dialog>
 <app-progress-bar></app-progress-bar>
 <div class="container-fluid">
   <form
@@ -86,7 +86,6 @@
         [(isReload)]="isReloading"
         [pageSize]="addPageSize"
         [pagination]="true"
-        [pageSizeOptions]="addPageSizeOptions"
         [(pageIndex)]="addPageIndex"
         [pageCount]="addPageCount"
         [tableTitle]="'Make Team'"

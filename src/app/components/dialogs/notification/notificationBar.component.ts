@@ -12,6 +12,7 @@ import {
 import { isPlatformBrowser, CommonModule, AsyncPipe } from '@angular/common';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { ChangeDetectorRef } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 
 export type msgTypes =
   | 'success'
@@ -38,49 +39,51 @@ export interface NotificationType {
   message: string;
 }
 
-@Component({
-  selector: 'app-notification',
+@Component( {
+  selector: 'app-notification-dialog',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './notification.component.html',
-  styleUrl: './notification.component.scss',
-})
+  imports: [ CommonModule, MatIconModule ],
+  templateUrl: './notificationBar.component.html',
+  styleUrl: './notificationBar.component.scss',
+} )
 export class NotificationDialogComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('notification') notificationElement!: ElementRef<HTMLDivElement>;
+  @ViewChild( 'notification' ) notificationElement!: ElementRef<HTMLDivElement>;
   private isBrowser: boolean;
-  protected status: msg['type'] = 'error';
+  protected status: msg[ 'type' ] = 'error';
   protected message: string = '';
   protected showNotification: boolean = false;
   protected isHovered: boolean = false;
+  protected isIncomingMessage: boolean = false;
 
-  constructor(
+  constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private cdr: ChangeDetectorRef
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
   }
 
-  ngAfterViewInit() { }
+  ngAfterViewInit() {}
 
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
-  ngOnDestroy(): void { }
+  ngOnDestroy(): void {}
 
-  public async notification(status: msg['type'], message: string) {
+  public async notification( status: msg[ 'type' ], message: string, incoming: boolean = false ) {
     this.status = status;
     this.message = message;
     this.showNotification = true;
+    this.isIncomingMessage = incoming;
 
-    if (this.cdr && this.isBrowser) {
+    if ( this.cdr && this.isBrowser ) {
       this.cdr.detectChanges();
-      await new Promise((resolve) => setTimeout(resolve));
+      await new Promise( ( resolve ) => setTimeout( resolve ) );
     }
-    if (!this.isHovered) {
-      setTimeout(() => {
+    if ( !this.isHovered ) {
+      setTimeout( () => {
         this.showNotification = false;
         this.cdr.detectChanges();
-      }, 5000);
+      }, 5000 );
     }
   }
 

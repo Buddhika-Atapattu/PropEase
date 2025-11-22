@@ -124,7 +124,7 @@ class ElectronApp {
         this.mainWindow = new electron_1.BrowserWindow({
             width: 1200,
             height: 800,
-            icon: path.join(__dirname, '..', 'public', 'Images', 'company-images', 'ICO', 'PropEaseLogo.ico'),
+            icon: path.join(__dirname, '..', 'public', 'Images', 'company-images', 'logo', 'win', 'without-bg-and-letters.ico'),
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,

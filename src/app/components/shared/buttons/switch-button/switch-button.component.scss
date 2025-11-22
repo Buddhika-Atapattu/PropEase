@@ -1,74 +1,119 @@
+/* switch-button.component.scss */
+/* Hidden measurers: same font as labels, but off-screen */
+.switch-measure {
+  position: absolute;
+  visibility: hidden;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  /* no width: 100% here – we want natural text width */
+}
+
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 100%;
+  min-width: 64px; /* fallback minimum */
   height: 32px;
+  cursor: pointer;
+}
+
+/* Visually hide checkbox but keep it accessible */
+.toggle-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Track (pill) */
+.toggle-switch .slider {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--danger-400); /* OFF background */
+  border-radius: 999px;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.25);
+  transition: background-color 0.25s ease;
   overflow: hidden;
+}
 
-  input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
+/* Thumb (white circle) */
+.toggle-switch .slider::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35),
+    inset 0 0 2px rgba(255, 255, 255, 0.4);
+  transition: left 0.25s ease;
+}
 
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background-color: #ccc;
-    border-radius: 34px;
-    transition: background-color 0.4s;
-    box-shadow: inset 0px 0px 3px 0px #00000061;
+/* Centered label (we just swap ON/OFF via opacity) */
+.toggle-switch .label-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  user-select: none;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
 
-    &::before {
-      content: "";
-      position: absolute;
-      height: 26px;
-      width: 26px;
-      left: 4px;
-      top: 3px;
-      background-color: white;
-      border-radius: 50%;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5),
-        inset 0px 0px 3px 0px rgba(0, 0, 0, 0.5);
-      transition: transform 0.4s;
-      z-index: 10;
-    }
+/* OFF state – show OFF, hide ON */
+.toggle-switch .label-text.on {
+  opacity: 0;
+  color: var(--on-primary);
+  justify-content: start;
+  margin-left: 1rem;
+}
 
-    .label-text {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-weight: bold;
-      font-size: 12px;
-      transition: color 0.3s;
-    }
+.toggle-switch .label-text.off {
+  opacity: 1;
+  color: rgba(0, 0, 0, 0.5); /* embossed grey look */
+  justify-content: end;
+  margin-right: 1rem;
+}
 
-    .off {
-      right: 5px;
-      color: #888;
-    }
+/* ON state – green pill, thumb moves right, show ON text */
+.toggle-switch input:checked + .slider {
+  background-color: var(--success); /* or var(--primary) if you prefer */
+}
 
-    .on {
-      left: 5px;
-      color: white;
-      opacity: 0;
-    }
-  }
+.toggle-switch input:checked + .slider::before {
+  /* Move thumb to the right edge: total width - thumb width - 2*margin */
+  left: calc(100% - 29px);
+}
 
-  input:checked + .slider {
-    background-color: #2ecc71;
+.toggle-switch input:checked + .slider .label-text.on {
+  opacity: 1;
+  color: var(--on-primary);
+}
 
-    &::before {
-      transform: translateX(100%); // adjusted for knob size
-    }
+.toggle-switch input:checked + .slider .label-text.off {
+  opacity: 0;
+}
 
-    .on {
-      opacity: 1;
-    }
+/* Keyboard focus outline */
+.toggle-switch input:focus-visible + .slider {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
 
-    .off {
-      opacity: 0;
-    }
-  }
+/* Disabled state */
+.toggle-switch--disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.trasform-left {
+  transform: translateX;
 }

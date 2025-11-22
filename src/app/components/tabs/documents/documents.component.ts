@@ -1,4 +1,4 @@
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -12,29 +12,29 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {MatButtonModule} from '@angular/material/button';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {MatInputModule} from '@angular/material/input';
-import {DomSanitizer} from '@angular/platform-browser';
-import {ActivatedRoute, Router} from '@angular/router';
-import {Subscription} from 'rxjs';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { DomSanitizer } from '@angular/platform-browser';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   APIsService,
   User,
   UDER_DOC_TYPES,
 } from '../../../services/APIs/apis.service';
-import {AuthService} from '../../../services/auth/auth.service';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import { AuthService } from '../../../services/auth/auth.service';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import {
   msgTypes,
   NotificationDialogComponent,
-} from '../../dialogs/notification/notification.component';
-import {ProgressBarComponent} from '../../dialogs/progress-bar/progress-bar.component';
-import {SkeletonLoaderComponent} from '../../shared/skeleton-loader/skeleton-loader.component';
+} from '../../dialogs/notification/notificationBar.component';
+import { ProgressBarComponent } from '../../dialogs/progress-bar/progress-bar.component';
+import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-loader.component';
 
 interface selectedFiles {
   name: string;
@@ -43,7 +43,7 @@ interface selectedFiles {
   file: File | null;
 }
 
-@Component({
+@Component( {
   selector: 'app-documents',
   imports: [
     CommonModule,
@@ -62,13 +62,13 @@ interface selectedFiles {
   providers: [],
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.scss',
-})
+} )
 export class DocumentsComponent
   implements OnInit, OnChanges, AfterViewInit, OnDestroy {
-  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-  @ViewChild(NotificationDialogComponent, {static: true})
+  @ViewChild( 'fileInput' ) fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild( NotificationDialogComponent, { static: true } )
   notification!: NotificationDialogComponent;
-  @ViewChild(ProgressBarComponent, {static: true})
+  @ViewChild( ProgressBarComponent, { static: true } )
   progress!: ProgressBarComponent;
   @Input() user: User | null = null;
   protected mode: boolean | null = null;
@@ -128,7 +128,7 @@ export class DocumentsComponent
   constructor (
     private APIs: APIsService,
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private router: Router,
     private activatedRouter: ActivatedRoute,
     private crypto: CryptoService,
@@ -136,48 +136,48 @@ export class DocumentsComponent
     private domSanitizer: DomSanitizer,
     private authService: AuthService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
     this.registerCustomIcons();
   }
 
   async ngOnInit(): Promise<void> {
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+    if ( this.isBrowser ) {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
-      window.addEventListener('dragover', this.preventDefault, {
+      } );
+      window.addEventListener( 'dragover', this.preventDefault, {
         passive: false,
-      });
-      window.addEventListener('drop', this.preventDefault, {passive: false});
+      } );
+      window.addEventListener( 'drop', this.preventDefault, { passive: false } );
     }
     await this.callTheAPI();
   }
 
   protected async callTheAPI() {
-    if(this.user) {
-      await this.APIs.getUserDocuments(this.user?.username)
-        .then((data) => {
-          if(data) {
+    if ( this.user ) {
+      await this.APIs.getUserDocuments( this.user?.username )
+        .then( ( data ) => {
+          if ( data ) {
             this.documents = data.data as UDER_DOC_TYPES[];
 
           }
-        })
-        .catch((error) => {
-          if(error) {
+        } )
+        .catch( ( error ) => {
+          if ( error ) {
             this.isNoData = true;
           }
-        });
-      if(this.documents.length > 0) {
+        } );
+      if ( this.documents.length > 0 ) {
         this.isNoData = false;
       } else {
         this.isNoData = true;
       }
       this.isActive = this.user?.isActive;
-      setTimeout(() => {
+      setTimeout( () => {
         this.isLoading = false;
-      }, 500);
+      }, 500 );
     } else {
-      console.error('User not found!');
+      console.error( 'User not found!' );
     }
   }
 
@@ -185,8 +185,8 @@ export class DocumentsComponent
     // this.notification.notification('', '');
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if(changes['user'] && this.user) {
+  ngOnChanges( changes: SimpleChanges ): void {
+    if ( changes[ 'user' ] && this.user ) {
       this.username = this.user.username;
     }
   }
@@ -214,11 +214,11 @@ export class DocumentsComponent
       image: 'file-types/image.svg',
     };
 
-    for(const [name, path] of Object.entries(iconMap)) {
+    for ( const [ name, path ] of Object.entries( iconMap ) ) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `Images/Icons/${path}`
+          `Images/Icons/${ path }`
         )
       );
     }
@@ -227,86 +227,86 @@ export class DocumentsComponent
 
   //<================== File Input Button Trigger ==================>
   protected triggerFileInput() {
-    document.querySelector<HTMLInputElement>('#fileInput')?.click();
+    document.querySelector<HTMLInputElement>( '#fileInput' )?.click();
   }
   //<================== End File Input Button Trigger ==================>
 
   //<================== File Copy and paste ==================>
-  protected handlePaste(event: ClipboardEvent): void {
+  protected handlePaste( event: ClipboardEvent ): void {
     event.preventDefault();
 
     const items = event.clipboardData?.items;
-    if(!items) return;
+    if ( !items ) return;
 
     const validFiles: File[] = [];
 
-    for(const item of items) {
-      if(item.kind === 'file') {
+    for ( const item of items ) {
+      if ( item.kind === 'file' ) {
         const file = item.getAsFile();
-        if(file && this.allowedTypes.includes(file.type)) {
-          validFiles.push(file);
+        if ( file && this.allowedTypes.includes( file.type ) ) {
+          validFiles.push( file );
         }
       }
     }
 
-    if(validFiles.length > 0) {
-      this.processPastedFiles(validFiles);
+    if ( validFiles.length > 0 ) {
+      this.processPastedFiles( validFiles );
     }
   }
 
-  protected processPastedFiles(files: File[]): void {
+  protected processPastedFiles( files: File[] ): void {
     const dataTransfer = new DataTransfer();
-    for(const file of files) {
-      dataTransfer.items.add(file);
+    for ( const file of files ) {
+      dataTransfer.items.add( file );
     }
 
     const input = this.fileInput.nativeElement as HTMLInputElement;
     input.files = dataTransfer.files;
 
     // Reuse existing file selection handler
-    this.onFileSelected({target: input} as unknown as Event);
+    this.onFileSelected( { target: input } as unknown as Event );
   }
   //<================== End File Copy and paste ==================>
 
   //<================== File Drag and Drop ==================>
-  protected onDragOver(event: DragEvent): void {
+  protected onDragOver( event: DragEvent ): void {
     event.preventDefault(); // Crucial to allow drop
     this.isDragOver = true;
   }
 
-  protected onDragLeave(event: DragEvent): void {
+  protected onDragLeave( event: DragEvent ): void {
     event.preventDefault();
     this.isDragOver = false;
   }
 
-  protected onDrop(event: DragEvent): void {
+  protected onDrop( event: DragEvent ): void {
     event.preventDefault();
     this.isDragOver = false;
 
     const files = event.dataTransfer?.files;
-    if(files && files.length > 0) {
+    if ( files && files.length > 0 ) {
       // Filter allowed types and collect valid files
       const validFiles: File[] = [];
-      for(let i = 0; i < files.length; i++) {
-        const file = files.item(i);
-        if(file && this.allowedTypes.includes(file.type)) {
-          validFiles.push(file);
+      for ( let i = 0; i < files.length; i++ ) {
+        const file = files.item( i );
+        if ( file && this.allowedTypes.includes( file.type ) ) {
+          validFiles.push( file );
         } else {
           this.isNotType = true;
         }
       }
 
-      if(validFiles.length > 0) {
-        this.processDroppedFiles(validFiles);
+      if ( validFiles.length > 0 ) {
+        this.processDroppedFiles( validFiles );
       }
     }
   }
 
   // Accepts an array of Files, not FileList
-  protected processDroppedFiles(files: File[]): void {
+  protected processDroppedFiles( files: File[] ): void {
     const dataTransfer = new DataTransfer();
-    for(const file of files) {
-      dataTransfer.items.add(file);
+    for ( const file of files ) {
+      dataTransfer.items.add( file );
     }
 
     const input = this.fileInput.nativeElement as HTMLInputElement;
@@ -315,18 +315,18 @@ export class DocumentsComponent
     input.files = dataTransfer.files;
 
     // Trigger your upload handler
-    this.onFileSelected({target: input} as unknown as Event);
+    this.onFileSelected( { target: input } as unknown as Event );
   }
 
-  private preventDefault(event: Event): void {
+  private preventDefault( event: Event ): void {
     event.preventDefault();
     event.stopPropagation();
   }
   //<================== End File Drag and Drop ==================>
 
   //<================== Choose icon ==================>
-  protected chooceIcon(type: string): string {
-    switch(type) {
+  protected chooceIcon( type: string ): string {
+    switch ( type ) {
       case 'doc':
         return 'word';
       case 'docx':
@@ -396,35 +396,35 @@ export class DocumentsComponent
   //<================== End Choose icon ==================>
 
   //<================== File input ==================>
-  protected onFileSelected(event: Event): void {
+  protected onFileSelected( event: Event ): void {
     const input = event.target as HTMLInputElement;
     let fileSize: number = 0;
-    if(input.files && input.files.length > 0) {
+    if ( input.files && input.files.length > 0 ) {
       this.file = input.files;
       this.isFileSelected = true;
 
-      for(let i = 0; i < this.file.length; i++) {
-        const file = this.file[i];
+      for ( let i = 0; i < this.file.length; i++ ) {
+        const file = this.file[ i ];
         const data: selectedFiles = {
           name: file.name,
-          size: file.size / (1024 * 1024),
-          icon: this.chooceIcon(file.name.split('.').pop() || ''),
+          size: file.size / ( 1024 * 1024 ),
+          icon: this.chooceIcon( file.name.split( '.' ).pop() || '' ),
           file: file,
         };
 
-        this.selectedFiles.push(data);
+        this.selectedFiles.push( data );
         fileSize += file.size;
       }
 
-      if(fileSize !== 0 && this.notification) {
-        if(fileSize > 10 * 1024 * 1024) {
+      if ( fileSize !== 0 && this.notification ) {
+        if ( fileSize > 10 * 1024 * 1024 ) {
           this.notification.notification(
             'error' as msgTypes,
             'File sizes should less than 10MB'
           );
         }
       } else {
-        console.error('Notification not found');
+        console.error( 'Notification not found' );
       }
     } else {
       this.file = null;
@@ -433,74 +433,74 @@ export class DocumentsComponent
   //<================== End File input ==================>
 
   //<================== File Delete Item from array of files ==================>
-  protected deleteFile(index: number) {
-    this.selectedFiles.splice(index, 1);
-    if(this.selectedFiles.length === 0) this.isFileSelected = false;
+  protected deleteFile( index: number ) {
+    this.selectedFiles.splice( index, 1 );
+    if ( this.selectedFiles.length === 0 ) this.isFileSelected = false;
   }
   //<================== End File Delete Item from array of files ==================>
 
   //<================== Download the documents ==================>
-  protected async downloadFile(downloadURL: string) {
-    if(this.isBrowser) {
-      window.open(downloadURL, '_blank');
-      URL.revokeObjectURL(downloadURL);
+  protected async downloadFile( downloadURL: string ) {
+    if ( this.isBrowser ) {
+      window.open( downloadURL, '_blank' );
+      URL.revokeObjectURL( downloadURL );
     }
   }
   //<================== End Download the documents ==================>
 
   //<================== Insert the documents ==================>
   protected async insertDocumnets() {
-    if(this.selectedFiles.length === 0 && this.notification) {
-      this.notification?.notification('error', 'No files selected to upload.');
+    if ( this.selectedFiles.length === 0 && this.notification ) {
+      this.notification?.notification( 'error', 'No files selected to upload.' );
       return;
     } else {
-      if(this.user) {
-        if(!this.progress) console.error('Progress bar not found!');
+      if ( this.user ) {
+        if ( !this.progress ) console.error( 'Progress bar not found!' );
         const formData = new FormData();
         this.progress.start();
-        formData.append('username', this.user?.username);
+        formData.append( 'username', this.user?.username );
         formData.append(
           'uploader',
           this.authService.getLoggedUser?.username ||
           'Error By taking logged user'
         );
-        for(let item of this.selectedFiles) {
-          formData.append('files', item.file as File);
+        for ( let item of this.selectedFiles ) {
+          formData.append( 'files', item.file as File );
         }
-        await this.APIs.uploadDocuments(formData, this.user?.username)
-          .then((data) => {
-            if(data && this.notification) {
-              this.notification.notification(data.status, data.message);
+        await this.APIs.uploadDocuments( formData, this.user?.username )
+          .then( ( data ) => {
+            if ( data && this.notification ) {
+              this.notification.notification( data.status, data.message );
             } else {
               this.notification.notification(
                 'error',
                 'Error: file upload failed!'
               );
             }
-          })
-          .catch((error) => {
-            if(error) {
-              this.notification.notification('error', error.message);
+          } )
+          .catch( ( error ) => {
+            if ( error ) {
+              this.notification.notification( 'error', error.message );
               this.progress.error();
             }
-          })
-          .finally(() => {
+          } )
+          .finally( () => {
             this.progress.complete();
             this.selectedFiles = [];
             this.isFileSelected = false;
-          });
+          } );
         await this.callTheAPI();
       } else {
-        console.error('User not found!');
+        console.error( 'User not found!' );
       }
     }
   }
   //<================== End Insert the documents ==================>
 
   ngOnDestroy(): void {
-    if(this.isBrowser) {
-      window.removeEventListener('dragover', this.preventDefault);
-      window.removeEventListener('drop', this.preventDefault);
+    if ( this.isBrowser ) {
+      window.removeEventListener( 'dragover', this.preventDefault );
+      window.removeEventListener( 'drop', this.preventDefault );
     }
 
     this.modeSub?.unsubscribe();

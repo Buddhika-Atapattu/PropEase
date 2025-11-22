@@ -45,14 +45,21 @@
                 "glob": "**/*",
                 "input": "node_modules/@fortawesome/fontawesome-free/webfonts",
                 "output": "webfonts"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/material-design-icons/iconfont",
+                "output": "assets/iconfont"
               }
             ],
             "styles": [
-              "src/styles.scss",
-              "src/app/styles/global.scss",
               "@fortawesome/fontawesome-free/css/all.min.css",
               "leaflet/dist/leaflet.css",
-              "leaflet-geosearch/dist/geosearch.css"
+              "leaflet-geosearch/dist/geosearch.css",
+              "node_modules/material-design-icons/iconfont/material-icons.css",
+              "node_modules/material-symbols/index.css",
+              "src/styles.scss",
+              "src/app/styles/global.scss"
             ],
             "scripts": [
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"

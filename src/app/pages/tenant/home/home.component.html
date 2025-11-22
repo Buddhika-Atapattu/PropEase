@@ -1,9 +1,9 @@
-<app-notification />
+<app-notification-dialog></app-notification-dialog>
 <app-progress-bar />
 
 <div class="main-panel">
   <div class="container-fluid">
-    @if(isAllowed){
+    @if(!isAllowed){
     <!-- Tenant Section -->
     <div class="row mb-4">
       <div class="col-xl-12">
@@ -11,12 +11,11 @@
       </div>
     </div>
 
-    @if(leaseTableData.length > 0){
+    @if(leaseTableDisplay){
     <app-custom-table
-      [(isReload)]="leaseTableIsReloading"
+      [(isReload)]="isLoading"
       [pagination]="true"
-      [pageSize]="leaseTablePageSize"
-      [(pageSizeOptions)]="leaseTablePageSizeOptions"
+      [(pageSize)]="leaseTablePageSize"
       [(index)]="leaseTablePageIndex"
       [tableTitle]="leaseTableTitle"
       [(search)]="leaseTabletSearch"
@@ -26,7 +25,7 @@
       (buttonOperation)="handleLeaseOperations($event)"
       [data]="leaseTableData"
       [columns]="leaseTableColumns"
-      [totalDataCount]="leaseLength"
+      [totalDataCount]="leaseTotalDataCount"
     ></app-custom-table>
     } } @else {
     <div class="row mb-4">
@@ -43,34 +42,23 @@
       </div>
     </div>
 
-    <!-- <app-custom-table
-      *ngIf="noneTenants.length > 0"
-      [(isReload)]="isReloading"
-      [(pageSize)]="noneTenantPageSize"
-      [(pageSizeOptions)]="noneTenantPageSizeOptions"
-      [(pageIndex)]="noneTenantPageIndex"
-      [(pageCount)]="noneTenantPageCount"
-      [(tableType)]="noneTenantTableType"
-      [(search)]="noneTenantName"
-      [(buttonAction)]="noneTenantButtonAction"
-      [(buttonOperation)]="noneTenantButtonOperation"
-      [(totalDataCount)]="noneTenantTotalDataCount"
-      [(buttonActionTrigger)]="noneTenantsButtonActionTrigger"
-      [(buttonOperationTrigger)]="noneTenantsButtonOperationTrigger"
-      [(notification)]="noneTenantsNotification"
-      [fileExportButtonTypeByExtension]="
-        noneTenantFileExportButtonTypeByExtension
-      "
-      [data]="noneTenants"
-      [columns]="columns"
-      [loggedUser]="loggedUser"
-      [isLoading]="isLoading"
-      [mode]="mode"
-      [isBrowser]="isBrowser"
-      [modeSub]="modeSub"
-      [fullDataCount]="noneTenantsFull.length"
-      (fileExport)="handleNoneTenantsFileExport($event)"
-    ></app-custom-table> -->
+    @if(adminTableDisplay){
+    <app-custom-table
+      [(isReload)]="isLoading"
+      [pagination]="true"
+      [(pageSize)]="adminPageSize"
+      [(index)]="adminPageIndex"
+      [tableTitle]="adminTableTitle"
+      [(search)]="adminSearch"
+      [buttons]="adminActionButtons"
+      (buttonOperation)="adminActionButtonCenter($event)"
+      [totalDataCount]="adminTotalDataCount"
+      [fileExportExtention]="adminFileExportExtension"
+      [data]="adminData"
+      [columns]="adminColumns"
+      (fileExport)="handleFileExport($event, 'Admin')"
+    ></app-custom-table>
+    }
 
     <div class="row">
       <div class="col-12">
@@ -79,36 +67,25 @@
         <!-- Admin Section -->
       </div>
     </div>
-    <!-- <app-custom-table
-      *ngIf="tenants.length > 0"
-      [(isReload)]="isReloading"
-      [(pageSize)]="tenantPageSize"
-      [(pageSizeOptions)]="tenantPageSizeOptions"
-      [(pageIndex)]="tenantPageIndex"
-      [(pageCount)]="tenantPageCount"
-      [(tableType)]="tenantTableType"
-      [(search)]="tenantName"
-      [(buttonAction)]="tenantButtonAction"
-      [(buttonOperation)]="tenantButtonOperation"
-      [(totalDataCount)]="tenantTotalDataCount"
-      [(buttonActionTrigger)]="tenantsButtonActionTrigger"
-      [(buttonOperationTrigger)]="tenantsButtonOperationTrigger"
-      [(notification)]="tenantsNotification"
-      [fileExportButtonTypeByExtension]="
-        tenantFileExportButtonTypeByExtension
-      "
-      [data]="tenants"
-      [columns]="columns"
-      [loggedUser]="loggedUser"
-      [isLoading]="isLoading"
-      [mode]="mode"
-      [isBrowser]="isBrowser"
-      [modeSub]="modeSub"
-      [fullDataCount]="tenantsFull.length"
-      (fileExport)="handleTenantsFileExport($event)"
-    ></app-custom-table> -->
-    }
 
-    <!-- End Admin Section -->
+    @if(tenantTableDisplay){
+    <app-custom-table
+      [(isReload)]="isLoading"
+      [pagination]="true"
+      [(pageSize)]="tenantPageSize"
+      [(index)]="tenantPageIndex"
+      [tableTitle]="tenantTableTitle"
+      [(search)]="tenantSearch"
+      [buttons]="tenantActionButtons"
+      (buttonOperation)="tenantActionButtonCenter($event)"
+      [totalDataCount]="tenantTotalDataCount"
+      [fileExportExtention]="tenantFileExportExtension"
+      [data]="tenantData"
+      [columns]="tenantColumns"
+      (fileExport)="handleFileExport($event, 'Tenant')"
+    ></app-custom-table>
+    }
+    <!-- End admin section -->
+    }
   </div>
 </div>

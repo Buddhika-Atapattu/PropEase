@@ -1,4 +1,4 @@
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -10,38 +10,38 @@ import {
   PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {DomSanitizer} from '@angular/platform-browser';
-import {Subscription} from 'rxjs';
-import {ActivityTrackerService} from '../../../../services/activityTacker/activity-tracker.service';
-import {User} from '../../../../services/APIs/apis.service';
-import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
-import {NotificationDialogComponent} from '../../../dialogs/notification/notification.component';
-import {ProgressBarComponent} from '../../../dialogs/progress-bar/progress-bar.component';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
+import { Subscription } from 'rxjs';
+import { ActivityTrackerService } from '../../../../services/activityTacker/activity-tracker.service';
+import { User } from '../../../../services/APIs/apis.service';
+import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
+import { NotificationDialogComponent } from '../../../dialogs/notification/notificationBar.component';
+import { ProgressBarComponent } from '../../../dialogs/progress-bar/progress-bar.component';
 
-import {MatDialogModule} from '@angular/material/dialog';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatSelectModule} from '@angular/material/select';
-import {MatTooltipModule} from '@angular/material/tooltip';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatMomentDateModule} from '@angular/material-moment-adapter';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {MatButtonModule} from '@angular/material/button';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatInputModule} from '@angular/material/input';
-import {MatPaginatorModule} from '@angular/material/paginator';
-import {MatSortModule, Sort} from '@angular/material/sort';
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
-import {ActivatedRoute, Router} from '@angular/router';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatMomentDateModule } from '@angular/material-moment-adapter';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule, Sort } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { ActivatedRoute, Router } from '@angular/router';
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 import {
   APIsService
 } from '../../../../services/APIs/apis.service';
-import {CryptoService} from '../../../../services/cryptoService/crypto.service';
-import {SkeletonLoaderComponent} from '../../../shared/skeleton-loader/skeleton-loader.component';
+import { CryptoService } from '../../../../services/cryptoService/crypto.service';
+import { SkeletonLoaderComponent } from '../../../shared/skeleton-loader/skeleton-loader.component';
 
 interface Data {
   name: string;
@@ -59,7 +59,7 @@ interface Data {
   updatedAt: Date;
 }
 
-@Component({
+@Component( {
   selector: 'app-user-creatinon-management',
   standalone: true,
   imports: [
@@ -86,12 +86,12 @@ interface Data {
   ],
   templateUrl: './user-creatinon-management.component.html',
   styleUrl: './user-creatinon-management.component.scss',
-})
+} )
 export class UserCreatinonManagementComponent
   implements OnInit, OnChanges, AfterViewInit, OnDestroy {
-  @ViewChild(ProgressBarComponent, {static: true})
+  @ViewChild( ProgressBarComponent, { static: true } )
   progress!: ProgressBarComponent;
-  @ViewChild(NotificationDialogComponent, {static: true})
+  @ViewChild( NotificationDialogComponent, { static: true } )
   notification!: NotificationDialogComponent;
 
   @Input() user: User | null = null;
@@ -145,7 +145,7 @@ export class UserCreatinonManagementComponent
 
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
     private activityTrackerService: ActivityTrackerService,
@@ -154,12 +154,12 @@ export class UserCreatinonManagementComponent
     private APIsService: APIsService,
     private route: ActivatedRoute
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
     this.registerCustomIcons();
   }
 
   async ngOnInit(): Promise<void> {
-    this.apiCall(this.start, this.limit);
+    this.apiCall( this.start, this.limit );
   }
 
   ngOnChanges(): void {}
@@ -168,7 +168,7 @@ export class UserCreatinonManagementComponent
 
   ngOnDestroy(): void {}
 
-  public async refresh(username: string): Promise<void> {
+  public async refresh( username: string ): Promise<void> {
     this.username = username;
     this.currentPage = 1; // reset to page 1
     const offset = 0;
@@ -177,16 +177,16 @@ export class UserCreatinonManagementComponent
     this.startDate = null;
     this.endDate = null;
 
-    await this.apiCall(offset, this.limit);
+    await this.apiCall( offset, this.limit );
   }
 
-  protected imageGenerator(image: string, gender: string): string {
-    if(image) {
-      const imagetype = image.split('.')[1];
-      if(imagetype !== '') {
+  protected imageGenerator( image: string, gender: string ): string {
+    if ( image ) {
+      const imagetype = image.split( '.' )[ 1 ];
+      if ( imagetype !== '' ) {
         return image;
       } else {
-        if(gender === 'male') {
+        if ( gender === 'male' ) {
           return this.definedMaleDummyImageURL;
         } else {
           return this.definedWomanDummyImageURL;
@@ -225,18 +225,18 @@ export class UserCreatinonManagementComponent
       image: 'file-types/image.svg',
     };
 
-    for(const [name, path] of Object.entries(iconMap)) {
+    for ( const [ name, path ] of Object.entries( iconMap ) ) {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `Images/Icons/${path}`
+          `Images/Icons/${ path }`
         )
       );
     }
   }
 
-  protected chooceIcon(type: string): string {
-    switch(type) {
+  protected chooceIcon( type: string ): string {
+    switch ( type ) {
       case 'doc':
         return 'word';
       case 'docx':
@@ -320,7 +320,7 @@ export class UserCreatinonManagementComponent
           startDate,
           endDate
         )
-        .then((data) => {
+        .then( ( data ) => {
           this.totalRecords = data.data.totalCount;
           this.isPaginationDisabled = this.totalRecords < this.limit;
 
@@ -331,24 +331,24 @@ export class UserCreatinonManagementComponent
           this.isTableEmpty = this.dataSource.data.length === 0;
           this.isLoading = false;
           // this.paginate();
-        })
-        .catch((error) => {
-          if(error) {
+        } )
+        .catch( ( error ) => {
+          if ( error ) {
             this.isTableEmpty = true;
             this.isLoading = true;
-            throw new Error(error);
+            throw new Error( error );
           }
-        });
-    } catch(error) {
-      if(error) {
+        } );
+    } catch ( error ) {
+      if ( error ) {
         this.isLoading = true;
-        console.error('API ERROR: ', error);
+        console.error( 'API ERROR: ', error );
       }
     }
   }
 
-  protected generateColData(data: string, element: any) {
-    switch(data) {
+  protected generateColData( data: string, element: any ) {
+    switch ( data ) {
       case 'Name':
         return element.name;
 
@@ -377,27 +377,27 @@ export class UserCreatinonManagementComponent
         return element.creator;
 
       case 'Created At':
-        return this.formatDate(element.createdAt);
+        return this.formatDate( element.createdAt );
 
       case 'UploadDate':
-        return this.formatDate(element.updatedAt);
+        return this.formatDate( element.updatedAt );
 
       default:
         return '';
     }
   }
 
-  protected sortData(sort: Sort): void {
+  protected sortData( sort: Sort ): void {
     const data = this.dataSource.data.slice();
     const isAsc = sort.direction === 'asc';
 
-    if(!sort.active || sort.direction === '') {
+    if ( !sort.active || sort.direction === '' ) {
       this.dataSource.data = data;
       return;
     }
 
     // Map displayed column labels to actual Data fields
-    const columnFieldMap: {[key: string]: keyof Data} = {
+    const columnFieldMap: { [ key: string ]: keyof Data; } = {
       Name: 'name',
       Username: 'username',
       Email: 'email',
@@ -412,35 +412,35 @@ export class UserCreatinonManagementComponent
       'Updated At': 'updatedAt',
     };
 
-    const field = columnFieldMap[sort.active];
+    const field = columnFieldMap[ sort.active ];
 
-    if(field) {
-      this.dataSource.data = data.sort((a, b) =>
-        this.compare(a[field], b[field], isAsc)
+    if ( field ) {
+      this.dataSource.data = data.sort( ( a, b ) =>
+        this.compare( a[ field ], b[ field ], isAsc )
       );
     }
   }
 
-  private compare(a: any, b: any, isAsc: boolean): number {
-    if(a == null && b != null) return isAsc ? -1 : 1;
-    if(a != null && b == null) return isAsc ? 1 : -1;
-    if(a == null && b == null) return 0;
+  private compare( a: any, b: any, isAsc: boolean ): number {
+    if ( a == null && b != null ) return isAsc ? -1 : 1;
+    if ( a != null && b == null ) return isAsc ? 1 : -1;
+    if ( a == null && b == null ) return 0;
 
-    if(typeof a === 'string' && typeof b === 'string') {
-      return a.localeCompare(b) * (isAsc ? 1 : -1);
+    if ( typeof a === 'string' && typeof b === 'string' ) {
+      return a.localeCompare( b ) * ( isAsc ? 1 : -1 );
     }
 
-    return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
+    return ( a < b ? -1 : a > b ? 1 : 0 ) * ( isAsc ? 1 : -1 );
   }
 
   // Called when user triggers a search (e.g., clicks "Search" button)
   protected async search(): Promise<void> {
     this.currentPage = 1; // Reset to first page
-    const offset = (this.currentPage - 1) * this.limit;
+    const offset = ( this.currentPage - 1 ) * this.limit;
 
-    if(this.startDate && this.endDate) {
+    if ( this.startDate && this.endDate ) {
       // Call API with current filters
-      await this.apiCall(offset, this.limit, this.startDate, this.endDate);
+      await this.apiCall( offset, this.limit, this.startDate, this.endDate );
     }
   }
 
@@ -451,56 +451,56 @@ export class UserCreatinonManagementComponent
     this.currentPage = 1;
     const offset = 0;
 
-    await this.apiCall(offset, this.limit);
+    await this.apiCall( offset, this.limit );
   }
 
   //<=========== Pagination ===========>
   // Called when user clicks a specific page number
-  protected async setCurrentPage(index: number): Promise<void> {
+  protected async setCurrentPage( index: number ): Promise<void> {
     // index is based on visible range, so we normalize it
     this.currentPage = this.getActualStart() + index;
 
     // Calculate offset and call paginated API
-    const offset = (this.currentPage - 1) * this.limit;
-    await this.paginate(offset, this.limit);
+    const offset = ( this.currentPage - 1 ) * this.limit;
+    await this.paginate( offset, this.limit );
   }
 
   // Calculates the total number of pages
   protected totalPages(): number {
-    return Math.ceil(this.totalRecords / this.limit);
+    return Math.ceil( this.totalRecords / this.limit );
   }
 
   // Calculate visible start page number (e.g., currentPage = 5 → show from 3)
   protected getActualStart(): number {
-    return Math.max(1, this.currentPage - 2);
+    return Math.max( 1, this.currentPage - 2 );
   }
 
   // Calculate visible end page number (e.g., currentPage = 5 → show to 7)
   protected getActualEnd(): number {
-    return Math.min(this.totalPages(), this.currentPage + 2);
+    return Math.min( this.totalPages(), this.currentPage + 2 );
   }
 
   // Jump back by 2 pages
   protected async goTwoPagesBack(): Promise<void> {
-    if(this.currentPage > 1) {
-      this.currentPage = Math.max(1, this.currentPage - 2);
-      const offset = (this.currentPage - 1) * this.limit;
-      await this.paginate(offset, this.limit);
+    if ( this.currentPage > 1 ) {
+      this.currentPage = Math.max( 1, this.currentPage - 2 );
+      const offset = ( this.currentPage - 1 ) * this.limit;
+      await this.paginate( offset, this.limit );
     }
   }
 
   // Jump forward by 2 pages
   protected async goTwoPagesForward(): Promise<void> {
     const totalPages = this.totalPages();
-    if(this.currentPage < totalPages) {
-      this.currentPage = Math.min(totalPages, this.currentPage + 2);
-      const offset = (this.currentPage - 1) * this.limit;
-      await this.paginate(offset, this.limit);
+    if ( this.currentPage < totalPages ) {
+      this.currentPage = Math.min( totalPages, this.currentPage + 2 );
+      const offset = ( this.currentPage - 1 ) * this.limit;
+      await this.paginate( offset, this.limit );
     }
   }
 
   // Pagination trigger wrapper that calls your API
-  protected async paginate(start: number, limit: number): Promise<void> {
+  protected async paginate( start: number, limit: number ): Promise<void> {
     this.start = start; // store offset
     await this.apiCall(
       start,
@@ -510,9 +510,9 @@ export class UserCreatinonManagementComponent
     );
   }
 
-  protected formatDate(date: Date): string {
-    if(!date) return '';
-    const d = new Date(date);
+  protected formatDate( date: Date ): string {
+    if ( !date ) return '';
+    const d = new Date( date );
     const options: Intl.DateTimeFormatOptions = {
       year: 'numeric',
       month: 'long',
@@ -522,26 +522,26 @@ export class UserCreatinonManagementComponent
       second: '2-digit',
       hour12: false,
     };
-    return d.toLocaleString('en-US', options);
+    return d.toLocaleString( 'en-US', options );
   }
 
-  protected download(url: string) {
-    window.open(url, '_blank');
+  protected download( url: string ) {
+    window.open( url, '_blank' );
   }
 
-  protected async visitUser(data: string) {
-    if(this.isBrowser) {
-      if(data !== '' && this.crypto) {
-        const username = await this.APIsService.generateToken(data);
+  protected async visitUser( data: string ) {
+    if ( this.isBrowser ) {
+      if ( data !== '' && this.crypto ) {
+        const username = await this.APIsService.generateToken( data );
         // this.refreshService.triggerRefresh();
-        this.router.navigate(['/dashboard/users/user-profile', username.token]);
+        this.router.navigate( [ '/dashboard/users/user-profile', username.token ] );
       }
     }
   }
 
   protected exportToExcel(): void {
     // Convert dataSource (MatTableDataSource) to a plain array
-    const exportData = this.dataSource.data.map((row) => ({
+    const exportData = this.dataSource.data.map( ( row ) => ( {
       Name: row.name,
       Username: row.username,
       Email: row.email,
@@ -553,28 +553,28 @@ export class UserCreatinonManagementComponent
       Role: row.role,
       'Is Active': row.isActive,
       Creator: row.creator,
-      'Created At': new Date(row.createdAt).toLocaleString(),
-      'Updated At': new Date(row.updatedAt).toLocaleString(),
-    }));
+      'Created At': new Date( row.createdAt ).toLocaleString(),
+      'Updated At': new Date( row.updatedAt ).toLocaleString(),
+    } ) );
 
-    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet( exportData );
     const workbook: XLSX.WorkBook = {
-      Sheets: {'User Files': worksheet},
-      SheetNames: ['User Files'],
+      Sheets: { 'User Files': worksheet },
+      SheetNames: [ 'User Files' ],
     };
 
-    const excelBuffer: any = XLSX.write(workbook, {
+    const excelBuffer: any = XLSX.write( workbook, {
       bookType: 'xlsx',
       type: 'array',
-    });
+    } );
 
-    const blobData: Blob = new Blob([excelBuffer], {
+    const blobData: Blob = new Blob( [ excelBuffer ], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    });
+    } );
 
     FileSaver.saveAs(
       blobData,
-      `User_Creation_Export_${new Date().toISOString()}.xlsx`
+      `User_Creation_Export_${ new Date().toISOString() }.xlsx`
     );
   }
 }

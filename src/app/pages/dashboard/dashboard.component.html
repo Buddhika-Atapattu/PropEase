@@ -48,7 +48,6 @@
         />
         <ng-template #userImage>
           <img
-            *ngIf="user"
             #userDesktopImage
             [src]="sanitizeURL(user.image)"
             alt="User Profile"

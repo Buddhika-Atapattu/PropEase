@@ -15,14 +15,14 @@
   >
     <!-- Header -->
     <header class="fx-head">
-      <button type="button" class="avatar" (click)="viewUserProfile()">
+      <button type="button" class="avatar" (click)="menuOpen = !menuOpen">
         <img
           *ngIf="profile?.avatarSrc"
           [src]="profile?.avatarSrc!"
           alt="Profile"
         />
       </button>
-
+      <app-user-info-panel *ngIf="menuOpen" (closePanel)="signalToClose()" />
       <div class="name">
         {{ profile?.name }}
       </div>

@@ -1,12 +1,19 @@
-<app-notification></app-notification>
-<label class="toggle-switch">
+<span class="switch-measure" #measureOn>{{ labelOn }}</span>
+<span class="switch-measure" #measureOff>{{ labelOff }}</span>
+<label
+  class="toggle-switch"
+  [class.toggle-switch--disabled]="disabled"
+  [style.width.px]="switchWidth"
+>
   <input
     type="checkbox"
+    #checkBox
     [checked]="localCheck"
+    [disabled]="disabled"
     (change)="onToggle()"
     name="switch"
-    #checkBox
   />
+
   <span class="slider">
     <span class="label-text on">{{ labelOn }}</span>
     <span class="label-text off">{{ labelOff }}</span>

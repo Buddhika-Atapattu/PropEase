@@ -7,7 +7,12 @@
   (mouseover)="onMouseOver()"
   (mouseout)="onMouseOut()"
 >
-  <div class="text py-0">{{ message }}</div>
+  <div class="text py-0">
+    @if(isIncomingMessage){
+    <mat-icon>notification</mat-icon>
+    }
+    <span class="ms-1">{{ message }}</span>
+  </div>
   <button class="btn py-0" (click)="close()">
     <i class="fa-solid fa-xmark"></i>
     <span class="sr-only">Close</span>

@@ -1,0 +1,321 @@
+@use "../../../styles/global.scss" as *;
+
+:host {
+  display: block;
+}
+
+/* Fullscreen backdrop */
+.preloader-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+      circle at 10% 0%,
+      rgba(250, 250, 255, 0.18),
+      transparent 60%
+    ),
+    radial-gradient(circle at 90% 100%, rgba(15, 23, 42, 0.9), transparent 65%),
+    var(--surface);
+}
+
+/* Card shell */
+.preloader-shell {
+  @include card-shell(
+    var(--elevated),
+    var(--on-surface),
+    transparent,
+    rgba(0, 0, 0, 0.6)
+  );
+  background: var(--elevated);
+  padding: 2.5rem 3rem;
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  max-width: 520px;
+  width: 90%;
+}
+
+/* Logo */
+.preloader-logo-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 1.5rem auto;
+}
+
+.preloader-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: relative;
+  z-index: 2;
+}
+
+/* Soft golden glow behind logo */
+.preloader-logo-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(250, 204, 21, 0.55),
+    transparent 65%
+  );
+  filter: blur(10px);
+  animation: logoGlow 3s ease-in-out infinite;
+  z-index: 1;
+}
+
+.preloader-title {
+  font-weight: 600;
+  font-size: 1.4rem;
+  margin-bottom: 0.25rem;
+  color: var(--on-surface);
+}
+
+.preloader-subtitle {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+
+/* Timeline */
+.preloader-timeline {
+  margin-bottom: 1.75rem;
+}
+
+.timeline-track {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--border-color) 70%, transparent);
+}
+
+.timeline-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  background: linear-gradient(
+    90deg,
+    var(--primary),
+    color-mix(in srgb, var(--primary) 60%, var(--btn-save) 40%)
+  );
+  animation: timelineFill 4s ease-in-out infinite;
+}
+
+/* Steps (labels under line) */
+.timeline-steps {
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+}
+
+.step {
+  position: relative;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* each step flashes in gold briefly */
+.step-1,
+.step-2,
+.step-3,
+.step-4,
+.step-5 {
+  animation-duration: 4s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.step-1 {
+  animation-name: stepHighlight1;
+}
+.step-2 {
+  animation-name: stepHighlight2;
+}
+.step-3 {
+  animation-name: stepHighlight3;
+}
+.step-4 {
+  animation-name: stepHighlight4;
+}
+.step-5 {
+  animation-name: stepHighlight5;
+}
+
+/* Status area */
+.preloader-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--on-surface);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--btn-save);
+  box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.6);
+  animation: pulseDot 1.4s ease-out infinite;
+}
+
+.status-text {
+  /* subtle typewriter effect via width + steps */
+  display: inline-block;
+  overflow: hidden;
+  border-right: 1px solid color-mix(in srgb, var(--muted) 60%, transparent);
+  white-space: nowrap;
+  animation: typingText 4s steps(30, end) infinite;
+}
+
+/* ───── Animations ───── */
+
+@keyframes logoGlow {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes timelineFill {
+  0% {
+    transform: scaleX(0.05);
+  }
+  30% {
+    transform: scaleX(0.4);
+  }
+  55% {
+    transform: scaleX(0.7);
+  }
+  80% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(0.05);
+  }
+}
+
+/* step highlights: each has its own window in time */
+@keyframes stepHighlight1 {
+  0%,
+  15%,
+  100% {
+    color: var(--muted);
+  }
+  5% {
+    color: var(--btn-save);
+  }
+}
+
+@keyframes stepHighlight2 {
+  0%,
+  30%,
+  100% {
+    color: var(--muted);
+  }
+  20% {
+    color: var(--btn-save);
+  }
+}
+
+@keyframes stepHighlight3 {
+  0%,
+  50%,
+  100% {
+    color: var(--muted);
+  }
+  40% {
+    color: var(--btn-save);
+  }
+}
+
+@keyframes stepHighlight4 {
+  0%,
+  70%,
+  100% {
+    color: var(--muted);
+  }
+  60% {
+    color: var(--btn-save);
+  }
+}
+
+@keyframes stepHighlight5 {
+  0%,
+  90%,
+  100% {
+    color: var(--muted);
+  }
+  80% {
+    color: var(--btn-save);
+  }
+}
+
+/* pulsing dot */
+@keyframes pulseDot {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.45);
+  }
+  70% {
+    transform: scale(1.4);
+    box-shadow: 0 0 0 12px rgba(250, 204, 21, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(250, 204, 21, 0);
+  }
+}
+
+/* fake typing loop: hides and re-types */
+@keyframes typingText {
+  0% {
+    width: 0;
+  }
+  40% {
+    width: 180px;
+  }
+  80% {
+    width: 180px;
+  }
+  100% {
+    width: 0;
+  }
+}
+
+/* Small screens */
+@media (max-width: 480px) {
+  .preloader-shell {
+    padding: 1.75rem 1.5rem;
+  }
+
+  .preloader-logo-wrap {
+    width: 96px;
+    height: 96px;
+  }
+
+  .timeline-steps {
+    font-size: 0.68rem;
+  }
+
+  .preloader-title {
+    font-size: 1.15rem;
+  }
+}

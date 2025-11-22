@@ -1,84 +1,131 @@
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
-  Component,
-  OnInit,
-  OnDestroy,
   AfterViewInit,
+  Component,
   Inject,
+  OnDestroy,
+  OnInit,
   PLATFORM_ID,
-  ViewChild
+  ViewChild,
 } from '@angular/core';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {Subscription} from 'rxjs';
-import {ActivatedRoute, Router} from '@angular/router';
-import {APIsService, User} from '../../../services/APIs/apis.service';
-import {SkeletonLoaderComponent} from '../../../components/shared/skeleton-loader/skeleton-loader.component';
-import {Lease, LeaseWithProperty, SWITCH_ON_ARRAY, TenantService} from '../../../services/tenant/tenant.service';
-import {
-  NotificationDialogComponent,
-  NotificationType,
-} from '../../../components/dialogs/notification/notification.component';
-import {HttpErrorResponse} from '@angular/common/http';
+import { MatDialog } from '@angular/material/dialog';
+import { ActivatedRoute, Router } from '@angular/router';
+import * as FileSaver from 'file-saver';
+import { Subscription } from 'rxjs';
+import * as XLSX from 'xlsx';
+
+// Shared / dialog components
+import { NotificationDialogComponent } from '../../../components/dialogs/notification/notificationBar.component';
+import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
+
+// Custom table
 import {
   CustomTableComponent,
+  FileExport,
+  SwitchButtonType,
   TableButton,
   TableButtonActionConfig,
   TableColumn,
-  FileExport,
-  SwitchButtonType,
 } from '../../../components/shared/custom-table/custom-table.component';
-import {BackEndPropertyData, PropertyService} from '../../../services/property/property.service';
-import {AuthService} from '../../../services/auth/auth.service';
-import {MatDialog} from '@angular/material/dialog';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
-import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
-import * as XLSX from 'xlsx';
-import * as FileSaver from 'file-saver';
 
+// Skeleton loader
+import { SkeletonLoaderComponent } from '../../../components/shared/skeleton-loader/skeleton-loader.component';
+
+// Services
+import { APIsService, User, type MSG } from '../../../services/APIs/apis.service';
+import { AuthService } from '../../../services/auth/auth.service';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
+import { BackEndPropertyData, PropertyService } from '../../../services/property/property.service';
+import {
+  Lease,
+  LeaseWithProperty,
+  SWITCH_ON_ARRAY,
+  TenantService,
+} from '../../../services/tenant/tenant.service';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+
+// Types
+import type { DateRange } from '../../../components/shared/paginator/paginator.component';
+
+import { PaginationUtil } from '../../../source/utility/pagination.utils';
+import { NotificationService } from '../../../services/notifications/notification-service';
+
+/**
+ * Data shape passed to the custom table for leases.
+ * Keep this in sync with table columns and CustomTableComponent expectations.
+ */
 interface LeaseTableDataType {
   image: string;
   leaseid: string;
   dateRange: {
-    start: Date,
-    end: Date
+    start: Date;
+    end: Date;
   };
   status: string;
   monthlyRent: string;
-  remaningDays: number;
+  remainingDays: number;
   notify: boolean;
-  view: {
-    type: string
-  },
-  download: {
-    type: string
-  }
-  switchButton: SwitchButtonType;
+  viewButton: TableButton;
+  downloadButton: TableButton;
+  switch: SwitchButtonType;
 }
 
-@Component({
+@Component( {
   selector: 'app-tenant-view',
-  imports: [CommonModule, SkeletonLoaderComponent, CustomTableComponent, NotificationDialogComponent, ProgressBarComponent],
+  imports: [
+    CommonModule,
+    SkeletonLoaderComponent,
+    CustomTableComponent,
+    NotificationDialogComponent,
+    ProgressBarComponent,
+  ],
   templateUrl: './tenant-view.component.html',
   styleUrl: './tenant-view.component.scss',
-})
+} )
 export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild(NotificationDialogComponent) NotificationDialogComponent!: NotificationDialogComponent
-  @ViewChild(ProgressBarComponent) progressBarComponent!: ProgressBarComponent
+  // ─────────────────────────────────────────────────────────────────────────────
+  // ViewChild references
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  @ViewChild( NotificationDialogComponent )
+  protected notificationDialog!: NotificationDialogComponent;
+
+  @ViewChild( ProgressBarComponent )
+  protected progressBarComponent!: ProgressBarComponent;
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // General state
+  // ─────────────────────────────────────────────────────────────────────────────
 
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   protected modeSub: Subscription | null = null;
+
   private tenantID: string = '';
   protected tenant: User | null = null;
-  protected leases: Lease[] = [];
-  protected isLoading: boolean = true;
+  protected loggedUser: User | null = null;
 
-  protected readonly definedMaleDummyImageURL =
+  protected leases: Lease[] = [];
+  protected leaseLength: number = 0;
+  protected tableVisible: boolean = false;
+
+  protected isLoading: boolean = true;
+  private readonly today: Date = new Date();
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Tenant images / dummy images
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  protected readonly definedMaleDummyImageURL: string =
     'Images/user-images/dummy-user/dummy-user.jpg';
-  protected readonly definedWomanDummyImageURL =
+
+  protected readonly definedWomanDummyImageURL: string =
     'Images/user-images/dummy-user/dummy_woman.jpg';
+
   protected definedImage: string =
     'Images/user-images/dummy-user/dummy-user.jpg';
+
   protected readonly definedImageExtentionArray: string[] = [
     'jpg',
     'webp',
@@ -88,669 +135,956 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     'gif',
   ];
 
-  //<============================================= LEASE TABLE VARIABLES =============================================>
-  private _leaseTableIsReloading: boolean = false;
-  private _leaseTablePageSize: number = 0;
-  private _leaseTablePageSizeOptions: number[] = [];
-  private _leaseTablePageIndex: number = 0;
-  private _leaseTablePageCount: number = 0;
-  private _leaseTableType: string = 'lease';
-  private _leaseTabletSearch: string = '';
-  protected leaseTableButtonActions: TableButton[] = [{'action': 'view', 'icon': 'visibility'}, {'action': 'download', 'icon': 'download'}];
-  private _leaseTableTotalDataCount: number = 0;
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Lease table – state / bindings
+  // ─────────────────────────────────────────────────────────────────────────────
 
-  protected leaseTableFileExportButtonTypeByExtension: FileExport['extention'] = 'xlsx';
-  private _leaseTableData: LeaseTableDataType[] = [];
+  private _leaseTableIsReloading: boolean = false;
+  private _leaseTablePageSize: number = 2;
+  private _leaseTablePageIndex: number = 0;
+  private _leaseTabletSearch: string = '';
+  private _leaseTableDateRang!: DateRange;
+  protected leaseTableTotalCount: number = 0;
+  protected leaseTableTitle: string = 'Lease';
+
+  protected leaseTableFileExportExtension: FileExport[ 'extention' ] = 'xlsx';
+  protected leaseTableData: LeaseTableDataType[] = [];
+
+  /**
+   * Columns mapping for CustomTableComponent.
+   * Keys must match LeaseTableDataType or adapter used in the table.
+   */
   protected leaseTableColumns: TableColumn[] = [
-    {label: 'Image', key: 'propertyimage'},
-    {label: 'Lease ID', key: 'leaseid'},
-    {label: 'Date Range', key: 'daterange'},
-    {label: 'Lease Status', key: 'status'},
-    {label: 'Monthly Rent', key: 'monthlyRent'},
-    {label: 'Remaining Days', key: 'remaningDays'},
-    {label: 'View', key: 'actions'},
-    {label: 'Download', key: 'operation'},
-    {label: 'Active', key: 'switchbutton'}
+    { label: 'Image', key: 'propertyimage' },
+    { label: 'Lease ID', key: 'leaseid' },
+    { label: 'Date Range', key: 'daterange' },
+    { label: 'Lease Status', key: 'status' },
+    { label: 'Monthly Rent', key: 'monthlyRent' },
+    { label: 'Remaining Days', key: 'remainingDays' },
+    { label: 'View', key: 'viewButton' },
+    { label: 'Download', key: 'downloadButton' },
+    { label: 'Active', key: 'switch' },
   ];
+
   private _leaseSwitchButton: SwitchButtonType = {
     isActive: false,
     index: 0,
     on: 'ACTIVE',
-    off: 'DEACTIVE'
+    off: 'DEACTIVE',
   };
-  protected loggedUser: User | null = null;
-  protected leaseLength: number = 0;
+
+  /**
+   * Properties fetched for each lease.
+   * Used when building the table and exporting data.
+   */
   private selectedProperties: BackEndPropertyData[] = [];
-  private today: Date = new Date();
-  //<============================================= END LEASE TABLE VARIABLES =============================================>
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Constructor
+  // ─────────────────────────────────────────────────────────────────────────────
 
   constructor (
-    private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private route: ActivatedRoute,
-    private router: Router,
-    private apiService: APIsService,
-    private tenantService: TenantService,
-    private propertyService: PropertyService,
-    private authService: AuthService,
-    private dialog: MatDialog,
-    private cryptoService: CryptoService
+    private readonly windowRef: WindowsRefService,
+    @Inject( PLATFORM_ID ) private readonly platformId: Object,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly apiService: APIsService,
+    private readonly tenantService: TenantService,
+    private readonly propertyService: PropertyService,
+    private readonly authService: AuthService,
+    private readonly dialog: MatDialog,
+    private readonly cryptoService: CryptoService, // currently unused in this file; might be used in template
+    protected readonly notificationService: NotificationService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    this.route.url.subscribe((segments) => {
-      const path = segments.map((s) => s.path).join('/');
-    });
+    this.isBrowser = isPlatformBrowser( this.platformId );
 
-    this.route.params.subscribe(async (params) => {
-      this.tenantID = params['tenantID'];
+    // Optional route URL subscription (currently not used)
+    this.route.url.subscribe( ( segments ) => {
+      const path = segments.map( ( s ) => s.path ).join( '/' );
+      // console.log('Tenant view path:', path);
+    } );
+
+    // Load tenant + leases as soon as we have the route param token
+    this.route.params.subscribe( async ( params ) => {
+      this.tenantID = params[ 'tenantID' ];
+
       await this.loadTenantData();
       await this.getLeaseAgreementsUnderUsername();
-      await this.loadeSelectedProperties();
-      this.organizeLeaseTableData();
-    });
+      await this.loadSelectedProperties();
+      await this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
+    } );
 
     this.loggedUser = this.authService.getLoggedUser;
   }
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Lifecycle hooks
+  // ─────────────────────────────────────────────────────────────────────────────
+
   async ngOnInit(): Promise<void> {
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+    if ( this.isBrowser ) {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
+      } );
     }
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void {
+    // Component view ready – no specific logic here yet
+  }
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
   }
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Lease table: getters / setters
+  // ─────────────────────────────────────────────────────────────────────────────
 
-  //<========================================================================= LEASE TABLE ========================================================================>
-  //<========================================================================= SETTER & GETTER ========================================================================>
-  // leaseTableIsReloading
   get leaseTableIsReloading(): boolean {
     return this._leaseTableIsReloading;
   }
-  set leaseTableIsReloading(value: boolean) {
+
+  set leaseTableIsReloading( value: boolean ) {
     this._leaseTableIsReloading = value;
-    if(this._leaseTableIsReloading) {
-      this.organizeLeaseTableData()
+
+    // When the table requests a reload, rebuild the data
+    if ( this._leaseTableIsReloading ) {
+      void this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
     }
   }
 
-  // leaseTablePageSize
   get leaseTablePageSize(): number {
     return this._leaseTablePageSize;
   }
-  set leaseTablePageSize(value: number) {
+
+  set leaseTablePageSize( value: number ) {
     this._leaseTablePageSize = value;
+    void this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
   }
 
-  // leaseTablePageSizeOptions
-  get leaseTablePageSizeOptions(): number[] {
-    return this._leaseTablePageSizeOptions;
-  }
-  set leaseTablePageSizeOptions(value: number[]) {
-    this._leaseTablePageSizeOptions = value;
-  }
-
-  // leaseTablePageIndex
   get leaseTablePageIndex(): number {
     return this._leaseTablePageIndex;
   }
-  set leaseTablePageIndex(value: number) {
+
+  set leaseTablePageIndex( value: number ) {
     this._leaseTablePageIndex = value;
+    void this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
   }
 
-  // leaseTablePageCount
-  get leaseTablePageCount(): number {
-    return this._leaseTablePageCount;
-  }
-  set leaseTablePageCount(value: number) {
-    this._leaseTablePageCount = value;
-  }
-
-  // leaseTableType
-  get leaseTableType(): string {
-    return this._leaseTableType;
-  }
-  set leaseTableType(value: string) {
-    this._leaseTableType = value;
-  }
-
-  // leaseTabletSearch
   get leaseTabletSearch(): string {
     return this._leaseTabletSearch;
   }
-  set leaseTabletSearch(value: string) {
-    this._leaseTabletSearch = value;
+
+  set leaseTabletSearch( value: string ) {
+    this._leaseTabletSearch = value.trim();
+    this.leaseSearch( this._leaseTabletSearch );
   }
 
-
-  // leaseTableTotalDataCount
-  get leaseTableTotalDataCount(): number {
-    return this._leaseTableTotalDataCount;
-  }
-  set leaseTableTotalDataCount(value: number) {
-    this._leaseTableTotalDataCount = value;
+  get leaseTableDateRang(): DateRange {
+    return this._leaseTableDateRang;
   }
 
-
-  // leaseTableData
-  get leaseTableData(): LeaseTableDataType[] {
-    return this._leaseTableData;
-  }
-  set leaseTableData(value: LeaseTableDataType[]) {
-    this._leaseTableData = value;
+  set leaseTableDateRang( value: DateRange ) {
+    this._leaseTableDateRang = value;
+    this.filterBaseOnDateRange( this._leaseTableDateRang );
   }
 
-  //switchButton
   get leaseSwitchButton(): SwitchButtonType {
     return this._leaseSwitchButton;
   }
-  set leaseSwitchButton(value: SwitchButtonType) {
+
+  set leaseSwitchButton( value: SwitchButtonType ) {
     this._leaseSwitchButton = value;
-    this.handleUpdateLeaseStatus(this._leaseSwitchButton)
+    // Any toggle from the custom table will be handled here
+    void this.handleUpdateLeaseStatus( this._leaseSwitchButton );
   }
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Shared helpers (error notification)
+  // ─────────────────────────────────────────────────────────────────────────────
 
-  //<========================================================================= END SETTER & GETTER ========================================================================>
+  /**
+   * Centralised error notification to avoid repeated instanceof checks.
+   */
+  private notifyError( error: unknown, fallbackMessage: string ): void {
+    console.error( error );
 
-  //<========================================================================= HANDLERS & OPERATIONALS ========================================================================>
-  protected handleExportLeaseTableData(value: FileExport) {
+    if ( error instanceof HttpErrorResponse ) {
+      this.notificationDialog.notification( 'error', error.message );
+      return;
+    }
+
+    if ( typeof error === 'string' ) {
+      this.notificationDialog.notification( 'error', error );
+      return;
+    }
+
+    if ( error instanceof Error ) {
+      this.notificationDialog.notification( 'error', error.message );
+      return;
+    }
+
+    this.notificationDialog.notification( 'error', fallbackMessage );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Lease table: export
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  protected handleExportLeaseTableData( value: FileExport ): void {
     try {
-      if(this.leases.length === 0) {
-        throw new Error('No lease agreements found!');
+      if ( this.leases.length === 0 ) {
+        throw new Error( 'No lease agreements found!' );
       }
 
-      if(this.selectedProperties.length === 0) {
-        throw new Error('No properties found!');
+      if ( this.selectedProperties.length === 0 ) {
+        throw new Error( 'No properties found!' );
       }
 
       const leasesWithProperty: LeaseWithProperty[] = [];
 
-      this.leases.forEach((lease) => {
-        const property = this.selectedProperties.find(p => p.id === lease.propertyID);
-        if(!property) throw new Error('Property not found!');
+      this.leases.forEach( ( lease ) => {
+        const property = this.selectedProperties.find(
+          ( p ) => p.id === lease.propertyID,
+        );
+
+        if ( !property ) {
+          throw new Error( 'Property not found!' );
+        }
+
         const leaseWithProperty: LeaseWithProperty = {
           ...lease,
-          property
+          property,
         };
-        leasesWithProperty.push(leaseWithProperty);
-      });
 
-      if(leasesWithProperty.length === 0) {
-        throw new Error('No leases with property found!');
+        leasesWithProperty.push( leaseWithProperty );
+      } );
+
+      if ( leasesWithProperty.length === 0 ) {
+        throw new Error( 'No leases with property found!' );
       }
 
-      this.exportLeasesDataAsExcel(leasesWithProperty, value.extention);
-    }
-    catch(error) {
-      console.error(error);
-      if(error instanceof HttpErrorResponse) this.NotificationDialogComponent.notification('error', error.message);
-      else if(typeof error === 'string') this.NotificationDialogComponent.notification('error', error);
-      else if(error instanceof Error) this.NotificationDialogComponent.notification('error', error.message);
-      else this.NotificationDialogComponent.notification('error', 'Failed to load tenant data.');
+      this.exportLeasesDataAsExcel( leasesWithProperty, value.extention );
+    } catch ( error ) {
+      this.notifyError( error, 'Failed to load tenant data.' );
     }
   }
 
-  private async handleUpdateLeaseStatus(data: SwitchButtonType): Promise<void> {
-    try {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Lease table: switch / update status
+  // ─────────────────────────────────────────────────────────────────────────────
 
+  private async handleUpdateLeaseStatus( data: SwitchButtonType ): Promise<void> {
+    try {
       this.isLoading = true;
 
-      if(!data) throw new Error('Invalid data from table!');
+      if ( !data ) {
+        throw new Error( 'Invalid data from table!' );
+      }
 
       const tableData: LeaseTableDataType = data.data as LeaseTableDataType;
 
-      if(!tableData) throw new Error('No table data found!');
+      if ( !tableData ) {
+        throw new Error( 'No table data found!' );
+      }
 
-      const leaseId = tableData.leaseid;// get the lease ID from the table data
+      const leaseId = tableData.leaseid;
 
-      if(!leaseId) throw new Error('No lease ID found!');
+      if ( !leaseId ) {
+        throw new Error( 'No lease ID found!' );
+      }
 
-      // Update Lease Array
-      const filteredLease = this.leases.find((lease) => lease.leaseID === leaseId);
+      // Find lease in local array
+      const filteredLease = this.leases.find(
+        ( lease ) => lease.leaseID === leaseId,
+      );
 
-      if(!filteredLease) throw new Error('Lease not found in the leases array!');
+      if ( !filteredLease ) {
+        throw new Error( 'Lease not found in the leases array!' );
+      }
 
-      const status: Lease['systemMetadata']['validationStatus'] = data.isActive ? 'active' : 'inactive';
+      const status: Lease[ 'systemMetadata' ][ 'validationStatus' ] =
+        data.isActive ? 'active' : 'inactive';
 
       const formdata: FormData = new FormData();
+      formdata.append( 'validationStatus', status );
 
-      formdata.append('validationStatus', status);
-
-      const res = await this.tenantService.getLeaseAgreementByIDAndUpdateValidationStatus(formdata, leaseId);
+      const res = await this.tenantService.getLeaseAgreementByIDAndUpdateValidationStatus(
+        formdata,
+        leaseId,
+      );
 
       const updatedLease: Lease = res.data;
 
-      const isActive: SwitchButtonType['isActive'] = updatedLease.systemMetadata.validationStatus.toLowerCase() === 'active' ? true : false;
+      const isActive: SwitchButtonType[ 'isActive' ] =
+        updatedLease.systemMetadata.validationStatus.toLowerCase() ===
+        'active';
 
-      filteredLease.systemMetadata.validationStatus = updatedLease.systemMetadata.validationStatus;
+      // Update local lease status
+      filteredLease.systemMetadata.validationStatus =
+        updatedLease.systemMetadata.validationStatus;
 
-      tableData.switchButton = {
-        isActive: isActive,
+      // Update table row
+      tableData.switch = {
+        isActive,
         index: null,
-        on: 'ACTIVE',
-        off: 'DEACTIVE'
+        off: 'Inactive',
+        on: 'Active'
       };
 
       tableData.status = updatedLease.systemMetadata.validationStatus;
 
-      if(typeof data.index !== 'number' || !Number.isFinite(data.index)) throw new Error('Data index is invalid');
+      if ( typeof data.index !== 'number' || !Number.isFinite( data.index ) ) {
+        throw new Error( 'Data index is invalid' );
+      }
 
-      this.leaseTableData[data.index] = tableData
-    }
-    catch(error) {
-      console.error(error)
-      this.NotificationDialogComponent.notification("error", "Failed to update lease status!");
+      this.leaseTableData[ data.index ] = tableData;
+    } catch ( error ) {
+      this.notifyError( error, 'Failed to update lease status!' );
       return;
-    }
-    finally {
+    } finally {
       this.isLoading = false;
     }
   }
 
-  private async organizeLeaseTableData(): Promise<void> {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Lease table: organisation / mapping
+  // ─────────────────────────────────────────────────────────────────────────────
+  private async organizeLeaseTableData( index: number, size: number ): Promise<void> {
     try {
-      if(!this.leases || this.leases.length === 0) {
-        throw new Error("No lease agreements found!");
+      if ( !this.leases || this.leases.length === 0 ) {
+        throw new Error( 'No lease agreements found!' );
       }
 
-      if(!this.selectedProperties || this.selectedProperties.length === 0) {
-        await this.loadeSelectedProperties();
-        if(!this.selectedProperties || this.selectedProperties.length === 0) {
-          throw new Error("No properties found!");
+      if ( !this.selectedProperties || this.selectedProperties.length === 0 ) {
+        await this.loadSelectedProperties();
+
+        if ( !this.selectedProperties || this.selectedProperties.length === 0 ) {
+          throw new Error( 'No properties found!' );
         }
       }
 
       this.isLoading = true;
-      this.leaseLength = this.leases.length;
-      this.leaseTablePageSize = 2;
-      this.leaseTablePageIndex = 0;
-      this.leaseTablePageSizeOptions = [];
 
-      for(let i = 1; i <= this.leaseLength; i++) {
-        if(i % this.leaseTablePageSize === 0) {
-          this.leaseTablePageSizeOptions.push(i);
-        }
-      }
+      // Basic pagination defaults (integrate with paginator as needed)
+      this.leaseTableTotalCount = this.leases.length;
 
-      if(this.leaseTablePageSizeOptions.length === 0) {
-        this.leaseTablePageSizeOptions.push(this.leaseLength);
-      }
+      const safeIndex = PaginationUtil.safeIndex( index, this.leaseTableTotalCount );
+      const safeSize = PaginationUtil.safeLimit( size, this.leaseTableTotalCount );
 
+      this._leaseTablePageIndex = safeIndex;
+      this._leaseTablePageSize = safeSize;
 
-      this.leaseTablePageCount = Math.ceil(this.leaseLength / this.leaseTablePageSize);
-      this.leaseTableType = 'Lease';
+      const safeStart = safeIndex * safeSize;
+      const safeEnd = safeStart + safeSize;
 
+      const organisingData: Lease[] = this.leases.slice( safeStart, safeEnd );
 
-      // Clear previous table data
       this.leaseTableData = [];
 
+      const rowPromises: Array<Promise<LeaseTableDataType | null>> =
+        organisingData.map( ( item ) => this.organiseTableRow( item ) );
 
-      for(const lease of this.leases) {
-        const property = this.selectedProperties.find(p => p.id === lease.propertyID);
-        if(!property) continue;
+      const rowsWithNulls: Array<LeaseTableDataType | null> = await Promise.all( rowPromises );
 
-        const propertyImageURL: LeaseTableDataType['image'] = property.images?.[0]?.imageURL || '';
-        const leaseID: LeaseTableDataType['leaseid'] = lease.leaseID;
-        const dateRange: LeaseTableDataType['dateRange'] = {
-          start: new Date(lease.leaseAgreement.startDate),
-          end: new Date(lease.leaseAgreement.endDate)
-        };
-        const status: LeaseTableDataType['status'] = lease.systemMetadata.validationStatus.toLocaleLowerCase();
-        const monthlyRent: LeaseTableDataType['monthlyRent'] =
-          `${lease.leaseAgreement.monthlyRent} ${lease.leaseAgreement.currency.currency}`;
-        const remaningDays: LeaseTableDataType['remaningDays'] = Math.ceil(
-          (dateRange.end.getTime() - this.today.getTime()) / (1000 * 3600 * 24)
-        );
-        const notify: LeaseTableDataType['notify'] = remaningDays < 30;
-        const view: LeaseTableDataType['view'] = {type: 'view'};
-        const download: LeaseTableDataType['download'] = {type: 'download'};
-        const switchButton: SwitchButtonType = {
-          isActive: SWITCH_ON_ARRAY.includes(status.toLowerCase()) ? true : false,
-          index: null,
-          on: 'ACTIVE',
-          off: 'DEACTIVE'
-        };
+      const leaseTableRows: LeaseTableDataType[] = rowsWithNulls.filter(
+        ( row ): row is LeaseTableDataType => row !== null,
+      );
 
-
-        const rowData: LeaseTableDataType = {
-          image: propertyImageURL,
-          leaseid: leaseID,
-          dateRange,
-          status,
-          monthlyRent,
-          remaningDays,
-          notify,
-          view,
-          download,
-          switchButton
-        };
-
-        this.leaseTableData.push(rowData);
+      if ( leaseTableRows.length === 0 ) {
+        throw new Error( 'No lease table rows could be built!' );
       }
 
-    } catch(error) {
-      console.error('Error organizing lease table data:', error);
-      this.NotificationDialogComponent.notification('error', (error as Error).message);
+      this.leaseTableData = [ ...leaseTableRows ];
+      if ( this.leaseTableData.length > 0 ) this.tableVisible = true;
+      else this.tableVisible = false;
+
+    } catch ( error ) {
+      console.error( 'Error organizing lease table data:', error );
+      this.notificationDialog.notification(
+        'error',
+        ( error as Error ).message ?? 'Failed to organise lease table.',
+      );
     } finally {
-      setTimeout(() => {
+      // Small delay for smoother spinner UX
+      setTimeout( () => {
         this.isLoading = false;
-      }, 500);
+      }, 500 );
     }
   }
 
-  protected async actionButtonsOperation(value: TableButtonActionConfig): Promise<void> {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Lease table: search (searches across *all* leases, not just current page)
+  // ─────────────────────────────────────────────────────────────────────────────
+  private async leaseSearch( search: string ): Promise<void> {
+    try {
+      // Reset current table view
+      this.leaseTableData = [];
+      console.log( search );
+
+      const safeSearch: string = search.trim().toLowerCase();
+      if ( !safeSearch ) {
+        return;
+      }
+
+      // Collect promises for matched leases
+      const tasks: Array<Promise<LeaseTableDataType | null>> = [];
+
+      for ( const item of this.leases ) {
+        const match: boolean =
+          item.leaseID.trim().toLowerCase() === safeSearch ||
+          ( item.propertyID && item.propertyID.trim().toLowerCase() === safeSearch ) ||
+          item.tenantInformation.fullName.trim().toLowerCase() === safeSearch ||
+          item.tenantInformation.tenantUsername.trim().toLowerCase() === safeSearch;
+
+        if ( match ) {
+          // Do NOT await here – create a Promise and store it
+          tasks.push( this.organiseTableRow( item ) );
+        }
+      }
+
+      if ( tasks.length === 0 ) {
+        throw new Error( 'Leases not found under the user!' );
+      }
+
+      // Resolve all build-row calls in parallel
+      const rowsWithNulls: Array<LeaseTableDataType | null> = await Promise.all( tasks );
+
+      // Remove any failed/null rows
+      const leaseTableRows: LeaseTableDataType[] = rowsWithNulls.filter(
+        ( row ): row is LeaseTableDataType => row !== null,
+      );
+
+      if ( leaseTableRows.length === 0 ) {
+        this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
+        return;
+      }
+
+      // Final table data
+      this.leaseTableData = [ ...leaseTableRows ];
+    } catch ( err ) {
+      console.error( '[Failed in lease search]: ', err );
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
+  // Lease table: filter by date range (correct overlap logic)
+  // ─────────────────────────────────────────────────────────────────────────────────────────────
+  private async filterBaseOnDateRange( range: DateRange ): Promise<void> {
+    try {
+      if ( !Array.isArray( this.leases ) || this.leases.length === 0 ) {
+        throw new Error( 'Leases are empty!' );
+      }
+
+      const startDate = new Date( range.start );
+      const endDate = new Date( range.end );
+
+
+
+      if ( isNaN( startDate.getTime() ) || isNaN( endDate.getTime() ) ) {
+        console.warn( 'Invalid date range input' );
+        this.notificationDialog.notification( 'warning', 'Invalid date range input' );
+        return;
+      }
+
+      const tasks: Array<Promise<LeaseTableDataType | null>> = [];
+
+      for ( const item of this.leases ) {
+        const leaseStart = new Date( item.leaseAgreement.startDate );
+        const leaseEnd = new Date( item.leaseAgreement.endDate );
+
+
+
+        // Correct overlap condition:
+        const isOverlapping =
+          leaseStart <= endDate &&
+          leaseEnd >= startDate;
+
+        if ( isOverlapping ) {
+          // Queue promises without awaiting inside loop
+          tasks.push( this.organiseTableRow( item ) );
+        }
+      }
+
+      if ( tasks.length === 0 ) {
+        console.warn( 'No leases matched the date range' );
+        this.leaseTableData = [];
+        return;
+      }
+
+      const rows = await Promise.all( tasks );
+
+      // Clean null values
+      const filtered = rows.filter(
+        ( row ): row is LeaseTableDataType => row !== null
+      );
+
+      if ( filtered.length === 0 ) {
+        console.warn( 'Date matches found, but row building returned empty.' );
+        this.notificationDialog.notification( 'warning', 'Date matches found, but row building returned empty.' );
+        this.leaseTableData = [];
+        return;
+      }
+
+      // Final filtered table data
+      this.leaseTableData = [ ...filtered ];
+    } catch ( error ) {
+      console.error( '[Date Range Filter Error] ', error );
+    }
+  }
+
+
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Lease table: build single row for the lease table
+  // ─────────────────────────────────────────────────────────────────────────────
+  private async organiseTableRow( item: Lease ): Promise<LeaseTableDataType | null> {
+    try {
+      if ( !item ) throw new Error( 'Invalid lease!' );
+      if ( !item.propertyID ) throw new Error( 'Invalid property ID!' );
+
+      const res: MSG = await this.propertyService.getPropertySectionById(
+        item.propertyID,
+        'images'
+      );
+      if ( res.status !== 'success' ) throw new Error( 'Property data fetch failed!' );
+
+      const values = res.data.value;
+
+      if ( !Array.isArray( values ) ) throw new Error( 'Invalid image array!' );
+
+      const images: BackEndPropertyData[ 'images' ] = values;
+
+      // Optional: guard for empty array to avoid images[0] undefined:
+      if ( images.length === 0 || !images[ 0 ]?.imageURL ) {
+        throw new Error( 'No images found for property!' );
+      }
+
+      const image = images[ 0 ].imageURL;
+      const leaseid = item.leaseID;
+
+      const dateRange = {
+        start: new Date( item.leaseAgreement.startDate ),
+        end: new Date( item.leaseAgreement.endDate ),
+      };
+
+      const status: Lease[ 'systemMetadata' ][ 'validationStatus' ] =
+        item.systemMetadata.validationStatus;
+
+      const startDate = this.tenantService.asDate( dateRange.start );
+      const endDate = this.tenantService.asDate( dateRange.end );
+
+      if ( !startDate || !endDate ) {
+        throw new Error( 'Invalid date range!' );
+      }
+
+      // Normalize today to midnight
+      const today = new Date();
+      today.setHours( 0, 0, 0, 0 );
+
+      // Normalize end date to midnight
+      const end = new Date( endDate );
+      end.setHours( 0, 0, 0, 0 );
+
+      const msDiff = end.getTime() - today.getTime();
+      const remainingDays: number = Math.ceil( msDiff / ( 1000 * 60 * 60 * 24 ) );
+
+      const monthlyRent = `${ item.leaseAgreement.currency.currency } ${ item.leaseAgreement.monthlyRent }`;
+
+      const notify: boolean = remainingDays <= 90;
+
+      const viewButton: TableButton = {
+        action: 'view',
+        icon: 'visibility',
+        label: 'View',
+      };
+
+      const downloadButton: TableButton = {
+        action: 'download',
+        icon: 'download',
+        label: 'Download',
+      };
+
+      const switchBtn: SwitchButtonType = {
+        index: null,
+        isActive: status.toLowerCase() === 'active',
+        off: 'Inactive',
+        on: 'Active',
+      };
+
+      const data: LeaseTableDataType = {
+        image,
+        leaseid,
+        dateRange,
+        status,
+        monthlyRent,
+        remainingDays,
+        notify,
+        viewButton,
+        downloadButton,
+        switch: switchBtn,
+      };
+
+      return data;
+    } catch ( err ) {
+      console.error( err );
+      return null;
+    }
+  }
+
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Lease table: action buttons (view / download)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  protected async actionButtonsOperation(
+    value: TableButtonActionConfig,
+  ): Promise<void> {
     try {
       const action = value.action;
       const data = value.data;
-      if(!action || !data) throw new Error('Invalid action or data from table');
-      const leaseID = data.element.leaseID;
-      if(!leaseID) throw new Error("Invalid lease ID");
-      switch(action) {
-        case 'download':
+
+      if ( !action || !data ) {
+        throw new Error( 'Invalid action or data from table' );
+      }
+
+      const leaseID = data.leaseid;
+      if ( !leaseID ) {
+        throw new Error( 'Invalid lease ID' );
+      }
+
+      switch ( action ) {
+        case 'download': {
           try {
             this.progressBarComponent.start();
 
-            if(this.authService.getLoggedUser === null) throw new Error("User not logged in");
-
+            if ( this.authService.getLoggedUser === null ) {
+              throw new Error( 'User not logged in' );
+            }
 
             // Download PDF blob from backend
-            const blob = await this.tenantService.downloadLeaseAgreement(leaseID, 'download', this.authService.getLoggedUser.username);
+            const blob = await this.tenantService.downloadLeaseAgreement(
+              leaseID,
+              'download',
+              this.authService.getLoggedUser.username,
+            );
 
-            const actualName = `${leaseID}-lease-agreement.pdf`;
+            const actualName = `${ leaseID }-lease-agreement.pdf`;
 
             // Create temporary link and trigger download
-            const fileURL = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
+            const fileURL = window.URL.createObjectURL( blob );
+            const a = document.createElement( 'a' );
+
             a.href = fileURL;
             a.download = actualName;
             a.style.display = 'none';
-            document.body.appendChild(a);
+
+            document.body.appendChild( a );
             a.click();
 
             // Clean up
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(fileURL);
-
-          } catch(error) {
-            console.error('Failed to download lease agreement PDF:', error);
-            if(error instanceof HttpErrorResponse) {
-              this.NotificationDialogComponent.notification('error', error.message);
-            }
-            else if(typeof error === 'string') {
-              this.NotificationDialogComponent.notification('error', error);
-            }
-            else if(error instanceof Error) {
-              this.NotificationDialogComponent.notification('error', error.message);
-            }
-            else {
-              this.NotificationDialogComponent.notification('error', 'Failed to download lease agreement PDF.');
-            }
+            document.body.removeChild( a );
+            window.URL.revokeObjectURL( fileURL );
+          } catch ( error ) {
+            this.notifyError(
+              error,
+              'Failed to download lease agreement PDF.',
+            );
           } finally {
             this.progressBarComponent.complete();
           }
           break;
-        case 'view':
-          this.router.navigate(['/dashboard/tenant/view-lease', leaseID]);
+        }
+
+        case 'view': {
+          await this.router.navigate( [ '/dashboard/tenant/view-lease', leaseID ] );
           break;
+        }
       }
-    }
-    catch(error) {
-      console.error('Failed to download lease agreement PDF:', error);
-      if(error instanceof HttpErrorResponse) {
-        this.NotificationDialogComponent.notification('error', error.message);
-      }
-      else if(typeof error === 'string') {
-        this.NotificationDialogComponent.notification('error', error);
-      }
-      else if(error instanceof Error) {
-        this.NotificationDialogComponent.notification('error', error.message);
-      }
-      else {
-        this.NotificationDialogComponent.notification('error', 'Failed to download lease agreement PDF.');
-      }
+    } catch ( error ) {
+      this.notifyError( error, 'Failed to process lease action.' );
     } finally {
+      // In case of early failure, make sure progress bar is not stuck
       this.progressBarComponent.complete();
     }
   }
 
-  //<========================================================================= END HANDLERS & OPERATIONALS ========================================================================>
-  //<========================================================================= END LEASE TABLE ========================================================================>
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Data loading: properties used by leases
+  // ─────────────────────────────────────────────────────────────────────────────
 
-  //<========================================================================= LOAD PROPERTY DATA ========================================================================>
-  private async loadeSelectedProperties() {
+  private async loadSelectedProperties(): Promise<void> {
     try {
-      if(this.leases.length === 0) {
-        throw new Error("No lease agreements found!");
+      if ( this.leases.length === 0 ) {
+        throw new Error( 'No lease agreements found!' );
       }
 
       this.isLoading = true;
+
       const seen = new Set<string>();
 
-      for(const lease of this.leases) {
+      for ( const lease of this.leases ) {
         const propertyID = lease.propertyID;
-        if(!propertyID || seen.has(propertyID)) continue; // Avoid duplicates
+
+        // Avoid duplicate calls for the same property
+        if ( !propertyID || seen.has( propertyID ) ) {
+          continue;
+        }
 
         try {
-          const res = await this.propertyService.getPropertyById(propertyID);
-          if(res.status === 'success') {
-            const resData: BackEndPropertyData = res.data as BackEndPropertyData;
-            this.selectedProperties.push(resData);
+          const res = await this.propertyService.getPropertyById( propertyID );
 
-            seen.add(propertyID);
+          if ( res.status === 'success' ) {
+            const resData: BackEndPropertyData =
+              res.data as BackEndPropertyData;
+
+            this.selectedProperties.push( resData );
+            seen.add( propertyID );
           } else {
-            console.error('Failed to fetch property:', res.message);
+            console.error( 'Failed to fetch property:', res.message );
           }
-        } catch(error: any) {
-          console.log('Error fetching property:', error);
-          if(error.status === 404) {
-            this.NotificationDialogComponent.notification('error', 'No property found for this lease.');
+        } catch ( error: any ) {
+          console.warn( 'Error fetching property:', error );
+
+          if ( error.status === 404 ) {
+            this.notificationDialog.notification(
+              'error',
+              'No property found for this lease.',
+            );
           } else {
-            this.NotificationDialogComponent.notification('error', 'Failed to fetch property.');
+            this.notificationDialog.notification(
+              'error',
+              'Failed to fetch property.',
+            );
           }
         }
       }
-
-    } catch(error) {
-      console.error(error);
-      this.NotificationDialogComponent.notification('error', 'Failed to load selected properties.');
-    }
-    finally {
-      setTimeout(() => {
+    } catch ( error ) {
+      console.error( error );
+      this.notificationDialog.notification(
+        'error',
+        'Failed to load selected properties.',
+      );
+    } finally {
+      setTimeout( () => {
         this.isLoading = false;
-      }, 500);
+      }, 500 );
     }
   }
-  //<========================================================================= END LOAD PROPERTY DATA ========================================================================>
 
-  //<========================================================================= LOAD TENANT DATA ========================================================================>
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Data loading: tenant
+  // ─────────────────────────────────────────────────────────────────────────────
+
   private async loadTenantData(): Promise<void> {
     try {
-      const res = await this.apiService.getUserByToken(this.tenantID);
+      const res = await this.apiService.getUserByToken( this.tenantID );
 
-      if(!res || !res.user) {
-        throw new Error('User data is missing from response.');
+      if ( !res || !res.user ) {
+        throw new Error( 'User data is missing from response.' );
       }
 
       this.tenant = res.user as User;
-
-    } catch(error) {
-      console.error('Error loading tenant data:', error);
-      this.NotificationDialogComponent?.notification?.(
+    } catch ( error ) {
+      console.error( 'Error loading tenant data:', error );
+      this.notificationDialog?.notification?.(
         'error',
-        'Failed to load tenant data. Please try again later.'
+        'Failed to load tenant data. Please try again later.',
       );
     } finally {
-      // Delay spinner fade-out slightly
-      setTimeout(() => {
+      setTimeout( () => {
         this.isLoading = false;
-      }, 500);
+      }, 500 );
     }
   }
-  //<========================================================================= END LOAD TENANT DATA ========================================================================>
 
-  //<========================================================================= LOAD LEASE AGREEMENTS DATA ========================================================================>
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Data loading: lease agreements for tenant
+  // ─────────────────────────────────────────────────────────────────────────────
+
   private async getLeaseAgreementsUnderUsername(): Promise<void> {
     try {
-      const username = this.tenant?.username || '';
-      if(!username) {
-        throw new Error('Tenant username is missing.');
+      const username: string = this.tenant?.username || '';
+
+      if ( !username ) {
+        throw new Error( 'Tenant username is missing.' );
       }
 
-      const res = await this.tenantService.getAllLeaseAgreementsByUsername(username);
+      const res = await this.tenantService.getAllLeaseAgreementsByUsername(
+        username,
+      );
 
-      if(res.status === 'success') {
+      if ( res.status === 'success' ) {
         this.leases = res.data as Lease[];
-        await this.organizeLeaseTableData();
+        await this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
       } else {
-        console.error('Failed to fetch lease agreements:', res.message);
+        console.error( 'Failed to fetch lease agreements:', res.message );
         this.leases = [];
-        this.NotificationDialogComponent.notification(
+        this.notificationDialog.notification(
           'error',
-          'Failed to fetch lease agreements. Please try again later.'
+          'Failed to fetch lease agreements. Please try again later.',
         );
       }
+    } catch ( error: any ) {
+      console.error( 'Error fetching lease agreements:', error );
 
-    } catch(error: any) {
-      console.error('Error fetching lease agreements:', error);
-
-      if(error instanceof HttpErrorResponse && error.status === 404) {
-        this.NotificationDialogComponent.notification(
+      if ( error instanceof HttpErrorResponse && error.status === 404 ) {
+        this.notificationDialog.notification(
           'error',
-          'No lease agreements found for this tenant.'
+          'No lease agreements found for this tenant.',
         );
       } else {
-        this.NotificationDialogComponent.notification(
+        this.notificationDialog.notification(
           'error',
-          'An error occurred while fetching lease agreements. Please try again later.'
+          'An error occurred while fetching lease agreements. Please try again later.',
         );
       }
 
       this.leases = [];
     }
   }
-  //<========================================================================= END LOAD LEASE AGREEMENTS DATA ========================================================================>
 
-  //<========================================================================= LOAD TENANT IMAGE DATA ========================================================================>
-  protected generateTenantImage(image: string, gender: string): string {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Tenant image selection
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  protected generateTenantImage( image: string, gender: string ): string {
     try {
-      const imageArray: string[] = image ? image.split('/') : [];
+      const imageArray: string[] = image ? image.split( '/' ) : [];
 
-      if(Array.isArray(imageArray) && imageArray.length > 0) {
-        const lastSegment = imageArray[imageArray.length - 1];
-        const extension = lastSegment.split('.').pop()?.toLowerCase();
+      if ( Array.isArray( imageArray ) && imageArray.length > 0 ) {
+        const lastSegment = imageArray[ imageArray.length - 1 ];
+        const extension = lastSegment.split( '.' ).pop()?.toLowerCase();
 
-        if(extension && this.definedImageExtentionArray.includes(extension)) {
+        if (
+          extension &&
+          this.definedImageExtentionArray.includes( extension )
+        ) {
           this.definedImage = image;
         } else {
-          this.definedImage = gender.toLowerCase() === 'male'
-            ? this.definedMaleDummyImageURL
-            : this.definedWomanDummyImageURL;
+          this.definedImage =
+            gender.toLowerCase() === 'male'
+              ? this.definedMaleDummyImageURL
+              : this.definedWomanDummyImageURL;
         }
       } else {
-        // Handle case where image is empty or malformed
-        this.definedImage = gender.toLowerCase() === 'male'
-          ? this.definedMaleDummyImageURL
-          : this.definedWomanDummyImageURL;
+        this.definedImage =
+          gender.toLowerCase() === 'male'
+            ? this.definedMaleDummyImageURL
+            : this.definedWomanDummyImageURL;
       }
 
       return this.definedImage;
+    } catch ( error ) {
+      console.error( 'Error generating tenant image:', error );
 
-    } catch(error) {
-      console.error('Error generating tenant image:', error);
       return gender.toLowerCase() === 'male'
         ? this.definedMaleDummyImageURL
         : this.definedWomanDummyImageURL;
     }
   }
-  //<========================================================================= END LOAD TENANT IMAGE DATA ========================================================================>
 
-  //<========================================================================= GO TO THE LEASE CREATION ========================================================================>
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Navigation: go to lease creation
+  // ─────────────────────────────────────────────────────────────────────────────
+
   protected async makeTenantLease(): Promise<void> {
     try {
-      if(!this.isBrowser) {
-        throw new Error('Not running in browser environment.');
+      if ( !this.isBrowser ) {
+        throw new Error( 'Not running in browser environment.' );
       }
 
-      if(!this.tenant || !this.tenant.username) {
-        throw new Error('Tenant information is missing.');
+      if ( !this.tenant || !this.tenant.username ) {
+        throw new Error( 'Tenant information is missing.' );
       }
 
-      const tokenResult = await this.apiService.generateToken(this.tenant.username);
+      const tokenResult = await this.apiService.generateToken(
+        this.tenant.username,
+      );
 
-      if(!tokenResult || !tokenResult.token) {
-        throw new Error('Failed to generate tenant token.');
+      if ( !tokenResult || !tokenResult.token ) {
+        throw new Error( 'Failed to generate tenant token.' );
       }
 
-      await this.router.navigate(['/dashboard/tenant/create-lease', tokenResult.token]);
-
-    } catch(error) {
-      console.error('Error while trying to create tenant lease:', error);
-      this.NotificationDialogComponent.notification('error', 'Unable to create tenant lease.');
-    }
-  }
-  //<========================================================================= END GO TO THE LEASE CREATION ========================================================================>
-
-  //<========================================================================= GO TO THE TENANT DASHBOARD ========================================================================>
-  protected async goToTenants(): Promise<void> {
-    try {
-      await this.router.navigateByUrl('/', {skipLocationChange: true});
-      await this.router.navigate(['/dashboard/tenant/tenant-home/']);
-    } catch(error) {
-      console.error('Navigation to tenants page failed:', error);
-      this.NotificationDialogComponent.notification(
+      await this.router.navigate( [
+        '/dashboard/tenant/create-lease',
+        tokenResult.token,
+      ] );
+    } catch ( error ) {
+      console.error( 'Error while trying to create tenant lease:', error );
+      this.notificationDialog.notification(
         'error',
-        'Failed to navigate to the tenants page.'
+        'Unable to create tenant lease.',
       );
     }
   }
-  //<========================================================================= END GO TO THE TENANT DASHBOARD ========================================================================>
 
-  //<========================================================================= GO TO THE TENANT VIEW ========================================================================>
-  protected async goToTenant(): Promise<void> {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Navigation: back to tenants dashboard
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  protected async goToTenants(): Promise<void> {
     try {
-      if(!this.tenant) {
-        throw new Error('No tenant information available.');
-      }
-
-      const tenant = await this.apiService.generateToken(this.tenant.username);
-
-      if(!tenant || !tenant.token) {
-        throw new Error('Failed to generate tenant token.');
-      }
-
-      await this.router.navigateByUrl('/', {skipLocationChange: true});
-      await this.router.navigate(['/dashboard/tenant/tenant-view/', tenant.token]);
-
-    } catch(error) {
-      console.error('Navigation to tenant view failed:', error);
-      this.NotificationDialogComponent.notification('error', 'Unable to load tenant view.');
+      await this.router.navigateByUrl( '/', { skipLocationChange: true } );
+      await this.router.navigate( [ '/dashboard/tenant/tenant-home/' ] );
+    } catch ( error ) {
+      console.error( 'Navigation to tenants page failed:', error );
+      this.notificationDialog.notification(
+        'error',
+        'Failed to navigate to the tenants page.',
+      );
     }
   }
-  //<========================================================================= END GO TO THE TENANT VIEW ========================================================================>
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Navigation: go to tenant view (by new token)
+  // ─────────────────────────────────────────────────────────────────────────────
 
-  //<=========================== EXPORT EXCEL FILE ===========================>
+  protected async goToTenant(): Promise<void> {
+    try {
+      if ( !this.tenant ) {
+        throw new Error( 'No tenant information available.' );
+      }
+
+      const tenant = await this.apiService.generateToken( this.tenant.username );
+
+      if ( !tenant || !tenant.token ) {
+        throw new Error( 'Failed to generate tenant token.' );
+      }
+
+      await this.router.navigateByUrl( '/', { skipLocationChange: true } );
+      await this.router.navigate( [
+        '/dashboard/tenant/tenant-view/',
+        tenant.token,
+      ] );
+    } catch ( error ) {
+      console.error( 'Navigation to tenant view failed:', error );
+      this.notificationDialog.notification(
+        'error',
+        'Unable to load tenant view.',
+      );
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Export lease data as Excel
+  // ─────────────────────────────────────────────────────────────────────────────
 
   private exportLeasesDataAsExcel(
     leases: LeaseWithProperty[],
-    fileExtension: FileExport['extention'] = 'xlsx'
+    fileExtension: FileExport[ 'extention' ] = 'xlsx',
   ): void {
-    if(!Array.isArray(leases) || leases.length === 0) {
-      console.warn('No lease data available for export.');
+    if ( !Array.isArray( leases ) || leases.length === 0 ) {
+      console.warn( 'No lease data available for export.' );
       return;
     }
 
-    const exportData: Record<string, any>[] = leases.map((lease) => {
+    const exportData: Record<string, unknown>[] = leases.map( ( lease ) => {
       const addr = lease.property?.address;
 
       return {
-        'leaseID': lease.leaseID,
+        leaseID: lease.leaseID,
         'Tenant name': lease.tenantInformation?.fullName ?? '',
         'Tenant email': lease.tenantInformation?.email ?? '',
         'Tenant contact': lease.tenantInformation?.phoneNumber ?? '',
@@ -760,67 +1094,85 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
         'Property title': lease.property?.title ?? '',
         'Property address':
-          (addr?.houseNumber ?? '') + ' ' +
-          (addr?.street ?? '') + ', ' +
-          (addr?.city ?? '') + ', ' +
-          (addr?.stateOrProvince ?? '') + ', ' +
-          (addr?.country ?? ''),
+          ( addr?.houseNumber ?? '' ) +
+          ' ' +
+          ( addr?.street ?? '' ) +
+          ', ' +
+          ( addr?.city ?? '' ) +
+          ', ' +
+          ( addr?.stateOrProvince ?? '' ) +
+          ', ' +
+          ( addr?.country ?? '' ),
 
-        'Started date': new Date(lease.leaseAgreement.startDate).toISOString(),
-        'End date': new Date(lease.leaseAgreement.endDate).toISOString(),
+        'Started date': new Date(
+          lease.leaseAgreement.startDate,
+        ).toISOString(),
+        'End date': new Date( lease.leaseAgreement.endDate ).toISOString(),
         'Monthly rent': lease.leaseAgreement.monthlyRent,
         'Rent currency': lease.leaseAgreement.currency?.currency ?? '',
-        'Payment frequency': lease.leaseAgreement.paymentFrequency?.name ?? '',
+        'Payment frequency':
+          lease.leaseAgreement.paymentFrequency?.name ?? '',
         'Payment method': lease.leaseAgreement.paymentMethod?.name ?? '',
-        'Deposit': lease.leaseAgreement.securityDeposit?.name ?? '',
+        Deposit: lease.leaseAgreement.securityDeposit?.name ?? '',
         'Rent due date': lease.leaseAgreement.rentDueDate?.label ?? '',
         'Notice period': lease.leaseAgreement.noticePeriodDays?.label ?? '',
 
-        'Late penalties': lease.leaseAgreement.latePaymentPenalties?.map(p => p.label).join(',\n') ?? '',
-        'Utility responsibilities': lease.leaseAgreement.utilityResponsibilities?.map(u => u.utility + ': ' + u.paidBy).join(',\n') ?? '',
+        'Late penalties':
+          lease.leaseAgreement.latePaymentPenalties
+            ?.map( ( p ) => p.label )
+            .join( ',\n' ) ?? '',
+        'Utility responsibilities':
+          lease.leaseAgreement.utilityResponsibilities
+            ?.map( ( u ) => `${ u.utility }: ${ u.paidBy }` )
+            .join( ',\n' ) ?? '',
 
-        'Rules and regulations': lease.rulesAndRegulations?.map(r => r.rule).join(';\n') ?? '',
+        'Rules and regulations':
+          lease.rulesAndRegulations?.map( ( r ) => r.rule ).join( ';\n' ) ?? '',
 
-        'Tenant signature URL': (lease.signatures.tenantSignature as any)?.URL ?? '',
-        'Landlord signature URL': (lease.signatures.landlordSignature as any)?.URL ?? '',
-        'Signed At': new Date(lease.signatures.signedAt).toISOString(),
+        'Tenant signature URL': ( lease.signatures.tenantSignature as any )?.URL ?? '',
+        'Landlord signature URL': ( lease.signatures.landlordSignature as any )?.URL ?? '',
+        'Signed At': new Date( lease.signatures.signedAt ).toISOString(),
         'Signed By': lease.signatures.userAgent?.name ?? '',
         'ip Address': lease.signatures.ipAddress ?? '',
 
-        'ocrStatus': lease.systemMetadata.ocrAutoFillStatus ? 'Yes' : 'No',
-        'validationStatus': lease.systemMetadata.validationStatus,
-        'leaseTemplateVersion': lease.systemMetadata.leaseTemplateVersion,
-        'lastUpdated': lease.systemMetadata.lastUpdated,
+        ocrStatus: lease.systemMetadata.ocrAutoFillStatus ? 'Yes' : 'No',
+        validationStatus: lease.systemMetadata.validationStatus,
+        leaseTemplateVersion: lease.systemMetadata.leaseTemplateVersion,
+        lastUpdated: lease.systemMetadata.lastUpdated,
       };
-    });
+    } );
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    worksheet['!cols'] = Object.keys(exportData[0]).map((key) => ({
-      wch: key.length + 10
-    }));
+    const worksheet = XLSX.utils.json_to_sheet( exportData );
+
+    // Auto column width based on header length
+    worksheet[ '!cols' ] = Object.keys( exportData[ 0 ] ).map( ( key ) => ( {
+      wch: key.length + 10,
+    } ) );
 
     const workbook: XLSX.WorkBook = {
-      Sheets: {LeaseData: worksheet},
-      SheetNames: ['LeaseData']
+      Sheets: { LeaseData: worksheet },
+      SheetNames: [ 'LeaseData' ],
     };
 
     const mimeMap: Record<string, string> = {
       xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       xls: 'application/vnd.ms-excel',
       csv: 'text/csv',
-      ods: 'application/vnd.oasis.opendocument.spreadsheet'
+      ods: 'application/vnd.oasis.opendocument.spreadsheet',
     };
 
     const bookType: XLSX.BookType = fileExtension as XLSX.BookType;
-    const mimeType = mimeMap[fileExtension] || mimeMap['xlsx'];
+    const mimeType = mimeMap[ fileExtension ] || mimeMap[ 'xlsx' ];
 
-    const excelBuffer = XLSX.write(workbook, {
+    const excelBuffer = XLSX.write( workbook, {
       bookType,
-      type: 'array'
-    });
+      type: 'array',
+    } );
 
-    const blob = new Blob([excelBuffer], {type: mimeType});
-    FileSaver.saveAs(blob, `Lease_Batch_Export_${new Date().toISOString()}.${fileExtension}`);
+    const blob = new Blob( [ excelBuffer ], { type: mimeType } );
+    FileSaver.saveAs(
+      blob,
+      `Lease_Batch_Export_${ new Date().toISOString() }.${ fileExtension }`,
+    );
   }
-  //<=========================== END EXPORT EXCEL FILE ===========================>
 }

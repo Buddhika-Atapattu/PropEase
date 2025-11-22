@@ -1,4 +1,4 @@
-@if(loggedUser && isArrayOfData){
+@if(loggedUser){
 <div class="row mt-5">
   <div class="col-xl-12">
     <h5 class="title">{{ tableTitle }}</h5>
@@ -9,12 +9,15 @@
 <div class="row my-2">
   <div class="col-12">
     <app-paginator
-      [(pageIndex)]="userPageIndex"
-      [pageSize]="pageSize"
-      [(search)]="searchValue"
-      [(isReload)]="isReloading"
+      [(pageIndex)]="tablePageIndex"
+      [(pageSize)]="tablePageSize"
+      [(search)]="tableSearchValue"
+      [(isReload)]="tableIsReload"
       [totalDataCount]="totalDataCount"
-      [pageSizeOptions]="pageSizeOptions"
+      [isDateRageActive]="isDateRageActive"
+      [initialRange]="dateRange"
+      (dateRangeChange)="onDateRangeChange($event)"
+      (rangeChange)="onRangeChange($event)"
       [pagination]="pagination"
       [extension]="fileExportExtention"
       (fileExport)="fileExportHandle($event)"
@@ -23,6 +26,7 @@
 </div>
 <!-- End Pagination -->
 
+@if(isArrayOfData){
 <div class="table-responsive mat-elevation-z8">
   <!-- Table -->
   <table
@@ -36,7 +40,7 @@
       <th
         mat-header-cell
         *matHeaderCellDef
-        [mat-sort-header]="isButtonColumn(column.key) ? null : column.key"
+        [mat-sort-header]="column.label"
         class="w-50 text-default text-center"
       >
         @if(isReload){
@@ -162,7 +166,7 @@
         <p>
           {{ element.date | date : "dd/MM/yyyy" }}
         </p>
-        } } @case ('switchbutton') { @if (isReload) {
+        } } @case ('switch') { @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
           [height]="'1.5rem'"
@@ -170,10 +174,10 @@
         ></app-skeleton-loader>
         } @else {
         <switch-button
-          [checked]="element.switchButton.isActive"
+          [checked]="element.switch.isActive"
           (checkedChange)="handleSwitchChange($event, element, i)"
-          [labelOn]="element.switchButton.on"
-          [labelOff]="element.switchButton.off"
+          [labelOn]="element.switch.on"
+          [labelOff]="element.switch.off"
         ></switch-button>
         } } @case ('status') { @if (isReload) {
         <app-skeleton-loader
@@ -212,8 +216,18 @@
   </table>
   <!-- End Table -->
 </div>
-
 } @else {
+<div class="no-users-container">
+  <mat-icon class="no-users-icon" aria-hidden="true">report_problem</mat-icon>
+  <p class="no-users-text">
+    {{
+      search.length === 0
+        ? "Data currently not available!"
+        : "Search data not found!"
+    }}
+  </p>
+</div>
+} } @else {
 
 <div class="no-users-container">
   <mat-icon class="no-users-icon" aria-hidden="true">report_problem</mat-icon>

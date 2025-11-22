@@ -1,4 +1,4 @@
-<app-notification />
+<app-notification-dialog></app-notification-dialog>
 
 <div class="main-panel">
   <!-- top means hear -->
@@ -55,8 +55,7 @@
 
       @if (users.length > 0) {
       <div class="desktop">
-        @if(!viewMode){ @for (user of users; track $index; let i =
-        $index) {
+        @if(!viewMode){ @for (user of users; track $index; let i = $index) {
         <app-user-view-card
           [user]="user"
           [viewMode]="viewMode"

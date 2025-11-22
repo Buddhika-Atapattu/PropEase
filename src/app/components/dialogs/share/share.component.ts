@@ -10,24 +10,24 @@ import {
 import {
   MAT_DIALOG_DATA, MatDialogRef
 } from '@angular/material/dialog';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {Subscription} from 'rxjs';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+import { Subscription } from 'rxjs';
 import {
   BackEndPropertyData
 } from '../../../services/property/property.service';
-import {NotificationDialogComponent} from '../notification/notification.component';
-import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
+import { NotificationDialogComponent } from '../notification/notificationBar.component';
+import { CloseBtnComponent } from '../../shared/buttons/close-btn/close-btn';
 
-@Component({
+@Component( {
   selector: 'app-share',
   standalone: true,
-  imports: [CommonModule, NotificationDialogComponent, CloseBtnComponent],
+  imports: [ CommonModule, NotificationDialogComponent, CloseBtnComponent ],
   templateUrl: './share.component.html',
   styleUrl: './share.component.scss',
-})
+} )
 export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild(NotificationDialogComponent, {static: true})
+  @ViewChild( NotificationDialogComponent, { static: true } )
   notification!: NotificationDialogComponent;
   // Dialog data
   protected mode: boolean | null = null;
@@ -71,21 +71,21 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    @Inject(MAT_DIALOG_DATA)
+    @Inject( PLATFORM_ID ) private platformId: Object,
+    @Inject( MAT_DIALOG_DATA )
     public data: any = {},
     public dialogRef: MatDialogRef<ShareComponent>,
     private cdr: ChangeDetectorRef
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+    this.isBrowser = isPlatformBrowser( this.platformId );
+    if ( this.isBrowser ) {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
+      } );
     }
-    if(this.data.property) {
+    if ( this.data.property ) {
       this.property = this.data.property;
-      this.link = `https://www.google.com/maps/place/${this.property?.location?.lat},${this.property?.location?.lng}`;
+      this.link = `https://www.google.com/maps/place/${ this.property?.location?.lat },${ this.property?.location?.lng }`;
     }
   }
 
@@ -97,51 +97,51 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy(): void {}
 
-  protected copyToClipboard(inputElement: HTMLInputElement): void {
-    console.log('Clciked');
+  protected copyToClipboard( inputElement: HTMLInputElement ): void {
+    console.log( 'Clciked' );
     inputElement.select();
-    inputElement.setSelectionRange(0, 99999); // For mobile
-    navigator.clipboard.writeText(inputElement.value).then(() => {
-      console.log('Link copied to clipboard!');
-    });
+    inputElement.setSelectionRange( 0, 99999 ); // For mobile
+    navigator.clipboard.writeText( inputElement.value ).then( () => {
+      console.log( 'Link copied to clipboard!' );
+    } );
     this.isCopied = true;
-    setTimeout(() => {
+    setTimeout( () => {
       this.isCopied = false;
-    }, 2000);
+    }, 2000 );
   }
 
-  protected shareSocialMedia(type: string): void {
-    const propertyUrl = `http://localhost:4200/dashboard/properties/property-view/${this.property?.id}`; // update accordingly
+  protected shareSocialMedia( type: string ): void {
+    const propertyUrl = `http://localhost:4200/dashboard/properties/property-view/${ this.property?.id }`; // update accordingly
 
     const text = `🏠 Check out this property listing!
-📍 Address: ${this.property?.address?.houseNumber}, ${this.property?.address?.street}, ${this.property?.address?.city}, ${this.property?.address?.stateOrProvince}, ${this.property?.address?.country}, ${this.property?.address?.postcode}
-📷 Image: ${this.property?.images?.[0]?.imageURL}
-📑 Listing Type: ${this.property?.listing}
-📈 Price: ${this.property?.price} ${this.property?.currency}
-#PropertyFor${this.property?.listing} #PropEase`;
+📍 Address: ${ this.property?.address?.houseNumber }, ${ this.property?.address?.street }, ${ this.property?.address?.city }, ${ this.property?.address?.stateOrProvince }, ${ this.property?.address?.country }, ${ this.property?.address?.postcode }
+📷 Image: ${ this.property?.images?.[ 0 ]?.imageURL }
+📑 Listing Type: ${ this.property?.listing }
+📈 Price: ${ this.property?.price } ${ this.property?.currency }
+#PropertyFor${ this.property?.listing } #PropEase`;
 
-    const encodedText = encodeURIComponent(text);
-    const encodedUrl = encodeURIComponent(propertyUrl);
+    const encodedText = encodeURIComponent( text );
+    const encodedUrl = encodeURIComponent( propertyUrl );
     let fullLink = '';
 
-    switch(type.toLowerCase()) {
+    switch ( type.toLowerCase() ) {
       case 'facebook':
-        fullLink = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+        fullLink = `https://www.facebook.com/sharer/sharer.php?u=${ encodedUrl }`;
         break;
       case 'twitter':
-        fullLink = `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`;
+        fullLink = `https://twitter.com/intent/tweet?text=${ encodedText }&url=${ encodedUrl }`;
         break;
       case 'linkedin':
-        fullLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        fullLink = `https://www.linkedin.com/sharing/share-offsite/?url=${ encodedUrl }`;
         break;
       case 'whatsapp':
-        fullLink = `https://wa.me/?text=${encodedText}%20${encodedUrl}`;
+        fullLink = `https://wa.me/?text=${ encodedText }%20${ encodedUrl }`;
         break;
       case 'telegram':
-        fullLink = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+        fullLink = `https://t.me/share/url?url=${ encodedUrl }&text=${ encodedText }`;
         break;
       case 'instagram':
-        if(this.notification) {
+        if ( this.notification ) {
           this.notification.notification(
             'warning',
             'Instagram does not support direct post sharing via links. Please copy the content manually.'
@@ -149,11 +149,11 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
         }
         return;
       default:
-        console.warn(`Unsupported social media type: ${type}`);
+        console.warn( `Unsupported social media type: ${ type }` );
         return;
     }
 
-    window.open(fullLink, '_blank');
+    window.open( fullLink, '_blank' );
   }
 
   protected pannelClose() {

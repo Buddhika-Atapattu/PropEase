@@ -1,223 +1,421 @@
 @use "../../styles/global.scss" as *;
 @use "sass:color";
 
-// Shared Glass Style
-@mixin glassmorphic-bg($bg, $shadow) {
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  background-color: $bg;
-  box-shadow: 0 8px 32px 0 $shadow;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-// Keyframe
-@keyframes slideFadeIn {
-  0% {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-// Light Mode
-:host-context(html.light) {
+/* Root layout: full-screen split hero + form */
+.login-container {
+  position: fixed;
+  inset: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-areas: "imageCol loginCol";
+  grid-template-columns: 1fr 1fr;
+  width: 100vw;
   height: 100vh;
-  background: linear-gradient(
-    135deg,
-    $light-secondary-color,
-    $light-primary-color
-  ) !important;
-
-  .main-container {
-    @include glassmorphic-bg(rgb(255 186 0 / 18%), rgba(31, 38, 135, 0.1));
+  justify-content: stretch;
+  align-items: stretch;
+  background: radial-gradient(
+      circle at 20% 0%,
+      rgba(255, 255, 255, 0.18),
+      transparent 55%
+    ),
+    radial-gradient(circle at 70% 270%, rgba(0, 0, 0, 0.9), transparent 65%),
+    color-mix(in srgb, var(--surface-variant) 85%, #020617 15%);
+  overflow: hidden;
+  z-index: 0;
+  @media (max-width: 1024px) {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
-    height: 100%;
-  }
-  .image-container {
-    width: 450px;
-    height: 450px;
-    border-radius: 50px;
-    background-color: rgba(255, 255, 255, 0.5);
-    box-shadow: 0 0 40px #ffd557;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    img {
-      width: 90%;
-      height: auto;
-    }
   }
 
-  .login-form-container {
-    width: 500px;
-    padding: 40px;
-    border-radius: 30px;
-    @include glassmorphic-bg(rgb(255 204 0 / 14%), rgba(0, 0, 0, 0.2));
-
-    .form {
-      animation: slideFadeIn 0.7s ease-out;
-
-      .form-field {
-        width: 100%;
-        margin-bottom: 20px;
-      }
-
-      .form-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 20px;
-        ::ng-deep .mdc-button__label {
-          color: $light-text-color !important;
-        }
-      }
-
-      .login-title {
-        font-size: 24px;
-        font-weight: 600;
-        color: $light-fourth-color;
-        margin-bottom: 5px;
-      }
-
-      .login-subtitle {
-        font-size: 14px;
-        color: $light-text-color;
-        opacity: 0.75;
-        margin-bottom: 30px;
-      }
-    }
-  }
-}
-
-// Dark Mode
-:host-context(html.dark) {
-  height: 100vh;
-  background: linear-gradient(135deg, #0e0e24, #1a1a40);
-
-  .main-container {
-    @include glassmorphic-bg(rgba(255, 255, 255, 0.03), rgba(31, 38, 135, 0.3));
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-  }
-  .image-container {
-    width: 450px;
-    height: 450px;
-    border-radius: 50px;
-    background-color: rgb(8 18 47);
-    box-shadow: 0 0 40px #ffbf0080;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    img {
-      width: 90%;
-      height: auto;
-    }
+  /* subtle dust / stars layer */
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background-image: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.45) 0,
+      rgba(255, 255, 255, 0) 55%
+    );
+    background-size: 4px 4px;
+    opacity: 0.22;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    animation: star-drift 50s linear infinite;
   }
 
-  .login-form-container {
-    width: 500px;
-    padding: 40px;
-    border-radius: 30px;
-    @include glassmorphic-bg(rgb(8 25 76), rgba(255, 204, 0, 0.1));
-
-    .form {
-      animation: slideFadeIn 0.7s ease-out;
-
-      .form-field {
-        width: 100%;
-        margin-bottom: 20px;
-
-        ::ng-deep .mdc-line-ripple {
-          background-color: $dark-primary-color !important;
-        }
-
-        ::ng-deep .mdc-floating-label--float-above {
-          color: $dark-primary-color !important;
-        }
-      }
-
-      .form-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 20px;
-        ::ng-deep .mdc-button__label {
-          color: $dark-text-color !important;
-        }
-      }
-
-      .login-title {
-        font-size: 24px;
-        font-weight: 600;
-        color: $dark-third-color;
-        margin-bottom: 5px;
-      }
-
-      .login-subtitle {
-        font-size: 14px;
-        color: $dark-text-color;
-        opacity: 0.75;
-        margin-bottom: 30px;
-      }
-
-      .login-button {
-        background-color: $dark-secondary-color;
-        color: $dark-text-color;
-        &:hover {
-          background-color: color.adjust($dark-secondary-color, $lightness: 5%);
-        }
-      }
-
-      .remember-me-checkbox {
-        color: $dark-text-color !important;
-
-        ::ng-deep .mdc-form-field {
-          color: $dark-text-color;
-        }
-
-        ::ng-deep .mdc-checkbox__background {
-          border-color: $dark-third-color;
-        }
-
-        ::ng-deep .mdc-checkbox__checkmark-path {
-          stroke: $dark-third-color;
-        }
-      }
-    }
+  &::after {
+    opacity: 0.12;
+    animation-duration: 80s;
+    animation-direction: reverse;
   }
-}
 
-::ng-deep mat-checkbox.mat-checkbox-checked .mat-checkbox-background,
-::ng-deep mat-checkbox.mat-accent .mat-checkbox-background {
-  background-color: #ffcc00 !important; // your custom color
-}
-
-//Mobile view
-@media (max-width: 1025px) {
-  .main-row {
-    display: flex 1 1 auto;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
+  /* =========================
+     LEFT COLUMN: LOGO / HERO
+     ========================= */
   .image-col {
-    display: none !important;
+    grid-area: imageCol;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: var(--secondary-400);
+    overflow: hidden;
+    @media (max-width: 1024px) {
+      display: none;
+    }
+
+    .image-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: auto;
+      width: 450px;
+      height: 450px;
+      border-radius: 3rem;
+      overflow: hidden;
+      box-shadow: 0 26px 40px rgba(0, 0, 0, 0.85);
+      z-index: 100;
+
+      /* DARK inside so GIF edges always look clean */
+      background: radial-gradient(
+          circle at 20% 0%,
+          rgba(255, 255, 255, 0.18),
+          transparent 55%
+        ),
+        radial-gradient(circle at 70% 270%, rgba(0, 0, 0, 0.9), transparent 65%),
+        color-mix(in srgb, #111827 85%, #020617 15%);
+    }
+
+    .logo-gif {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  /* =========================
+     RIGHT COLUMN: LOGIN CARD
+     ========================= */
+  .login-col {
+    grid-area: loginCol;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+
+    .login-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: auto;
+      width: 450px;
+      height: 450px;
+      border-radius: 3rem;
+      overflow: hidden;
+      padding: 2rem;
+      background: color-mix(in srgb, var(--surface) 90%, #000000 10%);
+      box-shadow: 0 26px 40px rgba(0, 0, 0, 0.85);
+      z-index: 1000;
+
+      .form {
+        width: 100%;
+        animation: slideFadeIn 0.7s ease-out;
+
+        .login-header {
+          margin-bottom: 2rem;
+        }
+
+        .login-title {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: var(--on-surface);
+          margin: 0 0 0.25rem;
+        }
+
+        .login-subtitle {
+          font-size: 0.875rem;
+          color: var(--on-surface);
+          opacity: 0.75;
+          margin: 0;
+        }
+
+        .form-field {
+          width: 100%;
+          margin-bottom: 1.25rem;
+
+          /* Mat underline + label (dark / default theme) */
+          ::ng-deep .mdc-line-ripple {
+            background-color: var(--primary) !important;
+          }
+
+          ::ng-deep .mdc-floating-label--float-above {
+            color: var(--primary) !important;
+          }
+
+          ::ng-deep .mat-mdc-form-field-focus-overlay {
+            background-color: color-mix(
+              in srgb,
+              var(--primary) 8%,
+              transparent 92%
+            );
+          }
+        }
+
+        .form-footer {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+          margin-top: 0.75rem;
+          @media (max-width: 1024px) and (min-widht: 425px) {
+            display: grid !important;
+            grid-template-areas: "rememberMe buttonLogin";
+            grid-template-columns: 2fr 1fr;
+            justify-self: center;
+            align-self: center;
+          }
+          @media (max-width: 424.98px) {
+            display: flex !important;
+            justify-content: space-between;
+            align-items: center;
+          }
+
+          .footer-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+          }
+
+          .forgot-link {
+            font-size: 0.8rem;
+            color: var(--primary);
+            text-decoration: none;
+
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+        }
+
+        .login-button {
+          padding-inline: 2.2rem;
+          border-radius: 999px;
+          background-color: var(--primary);
+          color: var(--on-primary);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+
+          &:hover {
+            background-color: color-mix(
+              in srgb,
+              var(--primary) 92%,
+              #ffffff 8%
+            );
+          }
+
+          &:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+          }
+        }
+
+        .remember-me-checkbox {
+          color: var(--on-surface);
+
+          ::ng-deep .mdc-form-field {
+            color: var(--on-surface);
+          }
+
+          ::ng-deep .mdc-checkbox__background {
+            border-color: var(--on-surface);
+          }
+
+          ::ng-deep .mdc-checkbox__checkmark-path {
+            stroke: var(--on-surface);
+          }
+
+          ::ng-deep
+            .mat-mdc-checkbox.remember-me-checkbox
+            .mdc-checkbox__native-control:checked
+            ~ .mdc-checkbox__background {
+            background-color: transparent !important;
+            border-color: var(--primary) !important;
+          }
+
+          ::ng-deep
+            .mat-mdc-checkbox.remember-me-checkbox
+            .mdc-checkbox__native-control:checked
+            ~ .mdc-checkbox__background
+            .mdc-checkbox__checkmark {
+            color: var(--primary) !important;
+          }
+        }
+      }
+    }
+  }
+
+  /* =========================
+     RESPONSIVE: TABLET & MOBILE
+     ========================= */
+  // @media (max-width: 1024px) {
+  //   grid-template-areas:
+  //     "imageCol"
+  //     "loginCol";
+  //   grid-template-columns: 1fr;
+  //   grid-template-rows: auto auto;
+  //   height: auto;
+  //   min-height: 100vh;
+
+  //   .image-col,
+  //   .login-col {
+  //     height: auto;
+  //     min-height: 50vh;
+  //   }
+
+  //   .image-col .image-container,
+  //   .login-col .login-card {
+  //     width: min(90vw, 420px);
+  //     height: auto;
+  //   }
+
+  //   .login-col .login-card {
+  //     margin-top: 2rem;
+  //     margin-bottom: 3rem;
+  //   }
+  // }
+
+  // @media (max-width: 480px) {
+  //   .image-col .image-container {
+  //     width: 80vw;
+  //     height: 80vw;
+  //     border-radius: 2rem;
+  //   }
+
+  //   .login-col .login-card {
+  //     width: 90vw;
+  //     border-radius: 2rem;
+  //     padding: 1.5rem;
+  //   }
+
+  //   .form-footer {
+  //     flex-direction: column;
+  //     align-items: flex-start;
+
+  //     .footer-actions {
+  //       width: 100%;
+  //       justify-content: flex-end;
+  //     }
+  //   }
+  // }
+}
+
+/* -----------------------------
+   LIGHT THEME OVERRIDES
+   (Pearl + Gold + Royal Blue)
+------------------------------ */
+:host-context(html.light) .login-container {
+  background: radial-gradient(
+      circle at 20% 0%,
+      rgba(255, 215, 0, 0.1),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 70% 120%,
+      rgba(102, 153, 255, 0.15),
+      transparent 60%
+    ),
+    color-mix(in srgb, var(--surface) 95%, #ffffff 5%);
+
+  &::before,
+  &::after {
+    background-image: radial-gradient(
+      circle,
+      rgba(255, 215, 0, 0.28) 0,
+      rgba(255, 215, 0, 0) 55%
+    );
+    opacity: 0.18;
+    mix-blend-mode: soft-light;
+  }
+
+  &::after {
+    opacity: 0.1;
   }
 }
 
-@media (max-width: 350px) {
-  .login-form-container {
-    padding: 1rem !important;
+/* Light theme: warm hero, bright card, same dark GIF container */
+:host-context(html.light) .image-col {
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 244, 214, 0.65),
+    rgba(255, 229, 150, 0.85)
+  );
+}
+
+:host-context(html.light) .login-col .login-card {
+  background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.92),
+      rgba(248, 248, 248, 0.98)
+    ),
+    radial-gradient(circle, rgba(255, 215, 0, 0.06), transparent 60%);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 5px 15px rgba(0, 0, 0, 0.05);
+
+  .login-title,
+  .login-subtitle {
+    color: var(--on-surface);
+  }
+
+  .login-button {
+    background: var(--primary);
+    color: var(--on-primary);
+
+    &:hover {
+      background: color-mix(in srgb, var(--primary) 92%, white 8%);
+    }
+  }
+
+  .remember-me-checkbox {
+    ::ng-deep .mdc-form-field {
+      color: var(--on-surface);
+    }
+
+    ::ng-deep .mdc-checkbox__background {
+      border-color: var(--primary);
+    }
+
+    ::ng-deep .mdc-checkbox__checkmark-path {
+      stroke: var(--primary);
+    }
+  }
+
+  .form-field {
+    ::ng-deep .mdc-line-ripple {
+      background-color: var(--primary) !important;
+    }
+
+    ::ng-deep .mdc-floating-label--float-above {
+      color: var(--primary) !important;
+    }
+  }
+}
+
+/* Optional: simple drift keyframes if you haven't defined them globally */
+@keyframes star-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-10%, -10%, 0);
   }
 }

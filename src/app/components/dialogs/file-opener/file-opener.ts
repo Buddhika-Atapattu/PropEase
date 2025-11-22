@@ -8,36 +8,36 @@ import {
   AfterViewInit, OnChanges,
   SimpleChanges
 } from '@angular/core';
-import {Router} from '@angular/router';
-import {MatInputModule} from '@angular/material/input';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatButtonModule} from '@angular/material/button';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatIconModule} from '@angular/material/icon';
-import {MatDatepickerModule} from '@angular/material/datepicker';
+import { Router } from '@angular/router';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatButtonModule } from '@angular/material/button';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import {
   MatMomentDateModule
 } from '@angular/material-moment-adapter';
-import {MatSelectModule} from '@angular/material/select';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatCheckboxModule} from '@angular/material/checkbox';
-import {MatProgressBarModule} from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import {
   MAT_DIALOG_DATA, MatDialogRef, MatDialogModule
 } from '@angular/material/dialog';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {Subscription} from 'rxjs';
-import {NotificationDialogComponent} from '../notification/notification.component';
-import {DomSanitizer, SafeResourceUrl} from '@angular/platform-browser';
-import {HttpClient} from '@angular/common/http';
-import {NgxExtendedPdfViewerModule} from 'ngx-extended-pdf-viewer';
-import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
-import {UserControllerService} from '../../../services/userController/user-controller.service';
-import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+import { Subscription } from 'rxjs';
+import { NotificationDialogComponent } from '../notification/notificationBar.component';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { HttpClient } from '@angular/common/http';
+import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { UserControllerService } from '../../../services/userController/user-controller.service';
+import { CloseBtnComponent } from '../../shared/buttons/close-btn/close-btn';
 
-@Component({
+@Component( {
   selector: 'app-file-opener',
   imports: [
     CommonModule,
@@ -62,9 +62,9 @@ import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
   ],
   templateUrl: './file-opener.html',
   styleUrl: './file-opener.scss'
-})
+} )
 export class FileOpener implements OnInit, OnDestroy, AfterViewInit, OnChanges {
-  @ViewChild(NotificationDialogComponent, {static: true})
+  @ViewChild( NotificationDialogComponent, { static: true } )
   notification!: NotificationDialogComponent;
 
   protected mode: boolean | null = null;
@@ -85,8 +85,8 @@ export class FileOpener implements OnInit, OnDestroy, AfterViewInit, OnChanges {
 
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    @Inject(MAT_DIALOG_DATA)
+    @Inject( PLATFORM_ID ) private platformId: Object,
+    @Inject( MAT_DIALOG_DATA )
     public data: any = {},
     public dialogRef: MatDialogRef<FileOpener>,
     private cdr: ChangeDetectorRef,
@@ -95,11 +95,11 @@ export class FileOpener implements OnInit, OnDestroy, AfterViewInit, OnChanges {
     private http: HttpClient,
     private userControllerService: UserControllerService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+    this.isBrowser = isPlatformBrowser( this.platformId );
+    if ( this.isBrowser ) {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
+      } );
     }
 
     this.fileType = this.data.type ?? '';
@@ -107,16 +107,16 @@ export class FileOpener implements OnInit, OnDestroy, AfterViewInit, OnChanges {
     this.name = this.data.name ?? '';
     this.size = this.data.size ?? 0;
     this.token = this.data.token ?? '';
-    this.fileExtention = this.name.split('.').pop() ?? '';
+    this.fileExtention = this.name.split( '.' ).pop() ?? '';
     this.URL = this.data.URL ?? '';
-    this.convertAndPreviewPDF(this.URL);
+    this.convertAndPreviewPDF( this.URL );
   }
 
   async ngOnInit(): Promise<void> {
 
   }
-  ngOnChanges(changes: SimpleChanges): void {
-    if(changes['data'] && changes['data'].currentValue) {
+  ngOnChanges( changes: SimpleChanges ): void {
+    if ( changes[ 'data' ] && changes[ 'data' ].currentValue ) {
     }
   }
 
@@ -125,31 +125,31 @@ export class FileOpener implements OnInit, OnDestroy, AfterViewInit, OnChanges {
   }
 
   ngOnDestroy(): void {
-    if(this.pdfBlob) {
-      URL.revokeObjectURL(this.pdfBlob);
+    if ( this.pdfBlob ) {
+      URL.revokeObjectURL( this.pdfBlob );
     }
   }
 
-  private async convertAndPreviewPDF(fileUrl: string) {
+  private async convertAndPreviewPDF( fileUrl: string ) {
 
     try {
       this.isLoading = true;
 
-      const blob = await this.userControllerService.convertToPDF(fileUrl);
+      const blob = await this.userControllerService.convertToPDF( fileUrl );
 
       const isPDF = blob.type === 'application/pdf' && blob.size > 1000;
-      if(!isPDF) {
+      if ( !isPDF ) {
         const text = await blob.text();
-        throw new Error(`Expected PDF blob, got text: ${text}`);
+        throw new Error( `Expected PDF blob, got text: ${ text }` );
       }
 
 
-      const objectUrl = URL.createObjectURL(blob);
+      const objectUrl = URL.createObjectURL( blob );
       this.pdfBlob = objectUrl;
-      this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(objectUrl);
+      this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl( objectUrl );
     }
-    catch(error) {
-      console.log(error)
+    catch ( error ) {
+      console.log( error );
     }
     finally {
       this.isLoading = false;
@@ -159,8 +159,8 @@ export class FileOpener implements OnInit, OnDestroy, AfterViewInit, OnChanges {
 
 
   protected pannelClose(): void {
-    this.dialogRef.close({
+    this.dialogRef.close( {
       token: this.token,
-    });
+    } );
   }
 }

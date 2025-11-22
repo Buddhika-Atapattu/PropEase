@@ -160,6 +160,7 @@ li > .menu-btn .dropdown-icon.rotate i {
       align-items: stretch;
       padding: 10px 15px;
       border-radius: 10px;
+      color: var(--on-surface);
 
       /* Collapsed: icon-only → center button inside li */
       &:has(.menu-btn.btn-collapse) {
@@ -209,6 +210,7 @@ li > .menu-btn .dropdown-icon.rotate i {
         padding: 0;
         transition: all 0.25s ease-in-out;
         position: relative;
+        color: var(--on-surface);
 
         /* Collapsed icon-only appearance */
         &.btn-collapse {
@@ -230,6 +232,7 @@ li > .menu-btn .dropdown-icon.rotate i {
           display: flex;
           justify-content: center;
           align-items: center;
+          color: var(--on-surface);
 
           ::ng-deep svg {
             fill: currentColor;
@@ -246,6 +249,7 @@ li > .menu-btn .dropdown-icon.rotate i {
           display: flex;
           justify-self: start;
           align-self: center;
+          color: var(--on-surface);
         }
 
         .dropdown-icon {
@@ -253,6 +257,7 @@ li > .menu-btn .dropdown-icon.rotate i {
           display: flex;
           justify-self: end;
           align-self: center;
+          color: var(--on-surface);
         }
 
         &.btn-collapse mat-icon {

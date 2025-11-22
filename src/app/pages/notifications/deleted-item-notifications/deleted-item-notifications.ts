@@ -12,10 +12,10 @@ import {
   ViewChild,
 } from '@angular/core';
 
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {ActivatedRoute, Router} from '@angular/router';
-import {Subscription, firstValueFrom} from 'rxjs';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription, firstValueFrom } from 'rxjs';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import {
   NotificationService,
   Notification,
@@ -25,16 +25,16 @@ import {
   BackendBasicResponse, // <-- we’ll use this for a quick FE guard on permanent delete
   TitleCategory
 } from '../../../services/notifications/notification-service';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
-import {MatIconModule} from '@angular/material/icon';
-import {ProgressBarComponent} from '../../../components/dialogs/progress-bar/progress-bar.component';
-import {NotificationDialogComponent} from '../../../components/dialogs/notification/notification.component';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { MatIconModule } from '@angular/material/icon';
+import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
+import { NotificationDialogComponent } from '../../../components/dialogs/notification/notificationBar.component';
 import {
   RestoreNotificationPayload
 } from '../../../types/notification.types'; // If you keep these types in service, adjust import path
-import {MatDialog} from '@angular/material/dialog';
-import {ConfirmationComponent} from '../../../components/shared/confirmation/confirmation.component';
-import {BackendActionResult, NotificationsRoutingService} from '../../../services/notificationRouting/notifications-routing-service';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmationComponent } from '../../../components/shared/confirmation/confirmation.component';
+import { BackendActionResult, NotificationsRoutingService } from '../../../services/notificationRouting/notifications-routing-service';
 
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -43,16 +43,16 @@ import {BackendActionResult, NotificationsRoutingService} from '../../../service
  *  - Strings: returned as-is
  *  - Objects/arrays: JSON.stringify capped at ~80 chars for compact display
  * ───────────────────────────────────────────────────────────────────────────── */
-@Pipe({name: 'metaRender', standalone: true})
+@Pipe( { name: 'metaRender', standalone: true } )
 export class MetaRenderPipe implements PipeTransform {
-  transform(v: any): string {
-    if(v == null) return '';
-    if(typeof v === 'string') return v;
+  transform( v: any ): string {
+    if ( v == null ) return '';
+    if ( typeof v === 'string' ) return v;
     try {
-      const s = JSON.stringify(v);
-      return s.length > 80 ? s.slice(0, 77) + '…' : s;
+      const s = JSON.stringify( v );
+      return s.length > 80 ? s.slice( 0, 77 ) + '…' : s;
     } catch {
-      return String(v);
+      return String( v );
     }
   }
 }
@@ -65,16 +65,16 @@ export class MetaRenderPipe implements PipeTransform {
  *      • Permanent Delete (hard delete) — ADMIN ONLY
  *  - Uses your NotificationService REST methods + existing dialog components
  * ───────────────────────────────────────────────────────────────────────────── */
-@Component({
+@Component( {
   selector: 'app-deleted-item-notifications',
   standalone: true,
-  imports: [CommonModule, MetaRenderPipe, MatIconModule, ProgressBarComponent, NotificationDialogComponent],
+  imports: [ CommonModule, MetaRenderPipe, MatIconModule, ProgressBarComponent, NotificationDialogComponent ],
   templateUrl: './deleted-item-notifications.html',
   styleUrl: './deleted-item-notifications.scss',
-})
+} )
 export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild(ProgressBarComponent) progress!: ProgressBarComponent;
-  @ViewChild(NotificationDialogComponent) notificationDialogComponent!: NotificationDialogComponent;
+  @ViewChild( ProgressBarComponent ) progress!: ProgressBarComponent;
+  @ViewChild( NotificationDialogComponent ) notificationDialogComponent!: NotificationDialogComponent;
 
   /** Theme mode (from WindowRefService); gate rendering until known. */
   protected mode: boolean | null = null;
@@ -88,7 +88,7 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
   protected notification: Notification | null = null;
 
   /** Flattened metadata grid for quick scanning */
-  protected primaryMeta: Array<{key: string; value: any}> = [];
+  protected primaryMeta: Array<{ key: string; value: any; }> = [];
 
   /** UI toggles */
   protected showRaw = false;
@@ -102,7 +102,7 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
 
   constructor (
     private readonly windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private readonly platformId: Object,
+    @Inject( PLATFORM_ID ) private readonly platformId: Object,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly notif: NotificationService,
@@ -110,35 +110,35 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
     private readonly dialog: MatDialog,
     private readonly notificationsRouting: NotificationsRoutingService,
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
   }
 
   /* ─────────────────────────── Lifecycle ─────────────────────────── */
 
   ngOnInit(): void {
     // 1) Watch theme/“mode” like in other pages
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => (this.mode = val));
+    if ( this.isBrowser ) {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => ( this.mode = val ) );
     }
 
     // 2) Read ?selected=… and resolve the notification from in-memory cache or by pulling a fresh page
-    this.qpSub = this.route.queryParamMap.subscribe(async (params) => {
-      const id = params.get('selected');
-      if(!id) {
+    this.qpSub = this.route.queryParamMap.subscribe( async ( params ) => {
+      const id = params.get( 'selected' );
+      if ( !id ) {
         this.loading = false;
         this.error = 'No deleted item selected.';
         return;
       }
-      await this.resolveNotification(id);
-    });
+      await this.resolveNotification( id );
+    } );
 
     this.authHeaders();
   }
 
   ngAfterViewInit(): void {
     // No-op: Keep for symmetry; we already show a progress bar during async actions.
-    if(this.notification) {
-      console.log(this.notification)
+    if ( this.notification ) {
+      console.log( this.notification );
     }
   }
 
@@ -150,8 +150,8 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
   /* ─────────────────────────── UI helpers ─────────────────────────── */
 
   /** Severity → chip class mapping (visual hint only). */
-  protected severityClass(s?: Severity) {
-    switch(s) {
+  protected severityClass( s?: Severity ) {
+    switch ( s ) {
       case 'success':
         return 'bg-success-subtle text-success';
       case 'warning':
@@ -163,54 +163,52 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
     }
   }
 
-  protected toggleRaw() {this.showRaw = !this.showRaw;}
-  protected askRestore(n: Notification) {
-    const dialog = this.dialog.open(ConfirmationComponent, {
+  protected toggleRaw() { this.showRaw = !this.showRaw; }
+  protected askRestore( n: Notification ) {
+    const dialog = this.dialog.open( ConfirmationComponent, {
       width: '400px',
       height: 'auto',
       data: {
-        isConfirm: true,
         title: 'Confirm Restore',
         message: 'Do you wish to restore these data!'
       }
-    })
+    } );
 
-    dialog.afterClosed().subscribe(async (val) => {
-      if(val.isConfirm) {
+    dialog.afterClosed().subscribe( async ( val ) => {
+      if ( val ) {
         this.confirm = 'restore';
-        await this.restore(n);
+        await this.restore( n );
       }
       else {
         this.confirm = null;
       }
-    })
+    } );
   }
-  protected askPermanentDelete(n: Notification) {
-    const dialog = this.dialog.open(ConfirmationComponent, {
+  protected askPermanentDelete( n: Notification ) {
+    const dialog = this.dialog.open( ConfirmationComponent, {
       width: '400px',
       height: 'auto',
       data: {
-        isConfirm: true,
         title: 'Permanent Delete',
         message: 'Do you wish to permanent delete these data!'
       }
-    })
+    } );
 
-    dialog.afterClosed().subscribe(async (val) => {
-      if(val.isConfirm) {
+    dialog.afterClosed().subscribe( async ( val ) => {
+      if ( val ) {
         this.confirm = 'delete';
-        await this.permanentDelete(n)
+        await this.permanentDelete( n );
       }
       else {
         this.confirm = null;
       }
-    })
+    } );
   }
   // protected cancelConfirm() {this.confirm = null;}
 
   /** Navigate back to the notifications list view. */
   protected backToList() {
-    this.router.navigate(['/dashboard/notifications/all-notifications']);
+    this.router.navigate( [ '/dashboard/notifications/all-notifications' ] );
   }
 
   /* ─────────────────────────── Actions ─────────────────────────── */
@@ -222,52 +220,52 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
    *  - Prefer refId (fastest, if soft-deleted).
    *  - If fully removed, send a snapshot (domain JSON) or metadata.filePath.
    */
-  protected async restore(notification: Notification) {
+  protected async restore( notification: Notification ) {
     try {
       this.loading = true;
       this.progress.start();
 
       const category = notification.category;
-      const refId = this.discoverRefId(notification);
-      const snapshot = this.discoverSnapshot(notification);
+      const refId = this.discoverRefId( notification );
+      const snapshot = this.discoverSnapshot( notification );
 
       // Carefully rebuild metadata in the new shape
-      const incomingData = (notification.metadata?.data ?? {}) as Record<string, any>;
+      const incomingData = ( notification.metadata?.data ?? {} ) as Record<string, any>;
       const meta =
-        refId || snapshot || Object.keys(incomingData).length
+        refId || snapshot || Object.keys( incomingData ).length
           ? {
-            refId: (notification.metadata?.refId || refId || '').trim(),
-            ...(Object.keys(incomingData).length ? {data: incomingData} : {}),
+            refId: ( notification.metadata?.refId || refId || '' ).trim(),
+            ...( Object.keys( incomingData ).length ? { data: incomingData } : {} ),
           }
           : undefined;
 
       const payload: RestoreNotificationPayload = {
         _id: notification._id,
         category,
-        ...(refId ? {refId} : {}),
-        ...(snapshot ? {snapshot} : {}),
-        ...(meta ? {metadata: meta} : {}),
+        ...( refId ? { refId } : {} ),
+        ...( snapshot ? { snapshot } : {} ),
+        ...( meta ? { metadata: meta } : {} ),
       };
 
-      const res = await this.notif.restoreDeleteJson(payload);
-      console.log(res)
-      if(res?.success) {
-        this.notificationDialogComponent.notification('success', res.message || 'Item restored.');
-        await this.notificationsRouting.routeForAny(res as BackendActionResult);
+      const res = await this.notif.restoreDeleteJson( payload );
+      console.log( res );
+      if ( res?.success ) {
+        this.notificationDialogComponent.notification( 'success', res.message || 'Item restored.' );
+        await this.notificationsRouting.routeForAny( res as BackendActionResult );
         return;
       } else {
-        this.notificationDialogComponent.notification('error', res?.message || 'Failed to restore the item!');
+        this.notificationDialogComponent.notification( 'error', res?.message || 'Failed to restore the item!' );
       }
-    } catch(error) {
-      console.error(error);
-      this.notificationDialogComponent.notification('error', 'Failed to restore the item!');
+    } catch ( error ) {
+      console.error( error );
+      this.notificationDialogComponent.notification( 'error', 'Failed to restore the item!' );
     } finally {
       this.progress.complete();
       this.loading = false;
       this.confirm = null;
-      setTimeout(() => {
+      setTimeout( () => {
         this.backToList();
-      }, 1000)
+      }, 1000 );
     }
   }
 
@@ -277,21 +275,21 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
    * ADMIN ONLY (server-enforced). We also add a small FE guard:
    *  - If we can read the current role and it is not 'admin', we show an error without calling the server.
    */
-  protected async permanentDelete(notification: Notification) {
+  protected async permanentDelete( notification: Notification ) {
     try {
       this.loading = true;
       this.progress.start();
 
-      const refId = this.discoverRefId(notification);
-      if(!refId) {
-        this.notificationDialogComponent.notification('error', 'Cannot determine item id to delete.');
+      const refId = this.discoverRefId( notification );
+      if ( !refId ) {
+        this.notificationDialogComponent.notification( 'error', 'Cannot determine item id to delete.' );
         return;
       }
 
       const data = {
         reason: 'User requested permanent deletion from Deleted Items page',
         via: 'UI',
-        ...(notification.metadata?.data ?? {}),
+        ...( notification.metadata?.data ?? {} ),
       };
 
       const payload: PermanentDeletePayload = {
@@ -305,25 +303,25 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
       };
 
       const currentRole = this.getCurrentUserRole(); // cosmetic FE guard
-      const res: BackendBasicResponse = await this.notif.permanentDeleteJson(payload, currentRole);
+      const res: BackendBasicResponse = await this.notif.permanentDeleteJson( payload, currentRole );
 
-      console.log(res)
-      if(res?.success) {
-        this.notificationDialogComponent.notification('success', res.message || 'Item permanently deleted.');
+      console.log( res );
+      if ( res?.success ) {
+        this.notificationDialogComponent.notification( 'success', res.message || 'Item permanently deleted.' );
         return;
       } else {
-        this.notificationDialogComponent.notification('error', res?.message || 'Failed to permanently delete the item!');
+        this.notificationDialogComponent.notification( 'error', res?.message || 'Failed to permanently delete the item!' );
       }
-    } catch(e: any) {
-      console.error(e);
-      this.notificationDialogComponent.notification('error', e?.message || 'Failed to permanently delete the item!');
+    } catch ( e: any ) {
+      console.error( e );
+      this.notificationDialogComponent.notification( 'error', e?.message || 'Failed to permanently delete the item!' );
     } finally {
       this.progress.complete();
       this.loading = false;
       this.confirm = null;
-      setTimeout(() => {
+      setTimeout( () => {
         this.backToList();
-      }, 1000)
+      }, 1000 );
     }
   }
 
@@ -333,29 +331,29 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
   /**
    * Resolve the selected notification from cache, or fetch a page and try again.
    */
-  private async resolveNotification(id: string) {
+  private async resolveNotification( id: string ) {
     this.loading = true;
     this.error = null;
 
     // 1) Try cache
-    const cached = await firstValueFrom(this.notif.itemById$(id));
-    if(cached) {
-      this.setNotification(cached);
+    const cached = await firstValueFrom( this.notif.itemById$( id ) );
+    if ( cached ) {
+      this.setNotification( cached );
       this.loading = false;
       return;
     }
 
     // 2) Fallback: fetch a page and try again
     try {
-      await this.notif.load({page: 0, limit: 50});
-      const after = await firstValueFrom(this.notif.itemById$(id));
-      if(after) {
-        this.setNotification(after);
+      await this.notif.load( { page: 0, limit: 50 } );
+      const after = await firstValueFrom( this.notif.itemById$( id ) );
+      if ( after ) {
+        this.setNotification( after );
         this.loading = false;
         return;
       }
       this.error = 'Selected item not found in recent list.';
-    } catch(e: any) {
+    } catch ( e: any ) {
       this.error = e?.message || 'Failed to load deleted item.';
     } finally {
       this.loading = false;
@@ -363,9 +361,9 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
   }
 
   /** Keep one place to normalize + extract a clean metadata grid */
-  private setNotification(n: Notification) {
+  private setNotification( n: Notification ) {
     this.notification = n;
-    this.primaryMeta = this.extractPrimaryMeta(n);
+    this.primaryMeta = this.extractPrimaryMeta( n );
   }
 
   /**
@@ -375,14 +373,14 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
    * - Prefer `notification['targetId']` if your delete logic stored it.
    */
   /** Resolve the domain refId (usually username or natural key). */
-  private discoverRefId(n: Notification): string | undefined {
+  private discoverRefId( n: Notification ): string | undefined {
     // 1) New canonical place
-    if(typeof n.metadata?.refId === 'string' && n.metadata.refId.trim()) {
+    if ( typeof n.metadata?.refId === 'string' && n.metadata.refId.trim() ) {
       return n.metadata.refId.trim();
     }
 
     // 2) Common fallbacks inside metadata.data
-    const data = (n.metadata?.data ?? {}) as Record<string, any>;
+    const data = ( n.metadata?.data ?? {} ) as Record<string, any>;
     const dataKeys = [
       'refId', 'id', '_id',
       'username', 'tenantUsername', 'owner',
@@ -392,17 +390,17 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
       'leaseId', 'leaseID',
       'entityId', 'documentId',
     ];
-    for(const k of dataKeys) {
-      const v = data[k];
-      if(typeof v === 'string' && v.trim()) return v.trim();
+    for ( const k of dataKeys ) {
+      const v = data[ k ];
+      if ( typeof v === 'string' && v.trim() ) return v.trim();
     }
 
     // 3) Legacy/grab-bag fallbacks (top level object fields if any were mirrored)
     const nAny = n as any;
-    const legacyKeys = ['refId', 'id', '_id', 'username', 'tenantUsername', 'propertyId', 'leaseId', 'userId'];
-    for(const k of legacyKeys) {
-      const v = nAny?.[k];
-      if(typeof v === 'string' && v.trim()) return v.trim();
+    const legacyKeys = [ 'refId', 'id', '_id', 'username', 'tenantUsername', 'propertyId', 'leaseId', 'userId' ];
+    for ( const k of legacyKeys ) {
+      const v = nAny?.[ k ];
+      if ( typeof v === 'string' && v.trim() ) return v.trim();
     }
 
     return undefined;
@@ -417,17 +415,17 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
    * - If you purposely embedded it under a known key at delete time (adapt here).
    */
   /** Extract a domain snapshot if you embedded one inside metadata.data. */
-  private discoverSnapshot(n: Notification): Record<string, any> | undefined {
-    const data = (n.metadata?.data ?? {}) as Record<string, unknown>;
+  private discoverSnapshot( n: Notification ): Record<string, any> | undefined {
+    const data = ( n.metadata?.data ?? {} ) as Record<string, unknown>;
 
     // Preferred keys
-    const snap = data['snapshot'];
-    if(snap && typeof snap === 'object' && !Array.isArray(snap)) {
+    const snap = data[ 'snapshot' ];
+    if ( snap && typeof snap === 'object' && !Array.isArray( snap ) ) {
       return snap as Record<string, any>;
     }
 
-    const domainSnap = data['domainSnapshot'];
-    if(domainSnap && typeof domainSnap === 'object' && !Array.isArray(domainSnap)) {
+    const domainSnap = data[ 'domainSnapshot' ];
+    if ( domainSnap && typeof domainSnap === 'object' && !Array.isArray( domainSnap ) ) {
       return domainSnap as Record<string, any>;
     }
 
@@ -445,8 +443,8 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
    * Build a compact, friendly metadata grid for the UI.
    * - Pulls common keys first, then adds a few extra fields (up to 8) for context.
    */
-  private extractPrimaryMeta(n: Notification) {
-    const meta = (n.metadata ?? {}) as Record<string, any>;
+  private extractPrimaryMeta( n: Notification ) {
+    const meta = ( n.metadata ?? {} ) as Record<string, any>;
     const candidates = [
       'propertyID', 'propertyId', 'propId',
       'tenantID', 'tenantId',
@@ -457,19 +455,19 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
       'filePath', 'path', 'targetId',
     ];
 
-    const rows: Array<{key: string; value: any}> = [];
-    for(const key of candidates) {
-      const v = meta[key];
-      if(v !== undefined && v !== null && (typeof v !== 'string' || v.trim() !== '')) {
-        rows.push({key, value: v});
+    const rows: Array<{ key: string; value: any; }> = [];
+    for ( const key of candidates ) {
+      const v = meta[ key ];
+      if ( v !== undefined && v !== null && ( typeof v !== 'string' || v.trim() !== '' ) ) {
+        rows.push( { key, value: v } );
       }
     }
 
     // Add a few extras for context (avoid overwhelming the UI)
-    const extras = Object.keys(meta)
-      .filter((k) => !candidates.includes(k))
-      .slice(0, 8);
-    for(const k of extras) rows.push({key: k, value: meta[k]});
+    const extras = Object.keys( meta )
+      .filter( ( k ) => !candidates.includes( k ) )
+      .slice( 0, 8 );
+    for ( const k of extras ) rows.push( { key: k, value: meta[ k ] } );
 
     return rows;
   }
@@ -478,21 +476,21 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
   private authHeaders(): HttpHeaders {
     let token: string | null = null;
     try {
-      token = localStorage.getItem('auth_token');
+      token = localStorage.getItem( 'auth_token' );
     } catch {}
-    return token ? new HttpHeaders({Authorization: `Bearer ${token}`}) : new HttpHeaders();
+    return token ? new HttpHeaders( { Authorization: `Bearer ${ token }` } ) : new HttpHeaders();
   }
 
   /** Choose a sensible display image from metadata, fall back to dummy. */
-  protected getUserImage(n: Notification): string {
+  protected getUserImage( n: Notification ): string {
     const data = n?.metadata?.data ?? {};
-    const image = typeof data['image'] === 'string' ? data['image'].trim() : '';
-    return image || this.filterImagesBasedCategory(n.category);
+    const image = typeof data[ 'image' ] === 'string' ? data[ 'image' ].trim() : '';
+    return image || this.filterImagesBasedCategory( n.category );
   }
 
   // Filter dummy images base category
-  private filterImagesBasedCategory(category: TitleCategory) {
-    switch(category) {
+  private filterImagesBasedCategory( category: TitleCategory ) {
+    switch ( category ) {
       case 'User':
         return 'Images/System-images/utilitiesImages/person.jpg';
         break;
@@ -514,9 +512,9 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
   }
 
   /** If the main image fails to load, swap to dummy to avoid a broken icon. */
-  protected setFallback(ev: Event): void {
+  protected setFallback( ev: Event ): void {
     const img = ev.target as HTMLImageElement | null;
-    if(img && img.src !== this.dummyUserImg) {
+    if ( img && img.src !== this.dummyUserImg ) {
       img.src = this.dummyUserImg;
     }
   }
@@ -527,36 +525,36 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
  * - Prefers actual name, falls back to username, then to refId.
  * - Safely navigates the new NotificationMetadata shape.
  */
-  protected getUserName(meta: Record<string, any> | undefined): string {
+  protected getUserName( meta: Record<string, any> | undefined ): string {
     // Step 1: Extract `data` block from metadata
-    const data = meta?.['data'] ?? {};
+    const data = meta?.[ 'data' ] ?? {};
 
     // Step 2: Try common nested objects (User, Tenant, UpdatedUserData, UpdatedTenantData)
-    const updated = data['UpdatedUserData'] || data['UpdatedTenantData'];
-    const user = data['user'] || data['tenant'] || data['owner'];
+    const updated = data[ 'UpdatedUserData' ] || data[ 'UpdatedTenantData' ];
+    const user = data[ 'user' ] || data[ 'tenant' ] || data[ 'owner' ];
 
     // Step 3: Extract name / username fields (most common ones first)
-    const name1 = updated?.['name'];
-    const name2 = user?.['name'];
-    const username1 = updated?.['username'];
-    const username2 = user?.['username'];
+    const name1 = updated?.[ 'name' ];
+    const name2 = user?.[ 'name' ];
+    const username1 = updated?.[ 'username' ];
+    const username2 = user?.[ 'username' ];
 
     // Step 4: Some systems store flat-level data (directly under `data`)
-    const flatName = data['name'] || data['tenantName'];
-    const flatUsername = data['username'] || data['tenantUsername'];
+    const flatName = data[ 'name' ] || data[ 'tenantName' ];
+    const flatUsername = data[ 'username' ] || data[ 'tenantUsername' ];
 
     // Step 5: Fallback to metadata root-level refId (always exists in NotificationMetadata)
     const refId: string | undefined =
-      typeof meta?.['refId'] === 'string' ? meta['refId'] : undefined;
+      typeof meta?.[ 'refId' ] === 'string' ? meta[ 'refId' ] : undefined;
 
     // Step 6: Choose best available name, in priority order
     const chosen =
-      (typeof name1 === 'string' && name1.trim()) ? name1 :
-        (typeof name2 === 'string' && name2.trim()) ? name2 :
-          (typeof flatName === 'string' && flatName.trim()) ? flatName :
-            (typeof username1 === 'string' && username1.trim()) ? username1 :
-              (typeof username2 === 'string' && username2.trim()) ? username2 :
-                (typeof flatUsername === 'string' && flatUsername.trim()) ? flatUsername :
+      ( typeof name1 === 'string' && name1.trim() ) ? name1 :
+        ( typeof name2 === 'string' && name2.trim() ) ? name2 :
+          ( typeof flatName === 'string' && flatName.trim() ) ? flatName :
+            ( typeof username1 === 'string' && username1.trim() ) ? username1 :
+              ( typeof username2 === 'string' && username2.trim() ) ? username2 :
+                ( typeof flatUsername === 'string' && flatUsername.trim() ) ? flatUsername :
                   refId;
 
     // Step 7: Always return a string
@@ -569,11 +567,11 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
    */
   private getCurrentUserRole(): UserRole | undefined {
     try {
-      const roleRaw = localStorage.getItem('role');
-      if(typeof roleRaw === 'string' && roleRaw.trim()) {
+      const roleRaw = localStorage.getItem( 'role' );
+      if ( typeof roleRaw === 'string' && roleRaw.trim() ) {
         const val = roleRaw.trim().toLowerCase();
         // normalize to UserRole
-        switch(val) {
+        switch ( val ) {
           case 'admin': return 'admin';
           case 'agent': return 'agent';
           case 'tenant': return 'tenant';

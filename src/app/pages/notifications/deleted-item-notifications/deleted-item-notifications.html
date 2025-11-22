@@ -1,9 +1,8 @@
-<app-notification />
+<app-notification-dialog></app-notification-dialog>
 <app-progress-bar />
 <!-- Everything lives inside .main-panel -->
 <div *ngIf="mode !== null" class="main-panel">
   <div class="container-fluid pt-5">
-
     <!-- Loading / Error states -->
     <div class="row" *ngIf="loading">
       <div class="col-12">

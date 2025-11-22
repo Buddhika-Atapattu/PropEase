@@ -1,4 +1,4 @@
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   Component,
   Inject,
@@ -6,27 +6,27 @@ import {
   PLATFORM_ID, SimpleChanges,
   ViewChild
 } from '@angular/core';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   MatMomentDateModule
 } from '@angular/material-moment-adapter';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {MatButtonModule} from '@angular/material/button';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MatDialogModule} from '@angular/material/dialog';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {MatInputModule} from '@angular/material/input';
-import {MatPaginatorModule} from '@angular/material/paginator';
-import {MatSelectModule} from '@angular/material/select';
-import {MatSort, MatSortModule, Sort} from '@angular/material/sort';
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
-import {MatTooltipModule} from '@angular/material/tooltip';
-import {DomSanitizer} from '@angular/platform-browser';
-import {ChartType, GoogleChartsModule} from 'angular-google-charts';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { DomSanitizer } from '@angular/platform-browser';
+import { ChartType, GoogleChartsModule } from 'angular-google-charts';
 import * as FileSaver from 'file-saver';
-import {Subscription} from 'rxjs';
+import { Subscription } from 'rxjs';
 import * as XLSX from 'xlsx';
 import {
   ActivityTrackerService
@@ -34,12 +34,12 @@ import {
 import {
   User
 } from '../../../../services/APIs/apis.service';
-import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
+import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
 import {
   NotificationDialogComponent
-} from '../../../dialogs/notification/notification.component';
-import {ProgressBarComponent} from '../../../dialogs/progress-bar/progress-bar.component';
-import {SkeletonLoaderComponent} from '../../../shared/skeleton-loader/skeleton-loader.component';
+} from '../../../dialogs/notification/notificationBar.component';
+import { ProgressBarComponent } from '../../../dialogs/progress-bar/progress-bar.component';
+import { SkeletonLoaderComponent } from '../../../shared/skeleton-loader/skeleton-loader.component';
 
 interface allUsersLoginCounts {
   id: string;
@@ -138,7 +138,7 @@ export interface GoogleChartOptions {
   pieHole?: number; // for donut chart
   pieSliceText?: 'percentage' | 'value' | 'label' | 'none';
   slices?: {
-    [index: number]: {
+    [ index: number ]: {
       color?: string;
       offset?: number;
       textStyle?: {
@@ -202,7 +202,7 @@ export interface GoogleChartConfig {
   height?: number | string;
 }
 
-@Component({
+@Component( {
   selector: 'app-logged-data',
   standalone: true,
   imports: [
@@ -230,12 +230,12 @@ export interface GoogleChartConfig {
   ],
   templateUrl: './logged-data.component.html',
   styleUrl: './logged-data.component.scss',
-})
+} )
 export class LoggedDataComponent {
-  @ViewChild(NotificationDialogComponent, {static: true})
+  @ViewChild( NotificationDialogComponent, { static: true } )
   notification!: NotificationDialogComponent;
-  @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(ProgressBarComponent, {static: true})
+  @ViewChild( MatSort ) sort!: MatSort;
+  @ViewChild( ProgressBarComponent, { static: true } )
   progress!: ProgressBarComponent;
 
   @Input() user: User | null = null;
@@ -251,7 +251,7 @@ export class LoggedDataComponent {
   //<========= Logged user table and pie chart variables =========>
   protected isTableEmpty: boolean = false;
   protected userLoggedData: UserLoggedData | null = null;
-  protected displayedColumns: string[] = ['IP Address', 'Date'];
+  protected displayedColumns: string[] = [ 'IP Address', 'Date' ];
   protected dataSource = new MatTableDataSource<userTrackingLoggedData>();
   protected userLoggedTimes: number = 0;
   protected userLoggedCurrentPage: number = 1;
@@ -268,32 +268,32 @@ export class LoggedDataComponent {
 
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
     private activityTrackerService: ActivityTrackerService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    if(this.isBrowser) {
-      google.charts.load('current', {packages: ['corechart']});
-      google.charts.setOnLoadCallback(() => {});
+    this.isBrowser = isPlatformBrowser( this.platformId );
+    if ( this.isBrowser ) {
+      google.charts.load( 'current', { packages: [ 'corechart' ] } );
+      google.charts.setOnLoadCallback( () => {} );
     }
     this.iconMaker();
   }
 
   async ngOnInit(): Promise<void> {
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+    if ( this.isBrowser ) {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
+      } );
     }
 
-    if(this.startDate && this.endDate) {
-      await this.getLoggedUserLoginTracking(1, this.startDate, this.endDate);
+    if ( this.startDate && this.endDate ) {
+      await this.getLoggedUserLoginTracking( 1, this.startDate, this.endDate );
     } else {
-      await this.getLoggedUserLoginTracking(1);
+      await this.getLoggedUserLoginTracking( 1 );
     }
-    if(this.user) {
+    if ( this.user ) {
       this.username = this.user.username;
     }
   }
@@ -302,29 +302,29 @@ export class LoggedDataComponent {
 
   private iconMaker() {
     const icons = [
-      {name: 'search', path: 'Images/Icons/search.svg'},
-      {name: 'reset', path: 'Images/Icons/reset.svg'},
+      { name: 'search', path: 'Images/Icons/search.svg' },
+      { name: 'reset', path: 'Images/Icons/reset.svg' },
     ];
 
-    for(let icon of icons) {
+    for ( let icon of icons ) {
       this.matIconRegistry.addSvgIcon(
         icon.name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl(icon.path)
+        this.domSanitizer.bypassSecurityTrustResourceUrl( icon.path )
       );
     }
   }
 
-  public async refresh(username: string): Promise<void> {
+  public async refresh( username: string ): Promise<void> {
     this.username = username;
 
-    if(this.user) {
+    if ( this.user ) {
       this.user.username = username;
     }
 
     this.userLoggedCurrentPage = 1;
     this.startDate = null;
     this.endDate = null;
-    await this.getLoggedUserLoginTracking(1);
+    await this.getLoggedUserLoginTracking( 1 );
   }
 
   protected getCurrentPage() {
@@ -332,19 +332,19 @@ export class LoggedDataComponent {
   }
 
   protected totalPages(): number {
-    if(this.userLoggedTimes !== 0) return Math.ceil(this.userLoggedTimes / 10);
+    if ( this.userLoggedTimes !== 0 ) return Math.ceil( this.userLoggedTimes / 10 );
     else return 0;
   }
 
   protected getActualStart(): number {
-    const actualStart = Math.ceil(this.userLoggedCurrentPage - 3);
-    if(actualStart < 0) return 1;
+    const actualStart = Math.ceil( this.userLoggedCurrentPage - 3 );
+    if ( actualStart < 0 ) return 1;
     else return actualStart;
   }
 
   protected getActualEnd(): number {
-    const actualEnd = Math.ceil(this.userLoggedCurrentPage + 3);
-    if(
+    const actualEnd = Math.ceil( this.userLoggedCurrentPage + 3 );
+    if (
       actualEnd > this.userLoggedCurrentPage &&
       actualEnd <= this.totalPages()
     )
@@ -352,63 +352,63 @@ export class LoggedDataComponent {
     else return this.totalPages();
   }
 
-  protected async goToThePage(number: number): Promise<void> {
+  protected async goToThePage( number: number ): Promise<void> {
     this.userLoggedCurrentPage = number;
-    if(this.startDate && this.endDate) {
+    if ( this.startDate && this.endDate ) {
       await this.getLoggedUserLoginTracking(
         number,
         this.startDate,
         this.endDate
       );
     } else {
-      await this.getLoggedUserLoginTracking(number);
+      await this.getLoggedUserLoginTracking( number );
     }
   }
 
   protected async goThreePagesBack() {
-    if(this.userLoggedCurrentPage - 3 > 0) {
-      this.userLoggedCurrentPage = Math.ceil(this.userLoggedCurrentPage - 3);
-      if(this.startDate && this.endDate) {
+    if ( this.userLoggedCurrentPage - 3 > 0 ) {
+      this.userLoggedCurrentPage = Math.ceil( this.userLoggedCurrentPage - 3 );
+      if ( this.startDate && this.endDate ) {
         await this.getLoggedUserLoginTracking(
           this.userLoggedCurrentPage,
           this.startDate,
           this.endDate
         );
       } else {
-        await this.getLoggedUserLoginTracking(this.userLoggedCurrentPage);
+        await this.getLoggedUserLoginTracking( this.userLoggedCurrentPage );
       }
     } else {
       this.userLoggedCurrentPage = 1;
-      if(this.startDate && this.endDate) {
-        await this.getLoggedUserLoginTracking(1, this.startDate, this.endDate);
+      if ( this.startDate && this.endDate ) {
+        await this.getLoggedUserLoginTracking( 1, this.startDate, this.endDate );
       } else {
-        await this.getLoggedUserLoginTracking(1);
+        await this.getLoggedUserLoginTracking( 1 );
       }
     }
   }
 
   protected async goThreePagesForward() {
-    if(this.userLoggedCurrentPage + 3 < this.totalPages()) {
-      this.userLoggedCurrentPage = Math.ceil(this.userLoggedCurrentPage + 3);
-      if(this.startDate && this.endDate) {
+    if ( this.userLoggedCurrentPage + 3 < this.totalPages() ) {
+      this.userLoggedCurrentPage = Math.ceil( this.userLoggedCurrentPage + 3 );
+      if ( this.startDate && this.endDate ) {
         await this.getLoggedUserLoginTracking(
           this.userLoggedCurrentPage,
           this.startDate,
           this.endDate
         );
       } else {
-        await this.getLoggedUserLoginTracking(this.userLoggedCurrentPage);
+        await this.getLoggedUserLoginTracking( this.userLoggedCurrentPage );
       }
     } else {
       this.userLoggedCurrentPage = this.totalPages();
-      if(this.startDate && this.endDate) {
+      if ( this.startDate && this.endDate ) {
         await this.getLoggedUserLoginTracking(
           this.totalPages(),
           this.startDate,
           this.endDate
         );
       } else {
-        await this.getLoggedUserLoginTracking(this.totalPages());
+        await this.getLoggedUserLoginTracking( this.totalPages() );
       }
     }
   }
@@ -418,12 +418,12 @@ export class LoggedDataComponent {
     startDate?: Date,
     endDate?: Date
   ): Promise<void> {
-    if(!this.user) return;
+    if ( !this.user ) return;
 
     this.isLoading = true;
 
     const username = this.user.username;
-    const start = (pageNumber - 1) * 10;
+    const start = ( pageNumber - 1 ) * 10;
     const limit = 10;
 
     try {
@@ -437,7 +437,7 @@ export class LoggedDataComponent {
           endDate
         );
 
-      if(
+      if (
         response &&
         response.status === 'success' &&
         response.data &&
@@ -447,10 +447,10 @@ export class LoggedDataComponent {
         this.isPaginationOpen = this.tableAllUsersLogingTimes > 10;
         this.tableUserLoggedTimes = response.data.userTrackingData.totalCount;
         const chartUserPercentage =
-          (this.tableUserLoggedTimes / this.tableAllUsersLogingTimes) * 100;
+          ( this.tableUserLoggedTimes / this.tableAllUsersLogingTimes ) * 100;
         const otherPercentage = 100 - chartUserPercentage;
 
-        this.drawChart(chartUserPercentage, otherPercentage);
+        this.drawChart( chartUserPercentage, otherPercentage );
         this.userLoggedData = response;
         const trackingData = response.data.userTrackingData;
 
@@ -465,8 +465,8 @@ export class LoggedDataComponent {
       } else {
         this.isTableEmpty = true;
       }
-    } catch(error) {
-      console.error('Error retrieving login tracking data:', error);
+    } catch ( error ) {
+      console.error( 'Error retrieving login tracking data:', error );
       this.isTableEmpty = true;
     } finally {
       this.isLoading = false;
@@ -480,10 +480,10 @@ export class LoggedDataComponent {
     this.tablePieChart = <GoogleChartConfig> {
       title: 'User Login Activity',
       type: ChartType.PieChart,
-      columns: ['Username', 'Login Count'],
+      columns: [ 'Username', 'Login Count' ],
       data: [
-        [this.username, chartUserPercentage],
-        ['Other Users', otherPercentage],
+        [ this.username, chartUserPercentage ],
+        [ 'Other Users', otherPercentage ],
       ],
       options: {
         is3D: true,
@@ -493,7 +493,7 @@ export class LoggedDataComponent {
         fontSize: 14,
         legend: {
           position: 'right',
-          textStyle: {color: '#333', fontSize: 12},
+          textStyle: { color: '#333', fontSize: 12 },
         },
         chartArea: {
           left: 0,
@@ -502,11 +502,11 @@ export class LoggedDataComponent {
           height: '100%',
         },
         slices: {
-          0: {color: '#ff00dd'},
-          1: {color: '#22ff00'},
+          0: { color: '#ff00dd' },
+          1: { color: '#22ff00' },
         },
         tooltip: {
-          textStyle: {color: '#000'},
+          textStyle: { color: '#000' },
           showColorCode: true,
         },
       },
@@ -515,83 +515,83 @@ export class LoggedDataComponent {
     };
   }
 
-  protected sortData(sort: Sort): void {
+  protected sortData( sort: Sort ): void {
     const data = this.userLoggedData?.data.userTrackingData.data.slice() ?? [];
-    if(!sort.active || sort.direction === '') {
-      this.dataSource = new MatTableDataSource<userTrackingLoggedData>(data);
+    if ( !sort.active || sort.direction === '' ) {
+      this.dataSource = new MatTableDataSource<userTrackingLoggedData>( data );
       this.dataSource.sort = this.sort;
       return;
     }
 
-    const sortedData = data.sort((a, b) => {
+    const sortedData = data.sort( ( a, b ) => {
       const isAsc = sort.direction === 'asc';
-      switch(sort.active) {
+      switch ( sort.active ) {
         case 'ip':
-          return this.compare(a.ip, b.ip, isAsc);
+          return this.compare( a.ip, b.ip, isAsc );
         case 'date':
-          return this.compare(new Date(a.date), new Date(b.date), isAsc);
+          return this.compare( new Date( a.date ), new Date( b.date ), isAsc );
         default:
           return 0;
       }
-    });
+    } );
     this.dataSource = new MatTableDataSource<userTrackingLoggedData>(
       sortedData
     );
     this.dataSource.sort = this.sort;
   }
 
-  private compare(a: any, b: any, isAsc: boolean): number {
-    return (a < b ? -1 : a > b ? 1 : 0) * (isAsc ? 1 : -1);
+  private compare( a: any, b: any, isAsc: boolean ): number {
+    return ( a < b ? -1 : a > b ? 1 : 0 ) * ( isAsc ? 1 : -1 );
   }
 
   protected async search() {
-    if(this.startDate && this.endDate) {
-      await this.getLoggedUserLoginTracking(1, this.startDate, this.endDate);
+    if ( this.startDate && this.endDate ) {
+      await this.getLoggedUserLoginTracking( 1, this.startDate, this.endDate );
     } else {
-      await this.getLoggedUserLoginTracking(1);
+      await this.getLoggedUserLoginTracking( 1 );
     }
   }
 
   protected async reset() {
     this.startDate = null;
     this.endDate = null;
-    await this.getLoggedUserLoginTracking(1);
+    await this.getLoggedUserLoginTracking( 1 );
   }
 
   protected exportToExcel() {
     const exportData = this.userLoggedData?.data.userTrackingData.data.map(
-      (row) => ({
+      ( row ) => ( {
         Username: row.username,
         'IP Address': row.ip,
         Date: row.date,
-      })
+      } )
     );
 
     const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(
       exportData ?? []
     );
     const workbook: XLSX.WorkBook = {
-      Sheets: {'User Login Data': worksheet},
-      SheetNames: ['User Login Data'],
+      Sheets: { 'User Login Data': worksheet },
+      SheetNames: [ 'User Login Data' ],
     };
 
-    const excelBuffer: any = XLSX.write(workbook, {
+    const excelBuffer: any = XLSX.write( workbook, {
       bookType: 'xlsx',
       type: 'array',
-    });
+    } );
 
-    const blobData: Blob = new Blob([excelBuffer], {
+    const blobData: Blob = new Blob( [ excelBuffer ], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    });
+    } );
 
     FileSaver.saveAs(
       blobData,
-      `User_Login_Data_Export_${new Date().toISOString()}.xlsx`
+      `User_Login_Data_Export_${ new Date().toISOString() }.xlsx`
     );
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if(changes['user'] && this.user) {
+  ngOnChanges( changes: SimpleChanges ): void {
+    if ( changes[ 'user' ] && this.user ) {
       this.username = this.user.username;
     }
   }

@@ -1,7 +1,10 @@
+// Path: src/app/components/shared/paginator/paginator.component.ts
+
 import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
   AfterViewInit,
   Component,
+  ElementRef,
   EventEmitter,
   Inject,
   Input,
@@ -10,9 +13,16 @@ import {
   OnInit,
   Output,
   PLATFORM_ID,
-  SimpleChanges
+  SimpleChanges,
+  ViewChild,
 } from '@angular/core';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormControl,
+  FormGroup,
+} from '@angular/forms';
 import {MatMomentDateModule} from '@angular/material-moment-adapter';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatButtonModule} from '@angular/material/button';
@@ -20,17 +30,27 @@ import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatDividerModule} from '@angular/material/divider';
 import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
+import {MatIconModule} from '@angular/material/icon';
 import {MatInputModule} from '@angular/material/input';
 import {MatPaginatorModule} from '@angular/material/paginator';
 import {MatSelectModule} from '@angular/material/select';
 import {MatTooltipModule} from '@angular/material/tooltip';
-import {DomSanitizer} from '@angular/platform-browser';
-import {ActivatedRoute, Router} from '@angular/router';
-import {APIsService} from '../../../services/APIs/apis.service';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
 
-export type Extension = 'doc'
+import {PaginationUtil} from '../../../source/utility/pagination.utils';
+
+import {
+  CdkConnectedOverlay,
+  CdkOverlayOrigin,
+  ConnectedPosition,
+  OverlayModule,
+} from '@angular/cdk/overlay';
+import {Subscription} from 'rxjs';
+
+/* ========================================================================
+   SUPPORTED EXTENSIONS (FOR FILE EXPORT ICONS / TYPE)
+   ====================================================================== */
+export type Extension =
+  | 'doc'
   | 'docx'
   | 'dot'
   | 'dotx'
@@ -63,242 +83,548 @@ export type Extension = 'doc'
   | 'svg'
   | 'file';
 
+/* ========================================================================
+   DATE RANGE TYPES
+   ====================================================================== */
+
+export interface DateRange {
+  start: string | Date;
+  end: string | Date;
+}
+
+interface DateRangeForm {
+  start: FormControl<Date | string | null>;
+  end: FormControl<Date | string | null>;
+}
+
+/* ========================================================================
+   COMPONENT
+   ====================================================================== */
+
 @Component({
   selector: 'app-paginator',
   standalone: true,
   imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
-    FormsModule,
-    CommonModule,
     MatAutocompleteModule,
     MatIconModule,
     MatButtonModule,
-    ReactiveFormsModule,
     MatPaginatorModule,
     MatMomentDateModule,
-    MatSelectModule,
     MatDividerModule,
     MatDialogModule,
     MatDatepickerModule,
     MatTooltipModule,
+    OverlayModule,
   ],
   templateUrl: './paginator.component.html',
-  styleUrl: './paginator.component.scss',
+  styleUrls: ['./paginator.component.scss'],
 })
 export class PaginatorComponent
   implements OnInit, OnDestroy, AfterViewInit, OnChanges {
+
+  /* --------------------------------------------------------------------
+     INPUTS — DATA FROM PARENT
+     ----------------------------------------------------------------- */
+
   @Input({required: true}) pageIndex: number = 0;
   @Input({required: true}) pageSize: number = 0;
   @Input({required: true}) totalDataCount: number = 0;
+
   @Input() tableType: string = '';
-  @Input() pageSizeOptions: number[] = [];
   @Input() search: string = '';
   @Input({required: true}) pagination: boolean = false;
   @Input() isReload: boolean = false;
   @Input() extension!: Extension;
 
-  @Output() pageCountChange = new EventEmitter<number>();
-  @Output() pageSizeChange = new EventEmitter<number>();
-  @Output() pageIndexChange = new EventEmitter<number>();
-  @Output() searchChange = new EventEmitter<string>();
-  @Output() isReloadChange = new EventEmitter<boolean>();
-  @Output() fileExport = new EventEmitter<Extension>();
+  /** Show / hide date range UI */
+  @Input() isDateRageActive: boolean = false;
+
+  /** Optional current range from parent */
+  @Input() initialRange?: DateRange;
+
+  /* --------------------------------------------------------------------
+     OUTPUTS
+     ----------------------------------------------------------------- */
+
+  @Output() pageSizeChange: EventEmitter<number> = new EventEmitter<number>();
+  @Output() pageIndexChange: EventEmitter<number> = new EventEmitter<number>();
+  @Output() searchChange: EventEmitter<string> = new EventEmitter<string>();
+  @Output() isReloadChange: EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Output() fileExport: EventEmitter<Extension> = new EventEmitter<Extension>();
+
+  /** Emit whenever date range changes (normalised to Date objects) */
+  @Output() dateRangeChange: EventEmitter<DateRange> = new EventEmitter<DateRange>();
+  @Output() rangeChange: EventEmitter<DateRange> = new EventEmitter<DateRange>();
+
+  /* --------------------------------------------------------------------
+     VIEW CHILDREN
+     ----------------------------------------------------------------- */
+
+  /** Page size overlay instance */
+  @ViewChild('pageOptionOverlay')
+  private pageOptionOverlay?: CdkConnectedOverlay;
+
+  /** Origin element for page size overlay */
+  @ViewChild('pageOptionOrigin')
+  protected pageOptionOrigin?: CdkOverlayOrigin;
+
+  /** Page size input (if needed later) */
+  @ViewChild('pageSizeInput')
+  protected pageSizeInput?: ElementRef<HTMLInputElement>;
+
+  /* --------------------------------------------------------------------
+     LOCAL STATE
+     ----------------------------------------------------------------- */
+
+  private static readonly ONE_DAY_MS: number = 24 * 60 * 60 * 1000;
+
+  /** Browser flag (for SSR safety). */
+  protected readonly isBrowser: boolean;
+
+  /** Reactive form backing the date-range component. */
+  protected dateRangeForm!: FormGroup<DateRangeForm>;
+  private dateRangeSub?: Subscription;
+  protected dateRangeSwap: boolean = false;
+  protected dateRangeToggleEnable: boolean = false;
+
+  /** Generated page-size options. */
+  protected pageSizeOptions: number[] = [];
+  private lastTotalForOptions: number = 0;
 
   protected name: string = '';
   protected isRefreshFinished: boolean = false;
-  protected isBrowser: boolean;
 
-  // protected pageSizeOptions: number[] = [];
-  protected selectedPageSize: number = 0;
+  /** Controls whether the page-size overlay is open. */
+  protected isPageOptionOpen: boolean = false;
+
+  /** Overlay positions for page-size flyout. */
+  protected readonly overlayPositions: ConnectedPosition[] = [
+    {
+      originX: 'start',
+      originY: 'bottom',
+      overlayX: 'start',
+      overlayY: 'top',
+      offsetY: 4,
+    },
+    {
+      originX: 'start',
+      originY: 'top',
+      overlayX: 'start',
+      overlayY: 'bottom',
+      offsetY: -4,
+    },
+  ];
+
+  /** Width used for [cdkConnectedOverlayWidth]. */
+  protected pageSizeOverlayWidth: number = 0;
+
+  /* --------------------------------------------------------------------
+     CONSTRUCTOR
+     ----------------------------------------------------------------- */
 
   constructor (
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer,
-    private crypto: CryptoService,
-    private router: Router,
-    private APIsService: APIsService,
-    private route: ActivatedRoute
+    @Inject(PLATFORM_ID) private readonly platformId: Object,
+    private readonly fb: FormBuilder,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
-    this.registerCustomIcons();
+
   }
 
-  ngOnInit() {
+  /* --------------------------------------------------------------------
+     LIFECYCLE
+     ----------------------------------------------------------------- */
+
+  ngOnInit(): void {
+    this.initDateRangeForm();
+    this.generatePageOptions();
+    this.dateRangeToggleEnable = this.isDateRageActive;
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void {
+    this.updateOverlayWidth();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if(changes['pageSizeOptions'] && this.pageSizeOptions?.length > 0) {
-      const newPageSize = this.pageSizeOptions[0];
-      const shouldResetPageIndex = this.selectedPageSize !== newPageSize;
+    if(changes['totalDataCount']) {
+      const currentTotal: number = Number(changes['totalDataCount'].currentValue ?? 0);
+      const previousTotal: number = Number(changes['totalDataCount'].previousValue ?? -1);
 
-      this.selectedPageSize = newPageSize;
-
-      if(shouldResetPageIndex && this.pageIndex !== 0) {
-        this.pageIndex = 0;
-        this.pageIndexChange.emit(this.pageIndex);
+      if(currentTotal !== previousTotal) {
+        this.generatePageOptions();
       }
     }
 
     if(changes['pageSize']) {
-      const newSize = changes['pageSize'].currentValue || 0;
-      if(this.pageSize !== newSize) {
+      const newSize: number = Number(changes['pageSize'].currentValue ?? 0);
+      if(!Number.isNaN(newSize) && this.pageSize !== newSize) {
         this.pageSize = newSize;
       }
     }
   }
 
-  ngOnDestroy(): void {}
+  ngOnDestroy(): void {
+    if(this.dateRangeSub) {
+      this.dateRangeSub.unsubscribe();
+    }
+  }
 
-  private registerCustomIcons(): void {
-    const iconMap = {
-      document: 'documents.svg',
-      fileExcel: 'fileExcel.svg',
-      search: 'search.svg',
-      reset: 'reset.svg',
-      download: 'download.svg',
-      userID: 'userID.svg',
-      eye: 'eye',
-      upload: 'upload.svg',
-      pdf: 'file-types/pdf.svg',
-      txt: 'file-types/txt.svg',
-      xml: 'file-types/xml.svg',
-      excel: 'file-types/excel.svg',
-      word: 'file-types/word.svg',
-      powerpoint: 'file-types/powerpoint.svg',
-      zip: 'file-types/zip.svg',
-      file: 'file-types/file-empty.svg',
-      jpeg: 'file-types/jpeg.svg',
-      png: 'file-types/png.svg',
-      webp: 'file-types/webp.svg',
-      gif: 'file-types/gif.svg',
-      jpg: 'file-types/jpg.svg',
-      ico: 'file-types/ico.svg',
-      svg: 'file-types/svg.svg',
-      image: 'file-types/image.svg',
+  /* --------------------------------------------------------------------
+     INIT DATE RANGE FORM
+     ----------------------------------------------------------------- */
+
+  private initDateRangeForm(): void {
+    const today: Date = new Date();
+
+    // Helper to normalise incoming value
+    const initialStart: Date =
+      this.asDate(this.initialRange?.start) ?? today;
+
+    const initialEnd: Date =
+      this.asDate(this.initialRange?.end) ??
+      new Date(initialStart.getTime() + PaginatorComponent.ONE_DAY_MS);
+
+    this.dateRangeForm = this.fb.group<DateRangeForm>({
+      start: new FormControl<Date | string | null>(initialStart),
+      end: new FormControl<Date | string | null>(initialEnd),
+    });
+
+    this.dateRangeSub = this.dateRangeForm.valueChanges.subscribe(() => {
+      this.handleDateRangeChanged();
+    });
+  }
+
+  /* --------------------------------------------------------------------
+     DATE HELPERS
+     ----------------------------------------------------------------- */
+
+  /**
+   * Safely convert string | Date | null into Date | null.
+   */
+  private asDate(value: string | Date | null | undefined): Date | null {
+    if(!value) {
+      return null;
+    }
+    if(value instanceof Date) {
+      return value;
+    }
+    const parsed: Date = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  /** Called whenever the internal range form changes. */
+  private handleDateRangeChanged(): void {
+    this.fixEndDateIfNeeded();
+    this.emitNormalisedRange();
+  }
+
+  /** Ensure end is always at least 1 day after start. */
+  private fixEndDateIfNeeded(): void {
+    const start: Date | null = this.asDate(this.dateRangeForm.controls.start.value);
+    const end: Date | null = this.asDate(this.dateRangeForm.controls.end.value);
+
+    if(!start || !end) {
+      return;
+    }
+
+    const minEnd: Date = new Date(start.getTime() + PaginatorComponent.ONE_DAY_MS);
+
+    if(end.getTime() < minEnd.getTime()) {
+      this.dateRangeForm.controls.end.setValue(minEnd, {emitEvent: false});
+    }
+  }
+
+  /** Emit a normalised DateRange object to parent. */
+  private emitNormalisedRange(): void {
+    const start: Date | null = this.asDate(this.dateRangeForm.controls.start.value);
+    const end: Date | null = this.asDate(this.dateRangeForm.controls.end.value);
+
+    if(!start || !end) {
+      return;
+    }
+
+    const payload: DateRange = {
+      start,
+      end,
     };
 
-    for(const [name, path] of Object.entries(iconMap)) {
-      this.matIconRegistry.addSvgIcon(
-        name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `Images/Icons/${path}`
-        )
-      );
-    }
+    // Keep both outputs for backwards-compat
+    this.dateRangeChange.emit(payload);
+    this.rangeChange.emit(payload);
   }
 
-  protected chooceIcon(type: string): string {
-    switch(type) {
+  protected clearRange(): void {
+    this.dateRangeForm.reset();
+  }
+
+  /* --------------------------------------------------------------------
+     INTERNAL: UPDATE OVERLAY WIDTH
+     ----------------------------------------------------------------- */
+
+  protected updateOverlayWidth(): void {
+    if(!this.isBrowser) {
+      return;
+    }
+
+    setTimeout((): void => {
+      const originElement: HTMLElement | null =
+        this.pageOptionOrigin?.elementRef?.nativeElement ?? null;
+
+      if(!originElement) {
+        return;
+      }
+
+      const rect: DOMRect = originElement.getBoundingClientRect();
+      const styles: CSSStyleDeclaration = window.getComputedStyle(originElement);
+
+      const paddingLeft: number = parseFloat(styles.paddingLeft || '0');
+      const paddingRight: number = parseFloat(styles.paddingRight || '0');
+      const borderLeft: number = parseFloat(styles.borderLeftWidth || '0');
+      const borderRight: number = parseFloat(styles.borderRightWidth || '0');
+
+      // Inner usable width. You can switch to innerWidth if you prefer.
+      const innerWidth: number =
+        rect.width - paddingLeft - paddingRight - borderLeft - borderRight;
+
+      this.pageSizeOverlayWidth = rect.width > 0 ? rect.width : innerWidth;
+    });
+  }
+
+  /* --------------------------------------------------------------------
+     ICON HANDLER
+     ----------------------------------------------------------------- */
+
+  protected chooseIcon(type: string): string {
+    const ext: string = type?.toLowerCase?.() ?? '';
+
+    switch(ext) {
       case 'doc':
-        return 'word';
       case 'docx':
-        return 'word';
       case 'dot':
-        return 'word';
       case 'dotx':
-        return 'word';
       case 'rtf':
-        return 'word';
       case 'odt':
-        return 'word';
+        return 'description';
+
       case 'txt':
-        return 'txt';
+        return 'text_snippet';
+
       case 'xml':
-        return 'xml';
+        return 'code';
+
       case 'xls':
-        return 'excel';
       case 'xlsx':
-        return 'excel';
       case 'xlsm':
-        return 'excel';
       case 'xlt':
-        return 'excel';
       case 'xltx':
-        return 'excel';
       case 'ods':
-        return 'excel';
+        return 'table';
+
       case 'csv':
-        return 'excel';
       case 'tsv':
-        return 'excel';
+        return 'table_chart';
+
       case 'ppt':
-        return 'powerpoint';
       case 'pptx':
-        return 'powerpoint';
       case 'pptm':
-        return 'powerpoint';
       case 'pot':
-        return 'powerpoint';
       case 'potx':
-        return 'powerpoint';
       case 'odp':
-        return 'powerpoint';
+        return 'slideshow';
+
       case 'pdf':
-        return 'pdf';
+        return 'picture_as_pdf';
+
       case 'zip':
-        return 'zip';
+        return 'archive';
+
       case 'png':
-        return 'image';
       case 'jpeg':
-        return 'image';
-      case 'webp':
-        return 'image';
-      case 'gif':
-        return 'image';
       case 'jpg':
-        return 'image';
+      case 'webp':
+      case 'gif':
+      case 'svg':
       case 'ico':
         return 'image';
-      case 'svg':
-        return 'image';
+
       default:
-        return 'file';
+        return 'insert_drive_file';
     }
   }
 
-  protected onPageSizeChanged(newSize: number) {
+  /* --------------------------------------------------------------------
+     SEARCH HANDLER
+     ----------------------------------------------------------------- */
 
-  }
-
-  protected onTenantNameChanged(input: string) {
-    this.search = input;
-    this.searchChange.emit(this.search);
-  }
-
-  private paginationChecker(type: string): number {
-    switch(type) {
-      case 'doubleBackword':
-        return -this.pageSize * 2;
-      case 'backward':
-        return -1;
-      case 'forward':
-        return 1;
-      case 'doubleForward':
-        return this.pageSize * 2;
-      default:
-        return 0;
+  protected onSearchClick(): void {
+    if(!this.isBrowser) {
+      return;
     }
+
+    const raw: string = (this.search ?? '').toString();
+    const safeInput: string = raw.trim();
+
+    this.search = safeInput;
+    this.searchChange.emit(safeInput);
   }
 
-  protected onPageIndexChanged(type: string): void {
+  /* --------------------------------------------------------------------
+     PAGE OPTION OVERLAY HANDLERS
+     ----------------------------------------------------------------- */
 
+  protected openPageOption(): void {
+    this.updateOverlayWidth();
+    this.isPageOptionOpen = true;
   }
 
-  protected onFileExport(data: Extension) {
+  protected closePageOption(): void {
+    this.isPageOptionOpen = false;
+  }
+
+  /* --------------------------------------------------------------------
+     PAGE SIZE / INDEX HANDLERS
+     ----------------------------------------------------------------- */
+
+  protected onPageSizeChanged(input: number): void {
+    const size: number = Number(input);
+
+    if(
+      Number.isNaN(size) ||
+      !Number.isFinite(size) ||
+      !Number.isInteger(size)
+    ) {
+      return;
+    }
+
+    const safeSize: number = PaginationUtil.safeLimit(size, this.totalDataCount);
+
+    this.pageSize = safeSize;
+    this.pageSizeChange.emit(this.pageSize);
+
+    this.pageIndex = 0;
+    this.pageIndexChange.emit(this.pageIndex);
+
+    this.closePageOption();
+  }
+
+  protected onPageIndexChanged(input: number): void {
+    let index: number = Number(input);
+
+    if(
+      Number.isNaN(index) ||
+      !Number.isFinite(index) ||
+      !Number.isInteger(index)
+    ) {
+      return;
+    }
+
+    if(index < 0) {
+      index = 0;
+    }
+
+    const safeIndex: number = PaginationUtil.safeIndex(index, this.totalDataCount);
+
+    this.pageIndex = safeIndex;
+    this.pageIndexChange.emit(this.pageIndex);
+  }
+
+  /* --------------------------------------------------------------------
+     FILE EXPORT HANDLER
+     ----------------------------------------------------------------- */
+
+  protected onFileExport(data: Extension): void {
     this.fileExport.emit(data);
   }
 
-  protected refreshPage() {
+  /* --------------------------------------------------------------------
+     REFRESH HANDLER
+     ----------------------------------------------------------------- */
+
+  protected refreshPage(): void {
     this.isReload = true;
-    this.isRefreshFinished = true;
     this.isReloadChange.emit(this.isReload);
-    setTimeout(() => {
-      this.isRefreshFinished = false;
-    }, 500);
+
+    setTimeout((): void => {
+      this.isReload = false;
+      this.isReloadChange.emit(this.isReload);
+    }, 0);
+  }
+
+  /* --------------------------------------------------------------------
+     PAGE OPTION GENERATOR
+     ----------------------------------------------------------------- */
+
+  protected generatePageOptions(): void {
+    try {
+      const total: number = Number(this.totalDataCount);
+
+      if(total === this.lastTotalForOptions) {
+        return;
+      }
+
+      this.lastTotalForOptions = total;
+      this.pageSizeOptions = [];
+
+      if(
+        Number.isNaN(total) ||
+        !Number.isFinite(total) ||
+        !Number.isInteger(total) ||
+        total <= 0
+      ) {
+        this.pageSizeOptions = [5, 10, 25];
+        if(!this.pageSize || this.pageSize <= 0) {
+          this.pageSize = this.pageSizeOptions[0];
+        }
+        return;
+      }
+
+      let divider: number;
+
+      if(total > 0 && total <= 10) {
+        divider = 2;
+      } else if(total > 10 && total <= 100) {
+        divider = 10;
+      } else if(total > 100 && total <= 1000) {
+        divider = 100;
+      } else {
+        divider = 1000;
+      }
+
+      const options: number[] = [];
+
+      for(let i: number = divider; i <= total; i += divider) {
+        options.push(i);
+      }
+
+      if(options.length === 0) {
+        options.push(total);
+      }
+
+      this.pageSizeOptions = [...options];
+
+      if(
+        !this.pageSize ||
+        this.pageSize <= 0 ||
+        !this.pageSizeOptions.includes(this.pageSize)
+      ) {
+        this.pageSize = this.pageSizeOptions[0];
+      }
+    } catch(error) {
+      console.error('Failed to generate page size options:', error);
+
+      this.pageSizeOptions = [5, 10, 25];
+      if(!this.pageSize || this.pageSize <= 0) {
+        this.pageSize = this.pageSizeOptions[0];
+      }
+    }
+  }
+
+  protected toggleInputState() {
+    this.dateRangeToggleEnable = !this.dateRangeToggleEnable;
   }
 }

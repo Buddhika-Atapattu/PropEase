@@ -11,32 +11,32 @@ import {
   AfterViewInit, OnChanges,
   SimpleChanges
 } from '@angular/core';
-import {Router} from '@angular/router';
-import {MatInputModule} from '@angular/material/input';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatButtonModule} from '@angular/material/button';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import {MatIconModule} from '@angular/material/icon';
-import {MatDatepickerModule} from '@angular/material/datepicker';
+import { Router } from '@angular/router';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatButtonModule } from '@angular/material/button';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import {
   MatMomentDateModule
 } from '@angular/material-moment-adapter';
-import {MatSelectModule} from '@angular/material/select';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatCheckboxModule} from '@angular/material/checkbox';
-import {MatProgressBarModule} from '@angular/material/progress-bar';
-import {CryptoService} from '../../../services/cryptoService/crypto.service';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import {
   MAT_DIALOG_DATA, MatDialogRef, MatDialogModule
 } from '@angular/material/dialog';
-import {isPlatformBrowser, CommonModule} from '@angular/common';
-import {WindowsRefService} from '../../../services/windowRef/windowRef.service';
-import {Subscription} from 'rxjs';
-import {NotificationDialogComponent} from '../notification/notification.component';
-import {ScanService} from '../../../services/scan/scan.service';
-import {toDataURL} from 'qrcode';
-import {CloseBtnComponent} from '../../shared/buttons/close-btn/close-btn';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+import { Subscription } from 'rxjs';
+import { NotificationDialogComponent } from '../notification/notificationBar.component';
+import { ScanService } from '../../../services/scan/scan.service';
+import { toDataURL } from 'qrcode';
+import { CloseBtnComponent } from '../../shared/buttons/close-btn/close-btn';
 
 interface USBDevice {
   deviceId: string;
@@ -45,11 +45,11 @@ interface USBDevice {
   manufacturerName?: string;
   productName?: string;
   serialNumber?: string;
-  [key: string]: any;
+  [ key: string ]: any;
 }
 
 // SkeletonLoaderComponent,ProgressBarComponent,
-@Component({
+@Component( {
   selector: 'app-file-scanner',
   standalone: true,
   imports: [
@@ -73,10 +73,10 @@ interface USBDevice {
   ],
   templateUrl: './file-scanner.html',
   styleUrl: './file-scanner.scss',
-})
+} )
 export class FileScanner
   implements OnInit, OnDestroy, AfterViewInit, OnChanges {
-  @ViewChild(NotificationDialogComponent, {static: true})
+  @ViewChild( NotificationDialogComponent, { static: true } )
   notification!: NotificationDialogComponent;
   // Dialog data
   protected mode: boolean | null = null;
@@ -104,8 +104,8 @@ export class FileScanner
 
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
-    @Inject(MAT_DIALOG_DATA)
+    @Inject( PLATFORM_ID ) private platformId: Object,
+    @Inject( MAT_DIALOG_DATA )
     public data: any = {},
     public dialogRef: MatDialogRef<FileScanner>,
     private cdr: ChangeDetectorRef,
@@ -113,19 +113,19 @@ export class FileScanner
     private router: Router,
     private crypto: CryptoService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+    this.isBrowser = isPlatformBrowser( this.platformId );
+    if ( this.isBrowser ) {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
+      } );
     }
 
     this.tenantUsername = this.data.tenantUsername;
-    if(this.scanService.isElectron()) {
+    if ( this.scanService.isElectron() ) {
       this.isElectron = this.scanService.isElectron();
     }
 
-    if(!this.isElectron) {
+    if ( !this.isElectron ) {
       this.selectionMedia = 'Mobile';
     }
   }
@@ -133,31 +133,31 @@ export class FileScanner
   async ngOnInit() {
     await this.createQRCode();
 
-    if(this.isElectron) {
+    if ( this.isElectron ) {
       this.isLoading = true;
 
       try {
-        const [usbDevices, wifiDevices] = await Promise.all([
+        const [ usbDevices, wifiDevices ] = await Promise.all( [
           window.electron.getUSBDevices(),
           window.electron.detectWiFiScanners(),
-        ]);
+        ] );
 
         this.USBDevices = usbDevices;
         this.WiFiDevices = wifiDevices;
 
         const usbScannerNames = usbDevices.map(
-          (item) => item.manufacturer || item.product
+          ( item ) => item.manufacturer || item.product
         );
 
         const wifiScannerNames = wifiDevices.map(
-          (item) => item.hostname || item.ip
+          ( item ) => item.hostname || item.ip
         );
 
-        this.scanners = [...usbScannerNames, ...wifiScannerNames];
+        this.scanners = [ ...usbScannerNames, ...wifiScannerNames ];
 
-        console.log(this.scanners);
-      } catch(err) {
-        console.error('Scanner fetch failed:', err);
+        console.log( this.scanners );
+      } catch ( err ) {
+        console.error( 'Scanner fetch failed:', err );
       } finally {
         this.isLoading = false;
       }
@@ -166,8 +166,8 @@ export class FileScanner
     this.cdr.detectChanges();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if(changes['data'] && changes['data'].currentValue) {
+  ngOnChanges( changes: SimpleChanges ): void {
+    if ( changes[ 'data' ] && changes[ 'data' ].currentValue ) {
     }
   }
 
@@ -182,33 +182,33 @@ export class FileScanner
   private async createQRCode(): Promise<void> {
     try {
       const tenantUserName = this.data?.tenantUsername;
-      if(!tenantUserName) throw new Error('Tenant username is missing');
+      if ( !tenantUserName ) throw new Error( 'Tenant username is missing' );
 
       const payload = {
         tenant: tenantUserName,
         issuedAt: Date.now(),
       };
-      const uniqueToken = await this.crypto.encrypt(JSON.stringify(payload));
+      const uniqueToken = await this.crypto.encrypt( JSON.stringify( payload ) );
 
-      if(!uniqueToken) throw new Error('Encryption failed!');
+      if ( !uniqueToken ) throw new Error( 'Encryption failed!' );
 
       this.token = uniqueToken as string;
 
-      const encodedToken = encodeURIComponent(uniqueToken);
+      const encodedToken = encodeURIComponent( uniqueToken );
 
       const protocol = window.location.protocol;
       // const host = window.location.host.includes('localhost')
       //   ? PC_IP_PLUS_PORT
       //   : window.location.host;
       const host = window.location.host;
-      const baseUrl = `${protocol}//${host}`;
-      const uploadUrl = `${baseUrl}/mobile-upload/${encodedToken}`;
+      const baseUrl = `${ protocol }//${ host }`;
+      const uploadUrl = `${ baseUrl }/mobile-upload/${ encodedToken }`;
 
-      const qrCodeDataUrl = await toDataURL(uploadUrl);
+      const qrCodeDataUrl = await toDataURL( uploadUrl );
 
       this.qrDataUrl = qrCodeDataUrl;
-    } catch(error) {
-      console.error('Failed to generate QR code:', error);
+    } catch ( error ) {
+      console.error( 'Failed to generate QR code:', error );
     }
   }
 
@@ -217,29 +217,29 @@ export class FileScanner
   protected async onSelectingScanner() {
     let selectedDevice: any;
 
-    if(this.selectedScanner) {
+    if ( this.selectedScanner ) {
       selectedDevice =
         this.USBDevices.find(
-          (item) =>
+          ( item ) =>
             item.manufacturer === this.selectedScanner ||
             item.product === this.selectedScanner
         ) ||
         this.WiFiDevices.find(
-          (item) =>
+          ( item ) =>
             item.hostname === this.selectedScanner ||
             item.ip === this.selectedScanner
         );
 
-      if(selectedDevice) {
-        console.log('Selected device:', selectedDevice);
+      if ( selectedDevice ) {
+        console.log( 'Selected device:', selectedDevice );
 
         // Notify Electron to scan
         try {
-          const result = await window.electron.scanDocument(selectedDevice);
-          console.log('Scan result:', result);
+          const result = await window.electron.scanDocument( selectedDevice );
+          console.log( 'Scan result:', result );
           // Handle result (e.g., display scanned image or PDF)
-        } catch(err) {
-          console.error('Scan failed:', err);
+        } catch ( err ) {
+          console.error( 'Scan failed:', err );
         }
       }
     }
@@ -248,8 +248,8 @@ export class FileScanner
   protected onScannerChange() {}
 
   protected pannelClose() {
-    this.dialogRef.close({
+    this.dialogRef.close( {
       token: this.token,
-    });
+    } );
   }
 }

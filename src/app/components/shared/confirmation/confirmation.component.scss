@@ -32,5 +32,6 @@
   padding: 1rem;
 }
 
-:host-context(html.dark) {
+.container-fluid {
+  max-width: 500px !important;
 }

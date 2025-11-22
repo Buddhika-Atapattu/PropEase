@@ -1,4 +1,4 @@
-<app-notification></app-notification>
+<app-notification-dialog></app-notification-dialog>
 <app-progress-bar></app-progress-bar>
 
 <div *ngIf="mode !== null" class="main-panel">
@@ -40,7 +40,6 @@
         <div class="col-12">
           <app-custom-table
             [(isReload)]="adminIsReloading"
-            [pageSizeOptions]="adminPageSizeOptions"
             [(index)]="adminPageIndex"
             [pageSize]="adminPageSize"
             [pagination]="true"
@@ -117,7 +116,6 @@
         <div class="col-12">
           <app-custom-table
             [(isReload)]="tenantIsReloading"
-            [pageSizeOptions]="tenantPageSizeOptions"
             [(index)]="tenantPageIndex"
             [pageSize]="tenantPageSize"
             [pagination]="true"

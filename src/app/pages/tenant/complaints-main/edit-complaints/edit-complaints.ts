@@ -1,4 +1,4 @@
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -9,13 +9,13 @@ import {
   Renderer2,
   ViewChild
 } from '@angular/core';
-import {FormsModule} from '@angular/forms';
-import {ActivatedRoute, Router} from '@angular/router';
-import {Subscription} from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 // Service and types imports
-import {APIsService, type User, type MSG} from '../../../../services/APIs/apis.service';
-import {AuthService} from '../../../../services/auth/auth.service';
+import { APIsService, type User, type MSG } from '../../../../services/APIs/apis.service';
+import { AuthService } from '../../../../services/auth/auth.service';
 import {
   PropertyService
 } from '../../../../services/property/property.service';
@@ -33,16 +33,16 @@ import {
   type PendingAttachmentClient,
   type ComplaintPriority
 } from '../../../../services/tenant/tenant.service';
-import {WindowsRefService} from '../../../../services/windowRef/windowRef.service';
+import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
 
 // Component imports
-import {NotificationDialogComponent} from '../../../../components/dialogs/notification/notification.component';
-import {ProgressBarComponent} from '../../../../components/dialogs/progress-bar/progress-bar.component';
-import {CommentsListComponent} from '../../../../components/shared/comments/comments-list.component';
-import {Dropdown} from '../../../../components/shared/dropdown/dropdown';
-import {StageIndicatorComponent, type StagePoint} from '../../../../components/shared/stageIndicator/stage-indicator.component';
-import {Textarea} from '../../../../components/shared/textarea/textarea.component';
-import {TextEditorComponent} from '../../../../components/shared/textEditor/text-editor';
+import { NotificationDialogComponent } from '../../../../components/dialogs/notification/notificationBar.component';
+import { ProgressBarComponent } from '../../../../components/dialogs/progress-bar/progress-bar.component';
+import { CommentsListComponent } from '../../../../components/shared/comments/comments-list.component';
+import { Dropdown } from '../../../../components/shared/dropdown/dropdown';
+import { StageIndicatorComponent, type StagePoint } from '../../../../components/shared/stageIndicator/stage-indicator.component';
+import { Textarea } from '../../../../components/shared/textarea/textarea.component';
+import { TextEditorComponent } from '../../../../components/shared/textEditor/text-editor';
 // import {
 //   ButtonDataType,
 //   ButtonType,
@@ -51,12 +51,12 @@ import {TextEditorComponent} from '../../../../components/shared/textEditor/text
 // } from '../../../../components/shared/custom-table/custom-table.component';
 
 // Material UI imports
-import {MatButtonModule} from '@angular/material/button';
-import {MatDialog} from '@angular/material/dialog';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatIcon} from '@angular/material/icon';
-import {MatInputModule} from '@angular/material/input';
-import {MatSelectModule} from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 
 
 interface TeamMemberTableData {
@@ -66,7 +66,7 @@ interface TeamMemberTableData {
 }
 
 
-@Component({
+@Component( {
   selector: 'app-edit-complaints',
   imports: [
     // Angular
@@ -77,24 +77,24 @@ interface TeamMemberTableData {
     MatSelectModule,
     MatFormFieldModule,
     MatButtonModule,
-    MatIcon,
+    // MatIcon,
     // Components
     NotificationDialogComponent,
     ProgressBarComponent,
     StageIndicatorComponent,
-    TextEditorComponent,
-    Dropdown,
-    Textarea,
+    // TextEditorComponent,
+    // Dropdown,
+    // Textarea,
     CommentsListComponent,
     // CustomTableComponent,
   ],
   templateUrl: './edit-complaints.html',
   styleUrl: './edit-complaints.scss'
-})
+} )
 export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
 
-  @ViewChild(NotificationDialogComponent) notification!: NotificationDialogComponent;
-  @ViewChild(ProgressBarComponent) progressBar!: ProgressBarComponent;
+  @ViewChild( NotificationDialogComponent ) notification!: NotificationDialogComponent;
+  @ViewChild( ProgressBarComponent ) progressBar!: ProgressBarComponent;
 
   // ─────────────────────────────────────────────
   // View / env state
@@ -111,35 +111,35 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
   protected readonly DEFINED_CATEGORIES: readonly ComplaintsCategory[] = COMPLAINT_CATEGORIES;
   protected readonly DEFINED_STATUS: readonly ComplaintStatus[] = COMPLAINT_STATUS;
   protected readonly COMPLAINT_PRIORITIES: readonly ComplaintPriority[] = COMPLAINT_PRIORITIES;
-  protected readonly DEFINED_AUDIENCES: string[] = ['admin', 'all', 'agent', 'developer', 'manager', 'operator', 'owner', 'system', 'tenant', 'user'];
+  protected readonly DEFINED_AUDIENCES: string[] = [ 'admin', 'all', 'agent', 'developer', 'manager', 'operator', 'owner', 'system', 'tenant', 'user' ];
   private _currentStatusPoint !: number;
-  private _status !: ComplaintClient['status'];
+  private _status !: ComplaintClient[ 'status' ];
 
   // ─────────────────────────────────────────────
   // Complaint Inserting Data
   // ─────────────────────────────────────────────
 
-  protected code !: ComplaintClient['code'];
-  private tenantId !: ComplaintClient['tenantId'];
-  private tenantUsername !: ComplaintClient['tenantName'];
-  private propertyId !: ComplaintClient['propertyId'];
-  private propertyName !: ComplaintClient['propertyName'];
-  private leaseId !: ComplaintClient['leaseId'];
-  protected title !: ComplaintClient['title'];
-  protected description !: ComplaintClient['description'];
-  protected category !: ComplaintClient['category'];
-  protected priority !: ComplaintClient['priority'];
-  protected assigneeId !: ComplaintClient['assigneeId'];
-  protected assigneeName !: ComplaintClient['assigneeName'];
-  private readonly updatedAt: ComplaintClient['updatedAt'] = new Date().toISOString();
-  protected pendingAttachments!: PendingAttachmentClient[]
-  protected comment !: ComplaintCommentClient['message'];
+  protected code !: ComplaintClient[ 'code' ];
+  private tenantId !: ComplaintClient[ 'tenantId' ];
+  private tenantUsername !: ComplaintClient[ 'tenantName' ];
+  private propertyId !: ComplaintClient[ 'propertyId' ];
+  private propertyName !: ComplaintClient[ 'propertyName' ];
+  private leaseId !: ComplaintClient[ 'leaseId' ];
+  protected title !: ComplaintClient[ 'title' ];
+  protected description !: ComplaintClient[ 'description' ];
+  protected category !: ComplaintClient[ 'category' ];
+  protected priority !: ComplaintClient[ 'priority' ];
+  protected assigneeId !: ComplaintClient[ 'assigneeId' ];
+  protected assigneeName !: ComplaintClient[ 'assigneeName' ];
+  private readonly updatedAt: ComplaintClient[ 'updatedAt' ] = new Date().toISOString();
+  protected pendingAttachments!: PendingAttachmentClient[];
+  protected comment !: ComplaintCommentClient[ 'message' ];
   protected timeline !: ComplaintTimelineEventClient;
-  private readonly timelineAt: ComplaintTimelineEventClient['at'] = new Date().toISOString();
-  private fromStatus !: ComplaintTimelineEventClient['fromStatus'];
-  private toStatus !: ComplaintTimelineEventClient['toStatus'];
-  private byUserId !: ComplaintTimelineEventClient['byUserId'];
-  protected note !: ComplaintTimelineEventClient['note'];
+  private readonly timelineAt: ComplaintTimelineEventClient[ 'at' ] = new Date().toISOString();
+  private fromStatus !: ComplaintTimelineEventClient[ 'fromStatus' ];
+  private toStatus !: ComplaintTimelineEventClient[ 'toStatus' ];
+  private byUserId !: ComplaintTimelineEventClient[ 'byUserId' ];
+  protected note !: ComplaintTimelineEventClient[ 'note' ];
 
   // ─────────────────────────────────────────────
   // Complaint Inserting Data
@@ -163,7 +163,7 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
   // ─────────────────────────────────────────────
   protected addPageSize: number = 10;
   protected addCurrentSearchTerm!: string;
-  protected addPageSizeOptions: number[] = [5, 10, 25, 50];
+  protected addPageSizeOptions: number[] = [ 5, 10, 25, 50 ];
   private _addPageIndex: number = 0;
   private _oldIndex!: number;
   protected addPageCount: number = 0;
@@ -175,7 +175,7 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
   // Team member table data for remove
   // ─────────────────────────────────────────────
   private _removePageSize: number = 10;
-  private _removePageSizeOptions: number[] = [5, 10, 25, 50];
+  private _removePageSizeOptions: number[] = [ 5, 10, 25, 50 ];
   private _removePageIndex: number = 0;
   private _removePageCount: number = 0;
   private _removeSearch: string = '';
@@ -187,7 +187,7 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
 
   constructor (
     private readonly windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly authService: AuthService,
@@ -197,34 +197,34 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
     private readonly propertyService: PropertyService,
     private readonly dialog: MatDialog,
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    this.route.url.subscribe(() => { /* reserved for future */});
+    this.isBrowser = isPlatformBrowser( this.platformId );
+    this.route.url.subscribe( () => { /* reserved for future */ } );
     this.loggedUser = this.authService.getLoggedUser;
 
-    this.route.params.subscribe(async (item): Promise<void> => {
+    this.route.params.subscribe( async ( item ): Promise<void> => {
       try {
-        const comaplaintID = item['complaintID'];
-        const res: MSG = await this.tenantService.getComplaintById(comaplaintID);
-        if(res.status !== 'success') throw new Error('Faild to get complaint!');
-        await this.dataInit(res.data);
+        const comaplaintID = item[ 'complaintID' ];
+        const res: MSG = await this.tenantService.getComplaintById( comaplaintID );
+        if ( res.status !== 'success' ) throw new Error( 'Faild to get complaint!' );
+        await this.dataInit( res.data );
       }
-      catch(error) {
-        console.error(error)
-        this.notification.notification('error', 'Faild to get complaint');
+      catch ( error ) {
+        console.error( error );
+        this.notification.notification( 'error', 'Faild to get complaint' );
         return;
       }
-    })
+    } );
   }
 
   async ngOnInit(): Promise<void> {
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {this.mode = val;});
+    if ( this.isBrowser ) {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => { this.mode = val; } );
     }
   }
 
   ngAfterViewInit(): void {
     // Attach highly-targeted listeners to the dropzone only (safer than document-level)
-    if(!this.isBrowser) return;
+    if ( !this.isBrowser ) return;
 
   }
 
@@ -233,18 +233,18 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
 
   }
 
-  protected get status(): ComplaintClient['status'] {
+  protected get status(): ComplaintClient[ 'status' ] {
     return this._status;
   }
 
-  protected set status(value: ComplaintClient['status']) {
+  protected set status( value: ComplaintClient[ 'status' ] ) {
     this._status = value;
     this.handleStatusChange();
   }
 
-  private async dataInit(complaint: ComplaintClient): Promise<void> {
+  private async dataInit( complaint: ComplaintClient ): Promise<void> {
     try {
-      if(!complaint) throw new Error('Invalid complaint!');
+      if ( !complaint ) throw new Error( 'Invalid complaint!' );
       this.code = complaint.code;
       this.tenantId = complaint.tenantId;
       this.tenantUsername = complaint.tenantName;
@@ -259,27 +259,27 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
       this.fromStatus = complaint.status;
       this.assigneeId = complaint.assigneeId;
       this.assigneeName = complaint.assigneeName;
-      await this.addUserInit(0);
+      await this.addUserInit( 0 );
 
       return;
     }
-    catch(err) {
-      console.error(err);
-      this.notification.notification('error', 'Assingin data falied!');
+    catch ( err ) {
+      console.error( err );
+      this.notification.notification( 'error', 'Assingin data falied!' );
       return;
     }
   }
 
   get adminAccess(): boolean {
     try {
-      if(!this.loggedUser) throw new Error('Logged user is invalid!');
-      const roles: string[] = ['admin', 'manager', 'operator', 'developer'];
-      const userRole: User['role'] = this.loggedUser.role;
-      if(roles.includes(userRole)) return true;
+      if ( !this.loggedUser ) throw new Error( 'Logged user is invalid!' );
+      const roles: string[] = [ 'admin', 'manager', 'operator', 'developer' ];
+      const userRole: User[ 'role' ] = this.loggedUser.role;
+      if ( roles.includes( userRole ) ) return true;
       else return false;
     }
-    catch(err) {
-      console.error(err);
+    catch ( err ) {
+      console.error( err );
       return false;
     }
   }
@@ -294,20 +294,20 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
    *  - value: numeric order position (used to fill the bar)
    */
   get STATUS_STAGE(): StagePoint[] {
-    return this.DEFINED_STATUS.map((status, index) => {
+    return this.DEFINED_STATUS.map( ( status, index ) => {
       return {
         key: status,
-        label: this.statusToLabel(status),
-        value: index * 100 / (this.DEFINED_STATUS.length - 1), // evenly spaced 0–100
+        label: this.statusToLabel( status ),
+        value: index * 100 / ( this.DEFINED_STATUS.length - 1 ), // evenly spaced 0–100
       } satisfies StagePoint;
-    });
+    } );
   }
 
   get STATUS_CURRENT_VALUE(): number {
     return this._currentStatusPoint;
   }
 
-  set STATUS_CURRENT_VALUE(value: number) {
+  set STATUS_CURRENT_VALUE( value: number ) {
     this._currentStatusPoint = value;
   }
 
@@ -317,23 +317,23 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
 
     // 02. Find its index in the defined status array
     const index = currentStatus
-      ? this.DEFINED_STATUS.indexOf(currentStatus)
+      ? this.DEFINED_STATUS.indexOf( currentStatus )
       : -1;
 
     // 03. Defensive guard: unknown status → return 0
-    if(index < 0) this.STATUS_CURRENT_VALUE = 0;
+    if ( index < 0 ) this.STATUS_CURRENT_VALUE = 0;
 
     // 04. Calculate proportional position (0 → 100)
     const lastIndex = this.DEFINED_STATUS.length - 1;
-    this.STATUS_CURRENT_VALUE = (index * 100) / lastIndex;
+    this.STATUS_CURRENT_VALUE = ( index * 100 ) / lastIndex;
   }
 
   /**
    * Convert backend-friendly status codes into readable labels.
    * You can later localize these strings or adjust styling.
    */
-  private statusToLabel(status: ComplaintStatus): string {
-    switch(status) {
+  private statusToLabel( status: ComplaintStatus ): string {
+    switch ( status ) {
       case 'new': return 'New';
       case 'triaged': return 'Triaged';
       case 'in_progress': return 'In Progress';
@@ -353,7 +353,7 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
   protected get addPageIndex(): number {
     return this._addPageIndex;
   }
-  protected set addPageIndex(value: number) {
+  protected set addPageIndex( value: number ) {
     this._addPageIndex = value;
 
     // this.addUserInit(value)
@@ -363,8 +363,8 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
   protected get addSearch(): string {
     return this._addSearch;
   }
-  protected set addSearch(value: string) {
-    this.searchUsers(value);
+  protected set addSearch( value: string ) {
+    this.searchUsers( value );
   }
 
   // addActionButtonFunction
@@ -386,18 +386,18 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
    * Live search handler (ngModelChange).
    * Always resets to page 0 on new search.
    */
-  protected async searchUsers(input: string): Promise<void> {
+  protected async searchUsers( input: string ): Promise<void> {
     try {
-      const raw: string = (input ?? '').toString();
+      const raw: string = ( input ?? '' ).toString();
       const safeInput: string = raw.trim().toLowerCase();
 
       this._addSearch = safeInput;
 
       // Reset to first page for a new search term.
-      await this.addUserInit(0);
-    } catch(err) {
-      console.error(err);
-      this.notification.notification('error', 'Failed to process user search.');
+      await this.addUserInit( 0 );
+    } catch ( err ) {
+      console.error( err );
+      this.notification.notification( 'error', 'Failed to process user search.' );
     }
   }
 
@@ -407,12 +407,12 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
     * - Computes start/end for the backend.
     * - Normalises search string and updates pagination state.
     */
-  private async addUserInit(pageIndex: number): Promise<void> {
+  private async addUserInit( pageIndex: number ): Promise<void> {
     try {
       this.isReloading = true;
 
-      const safeIndex: number = Math.max(0, Math.round(Number(pageIndex)));
-      const limit: number = Math.max(1, this.addPageSize);
+      const safeIndex: number = Math.max( 0, Math.round( Number( pageIndex ) ) );
+      const limit: number = Math.max( 1, this.addPageSize );
 
       const startIdx: number = safeIndex * limit;
       const endIdx: number = startIdx + limit;
@@ -424,41 +424,41 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
         safeSearch
       );
 
-      console.log(res);
-      if(!res || res.status !== 'success') {
-        throw new Error(res?.message || 'Loading users failed.');
+      console.log( res );
+      if ( !res || res.status !== 'success' ) {
+        throw new Error( res?.message || 'Loading users failed.' );
       }
 
       const payload = res.data;
-      if(Array.isArray(payload)) {
-        res.data.forEach((user: User) => {
-          this.addData.push({
+      if ( Array.isArray( payload ) ) {
+        res.data.forEach( ( user: User ) => {
+          this.addData.push( {
             image: user.image as string,
             name: user.name,
             role: user.role,
-          })
-        })
+          } );
+        } );
       }
 
 
       this.addTotalDataCount = res.count ?? 0;
 
       this.addPageCount =
-        this.addPageSize > 0 ? Math.ceil(this.addPageSize / limit) : 0;
+        this.addPageSize > 0 ? Math.ceil( this.addPageSize / limit ) : 0;
 
       // Clamp current page index in case count shrank.
       const maxIndex: number = this.addPageCount > 0 ? this.addPageCount - 1 : 0;
 
-      this.addPageIndex = Math.min(safeIndex, maxIndex);
+      this.addPageIndex = Math.min( safeIndex, maxIndex );
 
       // If requested page is beyond max (e.g. after bulk delete) → reload last page.
-      if(safeIndex > maxIndex && this.addPageCount > 0) {
-        await this.addUserInit(maxIndex);
+      if ( safeIndex > maxIndex && this.addPageCount > 0 ) {
+        await this.addUserInit( maxIndex );
         return;
       }
-    } catch(err) {
-      console.error('[Failed to process user loading with pagination!]: ', err);
-      this.notification.notification('error', 'Failed to process user loading.');
+    } catch ( err ) {
+      console.error( '[Failed to process user loading with pagination!]: ', err );
+      this.notification.notification( 'error', 'Failed to process user loading.' );
       this.addData = [];
       this.addTotalDataCount = 0;
       this.addPageCount = 0;

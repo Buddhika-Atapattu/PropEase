@@ -1,4 +1,4 @@
-<app-notification></app-notification>
+<app-notification-dialog></app-notification-dialog>
 <app-progress-bar></app-progress-bar>
 <div
   *ngIf="mode !== null && tenant !== null"
@@ -79,28 +79,31 @@
       </div>
     </div>
 
-    <div class="row mt-4" *ngIf="leases.length > 0">
+    <div class="row mt-4" *ngIf="leaseTableData">
       <div class="col-12">
         <h3 class="title">Lease Agreements</h3>
         <hr />
       </div>
     </div>
 
+    @if(leaseTableData){
     <app-custom-table
-      *ngIf="leases.length > 0"
       [pagination]="true"
       [(isReload)]="leaseTableIsReloading"
+      [isDateRageActive]="true"
       [pageSize]="leaseTablePageSize"
-      [pageSizeOptions]="leaseTablePageSizeOptions"
       [(index)]="leaseTablePageIndex"
-      [tableTitle]="leaseTableType"
+      [tableTitle]="leaseTableTitle"
       [(search)]="leaseTabletSearch"
-      [totalDataCount]="leaseTableTotalDataCount"
-      [fileExportExtention]="leaseTableFileExportButtonTypeByExtension"
+      [(dateRange)]="leaseTableDateRang"
+      [totalDataCount]="leaseTableTotalCount"
+      [fileExportExtention]="leaseTableFileExportExtension"
       (fileExport)="handleExportLeaseTableData($event)"
-      [(switchButton)]="leaseSwitchButton"
+      (buttonOperation)="actionButtonsOperation($event)"
+      [(switch)]="leaseSwitchButton"
       [data]="leaseTableData"
       [columns]="leaseTableColumns"
     ></app-custom-table>
+    }
   </div>
 </div>

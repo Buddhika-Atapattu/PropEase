@@ -36,6 +36,7 @@ import {AuthService} from '../../services/auth/auth.service';
 import {User} from '../../services/APIs/apis.service';
 import {MatMenuModule, MatMenuTrigger} from '@angular/material/menu';
 import {APIsService, type MSG} from '../../services/APIs/apis.service';
+import {UserInfoPanelComponent} from '../user-info-panel/user-info-panel.component';
 
 
 
@@ -49,7 +50,7 @@ export interface FullscreenMenuProfile {
 @Component({
   selector: 'app-fullscreen-menu',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatRippleModule],
+  imports: [CommonModule, MatIconModule, MatRippleModule, UserInfoPanelComponent],
   templateUrl: './fullscreen-menu.component.html',
   styleUrls: ['./fullscreen-menu.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -105,6 +106,8 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
     | '' = '';
 
   private destroy$ = new Subject<void>();
+
+  protected menuOpen: boolean = false;
 
   constructor (
     private readonly el: ElementRef<HTMLElement>,
@@ -175,15 +178,20 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
     });
 
     // Optional real-time
-    const maybeOnNew = (this.notificationService as any).onNew?.bind(this.notificationService);
-    if(typeof maybeOnNew === 'function') {
-      maybeOnNew()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (n: Notification) => this.notificationService.upsert?.(n),
-          error: () => { /* ignore; polling handles resilience */},
-        });
-    }
+    this.notificationService
+      .onNew(true) // true = play sound on each new notification
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (n: Notification) => {
+          // No need to upsert here; service already does it in handleIncoming.
+          // You can add extra UI-side effects here if needed.
+          console.log('[fullscreen-menu] new notification received:', n._id);
+        },
+        error: (err) => {
+          console.error('[fullscreen-menu] realtime notifications error', err);
+          // Polling already handles resilience, so we just log here.
+        },
+      });
 
     // Visibility-aware polling with backoff
     const visible$ = fromEvent(document, 'visibilitychange').pipe(
@@ -244,6 +252,9 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
     // release listeners + scroll lock
     this.unlisteners.forEach(u => u());
     this.applyBodyScrollLock(false);
+
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /** Toggle helpers (called by header pills) */
@@ -456,6 +467,11 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
     this.open = false;
     this.applyBodyScrollLock(false);
     this.closed.emit();
+  }
+
+  protected signalToClose(): void {
+    this.menuOpen = false;
+    this.requestClose();
   }
 
   /** Prevent background scroll when open */
