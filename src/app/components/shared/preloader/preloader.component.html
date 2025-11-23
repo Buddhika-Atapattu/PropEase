@@ -1,5 +1,6 @@
-<!-- preloader.component.html -->
-<div class="preloader-backdrop">
+@if(show) {
+
+<div class="preloader-backdrop" #preloaderBackdrop>
   <div class="preloader-shell">
     <!-- Logo -->
     <div class="preloader-logo-wrap">
@@ -11,14 +12,19 @@
       <div class="preloader-logo-glow"></div>
     </div>
 
-    <!-- Tagline -->
+    <!-- Text -->
     <h2 class="preloader-title">Welcome to PropEase</h2>
     <p class="preloader-subtitle">Preparing your property workspace…</p>
 
     <!-- Module timeline -->
     <div class="preloader-timeline">
       <div class="timeline-track">
-        <div class="timeline-fill"></div>
+        <div
+          class="timeline-fill"
+          [class.timeline-fill--error]="isError"
+          [class.timeline-fill--complete]="progressValue === 100"
+          [style.transform]="'scaleX(' + progressValue / 100 + ')'"
+        ></div>
       </div>
 
       <ul class="timeline-steps">
@@ -31,9 +37,23 @@
     </div>
 
     <!-- Animated status text -->
-    <p class="preloader-status">
-      <span class="status-dot"></span>
-      <span class="status-text">Loading modules…</span>
+    <p
+      class="preloader-status"
+      [class.preloader-status--error]="isError"
+      [class.preloader-status--complete]="progressValue === 100"
+    >
+      <span
+        class="status-dot"
+        [class.status-dot--error]="isError"
+        [class.status-dot--complete]="progressValue === 100"
+      ></span>
+
+      <span class="status-text">
+        @if (isError) { Error loading workspace… } @else if (progressValue ===
+        100) { All modules loaded. Workspace ready. } @else { Loading modules… }
+      </span>
     </p>
   </div>
 </div>
+
+}

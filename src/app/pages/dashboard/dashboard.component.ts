@@ -4,16 +4,24 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   Inject,
   NgZone,
   OnDestroy,
   OnInit,
   PLATFORM_ID,
   ViewChild,
-  ElementRef,
 } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { Router, RouterModule } from '@angular/router';
+import {
+  Router,
+  RouterModule,
+  NavigationStart,
+  NavigationEnd,
+  NavigationCancel,
+  NavigationError,
+  Event as RouterEvent
+} from '@angular/router';
 
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,11 +34,11 @@ import { NotificationComponent } from '../../components/shared/notification/noti
 import { SkeletonLoaderComponent } from '../../components/shared/skeleton-loader/skeleton-loader.component';
 import { TopProgressBarComponent } from '../../components/top-progress-bar/top-progress-bar.component';
 import { UserInfoPanelComponent } from '../../components/user-info-panel/user-info-panel.component';
-import { ActivityTrackerService } from '../../services/activityTacker/activity-tracker.service';
 import { User } from '../../services/APIs/apis.service';
 import { AssetUrlService } from '../../services/asset/asset-url.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { ExpandableService } from '../../services/expandable/expandable.service';
+import { NotificationService } from '../../services/notifications/notification-service';
 import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 
 /* Fullscreen menu */
@@ -39,7 +47,8 @@ import {
 } from '../../components/fullscreen-menu/fullscreen-menu.component';
 
 /* list-main-panel only for its static menuLists (shared source) + link type*/
-import { ListMainPanelComponent, FullscreenMenuLink } from '../../components/list-main-panel/list-main-panel.component';
+import { FullscreenMenuLink, ListMainPanelComponent } from '../../components/list-main-panel/list-main-panel.component';
+import { PreloaderComponent } from '../../components/shared/preloader/preloader.component';
 
 // ModeChangerComponent,
 @Component( {
@@ -55,6 +64,7 @@ import { ListMainPanelComponent, FullscreenMenuLink } from '../../components/lis
     UserInfoPanelComponent,
     NotificationComponent,
     BreadcrumbsComponent,
+    PreloaderComponent,
 
     /* list + fullscreen menu */
     ListMainPanelComponent,
@@ -74,6 +84,7 @@ import { ListMainPanelComponent, FullscreenMenuLink } from '../../components/lis
 export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild( 'userDesktopImage', { static: false } )
   private userimage?: ElementRef<HTMLImageElement>;
+  @ViewChild( PreloaderComponent, { static: false } ) preloaderComponent?: PreloaderComponent;
 
   /* UI state */
   protected menuOpen = false;           // user profile panel
@@ -81,6 +92,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   protected mode: boolean | null = null;
   protected isExpanded = true;
   protected isMobile = false;
+  private routerSub: Subscription | null = null;
 
   /* data */
   protected user: User | null = null;
@@ -100,7 +112,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Public asset fallbacks (handled by AssetUrlService)
   private readonly DEFAULT_USER_IMAGE = 'Images/user-images/dummy-user/dummy-user.jpg';
-  private readonly DEFAULT_COVER_NO_BG_IMAGE = 'Images/company-images/logo/logo/without-bg.webp';
+  private readonly DEFAULT_COVER_NO_BG_IMAGE = 'Images/company-images/logo/logo/without-bg-50-x-50.png';
 
   public constructor (
     private readonly windowRef: WindowsRefService,
@@ -112,6 +124,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     private readonly zone: NgZone,
     private readonly dom: DomSanitizer,
     private readonly assets: AssetUrlService,
+    private readonly notificationService: NotificationService,
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
 
@@ -130,6 +143,26 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     /* Source menu links from ListMainPanelComponent static registry */
     // Ensure your ListMainPanelComponent exposes: `public static menuLists: FullscreenMenuLink[]`
     this.linkLists = ( ListMainPanelComponent as any ).menuLists ?? [];
+
+    this.routerSub = this.router.events.subscribe( ( event: RouterEvent ) => {
+      if ( event instanceof NavigationStart ) {
+        // Optional: only react for dashboard child routes
+        if ( !event.url.startsWith( '/dashboard' ) ) return;
+
+        this.preloaderComponent?.start();
+      }
+
+      if (
+        event instanceof NavigationEnd ||
+        event instanceof NavigationCancel ||
+        event instanceof NavigationError
+      ) {
+        // small delay so it doesn't flicker on fast routes
+        setTimeout( () => {
+          this.preloaderComponent?.complete();
+        }, 200 );
+      }
+    } );
   }
 
   async ngOnInit(): Promise<void> {
@@ -232,5 +265,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
     this.expandSub?.unsubscribe();
+    this.routerSub?.unsubscribe();
+    this.routerSub = null;
   }
 }

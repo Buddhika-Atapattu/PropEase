@@ -182,7 +182,7 @@
                 name="tenantPhoneNumber"
                 placeholder="Phone Number..."
                 required
-                [class.text-danger]="!isValidCoTenantPhoneNumber"
+                [class.text-danger]="!isValidTenantPhoneNumber"
               />
             </mat-form-field>
           </div>
@@ -246,7 +246,7 @@
       <div class="row mt-4">
         <div
           *ngIf="identificationFileSelectionOption === 'file-selection'"
-          class="col-xl-8 col-md-8 col-sm-12 col-12 d-flex jsutify-content-center align-item-center mx-auto"
+          class="col-xl-8 col-md-8 col-sm-12 col-12 d-flex justify-content-center align-items-center mx-auto"
         >
           <div
             class="drop-down-container"
@@ -257,7 +257,7 @@
         </div>
         <div
           *ngIf="identificationFileSelectionOption === 'drag-and-drop'"
-          class="col-xl-8 col-md-8 col-sm-12 col-12 d-flex jsutify-content-center align-item-center mx-auto"
+          class="col-xl-8 col-md-8 col-sm-12 col-12 d-flex justify-content-center align-items-center mx-auto"
         >
           <div
             #dropZone
@@ -274,7 +274,7 @@
         </div>
         <div
           *ngIf="identificationFileSelectionOption === 'file-scan'"
-          class="col-xl-8 col-md-8 col-sm-12 col-12 d-flex jsutify-content-center align-item-center mx-auto"
+          class="col-xl-8 col-md-8 col-sm-12 col-12 d-flex justify-content-center align-items-center mx-auto"
         >
           <div class="drop-down-container" (click)="triggerScanner()">
             Click To Scan The File
@@ -300,14 +300,12 @@
       <!-- End Tenant Informations Identification File Selection Input -->
 
       <!-- Tenants Scanned File Document Preview -->
-      <div *ngIf="tenantScaannedDocumentPreview.length > 0" class="row mt-4">
+      <div *ngIf="tenantScannedDocumentPreview.length > 0" class="row mt-4">
         <div
           class="col-xl-4 col-md-6 col-sm-12 col-12 d-flex justify-content-center align-items-center"
-          *ngFor="let document of tenantScaannedDocumentPreview"
+          *ngFor="let document of tenantScannedDocumentPreview"
         >
-          <div
-            class="row document-preview-row"
-          >
+          <div class="row document-preview-row">
             <div class="col-2 d-flex justify-content-center align-items-center">
               <mat-icon
                 [svgIcon]="document.icon"
@@ -541,8 +539,8 @@
             <input
               matInput
               type="text"
-              name="coTenantFullName"
-              [(ngModel)]="coTenantFullName"
+              name="coTenantFullname"
+              [(ngModel)]="coTenantFullname"
               placeholder="Full Name..."
             />
           </mat-form-field>
@@ -916,7 +914,7 @@
                 class="example-right-align"
                 name="propertyHouserNumber"
                 readonly
-                placeholder="Year..."
+                placeholder="Build year..."
               />
             </mat-form-field>
           </div>
@@ -1150,7 +1148,7 @@
             <input
               matInput
               type="text"
-              [(ngModel)]="currencyLeaseAgreement"
+              [(ngModel)]="currency"
               name="currencyLeaseAgreement"
               aria-label="Currency"
               [matAutocomplete]="currencyChangeAuto"
@@ -1189,7 +1187,7 @@
             <input
               matInput
               type="text"
-              [(ngModel)]="paymentFrequencyLeaseAgreement"
+              [(ngModel)]="paymentFrequency"
               name="paymentFrequencyLeaseAgreement"
               aria-label="Payment Frequenct"
               [matAutocomplete]="paymentFrequencyChangeAuto"
@@ -1246,7 +1244,7 @@
             <input
               matInput
               type="text"
-              [(ngModel)]="paymentMethodLeaseAgreement"
+              [(ngModel)]="paymentMethod"
               name="paymentMethodLeaseAgreement"
               aria-label="Payment Method"
               [matAutocomplete]="paymentMethodChangeAuto"
@@ -1372,7 +1370,7 @@
             <input
               matInput
               type="text"
-              [(ngModel)]="securityDepositLeaseAgreement"
+              [(ngModel)]="securityDeposit"
               name="securityDepositLeaseAgreement"
               aria-label="Security Deposit"
               [matAutocomplete]="securityDepositChangeAuto"
@@ -1451,7 +1449,6 @@
                       <!-- Switch Button for Refundable -->
                       <switch-button
                         class="me-2"
-                        matButton
                         matTooltip="Is Refundable"
                         matTooltipPosition="above"
                         [(checked)]="securityDeposit.refundable"
@@ -1508,7 +1505,7 @@
             <input
               matInput
               type="text"
-              [(ngModel)]="rentDueDateLeaseAgreement"
+              [(ngModel)]="rentDueDate"
               name="rentDueDateLeaseAgreement"
               aria-label="Rent Due Date"
               [matAutocomplete]="rentDueDateChangeAuto"
@@ -1677,10 +1674,9 @@
             <input
               matInput
               type="text"
-              [(ngModel)]="latePaymentPenaltyLeaseAgreement"
+              [(ngModel)]="latePaymentPenaltyInput"
               name="latePaymentPenaltyLeaseAgreement"
               aria-label="Late Payment Penalty"
-              (ngModelChange)="handleLatePaymentPenaltyFilterChange($event)"
             />
             <button
               mat-icon-button
@@ -1717,13 +1713,18 @@
                     <mat-panel-title>{{ item.label }}</mat-panel-title>
                   </mat-expansion-panel-header>
                   <!-- Display the description of the late payment penalty -->
-                  <p *ngIf="!item.isEditable; else itemEditDescription">
+                  <p
+                    *ngIf="
+                      !item.isEditable;
+                      else templatSelectedLatePaymentPenalties
+                    "
+                  >
                     {{ item.description }}
                   </p>
                   <!-- Edit the description of the late payment penalty -->
 
                   <!-- DescriptionEdit Section -->
-                  <ng-template #itemEditDescription>
+                  <ng-template #templatSelectedLatePaymentPenalties>
                     <div class="row w-100">
                       <div class="col-12">
                         <mat-form-field
@@ -1810,12 +1811,9 @@
             <input
               matInput
               type="text"
-              [(ngModel)]="utilityResponsibilitiesLeaseAgreement"
+              [(ngModel)]="utilityResponsibilityInput"
               name="utilityResponsibilitiesLeaseAgreement"
               aria-label="Utility Responsibilities"
-              (ngModelChange)="
-                handleUtilityResponsibilitiesFilterChange($event)
-              "
             />
             <button
               mat-icon-button
@@ -1859,13 +1857,18 @@
                   </mat-expansion-panel-header>
 
                   <!-- Display the description of the utility responsibility -->
-                  <p *ngIf="!item.isEditable; else itemEditDescription">
+                  <p
+                    *ngIf="
+                      !item.isEditable;
+                      else templateSelectedUtilityResponsibilities
+                    "
+                  >
                     {{ item.description }}
                   </p>
                   <!-- End display the description of the utility responsibility -->
 
                   <!-- Edit the description of the utility responsibility -->
-                  <ng-template #itemEditDescription>
+                  <ng-template #templateSelectedUtilityResponsibilities>
                     <div class="row w-100">
                       <div class="col-12">
                         <mat-form-field
@@ -1952,7 +1955,7 @@
             <input
               matInput
               type="text"
-              [(ngModel)]="noticePeriodDaysLeaseAgreement"
+              [(ngModel)]="noticePeriodDays"
               name="noticePeriodDaysLeaseAgreement"
               aria-label="Notice Period Days"
               (ngModelChange)="handleNoticePeriodDaysFilterChange($event)"
@@ -1988,7 +1991,7 @@
                   <p
                     *ngIf="
                       !noticePeriodDays.isEditable;
-                      else itemEditDescription
+                      else templateNoticePeriodDays
                     "
                   >
                     {{ noticePeriodDays.description }}
@@ -1996,7 +1999,7 @@
                   <!-- Edit the description of the late payment penalty -->
 
                   <!-- DescriptionEdit Section -->
-                  <ng-template #itemEditDescription>
+                  <ng-template #templateNoticePeriodDays>
                     <div class="row w-100">
                       <div class="col-12">
                         <mat-form-field
@@ -2080,7 +2083,7 @@
             <input
               matInput
               type="text"
-              [(ngModel)]="rulesAndRegulation"
+              [(ngModel)]="rulesAndRegulationInput"
               name="rulesAndRegulation"
               aria-label="Rules And Regulations"
               (ngModelChange)="handleRulesAndRegulationsFilterChange($event)"
@@ -2152,11 +2155,16 @@
               </mat-expansion-panel-header>
 
               <!-- Description View/Edit Toggle -->
-              <p *ngIf="!item.isEditable; else itemEditDescription">
+              <p
+                *ngIf="
+                  !item.isEditable;
+                  else templateSelectedRuleAndRegulations
+                "
+              >
                 {{ item.description }}
               </p>
 
-              <ng-template #itemEditDescription>
+              <ng-template #templateSelectedRuleAndRegulations>
                 <div class="row w-100">
                   <div class="col-12">
                     <mat-form-field

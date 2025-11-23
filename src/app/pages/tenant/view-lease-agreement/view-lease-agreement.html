@@ -5,14 +5,8 @@
   class="main-panel"
   [ngClass]="mode ? 'dark' : 'light'"
 >
-  <div
-    class="container-fluid"
-    *ngIf="lease && selectedProperty && tenant; else loading"
-  >
-    <!-- Page Indicators -->
-
-    <!-- End Page Indicators -->
-
+  @if(lease && selectedProperty && tenant){
+  <div class="container-fluid">
     <!-- user-image row -->
     <div class="row user-image-row">
       <div
@@ -146,10 +140,15 @@
         <ul>
           <li>Name: {{ lease.coTenant?.fullName }}</li>
           <li>Email: {{ lease.coTenant?.email }}</li>
-          <li *ngIf="lease.coTenant?.phoneCode && lease.coTenant?.phoneNumber">
+          <li
+            *ngIf="lease.coTenant
+          && lease.coTenant.phoneNumber
+          && lease.coTenant.phoneCodeDetails
+          && lease.coTenant.phoneCodeDetails.code !== undefined"
+          >
             Contact Number: {{
-            makeStringCombineWhenItMightUndefined(lease.coTenant?.phoneCode,
-            lease.coTenant?.phoneNumber) }}
+            makeStringCombineWhenItMightUndefined(lease.coTenant.phoneCodeDetails.code,
+            lease.coTenant.phoneNumber) }}
           </li>
           <li>Gender: {{ lease.coTenant?.gender }}</li>
           <li>Relationship: {{ lease.coTenant?.relationship }}</li>
@@ -483,98 +482,159 @@
       </div>
     </div>
   </div>
-  <ng-template #loading>
-    <div class="container-fluid">
-      <div class="row mt-3">
-        <div class="col-12">
-          <app-skeleton-loader
-            [width]="'100%'"
-            [height]="'3rem'"
-            [Mode]="mode"
-            [borderRadius]="'10px'"
-          ></app-skeleton-loader>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <app-skeleton-loader
-            [width]="'100%'"
-            [height]="'3rem'"
-            [Mode]="mode"
-            [borderRadius]="'10px'"
-          ></app-skeleton-loader>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <app-skeleton-loader
-            [width]="'100%'"
-            [height]="'3rem'"
-            [Mode]="mode"
-            [borderRadius]="'10px'"
-          ></app-skeleton-loader>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <app-skeleton-loader
-            [width]="'100%'"
-            [height]="'3rem'"
-            [Mode]="mode"
-            [borderRadius]="'10px'"
-          ></app-skeleton-loader>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <app-skeleton-loader
-            [width]="'100%'"
-            [height]="'3rem'"
-            [Mode]="mode"
-            [borderRadius]="'10px'"
-          ></app-skeleton-loader>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <app-skeleton-loader
-            [width]="'100%'"
-            [height]="'3rem'"
-            [Mode]="mode"
-            [borderRadius]="'10px'"
-          ></app-skeleton-loader>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <app-skeleton-loader
-            [width]="'100%'"
-            [height]="'3rem'"
-            [Mode]="mode"
-            [borderRadius]="'10px'"
-          ></app-skeleton-loader>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <app-skeleton-loader
-            [width]="'100%'"
-            [height]="'3rem'"
-            [Mode]="mode"
-            [borderRadius]="'10px'"
-          ></app-skeleton-loader>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <app-skeleton-loader
-            [width]="'100%'"
-            [height]="'3rem'"
-            [Mode]="mode"
-            [borderRadius]="'10px'"
-          ></app-skeleton-loader>
-        </div>
+  } @else {
+  <div class="container-fluid py-3">
+    <!-- Title -->
+    <div class="row mb-3">
+      <div class="col-8">
+        <app-skeleton-loader
+          width="80%"
+          height="2.5rem"
+          [Mode]="mode"
+          borderRadius="10px"
+        ></app-skeleton-loader>
       </div>
     </div>
-  </ng-template>
+
+    <!-- Subtitle -->
+    <div class="row mb-4">
+      <div class="col-5">
+        <app-skeleton-loader
+          width="60%"
+          height="1.8rem"
+          [Mode]="mode"
+          borderRadius="10px"
+        ></app-skeleton-loader>
+      </div>
+    </div>
+
+    <!-- Section heading -->
+    <div class="row mb-2">
+      <div class="col-4">
+        <app-skeleton-loader
+          width="50%"
+          height="1.5rem"
+          [Mode]="mode"
+          borderRadius="8px"
+        ></app-skeleton-loader>
+      </div>
+    </div>
+
+    <!-- Paragraph block -->
+    <div class="row g-2 mb-4">
+      <div class="col-12">
+        <app-skeleton-loader
+          width="100%"
+          height="1.2rem"
+          [Mode]="mode"
+          borderRadius="6px"
+        ></app-skeleton-loader>
+      </div>
+      <div class="col-12">
+        <app-skeleton-loader
+          width="95%"
+          height="1.2rem"
+          [Mode]="mode"
+          borderRadius="6px"
+        ></app-skeleton-loader>
+      </div>
+      <div class="col-12">
+        <app-skeleton-loader
+          width="90%"
+          height="1.2rem"
+          [Mode]="mode"
+          borderRadius="6px"
+        ></app-skeleton-loader>
+      </div>
+    </div>
+
+    <!-- Two-column layout (address + dates) -->
+    <div class="row mb-4">
+      <div class="col-md-6 mb-3 mb-md-0">
+        <app-skeleton-loader
+          width="90%"
+          height="2rem"
+          [Mode]="mode"
+          borderRadius="8px"
+        ></app-skeleton-loader>
+      </div>
+      <div class="col-md-6">
+        <app-skeleton-loader
+          width="90%"
+          height="2rem"
+          [Mode]="mode"
+          borderRadius="8px"
+        ></app-skeleton-loader>
+      </div>
+    </div>
+
+    <!-- Another heading -->
+    <div class="row mb-2">
+      <div class="col-5">
+        <app-skeleton-loader
+          width="60%"
+          height="1.5rem"
+          [Mode]="mode"
+          borderRadius="8px"
+        ></app-skeleton-loader>
+      </div>
+    </div>
+
+    <!-- Table-like skeleton (3 rows) -->
+    <div class="row g-2 mb-4">
+      <div class="col-12">
+        <app-skeleton-loader
+          width="100%"
+          height="2.5rem"
+          [Mode]="mode"
+          borderRadius="8px"
+        ></app-skeleton-loader>
+      </div>
+      <div class="col-12">
+        <app-skeleton-loader
+          width="100%"
+          height="2.5rem"
+          [Mode]="mode"
+          borderRadius="8px"
+        ></app-skeleton-loader>
+      </div>
+      <div class="col-12">
+        <app-skeleton-loader
+          width="100%"
+          height="2.5rem"
+          [Mode]="mode"
+          borderRadius="8px"
+        ></app-skeleton-loader>
+      </div>
+    </div>
+
+    <!-- Signature area -->
+    <div class="row mt-5">
+      <div class="col-md-4">
+        <app-skeleton-loader
+          width="100%"
+          height="5rem"
+          [Mode]="mode"
+          borderRadius="12px"
+        ></app-skeleton-loader>
+      </div>
+      <div class="col-md-4 mt-4 mt-md-0">
+        <app-skeleton-loader
+          width="100%"
+          height="5rem"
+          [Mode]="mode"
+          borderRadius="12px"
+        ></app-skeleton-loader>
+      </div>
+      <div class="col-md-4 mt-4 mt-md-0">
+        <app-skeleton-loader
+          width="100%"
+          height="5rem"
+          [Mode]="mode"
+          borderRadius="12px"
+        ></app-skeleton-loader>
+      </div>
+    </div>
+  </div>
+  }
 </div>

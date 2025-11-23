@@ -82,6 +82,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isBrowser = isPlatformBrowser( this.platformId );
     this.imageService.preload( 'Images/System-images/noImage.png' );
     this.imageService.preload( 'Images/company-images/logo/logo/animation.gif' );
+    this.imageService.preload( 'Images/company-images/logo/logo/animation-02.gif' );
     this.imageService.preload( 'Images/company-images/logo/logo/without-bg.webp' );
   }
 

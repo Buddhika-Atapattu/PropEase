@@ -931,7 +931,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
       if ( error instanceof HttpErrorResponse && error.status === 404 ) {
         this.notificationDialog.notification(
-          'error',
+          'warning',
           'No lease agreements found for this tenant.',
         );
       } else {

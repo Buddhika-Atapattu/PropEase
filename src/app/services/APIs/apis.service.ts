@@ -1,8 +1,8 @@
-import {isPlatformBrowser} from '@angular/common';
-import {HttpClient, HttpParams} from '@angular/common/http';
-import {Inject, Injectable, PLATFORM_ID} from '@angular/core';
-import {getCountries} from '@yusifaliyevpro/countries';
-import {firstValueFrom} from 'rxjs';
+import { isPlatformBrowser } from '@angular/common';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { getCountries } from '@yusifaliyevpro/countries';
+import { firstValueFrom } from 'rxjs';
 
 export interface CurrencyFormat {
   country: string;
@@ -38,7 +38,7 @@ export interface CountryDetailsCustomType {
     common: string; // Commonly used name (e.g., "Eritrea")
     official: string; // Official full name
     nativeName?: {
-      [langCode: string]: {
+      [ langCode: string ]: {
         official: string;
         common: string;
       };
@@ -46,7 +46,7 @@ export interface CountryDetailsCustomType {
   };
 
   currencies?: {
-    [code: string]: {
+    [ code: string ]: {
       name: string; // Currency name (e.g., "Eritrean nakfa")
       symbol: string; // Currency symbol (e.g., "Nfk")
     };
@@ -81,7 +81,7 @@ export interface CountryDetails {
     common: string; // Commonly used name (e.g., "Eritrea")
     official: string; // Official full name
     nativeName?: {
-      [langCode: string]: {
+      [ langCode: string ]: {
         official: string;
         common: string;
       };
@@ -97,7 +97,7 @@ export interface CountryDetails {
   unMember?: boolean;
 
   currencies?: {
-    [code: string]: {
+    [ code: string ]: {
       name: string; // Currency name (e.g., "Eritrean nakfa")
       symbol: string; // Currency symbol (e.g., "Nfk")
     };
@@ -114,21 +114,21 @@ export interface CountryDetails {
   subregion?: string; // Subregion (e.g., "Eastern Africa")
 
   languages?: {
-    [langCode: string]: string; // Language map (e.g., { "eng": "English" })
+    [ langCode: string ]: string; // Language map (e.g., { "eng": "English" })
   };
 
-  latlng: [number, number]; // Latitude and longitude
+  latlng: [ number, number ]; // Latitude and longitude
   landlocked?: boolean;
   borders?: string[]; // Bordering country codes
   area: number; // Total area in square kilometers
 
   demonyms?: {
-    eng: {m: string; f: string}; // Demonyms in English
-    [langCode: string]: {m: string; f: string};
+    eng: { m: string; f: string; }; // Demonyms in English
+    [ langCode: string ]: { m: string; f: string; };
   };
 
   translations?: {
-    [langCode: string]: {
+    [ langCode: string ]: {
       official: string;
       common: string;
     };
@@ -164,7 +164,7 @@ export interface CountryDetails {
   startOfWeek?: string; // "monday", "sunday", etc.
 
   capitalInfo?: {
-    latlng: [number, number];
+    latlng: [ number, number ];
   };
 
   postalCode?: {
@@ -218,6 +218,7 @@ export interface User {
   age: number;
   image?: string | File;
   phoneNumber?: string;
+  phoneCodeDetails?: CountryCodes | null;
   bio: string;
   role:
   | 'admin'
@@ -246,7 +247,7 @@ export interface NewUser extends User {
 
 
 export type AccessMap = {
-  [module: string]: string[]; // list of actions allowed
+  [ module: string ]: string[]; // list of actions allowed
 };
 
 export interface MSG {
@@ -278,37 +279,37 @@ export interface UDER_DOC_TYPES extends MSG {
   uploadDate: Date;
   download: string;
 }
-@Injectable({
+@Injectable( {
   providedIn: 'root',
-})
+} )
 export class APIsService {
   private isBrowser: boolean;
   private baseURL: string = 'http://localhost:3000';
-  private userAPI: string = 'api-user'
+  private userAPI: string = 'api-user';
 
   constructor (
     private http: HttpClient,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject( PLATFORM_ID ) private platformId: Object
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
   }
 
   public async getAllUsers(): Promise<User[]> {
     return (
-      (await firstValueFrom(
-        this.http.get<User[]>(`${this.baseURL}/${this.userAPI}/users`)
-      ))
+      ( await firstValueFrom(
+        this.http.get<User[]>( `${ this.baseURL }/${ this.userAPI }/users` )
+      ) )
     );
   }
 
-  public async verifyUser(user: UserCredentials): Promise<MSG> {
+  public async verifyUser( user: UserCredentials ): Promise<MSG> {
     return (
-      (await firstValueFrom(
+      ( await firstValueFrom(
         this.http.post<MSG>(
-          `${this.baseURL}/${this.userAPI}/verify-user`,
+          `${ this.baseURL }/${ this.userAPI }/verify-user`,
           user
         )
-      ))
+      ) )
     );
   }
 
@@ -327,7 +328,7 @@ export class APIsService {
   ): Promise<MSG> {
     return await firstValueFrom(
       this.http.put<MSG>(
-        `${this.baseURL}/${this.userAPI}/user-update/${username}`,
+        `${ this.baseURL }/${ this.userAPI }/user-update/${ username }`,
         user
       )
     );
@@ -339,63 +340,63 @@ export class APIsService {
     search?: string
   ): Promise<MSG> {
     let params = new HttpParams();
-    if(search !== undefined) {
-      params = params.set('search', search.trim());
+    if ( search !== undefined ) {
+      params = params.set( 'search', search.trim() );
     }
     return await firstValueFrom(
       this.http.get<MSG>(
-        `${this.baseURL}/${this.userAPI}/users-with-pagination/${start}/${limit}`,
-        {params}
+        `${ this.baseURL }/${ this.userAPI }/users-with-pagination/${ start }/${ limit }`,
+        { params }
       )
-    )
+    );
   }
 
   public async getAllUserCount(): Promise<MSG> {
     return await firstValueFrom(
       this.http.get<MSG>(
-        `${this.baseURL}/${this.userAPI}/users-count`,
-      )
-    )
-  }
-
-  public async getUserByUsername(username: string): Promise<validateType> {
-    return await firstValueFrom(
-      this.http.get<validateType>(
-        `${this.baseURL}/${this.userAPI}/user-username/${username}`
+        `${ this.baseURL }/${ this.userAPI }/users-count`,
       )
     );
   }
 
-  public async getUserByEmail(email: string): Promise<validateType> {
+  public async getUserByUsername( username: string ): Promise<validateType> {
     return await firstValueFrom(
       this.http.get<validateType>(
-        `${this.baseURL}/${this.userAPI}/user-email/${email}`
+        `${ this.baseURL }/${ this.userAPI }/user-username/${ username }`
       )
     );
   }
 
-  public async getUserByPhone(phone: string): Promise<MSG> {
+  public async getUserByEmail( email: string ): Promise<validateType> {
+    return await firstValueFrom(
+      this.http.get<validateType>(
+        `${ this.baseURL }/${ this.userAPI }/user-email/${ email }`
+      )
+    );
+  }
+
+  public async getUserByPhone( phone: string ): Promise<MSG> {
     return await firstValueFrom(
       this.http.get<MSG>(
-        `${this.baseURL}/${this.userAPI}/user-phone/${phone}`
+        `${ this.baseURL }/${ this.userAPI }/user-phone/${ phone }`
       )
     );
   }
 
-  public async createNewUser(data: FormData): Promise<MSG> {
+  public async createNewUser( data: FormData ): Promise<MSG> {
     return await firstValueFrom(
       this.http.post<MSG>(
-        `${this.baseURL}/${this.userAPI}/create-user`,
+        `${ this.baseURL }/${ this.userAPI }/create-user`,
         data
       )
     );
   }
 
-  public async generateToken(username: string): Promise<MSG> {
+  public async generateToken( username: string ): Promise<MSG> {
     return await firstValueFrom(
       this.http.post<MSG>(
-        `${this.baseURL}/${this.userAPI}/generate-token`,
-        {username: username}
+        `${ this.baseURL }/${ this.userAPI }/generate-token`,
+        { username: username }
       )
     );
   }
@@ -406,44 +407,44 @@ export class APIsService {
   ): Promise<MSG> {
     return await firstValueFrom(
       this.http.post<MSG>(
-        `${this.baseURL}/${this.userAPI}/user-document-upload/${username}`,
+        `${ this.baseURL }/${ this.userAPI }/user-document-upload/${ username }`,
         data
       )
     );
   }
 
-  public async getUserByToken(token: string): Promise<MSG> {
+  public async getUserByToken( token: string ): Promise<MSG> {
     return await firstValueFrom(
       this.http.get<MSG>(
-        `${this.baseURL}/${this.userAPI}/user-token/${token}`
+        `${ this.baseURL }/${ this.userAPI }/user-token/${ token }`
       )
     );
   }
 
-  public async getUserDocuments(username: string): Promise<UDER_DOC_TYPES> {
+  public async getUserDocuments( username: string ): Promise<UDER_DOC_TYPES> {
     return await firstValueFrom(
       this.http.get<UDER_DOC_TYPES>(
-        `${this.baseURL}/${this.userAPI}/uploads/${username}/documents`
+        `${ this.baseURL }/${ this.userAPI }/uploads/${ username }/documents`
       )
     );
   }
 
   public async getAllCountryWithCurrency(): Promise<CountryDetails[]> {
     return await firstValueFrom(
-      this.http.get<CountryDetails[]>('https://restcountries.com/v3.1/all')
+      this.http.get<CountryDetails[]>( 'https://restcountries.com/v3.1/all' )
     );
   }
 
-  public async getCountryByName(name: string): Promise<CountryDetails[]> {
+  public async getCountryByName( name: string ): Promise<CountryDetails[]> {
     return await firstValueFrom(
       this.http.get<CountryDetails[]>(
-        `https://restcountries.com/v3.1/name/${name}?fullText=true`
+        `https://restcountries.com/v3.1/name/${ name }?fullText=true`
       )
     );
   }
 
   public async getCustomCountryDetails(): Promise<CountryDetailsCustomType[]> {
-    const countries = (await getCountries({
+    const countries = ( await getCountries( {
       fields: [
         'name',
         'currencies',
@@ -453,32 +454,32 @@ export class APIsService {
         'maps',
         'postalCode',
       ],
-    })) as CountryDetailsCustomType[];
+    } ) ) as CountryDetailsCustomType[];
     return countries;
   }
 
   public async getCountryCodes(): Promise<CountryCodes[]> {
     const countries = await this.getCustomCountryDetails();
     const countriesCodes: CountryCodes[] = [];
-    countries.forEach((country) => {
-      countriesCodes.push({
+    countries.forEach( ( country ) => {
+      countriesCodes.push( {
         name: country.name.common,
-        code: (country.idd?.root ?? '') + (country.idd?.suffixes?.[0] ?? ''),
+        code: ( country.idd?.root ?? '' ) + ( country.idd?.suffixes?.[ 0 ] ?? '' ),
         flags: {
           png: country.flags.png,
           svg: country.flags.svg,
           alt: country.flags.alt,
         },
-      });
-    });
+      } );
+    } );
 
     return countriesCodes;
   }
 
-  public async deleteUserByUsername(username: string, deletedBy: string): Promise<MSG> {
+  public async deleteUserByUsername( username: string, deletedBy: string ): Promise<MSG> {
     return await firstValueFrom(
       this.http.delete<MSG>(
-        `${this.baseURL}/${this.userAPI}/user-delete/${username}/${deletedBy}`
+        `${ this.baseURL }/${ this.userAPI }/user-delete/${ username }/${ deletedBy }`
       )
     );
   }
