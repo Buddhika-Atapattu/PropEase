@@ -324,6 +324,8 @@ export interface CreateComplaintPayload {
   tenantName?: string; propertyName?: string; assigneeName?: string;
 }
 
+export type ComplaintSection = keyof ComplaintClient;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Service
 // ─────────────────────────────────────────────────────────────────────────────
@@ -384,7 +386,10 @@ export class TenantService {
     create: () => `${ this.API_TENANT_ROOT }/create-complaint`,
     byId: ( complaintID: string ) => `${ this.API_TENANT_ROOT }/complaint/${ this.safeSeg( complaintID ) }`,
     byTenant: ( username: string ) => `${ this.API_TENANT_ROOT }/complaints/tenant/${ this.safeSeg( username ) }`,
+    countByTenant: ( username: string ) => `${ this.API_TENANT_ROOT }/complaints-count/tenant/${ this.safeSeg( username ) }`,
     allComplaints: () => `${ this.API_TENANT_ROOT }/complaints/all`,
+    allComplaintsCount: () => `${ this.API_TENANT_ROOT }/complaints-count/all`,
+    allComplaintsBySection: (section: ComplaintSection) => `${ this.API_TENANT_ROOT }/complaints-by-section/all/${section}`,
     postComment: () => `${ this.API_TENANT_ROOT }/complaints/post-comments`,
   } as const;
 
@@ -670,12 +675,31 @@ export class TenantService {
     try { return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.byId( complaintID ) ) ) ); }
     catch ( e ) { return this.mapError( e ); }
   }
-  public async getAllComplaintsByTenant( username: string ): Promise<MSG> {
-    try { return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.byTenant( username ) ) ) ); }
+
+  public async getTotalCountOfComplaintsByTenant( username: string ): Promise<MSG> {
+    try {
+      return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.countByTenant( username ) ) ) );
+    }
     catch ( e ) { return this.mapError( e ); }
   }
-  public async getAllComplaints(): Promise<MSG> {
-    try { return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.allComplaints() ) ) ); }
+  public async getAllComplaintsByTenant( username: string, start: number, limit: number, search?: string ): Promise<MSG> {
+    try {
+      const params = this.toParams( { start, limit, search } );
+      return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.byTenant( username ), { params } ) ) );
+    }
+    catch ( e ) { return this.mapError( e ); }
+  }
+  public async getAllComplaints( start: number, limit: number, search?: string ): Promise<MSG> {
+    const params = this.toParams( { start, limit, search } );
+    try { return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.allComplaints(), { params } ) ) ); }
+    catch ( e ) { return this.mapError( e ); }
+  }
+  public async getAllComplaintsCount(): Promise<MSG> {
+    try { return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.allComplaintsCount() ) ) ); }
+    catch ( e ) { return this.mapError( e ); }
+  }
+  public async getAllComplaintsBySection(section: ComplaintSection): Promise<MSG> {
+    try { return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.allComplaintsBySection(section) ) ) ); }
     catch ( e ) { return this.mapError( e ); }
   }
   public async postComment( data: FormData ): Promise<MSG> {

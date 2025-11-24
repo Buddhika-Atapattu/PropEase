@@ -241,6 +241,8 @@ export interface User {
   updatedAt: Date;
 }
 
+export type UserSections = keyof User;
+
 export interface NewUser extends User {
   password: string;
 }
@@ -480,6 +482,14 @@ export class APIsService {
     return await firstValueFrom(
       this.http.delete<MSG>(
         `${ this.baseURL }/${ this.userAPI }/user-delete/${ username }/${ deletedBy }`
+      )
+    );
+  }
+
+  public async getSectionKeyFromUser( username: string, section: UserSections ): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.get<MSG>(
+        `${ this.baseURL }/${ this.userAPI }/user-section-key/${ username.trim() }/${ section.trim() }`
       )
     );
   }

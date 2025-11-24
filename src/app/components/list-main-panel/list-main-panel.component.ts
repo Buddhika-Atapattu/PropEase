@@ -33,19 +33,19 @@ import {
   OverlayModule,
 } from '@angular/cdk/overlay';
 
-import {CommonModule, isPlatformBrowser} from '@angular/common';
-import {NavigationEnd, Router} from '@angular/router';
-import {filter, Subscription} from 'rxjs';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter, Subscription } from 'rxjs';
 
-import {MatButtonModule} from '@angular/material/button';
-import {MatIconModule, MatIconRegistry} from '@angular/material/icon';
-import {MatTooltipModule} from '@angular/material/tooltip';
-import {DomSanitizer} from '@angular/platform-browser';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { DomSanitizer } from '@angular/platform-browser';
 
-import {User} from '../../services/APIs/apis.service';
-import {AuthService} from '../../services/auth/auth.service';
-import {ExpandableService} from '../../services/expandable/expandable.service';
-import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import { User } from '../../services/APIs/apis.service';
+import { AuthService } from '../../services/auth/auth.service';
+import { ExpandableService } from '../../services/expandable/expandable.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 
 /* ----------------------------------------------------------------------------
  * Menu interface
@@ -64,7 +64,7 @@ export interface FullscreenMenuLink {
 /* =============================================================================
  * COMPONENT
  * ===========================================================================*/
-@Component({
+@Component( {
   selector: 'app-list-main-panel',
   standalone: true,
   imports: [
@@ -75,8 +75,8 @@ export interface FullscreenMenuLink {
     OverlayModule,
   ],
   templateUrl: './list-main-panel.component.html',
-  styleUrls: ['./list-main-panel.component.scss'],
-})
+  styleUrls: [ './list-main-panel.component.scss' ],
+} )
 export class ListMainPanelComponent implements OnInit, OnDestroy {
   /* ---------------------------------------------------------------------------
    * INPUT + OUTPUT
@@ -86,7 +86,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
    * Whether the side panel is collapsed (icon-only) or expanded (full width).
    * Parent drives this via @Input, but we also keep it in sync with ExpandableService.
    */
-  @Input({required: true}) collapsed: boolean = false;
+  @Input( { required: true } ) collapsed: boolean = false;
 
   /**
    * Emit whenever this component decides to change collapsed state
@@ -102,7 +102,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
    * Reference to the CDK Connected Overlay that renders the submenu fly-out.
    * Used to force re-positioning after fonts/layout stabilize.
    */
-  @ViewChild('submenuOverlay')
+  @ViewChild( 'submenuOverlay' )
   private submenuOverlay?: CdkConnectedOverlay;
 
   /* ---------------------------------------------------------------------------
@@ -124,13 +124,13 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
   protected currecntURL: string = '';          // last segment under /dashboard/...
   protected activeParentRoute: string = '';    // parent route segment after /dashboard
   protected currentFullURL: string = '';       // full URL after redirects
-  private currentURLCommand: string[] = []
+  private currentURLCommand: string[] = [];
 
   /** Logged user (to be used later for role-based menus if needed). */
   protected loggedUser: User | null = null;
 
   /** Signal controlling visual expand/collapse state (backed by ExpandableService). */
-  public isExpanded = signal<boolean>(true);
+  public isExpanded = signal<boolean>( true );
 
   /**
    * Index of the dropdown that is open in expanded mode (normal dropdowns).
@@ -191,7 +191,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     {
       url: '/dashboard/home',
       unit: 'home',
-      commands: ['home'],
+      commands: [ 'home' ],
       mat_icon: 'home-icon',
       icon_text: 'Home',
       toolTip: 'Home',
@@ -199,7 +199,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     {
       url: '/dashboard/properties/list',
       unit: 'properties',
-      commands: ['properties', 'list'],
+      commands: [ 'properties', 'list' ],
       mat_icon: 'property-icon',
       icon_text: 'Properties',
       toolTip: 'Properties',
@@ -207,7 +207,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     {
       url: '/dashboard/users/list',
       unit: 'users',
-      commands: ['users', 'list'],
+      commands: [ 'users', 'list' ],
       mat_icon: 'users-icon',
       icon_text: 'Users',
       toolTip: 'Users',
@@ -215,16 +215,16 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     {
       // parent (segment only) for active state
       url: null,
-      commands: ['tenant'],
+      commands: [ 'tenant' ],
       unit: 'tenant',
       mat_icon: 'tenant-icon',
       icon_text: 'Tenants',
       toolTip: 'Tenants',
       sub: [
         {
-          url: '/dashboard/tenant/tenant-home',
-          commands: ['tenant', 'tenant-home'],
-          unit: 'tenant-home',
+          url: '/dashboard/tenant/dashboard',
+          commands: [ 'tenant', 'dashboard' ],
+          unit: 'dashboard',
           mat_icon: 'home-icon',
           icon_text: 'Home',
           toolTip: 'Tenant Home',
@@ -232,7 +232,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
         {
           url: '/dashboard/tenant/complaints',
           unit: 'complaints',
-          commands: ['tenant', 'complaints'],
+          commands: [ 'tenant', 'complaints' ],
           mat_icon: 'complaints-icon',
           icon_text: 'Complaints',
           toolTip: 'Complaints',
@@ -242,7 +242,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     {
       url: '/dashboard/agent/panel',
       unit: 'agent',
-      commands: ['agent', 'panel'],
+      commands: [ 'agent', 'panel' ],
       mat_icon: 'agent-icon',
       icon_text: 'Agents',
       toolTip: 'Agent',
@@ -250,7 +250,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     {
       url: '/dashboard/payments',
       unit: 'payments',
-      commands: ['payments'],
+      commands: [ 'payments' ],
       mat_icon: 'payment-icon',
       icon_text: 'Payments',
       toolTip: 'Payments',
@@ -258,7 +258,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     {
       url: '/dashboard/report',
       unit: 'report',
-      commands: ['report'],
+      commands: [ 'report' ],
       mat_icon: 'report-icon',
       icon_text: 'Reports',
       toolTip: 'Reports',
@@ -266,7 +266,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     {
       url: '/dashboard/log',
       unit: 'log',
-      commands: ['log'],
+      commands: [ 'log' ],
       mat_icon: 'certification-icon',
       icon_text: 'Log',
       toolTip: 'Log',
@@ -282,13 +282,13 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     private windowRef: WindowsRefService,
     private expandableService: ExpandableService,
     private router: Router,
-    @Inject(PLATFORM_ID) platformId: Object,
+    @Inject( PLATFORM_ID ) platformId: Object,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
     private authService: AuthService,
     private elementRef: ElementRef
   ) {
-    this.isBrowser = isPlatformBrowser(platformId);
+    this.isBrowser = isPlatformBrowser( platformId );
     this.loggedUser = this.authService.getLoggedUser;
 
     this.bootstrapRouterListener();
@@ -303,27 +303,27 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
    */
   private bootstrapRouterListener(): void {
     this.routerSub = this.router.events
-      .pipe(filter((e) => e instanceof NavigationEnd))
-      .subscribe((event: any) => {
+      .pipe( filter( ( e ) => e instanceof NavigationEnd ) )
+      .subscribe( ( event: any ) => {
         const navEvent = event as NavigationEnd;
         this.currentFullURL = navEvent.urlAfterRedirects;
 
-        const segments: string[] = this.currentFullURL.split('/').filter(Boolean);
-        const dashboardIndex: number = segments.indexOf('dashboard');
+        const segments: string[] = this.currentFullURL.split( '/' ).filter( Boolean );
+        const dashboardIndex: number = segments.indexOf( 'dashboard' );
 
         this.activeParentRoute =
           dashboardIndex !== -1 && segments.length > dashboardIndex + 1
-            ? segments[dashboardIndex + 1]
+            ? segments[ dashboardIndex + 1 ]
             : '';
 
         const commands: string[] = [];
         this.currentURLCommand = [];
-        segments.forEach((item) => {
-          if(item !== 'dashboard') commands.push(item);
-        })
-        this.currentURLCommand = [...commands];
-        this.currecntURL = segments[segments.length - 1] ?? '';
-      });
+        segments.forEach( ( item ) => {
+          if ( item !== 'dashboard' ) commands.push( item );
+        } );
+        this.currentURLCommand = [ ...commands ];
+        this.currecntURL = segments[ segments.length - 1 ] ?? '';
+      } );
   }
 
   /* =============================================================================
@@ -332,21 +332,21 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     // On server, avoid touching browser-only things.
-    if(!this.isBrowser) {
-      this.isExpanded.set(!this.collapsed);
+    if ( !this.isBrowser ) {
+      this.isExpanded.set( !this.collapsed );
       return;
     }
 
     // Subscribe to theme mode (light/dark).
-    this.modeSub = this.windowRef.mode$.subscribe((val: boolean | null) => {
+    this.modeSub = this.windowRef.mode$.subscribe( ( val: boolean | null ) => {
       this.mode = val;
-    });
+    } );
 
     // Keep local signal + @Input collapsed in sync with global ExpandableService.
     this.expandSub = this.expandableService.isExpanded$.subscribe(
-      (expanded: boolean) => {
-        this.isExpanded.set(expanded);
-        this.syncCollapsedFromExpanded(expanded);
+      ( expanded: boolean ) => {
+        this.isExpanded.set( expanded );
+        this.syncCollapsedFromExpanded( expanded );
       }
     );
   }
@@ -374,31 +374,31 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
    * All paths are relative to /public for Electron compatibility.
    */
   private registerIcons(): void {
-    const icons: {name: string; icon: string}[] = [
-      {name: 'home-icon', icon: 'Images/Icons/home.svg'},
-      {name: 'property-icon', icon: 'Images/Icons/property.svg'},
-      {name: 'users-icon', icon: 'Images/Icons/users.svg'},
-      {name: 'tenant-icon', icon: 'Images/Icons/tenant.svg'},
-      {name: 'agent-icon', icon: 'Images/Icons/agents.svg'},
-      {name: 'report-icon', icon: 'Images/Icons/report.svg'},
-      {name: 'owner-icon', icon: 'Images/Icons/owner.svg'},
-      {name: 'payment-icon', icon: 'Images/Icons/payments.svg'},
-      {name: 'access-icon', icon: 'Images/Icons/access-control.svg'},
-      {name: 'bill-list-icon', icon: 'Images/Icons/bill-list.svg'},
-      {name: 'certification-icon', icon: 'Images/Icons/certification.svg'},
-      {name: 'create-icon', icon: 'Images/Icons/create.svg'},
-      {name: 'documents-icon', icon: 'Images/Icons/documents.svg'},
-      {name: 'notifications-icon', icon: 'Images/Icons/notification.svg'},
-      {name: 'log-icon', icon: 'Images/Icons/log.svg'},
-      {name: 'complaints-icon', icon: 'Images/Icons/complaints.svg'},
+    const icons: { name: string; icon: string; }[] = [
+      { name: 'home-icon', icon: 'Images/Icons/home.svg' },
+      { name: 'property-icon', icon: 'Images/Icons/property.svg' },
+      { name: 'users-icon', icon: 'Images/Icons/users.svg' },
+      { name: 'tenant-icon', icon: 'Images/Icons/tenant.svg' },
+      { name: 'agent-icon', icon: 'Images/Icons/agents.svg' },
+      { name: 'report-icon', icon: 'Images/Icons/report.svg' },
+      { name: 'owner-icon', icon: 'Images/Icons/owner.svg' },
+      { name: 'payment-icon', icon: 'Images/Icons/payments.svg' },
+      { name: 'access-icon', icon: 'Images/Icons/access-control.svg' },
+      { name: 'bill-list-icon', icon: 'Images/Icons/bill-list.svg' },
+      { name: 'certification-icon', icon: 'Images/Icons/certification.svg' },
+      { name: 'create-icon', icon: 'Images/Icons/create.svg' },
+      { name: 'documents-icon', icon: 'Images/Icons/documents.svg' },
+      { name: 'notifications-icon', icon: 'Images/Icons/notification.svg' },
+      { name: 'log-icon', icon: 'Images/Icons/log.svg' },
+      { name: 'complaints-icon', icon: 'Images/Icons/complaints.svg' },
     ];
 
-    icons.forEach((iconDef: {name: string; icon: string}) => {
+    icons.forEach( ( iconDef: { name: string; icon: string; } ) => {
       this.matIconRegistry.addSvgIcon(
         iconDef.name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl(iconDef.icon)
+        this.domSanitizer.bypassSecurityTrustResourceUrl( iconDef.icon )
       );
-    });
+    } );
   }
 
   /* =============================================================================
@@ -411,19 +411,19 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
    */
   protected togglePanel(): void {
     const expanded: boolean = !this.isExpanded();
-    this.expandableService.setExpanded(expanded);
-    this.syncCollapsedFromExpanded(expanded);
-    this.updateLabelVisibility(expanded);
+    this.expandableService.setExpanded( expanded );
+    this.syncCollapsedFromExpanded( expanded );
+    this.updateLabelVisibility( expanded );
   }
 
   /**
    * Derive @Input collapsed from expanded state and emit if changed.
    */
-  private syncCollapsedFromExpanded(expanded: boolean): void {
+  private syncCollapsedFromExpanded( expanded: boolean ): void {
     const newCollapsed: boolean = !expanded;
-    if(this.collapsed !== newCollapsed) {
+    if ( this.collapsed !== newCollapsed ) {
       this.collapsed = newCollapsed;
-      this.collapsedChange.emit(newCollapsed);
+      this.collapsedChange.emit( newCollapsed );
     }
   }
 
@@ -434,8 +434,8 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
    * NOTE: We keep this DOM-level for now because it affects many small spans;
    * later this could be replaced with a structural directive if needed.
    */
-  private updateLabelVisibility(expanded: boolean): void {
-    if(!this.isBrowser) {
+  private updateLabelVisibility( expanded: boolean ): void {
+    if ( !this.isBrowser ) {
       return;
     }
 
@@ -444,20 +444,20 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
         '.delay-expand'
       ) as NodeListOf<HTMLElement>;
 
-    if(expanded) {
-      labels.forEach((el: HTMLElement) => {
+    if ( expanded ) {
+      labels.forEach( ( el: HTMLElement ) => {
         el.style.opacity = '1';
         el.style.display = 'inline-flex';
-      });
+      } );
     } else {
       // When collapsing, always close all dropdowns and any overlay submenu.
       this.closeAllDropdowns();
       this.closeSubmenu();
 
-      labels.forEach((el: HTMLElement) => {
+      labels.forEach( ( el: HTMLElement ) => {
         el.style.opacity = '0';
         el.style.display = 'none';
-      });
+      } );
     }
   }
 
@@ -478,11 +478,11 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     origin: CdkOverlayOrigin,
     index: number
   ): void {
-    if(link.sub?.length) {
+    if ( link.sub?.length ) {
       const isSameItem: boolean = this.activeSubmenuIndex === index;
 
       // CASE 1: Clicking the same item while submenu is open → close it.
-      if(isSameItem && this.submenuOpen) {
+      if ( isSameItem && this.submenuOpen ) {
         this.closeSubmenu();
         return;
       }
@@ -497,10 +497,10 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
 
       // Force CDK to recalc overlay position after view updates
       // (fonts & layout can shift right after load).
-      if(this.isBrowser) {
-        setTimeout(() => {
+      if ( this.isBrowser ) {
+        setTimeout( () => {
           this.submenuOverlay?.overlayRef?.updatePosition();
-        }, 0);
+        }, 0 );
       }
 
       return;
@@ -509,7 +509,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
     // No submenu → treat as simple navigation and reset submenu state.
     this.submenuOpen = false;
     this.activeSubmenuIndex = null;
-    this.navigateTo(link.commands);
+    this.navigateTo( link.commands );
   }
 
   /**
@@ -536,18 +536,18 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
       'ul.menu > li.open'
     );
 
-    openItems.forEach((li: Element) => {
-      li.classList.remove('open');
+    openItems.forEach( ( li: Element ) => {
+      li.classList.remove( 'open' );
 
-      li.querySelectorAll('.dropdown-icon i').forEach((icon: Element) => {
-        icon.classList.remove('fa-chevron-up');
-        icon.classList.add('fa-chevron-down');
-      });
+      li.querySelectorAll( '.dropdown-icon i' ).forEach( ( icon: Element ) => {
+        icon.classList.remove( 'fa-chevron-up' );
+        icon.classList.add( 'fa-chevron-down' );
+      } );
 
-      li.querySelectorAll('button').forEach((b: Element) => {
-        b.classList.remove('active');
-      });
-    });
+      li.querySelectorAll( 'button' ).forEach( ( b: Element ) => {
+        b.classList.remove( 'active' );
+      } );
+    } );
 
     this.currentOpenIndex = null;
   }
@@ -565,13 +565,13 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
    *
    * If parent is null, fall back to /dashboard.
    */
-  protected navigateTo(commands: string[] | null | undefined): void {
-    if(!commands || commands.length === 0) {
-      this.router.navigate(['/dashboard', 'home']);
+  protected navigateTo( commands: string[] | null | undefined ): void {
+    if ( !commands || commands.length === 0 ) {
+      this.router.navigate( [ '/dashboard', 'home' ] );
       return;
     }
 
-    this.router.navigate(['dashboard', ...commands]);
+    this.router.navigate( [ 'dashboard', ...commands ] );
     return;
   }
 
@@ -583,10 +583,10 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
    * Navigate using the provided segments.
    * This will check the path of the route then return boolean value
    */
-  protected checkRoutingPath(item: FullscreenMenuLink): boolean {
-    if(!item) return false;
-    if(this.currentURLCommand.includes(item.unit)) return true;
-    return false
+  protected checkRoutingPath( item: FullscreenMenuLink ): boolean {
+    if ( !item ) return false;
+    if ( this.currentURLCommand.includes( item.unit ) ) return true;
+    return false;
   }
 
 

@@ -39,13 +39,14 @@
       <div class="row my-2">
         <div class="col-12">
           <app-custom-table
-            [(isReload)]="adminIsReloading"
-            [(index)]="adminPageIndex"
-            [pageSize]="adminPageSize"
+            [(isReload)]="tenantIsReloading"
+            [(index)]="tenantPageIndex"
+            [pageSize]="tenantPageSize"
             [pagination]="true"
+            [(search)]="tenantSearch"
             [columns]="complaintTableColumns"
-            [data]="adminFilteredData"
-            [totalDataCount]="adminAllData.length"
+            [data]="tenantAllData"
+            [totalDataCount]="tenantTotalDataCount"
             [buttons]="actionButtons"
             (buttonOperation)="handleButtonTrigger($event)"
           ></app-custom-table>
@@ -115,13 +116,14 @@
       <div class="row my-2">
         <div class="col-12">
           <app-custom-table
-            [(isReload)]="tenantIsReloading"
-            [(index)]="tenantPageIndex"
-            [pageSize]="tenantPageSize"
+            [(isReload)]="adminIsReloading"
+            [(index)]="adminPageIndex"
+            [pageSize]="adminPageSize"
+            [(search)]="adminSearch"
             [pagination]="true"
             [columns]="complaintTableColumns"
-            [data]="tenantFilteredData"
-            [totalDataCount]="tenantAllData.length"
+            [data]="adminAllData"
+            [totalDataCount]="adminTotalDataCount"
             [buttons]="actionButtons"
             (buttonOperation)="handleButtonTrigger($event)"
           ></app-custom-table>

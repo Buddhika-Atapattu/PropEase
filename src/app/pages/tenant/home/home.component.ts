@@ -1034,7 +1034,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           : user.name;
 
         const image: string = String( user.image ?? this.defaultUserImage );
-        const contactNumber: string = String( user.phoneNumber ?? '' );
+        const contactNumber: string = String( user.contactNumber ?? '' );
         const email: string = String( user.email ?? '' );
         const username: string = String( user.username ?? '' );
 
