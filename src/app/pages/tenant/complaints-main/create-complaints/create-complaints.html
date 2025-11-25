@@ -25,7 +25,6 @@
       </div>
       <div class="row">
         <app-custom-table
-          *ngIf="properties.length > 0"
           [(isReload)]="isReloading"
           [pageSize]="pageSize"
           [pagination]="true"
@@ -33,9 +32,10 @@
           [tableTitle]="tableType"
           [(search)]="search"
           [buttons]="actionButtons"
-          [totalDataCount]="totleDataCount"
-          [data]="filteredData"
+          [totalDataCount]="totalDataCount"
+          [data]="allData"
           [columns]="tableColumns"
+          (fetchData)="fetchData()"
           (buttonOperation)="actionButtonOperations($event)"
         ></app-custom-table>
       </div>

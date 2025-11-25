@@ -53,6 +53,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { HttpErrorResponse } from '@angular/common/http';
+import { PaginationUtil } from '../../../../source/utility/pagination.utils';
 
 /** Simple row model for the property selector table */
 interface PropertyTableData {
@@ -62,6 +64,8 @@ interface PropertyTableData {
   title: string;
   type: string;
   address: Address;
+  viewButton: TableButton,
+  addButton: TableButton,
 }
 
 /** Internal pair to link a property with its lease */
@@ -135,8 +139,8 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
     { key: 'title', label: 'Title' },
     { key: 'type', label: 'Type' },
     { key: 'address', label: 'Address' },
-    { key: 'actions', label: 'View' },
-    { key: 'operation', label: 'Add' },
+    { key: 'viewButton', label: 'View' },
+    { key: 'addButton', label: 'Add' },
   ];
   protected tableType: string = 'Property Selection';
   protected actionButtons: TableButton[] = [ { 'action': 'view', 'icon': 'visibility' }, { 'action': 'add', 'icon': 'add_circle' } ];
@@ -144,12 +148,10 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
   // Pagination + data
   private _isReloading: boolean = false;
   private _pageSize: number = 10;
-  private _pageSizeOptions: number[] = [ 5, 10, 25, 50 ];
   private _pageIndex: number = 0;
   private _search: string = '';
-  private _totalDataCount: number = 0;
-  private _allData: PropertyTableData[] = [];
-  protected filteredData: PropertyTableData[] = [];
+  protected totalDataCount: number = 0;
+  protected allData: PropertyTableData[] = [];
 
   // ─────────────────────────────────────────────
   // Complaint form fields
@@ -200,6 +202,9 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
   private _dropLeaveListener?: () => void;
   private _dropListener?: () => void;
 
+  /** Quick role gate: admin-like roles can see "All Complaints" dashboard */
+
+
   public constructor (
     private readonly windowRef: WindowsRefService,
     @Inject( PLATFORM_ID ) private platformId: Object,
@@ -236,8 +241,7 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
     if ( this.isBrowser ) {
       this.modeSub = this.windowRef.mode$.subscribe( ( val ) => { this.mode = val; } );
     }
-    await this._getAllProperties();
-    this.filterProperty();
+    await this.loadTableData( this._pageIndex, this._pageSize, this._search );
   }
 
   ngAfterViewInit(): void {
@@ -272,47 +276,29 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
   // Table API getters/setters
   // ─────────────────────────────────────────────
   get isReloading(): boolean { return this._isReloading; }
-  set isReloading( value: boolean ) { this._isReloading = value; this._applyPage( 0 ); }
+  set isReloading( value: boolean ) {
+    this._isReloading = value;
+    if ( this._isReloading ) this.loadTableData( this._pageIndex, this._pageSize, this._search );
+  }
 
   get pageSize(): number { return this._pageSize; }
   set pageSize( value: number ) {
     this._pageSize = value;
-    this._applyPage( 0 );
-    this._rebuildPageSizeOptions( this.filteredData.length );
+    this.loadTableData( this._pageIndex, this._pageSize, this._search );
   }
-
-  get pageSizeOptions(): number[] { return this._pageSizeOptions; }
-  set pageSizeOptions( value: number[] ) { this._pageSizeOptions = value ?? []; }
 
   get pageIndex(): number { return this._pageIndex; }
   set pageIndex( value: number ) {
     this._pageIndex = value;
-    this._applyPage( this._pageIndex );
+    this.loadTableData( this._pageIndex, this._pageSize, this._search );
   }
 
   get search(): string { return this._search; }
   set search( value: string ) {
     this._search = ( value ?? '' ).trim();
-    if ( this._search.length === 0 ) {
-      this.filteredData = [ ...this._allData ];
-      this.totleDataCount = this.filteredData.length;
-      this._applyPage( 0 );
-      this._rebuildPageSizeOptions( this.filteredData.length );
-      return;
-    }
-    const q = this._search.toLowerCase();
-    this.filteredData = this._allData.filter( r =>
-      r.title.toLowerCase().includes( q ) ||
-      r.type.toLowerCase().includes( q ) ||
-      r.id.toLowerCase().includes( q )
-    );
-    this.totleDataCount = this.filteredData.length;
-    this._applyPage( 0 );
-    this._rebuildPageSizeOptions( this.filteredData.length );
+    this.loadTableData( this._pageIndex, this._pageSize, this._search );
   }
 
-  get totleDataCount(): number { return this._totalDataCount; }
-  set totleDataCount( value: number ) { this._totalDataCount = value; }
 
   // Make public selected property
   get property(): BackEndPropertyData {
@@ -327,115 +313,148 @@ export class CreateComplaints implements OnInit, AfterViewInit, OnDestroy {
   // ─────────────────────────────────────────────
   // Data load + assembly
   // ─────────────────────────────────────────────
-  private async _loadLeaseAndFindProperties(): Promise<PropertyWithLease[]> {
+  protected fetchData() {
+    this.loadTableData( this._pageIndex, this._pageSize, this._search );
+  }
+  private async loadTableData( index: number, limit: number, search?: string ): Promise<void> {
     try {
-      const leaseRes: MSG = await this.tenantService.getAllLeases( 0, 5 );
-      const leases: Lease[] = leaseRes.data as Lease[];
-      if ( !Array.isArray( leases ) ) throw new Error( 'Leases cannot be read!' );
-      if ( this.properties.length === 0 ) throw new Error( 'Properties are empty' );
-      this._leases = leases;
+      // 1) Get total count
+      const countRes = await this.tenantService.getLeaseCount();
 
-      // Build property-lease pairs quickly using a lookup map for performance
-      const byPropertyId = new Map<string, BackEndPropertyData>(
-        this.properties.map( p => [ String( p.id ?? '' ), p ] )
+      if ( countRes.status.toLowerCase() !== 'success' ) {
+        throw new Error( 'Failed to fetch total count of leases' );
+      }
+
+      const total: number = countRes.data;
+
+      if ( !Number.isFinite( total ) || !Number.isInteger( total ) || total < 0 ) {
+        throw new Error( 'Invalid lease total number!' );
+      }
+
+      // If no leases, just show an empty table and exit
+      if ( total === 0 ) {
+        this.allData = [];
+        return;
+      }
+
+      // 2) Pagination
+      const safeIndex: number = PaginationUtil.safeIndex( index, total );
+      const safeLimit: number = PaginationUtil.safeLimit( limit, total );
+      const safeStart: number = safeIndex * safeLimit;
+
+      // 3) Fetch paginated leases
+      const leaseRes = await this.tenantService.getAllLeases( safeStart, safeLimit );
+
+      if ( leaseRes.status.toLowerCase() !== 'success' ) {
+        throw new Error( 'Failed to fetch lease data!' );
+      }
+
+      const leases: Lease[] = leaseRes.data.leases;
+
+      // If backend returns no leases for this page, just show empty
+      if ( !Array.isArray( leases ) || leases.length === 0 ) {
+        this.allData = [];
+        return;
+      }
+
+      // 4) Build rows
+      const rows: ( PropertyTableData | null )[] = await Promise.all(
+        leases.map( async ( lease ): Promise<PropertyTableData | null> => {
+          return this.organiseTableRow( lease );
+        } )
       );
 
-      const pairs: PropertyWithLease[] = [];
-      for ( const lease of this._leases ) {
-        const prop = byPropertyId.get( String( lease.propertyID ?? '' ) );
-        if ( prop ) pairs.push( { property: prop, lease } );
-      }
+      const filteredRows: PropertyTableData[] = rows.filter(
+        ( row ): row is PropertyTableData => row !== null
+      );
 
-      if ( pairs.length === 0 ) throw new Error( 'No property matched to any lease.' );
-      return pairs;
+      // It is valid that some rows fail and are skipped
+      this.allData = filteredRows;
     } catch ( error ) {
       console.error( error );
-      return [];
+      if ( error instanceof HttpErrorResponse ) {
+        this.notification.notification( 'error', error.message );
+      } else if ( error instanceof Error ) {
+        this.notification.notification( 'error', error.message );
+      } else {
+        this.notification.notification( 'error', 'Unknown error while loading lease table.' );
+      }
     }
   }
 
-  private async _getAllProperties(): Promise<void> {
+
+  private async organiseTableRow( data: Lease ): Promise<PropertyTableData | null> {
     try {
-      if ( !this.loggedUser ) throw new Error( 'Invalid user login!' );
-      if ( this.loggedUser.role !== 'admin' ) return;
+      const propertyID: Lease[ 'leaseID' ] | undefined = data.propertyID;
 
-      this.isReloading = true;
-      const propertyRes: MSG = await this.propertyService.getAllProperties();
-      if ( propertyRes.status !== 'success' || !Array.isArray( propertyRes.data ) ) {
-        throw new Error( 'Failed to fetch properties from backend!' );
+      if ( !propertyID ) {
+        throw new Error( 'Invalid property ID!' );
       }
-      this.properties = propertyRes.data;
 
-      const pairs = await this._loadLeaseAndFindProperties();
-      if ( pairs.length === 0 ) throw new Error( 'Lease with property array is empty!' );
+      const propertyRes = await this.propertyService.getPropertySectionById(
+        propertyID,
+        [ 'images', 'title', 'address', 'type' ]
+      );
 
-      this._propertiesWithLease = pairs;
+      if ( propertyRes.status.toLowerCase() !== 'success' ) {
+        throw new Error( 'Failed to fetch section of the property!' );
+      }
 
-      // Build master rows
-      this._allData = this._buildPropertyRows( this._propertiesWithLease );
-      this.totleDataCount = this._allData.length;
+      const values = propertyRes.data?.values as {
+        images?: BackEndPropertyData[ 'images' ];
+        title?: BackEndPropertyData[ 'title' ];
+        type?: BackEndPropertyData[ 'type' ];
+        address?: BackEndPropertyData[ 'address' ];
+      };
 
-      // Pagination
-      this._applyPage( 0 );
-      this._rebuildPageSizeOptions( this._allData.length );
-      this.isReloading = false;
-      return;
+      if ( !values ) {
+        throw new Error( 'Property section payload is missing!' );
+      }
+
+      const images: BackEndPropertyData[ 'images' ] | undefined = values.images;
+      const image: string | undefined = Array.isArray( images ) && images.length > 0
+        ? images[ 0 ].imageURL
+        : undefined;
+
+      const title: BackEndPropertyData[ 'title' ] | undefined = values.title;
+      const type: BackEndPropertyData[ 'type' ] | undefined = values.type;
+      const address: BackEndPropertyData[ 'address' ] | undefined = values.address;
+
+      if ( !image || !title || !type || !address ) {
+        throw new Error( 'One or more required property fields are missing (image/title/type/address).' );
+      }
+
+      const id: BackEndPropertyData[ 'id' ] = propertyID;
+      const leaseid: Lease[ 'leaseID' ] = data.leaseID;
+
+      const viewButton: TableButton = { action: 'view', icon: 'visibility', label: 'View' };
+      const addButton: TableButton = { action: 'add', icon: 'add_circle', label: 'Add' };
+
+      const row: PropertyTableData = {
+        image,
+        id,
+        leaseid,
+        title,
+        type,
+        address,
+        viewButton,
+        addButton,
+      };
+
+      return row;
     } catch ( error ) {
-      console.error( error );
-      this.notification?.notification( 'error', 'Error: Failed to fetch properties.' );
-      this.isReloading = false;
-      return;
+      console.error( '[organiseTableRow] error:', error );
+      // Optional: comment this if you don’t want spammy notifications per row
+      if ( error instanceof HttpErrorResponse ) {
+        this.notification.notification( 'error', error.message );
+      } else if ( error instanceof Error ) {
+        this.notification.notification( 'error', error.message );
+      }
+      return null;
     }
   }
 
-  /** Convert property-lease pairs to table rows */
-  private _buildPropertyRows( list: PropertyWithLease[] ): PropertyTableData[] {
-    if ( !Array.isArray( list ) || list.length === 0 ) return [];
-    const rows: PropertyTableData[] = [];
-    for ( const pair of list ) {
-      const firstImageUrl =
-        Array.isArray( pair.property.images ) && pair.property.images[ 0 ]?.imageURL
-          ? pair.property.images[ 0 ].imageURL
-          : 'Images/System-images/noProperties.jpg';
-      rows.push( {
-        image: firstImageUrl,
-        id: pair.property.id ?? '',
-        leaseid: pair.lease.leaseID,
-        title: pair.property.title ?? 'Untitled',
-        type: pair.property.type ?? 'Unknown',
-        address: pair.property.address as Address,
-      } );
-    }
-    return rows;
-  }
 
-  // ─────────────────────────────────────────────
-  // Pagination helpers
-  // ─────────────────────────────────────────────
-  private _applyPage( nextIndex: number ): void {
-    const total = this.filteredData.length;
-    const pageCount = this.pageSize > 0 ? Math.ceil( total / this.pageSize ) : 0;
-    const safeIndex = Math.max( 0, Math.min( nextIndex, Math.max( 0, pageCount - 1 ) ) );
-    this._pageIndex = safeIndex;
-
-    const start = safeIndex * this.pageSize;
-    const end = start + this.pageSize;
-    this.filteredData = this._allData.slice( start, end );
-  }
-
-  private _rebuildPageSizeOptions( totalRows: number ): void {
-    const base = [ 5, 10, 25, 50, 100 ];
-    const opts = base.filter( n => n <= Math.max( totalRows, 1 ) );
-    if ( totalRows > 0 && !opts.includes( totalRows ) && totalRows < Math.min( ...base ) ) {
-      opts.unshift( totalRows );
-    }
-    this.pageSizeOptions = Array.from( new Set( opts ) ).sort( ( a, b ) => a - b );
-
-    if ( this.pageSize > Math.max( totalRows, 1 ) ) {
-      this.pageSize = this.pageSizeOptions[ this.pageSizeOptions.length - 1 ];
-      this._applyPage( 0 );
-    }
-  }
 
   // ─────────────────────────────────────────────
   // Action & Operation buttons function only admin

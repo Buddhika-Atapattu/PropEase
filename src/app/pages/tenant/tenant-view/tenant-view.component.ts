@@ -646,11 +646,11 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const res: MSG = await this.propertyService.getPropertySectionById(
         item.propertyID,
-        'images'
+        [ 'images' ]
       );
       if ( res.status !== 'success' ) throw new Error( 'Property data fetch failed!' );
 
-      const values = res.data.value;
+      const values = res.data.values.images;
 
       if ( !Array.isArray( values ) ) throw new Error( 'Invalid image array!' );
 

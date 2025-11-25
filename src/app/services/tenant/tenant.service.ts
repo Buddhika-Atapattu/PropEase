@@ -389,7 +389,7 @@ export class TenantService {
     countByTenant: ( username: string ) => `${ this.API_TENANT_ROOT }/complaints-count/tenant/${ this.safeSeg( username ) }`,
     allComplaints: () => `${ this.API_TENANT_ROOT }/complaints/all`,
     allComplaintsCount: () => `${ this.API_TENANT_ROOT }/complaints-count/all`,
-    allComplaintsBySection: (section: ComplaintSection) => `${ this.API_TENANT_ROOT }/complaints-by-section/all/${section}`,
+    allComplaintsBySection: ( section: ComplaintSection ) => `${ this.API_TENANT_ROOT }/complaints-by-section/all/${ section }`,
     postComment: () => `${ this.API_TENANT_ROOT }/complaints/post-comments`,
   } as const;
 
@@ -698,8 +698,8 @@ export class TenantService {
     try { return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.allComplaintsCount() ) ) ); }
     catch ( e ) { return this.mapError( e ); }
   }
-  public async getAllComplaintsBySection(section: ComplaintSection): Promise<MSG> {
-    try { return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.allComplaintsBySection(section) ) ) ); }
+  public async getAllComplaintsBySection( section: ComplaintSection ): Promise<MSG> {
+    try { return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.allComplaintsBySection( section ) ) ) ); }
     catch ( e ) { return this.mapError( e ); }
   }
   public async postComment( data: FormData ): Promise<MSG> {

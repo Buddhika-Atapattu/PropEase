@@ -624,8 +624,16 @@ export class PropertyService {
     );
   }
 
-  public async getPropertySectionById( propertyID: Property[ 'id' ], section: PropertySections ) {
-    const params: HttpParams = this.toParams( { section } );
+  public async getPropertySectionById(
+    propertyID: Property[ 'id' ],
+    rowSections: PropertySections[]
+  ): Promise<MSG> {
+
+    // Convert array → "title,images,address"
+    const sections = rowSections.join( ',' );
+
+    const params: HttpParams = this.toParams( { sections } );
+
     return firstValueFrom(
       this.http.get<MSG>(
         `${ this.propertyAPI }/get-single-property-section-by-id/${ propertyID }`,
