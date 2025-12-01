@@ -1,6 +1,14 @@
 <app-notification-dialog></app-notification-dialog>
 <app-progress-bar></app-progress-bar>
-<form action="">
+<form
+  action=""
+  method="POST"
+  enctype="multipart/form-data"
+  (ngSubmit)="submitLeaseAgreement()"
+  class="profile-form"
+  autocomplete="off"
+  #userForm="ngForm"
+>
   <div
     *ngIf="mode !== null && tenant !== null"
     class="main-panel"
@@ -718,7 +726,7 @@
         <div class="col-12">
           <app-custom-table
             [(isReload)]="propertyTableIsReloading"
-            [(pageSize)]="propertyTablePageSize"
+            [(limit)]="propertyTablePageSize"
             [(index)]="propertyTablePageIndex"
             [(search)]="propertyTabletSearchText"
             [pagination]="true"
@@ -2339,12 +2347,11 @@
       <div class="row my-5">
         <div class="col-12 d-flex justify-content-end align-items-center">
           <button
-            type="button"
-            class="btn-custom"
-            (click)="submitLeaseAgreement()"
+            type="submit"
             aria-label="Submit Lease Agreement"
+            class="btn btn-success fw-bold"
           >
-            <i class="fa-solid fa-download me-2"></i> Save
+            <mat-icon>cloud_upload</mat-icon> Save
           </button>
         </div>
       </div>

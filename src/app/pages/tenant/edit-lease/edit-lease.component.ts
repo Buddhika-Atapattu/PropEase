@@ -182,10 +182,10 @@ interface PropertyCustomTableDataType {
     MatExpansionModule,
     SwitchButton,
   ],
-  templateUrl: './tenant-edit.component.html',
-  styleUrl: './tenant-edit.component.scss',
+  templateUrl: './edit-lease.component.html',
+  styleUrl: './edit-lease.component.scss',
 } )
-export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
+export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
   // ============================================================================
   // 1. ViewChild references
   // ============================================================================
@@ -633,23 +633,34 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected async goLease(): Promise<void> {
     if ( this.tenant ) {
-      this.router.navigate( [ '/dashboard/tenant/tenant-lease', this.leaseID ] );
+      this.router.navigate( [ '/dashboard/tenant/edit-lease', this.leaseID ] );
     }
   }
 
   protected async goToTenant(): Promise<void> {
-    if ( this.tenant ) {
-      const tenant = await this.apiService.generateToken( this.tenant.username );
-      if ( tenant ) {
-        this.router
-          .navigateByUrl( '/', { skipLocationChange: true } )
-          .then( () => {
-            this.router.navigate( [
-              '/dashboard/tenant/tenant-view/',
-              tenant.token,
-            ] );
-          } );
+
+    try {
+      if ( !this.tenant ) {
+        throw new Error( 'Invalid tenant!' );
       }
+
+      const username = this.tenant.username;
+      const res = await this.apiService.generateToken( username );
+
+      if ( !res.success || res.status !== 'success' ) {
+        throw new Error( 'Failed to fetch user!' );
+      }
+
+      const token = this.apiService.extractTokenFromMsg( res );
+
+      if ( !token ) {
+        throw new Error( 'Invalid user data!' );
+      }
+
+      await this.router.navigate( [ '/dashboard/tenant/tenant-view/', token ] );
+    }
+    catch ( error ) {
+      console.error( error );
     }
   }
 
@@ -784,6 +795,8 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       this.isLoading = true;
 
+
+
       // 1) Load lease
       const response = await this.tenantService.getLeaseAgreementByLeaseID(
         this.leaseID.trim(),
@@ -791,7 +804,13 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
       if ( response.status !== 'success' ) {
         throw new Error( 'Loading lease agreement failed!' );
       }
-      this.lease = response.data as Lease;
+      const lease: Lease | undefined = response.data?.system?.lease;
+
+      if ( !lease ) {
+        throw new Error( 'Failed to fetch lease data!' );
+      }
+
+      this.lease = lease;
 
       // 2) Load tenant
       const tenantUsername = this.lease.tenantInformation.tenantUsername;
@@ -857,17 +876,33 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
         } );
       } );
 
-      this.tenantUsername = this.lease.tenantInformation.tenantUsername;
+      this.tenantUsername = this.lease.tenantInformation.tenantUsername ?? '';
+
+      if ( !this.tenantUsername ) {
+        throw new Error( 'Invalid user name!' );
+      }
+
+      const tenantRes = await this.apiService.getUserByUsername( this.tenantUsername );
+
+      if ( !tenantRes.success || tenantRes.status !== 'success' ) {
+        throw new Error( 'Failed to fetch user data!' );
+      }
+
+      const tenant = tenantRes.data?.system?.user;
+
+      if ( !tenant ) {
+        throw new Error( 'Invalid tenant data!' );
+      }
+
+      this.tenant = tenant;
 
       // --- Tenant address ---
-      this.tenantHouseNumber = this.tenant.address.houseNumber;
-      this.tenantStreet = this.tenant.address.street;
-      this.tenantCity = this.tenant.address.city;
-      this.tenantStateOrProvince = this.tenant.address.stateOrProvince ?? '';
-      this.tenantPostalCode = this.tenant.address.postcode;
-      this.tenantCountry = this.filterCountryFromFilterList(
-        this.tenant.address.country ?? ''
-      );
+      this.tenantHouseNumber = this.lease.tenantInformation.permanentAddress.houseNumber;
+      this.tenantStreet = this.lease.tenantInformation.permanentAddress.street;
+      this.tenantCity = this.lease.tenantInformation.permanentAddress.city;
+      this.tenantStateOrProvince = this.lease.tenantInformation.permanentAddress.stateOrProvince ?? '';
+      this.tenantPostalCode = this.lease.tenantInformation.permanentAddress.postalCode;
+      this.tenantCountry = this.lease.tenantInformation.permanentAddress.country;
 
       // --- Emergency contact ---
       this.emergencyContactName =
@@ -1166,37 +1201,12 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected async onTenantEmailChange( email: string ): Promise<void> {
-    await this.userControllerService
-      .emailValidator( email )
-      .then( ( res ) => {
-        if ( res.status === 'success' ) {
-          this.isTenantEmailValid = res.data.validation;
-        } else {
-          this.isTenantEmailValid = false;
-        }
-      } )
-      .catch( ( error: HttpErrorResponse ) => {
-        if ( error.status === 400 || error.status === 500 ) {
-          this.isTenantEmailValid = false;
-        }
-      } );
+    this.isTenantEmailValid = await this.emailValidator( email, 'Tenant' );
+
   }
 
   protected async onCoTenantEmailChange( email: string ): Promise<void> {
-    await this.userControllerService
-      .emailValidator( email )
-      .then( ( res ) => {
-        if ( res.status === 'success' ) {
-          this.isCoTenantEmailValid = res.data.validation;
-        } else {
-          this.isCoTenantEmailValid = false;
-        }
-      } )
-      .catch( ( error: HttpErrorResponse ) => {
-        if ( error.status === 400 || error.status === 500 ) {
-          this.isCoTenantEmailValid = false;
-        }
-      } );
+    this.isCoTenantEmailValid = await this.emailValidator( email, 'Co-Tenant' );
   }
 
   protected async emergencyContactChange( input: string ): Promise<void> {
@@ -1208,31 +1218,8 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if ( isMatched ) {
       // Validate as email via backend
-      await this.userControllerService
-        .emailValidator( value )
-        .then( ( res ) => {
-          if ( res.status === 'success' ) {
-            this.isEmergencyContactValid = res.data.validation;
-            this.emergencyContactSpanMessage = res.data.message;
-          } else {
-            this.isEmergencyContactValid = false;
-          }
-        } )
-        .catch( ( error: HttpErrorResponse ) => {
-          if ( error.status >= 400 && error.status < 500 ) {
-            this.isEmergencyContactValid = false;
-            this.emergencyContactSpanMessage =
-              error.error.message || 'Invalid email format.';
-          } else if ( error.status === 500 ) {
-            this.isEmergencyContactValid = false;
-            this.emergencyContactSpanMessage =
-              'Internal server error. Please try again later.';
-          } else {
-            this.isEmergencyContactValid = false;
-            this.emergencyContactSpanMessage =
-              'An unexpected error occurred.';
-          }
-        } );
+      this.isEmergencyContactValid = await this.emailValidator( value, 'Emergency contact' );
+
     } else {
       // Then treat as phone
       const isPhoneValid = await this.phoneNumberValid( value );
@@ -1246,6 +1233,63 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.cdr.detectChanges();
+  }
+
+  private async emailValidator( email: string, user: string ): Promise<boolean> {
+    try {
+      const rowEmail = email.trim();
+      const rowUser = user.trim();
+
+      if ( !rowEmail ) {
+        throw new Error( 'Empty email!' );
+      }
+
+      if ( !rowUser ) {
+        throw new Error( 'Empty user!' );
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const isMatched = emailRegex.test( rowEmail );
+
+      if ( !isMatched ) {
+        this.notification.notification( 'warning', 'Invalid email format!' );
+        throw new Error( 'Invalid email format!' );
+      }
+
+      const res = await this.userControllerService.emailValidator( rowEmail );
+
+      if ( res.status !== 'success' ) {
+        this.notification.notification( 'error', `Failed to validate email of ${ rowUser }` );
+        throw new Error( `Failed to validate email of ${ rowUser }` );
+      }
+
+      const validatedEmail = this.apiService.extractStringFromOther( res.data, 'email' );
+      const validationObj = this.apiService.extractObjectFromOther<{
+        format: boolean,
+        mx: boolean;
+      }>( res.data, 'validation' );
+      const domain = this.apiService.extractStringFromOther( res.data, 'domain' );
+
+      if ( !validatedEmail ) {
+        throw new Error( 'Invalid email!' );
+      }
+
+      if ( !domain ) {
+        throw new Error( 'Invalid domain!' );
+      }
+
+      if ( !validationObj?.format || !validationObj.mx ) {
+        this.notification.notification( 'error', `Please enter valid email address of ${ rowUser }` );
+        throw new Error( `Please enter valid email address of ${ rowUser }` );
+      }
+
+      return true;
+
+    }
+    catch ( error ) {
+      console.error( error );
+      return false;
+    }
   }
 
   // ============================================================================
@@ -1656,9 +1700,10 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
         throw new Error( 'Failed in counting properties!' );
       }
 
-      const total = res.data.total;
+      const total: number | undefined = res.data?.pagination?.total;
 
       if (
+        !total ||
         Number.isNaN( total ) ||
         !Number.isFinite( total ) ||
         !Number.isFinite( total )
@@ -1684,7 +1729,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
         throw new Error( 'Failed in fetching properties!' );
       }
 
-      const properties: BackEndPropertyData[] = propertyRes.data.properties;
+      const properties: BackEndPropertyData[] | undefined = propertyRes.data?.system?.properties;
 
       if ( !Array.isArray( properties ) || properties.length <= 0 ) {
         throw new Error( 'Invalid properties!' );
@@ -1770,7 +1815,7 @@ export class TenantEditComponent implements OnInit, AfterViewInit, OnDestroy {
       if ( res.status !== 'success' ) {
         throw new Error( 'Failed in fetching property!' );
       }
-      const property: BackEndPropertyData = res.data;
+      const property: BackEndPropertyData | undefined = res.data?.system?.property;
 
       if ( !property ) {
         this.resetProperty();

@@ -14,7 +14,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 // Service and types imports
-import { APIsService, type User, type MSG } from '../../../../services/APIs/apis.service';
+import { APIsService, type User } from '../../../../services/APIs/apis.service';
 import { AuthService } from '../../../../services/auth/auth.service';
 import {
   PropertyService
@@ -111,6 +111,7 @@ export class ViewComplaints implements OnInit, AfterViewInit, OnDestroy {
   private userFullName!: ComplaintCommentClient[ 'byName' ];
   private userImage !: ComplaintCommentClient[ 'image' ];
   protected audience: ComplaintCommentClient[ 'audience' ] = 'all';
+  protected complaintCount: number = 5;
 
 
   constructor (
@@ -121,7 +122,7 @@ export class ViewComplaints implements OnInit, AfterViewInit, OnDestroy {
     private readonly authService: AuthService,
     private readonly tenantService: TenantService,
     private readonly renderer: Renderer2,
-    private readonly APIsService: APIsService,
+    private readonly apiService: APIsService,
     private readonly propertyService: PropertyService,
     private readonly dialog: MatDialog,
   ) {
@@ -137,9 +138,14 @@ export class ViewComplaints implements OnInit, AfterViewInit, OnDestroy {
     this.route.params.subscribe( async ( item ): Promise<void> => {
       try {
         const comaplaintID = item[ 'complaintID' ];
-        const res: MSG = await this.tenantService.getComplaintById( comaplaintID );
+        const res = await this.tenantService.getComplaintById( comaplaintID );
         if ( res.status !== 'success' ) throw new Error( 'Faild to get complaint!' );
-        this.complaint = res.data;
+        const complaint: ComplaintClient | undefined = res.data?.system?.complaint;
+
+        if ( !complaint ) {
+          throw new Error( 'Invalid complaint data!' );
+        }
+        this.complaint = complaint;
       }
       catch ( error ) {
         console.error( error );
@@ -383,7 +389,7 @@ export class ViewComplaints implements OnInit, AfterViewInit, OnDestroy {
       this.progressBar.start();
 
       // 6) Call API
-      const res: MSG = await this.tenantService.postComment( fd );
+      const res = await this.tenantService.postComment( fd );
 
 
       // 7) Handle response schema aligned with backend: { success: boolean, status: 'success' | 'warning' | 'error', data?: { code, comment } }
@@ -393,7 +399,18 @@ export class ViewComplaints implements OnInit, AfterViewInit, OnDestroy {
       }
 
       // 8) Optionally update local UI (append new comment returned by backend)
-      const created = res.data?.comment;
+      if(!res.data){
+        throw new Error('Invalid comment data!');
+      }
+      const resCode = this.apiService.extractObjectFromOther<{code: string}>(res.data, 'code');
+      const resComment = this.apiService.extractObjectFromOther<{comment: any}>(res.data, 'comment');
+
+      if(!resCode || !resComment){
+        throw new Error('Either code or comment is empty!');
+      }
+
+      const created = resComment.comment;
+
       if ( created ) {
         console.log( created );
         // example: push to your local comments list if available

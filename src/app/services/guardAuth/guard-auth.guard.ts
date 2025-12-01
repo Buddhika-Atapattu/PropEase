@@ -21,8 +21,8 @@
 // - Keep `definedURLs` close to your route tree for clarity and easy maintenance.
 // -----------------------------------------------------------------------------
 
-import {isPlatformBrowser} from '@angular/common';
-import {Inject, Injectable, PLATFORM_ID} from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import {
   ActivatedRouteSnapshot,
   CanActivate,
@@ -38,7 +38,7 @@ import {
   ACCESS_OPTIONS,
   Role,
 } from '../auth/auth.service';
-import {User} from '../APIs/apis.service'
+import { User } from '../APIs/apis.service';
 interface RouteRequirement {
   /** Concrete URL pattern from the router (supports :params and *). */
   url: string;
@@ -48,46 +48,46 @@ interface RouteRequirement {
   action: string;
 }
 
-@Injectable({providedIn: 'root'})
+@Injectable( { providedIn: 'root' } )
 export class AuthGuard implements CanActivate, CanActivateChild {
   private readonly isBrowser: boolean;
 
   constructor (
     private readonly authService: AuthService,
     private readonly router: Router,
-    @Inject(PLATFORM_ID) platformId: Object
+    @Inject( PLATFORM_ID ) platformId: Object
   ) {
-    this.isBrowser = isPlatformBrowser(platformId);
+    this.isBrowser = isPlatformBrowser( platformId );
   }
 
   /* ==================== Router Guards ==================== */
 
-  public canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
+  public canActivate( route: ActivatedRouteSnapshot, state: RouterStateSnapshot ): boolean {
     // Gate #1: require login
     const loggedUser = this.authService.getLoggedUser;
-    if(!this.authService.isUserLoggedIn || !loggedUser) {
-      this.router.navigateByUrl('/login');
+    if ( !this.authService.isUserLoggedIn || !loggedUser ) {
+      this.router.navigateByUrl( '/login' );
       return false;
     }
 
     // Gate #2: coarse role filter from route data (if present)
-    if(!this.passesRouteRoleFilter(route, loggedUser)) {
-      this.router.navigateByUrl('/dashboard/unauthorized');
+    if ( !this.passesRouteRoleFilter( route, loggedUser ) ) {
+      this.router.navigateByUrl( '/dashboard/unauthorized' );
       return false;
     }
 
     // Gate #3: fine-grained permission based on module/action rules
-    if(!this.passesPermissionForUrl(state.url, loggedUser)) {
-      this.router.navigateByUrl('/dashboard/unauthorized');
+    if ( !this.passesPermissionForUrl( state.url, loggedUser ) ) {
+      this.router.navigateByUrl( '/dashboard/unauthorized' );
       return false;
     }
 
     return true;
   }
 
-  public canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
+  public canActivateChild( route: ActivatedRouteSnapshot, state: RouterStateSnapshot ): boolean {
     // Delegate to the main guard (keeps logic in one place)
-    return this.canActivate(route, state);
+    return this.canActivate( route, state );
   }
 
   /* ==================== Gate #2 — Role Filter ==================== */
@@ -96,10 +96,10 @@ export class AuthGuard implements CanActivate, CanActivateChild {
    * Returns true if user's role is included in route.data.roles (when provided).
    * If no roles are defined on the route, we allow and defer to permission check.
    */
-  private passesRouteRoleFilter(route: ActivatedRouteSnapshot, user: User): boolean {
-    const allowedRoles = (route.data?.['roles'] as Role[] | undefined) ?? undefined;
-    if(!allowedRoles || allowedRoles.length === 0) return true;
-    return allowedRoles.includes(user.role);
+  private passesRouteRoleFilter( route: ActivatedRouteSnapshot, user: User ): boolean {
+    const allowedRoles = ( route.data?.[ 'roles' ] as Role[] | undefined ) ?? undefined;
+    if ( !allowedRoles || allowedRoles.length === 0 ) return true;
+    return allowedRoles.includes( user.role );
   }
 
   /* ==================== Gate #3 — Permission Check ==================== */
@@ -108,34 +108,34 @@ export class AuthGuard implements CanActivate, CanActivateChild {
    * Matches current URL to a (module, action) requirement and verifies
    * the user's effective permission.
    */
-  private passesPermissionForUrl(currentUrl: string, user: User): boolean {
+  private passesPermissionForUrl( currentUrl: string, user: User ): boolean {
     // 1) Find the first matching URL rule (if any). If none, allow by default.
-    const match = this.matchRequirement(currentUrl);
-    if(!match) return true;
+    const match = this.matchRequirement( currentUrl );
+    if ( !match ) return true;
 
     // 2) Derive effective AccessMap for this user.
-    const access = this.computeEffectiveAccess(user.role);
+    const access = this.computeEffectiveAccess( user.role );
 
     // 3) Validate module exists in catalog (defense-in-depth)
-    const moduleCatalog = ACCESS_OPTIONS.find(m => m.module === match.module);
-    if(!moduleCatalog) return false;
+    const moduleCatalog = ACCESS_OPTIONS.find( m => m.module === match.module );
+    if ( !moduleCatalog ) return false;
 
     // 4) Validate action belongs to the module catalog (helps catch typos)
-    if(!moduleCatalog.actions.includes(match.action)) return false;
+    if ( !moduleCatalog.actions.includes( match.action ) ) return false;
 
     // 5) Check permission in the effective AccessMap
-    const allowedActions = access[match.module] ?? [];
-    return allowedActions.includes(match.action);
+    const allowedActions = access[ match.module ] ?? [];
+    return allowedActions.includes( match.action );
   }
 
   /**
    * Compute effective AccessMap either from server-provided per-user access
    * (if you start storing it in `loggedUser.access`) or from DEFAULT_ROLE_ACCESS.
    */
-  private computeEffectiveAccess(role: Role): AccessMap {
+  private computeEffectiveAccess( role: Role ): AccessMap {
     // If you later persist per-user overrides in loggedUser.access, resolve them here.
     // For now we use DEFAULT_ROLE_ACCESS as the single source of truth.
-    const fromDefaults = DEFAULT_ROLE_ACCESS[role] ?? {};
+    const fromDefaults = DEFAULT_ROLE_ACCESS[ role ] ?? {};
     return fromDefaults;
   }
 
@@ -143,10 +143,10 @@ export class AuthGuard implements CanActivate, CanActivateChild {
    * Try to match the current URL to one of our route requirements.
    * Supports `:params` and `*` wildcards.
    */
-  private matchRequirement(currentUrl: string): RouteRequirement | null {
-    for(const req of this.definedURLs) {
-      const regex = this.routeToRegex(req.url);
-      if(regex.test(currentUrl)) return req;
+  private matchRequirement( currentUrl: string ): RouteRequirement | null {
+    for ( const req of this.definedURLs ) {
+      const regex = this.routeToRegex( req.url );
+      if ( regex.test( currentUrl ) ) return req;
     }
     return null;
   }
@@ -157,11 +157,11 @@ export class AuthGuard implements CanActivate, CanActivateChild {
    * - `*`      → `[^/]+`
    * - Anchored from start to end to avoid partial matches.
    */
-  private routeToRegex(routePattern: string): RegExp {
+  private routeToRegex( routePattern: string ): RegExp {
     const escaped = routePattern
-      .replace(/:[^/]+/g, '[^/]+') // replace :params
-      .replace(/\*/g, '[^/]+');    // replace wildcards
-    return new RegExp(`^${escaped}$`);
+      .replace( /:[^/]+/g, '[^/]+' ) // replace :params
+      .replace( /\*/g, '[^/]+' );    // replace wildcards
+    return new RegExp( `^${ escaped }$` );
   }
 
   /* ==================== URL → Rule Mapping ==================== */
@@ -176,35 +176,35 @@ export class AuthGuard implements CanActivate, CanActivateChild {
     // (No strict module/action needed for /dashboard/home — roles on the route already handle it)
 
     // ---------- Notifications ----------
-    {url: '/dashboard/notifications/all-notifications', module: 'Communication & Notification', action: 'view message logs'},
+    { url: '/dashboard/notifications/all-notifications', module: 'Communication & Notification', action: 'view message logs' },
 
     // ---------- User Management ----------
-    {url: '/dashboard/users', module: 'User Management', action: 'view users'},
-    {url: '/dashboard/users/add-new-user', module: 'User Management', action: 'create user'},
-    {url: '/dashboard/users/edit-user/:username', module: 'User Management', action: 'update user'},
-    {url: '/dashboard/users/user-profile/:username', module: 'User Management', action: 'view users'},
+    { url: '/dashboard/users', module: 'User Management', action: 'view users' },
+    { url: '/dashboard/users/add-new-user', module: 'User Management', action: 'create user' },
+    { url: '/dashboard/users/edit-user/:username', module: 'User Management', action: 'update user' },
+    { url: '/dashboard/users/user-profile/:username', module: 'User Management', action: 'view users' },
 
     // Optional: access-control is admin-only by route roles, but bind to rule too:
-    {url: '/dashboard/access-control', module: 'Access Control', action: 'control sessions'},
+    { url: '/dashboard/access-control', module: 'Access Control', action: 'control sessions' },
 
     // ---------- Property Management ----------
-    {url: '/dashboard/properties', module: 'Property Management', action: 'view properties'},
-    {url: '/dashboard/properties/property-listing', module: 'Property Management', action: 'create property'},
-    {url: '/dashboard/properties/property-view/:propertyID', module: 'Property Management', action: 'view properties'},
-    {url: '/dashboard/properties/property-edit/:propertyID', module: 'Property Management', action: 'update property'},
+    { url: '/dashboard/properties', module: 'Property Management', action: 'view properties' },
+    { url: '/dashboard/properties/property-listing', module: 'Property Management', action: 'create property' },
+    { url: '/dashboard/properties/property-view/:propertyID', module: 'Property Management', action: 'view properties' },
+    { url: '/dashboard/properties/property-edit/:propertyID', module: 'Property Management', action: 'update property' },
 
     // ---------- Tenant Management (main) ----------
-    {url: '/dashboard/tenant/tenant-home', module: 'Tenant Management', action: 'view tenant profile'},
-    {url: '/dashboard/tenant/tenant-view/:tenantID', module: 'Tenant Management', action: 'view tenant profile'},
-    {url: '/dashboard/tenant/create-lease/:tenantID', module: 'Tenant Management', action: 'create lease'},
-    {url: '/dashboard/tenant/view-lease/:leaseID', module: 'Tenant Management', action: 'view lease'},
-    {url: '/dashboard/tenant/tenant-lease/:leaseID', module: 'Tenant Management', action: 'update lease'},
+    { url: '/dashboard/tenant/tenant-home', module: 'Tenant Management', action: 'view tenant profile' },
+    { url: '/dashboard/tenant/tenant-view/:tenantID', module: 'Tenant Management', action: 'view tenant profile' },
+    { url: '/dashboard/tenant/create-lease/:tenantID', module: 'Tenant Management', action: 'create lease' },
+    { url: '/dashboard/tenant/view-lease/:leaseID', module: 'Tenant Management', action: 'view lease' },
+    { url: '/dashboard/tenant/edit-lease/:leaseID', module: 'Tenant Management', action: 'update lease' },
 
     // ---------- Tenant Complaints ----------
-    {url: '/dashboard/tenant/complaints', module: 'Tenant Management', action: 'view complaint'},
-    {url: '/dashboard/tenant/complaints/create-complaint/:tenantID', module: 'Tenant Management', action: 'create complaint'},
-    {url: '/dashboard/tenant/complaints/edit-complaint/:complaintID', module: 'Tenant Management', action: 'update complaint'},
-    {url: '/dashboard/tenant/complaints/view-complaint/:complaintID', module: 'Tenant Management', action: 'view complaint'},
+    { url: '/dashboard/tenant/complaints', module: 'Tenant Management', action: 'view complaint' },
+    { url: '/dashboard/tenant/complaints/create-complaint/:tenantID', module: 'Tenant Management', action: 'create complaint' },
+    { url: '/dashboard/tenant/complaints/edit-complaint/:complaintID', module: 'Tenant Management', action: 'update complaint' },
+    { url: '/dashboard/tenant/complaints/view-complaint/:complaintID', module: 'Tenant Management', action: 'view complaint' },
 
     // ---------- Maintenance (if/when you add top-level pages) ----------
     // Example (uncomment/add when pages exist):

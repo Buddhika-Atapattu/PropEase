@@ -848,6 +848,11 @@
                     required
                     placeholder="Price per Sqft"
                   />
+                  <div mat-icon matSuffix class="mx-2 text-muted fw-bold">
+                    {{
+                      isCurrencySelected ? countryActualCurrency : "Currency"
+                    }}
+                  </div>
                 </mat-form-field>
               </div>
               <!-- End Price per Sqft -->
@@ -864,6 +869,11 @@
                     required
                     placeholder="Maintenance Fees"
                   />
+                  <div mat-icon matSuffix class="mx-2 text-muted fw-bold">
+                    {{
+                      isCurrencySelected ? countryActualCurrency : "Currency"
+                    }}
+                  </div>
                 </mat-form-field>
               </div>
               <!-- End Maintenance Fees -->
@@ -884,6 +894,11 @@
                     required
                     placeholder="Service Charges / Association Fees"
                   />
+                  <div mat-icon matSuffix class="mx-2 text-muted fw-bold">
+                    {{
+                      isCurrencySelected ? countryActualCurrency : "Currency"
+                    }}
+                  </div>
                 </mat-form-field>
               </div>
               <!-- End Service Charges / Association Fees -->
@@ -931,6 +946,11 @@
                     name="transferFees"
                     placeholder="Govt. Reg. / Transfer Fees"
                   />
+                  <div mat-icon matSuffix class="mx-2 text-muted fw-bold">
+                    {{
+                      isCurrencySelected ? countryActualCurrency : "Currency"
+                    }}
+                  </div>
                 </mat-form-field>
               </div>
               <!-- End Govt. Reg. / Transfer Fees -->
@@ -950,6 +970,11 @@
                     name="expectedRentYearly"
                     placeholder="Expected Rent Yearly"
                   />
+                  <div mat-icon matSuffix class="mx-2 text-muted fw-bold">
+                    {{
+                      isCurrencySelected ? countryActualCurrency : "Currency"
+                    }}
+                  </div>
                 </mat-form-field>
               </div>
               <!-- End Expected Rent Yearly -->
@@ -965,6 +990,11 @@
                     name="expectedRentQuartely"
                     placeholder="Expected Rent Quartaly"
                   />
+                  <div mat-icon matSuffix class="mx-2 text-muted fw-bold">
+                    {{
+                      isCurrencySelected ? countryActualCurrency : "Currency"
+                    }}
+                  </div>
                 </mat-form-field>
               </div>
               <!-- End Expected Rent Quartaly -->
@@ -980,6 +1010,11 @@
                     name="expectedRentMonthly"
                     placeholder="Expected Rent Monthly"
                   />
+                  <div mat-icon matSuffix class="mx-2 text-muted fw-bold">
+                    {{
+                      isCurrencySelected ? countryActualCurrency : "Currency"
+                    }}
+                  </div>
                 </mat-form-field>
               </div>
               <!-- End Expected Rent Monthly -->
@@ -995,6 +1030,11 @@
                     name="expectedRentDaily"
                     placeholder="Expected Rent Daily"
                   />
+                  <div mat-icon matSuffix class="mx-2 text-muted fw-bold">
+                    {{
+                      isCurrencySelected ? countryActualCurrency : "Currency"
+                    }}
+                  </div>
                 </mat-form-field>
               </div>
               <!-- End Expected Rent Daily -->
@@ -1729,9 +1769,9 @@
           <button
             *ngIf="currentIndex === 8"
             type="submit"
-            class="btn-custom fw-bold submit-btn"
+            class="btn btn-success fw-bold"
           >
-            <mat-icon svgIcon="upload" class="me-1"></mat-icon> Save
+            <mat-icon>cloud_upload</mat-icon> Save
           </button>
           <!-- End Submit Button -->
         </div>

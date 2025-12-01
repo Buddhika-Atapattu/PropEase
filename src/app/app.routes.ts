@@ -128,7 +128,7 @@ export const routes: Routes = [
         path: 'tenant',
         data: { title: 'TENANT' }, // Breadcrumb: DASHBOARD > TENANT
         loadComponent: () =>
-          import( './pages/tenant/tenant/tenant.component' ).then( m => m.TenantComponent ),
+          import( './pages/tenant/tenant.component' ).then( m => m.TenantComponent ),
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
 
@@ -138,24 +138,12 @@ export const routes: Routes = [
             loadComponent: () =>
               import( './pages/tenant/home/home.component' ).then( m => m.HomeComponent ),
           },
+
           {
-            path: 'payments-list',
-            data: { title: 'PAYMENT LIST' }, // DASHBOARD > TENANT > PAYMENT LIST
+            path: 'edit-lease/:leaseID',
+            data: { title: 'LEASE EDIT' },
             loadComponent: () =>
-              import( './pages/tenant/payments/list/list.component' ).then( m => m.ListComponent ),
-          },
-          {
-            path: 'payments-upload-proof',
-            data: { title: 'PAYMENT PROOF UPLOAD' }, // fixed label
-            loadComponent: () =>
-              import( './pages/tenant/payments/upload-proof/upload-proof.component' )
-                .then( m => m.UploadProofComponent ),
-          },
-          {
-            path: 'tenant-lease/:leaseID',
-            data: { title: 'TENANT LEASE' },
-            loadComponent: () =>
-              import( './pages/tenant/tenant-edit/tenant-edit.component' ).then( m => m.TenantEditComponent ),
+              import( './pages/tenant/edit-lease/edit-lease.component' ).then( m => m.LeaseEditComponent ),
           },
           {
             path: 'create-lease/:tenantID',

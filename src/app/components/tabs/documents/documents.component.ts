@@ -1,508 +1,456 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+// Path: src/app/components/tabs/documents/documents.component.ts
+
+import { CommonModule } from '@angular/common';
 import {
-  AfterViewInit,
   Component,
-  ElementRef,
-  Inject,
   Input,
-  OnChanges,
-  OnDestroy,
   OnInit,
-  PLATFORM_ID,
-  SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { DomSanitizer } from '@angular/platform-browser';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
+
 import {
   APIsService,
   User,
-  UDER_DOC_TYPES,
 } from '../../../services/APIs/apis.service';
 import { AuthService } from '../../../services/auth/auth.service';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+import { DownloadService } from '../../../services/downloadService/download.service';
+
+import { PaginationUtil } from '../../../source/utility/pagination.utils';
+import type {
+  UploadedFile,
+  UserDocumentEntity,
+} from '../../../types/api-message.types';
+
 import {
-  msgTypes,
   NotificationDialogComponent,
 } from '../../dialogs/notification/notificationBar.component';
 import { ProgressBarComponent } from '../../dialogs/progress-bar/progress-bar.component';
-import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-loader.component';
+import {
+  CustomTableComponent,
+  TableButton,
+  TableButtonActionConfig,
+  TableColumn,
+  TableExtension,
+} from '../../shared/custom-table/custom-table.component';
+import { Dropdown } from '../../shared/dropdown/dropdown';
 
-interface selectedFiles {
-  name: string;
-  size: number;
-  icon: string;
-  file: File | null;
+/** Row shape for custom table */
+interface TableData {
+  icon: string;              // mime/type or extension → mapped to icon in table
+  fileType: string;          // human-readable type (mime/type or extension)
+  fileName: string;
+  uploaded: Date;
+  downloadButton: TableButton;
+  fullFile: UploadedFile;    // keep original file object for download
 }
 
 @Component( {
   selector: 'app-documents',
+  standalone: true,
   imports: [
     CommonModule,
-    MatIconModule,
-    SkeletonLoaderComponent,
-    MatInputModule,
-    MatFormFieldModule,
-    MatButtonModule,
-    MatAutocompleteModule,
     FormsModule,
-    ReactiveFormsModule,
+    MatIconModule,
+    CustomTableComponent,
+    Dropdown,
     NotificationDialogComponent,
     ProgressBarComponent,
+    MatTooltipModule
   ],
-  standalone: true,
-  providers: [],
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.scss',
 } )
-export class DocumentsComponent
-  implements OnInit, OnChanges, AfterViewInit, OnDestroy {
-  @ViewChild( 'fileInput' ) fileInput!: ElementRef<HTMLInputElement>;
+export class DocumentsComponent implements OnInit {
+  // ─────────────────────────────────────────────────────────────
+  // View children (notification + progress bar)
+  // ─────────────────────────────────────────────────────────────
+
   @ViewChild( NotificationDialogComponent, { static: true } )
   notification!: NotificationDialogComponent;
+
   @ViewChild( ProgressBarComponent, { static: true } )
   progress!: ProgressBarComponent;
-  @Input() user: User | null = null;
-  protected mode: boolean | null = null;
-  protected isBrowser: boolean;
-  private modeSub: Subscription | null = null;
-  protected isActive: boolean = false;
-  protected isLoading: boolean = true;
-  protected file: FileList | File | null = null;
-  protected isSizeBig: boolean = false;
-  protected isNoData: boolean = false;
-  protected isFileSelected: boolean = false;
-  protected selectedFiles: selectedFiles[] = [];
-  protected username: string = '';
-  protected documents: UDER_DOC_TYPES[] = [];
-  protected isDragOver: boolean = false;
-  protected isNotType: boolean = false;
-  private readonly allowedTypes = [
-    // Word Documents
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
-    'application/rtf',
 
-    // Excel Documents
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
-    'text/csv',
-    'text/tab-separated-values',
+  @ViewChild( Dropdown, { static: true } ) dropDown !: Dropdown;
 
-    // PowerPoint Documents
-    'application/vnd.ms-powerpoint',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'application/vnd.openxmlformats-officedocument.presentationml.template',
+  // ─────────────────────────────────────────────────────────────
+  // Input: user whose documents we manage
+  // ─────────────────────────────────────────────────────────────
 
-    // OpenDocument Formats
-    'application/vnd.oasis.opendocument.text',
-    'application/vnd.oasis.opendocument.spreadsheet',
-    'application/vnd.oasis.opendocument.presentation',
+  private _user: User | null = null;
+  private initialized = false; // to avoid double fetch on first render
 
-    // PDF
-    'application/pdf',
+  @Input( { required: true } )
+  set user( value: User | null ) {
+    this._user = value;
 
-    // Plain Text
-    'text/plain',
+    // Before ngOnInit: just store, ngOnInit will do the first fetch
+    if ( !this.initialized ) return;
 
-    // Common Image Types
-    'image/jpeg',
-    'image/png',
-    'image/webp',
-    'image/gif',
-    'image/jpg',
-    'image/ico',
-    'image/svg+xml',
+    // After component is initialized:
+    // when parent changes user (e.g., different profile),
+    // reset pagination and reload documents for the new user.
+    if ( this._user ) {
+      this.resetPaging();
+      void this.fetch();
+    } else {
+      // No user → clear table
+      this.total = 0;
+      this.data = [];
+    }
+  }
+
+  get user(): User | null {
+    return this._user;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Local state: uploads + table
+  // ─────────────────────────────────────────────────────────────
+
+  /** Files selected for upload (local, not yet sent) */
+  private selectedFiles: File[] = [];
+
+  /** Table + loading state (driven by custom table bindings) */
+  private _isLoading = false;
+  private _index = 0;
+  private _limit = 10;
+  private _search = '';
+
+  protected tableTitle = "User's files";
+  protected total = 0;
+  protected extension: TableExtension = 'xlsx';
+
+  protected data: TableData[] = [];
+
+  protected columns: TableColumn[] = [
+    { key: 'icon', label: 'Icon' },
+    { key: 'fileType', label: 'File Type' },
+    { key: 'fileName', label: 'File Name' },
+    { key: 'uploaded', label: 'Uploaded' },
+    { key: 'downloadButton', label: 'Download' },
   ];
 
-  constructor (
-    private APIs: APIsService,
-    private windowRef: WindowsRefService,
-    @Inject( PLATFORM_ID ) private platformId: Object,
-    private router: Router,
-    private activatedRouter: ActivatedRoute,
-    private crypto: CryptoService,
-    private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer,
-    private authService: AuthService
-  ) {
-    this.isBrowser = isPlatformBrowser( this.platformId );
-    this.registerCustomIcons();
-  }
+  // ─────────────────────────────────────────────────────────────
+  // DI
+  // ─────────────────────────────────────────────────────────────
 
-  async ngOnInit(): Promise<void> {
-    if ( this.isBrowser ) {
-      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
-        this.mode = val;
-      } );
-      window.addEventListener( 'dragover', this.preventDefault, {
-        passive: false,
-      } );
-      window.addEventListener( 'drop', this.preventDefault, { passive: false } );
-    }
-    await this.callTheAPI();
-  }
+  public constructor (
+    private readonly apiService: APIsService,
+    private readonly authService: AuthService,
+    private readonly downloadService: DownloadService,
+  ) {}
 
-  protected async callTheAPI() {
+  // ─────────────────────────────────────────────────────────────
+  // Lifecycle
+  // ─────────────────────────────────────────────────────────────
+
+  public async ngOnInit(): Promise<void> {
+    this.initialized = true;
+
+    // If user was already bound before OnInit, load documents once.
     if ( this.user ) {
-      await this.APIs.getUserDocuments( this.user?.username )
-        .then( ( data ) => {
-          if ( data ) {
-            this.documents = data.data as UDER_DOC_TYPES[];
+      await this.fetch();
+    }
+  }
 
-          }
-        } )
-        .catch( ( error ) => {
-          if ( error ) {
-            this.isNoData = true;
-          }
-        } );
-      if ( this.documents.length > 0 ) {
-        this.isNoData = false;
-      } else {
-        this.isNoData = true;
+  // ─────────────────────────────────────────────────────────────
+  // Getters / setters (bound to <app-custom-table>)
+  // ─────────────────────────────────────────────────────────────
+
+  get isLoading(): boolean {
+    return this._isLoading;
+  }
+
+  set isLoading( value: boolean ) {
+    this._isLoading = value;
+    // Table can toggle this to request a reload
+    if ( value ) {
+      void this.fetch();
+    }
+  }
+
+  get index(): number {
+    return this._index;
+  }
+  set index( value: number ) {
+    this._index = value;
+    void this.fetch();
+  }
+
+  get limit(): number {
+    return this._limit;
+  }
+  set limit( value: number ) {
+    this._limit = value;
+    void this.fetch();
+  }
+
+  get search(): string {
+    return this._search;
+  }
+  set search( value: string ) {
+    this._search = value.trim();
+    void this.fetch();
+  }
+
+  /** Helper to reset pagination/search when user changes */
+  private resetPaging(): void {
+    this._index = 0;
+    this._search = '';
+  }
+
+  /** Called by table’s `fetchData` output or by setters above */
+  protected async fetch(): Promise<void> {
+    // If there is no user yet, do nothing – retry logic in table will handle later.
+    if ( !this.user ) return;
+    await this.dataInit( this._index, this._limit, this._search );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Data init (load + paginate + search)
+  // ─────────────────────────────────────────────────────────────
+
+  private async dataInit(
+    index: number,
+    limit: number,
+    search?: string,
+  ): Promise<void> {
+    try {
+      this._isLoading = true;
+      this.data = [];
+
+      if ( !this.user ) {
+        throw new Error( 'Invalid user data!' );
       }
-      this.isActive = this.user?.isActive;
-      setTimeout( () => {
-        this.isLoading = false;
-      }, 500 );
-    } else {
-      console.error( 'User not found!' );
+
+      const username = this.user.username.trim();
+      const res = await this.apiService.getUserDocuments( username );
+
+      if ( !res.success || res.status !== 'success' ) {
+        this.notification.notification( 'error', 'Failed to fetch user document data!' );
+        throw new Error( 'Failed to fetch user document data!' );
+      }
+
+
+      const documentEntity: UserDocumentEntity | null =
+        res.data?.system?.fileUpload ?? null;
+
+      if ( !documentEntity ) {
+        this.total = 0;
+        this.data = [];
+        this.notification.notification( 'warning', 'No document data found for user.' );
+        return;
+      }
+
+      const files: UploadedFile[] = this.sortFilesByUploadDate( documentEntity.files, true ) ?? [];
+
+      if ( !Array.isArray( files ) || files.length === 0 ) {
+        // No files → keep table empty but not an error
+        this.total = 0;
+        this.data = [];
+        return;
+      }
+
+      // Total count (for paginator, before filtering)
+      const total = files.length;
+      this.total = total;
+
+      // Safe pagination boundaries
+      const safeIndex = PaginationUtil.safeIndex( index, total );
+      const safeLimit = PaginationUtil.safeLimit( limit, total );
+      const safeStart = safeIndex * safeLimit;
+      const safeEnd = safeStart + safeLimit;
+
+      const safeSearch = search ? search.trim().toLowerCase() : undefined;
+
+      let filteredFiles: UploadedFile[] = files;
+
+      // Apply search on originalName / storedName
+      if ( safeSearch ) {
+        filteredFiles = files.filter( ( item: UploadedFile ) => {
+          const original = ( item.originalName ?? '' ).toLowerCase();
+          const stored = ( item.storedName ?? '' ).toLowerCase();
+          return original.includes( safeSearch ) || stored.includes( safeSearch );
+        } );
+      }
+
+      // Recompute total for filtered results
+      const effectiveTotal = filteredFiles.length;
+      this.total = effectiveTotal;
+
+      const pagedFiles = filteredFiles.slice( safeStart, safeEnd );
+
+      this.data = pagedFiles.map( ( file: UploadedFile ) =>
+        this.buildTableRowFromFile( file ),
+      );
+    } catch ( error ) {
+      console.error( '[DocumentsComponent] Error in dataInit:', error );
+    } finally {
+      this._isLoading = false;
     }
   }
 
-  ngAfterViewInit(): void {
-    // this.notification.notification('', '');
+  /**
+ * Organize UploadedFile[] by uploadDate.
+ * @param files - array of UploadedFile
+ * @param newestFirst - true = newest first, false = oldest first
+ */
+  private sortFilesByUploadDate(
+    files: UploadedFile[],
+    newestFirst: boolean = true
+  ): UploadedFile[] {
+
+    // 1. Convert to safe comparable timestamps
+    const withSafeDates = files.map( f => {
+      const ts = f.uploadDate ? new Date( f.uploadDate ).getTime() : 0;
+      return { ...f, __ts: ts };
+    } );
+
+    // 2. Sort
+    withSafeDates.sort( ( a, b ) => {
+      return newestFirst
+        ? b.__ts - a.__ts  // Newest first
+        : a.__ts - b.__ts; // Oldest first
+    } );
+
+    // 3. Cleanup and return final
+    return withSafeDates.map( ( { __ts, ...rest } ) => rest );
   }
 
-  ngOnChanges( changes: SimpleChanges ): void {
-    if ( changes[ 'user' ] && this.user ) {
-      this.username = this.user.username;
-    }
-  }
+  /** Build a single row for the table from an UploadedFile */
+  private buildTableRowFromFile( file: UploadedFile ): TableData {
+    const uploadedDate = file.uploadDate ? new Date( file.uploadDate ) : new Date();
 
-  //<================== Icons ==================>
-  private registerCustomIcons(): void {
-    const iconMap = {
-      document: 'documents.svg',
-      upload: 'upload.svg',
-      pdf: 'file-types/pdf.svg',
-      txt: 'file-types/txt.svg',
-      xml: 'file-types/xml.svg',
-      excel: 'file-types/excel.svg',
-      word: 'file-types/word.svg',
-      powerpoint: 'file-types/powerpoint.svg',
-      zip: 'file-types/zip.svg',
-      file: 'file-types/file-empty.svg',
-      jpeg: 'file-types/jpeg.svg',
-      png: 'file-types/png.svg',
-      webp: 'file-types/webp.svg',
-      gif: 'file-types/gif.svg',
-      jpg: 'file-types/jpg.svg',
-      ico: 'file-types/ico.svg',
-      svg: 'file-types/svg.svg',
-      image: 'file-types/image.svg',
+    const downloadButton: TableButton = {
+      icon: 'download',
+      action: 'download',
+      label: 'Download',
     };
 
-    for ( const [ name, path ] of Object.entries( iconMap ) ) {
-      this.matIconRegistry.addSvgIcon(
-        name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `Images/Icons/${ path }`
-        )
-      );
-    }
+    return {
+      icon: file.mimeType ?? file.extension ?? 'file',
+      fileType: file.mimeType ?? file.extension ?? 'unknown',
+      fileName: file.originalName ?? file.storedName ?? 'unknown',
+      uploaded: uploadedDate,
+      downloadButton,
+      fullFile: file,
+    };
   }
-  //<================== End Icons ==================>
 
-  //<================== File Input Button Trigger ==================>
-  protected triggerFileInput() {
-    document.querySelector<HTMLInputElement>( '#fileInput' )?.click();
-  }
-  //<================== End File Input Button Trigger ==================>
+  // ─────────────────────────────────────────────────────────────
+  // Table button centre
+  // ─────────────────────────────────────────────────────────────
 
-  //<================== File Copy and paste ==================>
-  protected handlePaste( event: ClipboardEvent ): void {
-    event.preventDefault();
+  protected async buttonCentra(
+    value: TableButtonActionConfig,
+  ): Promise<void> {
+    try {
+      if ( !value.action || !value.data ) {
+        throw new Error( 'Invalid table button payload!' );
+      }
 
-    const items = event.clipboardData?.items;
-    if ( !items ) return;
+      const action: TableButtonActionConfig[ 'action' ] = value.action;
+      const row: TableData = value.data as TableData;
 
-    const validFiles: File[] = [];
+      switch ( action ) {
+        case 'download': {
+          const fullFile = row.fullFile;
+          const url = fullFile.URL;
+          const name = fullFile.originalName ?? fullFile.storedName;
 
-    for ( const item of items ) {
-      if ( item.kind === 'file' ) {
-        const file = item.getAsFile();
-        if ( file && this.allowedTypes.includes( file.type ) ) {
-          validFiles.push( file );
+          if ( !url || !name ) {
+            this.notification.notification( 'warning', 'Unsupported file download!' );
+            throw new Error( 'Unsupported file download!' );
+          }
+
+          await this.downloadService.downloadFromUrl( url, name );
+          break;
         }
+
+        default:
+          // For future actions (view, delete, etc.)
+          return;
       }
-    }
-
-    if ( validFiles.length > 0 ) {
-      this.processPastedFiles( validFiles );
+    } catch ( error ) {
+      console.error( '[DocumentsComponent] buttonCentra error:', error );
     }
   }
 
-  protected processPastedFiles( files: File[] ): void {
-    const dataTransfer = new DataTransfer();
-    for ( const file of files ) {
-      dataTransfer.items.add( file );
-    }
+  // ─────────────────────────────────────────────────────────────
+  // File selection (upload)
+  // ─────────────────────────────────────────────────────────────
 
-    const input = this.fileInput.nativeElement as HTMLInputElement;
-    input.files = dataTransfer.files;
-
-    // Reuse existing file selection handler
-    this.onFileSelected( { target: input } as unknown as Event );
-  }
-  //<================== End File Copy and paste ==================>
-
-  //<================== File Drag and Drop ==================>
-  protected onDragOver( event: DragEvent ): void {
-    event.preventDefault(); // Crucial to allow drop
-    this.isDragOver = true;
-  }
-
-  protected onDragLeave( event: DragEvent ): void {
-    event.preventDefault();
-    this.isDragOver = false;
-  }
-
-  protected onDrop( event: DragEvent ): void {
-    event.preventDefault();
-    this.isDragOver = false;
-
-    const files = event.dataTransfer?.files;
-    if ( files && files.length > 0 ) {
-      // Filter allowed types and collect valid files
-      const validFiles: File[] = [];
-      for ( let i = 0; i < files.length; i++ ) {
-        const file = files.item( i );
-        if ( file && this.allowedTypes.includes( file.type ) ) {
-          validFiles.push( file );
-        } else {
-          this.isNotType = true;
-        }
-      }
-
-      if ( validFiles.length > 0 ) {
-        this.processDroppedFiles( validFiles );
-      }
-    }
-  }
-
-  // Accepts an array of Files, not FileList
-  protected processDroppedFiles( files: File[] ): void {
-    const dataTransfer = new DataTransfer();
-    for ( const file of files ) {
-      dataTransfer.items.add( file );
-    }
-
-    const input = this.fileInput.nativeElement as HTMLInputElement;
-
-    // Replace input files with the new DataTransfer file list
-    input.files = dataTransfer.files;
-
-    // Trigger your upload handler
-    this.onFileSelected( { target: input } as unknown as Event );
-  }
-
-  private preventDefault( event: Event ): void {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-  //<================== End File Drag and Drop ==================>
-
-  //<================== Choose icon ==================>
-  protected chooceIcon( type: string ): string {
-    switch ( type ) {
-      case 'doc':
-        return 'word';
-      case 'docx':
-        return 'word';
-      case 'dot':
-        return 'word';
-      case 'dotx':
-        return 'word';
-      case 'rtf':
-        return 'word';
-      case 'odt':
-        return 'word';
-      case 'txt':
-        return 'txt';
-      case 'xml':
-        return 'xml';
-      case 'xls':
-        return 'excel';
-      case 'xlsx':
-        return 'excel';
-      case 'xlsm':
-        return 'excel';
-      case 'xlt':
-        return 'excel';
-      case 'xltx':
-        return 'excel';
-      case 'ods':
-        return 'excel';
-      case 'csv':
-        return 'excel';
-      case 'tsv':
-        return 'excel';
-      case 'ppt':
-        return 'powerpoint';
-      case 'pptx':
-        return 'powerpoint';
-      case 'pptm':
-        return 'powerpoint';
-      case 'pot':
-        return 'powerpoint';
-      case 'potx':
-        return 'powerpoint';
-      case 'odp':
-        return 'powerpoint';
-      case 'pdf':
-        return 'pdf';
-      case 'zip':
-        return 'zip';
-      case 'png':
-        return 'image';
-      case 'jpeg':
-        return 'image';
-      case 'webp':
-        return 'image';
-      case 'gif':
-        return 'image';
-      case 'jpg':
-        return 'image';
-      case 'ico':
-        return 'image';
-      case 'svg':
-        return 'image';
-      default:
-        return 'file';
-    }
-  }
-  //<================== End Choose icon ==================>
-
-  //<================== File input ==================>
-  protected onFileSelected( event: Event ): void {
-    const input = event.target as HTMLInputElement;
-    let fileSize: number = 0;
-    if ( input.files && input.files.length > 0 ) {
-      this.file = input.files;
-      this.isFileSelected = true;
-
-      for ( let i = 0; i < this.file.length; i++ ) {
-        const file = this.file[ i ];
-        const data: selectedFiles = {
-          name: file.name,
-          size: file.size / ( 1024 * 1024 ),
-          icon: this.chooceIcon( file.name.split( '.' ).pop() || '' ),
-          file: file,
-        };
-
-        this.selectedFiles.push( data );
-        fileSize += file.size;
-      }
-
-      if ( fileSize !== 0 && this.notification ) {
-        if ( fileSize > 10 * 1024 * 1024 ) {
-          this.notification.notification(
-            'error' as msgTypes,
-            'File sizes should less than 10MB'
-          );
-        }
-      } else {
-        console.error( 'Notification not found' );
-      }
-    } else {
-      this.file = null;
-    }
-  }
-  //<================== End File input ==================>
-
-  //<================== File Delete Item from array of files ==================>
-  protected deleteFile( index: number ) {
-    this.selectedFiles.splice( index, 1 );
-    if ( this.selectedFiles.length === 0 ) this.isFileSelected = false;
-  }
-  //<================== End File Delete Item from array of files ==================>
-
-  //<================== Download the documents ==================>
-  protected async downloadFile( downloadURL: string ) {
-    if ( this.isBrowser ) {
-      window.open( downloadURL, '_blank' );
-      URL.revokeObjectURL( downloadURL );
-    }
-  }
-  //<================== End Download the documents ==================>
-
-  //<================== Insert the documents ==================>
-  protected async insertDocumnets() {
-    if ( this.selectedFiles.length === 0 && this.notification ) {
-      this.notification?.notification( 'error', 'No files selected to upload.' );
+  protected filesAdded( files: File[] ): void {
+    if ( !Array.isArray( files ) || files.length === 0 ) {
       return;
-    } else {
-      if ( this.user ) {
-        if ( !this.progress ) console.error( 'Progress bar not found!' );
-        const formData = new FormData();
-        this.progress.start();
-        formData.append( 'username', this.user?.username );
-        formData.append(
-          'uploader',
-          this.authService.getLoggedUser?.username ||
-          'Error By taking logged user'
-        );
-        for ( let item of this.selectedFiles ) {
-          formData.append( 'files', item.file as File );
-        }
-        await this.APIs.uploadDocuments( formData, this.user?.username )
-          .then( ( data ) => {
-            if ( data && this.notification ) {
-              this.notification.notification( data.status, data.message );
-            } else {
-              this.notification.notification(
-                'error',
-                'Error: file upload failed!'
-              );
-            }
-          } )
-          .catch( ( error ) => {
-            if ( error ) {
-              this.notification.notification( 'error', error.message );
-              this.progress.error();
-            }
-          } )
-          .finally( () => {
-            this.progress.complete();
-            this.selectedFiles = [];
-            this.isFileSelected = false;
-          } );
-        await this.callTheAPI();
-      } else {
-        console.error( 'User not found!' );
-      }
     }
+    this.selectedFiles.push( ...files );
   }
-  //<================== End Insert the documents ==================>
 
-  ngOnDestroy(): void {
-    if ( this.isBrowser ) {
-      window.removeEventListener( 'dragover', this.preventDefault );
-      window.removeEventListener( 'drop', this.preventDefault );
+  // ─────────────────────────────────────────────────────────────
+  // Submit upload
+  // ─────────────────────────────────────────────────────────────
+
+  protected async submit(): Promise<void> {
+    try {
+      if ( this.selectedFiles.length === 0 ) {
+        this.notification.notification( 'warning', 'No files selected to upload.' );
+        throw new Error( 'Empty array of files!' );
+      }
+
+      if ( !this.user ) {
+        throw new Error( 'Invalid user!' );
+      }
+
+      if ( !this.authService.getLoggedUser ) {
+        this.authService.clearCredentials();
+        throw new Error( 'Invalid login!' );
+      }
+
+      const uploaderUsername = this.authService.getLoggedUser.username;
+      const targetUsername = this.user.username;
+
+      const formData = new FormData();
+
+      this.progress.start();
+
+      formData.append( 'username', targetUsername );
+      formData.append( 'uploader', uploaderUsername );
+
+      for ( const file of this.selectedFiles ) {
+        formData.append( 'files', file, file.name );
+      }
+
+      const res = await this.apiService.uploadDocuments( formData, targetUsername );
+
+      if ( !res.success || res.status !== 'success' ) {
+        this.notification.notification(
+          'error',
+          'Failed to upload selected documents.',
+        );
+        throw new Error( 'Failed to upload selected documents' );
+      }
+
+      this.notification.notification(
+        'success',
+        'Successfully uploaded documents.',
+      );
+
+      // Reload list after successful upload
+      this.selectedFiles = [];
+      await this.fetch();
+    } catch ( error ) {
+      console.error( '[DocumentsComponent] submit error:', error );
+      this.progress.stop();
+    } finally {
+      this.progress.complete();
+      this.selectedFiles = [];
+      this.dropDown.clear();
+      await this.fetch();
     }
-
-    this.modeSub?.unsubscribe();
   }
 }

@@ -1,4 +1,14 @@
+// ============================================================================
 // Path: src/app/pages/tenant/home/home.component.ts
+// Description:
+//  Tenant home page:
+//    - Section 01: Admin / Non-tenant users table
+//    - Section 02: Tenant users table
+//    - Section 03: Tenant leases table (current user's leases)
+// Notes:
+//  - Class-based only (no standalone functions).
+//  - SSR/Electron safe: browser-only logic is guarded with isBrowser.
+// ============================================================================
 
 import {
   CommonModule,
@@ -38,7 +48,7 @@ import {
 
 import {
   Subscription,
-  firstValueFrom
+  firstValueFrom,
 } from 'rxjs';
 
 import * as FileSaver from 'file-saver';
@@ -50,7 +60,6 @@ import {
 
 import {
   NotificationDialogComponent,
-  NotificationType,
 } from '../../../components/dialogs/notification/notificationBar.component';
 
 import {
@@ -59,7 +68,6 @@ import {
 
 import {
   CustomTableComponent,
-  SwitchButtonType,
   FileExport,
   TableButton,
   TableButtonActionConfig,
@@ -172,7 +180,7 @@ export class HomeComponent implements OnInit, OnDestroy {
      COMMON / SHARED STATE
      ====================================================================== */
 
-  // Loading flag used to show global spinner in template
+  // Global loading state for this page
   private _isLoading: boolean = false;
 
   protected mode: boolean | null = null;
@@ -182,10 +190,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   protected allUsers: User[] | null = [];
 
-  // All properties (not only for leases) – currently unused but kept for future
+  // All properties (not only for leases) – currently unused but kept for future use
   private properties!: BackEndPropertyData[];
 
-  // Properties that belong to leases of the logged-in user (used in export)
+  // Properties linked to leases (for export)
   private leaseProperties: BackEndPropertyData[] = [];
 
   private readonly defaultUserImage: string =
@@ -338,7 +346,7 @@ export class HomeComponent implements OnInit, OnDestroy {
    */
   async ngOnInit(): Promise<void> {
     try {
-      this._isLoading = true;
+      this.isLoading = true;
 
       // SECTION 01: Non-tenants (Admin table)
       await this.organiseAdmintable( 0, this._adminPageSize );
@@ -348,9 +356,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 
       // SECTION 03: Logged user leases
       await this.loggeUserLeases();
-
-    } finally {
-      this._isLoading = false;
+    }
+    finally {
+      this.isLoading = false;
     }
   }
 
@@ -372,26 +380,46 @@ export class HomeComponent implements OnInit, OnDestroy {
     return this._isLoading;
   }
 
-  // IMPORTANT:
-  //  - Setter now ONLY sets the flag.
-  //  - It does NOT trigger any reload to avoid recursive calls.
+  // NOTE:
+  //  - Setter ONLY updates the flag now.
+  //  - No hidden reloads (to avoid recursion / unexpected calls).
   protected set isLoading( value: boolean ) {
     this._isLoading = value;
-    if ( this._isLoading ) {
-      // SECTION 01: Non-tenants (Admin table)
-      this.organiseAdmintable( 0, this._adminPageSize );
-      this.adminSearch = '';
+  }
 
-      // SECTION 02: Tenants table
-      this.organisTenantTable( 0, this._tenantPageSize );
-      this.tenantSearch = '';
+  /* ======================================================================
+     SMALL SHARED HELPERS
+     ====================================================================== */
 
-      // SECTION 03: Logged user leases
-      this.loggeUserLeases();
+  /**
+   * ensureValidInteger
+   *  - Basic guard for non-negative integer values.
+   */
+  private ensureValidInteger(
+    value: number,
+    fieldName: string,
+  ): void {
+    if (
+      Number.isNaN( value ) ||
+      !Number.isFinite( value ) ||
+      !Number.isInteger( value ) ||
+      value < 0
+    ) {
+      throw new Error( `Invalid ${ fieldName }` );
     }
-    else {
-      this._isLoading = false;
-    }
+  }
+
+  /**
+   * normalizeSearch
+   *  - Common search normaliser used by admin / tenant tables.
+   */
+  private normalizeSearch(
+    search?: string,
+  ): string | undefined {
+    if ( typeof search !== 'string' ) return undefined;
+
+    const trimmed: string = search.trim();
+    return trimmed.length > 0 ? trimmed.toLowerCase() : undefined;
   }
 
   /* ======================================================================
@@ -433,7 +461,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
 
       this.exportTableData( value, type );
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( error );
       this.handleError( error, 'Failed to load file data.' );
     }
@@ -472,12 +501,12 @@ export class HomeComponent implements OnInit, OnDestroy {
     const columns: string[] = Object.values( keyMap );
 
     // Normalize each row to use display labels
-    const exportData: Record<string, any>[] = fileData.map( ( item ) => {
-      const normalizedRow: Record<string, any> = {};
+    const exportData: Record<string, unknown>[] = fileData.map( ( item ) => {
+      const normalizedRow: Record<string, unknown> = {};
 
       for ( const rawKey in keyMap ) {
         const displayKey = keyMap[ rawKey ];
-        normalizedRow[ displayKey ] = item[ rawKey ] ?? '';
+        normalizedRow[ displayKey ] = ( item as Record<string, unknown> )[ rawKey ] ?? '';
       }
 
       return normalizedRow;
@@ -543,7 +572,9 @@ export class HomeComponent implements OnInit, OnDestroy {
    * isExcel
    *  - Returns true if the provided extension is supported for Excel export.
    */
-  private isExcel( type: string ): boolean {
+  private isExcel(
+    type: string,
+  ): boolean {
     switch ( type.toLowerCase().trim() ) {
       case 'xls':
       case 'xlsx':
@@ -625,30 +656,15 @@ export class HomeComponent implements OnInit, OnDestroy {
   ): Promise<void> {
     try {
       this.adminTableDisplay = false;
-      this._isLoading = true;
+      this.isLoading = true;
 
       // Reset current page data
       this.adminData = [];
 
-      // 1) Validate and sanitize index
-      if (
-        Number.isNaN( index ) ||
-        !Number.isFinite( index ) ||
-        !Number.isInteger( index )
-      ) {
-        throw new Error( 'Invalid index' );
-      }
+      // Validate index
+      this.ensureValidInteger( index, 'index' );
 
-      // 2) Normalize search query
-      let safeSearch: string | undefined = undefined;
-
-      if ( typeof search === 'string' ) {
-        const trimmed: string = search.trim();
-
-        if ( trimmed.length > 0 ) {
-          safeSearch = trimmed.toLowerCase();
-        }
-      }
+      const safeSearch: string | undefined = this.normalizeSearch( search );
 
       // 3) Fetch total user count
       const countRes = await this.tenantService.getAllNoneTenantsCount();
@@ -657,30 +673,19 @@ export class HomeComponent implements OnInit, OnDestroy {
         throw new Error( 'Failed to count total users' );
       }
 
-      const count: number = Number( countRes.data );
+      const count: number | undefined = countRes.data?.pagination?.total;
 
-      if (
-        Number.isNaN( count ) ||
-        !Number.isFinite( count ) ||
-        !Number.isInteger( count ) ||
-        count < 0
-      ) {
+      if ( typeof count !== 'number' ) {
         throw new Error( 'Invalid count' );
       }
+
+      this.ensureValidInteger( count, 'count' );
 
       this.adminTotalDataCount = count;
 
       // 4) Pagination calculations
-      const safeIndex: number = PaginationUtil.safeIndex(
-        index,
-        count,
-      );
-
-      const safeLimit: number = PaginationUtil.safeLimit(
-        size,
-        count,
-      );
-
+      const safeIndex: number = PaginationUtil.safeIndex( index, count );
+      const safeLimit: number = PaginationUtil.safeLimit( size, count );
       const safeStart: number = safeIndex * safeLimit;
 
       // 5) Fetch paginated user list
@@ -690,11 +695,11 @@ export class HomeComponent implements OnInit, OnDestroy {
         safeSearch,
       );
 
-      if ( res.status !== 'success' || !Array.isArray( res.data.users ) ) {
+      if ( res.status !== 'success' || !Array.isArray( res.data?.system?.users ) ) {
         throw new Error( 'Failed to process user fetching in admin table' );
       }
 
-      const users = res.data.users;
+      const users = res.data.system.users;
 
       if ( users.length === 0 ) {
         // No users for this page; table remains empty
@@ -751,12 +756,15 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         this.adminData.push( row );
       }
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( 'Error organizing users table data:', error );
-    } finally {
+      this.handleError( error, 'Failed to load admin users.' );
+    }
+    finally {
       this.adminTableDisplay = true;
       setTimeout( (): void => {
-        this._isLoading = false;
+        this.isLoading = false;
       }, 500 );
     }
   }
@@ -794,14 +802,15 @@ export class HomeComponent implements OnInit, OnDestroy {
             }
 
             const resView = await this.apiService.generateToken( username );
-            const token = resView.token;
+            const token = this.apiService.extractTokenFromMsg( resView );
 
             if ( !token || typeof token !== 'string' ) {
               throw new Error( 'Invalid token!' );
             }
 
             await this.router.navigate( [ '/dashboard/users/user-profile', token ] );
-          } catch ( error ) {
+          }
+          catch ( error ) {
             console.error( error );
           }
           break;
@@ -815,7 +824,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         default:
           return;
       }
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( error );
       this.handleError( error, 'Failed to load user data.' );
     }
@@ -833,7 +843,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         throw new Error( 'Invalid tenant data in insertion!' );
       }
 
-      this._isLoading = true;
+      this.isLoading = true;
       this.progressBarComponent.start();
 
       const formData: FormData = new FormData();
@@ -855,15 +865,17 @@ export class HomeComponent implements OnInit, OnDestroy {
       // Reload both admin and tenant tables
       await this.organiseAdmintable( this._adminPageIndex, this._adminPageSize, this._adminSearch );
       await this.organisTenantTable( this._tenantPageIndex, this._tenantPageSize, this._tenantSearch );
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( error );
       this.progressBarComponent.stop();
       this.handleError( error, 'Failed to load tenant data.' );
-    } finally {
+    }
+    finally {
       this.progressBarComponent.complete();
 
       setTimeout( (): void => {
-        this._isLoading = false;
+        this.isLoading = false;
       }, 500 );
     }
   }
@@ -937,20 +949,11 @@ export class HomeComponent implements OnInit, OnDestroy {
   ): Promise<void> {
     try {
       this.tenantTableDisplay = false;
-      this._isLoading = true;
+      this.isLoading = true;
 
       this.tenantData = [];
 
-      // 1) Normalize search
-      let safeSearch: string | undefined = undefined;
-
-      if ( typeof search === 'string' ) {
-        const trimmed: string = search.trim();
-
-        if ( trimmed.length > 0 ) {
-          safeSearch = trimmed.toLowerCase();
-        }
-      }
+      const safeSearch: string | undefined = this.normalizeSearch( search );
 
       // 2) Get total tenant count
       const resTotal = await this.tenantService.getAllTenantsCount();
@@ -959,17 +962,13 @@ export class HomeComponent implements OnInit, OnDestroy {
         throw new Error( 'Process tenant total count failed!' );
       }
 
-      const totalRaw = resTotal.data;
-      const total: number = Number( totalRaw );
+      const total: number | undefined = resTotal.data?.pagination?.total;
 
-      if (
-        Number.isNaN( total ) ||
-        !Number.isFinite( total ) ||
-        !Number.isInteger( total ) ||
-        total < 0
-      ) {
-        throw new Error( 'Invalid total tenant count' );
+      if ( !total || Number.isNaN( total ) || !Number.isInteger( total ) || !Number.isFinite( total ) ) {
+        throw new Error( 'Invalid tenant total number!' );
       }
+
+      this.ensureValidInteger( total, 'total tenant count' );
 
       this.tenantTotalDataCount = total;
 
@@ -998,11 +997,11 @@ export class HomeComponent implements OnInit, OnDestroy {
         safeSearch,
       );
 
-      if ( res.status !== 'success' || !Array.isArray( res.data.tenants ) ) {
+      if ( res.status !== 'success' || !Array.isArray( res.data?.system?.tenants ) ) {
         throw new Error( 'Tenant data process failed!' );
       }
 
-      const tenants = res.data.tenants;
+      const tenants = res.data.system.tenants;
 
       if ( !Array.isArray( tenants ) ) {
         throw new Error( 'Invalid tenant list received from server!' );
@@ -1067,16 +1066,18 @@ export class HomeComponent implements OnInit, OnDestroy {
 
         this.tenantData.push( row );
       }
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( error );
 
       this.progressBarComponent.stop();
       this.handleError( error, 'Failed to load tenant data.' );
-    } finally {
+    }
+    finally {
       this.tenantTableDisplay = true;
 
       setTimeout( (): void => {
-        this._isLoading = false;
+        this.isLoading = false;
       }, 500 );
     }
   }
@@ -1115,14 +1116,15 @@ export class HomeComponent implements OnInit, OnDestroy {
             }
 
             const resView = await this.apiService.generateToken( username );
-            const token = resView.token;
+            const token = this.apiService.extractTokenFromMsg( resView );
 
             if ( !token || typeof token !== 'string' ) {
               throw new Error( 'Invalid token!' );
             }
 
             await this.router.navigate( [ '/dashboard/tenant/tenant-view', token ] );
-          } catch ( error ) {
+          }
+          catch ( error ) {
             console.error( error );
           }
           break;
@@ -1136,7 +1138,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         default:
           return;
       }
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( error );
       this.progressBarComponent.stop();
       this.handleError( error, 'Failed to load tenant data.' );
@@ -1155,19 +1158,19 @@ export class HomeComponent implements OnInit, OnDestroy {
         width: '400px',
         height: 'auto',
         data: {
-          title: `Do you wish to remove this tenant`,
-          body: `All related activities and leases will be deleted!`
-        }
+          title: 'Do you wish to remove this tenant',
+          body: 'All related activities and leases will be deleted!',
+        },
       } );
 
       // Wait for the dialog result (true/false)
       const isConfirmed: boolean = await firstValueFrom(
-        dialogRef.afterClosed()
+        dialogRef.afterClosed(),
       );
 
-      if ( !isConfirmed.valueOf() ) return;
+      if ( !isConfirmed ) return;
 
-      this._isLoading = true;
+      this.isLoading = true;
       this.progressBarComponent.start();
 
       if ( !this.loggedUser ) {
@@ -1191,7 +1194,6 @@ export class HomeComponent implements OnInit, OnDestroy {
         loggedUsername,
       );
 
-
       if ( res.status !== 'success' ) {
         throw new Error( 'Failed to process tenant delete' );
       }
@@ -1203,17 +1205,18 @@ export class HomeComponent implements OnInit, OnDestroy {
 
       await this.organiseAdmintable( this._adminPageIndex, this._adminPageSize, this._adminSearch );
       await this.organisTenantTable( this._tenantPageIndex, this._tenantPageSize, this._tenantSearch );
-
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( error );
 
       this.progressBarComponent.stop();
       this.handleError( error, 'Failed to load tenant data.' );
-    } finally {
+    }
+    finally {
       this.progressBarComponent.complete();
 
       setTimeout( (): void => {
-        this._isLoading = false;
+        this.isLoading = false;
       }, 500 );
     }
   }
@@ -1241,18 +1244,20 @@ export class HomeComponent implements OnInit, OnDestroy {
         throw new Error( response.message );
       }
 
-      if ( response.data.length === 0 ) {
+      const rowLeases: Lease[] | undefined = response.data?.system?.leases;
+
+      if ( !Array.isArray( rowLeases ) || rowLeases.length === 0 ) {
+        this.notificationDialog.notification( 'warning', "You don't have any leases!" );
         throw new Error( "You don't have any leases!" );
       }
 
-      const leases: Lease[] = response.data;
+      this.userLeases = [ ...rowLeases ];
 
-      this.userLeases = [ ...leases ];
-
-      if ( Array.isArray( this.userLeases ) && this.userLeases.length > 0 ) {
+      if ( this.userLeases.length > 0 ) {
         await this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
       }
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( error );
       this.userLeases = [];
       // Optional: show notification here if you want
@@ -1313,27 +1318,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   ): Promise<void> {
     try {
       this.leaseTableDisplay = false;
-      this._isLoading = true;
+      this.isLoading = true;
 
       if ( !this.loggedUser ) {
         throw new Error( 'Invalid logged user!' );
       }
 
-      if (
-        Number.isNaN( index ) ||
-        !Number.isFinite( index ) ||
-        !Number.isInteger( index )
-      ) {
-        throw new Error( 'Invalid index' );
-      }
-
-      if (
-        Number.isNaN( size ) ||
-        !Number.isFinite( size ) ||
-        !Number.isInteger( size )
-      ) {
-        throw new Error( 'Invalid size' );
-      }
+      this.ensureValidInteger( index, 'index' );
+      this.ensureValidInteger( size, 'size' );
 
       if ( !Array.isArray( this.userLeases ) || this.userLeases.length === 0 ) {
         throw new Error( "You don't have any leases!" );
@@ -1364,7 +1356,7 @@ export class HomeComponent implements OnInit, OnDestroy {
                 throw new Error( 'Failed to process property fetch!' );
               }
 
-              const property: BackEndPropertyData = propertyRes.data;
+              const property: BackEndPropertyData | undefined = propertyRes.data?.system?.property;
 
               if ( !property ) {
                 throw new Error( 'Invalid property!' );
@@ -1428,7 +1420,8 @@ export class HomeComponent implements OnInit, OnDestroy {
               };
 
               return data;
-            } catch ( error ) {
+            }
+            catch ( error ) {
               console.error( 'Error building lease row:', error );
               return null;
             }
@@ -1450,18 +1443,20 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.leaseTotalDataCount = this.allLeasesUnderLoggedUser.length;
 
       this.makeLeasePagination( index, size );
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( 'Error organizing lease table data:', error );
 
       this.notificationDialog.notification(
         'error',
         ( error as Error ).message,
       );
-    } finally {
+    }
+    finally {
       this.leaseTableDisplay = true;
 
       setTimeout( (): void => {
-        this._isLoading = false;
+        this.isLoading = false;
       }, 500 );
     }
   }
@@ -1475,21 +1470,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     size: number,
   ): void {
     try {
-      if (
-        Number.isNaN( index ) ||
-        !Number.isFinite( index ) ||
-        !Number.isInteger( index )
-      ) {
-        throw new Error( 'Invalid index' );
-      }
-
-      if (
-        Number.isNaN( size ) ||
-        !Number.isFinite( size ) ||
-        !Number.isInteger( size )
-      ) {
-        throw new Error( 'Invalid size' );
-      }
+      this.ensureValidInteger( index, 'index' );
+      this.ensureValidInteger( size, 'size' );
 
       this.leaseTableData = [];
 
@@ -1497,11 +1479,11 @@ export class HomeComponent implements OnInit, OnDestroy {
         throw new Error( 'Leases not found under the user!' );
       }
 
-      const total: number = Number( this.allLeasesUnderLoggedUser.length );
+      const total: number = this.allLeasesUnderLoggedUser.length;
 
-      const pageSize: number = PaginationUtil.safeLimit( Number( size ), total );
+      const pageSize: number = PaginationUtil.safeLimit( size, total );
 
-      const safeIndex: number = PaginationUtil.safeIndex( Number( index ), total );
+      const safeIndex: number = PaginationUtil.safeIndex( index, total );
 
       const safeStart: number = safeIndex * pageSize;
       const safeEnd: number = Math.min( safeStart + pageSize, total );
@@ -1512,7 +1494,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       );
 
       this.leaseTableData = [ ...data ];
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( error );
     }
   }
@@ -1552,7 +1535,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         default:
           return;
       }
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( error );
       this.notificationDialog.notification( 'error', String( error ) );
     }
@@ -1571,7 +1555,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       }
 
       await this.router.navigate( [ '/dashboard/tenant/view-lease', leaseId ] );
-    } catch ( err ) {
+    }
+    catch ( err ) {
       console.error( 'Failed to view lease agreement:', err );
       this.handleError( err, 'Failed to open lease agreement.' );
     }
@@ -1602,10 +1587,12 @@ export class HomeComponent implements OnInit, OnDestroy {
 
       if ( Array.isArray( searchData ) && searchData.length > 0 ) {
         this.leaseTableData = [ ...searchData ];
-      } else {
+      }
+      else {
         this.makeLeasePagination( this._leaseTablePageIndex, this._leaseTablePageSize );
       }
-    } catch ( err ) {
+    }
+    catch ( err ) {
       console.error( 'Failed to search lease data:', err );
       this.handleError( err, 'Failed to search lease data.' );
     }
@@ -1614,6 +1601,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   /**
    * downloadLease
    *  - Downloads a lease agreement PDF for the given leaseId.
+   *  - Browser-only (guarded for SSR/Electron).
    */
   private async downloadLease(
     leaseId: string,
@@ -1627,6 +1615,10 @@ export class HomeComponent implements OnInit, OnDestroy {
         throw new Error( 'Invalid lease ID!' );
       }
 
+      if ( !this.isBrowser ) {
+        throw new Error( 'Downloading is only supported in browser environment.' );
+      }
+
       this.progressBarComponent.start();
 
       const blob: Blob = await this.tenantService.downloadLeaseAgreement(
@@ -1637,22 +1629,29 @@ export class HomeComponent implements OnInit, OnDestroy {
 
       const actualName: string = `${ leaseId }-lease-agreement.pdf`;
 
-      const fileURL: string = window.URL.createObjectURL( blob );
+      const nativeWindow: Window | null = this.windowRef.nativeWindow;
+      if ( !nativeWindow ) {
+        throw new Error( 'Window object is not available.' );
+      }
 
-      const a: HTMLAnchorElement = document.createElement( 'a' );
-      a.href = fileURL;
-      a.download = actualName;
-      a.style.display = 'none';
+      const fileURL: string = URL.createObjectURL( blob );
 
-      document.body.appendChild( a );
-      a.click();
-      document.body.removeChild( a );
+      const anchor: HTMLAnchorElement = nativeWindow.document.createElement( 'a' );
+      anchor.href = fileURL;
+      anchor.download = actualName;
+      anchor.style.display = 'none';
 
-      window.URL.revokeObjectURL( fileURL );
-    } catch ( err ) {
+      nativeWindow.document.body.appendChild( anchor );
+      anchor.click();
+      nativeWindow.document.body.removeChild( anchor );
+
+      URL.revokeObjectURL( fileURL );
+    }
+    catch ( err ) {
       console.error( 'Failed to download lease agreement PDF:', err );
       this.handleError( err, 'Failed to download lease agreement PDF.' );
-    } finally {
+    }
+    finally {
       this.progressBarComponent.complete();
     }
   }
@@ -1700,7 +1699,8 @@ export class HomeComponent implements OnInit, OnDestroy {
         leasesWithProperty,
         value.extention,
       );
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( error );
       this.handleError( error, 'Failed to load tenant data.' );
     }
@@ -1719,7 +1719,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const exportData: Record<string, any>[] = leases.map( ( lease ) => {
+    const exportData: Record<string, unknown>[] = leases.map( ( lease ) => {
       const addr = lease.property?.address;
 
       return {
@@ -1821,11 +1821,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   ): void {
     if ( error instanceof HttpErrorResponse ) {
       this.notificationDialog.notification( 'error', error.message );
-    } else if ( typeof error === 'string' ) {
+    }
+    else if ( typeof error === 'string' ) {
       this.notificationDialog.notification( 'error', error );
-    } else if ( error instanceof Error ) {
+    }
+    else if ( error instanceof Error ) {
       this.notificationDialog.notification( 'error', error.message );
-    } else {
+    }
+    else {
       this.notificationDialog.notification( 'error', fallbackMessage );
     }
   }

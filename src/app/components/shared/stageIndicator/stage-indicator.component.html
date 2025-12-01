@@ -23,14 +23,22 @@
         type="button"
         class="point-bubble"
         [style.maxWidth.px]="bubbleMaxWidthPx"
-        [matTooltip]="item.label"
-        matTooltipPosition="above"
       >
-        {{
-          item.label.length > 10
-            ? (item.label | slice : 0 : 10) + "..."
-            : item.label
-        }}
+      <div class="inner-bubble-container">
+        <span class="bubble-text-hover">{{ item.label }}</span>
+        <span
+          class="bubble-text"
+          [matTooltip]="item.label"
+          matTooltipPosition="above"
+        >
+          {{
+            item.label.length > 10
+              ? (item.label | slice : 0 : 10) + "..."
+              : item.label
+          }}
+        </span>
+      </div>
+
       </button>
     </div>
   </div>

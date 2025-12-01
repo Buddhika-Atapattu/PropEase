@@ -4,6 +4,7 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {isPlatformBrowser} from '@angular/common';
 import {Observable} from 'rxjs';
 import {environment} from '../../../environments/environment';
+import {MSG} from '../../types/api-message.types'
 
 export interface ComplaintCommentClient {
   _id?: string;
@@ -36,11 +37,11 @@ export class CommentsService {
     @Inject(PLATFORM_ID) private readonly platformId: Object,
   ) {}
 
-  public fetchComments(code: string, limit: number, cursor?: string): Observable<CommentsResponse> {
+  public fetchComments(code: string, limit: number, cursor?: string): Observable<MSG> {
     const url = `${this.base}/api-tenant/complaints/${encodeURIComponent(code)}/comments`;
     let params = new HttpParams().set('limit', String(limit));
     if(cursor) params = params.set('cursor', cursor);
-    return this.http.get<CommentsResponse>(url, {params});
+    return this.http.get<MSG>(url, {params});
   }
 
   public isBrowser(): boolean {

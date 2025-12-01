@@ -83,15 +83,16 @@
       cdkOverlayOrigin
       #pageOptionOrigin="cdkOverlayOrigin"
     >
-      @if (pageSizeOptions && pageSizeOptions.length > 0) {
+      @if (limitOptions && limitOptions.length > 0) {
+      <!-- (ngModelChange)="onLimitChanged($event)" -->
       <input
         #pageSizeInput
         type="number"
         name="pageSize"
         id="pageSize"
         class="size-input"
-        [(ngModel)]="pageSize"
-        (ngModelChange)="onPageSizeChanged($event)"
+        [(ngModel)]="limit"
+        (keydown.enter)="onLimitInputChange()"
         (focus)="openPageOption()"
         (click)="openPageOption()"
       />
@@ -110,12 +111,12 @@
         (detach)="closePageOption()"
       >
         <ul class="menu">
-          @for (item of pageSizeOptions; track item; let i = $index) {
-          <li class="menu-item" [class.active]="item === pageSize">
+          @for (item of limitOptions; track item; let i = $index) {
+          <li class="menu-item" [class.active]="item === limit">
             <button
               type="button"
               class="item-btn"
-              (click)="onPageSizeChanged(item)"
+              (click)="onLimitChanged(item)"
             >
               {{ item }}
             </button>
@@ -128,8 +129,8 @@
         type="number"
         name="pageSize"
         id="pageSize"
-        [(ngModel)]="pageSize"
-        (ngModelChange)="onPageSizeChanged($event)"
+        [(ngModel)]="limit"
+        (ngModelChange)="onLimitChanged($event)"
         class="size-input"
       />
       }
@@ -142,7 +143,7 @@
         class="btn btn-outline-warning"
         matTooltip="Skip Backward"
         matTooltipPosition="above"
-        (click)="onPageIndexChanged(pageIndex - 3)"
+        (click)="onPageIndexChanged(index - 3)"
       >
         <i class="fa-solid fa-angles-left"></i>
       </button>
@@ -152,7 +153,7 @@
         class="btn btn-outline-warning"
         matTooltip="Backward"
         matTooltipPosition="above"
-        (click)="onPageIndexChanged(pageIndex - 1)"
+        (click)="onPageIndexChanged(index - 1)"
       >
         <i class="fa-solid fa-angle-left"></i>
       </button>
@@ -162,7 +163,7 @@
         class="btn btn-outline-warning"
         matTooltip="Forward"
         matTooltipPosition="above"
-        (click)="onPageIndexChanged(pageIndex + 1)"
+        (click)="onPageIndexChanged(index + 1)"
       >
         <i class="fa-solid fa-angle-right"></i>
       </button>
@@ -172,7 +173,7 @@
         class="btn btn-outline-warning"
         matTooltip="Skip forward"
         matTooltipPosition="above"
-        (click)="onPageIndexChanged(pageIndex + 3)"
+        (click)="onPageIndexChanged(index + 3)"
       >
         <i class="fa-solid fa-angles-right"></i>
       </button>

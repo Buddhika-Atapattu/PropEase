@@ -1,11 +1,12 @@
 // Path: src/app/components/shared/paginator/paginator.component.ts
 
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
   Component,
   ElementRef,
   EventEmitter,
+  HostListener,
   Inject,
   Input,
   OnChanges,
@@ -23,20 +24,20 @@ import {
   FormControl,
   FormGroup,
 } from '@angular/forms';
-import {MatMomentDateModule} from '@angular/material-moment-adapter';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {MatButtonModule} from '@angular/material/button';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MatDialogModule} from '@angular/material/dialog';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatIconModule} from '@angular/material/icon';
-import {MatInputModule} from '@angular/material/input';
-import {MatPaginatorModule} from '@angular/material/paginator';
-import {MatSelectModule} from '@angular/material/select';
-import {MatTooltipModule} from '@angular/material/tooltip';
+import { MatMomentDateModule } from '@angular/material-moment-adapter';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
-import {PaginationUtil} from '../../../source/utility/pagination.utils';
+import { PaginationUtil } from '../../../source/utility/pagination.utils';
 
 import {
   CdkConnectedOverlay,
@@ -44,7 +45,7 @@ import {
   ConnectedPosition,
   OverlayModule,
 } from '@angular/cdk/overlay';
-import {Subscription} from 'rxjs';
+import { Subscription } from 'rxjs';
 
 /* ========================================================================
    SUPPORTED EXTENSIONS (FOR FILE EXPORT ICONS / TYPE)
@@ -88,8 +89,8 @@ export type Extension =
    ====================================================================== */
 
 export interface DateRange {
-  start: string | Date;
-  end: string | Date;
+  start: string | Date | null;
+  end: string | Date | null;
 }
 
 interface DateRangeForm {
@@ -101,7 +102,7 @@ interface DateRangeForm {
    COMPONENT
    ====================================================================== */
 
-@Component({
+@Component( {
   selector: 'app-paginator',
   standalone: true,
   imports: [
@@ -123,8 +124,8 @@ interface DateRangeForm {
     OverlayModule,
   ],
   templateUrl: './paginator.component.html',
-  styleUrls: ['./paginator.component.scss'],
-})
+  styleUrls: [ './paginator.component.scss' ],
+} )
 export class PaginatorComponent
   implements OnInit, OnDestroy, AfterViewInit, OnChanges {
 
@@ -132,13 +133,13 @@ export class PaginatorComponent
      INPUTS — DATA FROM PARENT
      ----------------------------------------------------------------- */
 
-  @Input({required: true}) pageIndex: number = 0;
-  @Input({required: true}) pageSize: number = 0;
-  @Input({required: true}) totalDataCount: number = 0;
+  @Input( { required: true } ) index: number = 0;
+  @Input( { required: true } ) limit: number = 0;
+  @Input( { required: true } ) totalDataCount: number = 0;
 
   @Input() tableType: string = '';
   @Input() search: string = '';
-  @Input({required: true}) pagination: boolean = false;
+  @Input( { required: true } ) pagination: boolean = false;
   @Input() isReload: boolean = false;
   @Input() extension!: Extension;
 
@@ -146,36 +147,36 @@ export class PaginatorComponent
   @Input() isDateRageActive: boolean = false;
 
   /** Optional current range from parent */
-  @Input() initialRange?: DateRange;
+  @Input() initialRange: DateRange | null = null;
 
   /* --------------------------------------------------------------------
      OUTPUTS
      ----------------------------------------------------------------- */
 
-  @Output() pageSizeChange: EventEmitter<number> = new EventEmitter<number>();
-  @Output() pageIndexChange: EventEmitter<number> = new EventEmitter<number>();
+  @Output() limitChange: EventEmitter<number> = new EventEmitter<number>();
+  @Output() indexChange: EventEmitter<number> = new EventEmitter<number>();
   @Output() searchChange: EventEmitter<string> = new EventEmitter<string>();
   @Output() isReloadChange: EventEmitter<boolean> = new EventEmitter<boolean>();
   @Output() fileExport: EventEmitter<Extension> = new EventEmitter<Extension>();
 
   /** Emit whenever date range changes (normalised to Date objects) */
-  @Output() dateRangeChange: EventEmitter<DateRange> = new EventEmitter<DateRange>();
-  @Output() rangeChange: EventEmitter<DateRange> = new EventEmitter<DateRange>();
+  @Output() dateRangeChange: EventEmitter<DateRange | null> = new EventEmitter<DateRange | null>();
+  @Output() rangeChange: EventEmitter<DateRange | null> = new EventEmitter<DateRange | null>();
 
   /* --------------------------------------------------------------------
      VIEW CHILDREN
      ----------------------------------------------------------------- */
 
   /** Page size overlay instance */
-  @ViewChild('pageOptionOverlay')
+  @ViewChild( 'pageOptionOverlay' )
   private pageOptionOverlay?: CdkConnectedOverlay;
 
   /** Origin element for page size overlay */
-  @ViewChild('pageOptionOrigin')
+  @ViewChild( 'pageOptionOrigin' )
   protected pageOptionOrigin?: CdkOverlayOrigin;
 
   /** Page size input (if needed later) */
-  @ViewChild('pageSizeInput')
+  @ViewChild( 'pageSizeInput' )
   protected pageSizeInput?: ElementRef<HTMLInputElement>;
 
   /* --------------------------------------------------------------------
@@ -194,7 +195,7 @@ export class PaginatorComponent
   protected dateRangeToggleEnable: boolean = false;
 
   /** Generated page-size options. */
-  protected pageSizeOptions: number[] = [];
+  protected limitOptions: number[] = [];
   private lastTotalForOptions: number = 0;
 
   protected name: string = '';
@@ -229,10 +230,10 @@ export class PaginatorComponent
      ----------------------------------------------------------------- */
 
   constructor (
-    @Inject(PLATFORM_ID) private readonly platformId: Object,
+    @Inject( PLATFORM_ID ) private readonly platformId: Object,
     private readonly fb: FormBuilder,
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
+    this.isBrowser = isPlatformBrowser( this.platformId );
 
   }
 
@@ -250,26 +251,26 @@ export class PaginatorComponent
     this.updateOverlayWidth();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if(changes['totalDataCount']) {
-      const currentTotal: number = Number(changes['totalDataCount'].currentValue ?? 0);
-      const previousTotal: number = Number(changes['totalDataCount'].previousValue ?? -1);
+  ngOnChanges( changes: SimpleChanges ): void {
+    if ( changes[ 'totalDataCount' ] ) {
+      const currentTotal: number = Number( changes[ 'totalDataCount' ].currentValue ?? 0 );
+      const previousTotal: number = Number( changes[ 'totalDataCount' ].previousValue ?? -1 );
 
-      if(currentTotal !== previousTotal) {
+      if ( currentTotal !== previousTotal ) {
         this.generatePageOptions();
       }
     }
 
-    if(changes['pageSize']) {
-      const newSize: number = Number(changes['pageSize'].currentValue ?? 0);
-      if(!Number.isNaN(newSize) && this.pageSize !== newSize) {
-        this.pageSize = newSize;
+    if ( changes[ 'pageSize' ] ) {
+      const newSize: number = Number( changes[ 'pageSize' ].currentValue ?? 0 );
+      if ( !Number.isNaN( newSize ) && this.limit !== newSize ) {
+        this.limit = newSize;
       }
     }
   }
 
   ngOnDestroy(): void {
-    if(this.dateRangeSub) {
+    if ( this.dateRangeSub ) {
       this.dateRangeSub.unsubscribe();
     }
   }
@@ -283,20 +284,20 @@ export class PaginatorComponent
 
     // Helper to normalise incoming value
     const initialStart: Date =
-      this.asDate(this.initialRange?.start) ?? today;
+      this.asDate( this.initialRange?.start ) ?? today;
 
     const initialEnd: Date =
-      this.asDate(this.initialRange?.end) ??
-      new Date(initialStart.getTime() + PaginatorComponent.ONE_DAY_MS);
+      this.asDate( this.initialRange?.end ) ??
+      new Date( initialStart.getTime() + PaginatorComponent.ONE_DAY_MS );
 
-    this.dateRangeForm = this.fb.group<DateRangeForm>({
-      start: new FormControl<Date | string | null>(initialStart),
-      end: new FormControl<Date | string | null>(initialEnd),
-    });
+    this.dateRangeForm = this.fb.group<DateRangeForm>( {
+      start: new FormControl<Date | string | null>( initialStart ),
+      end: new FormControl<Date | string | null>( initialEnd ),
+    } );
 
-    this.dateRangeSub = this.dateRangeForm.valueChanges.subscribe(() => {
+    this.dateRangeSub = this.dateRangeForm.valueChanges.subscribe( () => {
       this.handleDateRangeChanged();
-    });
+    } );
   }
 
   /* --------------------------------------------------------------------
@@ -306,15 +307,15 @@ export class PaginatorComponent
   /**
    * Safely convert string | Date | null into Date | null.
    */
-  private asDate(value: string | Date | null | undefined): Date | null {
-    if(!value) {
+  private asDate( value: string | Date | null | undefined ): Date | null {
+    if ( !value ) {
       return null;
     }
-    if(value instanceof Date) {
+    if ( value instanceof Date ) {
       return value;
     }
-    const parsed: Date = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
+    const parsed: Date = new Date( value );
+    return Number.isNaN( parsed.getTime() ) ? null : parsed;
   }
 
   /** Called whenever the internal range form changes. */
@@ -325,26 +326,26 @@ export class PaginatorComponent
 
   /** Ensure end is always at least 1 day after start. */
   private fixEndDateIfNeeded(): void {
-    const start: Date | null = this.asDate(this.dateRangeForm.controls.start.value);
-    const end: Date | null = this.asDate(this.dateRangeForm.controls.end.value);
+    const start: Date | null = this.asDate( this.dateRangeForm.controls.start.value );
+    const end: Date | null = this.asDate( this.dateRangeForm.controls.end.value );
 
-    if(!start || !end) {
+    if ( !start || !end ) {
       return;
     }
 
-    const minEnd: Date = new Date(start.getTime() + PaginatorComponent.ONE_DAY_MS);
+    const minEnd: Date = new Date( start.getTime() + PaginatorComponent.ONE_DAY_MS );
 
-    if(end.getTime() < minEnd.getTime()) {
-      this.dateRangeForm.controls.end.setValue(minEnd, {emitEvent: false});
+    if ( end.getTime() < minEnd.getTime() ) {
+      this.dateRangeForm.controls.end.setValue( minEnd, { emitEvent: false } );
     }
   }
 
   /** Emit a normalised DateRange object to parent. */
   private emitNormalisedRange(): void {
-    const start: Date | null = this.asDate(this.dateRangeForm.controls.start.value);
-    const end: Date | null = this.asDate(this.dateRangeForm.controls.end.value);
+    const start: Date | null = this.asDate( this.dateRangeForm.controls.start.value );
+    const end: Date | null = this.asDate( this.dateRangeForm.controls.end.value );
 
-    if(!start || !end) {
+    if ( !start || !end ) {
       return;
     }
 
@@ -354,8 +355,8 @@ export class PaginatorComponent
     };
 
     // Keep both outputs for backwards-compat
-    this.dateRangeChange.emit(payload);
-    this.rangeChange.emit(payload);
+    this.dateRangeChange.emit( payload );
+    this.rangeChange.emit( payload );
   }
 
   protected clearRange(): void {
@@ -367,42 +368,42 @@ export class PaginatorComponent
      ----------------------------------------------------------------- */
 
   protected updateOverlayWidth(): void {
-    if(!this.isBrowser) {
+    if ( !this.isBrowser ) {
       return;
     }
 
-    setTimeout((): void => {
+    setTimeout( (): void => {
       const originElement: HTMLElement | null =
         this.pageOptionOrigin?.elementRef?.nativeElement ?? null;
 
-      if(!originElement) {
+      if ( !originElement ) {
         return;
       }
 
       const rect: DOMRect = originElement.getBoundingClientRect();
-      const styles: CSSStyleDeclaration = window.getComputedStyle(originElement);
+      const styles: CSSStyleDeclaration = window.getComputedStyle( originElement );
 
-      const paddingLeft: number = parseFloat(styles.paddingLeft || '0');
-      const paddingRight: number = parseFloat(styles.paddingRight || '0');
-      const borderLeft: number = parseFloat(styles.borderLeftWidth || '0');
-      const borderRight: number = parseFloat(styles.borderRightWidth || '0');
+      const paddingLeft: number = parseFloat( styles.paddingLeft || '0' );
+      const paddingRight: number = parseFloat( styles.paddingRight || '0' );
+      const borderLeft: number = parseFloat( styles.borderLeftWidth || '0' );
+      const borderRight: number = parseFloat( styles.borderRightWidth || '0' );
 
       // Inner usable width. You can switch to innerWidth if you prefer.
       const innerWidth: number =
         rect.width - paddingLeft - paddingRight - borderLeft - borderRight;
 
       this.pageSizeOverlayWidth = rect.width > 0 ? rect.width : innerWidth;
-    });
+    } );
   }
 
   /* --------------------------------------------------------------------
      ICON HANDLER
      ----------------------------------------------------------------- */
 
-  protected chooseIcon(type: string): string {
+  protected chooseIcon( type: string ): string {
     const ext: string = type?.toLowerCase?.() ?? '';
 
-    switch(ext) {
+    switch ( ext ) {
       case 'doc':
       case 'docx':
       case 'dot':
@@ -462,15 +463,15 @@ export class PaginatorComponent
      ----------------------------------------------------------------- */
 
   protected onSearchClick(): void {
-    if(!this.isBrowser) {
+    if ( !this.isBrowser ) {
       return;
     }
 
-    const raw: string = (this.search ?? '').toString();
+    const raw: string = ( this.search ?? '' ).toString();
     const safeInput: string = raw.trim();
 
     this.search = safeInput;
-    this.searchChange.emit(safeInput);
+    this.searchChange.emit( safeInput );
   }
 
   /* --------------------------------------------------------------------
@@ -489,56 +490,58 @@ export class PaginatorComponent
   /* --------------------------------------------------------------------
      PAGE SIZE / INDEX HANDLERS
      ----------------------------------------------------------------- */
+  protected onLimitInputChange(): void {
+    this.onLimitChanged( this.limit );
+  }
+  protected onLimitChanged( input: number ): void {
+    const size: number = Number( input );
 
-  protected onPageSizeChanged(input: number): void {
-    const size: number = Number(input);
-
-    if(
-      Number.isNaN(size) ||
-      !Number.isFinite(size) ||
-      !Number.isInteger(size)
+    if (
+      Number.isNaN( size ) ||
+      !Number.isFinite( size ) ||
+      !Number.isInteger( size )
     ) {
       return;
     }
 
-    const safeSize: number = PaginationUtil.safeLimit(size, this.totalDataCount);
+    const safeSize: number = PaginationUtil.safeLimit( size, this.totalDataCount );
 
-    this.pageSize = safeSize;
-    this.pageSizeChange.emit(this.pageSize);
+    this.limit = safeSize;
+    this.limitChange.emit( this.limit );
 
-    this.pageIndex = 0;
-    this.pageIndexChange.emit(this.pageIndex);
+    this.index = 0;
+    this.indexChange.emit( this.index );
 
     this.closePageOption();
   }
 
-  protected onPageIndexChanged(input: number): void {
-    let index: number = Number(input);
+  protected onPageIndexChanged( input: number ): void {
+    let index: number = Number( input );
 
-    if(
-      Number.isNaN(index) ||
-      !Number.isFinite(index) ||
-      !Number.isInteger(index)
+    if (
+      Number.isNaN( index ) ||
+      !Number.isFinite( index ) ||
+      !Number.isInteger( index )
     ) {
       return;
     }
 
-    if(index < 0) {
+    if ( index < 0 ) {
       index = 0;
     }
 
-    const safeIndex: number = PaginationUtil.safeIndex(index, this.totalDataCount);
+    const safeIndex: number = PaginationUtil.safeIndex( index, this.totalDataCount );
 
-    this.pageIndex = safeIndex;
-    this.pageIndexChange.emit(this.pageIndex);
+    this.index = safeIndex;
+    this.indexChange.emit( this.index );
   }
 
   /* --------------------------------------------------------------------
      FILE EXPORT HANDLER
      ----------------------------------------------------------------- */
 
-  protected onFileExport(data: Extension): void {
-    this.fileExport.emit(data);
+  protected onFileExport( data: Extension ): void {
+    this.fileExport.emit( data );
   }
 
   /* --------------------------------------------------------------------
@@ -547,12 +550,21 @@ export class PaginatorComponent
 
   protected refreshPage(): void {
     this.isReload = true;
-    this.isReloadChange.emit(this.isReload);
+    this.search = '';
+    this.initialRange = null;
+    this.index = 0;
+    this.limit = this.limitOptions[ 0 ];
+    this.isReloadChange.emit( this.isReload );
+    this.searchChange.emit( this.search );
+    this.dateRangeChange.emit( null );
+    this.indexChange.emit( 0 );
+    this.initDateRangeForm();
+    this.limitChange.emit( this.limit );
 
-    setTimeout((): void => {
+    setTimeout( (): void => {
       this.isReload = false;
-      this.isReloadChange.emit(this.isReload);
-    }, 0);
+      this.isReloadChange.emit( this.isReload );
+    }, 0 );
   }
 
   /* --------------------------------------------------------------------
@@ -561,35 +573,35 @@ export class PaginatorComponent
 
   protected generatePageOptions(): void {
     try {
-      const total: number = Number(this.totalDataCount);
+      const total: number = Number( this.totalDataCount );
 
-      if(total === this.lastTotalForOptions) {
+      if ( total === this.lastTotalForOptions ) {
         return;
       }
 
       this.lastTotalForOptions = total;
-      this.pageSizeOptions = [];
+      this.limitOptions = [];
 
-      if(
-        Number.isNaN(total) ||
-        !Number.isFinite(total) ||
-        !Number.isInteger(total) ||
+      if (
+        Number.isNaN( total ) ||
+        !Number.isFinite( total ) ||
+        !Number.isInteger( total ) ||
         total <= 0
       ) {
-        this.pageSizeOptions = [5, 10, 25];
-        if(!this.pageSize || this.pageSize <= 0) {
-          this.pageSize = this.pageSizeOptions[0];
+        this.limitOptions = [ 5, 10, 25 ];
+        if ( !this.limit || this.limit <= 0 ) {
+          this.limit = this.limitOptions[ 0 ];
         }
         return;
       }
 
       let divider: number;
 
-      if(total > 0 && total <= 10) {
+      if ( total > 0 && total <= 10 ) {
         divider = 2;
-      } else if(total > 10 && total <= 100) {
+      } else if ( total > 10 && total <= 100 ) {
         divider = 10;
-      } else if(total > 100 && total <= 1000) {
+      } else if ( total > 100 && total <= 1000 ) {
         divider = 100;
       } else {
         divider = 1000;
@@ -597,29 +609,29 @@ export class PaginatorComponent
 
       const options: number[] = [];
 
-      for(let i: number = divider; i <= total; i += divider) {
-        options.push(i);
+      for ( let i: number = divider; i <= total; i += divider ) {
+        options.push( i );
       }
 
-      if(options.length === 0) {
-        options.push(total);
+      if ( options.length === 0 ) {
+        options.push( total );
       }
 
-      this.pageSizeOptions = [...options];
+      this.limitOptions = [ ...options ];
 
-      if(
-        !this.pageSize ||
-        this.pageSize <= 0 ||
-        !this.pageSizeOptions.includes(this.pageSize)
+      if (
+        !this.limit ||
+        this.limit <= 0 ||
+        !this.limitOptions.includes( this.limit )
       ) {
-        this.pageSize = this.pageSizeOptions[0];
+        this.limit = this.limitOptions[ 0 ];
       }
-    } catch(error) {
-      console.error('Failed to generate page size options:', error);
+    } catch ( error ) {
+      console.error( 'Failed to generate page size options:', error );
 
-      this.pageSizeOptions = [5, 10, 25];
-      if(!this.pageSize || this.pageSize <= 0) {
-        this.pageSize = this.pageSizeOptions[0];
+      this.limitOptions = [ 5, 10, 25 ];
+      if ( !this.limit || this.limit <= 0 ) {
+        this.limit = this.limitOptions[ 0 ];
       }
     }
   }

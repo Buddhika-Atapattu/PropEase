@@ -559,9 +559,25 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
     this.route.params.subscribe( async ( params ): Promise<void> => {
       if ( params[ 'tenantID' ] ) {
-        const token = params[ 'tenantID' ];
-        const res = await this.apiService.getUserByToken( token );
-        if ( res.user ) this.assignTenantInformation( res.user );
+        try {
+          const token = params[ 'tenantID' ];
+          const res = await this.apiService.getUserByToken( token );
+
+          if ( !res.success || res.status !== 'success' ) {
+            throw new Error( 'Failed to fetch user!' );
+          }
+
+          const user: User | undefined = res.data?.system?.user;
+
+          if ( !user ) {
+            throw new Error( 'Invalid user data!' );
+          }
+
+          this.assignTenantInformation( user );
+        }
+        catch ( error ) {
+          console.error( error );
+        }
       }
     } );
 
@@ -692,23 +708,33 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   protected async goLease(): Promise<void> {
     if ( this.tenant ) {
-      this.router.navigate( [ '/dashboard/tenant/tenant-lease', this.leaseID ] );
+      this.router.navigate( [ '/dashboard/tenant/edit-lease', this.leaseID ] );
     }
   }
 
   protected async goToTenant(): Promise<void> {
-    if ( this.tenant ) {
-      const tenant = await this.apiService.generateToken( this.tenant.username );
-      if ( tenant ) {
-        this.router
-          .navigateByUrl( '/', { skipLocationChange: true } )
-          .then( () => {
-            this.router.navigate( [
-              '/dashboard/tenant/tenant-view/',
-              tenant.token,
-            ] );
-          } );
+    try {
+      if ( !this.tenant ) {
+        throw new Error( 'Invalid tenant!' );
       }
+      const res = await this.apiService.generateToken( this.tenant.username );
+
+      if ( !res.success || res.status !== 'success' ) {
+        throw new Error( 'Failed to fetch token!' );
+      }
+
+      const token = this.apiService.extractTokenFromMsg( res );
+
+      if ( !token ) {
+        throw new Error( 'Invalid token!' );
+      }
+
+      await this.router.navigate( [ '/dashboard/tenant/tenant-view/', token ] );
+      return;
+    }
+    catch ( error ) {
+      console.error( error );
+      return;
     }
   }
 
@@ -993,37 +1019,68 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   }
 
   protected async onTenantEmailChange( email: string ): Promise<void> {
-    await this.userControllerService
-      .emailValidator( email )
-      .then( ( res ) => {
-        if ( res.status === 'success' ) {
-          this.isTenantEmailValid = res.data.validation;
-        } else {
-          this.isTenantEmailValid = false;
-        }
-      } )
-      .catch( ( error: HttpErrorResponse ) => {
-        if ( error.status === 400 || error.status === 500 ) {
-          this.isTenantEmailValid = false;
-        }
-      } );
+    this.isTenantEmailValid = await this.emailValidator( email, 'Tenant' );
   }
 
   protected async onCoTenantEmailChange( email: string ): Promise<void> {
-    await this.userControllerService
-      .emailValidator( email )
-      .then( ( res ) => {
-        if ( res.status === 'success' ) {
-          this.isCoTenantEmailValid = res.data.validation;
-        } else {
-          this.isCoTenantEmailValid = false;
-        }
-      } )
-      .catch( ( error: HttpErrorResponse ) => {
-        if ( error.status === 400 || error.status === 500 ) {
-          this.isCoTenantEmailValid = false;
-        }
-      } );
+    this.isCoTenantEmailValid = await this.emailValidator( email, 'Co-Tenant' );
+  }
+
+  private async emailValidator( email: string, user: string ): Promise<boolean> {
+    try {
+      const rowEmail = email.trim();
+      const rowUser = user.trim();
+
+      if ( !rowEmail ) {
+        throw new Error( 'Empty email!' );
+      }
+
+      if ( !rowUser ) {
+        throw new Error( 'Empty user!' );
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const isMatched = emailRegex.test( rowEmail );
+
+      if ( !isMatched ) {
+        this.notification.notification( 'warning', 'Invalid email format!' );
+        throw new Error( 'Invalid email format!' );
+      }
+
+      const res = await this.userControllerService.emailValidator( rowEmail );
+
+      if ( res.status !== 'success' ) {
+        this.notification.notification( 'error', `Failed to validate email of ${ rowUser }` );
+        throw new Error( `Failed to validate email of ${ rowUser }` );
+      }
+
+      const validatedEmail = this.apiService.extractStringFromOther( res.data, 'email' );
+      const validationObj = this.apiService.extractObjectFromOther<{
+        format: boolean,
+        mx: boolean;
+      }>( res.data, 'validation' );
+      const domain = this.apiService.extractStringFromOther( res.data, 'domain' );
+
+      if ( !validatedEmail ) {
+        throw new Error( 'Invalid email!' );
+      }
+
+      if ( !domain ) {
+        throw new Error( 'Invalid domain!' );
+      }
+
+      if ( !validationObj?.format || !validationObj.mx ) {
+        this.notification.notification( 'error', `Please enter valid email address of ${ rowUser }` );
+        throw new Error( `Please enter valid email address of ${ rowUser }` );
+      }
+
+      return true;
+
+    }
+    catch ( error ) {
+      console.error( error );
+      return false;
+    }
   }
 
   protected async emergencyContactChange( input: string ): Promise<void> {
@@ -1035,31 +1092,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
     if ( isMatched ) {
       // Validate as email via backend
-      await this.userControllerService
-        .emailValidator( value )
-        .then( ( res ) => {
-          if ( res.status === 'success' ) {
-            this.isEmergencyContactValid = res.data.validation;
-            this.emergencyContactSpanMessage = res.data.message;
-          } else {
-            this.isEmergencyContactValid = false;
-          }
-        } )
-        .catch( ( error: HttpErrorResponse ) => {
-          if ( error.status >= 400 && error.status < 500 ) {
-            this.isEmergencyContactValid = false;
-            this.emergencyContactSpanMessage =
-              error.error.message || 'Invalid email format.';
-          } else if ( error.status === 500 ) {
-            this.isEmergencyContactValid = false;
-            this.emergencyContactSpanMessage =
-              'Internal server error. Please try again later.';
-          } else {
-            this.isEmergencyContactValid = false;
-            this.emergencyContactSpanMessage =
-              'An unexpected error occurred.';
-          }
-        } );
+      this.isEmergencyContactValid = await this.emailValidator( value, 'Emergency contact' );
     } else {
       // Then treat as phone
       const isPhoneValid = await this.phoneNumberValid( value );
@@ -1465,20 +1498,19 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     try {
       this.propertyTableData = [];
 
-      // NOTE: currently counting all properties. Ideally you should
-      // call a "count properties without leases" endpoint.
       const res = await this.tenantService.getAllPropertiesCountWithoutLeases();
 
-      if ( res.status !== 'success' ) {
+      if ( !res.status || res.status !== 'success' ) {
         throw new Error( 'Failed in counting properties!' );
       }
 
-      const total = res.data.total;
+      const total = res.data?.pagination?.total;
 
       if (
+        !total ||
         Number.isNaN( total ) ||
         !Number.isFinite( total ) ||
-        !Number.isFinite( total )
+        !Number.isInteger( total )
       ) {
         throw new Error( 'Invalid properties count!' );
       }
@@ -1488,7 +1520,8 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       const safeIndex = PaginationUtil.safeIndex( index, total );
       const safeLimit = PaginationUtil.safeLimit( limit, total );
       const start = safeIndex * safeLimit;
-      const safeSearch: string | undefined = search && search.trim().length > 0 ? search.trim() : undefined;
+      const safeSearch: string | undefined =
+        search && search.trim().length > 0 ? search.trim() : undefined;
 
       const propertyRes =
         await this.tenantService.getAllPropertiesWithoutLeases(
@@ -1497,13 +1530,14 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
           safeSearch,
         );
 
-      if ( propertyRes.status !== 'success' ) {
+      if ( !propertyRes.success || propertyRes.status !== 'success' ) {
         throw new Error( 'Failed in fetching properties!' );
       }
 
-      const properties: BackEndPropertyData[] = propertyRes.data.properties;
+      const properties: BackEndPropertyData[] | undefined =
+        propertyRes.data?.system?.properties;
 
-      if ( !Array.isArray( properties ) || properties.length <= 0 ) {
+      if ( !Array.isArray( properties ) || properties.length === 0 ) {
         throw new Error( 'Invalid properties!' );
       }
 
@@ -1511,8 +1545,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
       properties.forEach( ( property: BackEndPropertyData ): void => {
         try {
-          const data =
-            this.makePropertyTableRow( property );
+          const data = this.makePropertyTableRow( property );
           if ( data ) {
             forTableData.push( data );
           } else {
@@ -1532,6 +1565,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       console.error( err );
     }
   }
+
 
   private makePropertyTableRow(
     data: BackEndPropertyData,
@@ -1584,10 +1618,10 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
       const res = await this.propertyService.getPropertyById( safePropertyID );
 
-      if ( res.status !== 'success' ) {
+      if ( !res.success || res.status !== 'success' ) {
         throw new Error( 'Failed in fetching property!' );
       }
-      const property: BackEndPropertyData = res.data;
+      const property: BackEndPropertyData | undefined = res.data?.system?.property;
 
       if ( !property ) {
         this.resetProperty();
@@ -2290,7 +2324,6 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
   protected addUtilities(): void {
     try {
-
       if ( !this.utilityResponsibilityInput || this.utilityResponsibilityInput.trim() === '' ) {
         throw new Error( 'Please enter a utility responsibility!' );
       }
@@ -2304,10 +2337,16 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
         throw new Error( 'Invalid utility!' );
       }
 
-
-      this.selectedUtilityResponsibilities.push(
+      const exists = this.checkIsUtilityExist(
+        this.selectedUtilityResponsibilities,
         this.utilityResponsibility,
       );
+
+      if ( exists ) {
+        throw new Error( 'This utility responsibility already exists!' );
+      }
+
+      this.selectedUtilityResponsibilities.push( this.utilityResponsibility );
       this.utilityResponsibility = null;
       this.utilityResponsibilityInput = '';
     } catch ( error ) {
@@ -2317,6 +2356,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       this.utilityResponsibilityInput = '';
     }
   }
+
 
   protected removeUtility( index: number ): void {
     this.selectedUtilityResponsibilities.splice( index, 1 );

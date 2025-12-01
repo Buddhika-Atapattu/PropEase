@@ -1,34 +1,15 @@
-import {CommonModule, isPlatformBrowser} from '@angular/common';
 import {
-  Component,
-  Inject,
-  OnDestroy,
-  OnInit,
-  PLATFORM_ID,
+  Component
 } from '@angular/core';
-import {ActivatedRoute, Router, RouterModule} from '@angular/router';
+import { RouterModule } from '@angular/router';
 
 
-@Component({
+@Component( {
   selector: 'app-complaint-main',
-  imports: [CommonModule, RouterModule],
+  imports: [ RouterModule ],
   templateUrl: './complaint-main.component.html',
   styleUrl: './complaint-main.component.scss',
-})
-export class ComplaintMainomponent implements OnInit, OnDestroy {
+} )
+export class ComplaintMainomponent {
 
-  constructor (
-    @Inject(PLATFORM_ID) private platformId: Object,
-    private route: ActivatedRoute,
-    private router: Router
-  ) {
-
-  }
-
-  async ngOnInit(): Promise<void> {
-
-  }
-
-  ngOnDestroy(): void {
-  }
 }

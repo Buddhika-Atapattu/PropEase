@@ -1,6 +1,7 @@
 // Example: Path: src/app/source/utility/pagination.util.ts
 export class PaginationUtil {
 
+  // HINT: index is current page and total is total count of data
   public static safeIndex(index: number, total: number): number {
     try {
       // Validate total count

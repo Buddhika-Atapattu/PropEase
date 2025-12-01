@@ -14,7 +14,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 // Service and types imports
-import { APIsService, type User, type MSG } from '../../../../services/APIs/apis.service';
+import { APIsService, type User } from '../../../../services/APIs/apis.service';
 import { AuthService } from '../../../../services/auth/auth.service';
 import {
   PropertyService
@@ -43,12 +43,12 @@ import { Dropdown } from '../../../../components/shared/dropdown/dropdown';
 import { StageIndicatorComponent, type StagePoint } from '../../../../components/shared/stageIndicator/stage-indicator.component';
 import { Textarea } from '../../../../components/shared/textarea/textarea.component';
 import { TextEditorComponent } from '../../../../components/shared/textEditor/text-editor';
-// import {
-//   ButtonDataType,
-//   ButtonType,
-//   CustomTableColumnType,
-//   CustomTableComponent,
-// } from '../../../../components/shared/custom-table/custom-table.component';
+import {
+  TableButtonActionConfig,
+  TableButton,
+  TableColumn,
+  CustomTableComponent,
+} from '../../../../components/shared/custom-table/custom-table.component';
 
 // Material UI imports
 import { MatButtonModule } from '@angular/material/button';
@@ -57,12 +57,15 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIcon } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { HttpErrorResponse } from '@angular/common/http';
 
 
 interface TeamMemberTableData {
   image: string;
   name: string;
   role: string;
+  viewButton: TableButton,
+  addButton: TableButton;
 }
 
 
@@ -86,7 +89,7 @@ interface TeamMemberTableData {
     // Dropdown,
     // Textarea,
     CommentsListComponent,
-    // CustomTableComponent,
+    CustomTableComponent,
   ],
   templateUrl: './edit-complaints.html',
   styleUrl: './edit-complaints.scss'
@@ -147,42 +150,106 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
   protected teamName !: string;
   private teamMembers !: string[];
 
-  // ─────────────────────────────────────────────
-  // Columns for team member tables
-  // ─────────────────────────────────────────────
-  // protected tableColumns: CustomTableColumnType[] = [
-  //   {key: 'userimage', label: 'Image'},
-  //   {key: 'name', label: 'Name'},
-  //   {key: 'role', label: 'Role'},
-  //   {key: 'actions', label: 'View'},
-  //   {key: 'operation', label: 'Add'},
-  // ]
-  protected isReloading: boolean = false;
+
   // ─────────────────────────────────────────────
   // Team member table data for add
   // ─────────────────────────────────────────────
-  protected addPageSize: number = 10;
-  protected addCurrentSearchTerm!: string;
-  protected addPageSizeOptions: number[] = [ 5, 10, 25, 50 ];
-  private _addPageIndex: number = 0;
-  private _oldIndex!: number;
-  protected addPageCount: number = 0;
-  private _addSearch: string = '';
-  protected addTotalDataCount: number = 0;
-  protected addData: TeamMemberTableData[] = [];
+  private _teamAddIsReloading: boolean = false;
+  private _teamAddLimit: number = 10;
+  private _teamAddSearch: string = '';
+  private _teamAddIndex: number = 0;
+  protected teamAddDataCount: number = 0;
+  protected teamAddData: TeamMemberTableData[] = [];
+  protected teamAddTableTitle: string = 'Add team members';
+  protected teamAddTableColumns: TableColumn[] = [
+    { key: 'userimage', label: 'Image' },
+    { key: 'name', label: 'Name' },
+    { key: 'role', label: 'Role' },
+    { key: 'viewButton', label: 'View' },
+    { key: 'addButton', label: 'Add' },
+  ];
+
+  //01. teamAddIsReloading
+  get teamAddIsReloading(): boolean {
+    return this._teamAddIsReloading;
+  }
+  set teamAddIsReloading( value: boolean ) {
+    this._teamAddIsReloading = value;
+  }
+
+  // 02. teamAddLimit
+  get teamAddLimit(): number {
+    return this._teamAddLimit;
+  }
+  set teamAddLimit( value: number ) {
+    this._teamAddLimit = value;
+  }
+
+  // 03. teamAddSearch
+  get teamAddSearch(): string {
+    return this._teamAddSearch;
+  }
+  set teamAddSearch( value: string ) {
+    this._teamAddSearch = value.trim();
+  }
+
+  //04. teamAddIndex
+  get teamAddIndex(): number {
+    return this._teamAddIndex;
+  }
+  set teamAddIndex( value: number ) {
+    this._teamAddIndex = value;
+  }
 
   // ─────────────────────────────────────────────
   // Team member table data for remove
   // ─────────────────────────────────────────────
-  private _removePageSize: number = 10;
-  private _removePageSizeOptions: number[] = [ 5, 10, 25, 50 ];
-  private _removePageIndex: number = 0;
-  private _removePageCount: number = 0;
-  private _removeSearch: string = '';
-  private _removeTotalDataCount: number = 0;
-  private _removeAllData: TeamMemberTableData[] = [];
-  private _removeFilteredData: TeamMemberTableData[] = [];
+  private _teamRemoveIsReloading: boolean = false;
+  private _teamRemoveLimit: number = 10;
+  private _teamRemoveIndex: number = 0;
+  private _teamRemoveSearch: string = '';
+  protected teamRemoveDataCount: number = 0;
+  protected teamRemoveData: TeamMemberTableData[] = [];
+  protected teamRemoveTableTitle: string = 'Team members';
+  protected teamRemoveTableColumns: TableColumn[] = [
+    { key: 'userimage', label: 'Image' },
+    { key: 'name', label: 'Name' },
+    { key: 'role', label: 'Role' },
+    { key: 'viewButton', label: 'View' },
+    { key: 'removeButton', label: 'Remove' },
+  ];
 
+  //01. teamRemoveIsReloading
+  get teamRemoveIsReloading(): boolean {
+    return this._teamRemoveIsReloading;
+  }
+  set teamRemoveIsReloading( value: boolean ) {
+    this._teamRemoveIsReloading = value;
+  }
+
+  // 02. teamRemoveLimit
+  get teamRemoveLimit(): number {
+    return this._teamRemoveLimit;
+  }
+  set teamRemoveLimit( value: number ) {
+    this._teamRemoveLimit = value;
+  }
+
+  // 03. teamRemoveSearch
+  get teamRemoveSearch(): string {
+    return this._teamRemoveSearch;
+  }
+  set teamRemoveSearch( value: string ) {
+    this._teamRemoveSearch = value.trim();
+  }
+
+  //04. teamRemoveIndex
+  get teamRemoveIndex(): number {
+    return this._teamRemoveIndex;
+  }
+  set teamRemoveIndex( value: number ) {
+    this._teamRemoveIndex = value;
+  }
 
 
   constructor (
@@ -204,9 +271,15 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
     this.route.params.subscribe( async ( item ): Promise<void> => {
       try {
         const comaplaintID = item[ 'complaintID' ];
-        const res: MSG = await this.tenantService.getComplaintById( comaplaintID );
+        const res = await this.tenantService.getComplaintById( comaplaintID );
         if ( res.status !== 'success' ) throw new Error( 'Faild to get complaint!' );
-        await this.dataInit( res.data );
+        const complaint: ComplaintClient | undefined = res.data?.system?.complaint;
+
+        if ( !complaint ) {
+          throw new Error( 'Invalid complaint data!' );
+        }
+
+        await this.dataInit( complaint );
       }
       catch ( error ) {
         console.error( error );
@@ -259,7 +332,6 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
       this.fromStatus = complaint.status;
       this.assigneeId = complaint.assigneeId;
       this.assigneeName = complaint.assigneeName;
-      await this.addUserInit( 0 );
 
       return;
     }
@@ -270,7 +342,7 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  get adminAccess(): boolean {
+  get adminLike(): boolean {
     try {
       if ( !this.loggedUser ) throw new Error( 'Logged user is invalid!' );
       const roles: string[] = [ 'admin', 'manager', 'operator', 'developer' ];
@@ -346,28 +418,6 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  /**
-   * Make team for the complaint table getter and setter for add
-   */
-  // addPageIndex
-  protected get addPageIndex(): number {
-    return this._addPageIndex;
-  }
-  protected set addPageIndex( value: number ) {
-    this._addPageIndex = value;
-
-    // this.addUserInit(value)
-  }
-
-  // addSearch
-  protected get addSearch(): string {
-    return this._addSearch;
-  }
-  protected set addSearch( value: string ) {
-    this.searchUsers( value );
-  }
-
-  // addActionButtonFunction
 
 
   /**
@@ -378,96 +428,43 @@ export class EditComplaints implements OnInit, AfterViewInit, OnDestroy {
 
   }
 
-  /* --------------------------------------------------------------------------
-  * SEARCH
-  * ------------------------------------------------------------------------ */
+  protected async handelFetchingOnTeamAdd(): Promise<void> {
 
-  /**
-   * Live search handler (ngModelChange).
-   * Always resets to page 0 on new search.
-   */
-  protected async searchUsers( input: string ): Promise<void> {
+  }
+
+  protected async teamAddActionButtonCenter( value: TableButtonActionConfig ): Promise<void> {
+
+  }
+
+  private async loadTeamAddData( index: number, limit: number, search?: string ): Promise<void> {
     try {
-      const raw: string = ( input ?? '' ).toString();
-      const safeInput: string = raw.trim().toLowerCase();
-
-      this._addSearch = safeInput;
-
-      // Reset to first page for a new search term.
-      await this.addUserInit( 0 );
-    } catch ( err ) {
-      console.error( err );
-      this.notification.notification( 'error', 'Failed to process user search.' );
+      const countRes = await this.APIsService.getAllUserCount();
+      if ( countRes.status !== 'success' ) {
+        throw new Error( 'Failed to fetch all user count!' );
+      }
+      const total = countRes.data;
+    }
+    catch ( error ) {
+      console.error( error );
+      if ( error instanceof Error ) {
+        this.notification.notification( 'error', error.message );
+      }
+      else if ( error instanceof HttpErrorResponse ) {
+        this.notification.notification( 'error', error.message );
+      }
+      else {
+        this.notification.notification( 'error', 'Unexpected error while fetching users!' );
+      }
     }
   }
 
-  /**
-    * Main backend loader.
-    * - Takes a 0-based page index.
-    * - Computes start/end for the backend.
-    * - Normalises search string and updates pagination state.
-    */
-  private async addUserInit( pageIndex: number ): Promise<void> {
-    try {
-      this.isReloading = true;
+  protected async handelFetchingOnTeamRemove(): Promise<void> {
 
-      const safeIndex: number = Math.max( 0, Math.round( Number( pageIndex ) ) );
-      const limit: number = Math.max( 1, this.addPageSize );
-
-      const startIdx: number = safeIndex * limit;
-      const endIdx: number = startIdx + limit;
-      const safeSearch: string = this._addSearch.trim();
-
-      const res = await this.APIsService.getAllUsersWithPagination(
-        startIdx,
-        endIdx,
-        safeSearch
-      );
-
-      console.log( res );
-      if ( !res || res.status !== 'success' ) {
-        throw new Error( res?.message || 'Loading users failed.' );
-      }
-
-      const payload = res.data;
-      if ( Array.isArray( payload ) ) {
-        res.data.forEach( ( user: User ) => {
-          this.addData.push( {
-            image: user.image as string,
-            name: user.name,
-            role: user.role,
-          } );
-        } );
-      }
-
-
-      this.addTotalDataCount = res.count ?? 0;
-
-      this.addPageCount =
-        this.addPageSize > 0 ? Math.ceil( this.addPageSize / limit ) : 0;
-
-      // Clamp current page index in case count shrank.
-      const maxIndex: number = this.addPageCount > 0 ? this.addPageCount - 1 : 0;
-
-      this.addPageIndex = Math.min( safeIndex, maxIndex );
-
-      // If requested page is beyond max (e.g. after bulk delete) → reload last page.
-      if ( safeIndex > maxIndex && this.addPageCount > 0 ) {
-        await this.addUserInit( maxIndex );
-        return;
-      }
-    } catch ( err ) {
-      console.error( '[Failed to process user loading with pagination!]: ', err );
-      this.notification.notification( 'error', 'Failed to process user loading.' );
-      this.addData = [];
-      this.addTotalDataCount = 0;
-      this.addPageCount = 0;
-      this.addPageIndex = 0;
-    } finally {
-      this.isReloading = false;
-    }
   }
 
+  protected async teamRemoveActionButtonCenter( value: TableButtonActionConfig ): Promise<void> {
+
+  }
 
   protected async submit(): Promise<void> {
 

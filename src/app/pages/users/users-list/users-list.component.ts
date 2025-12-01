@@ -21,10 +21,10 @@ import { NotificationDialogComponent } from '../../../components/dialogs/notific
 import { LayoutSwitchBtn } from '../../../components/shared/buttons/layout-switch-btn/layout-switch-btn';
 import { ConfirmationComponent } from '../../../components/shared/confirmation/confirmation.component';
 import { UserViewCardComponent } from '../../../components/user-view-card/user-view-card.component';
-import { APIsService, type User, type MSG } from '../../../services/APIs/apis.service';
+import { APIsService, type User } from '../../../services/APIs/apis.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-
+import { PaginationUtil } from '../../../source/utility/pagination.utils';
 
 /**
  * UsersListComponent
@@ -157,7 +157,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
     private APIsService: APIsService,
     private matIconRegistry: MatIconRegistry,
     private domSanitizer: DomSanitizer,
-    private dialog: MatDialog
+    private dialog: MatDialog,
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
 
@@ -232,7 +232,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
     iconMap.forEach( ( icon ) => {
       this.matIconRegistry.addSvgIcon(
         icon.name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl( icon.path )
+        this.domSanitizer.bypassSecurityTrustResourceUrl( icon.path ),
       );
     } );
   }
@@ -276,7 +276,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
       this.LOGGED_USER.access?.permissions?.some(
         ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes( 'create user' )
+          permission.actions.includes( 'create user' ),
       ) ?? false
     );
   }
@@ -291,7 +291,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
       this.LOGGED_USER.access?.permissions?.some(
         ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes( 'view users' )
+          permission.actions.includes( 'view users' ),
       ) ?? false
     );
   }
@@ -306,7 +306,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
       this.LOGGED_USER.access?.permissions?.some(
         ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes( 'update user' )
+          permission.actions.includes( 'update user' ),
       ) ?? false
     );
   }
@@ -321,7 +321,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
       this.LOGGED_USER.access?.permissions?.some(
         ( permission ) =>
           permission.module === 'User Management' &&
-          permission.actions.includes( 'delete user' )
+          permission.actions.includes( 'delete user' ),
       ) ?? false
     );
   }
@@ -341,7 +341,8 @@ export class UsersListComponent implements OnInit, OnDestroy {
 
       if ( imageArray.length > 0 ) {
         const filename: string = imageArray[ imageArray.length - 1 ] ?? '';
-        const extension: string = filename.split( '.' )[ 1 ] ?? '';
+        const parts = filename.split( '.' );
+        const extension: string = ( parts[ parts.length - 1 ] ?? '' ).toLowerCase();
 
         // Only accept known extensions
         if ( this.definedImageExtensionArray.includes( extension ) ) {
@@ -382,7 +383,10 @@ export class UsersListComponent implements OnInit, OnDestroy {
    */
   protected addUser(): void {
     if ( !this.createUserAvailable() ) {
-      this.notification.notification( 'error', 'You do not have permission to create users.' );
+      this.notification.notification(
+        'error',
+        'You do not have permission to create users.',
+      );
       return;
     }
 
@@ -404,14 +408,23 @@ export class UsersListComponent implements OnInit, OnDestroy {
 
       const res = await this.APIsService.generateToken( user.username );
 
-      if ( !res.token ) {
+      if ( !res.success || res.status !== 'success' ) {
+        throw new Error( 'Failed to fetch user token!' );
+      }
+
+      const token = this.APIsService.extractTokenFromMsg( res );
+
+      if ( !token ) {
         throw new Error( 'Invalid token returned from server.' );
       }
 
-      this.router.navigate( [ '/dashboard/users/user-profile', res.token ] );
+      this.router.navigate( [ '/dashboard/users/user-profile', token ] );
     } catch ( err ) {
       console.error( err );
-      this.notification.notification( 'error', 'Unable to open user profile.' );
+      this.notification.notification(
+        'error',
+        'Unable to open user profile.',
+      );
     }
   }
 
@@ -430,14 +443,23 @@ export class UsersListComponent implements OnInit, OnDestroy {
 
       const res = await this.APIsService.generateToken( user.username );
 
-      if ( !res.token ) {
+      if ( !res.success || res.status !== 'success' ) {
+        throw new Error( 'Failed to fetch user token!' );
+      }
+
+      const token = this.APIsService.extractTokenFromMsg( res );
+
+      if ( !token ) {
         throw new Error( 'Invalid token returned from server.' );
       }
 
-      this.router.navigate( [ '/dashboard/users/edit-user', res.token ] );
+      this.router.navigate( [ '/dashboard/users/edit-user', token ] );
     } catch ( err ) {
       console.error( err );
-      this.notification.notification( 'error', 'Unable to open edit user screen.' );
+      this.notification.notification(
+        'error',
+        'Unable to open edit user screen.',
+      );
     }
   }
 
@@ -472,7 +494,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
 
           await this.APIsService.deleteUserByUsername(
             username,
-            this.LOGGED_USER.username
+            this.LOGGED_USER.username,
           )
             .then( ( res ) => {
               this.notification.notification( res.status, res.message );
@@ -480,7 +502,10 @@ export class UsersListComponent implements OnInit, OnDestroy {
               void this.userInit( this.index );
             } )
             .catch( ( err: HttpErrorResponse ) => {
-              this.notification.notification( err.error?.error ?? 'error', err.error?.message ?? 'Delete failed.' );
+              this.notification.notification(
+                err.error?.error ?? 'error',
+                err.error?.message ?? 'Delete failed.',
+              );
             } );
         } catch ( err ) {
           this.notification.notification( 'error', String( err ) );
@@ -510,7 +535,10 @@ export class UsersListComponent implements OnInit, OnDestroy {
       await this.userInit( 0 );
     } catch ( err ) {
       console.error( err );
-      this.notification.notification( 'error', 'Failed to process user search.' );
+      this.notification.notification(
+        'error',
+        'Failed to process user search.',
+      );
     }
   }
 
@@ -535,8 +563,20 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * Whether pagination controls should be shown.
    */
   get isPaginationOn(): boolean {
-    // If items == pageSize, only one page → hide controls
+    // If items <= pageSize, only one page → hide controls
     return this.totalItems > this.itemsPerPage;
+  }
+
+  /**
+   * Validate that a value can be treated as a number.
+   */
+  private isNumberValue( value: unknown ): boolean {
+    return (
+      value !== null &&
+      value !== undefined &&
+      value !== '' &&
+      !isNaN( Number( value ) )
+    );
   }
 
   /**
@@ -545,12 +585,26 @@ export class UsersListComponent implements OnInit, OnDestroy {
    * - Computes start/end for the backend.
    * - Normalises search string and updates pagination state.
    */
-  private async userInit( pageIndex: number ): Promise<void> {
+  private async userInit( index: number ): Promise<void> {
     try {
       this.loading = true;
 
-      const safeIndex: number = Math.max( 0, Math.round( Number( pageIndex ) ) );
-      const limit: number = Math.max( 1, this.itemsPerPage );
+      const totalRes = await this.APIsService.getAllUserCount();
+
+      if ( totalRes.status !== 'success' ) {
+        throw new Error( 'Failed to fetch total amount of all users!' );
+      }
+
+      const totalRaw = totalRes.data?.pagination?.total;
+
+      if ( !this.isNumberValue( totalRaw ) ) {
+        throw new Error( 'Invalid total amount of all users!' );
+      }
+
+      const total: number = Number( totalRaw );
+
+      const safeIndex: number = PaginationUtil.safeIndex( index, total );
+      const limit: number = PaginationUtil.safeLimit( this.itemsPerPage, total );
 
       const startIdx: number = safeIndex * limit;
       const endIdx: number = startIdx + limit;
@@ -559,24 +613,27 @@ export class UsersListComponent implements OnInit, OnDestroy {
       const res = await this.APIsService.getAllUsersWithPagination(
         startIdx,
         endIdx,
-        safeSearch
+        safeSearch,
       );
 
-      if ( !res || res.status !== 'success' ) {
+      if ( !res.success || res.status !== 'success' ) {
         throw new Error( res?.message || 'Loading users failed.' );
       }
 
-      const payload = res.data;
-      this.users = Array.isArray( payload ) ? payload : [];
+      const payload = res.data?.system?.users;
 
-      this.totalItems = res.count ?? 0;
+      if ( !Array.isArray( payload ) ) {
+        throw new Error( 'Invalid array of users!' );
+      }
 
+      this.users = payload;
+
+      this.totalItems = total;
       this.pageCount =
         this.totalItems > 0 ? Math.ceil( this.totalItems / limit ) : 0;
 
       // Clamp current page index in case count shrank.
       const maxIndex: number = this.pageCount > 0 ? this.pageCount - 1 : 0;
-
       this.index = Math.min( safeIndex, maxIndex );
 
       // If requested page is beyond max (e.g. after bulk delete) → reload last page.
@@ -594,7 +651,10 @@ export class UsersListComponent implements OnInit, OnDestroy {
       }
     } catch ( err ) {
       console.error( '[Failed to process user loading with pagination!]: ', err );
-      this.notification.notification( 'error', 'Failed to process user loading.' );
+      this.notification.notification(
+        'error',
+        'Failed to process user loading.',
+      );
       this.users = [];
       this.totalItems = 0;
       this.pageCount = 0;
@@ -617,18 +677,6 @@ export class UsersListComponent implements OnInit, OnDestroy {
     const e = Math.max( s, Math.min( this.end, totalPages - 1 ) );
 
     return Array.from( { length: e - s + 1 }, ( _, i ) => s + i );
-  }
-
-  /**
-   * Validate that a value can be treated as a number.
-   */
-  private isNumberValue( value: unknown ): boolean {
-    return (
-      value !== null &&
-      value !== undefined &&
-      value !== '' &&
-      !isNaN( Number( value ) )
-    );
   }
 
   /**

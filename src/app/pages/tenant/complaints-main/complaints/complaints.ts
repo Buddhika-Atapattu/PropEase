@@ -382,11 +382,21 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
         throw new Error( 'Username is empty!' );
       }
 
-      const tok = await this.apiService.generateToken(
+      const res = await this.apiService.generateToken(
         this.loggedUser.username,
       );
 
-      this.tenantToken = tok?.token ?? '';
+      if ( res.status !== 'success' || !res.success ) {
+        throw new Error( 'Failed to fetch token!' );
+      }
+
+      const token: string | null = this.apiService.extractTokenFromMsg( res );
+
+      if ( !token ) {
+        throw new Error( 'Invalid token!' );
+      }
+
+      this.tenantToken = token;
     } catch ( err ) {
       console.error( err );
       this.notification?.notification( 'error', String( err ) );
@@ -576,11 +586,11 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
       // 1) Get total complaint count
       const countRea = await this.tenantService.getAllComplaintsCount();
 
-      if ( countRea.status !== 'success' || typeof countRea.data?.total !== 'number' ) {
+      if ( countRea.status !== 'success' || typeof countRea.data?.pagination?.total !== 'number' ) {
         throw new Error( countRea.message || 'Failed to fetch complaints count' );
       }
 
-      const total = Number( countRea.data.total );
+      const total = Number( countRea.data?.pagination?.total );
       this.adminTotalDataCount = total;
 
       // 2) Compute safe pagination based on total
@@ -596,13 +606,13 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
         safeSearch,
       );
 
-      if ( resp.status !== 'success' || !Array.isArray( resp.data?.items ) ) {
+      if ( resp.status !== 'success' || !Array.isArray( resp.data?.system?.complaints ) ) {
         throw new Error( resp.message || 'Failed to fetch complaints' );
       }
 
       // 4) Map backend DTOs → table rows
       const rows = await Promise.all(
-        resp.data.items.map(
+        resp.data?.system?.complaints.map(
           async ( complaint: ComplaintClient ): Promise<ComplaintTableRow> =>
             await this.buildRow( complaint ),
         ),
@@ -659,13 +669,13 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
       const countRes =
         await this.tenantService.getTotalCountOfComplaintsByTenant( username );
 
-      if ( countRes.status !== 'success' || typeof countRes.data?.total !== 'number' ) {
+      if ( countRes.status !== 'success' || typeof countRes.data?.pagination?.total !== 'number' ) {
         throw new Error(
           countRes.message || 'Failed to fetch complaint count for tenant',
         );
       }
 
-      const totalComplaints = countRes.data.total;
+      const totalComplaints = countRes.data.pagination.total;
       this.tenantTotalDataCount = totalComplaints;
 
       // 2) Compute safe pagination
@@ -682,13 +692,13 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
         safeSearch,
       );
 
-      if ( resp.status !== 'success' || !Array.isArray( resp.data.complaints ) ) {
+      if ( resp.status !== 'success' || !Array.isArray( resp.data?.system?.complaints ) ) {
         throw new Error( resp.message || 'Failed to fetch tenant complaints' );
       }
 
       // 4) Map backend DTOs → table rows
       const rows = await Promise.all(
-        resp.data.complaints.map(
+        resp.data.system.complaints.map(
           async ( complaint: ComplaintClient ): Promise<ComplaintTableRow> =>
             await this.buildRow( complaint ),
         ),
@@ -716,32 +726,86 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
    * - Fills action buttons for view/edit
    */
   private async buildRow( item: ComplaintClient ): Promise<ComplaintTableRow> {
-    const res = await this.apiService.getSectionKeyFromUser(
-      item.tenantId,
-      'name',
-    );
+    try {
+      let userFullName = '';
 
-    if ( res.status !== 'success' ) {
-      console.warn( 'Failed to fetch user data' );
+      // ─────────────────────────────────────────────
+      // 1) Fetch `section` from backend (user.name)
+      // ─────────────────────────────────────────────
+      try {
+        const res = await this.apiService.getSectionKeyFromUser(
+          item.tenantId,
+          'name'
+        );
+
+        if ( res.status !== 'success' ) {
+          console.warn(
+            '[buildRow] getSectionKeyFromUser failed:',
+            res.message ?? 'Unknown error'
+          );
+        } else {
+          // section should look like: { section: { name: string } }
+          const section = this.apiService.extractObjectFromOther<{
+            name?: string;
+          }>( res.data, 'section' );
+
+          // Guard: section exists AND has a non-empty name
+          if ( section && typeof section.name === 'string' && section.name.trim() ) {
+            userFullName = section.name.trim();
+          } else {
+            console.warn(
+              '[buildRow] Section is missing a valid name for tenant:',
+              item.tenantId,
+              section
+            );
+          }
+        }
+      } catch ( err ) {
+        // Network / unexpected API errors
+        console.error( '[buildRow] Error while fetching user section:', err );
+      }
+
+      // Fallback: if we still don’t have a name, show tenantId
+      if ( !userFullName ) {
+        console.warn(
+          '[buildRow] Falling back to tenantId as tenantname for:',
+          item.tenantId
+        );
+        userFullName = item.tenantId;
+      }
+
+      // ─────────────────────────────────────────────
+      // 2) Build the row (always returns something)
+      // ─────────────────────────────────────────────
+      const data: ComplaintTableRow = {
+        id: item.code || '',
+        propertyid: item.propertyId || '',
+        tenantname: userFullName,
+        status: item.status || '',
+        category: item.category || '',
+        viewButton: { action: 'view', icon: 'visibility', label: 'View' },
+        editButton: { action: 'edit', icon: 'edit', label: 'Edit' },
+      };
+
+      return data;
+    } catch ( err ) {
+      // Absolute last-resort fallback – should be rare
+      console.error( '[buildRow] Unexpected error building row:', err );
+
+      const fallback: ComplaintTableRow = {
+        id: item.code || '',
+        propertyid: item.propertyId || '',
+        tenantname: item.tenantId,
+        status: item.status || '',
+        category: item.category || '',
+        viewButton: { action: 'view', icon: 'visibility', label: 'View' },
+        editButton: { action: 'edit', icon: 'edit', label: 'Edit' },
+      };
+
+      return fallback;
     }
-
-    const userFullName = res.data.section?.name ?? '';
-    if ( !userFullName ) {
-      console.warn( 'Failed to process user full name' );
-    }
-
-    const data: ComplaintTableRow = {
-      id: item.code || '',
-      propertyid: item.propertyId || '',
-      tenantname: userFullName || item.tenantId,
-      status: item.status || '',
-      category: item.category || '',
-      viewButton: { action: 'view', icon: 'visibility', label: 'View' },
-      editButton: { action: 'edit', icon: 'edit', label: 'Edit' },
-    };
-
-    return data;
   }
+
 
   // ========================================================================
   // 13. TABLE BUTTON HANDLERS (VIEW / EDIT)
@@ -808,8 +872,8 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
         throw new Error( 'Failed to fetch complaints data!' );
       }
 
-      const complaints = res.data?.complaints;
-      const total = res.data?.total;
+      const complaints = res.data?.system?.complaints;
+      const total = res.data?.pagination?.total;
 
       // Choose dataset:
       // 1) use aggregated "complaints" if present
@@ -925,8 +989,8 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
         throw new Error( 'Failed to fetch complaints data!' );
       }
 
-      const complaints = res.data?.complaints;
-      const total = res.data?.total;
+      const complaints = res.data?.system?.complaints;
+      const total = res.data?.pagination?.total;
 
       // Select dataset: backend aggregation or fallback admin data
       let rows: Array<{ category?: string; }> | undefined;

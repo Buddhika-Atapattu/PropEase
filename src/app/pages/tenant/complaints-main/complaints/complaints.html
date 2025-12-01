@@ -41,13 +41,14 @@
           <app-custom-table
             [(isReload)]="tenantIsReloading"
             [(index)]="tenantPageIndex"
-            [pageSize]="tenantPageSize"
+            [(limit)]="tenantPageSize"
             [pagination]="true"
             [(search)]="tenantSearch"
             [columns]="complaintTableColumns"
             [data]="tenantAllData"
             [totalDataCount]="tenantTotalDataCount"
             [buttons]="actionButtons"
+            [tableTitle]="'My complainst'"
             (buttonOperation)="handleButtonTrigger($event)"
           ></app-custom-table>
         </div>
@@ -118,13 +119,14 @@
           <app-custom-table
             [(isReload)]="adminIsReloading"
             [(index)]="adminPageIndex"
-            [pageSize]="adminPageSize"
+            [(limit)]="adminPageSize"
             [(search)]="adminSearch"
             [pagination]="true"
             [columns]="complaintTableColumns"
             [data]="adminAllData"
             [totalDataCount]="adminTotalDataCount"
             [buttons]="actionButtons"
+            [tableTitle]="'All Complaints'"
             (buttonOperation)="handleButtonTrigger($event)"
           ></app-custom-table>
         </div>

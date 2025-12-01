@@ -574,7 +574,6 @@ export class AuthService {
 
   set setLoggedUser( user: User | null ) {
     this.loggedUser = user;
-    this.activityTrackerService.loggedUser = user;
   }
 
   set logginUser( user: UserCredentials ) {
@@ -590,7 +589,7 @@ export class AuthService {
         throw new Error( 'Invalid credentials!' );
       }
 
-      const user: User | undefined = response.user as User;
+      const user: User | undefined = response.data?.system?.user as User;
       if ( !user ) {
         throw new Error( 'User not found!' );
       }
@@ -761,7 +760,6 @@ export class AuthService {
 
   public async insertLoggedUserTracks(): Promise<void> {
     const date = new Date();
-    this.activityTrackerService.userLoggedTime = date;
     const data = { username: this.user?.username, date };
     await this.activityTrackerService
       .saveLoggedUserDataToTracking( data )

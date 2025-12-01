@@ -1,47 +1,83 @@
+<!--
+  Global dialogs
+  - Notification dialog (snackbar-style messages)
+  - Progress bar (used when submitting / loading)
+-->
 <app-notification-dialog></app-notification-dialog>
 <app-progress-bar></app-progress-bar>
+
 <div class="main-panel">
   <div class="container-fluid">
-    <!-- Page Indicators -->
-
-    <!-- End Page Indicators -->
-
-    <!-- Page title -->
+    <!-- ─────────────────────────────────────────────
+         Page header
+         ───────────────────────────────────────────── -->
     <div class="row">
       <div class="col-12">
         <h1>Create Complaint</h1>
         <hr />
       </div>
     </div>
-    <!-- End page title -->
 
-    <!-- Admin property table -->
-    <ng-container *ngIf="checkLoggedUserRole">
-      <div class="row my-4">
-        <div class="col-12">
-          <h4>Admin Panel</h4>
-          <hr />
-        </div>
+    <!-- ─────────────────────────────────────────────
+         Property selection table
+         - Admin: see all leases (admin / operator / manager)
+         - Tenant: see only their own leases
+         ───────────────────────────────────────────── -->
+    @if (checkLoggedUserRole) {
+    <!-- Admin panel (all leases) -->
+    <div class="row my-4">
+      <div class="col-12">
+        <h4>Admin Panel</h4>
+        <hr />
       </div>
-      <div class="row">
-        <app-custom-table
-          [(isReload)]="isReloading"
-          [pageSize]="pageSize"
-          [pagination]="true"
-          [(index)]="pageIndex"
-          [tableTitle]="tableType"
-          [(search)]="search"
-          [buttons]="actionButtons"
-          [totalDataCount]="totalDataCount"
-          [data]="allData"
-          [columns]="tableColumns"
-          (fetchData)="fetchData()"
-          (buttonOperation)="actionButtonOperations($event)"
-        ></app-custom-table>
-      </div>
-    </ng-container>
-    <!-- End admin property table -->
+    </div>
 
+    <div class="row">
+      <app-custom-table
+        [(isReload)]="isReloading"
+        [(limit)]="pageSize"
+        [pagination]="true"
+        [(index)]="pageIndex"
+        [tableTitle]="tableType"
+        [(search)]="search"
+        [buttons]="actionButtons"
+        [totalDataCount]="totalDataCount"
+        [data]="allData"
+        [columns]="tableColumns"
+        (fetchData)="fetchData()"
+        (buttonOperation)="actionButtonOperations($event)"
+      ></app-custom-table>
+    </div>
+    } @else {
+    <!-- Tenant panel (only leases of current tenant) -->
+    <div class="row my-4">
+      <div class="col-12">
+        <h4>Tenant Panel</h4>
+        <hr />
+      </div>
+    </div>
+
+    <div class="row">
+      <app-custom-table
+        [(isReload)]="isReloadingTenant"
+        [(limit)]="pageLimiteTenant"
+        [pagination]="true"
+        [(index)]="pageIndexTenant"
+        [tableTitle]="tableType"
+        [(search)]="searchTenant"
+        [buttons]="actionButtons"
+        [totalDataCount]="totalDataCountTenant"
+        [data]="allDataTenant"
+        [columns]="tableColumns"
+        (fetchData)="fetchData()"
+        (buttonOperation)="actionButtonOperations($event)"
+      ></app-custom-table>
+    </div>
+    }
+
+    <!-- ─────────────────────────────────────────────
+         Complaint section heading
+         ───────────────────────────────────────────── -->
     <div class="row my-2">
       <div class="col-12">
         <h4>Complaint</h4>
@@ -49,9 +85,14 @@
       </div>
     </div>
 
-    <!-- Display selected property -->
+    <!-- ─────────────────────────────────────────────
+         Selected property preview
+         - Shows when a property is selected from the table
+         - Uses property + leaseID from component getters
+         ───────────────────────────────────────────── -->
     <ng-container *ngIf="property">
       <div class="row my-2">
+        <!-- Property image -->
         <div class="col-xl-6 col-md-6 col-12">
           <div class="image-container rounded">
             <img
@@ -61,35 +102,46 @@
             />
           </div>
         </div>
+
+        <!-- Property title + address -->
         <div class="col-xl-6 col-md-6 col-12">
-          <h3 class="title my-2">{{property.title}}</h3>
+          <h3 class="title my-2">{{ property.title }}</h3>
           <hr class="my-3" />
+
           <h4 class="my-2">Property Address:</h4>
           <p class="text-capitalize">
-            {{property.address.houseNumber}}, <br />
-            {{property.address.street}}, <br />
-            {{property.address.city}}, <br />
-            {{property.address.stateOrProvince}}, <br />
-            {{property.address.country}}, <br />
-            {{property.address.postcode}}.
+            {{ property.address.houseNumber }}, <br />
+            {{ property.address.street }}, <br />
+            {{ property.address.city }}, <br />
+            {{ property.address.stateOrProvince }}, <br />
+            {{ property.address.country }}, <br />
+            {{ property.address.postcode }}.
           </p>
         </div>
       </div>
+
+      <!-- Property & lease IDs (small badge footer) -->
       <div class="row d-flex justify-content-end align-items-center">
         <p
           class="badge text-default d-flex justify-content-end align-items-center"
         >
-          <ng-container *ngIf="property.id"
-            >Property ID: {{property.id}}</ng-container
-          >
-          | <ng-container *ngIf="leaseID">lease ID: {{leaseID}}</ng-container>
+          <ng-container *ngIf="property.id">
+            Property ID: {{ property.id }}
+          </ng-container>
+          |
+          <ng-container *ngIf="leaseID"> Lease ID: {{ leaseID }} </ng-container>
         </p>
       </div>
     </ng-container>
 
-    <!-- End display selected property -->
-
-    <!-- Compalint data -->
+    <!-- ─────────────────────────────────────────────
+         Complaint form
+         - Title
+         - Category
+         - Description (rich text)
+         - Attachments (images)
+         - Submit
+         ───────────────────────────────────────────── -->
     <form
       action=""
       method="POST"
@@ -97,10 +149,11 @@
       (ngSubmit)="submit()"
       class="profile-form"
       autocomplete="off"
-      #comaplaintForm="ngForm"
+      #complaintForm="ngForm"
     >
-      <!-- Complaint title and category -->
+      <!-- Complaint title + category row -->
       <div class="row my-4">
+        <!-- Title -->
         <div class="col-xl-9 col-md-8 col-12">
           <mat-form-field class="w-100">
             <mat-label>Complaint Title</mat-label>
@@ -109,10 +162,12 @@
               required
               [(ngModel)]="title"
               name="complaintTitle"
-              #complaintTitle
+              #complaintTitle="ngModel"
             />
           </mat-form-field>
         </div>
+
+        <!-- Category selector -->
         <div class="col-xl-3 col-md-4 col-12">
           <mat-form-field class="w-100">
             <mat-label>Complaint Category</mat-label>
@@ -127,9 +182,8 @@
           </mat-form-field>
         </div>
       </div>
-      <!-- End complaint title and category -->
 
-      <!-- Complaint description -->
+      <!-- Complaint description (rich text editor) -->
       <div class="row mt-4">
         <div class="col-12">
           <hr />
@@ -142,11 +196,18 @@
           </app-text-editor>
         </div>
       </div>
-      <!-- End complaint description -->
 
+      <!-- Attachments (drag & drop / paste / file select) -->
       <div class="row my-2">
         <div class="col-12">
-          <!-- create-complaints.html (example snippet) -->
+          <!--
+            app-dropdown:
+              - Handles drag & drop, paste and file input
+              - Emits:
+                  filesChange -> full queue
+                  filesAdded  -> newly added files
+                  fileRemoved -> single removed file
+          -->
           <app-dropdown
             [accept]="'image/*'"
             [multiple]="true"
@@ -163,18 +224,23 @@
         </div>
       </div>
 
+      <!-- Submit button -->
       <div class="row d-flex justify-content-end align-items-center">
         <div
           class="col-xl-3 col-md-4 col-12 d-flex justify-content-end align-items-center"
         >
           <button
             type="submit"
-            class="btn rounded btn-view d-flex justify-content-center align-items-center"
+            class="btn rounded btn-success d-flex justify-content-center align-items-center"
           >
-            <mat-icon class="mx-2">save</mat-icon> Create
+            <mat-icon class="mx-2">cloud_upload</mat-icon>
+            Create
           </button>
         </div>
       </div>
     </form>
+    <!-- ─────────────────────────────────────────────
+         End complaint form
+         ───────────────────────────────────────────── -->
   </div>
 </div>

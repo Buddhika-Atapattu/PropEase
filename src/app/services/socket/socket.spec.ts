@@ -1,16 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Socket } from './socket';
+import { SocketPlaceholder } from './socket';
 
-describe('Socket', () => {
-  let service: Socket;
+describe( 'Socket', () => {
+  let service: SocketPlaceholder;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(Socket);
-  });
+  beforeEach( () => {
+    TestBed.configureTestingModule( {} );
+    service = TestBed.inject( SocketPlaceholder );
+  } );
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-});
+  it( 'should be created', () => {
+    expect( service ).toBeTruthy();
+  } );
+} );

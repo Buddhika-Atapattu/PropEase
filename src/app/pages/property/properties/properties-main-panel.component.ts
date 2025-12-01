@@ -7,29 +7,47 @@ import {
   OnInit,
   PLATFORM_ID,
   ViewChild,
-  AfterViewInit
-
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import {
+  MatIconModule,
+  MatIconRegistry,
+} from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import {
+  ActivatedRoute,
+  Router,
+} from '@angular/router';
+import {
+  Subscription,
+} from 'rxjs';
 
-import { NotificationDialogComponent } from '../../../components/dialogs/notification/notificationBar.component';
+import {
+  NotificationDialogComponent,
+} from '../../../components/dialogs/notification/notificationBar.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
-import { PropertyFilterDialogComponent } from '../../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
+import {
+  PropertyFilterDialogComponent,
+} from '../../../components/dialogs/property-filter-dialog/property-filter-dialog.component';
 import { PropertyViewCardComponent } from '../../../components/property-view-card/property-view-card.component';
-import { User, APIsService } from '../../../services/APIs/apis.service';
+import { LayoutSwitchBtn } from '../../../components/shared/buttons/layout-switch-btn/layout-switch-btn';
+import { ConfirmationComponent } from '../../../components/shared/confirmation/confirmation.component';
+import {
+  APIsService,
+  User,
+} from '../../../services/APIs/apis.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import {
   BackEndPropertyData,
-  PropertyService
+  PropertyService,
 } from '../../../services/property/property.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { ConfirmationComponent } from '../../../components/shared/confirmation/confirmation.component';
-import { LayoutSwitchBtn } from '../../../components/shared/buttons/layout-switch-btn/layout-switch-btn';
+import { PaginationUtil } from '../../../source/utility/pagination.utils';
+
+// ─────────────────────────────────────────────────────────────
+// Local interfaces
+// ─────────────────────────────────────────────────────────────
 
 interface FilterDialogData {
   minPrice: number;
@@ -41,147 +59,161 @@ interface FilterDialogData {
   status: string;
 }
 
-interface ApiDataTypeForProperties {
-  properties: BackEndPropertyData[];
-  count: number;
-}
-
 @Component( {
   selector: 'app-properties-main-panel',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+
+    // Material / shared
     MatIconModule,
     NotificationDialogComponent,
     ProgressBarComponent,
     PropertyViewCardComponent,
-    FormsModule,
-    LayoutSwitchBtn
+    LayoutSwitchBtn,
   ],
   templateUrl: './properties-main-panel.component.html',
   styleUrl: './properties-main-panel.component.scss',
 } )
 export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
-  @ViewChild( ProgressBarComponent ) progress!: ProgressBarComponent;
-  @ViewChild( NotificationDialogComponent ) notification!: NotificationDialogComponent;
+  @ViewChild( ProgressBarComponent )
+  progress!: ProgressBarComponent;
+
+  @ViewChild( NotificationDialogComponent )
+  notification!: NotificationDialogComponent;
+
   @ViewChild( 'searchInput', { static: true } )
   searchInput!: ElementRef<HTMLInputElement>;
 
+  // ─────────────────────────────────────────────────────────────
+  // Environment / global state
+  // ─────────────────────────────────────────────────────────────
+
   protected mode: boolean | null = null;
-  protected isBrowser: boolean;
+  protected readonly isBrowser: boolean;
+
   private modeSub: Subscription | null = null;
+  private windowWidthSub: Subscription | null = null;
+  private routeSub: Subscription | null = null;
 
   protected LOGGED_USER: User | null = null;
   protected loading: boolean = false;
   protected viewMode: boolean = false;
 
+  // ─────────────────────────────────────────────────────────────
   // Search / filter
+  // ─────────────────────────────────────────────────────────────
+
   protected search: string = '';
   private currentSearchTerm: string = '';
   private currentFilter: FilterDialogData | null = null;
 
-  // Data (only current page from backend)
+  // ─────────────────────────────────────────────────────────────
+  // Data (current page)
+  // ─────────────────────────────────────────────────────────────
+
   protected properties: BackEndPropertyData[] = [];
 
-  // PAGINATION (backend-driven)
+  // ─────────────────────────────────────────────────────────────
+  // Backend pagination
+  // ─────────────────────────────────────────────────────────────
+
   protected itemsPerPage: number = 12; // page size
-  protected totalItems: number = 0;    // total count (from backend)
+  protected totalItems: number = 0;    // total count from backend
   protected pageCount: number = 0;     // total pages
   protected index: number = 0;         // current page index (0-based)
 
   // Page-number window for UI (0-based indices)
-  protected start: number = 0; // first page index shown in pager
-  protected end: number = 0;   // last page index shown in pager
+  protected start: number = 0; // first page index shown
+  protected end: number = 0;   // last page index shown
+
+  // ─────────────────────────────────────────────────────────────
+  // Constructor
+  // ─────────────────────────────────────────────────────────────
 
   constructor (
-    private windowRef: WindowsRefService,
-    @Inject( PLATFORM_ID ) private platformId: Object,
-    private route: ActivatedRoute,
-    private authService: AuthService,
+    private readonly windowRef: WindowsRefService,
+    @Inject( PLATFORM_ID ) private readonly platformId: Object,
+    private readonly route: ActivatedRoute,
+    private readonly authService: AuthService,
     private readonly apiService: APIsService,
-    private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer,
-    private router: Router,
-    private dialog: MatDialog,
-    private propertyService: PropertyService,
+    private readonly matIconRegistry: MatIconRegistry,
+    private readonly domSanitizer: DomSanitizer,
+    private readonly router: Router,
+    private readonly dialog: MatDialog,
+    private readonly propertyService: PropertyService,
   ) {
     this.LOGGED_USER = this.authService.getLoggedUser;
     this.isBrowser = isPlatformBrowser( this.platformId );
 
-    this.route.url.subscribe( ( segments ) => {
+    // Route subscription (kept in case you want to use `path` later)
+    this.routeSub = this.route.url.subscribe( ( segments ) => {
       const path = segments.map( ( s ) => s.path ).join( '/' );
       // path available if needed
     } );
 
-    this.iconMaker();
+    this.registerIcons();
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // Lifecycle
+  // ─────────────────────────────────────────────────────────────
 
   async ngOnInit(): Promise<void> {
     if ( this.isBrowser ) {
+      // Theme mode subscription
       this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
       } );
 
-      this.windowRef.windowWidth$.subscribe( ( val ) => {
-        let newPageSize = this.itemsPerPage;
+      // Responsive page size
+      this.windowWidthSub = this.windowRef.windowWidth$.subscribe( ( width ) => {
+        const newPageSize = this.calculatePageSize( width );
 
-        if ( val <= 599.99 ) {
-          newPageSize = 6;
-        } else if ( val >= 600 && val <= 1199.98 ) {
-          newPageSize = 10;
-        } else if ( val >= 1200 && val <= 1999.98 ) {
-          newPageSize = 12;
-        } else {
-          newPageSize = 20;
-        }
-
-        // Only update if actually changed
         if ( newPageSize !== this.itemsPerPage ) {
           this.itemsPerPage = newPageSize;
-          // (Optional) If you want to reload when page size changes:
+          // Reload from first page when page size changes
           void this.propertyInit( 0 );
         }
       } );
     }
 
-    //  Load first page here – BEFORE first change detection of children
+    // Initial load
     await this.propertyInit( 0 );
   }
 
-
-
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
+    this.windowWidthSub?.unsubscribe();
+    this.routeSub?.unsubscribe();
   }
 
-  // ───────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
   // Layout / permissions
-  // ───────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
 
   protected changeLayout( value: boolean ): void {
-    try {
-      if ( typeof value !== 'boolean' ) {
-        throw new Error( 'Only Boolean value can accept!' );
-      }
-      this.viewMode = value;
-    } catch ( err ) {
-      console.error( err );
-    }
+    // LayoutSwitchBtn already sends a boolean; just coerce for safety
+    this.viewMode = !!value;
   }
-
 
   protected isUserCanCreateProperty(): boolean {
     return (
       this.LOGGED_USER?.access.permissions.some(
         ( permission ) =>
           permission.module === 'Property Management' &&
-          permission.actions.includes( 'create property' )
+          permission.actions.includes( 'create property' ),
       ) ?? false
     );
   }
 
-  private iconMaker(): void {
-    const iconMap = [
+  // ─────────────────────────────────────────────────────────────
+  // Icon registration
+  // ─────────────────────────────────────────────────────────────
+
+  private registerIcons(): void {
+    const iconMap: { name: string; path: string; }[] = [
       { name: 'view', path: 'Images/Icons/view.svg' },
       { name: 'listing', path: 'Images/Icons/listing.svg' },
       { name: 'edit', path: 'Images/Icons/pencil-square.svg' },
@@ -196,118 +228,145 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
 
     for ( const icon of iconMap ) {
       this.matIconRegistry.addSvgIcon(
-        icon.name.toString(),
-        this.domSanitizer.bypassSecurityTrustResourceUrl( icon.path.toString() )
+        icon.name,
+        this.domSanitizer.bypassSecurityTrustResourceUrl( icon.path ),
       );
     }
   }
 
-  // ───────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
   // Navigation operations
-  // ───────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
 
-  protected async viewProperty( isAllowed: boolean, property: BackEndPropertyData ): Promise<void> {
+  protected async viewProperty(
+    isAllowed: boolean,
+    property: BackEndPropertyData,
+  ): Promise<void> {
     try {
       if ( !isAllowed ) return;
-      if ( !property ) throw new Error( 'Invalid property data!' );
-      const propertyId = property.id;
+      const propertyId = property?.id;
       if ( !propertyId ) throw new Error( 'Invalid property id!' );
       await this.router.navigate( [ '/dashboard/properties/property-view', propertyId ] );
     } catch ( err ) {
-      console.error( err );
+      console.error( '[viewProperty]:', err );
     }
   }
 
-  protected async editProperty( isAllowed: boolean, property: BackEndPropertyData ): Promise<void> {
+  protected async editProperty(
+    isAllowed: boolean,
+    property: BackEndPropertyData,
+  ): Promise<void> {
     try {
       if ( !isAllowed ) return;
-      if ( !property ) throw new Error( 'Invalid property data!' );
-      const propertyId = property.id;
+      const propertyId = property?.id;
       if ( !propertyId ) throw new Error( 'Invalid property id!' );
       await this.router.navigate( [ '/dashboard/properties/property-edit', propertyId ] );
     } catch ( err ) {
-      console.error( err );
+      console.error( '[editProperty]:', err );
     }
   }
 
-  protected async deleteProperty( isAllowed: boolean, property: BackEndPropertyData ): Promise<void> {
+  protected async deleteProperty(
+    isAllowed: boolean,
+    property: BackEndPropertyData,
+  ): Promise<void> {
     try {
       if ( !isAllowed ) return;
       if ( !property ) throw new Error( 'Invalid property data!' );
-      if ( !this.LOGGED_USER ) throw new Error( 'Invalid login!' );
+      if ( !this.LOGGED_USER ) throw new Error( 'User is not logged in!' );
 
       const propertyId = property.id;
+      if ( !propertyId ) throw new Error( 'Invalid property id!' );
+
       const title = `Delete ${ propertyId }`;
-      const message = `Are you sure to delete ${ propertyId }`;
+      const message = `Are you sure you want to delete ${ propertyId }?`;
 
       const dialogRef = this.dialog.open( ConfirmationComponent, {
         width: '400px',
         height: 'auto',
         data: {
-          isDelete: isAllowed,
+          isDelete: true,
           title,
           message,
         },
       } );
 
-      dialogRef.afterClosed().subscribe( async ( val ): Promise<void> => {
-        try {
-          const confirm: boolean = val;
-          if ( !confirm ) return;
+      dialogRef.afterClosed().subscribe( async ( confirmed: boolean ) => {
+        if ( !confirmed ) return;
 
+        try {
           const username = this.LOGGED_USER?.username ?? '';
           const res = await this.propertyService.deleteProperty( propertyId, username );
 
           if ( res.success || res.status.toLocaleLowerCase() === 'success' ) {
-            this.notification.notification( 'warning', `Property deleted ${ propertyId }` );
-            // reload current page (backend will give updated count)
+            this.notification.notification( 'warning', `Property deleted: ${ propertyId }` );
+            // Reload current page (backend returns updated count)
             await this.propertyInit( this.index );
           } else {
             this.notification.notification( 'error', 'Failed to delete property!' );
-            throw new Error( '[Failed to delete property]: ' + res.message );
+            throw new Error( '[Failed to delete property]: ' + ( res.message ?? 'Unknown' ) );
           }
         } catch ( error ) {
-          console.error( error );
+          console.error( '[deleteProperty > afterClosed]:', error );
         }
       } );
     } catch ( err ) {
-      console.error( err );
+      console.error( '[deleteProperty]:', err );
     }
   }
 
-  // ───────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
   // Filter / search
-  // ───────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
 
   private async getHighestPropertyPrice(): Promise<number> {
-    const data = await this.propertyService.getAllProperties();
-    const properties: BackEndPropertyData[] = data.data as BackEndPropertyData[];
-    if ( !properties || properties.length === 0 ) return 0;
-    return Math.max( ...properties.map( ( prop ) => prop.price || 0 ) );
+    try {
+      const data = await this.propertyService.getAllProperties();
+      const properties = data.data as BackEndPropertyData[] | undefined;
+
+      if ( !Array.isArray( properties ) || properties.length === 0 ) {
+        return 0;
+      }
+
+      return Math.max( ...properties.map( ( prop ) => prop.price || 0 ) );
+    } catch ( err ) {
+      console.error( '[getHighestPropertyPrice]:', err );
+      this.notification.notification( 'error', 'Failed to load max property price!' );
+      return 0;
+    }
   }
 
   protected async openFilter(): Promise<void> {
-    const dialogRef = this.dialog.open( PropertyFilterDialogComponent, {
-      width: 'auto',
-      height: 'auto',
-      maxWidth: '100vw',
-      maxHeight: '100vh',
-      minWidth: '25vw',
-      minHeight: '25vh',
-      autoFocus: false,
-      data: {
-        maxPrice: await this.getHighestPropertyPrice(),
-        minPrice: 0,
-      },
-    } );
+    try {
+      const maxPrice = await this.getHighestPropertyPrice();
 
-    dialogRef.afterClosed().subscribe( async ( result ) => {
-      if ( result !== null && result !== undefined ) {
-        this.currentFilter = result as FilterDialogData;
-        // filter changed → go back to first page
+      const dialogRef = this.dialog.open( PropertyFilterDialogComponent, {
+        width: 'auto',
+        height: 'auto',
+        maxWidth: '100vw',
+        maxHeight: '100vh',
+        minWidth: '25vw',
+        minHeight: '25vh',
+        autoFocus: false,
+        data: {
+          maxPrice,
+          minPrice: 0,
+        },
+      } );
+
+      dialogRef.afterClosed().subscribe( async ( result: FilterDialogData | null | undefined ) => {
+        if ( result === null || result === undefined ) {
+          return;
+        }
+
+        this.currentFilter = result;
+        // Filter changed → go back to first page
         await this.propertyInit( 0 );
-      }
-    } );
+      } );
+    } catch ( err ) {
+      console.error( '[openFilter]:', err );
+      this.notification.notification( 'error', 'Failed to open filter dialog!' );
+    }
   }
 
   protected async resetFilter(): Promise<void> {
@@ -319,14 +378,14 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
 
   protected async searchProperties( input: string ): Promise<void> {
     try {
-      const raw: string = ( input ?? '' ).toString();
-      const safeInput: string = raw.trim().toLowerCase();
+      const raw = ( input ?? '' ).toString();
+      const safeInput = raw.trim().toLowerCase();
 
       this.currentSearchTerm = safeInput;
-      // search changed → first page
+      // Search changed → first page
       await this.propertyInit( 0 );
     } catch ( err ) {
-      console.error( err );
+      console.error( '[searchProperties]:', err );
       this.notification.notification( 'error', 'Failed to process property search!' );
     }
   }
@@ -336,72 +395,77 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
       const input = this.searchInput.nativeElement.value;
       await this.searchProperties( input );
     } catch ( err ) {
-      console.error( err );
+      console.error( '[searchBtn]:', err );
       this.notification.notification( 'error', 'Property search failed!' );
     }
   }
 
-  // ───────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
   // Backend pagination core
-  // ───────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+
   get isPaginationOn(): boolean {
-    return this.totalItems !== this.itemsPerPage;
+    return this.totalItems > this.itemsPerPage;
   }
+
+  /**
+   * Calculate itemsPerPage based on viewport width.
+   */
+  private calculatePageSize( width: number ): number {
+    if ( width <= 599.99 ) return 6;
+    if ( width >= 600 && width <= 1199.98 ) return 10;
+    if ( width >= 1200 && width <= 1999.98 ) return 12;
+    return 20;
+  }
+
   /**
    * Main backend loader.
    * pageIndex is 0-based (0,1,2,...).
-   * It converts to start/end and calls the backend pagination API.
    */
-  private async propertyInit( pageIndex: number ): Promise<void> {
+  private async propertyInit( index: number ): Promise<void> {
     try {
       this.loading = true;
 
-      const safeIndex: number = Math.max( 0, Math.round( Number( pageIndex ) ) );
-      const limit: number = Math.max( 1, this.itemsPerPage );
+      // 1) Fetch total count
+      const total = await this.fetchTotalPropertyCount();
+      this.totalItems = total;
 
-      const startIdx: number = safeIndex * limit;
-      const endIdx: number = startIdx + limit;
+      // 2) Compute safe index & bounds
+      const limit = PaginationUtil.safeLimit( this.itemsPerPage, total );
+      const safeIndex = PaginationUtil.safeIndex( index, total );
+      const { startIdx, endIdx } = this.computeBounds( safeIndex, limit );
 
-      const safeFilter: string = this.currentFilter
+      // 3) Build filter/search payload
+      const safeFilter = this.currentFilter
         ? JSON.stringify( this.currentFilter )
         : '';
+      const safeSearch = this.currentSearchTerm || '';
 
-      const safeSearch: string = this.currentSearchTerm || '';
-
-      const res = await this.propertyService.getPropertiesWithPaginationAndFilter(
+      // 4) Fetch page from backend
+      const properties = await this.fetchPropertyPage(
         startIdx,
         endIdx,
         safeSearch,
-        safeFilter
+        safeFilter,
       );
 
-      if ( !res || res.status !== 'success' ) {
-        throw new Error( res?.message || 'Loading properties failed!' );
-      }
-
-      const payload = res.data as ApiDataTypeForProperties;
-      const properties = Array.isArray( payload.properties )
-        ? payload.properties
-        : [];
-
+      // 5) Apply to component state
       this.properties = properties;
-      this.totalItems = payload.count ?? 0;
 
-      this.pageCount = this.totalItems > 0
-        ? Math.ceil( this.totalItems / limit )
+      this.pageCount = total > 0
+        ? Math.ceil( total / limit )
         : 0;
 
-      // Clamp current page index in case count shrank
-      const maxIndex: number = this.pageCount > 0 ? this.pageCount - 1 : 0;
+      const maxIndex = this.pageCount > 0 ? this.pageCount - 1 : 0;
       this.index = Math.min( safeIndex, maxIndex );
 
-      // If requested page is beyond the max (e.g. after big delete) → reload last page
+      // If requested page > maxIndex (e.g. after mass delete), reload last page
       if ( safeIndex > maxIndex && this.pageCount > 0 ) {
         await this.propertyInit( maxIndex );
         return;
       }
 
-      // Update page-number window
+      // 6) Update page number window
       if ( this.pageCount > 0 ) {
         this.updateWindow();
       } else {
@@ -409,15 +473,78 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
         this.end = 0;
       }
     } catch ( err ) {
-      console.error( '[Failed to process property loading with pagination!]: ', err );
-      this.notification.notification( 'error', 'Failed to process property loading!' );
+      console.error( '[propertyInit]: Failed to load properties with pagination:', err );
+      this.notification.notification( 'error', 'Failed to load properties!' );
       this.properties = [];
       this.totalItems = 0;
       this.pageCount = 0;
       this.index = 0;
+      this.start = 0;
+      this.end = 0;
     } finally {
       this.loading = false;
     }
+  }
+
+  /**
+   * Fetch total property count from backend and validate.
+   */
+  private async fetchTotalPropertyCount(): Promise<number> {
+    const totalRes = await this.propertyService.getAllPropertiesCount();
+
+    if ( !totalRes.success || totalRes.status !== 'success' ) {
+      throw new Error( 'Failed to fetch total number of properties' );
+    }
+
+    const total: number | undefined = totalRes.data?.pagination?.total;
+
+    if (
+      !total ||
+      Number.isNaN( total ) ||
+      !Number.isFinite( total ) ||
+      !Number.isInteger( total )
+    ) {
+      throw new Error( 'Invalid property total number!' );
+    }
+
+    return total;
+  }
+
+  /**
+   * Compute start/end indices for backend pagination.
+   */
+  private computeBounds( pageIndex: number, limit: number ): { startIdx: number; endIdx: number; } {
+    const startIdx = pageIndex * limit;
+    const endIdx = startIdx + limit;
+    return { startIdx, endIdx };
+  }
+
+  /**
+   * Fetch paginated properties from backend with search + filter.
+   */
+  private async fetchPropertyPage(
+    startIdx: number,
+    endIdx: number,
+    search: string,
+    filter: string,
+  ): Promise<BackEndPropertyData[]> {
+    const res = await this.propertyService.getPropertiesWithPaginationAndFilter(
+      startIdx,
+      endIdx,
+      search,
+      filter,
+    );
+
+    if ( !res.success || res.status !== 'success' ) {
+      throw new Error( res?.message || 'Loading properties failed!' );
+    }
+
+    const properties = res.data?.system?.properties;
+    if ( !Array.isArray( properties ) ) {
+      throw new Error( 'Invalid array of property data!' );
+    }
+
+    return properties;
   }
 
   /**
@@ -459,7 +586,7 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
 
       const target = Math.min(
         Math.max( 0, requested ),
-        totalPages - 1
+        totalPages - 1,
       );
 
       if ( target === this.index ) {
@@ -507,11 +634,11 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     this.end = end;
   }
 
-  // ───────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
   // Misc navigation
-  // ───────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
 
   protected propertyListing(): void {
-    this.router.navigate( [ '/dashboard/properties/property-listing' ] );
+    void this.router.navigate( [ '/dashboard/properties/property-listing' ] );
   }
 }

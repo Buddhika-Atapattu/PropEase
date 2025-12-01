@@ -1,13 +1,12 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
-
 @Component( {
-  selector: 'app-users',
+  selector: 'app-tenant',
   imports: [ RouterModule ],
-  templateUrl: './users.component.html',
-  styleUrl: './users.component.scss',
+  templateUrl: './tenant.component.html',
+  styleUrl: './tenant.component.scss',
 } )
-export class UsersComponent {
+export class TenantComponent {
 
 }

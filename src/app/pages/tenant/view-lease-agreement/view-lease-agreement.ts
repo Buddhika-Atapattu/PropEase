@@ -1,31 +1,64 @@
+// Path: src/app/pages/tenant/view-lease-agreement/view-lease-agreement.ts
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Angular core / common
+// ──────────────────────────────────────────────────────────────────────────────
 import {
-  Component,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
   AfterViewInit,
+  Component,
+  Inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Lease, ScannedFileRecordJSON, TenantService, LeaseWithProperty } from '../../../services/tenant/tenant.service';
-import { AuthService } from '../../../services/auth/auth.service';
-import { PropertyService, BackEndPropertyData } from '../../../services/property/property.service';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Angular routing / dialogs / icons
+// ──────────────────────────────────────────────────────────────────────────────
+import { ActivatedRoute, Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// RxJS
+// ──────────────────────────────────────────────────────────────────────────────
+import { Subscription } from 'rxjs';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Shared components / pipes
+// ──────────────────────────────────────────────────────────────────────────────
 import { NotificationDialogComponent } from '../../../components/dialogs/notification/notificationBar.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
 import { SkeletonLoaderComponent } from '../../../components/shared/skeleton-loader/skeleton-loader.component';
-import { APIsService, User } from '../../../services/APIs/apis.service';
-import { MatIconRegistry, MatIconModule } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
 import { FileOpener } from '../../../components/dialogs/file-opener/file-opener';
-import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 import { LeaseAgreements } from '../../../components/dialogs/lease-agreements/lease-agreements';
+import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Services
+// ──────────────────────────────────────────────────────────────────────────────
+import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+import {
+  Lease,
+  LeaseWithProperty,
+  ScannedFileRecordJSON,
+  TenantService,
+} from '../../../services/tenant/tenant.service';
+import {
+  BackEndPropertyData,
+  PropertyService,
+} from '../../../services/property/property.service';
+import { AuthService } from '../../../services/auth/auth.service';
+import { CryptoService } from '../../../services/cryptoService/crypto.service';
+import { APIsService, User } from '../../../services/APIs/apis.service';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Local interfaces
+// ──────────────────────────────────────────────────────────────────────────────
 
 interface ScannedFilePreview {
   icon: string;
@@ -36,40 +69,72 @@ interface ScannedFilePreview {
   URL?: string;
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// Component
+// ──────────────────────────────────────────────────────────────────────────────
 
 @Component( {
   selector: 'app-view-lease-agreement',
   standalone: true,
-  imports: [ CommonModule, NotificationDialogComponent, ProgressBarComponent, SkeletonLoaderComponent, MatDialogModule, MatIconModule, SafeUrlPipe ],
+  imports: [
+    CommonModule,
+    NotificationDialogComponent,
+    ProgressBarComponent,
+    SkeletonLoaderComponent,
+    MatDialogModule,
+    MatIconModule,
+    SafeUrlPipe,
+  ],
   templateUrl: './view-lease-agreement.html',
-  styleUrl: './view-lease-agreement.scss'
+  styleUrl: './view-lease-agreement.scss',
 } )
 export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild( NotificationDialogComponent ) NotificationDialogComponent!: NotificationDialogComponent;
-  @ViewChild( ProgressBarComponent ) progressBarComponent !: ProgressBarComponent;
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // ViewChilds
+  // ────────────────────────────────────────────────────────────────────────────
+
+  @ViewChild( NotificationDialogComponent )
+  protected notificationDialog!: NotificationDialogComponent;
+
+  @ViewChild( ProgressBarComponent )
+  protected progressBarComponent!: ProgressBarComponent;
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // General state
+  // ────────────────────────────────────────────────────────────────────────────
 
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
+
   protected loggedUser: User | null = null;
 
-  //Lease details
+  // Lease / property / tenant
   private leaseID: string = '';
+  private propertyID: string = '';
+  private tenantUsername: string = '';
+
   protected lease: Lease | null = null;
   protected selectedProperty: BackEndPropertyData | null = null;
-  private propertyID: string = '';
-  protected isLoading: boolean = false;
   protected tenant: User | null = null;
-  private tenantUsername: string = '';
+
+  protected isLoading: boolean = false;
+
+  // Scanned files
   protected scannedDocuments: ScannedFileRecordJSON[] = [];
   protected scannedFilePreview: ScannedFilePreview[] = [];
 
-  protected readonly definedMaleDummyImageURL =
+  // Tenant image handling
+  protected readonly definedMaleDummyImageURL: string =
     'Images/user-images/dummy-user/dummy-user.jpg';
-  protected readonly definedWomanDummyImageURL =
+
+  protected readonly definedWomanDummyImageURL: string =
     'Images/user-images/dummy-user/dummy_woman.jpg';
+
   protected definedImage: string =
     'Images/user-images/dummy-user/dummy-user.jpg';
+
   protected readonly definedImageExtentionArray: string[] = [
     'jpg',
     'webp',
@@ -79,37 +144,48 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
     'gif',
   ];
 
-
+  // ────────────────────────────────────────────────────────────────────────────
+  // Constructor
+  // ────────────────────────────────────────────────────────────────────────────
 
   constructor (
-    private windowRef: WindowsRefService,
-    @Inject( PLATFORM_ID ) private platformId: Object,
-    private route: ActivatedRoute,
-    private router: Router,
-    private tenantService: TenantService,
-    private authService: AuthService,
-    private propertyService: PropertyService,
-    private dialog: MatDialog,
-    private cryptoService: CryptoService,
-    private apiService: APIsService,
-    private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer,
+    private readonly windowRef: WindowsRefService,
+    @Inject( PLATFORM_ID ) private readonly platformId: Object,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly tenantService: TenantService,
+    private readonly authService: AuthService,
+    private readonly propertyService: PropertyService,
+    private readonly dialog: MatDialog,
+    private readonly cryptoService: CryptoService, // kept for template usage if needed
+    private readonly apiService: APIsService,
+    private readonly matIconRegistry: MatIconRegistry,
+    private readonly domSanitizer: DomSanitizer,
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
     this.loggedUser = this.authService.getLoggedUser;
 
+    // Optional URL watcher (currently unused, kept for future)
     this.route.url.subscribe( ( segments ) => {
       const path = segments.map( ( s ) => s.path ).join( '/' );
+      // console.debug('[ViewLeaseAgreement] route path:', path);
     } );
 
+    // Resolve leaseID from route params and load data chain
     this.route.params.subscribe( async ( params ) => {
       this.leaseID = params[ 'leaseID' ];
+
       await this.loadLeaseAgreement();
       await this.loadSelectedProperty();
       await this.loadTenant();
     } );
+
     this.registerCustomIcons();
   }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // Lifecycle hooks
+  // ────────────────────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
     if ( this.isBrowser ) {
@@ -119,205 +195,268 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void {
+    // View is now ready – nothing specific yet
+  }
 
   ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
   }
 
-  //<============================================== LOAD LEASE AGREEMENT DATA ==============================================>
+  // ────────────────────────────────────────────────────────────────────────────
+  // Shared error helper
+  // ────────────────────────────────────────────────────────────────────────────
+
+  private notifyError(
+    error: unknown,
+    fallbackMessage: string,
+  ): void {
+    console.error( error );
+
+    if ( !this.notificationDialog ) {
+      return;
+    }
+
+    if ( error instanceof HttpErrorResponse ) {
+      this.notificationDialog.notification( 'error', error.message );
+      return;
+    }
+
+    if ( typeof error === 'string' ) {
+      this.notificationDialog.notification( 'error', error );
+      return;
+    }
+
+    if ( error instanceof Error ) {
+      this.notificationDialog.notification( 'error', error.message );
+      return;
+    }
+
+    this.notificationDialog.notification( 'error', fallbackMessage );
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // Load: Lease agreement
+  // ────────────────────────────────────────────────────────────────────────────
+
   private async loadLeaseAgreement(): Promise<void> {
     try {
       this.isLoading = true;
-      if ( !this.leaseID ) throw new Error( 'No lease ID found!' );
 
+      if ( !this.leaseID ) {
+        throw new Error( 'No lease ID found!' );
+      }
 
-      const response = await this.tenantService.getLeaseAgreementByLeaseID( this.leaseID );
+      const response = await this.tenantService.getLeaseAgreementByLeaseID(
+        this.leaseID,
+      );
 
-      if ( response.status !== 'success' ) throw new Error( 'Lease cloud not find!' );
+      if ( response.status !== 'success' ) {
+        throw new Error( 'Lease could not be found!' );
+      }
 
-      this.lease = response.data as Lease;
+      const lease: Lease | undefined = response.data?.system?.lease;
 
-      if ( !this.lease ) throw new Error( 'No lease found!' );
+      if ( !lease ) {
+        throw new Error( 'No lease found!' );
+      }
 
-      type ScannedDoc = ScannedFileRecordJSON;
+      this.lease = lease;
 
-      const raw = this.lease?.tenantInformation?.scannedDocuments ?? [];
+      // Flatten scanned documents
+      this.scannedDocuments = this.flattenScannedDocuments(
+        this.lease.tenantInformation?.scannedDocuments ?? [],
+      );
 
-      // Ensure we end up with ScannedDoc[]
-      this.scannedDocuments = raw.reduce<ScannedDoc[]>( ( acc, entry ) => {
-        if ( Array.isArray( entry ) ) {
-          acc.push( ...( entry as ScannedDoc[] ) );
-        } else if ( entry ) {
-          acc.push( entry as ScannedDoc );
-        }
-        return acc;
-      }, [] );
+      if ( this.scannedDocuments.length === 0 ) {
+        throw new Error( 'No scanned documents found!' );
+      }
 
-      if ( this.scannedDocuments.length === 0 ) throw new Error( 'No scanned documents found!' );
+      // Build preview list
+      this.scannedFilePreview = this.buildScannedFilePreviews(
+        this.scannedDocuments,
+      );
 
-      this.scannedDocuments.forEach( ( item ) => {
-        item.files.forEach( ( doc ) => {
-          const name = doc.file.filename;
-          const type = doc.file.mimetype;
-          const size = doc.file.size;
-          const token = doc.token ?? '';
-          const URL = doc.file.URL;
-          const icon = this.chooceFileIcon( name.split( '.' ).pop() ?? '' );
-          this.scannedFilePreview.push( {
-            icon,
-            name,
-            size,
-            type,
-            token,
-            URL
-          } );
-        } );
-      } );
-
+      // Extract property ID & tenant username for later calls
       this.propertyID = this.lease.propertyID ?? '';
 
-      if ( !this.propertyID ) throw new Error( 'No property ID found!' );
+      if ( !this.propertyID ) {
+        throw new Error( 'No property ID found!' );
+      }
 
       this.tenantUsername = this.lease.tenantInformation.tenantUsername;
 
-      if ( !this.tenantUsername ) throw new Error( 'No tenant username found!' );
-
-    }
-    catch ( error ) {
-      console.error( error );
-      if ( error instanceof HttpErrorResponse ) this.NotificationDialogComponent.notification( 'error', error.message );
-      else if ( typeof error === 'string' ) this.NotificationDialogComponent.notification( 'error', error );
-      else if ( error instanceof Error ) this.NotificationDialogComponent.notification( 'error', error.message );
-      else this.NotificationDialogComponent.notification( 'error', 'Failed to load lease agreement.' );
-    }
-    finally {
+      if ( !this.tenantUsername ) {
+        throw new Error( 'No tenant username found!' );
+      }
+    } catch ( error ) {
+      this.notifyError( error, 'Failed to load lease agreement.' );
+    } finally {
       setTimeout( () => {
         this.isLoading = false;
       }, 500 );
     }
   }
-  //<============================================== END LOAD LEASE AGREEMENT DATA ==============================================>
 
-  //<============================================== LOAD SELECTED PROPERTY DATA ==============================================>
+  // ────────────────────────────────────────────────────────────────────────────
+  // Load: Selected property
+  // ────────────────────────────────────────────────────────────────────────────
+
   private async loadSelectedProperty(): Promise<void> {
     try {
-      if ( !this.propertyID ) throw new Error( 'No property ID found!' );
+      if ( !this.propertyID ) {
+        throw new Error( 'No property ID found!' );
+      }
 
-      const response = await this.propertyService.getPropertyById( this.propertyID );
+      const response = await this.propertyService.getPropertyById(
+        this.propertyID,
+      );
 
-      if ( response.status !== 'success' ) throw new Error( 'Property cloud not find!' );
+      if ( response.status !== 'success' ) {
+        throw new Error( 'Property could not be found!' );
+      }
 
-      this.selectedProperty = response.data as BackEndPropertyData;
+      const property = response.data?.system?.property;
 
-      if ( !this.selectedProperty ) throw new Error( 'No property found!' );
-    }
-    catch ( error ) {
-      console.error( error );
-      if ( error instanceof HttpErrorResponse ) this.NotificationDialogComponent.notification( 'error', error.message );
-      else if ( typeof error === 'string' ) this.NotificationDialogComponent.notification( 'error', error );
-      else if ( error instanceof Error ) this.NotificationDialogComponent.notification( 'error', error.message );
-      else this.NotificationDialogComponent.notification( 'error', 'Failed to load property data.' );
+      if ( !property ) {
+        throw new Error( 'No property found!' );
+      }
+      this.selectedProperty = property;
+    } catch ( error ) {
+      this.notifyError( error, 'Failed to load property data.' );
     }
   }
-  //<============================================== END LOAD SELECTED PROPERTY DATA ==============================================>
 
-  //<============================================== LOAD TENANT DATA ==============================================>
+  // ────────────────────────────────────────────────────────────────────────────
+  // Load: Tenant
+  // ────────────────────────────────────────────────────────────────────────────
+
   private async loadTenant(): Promise<void> {
     try {
-      if ( !this.tenantUsername ) throw new Error( 'No tenant username found!' );
+      if ( !this.tenantUsername ) {
+        throw new Error( 'No tenant username found!' );
+      }
 
-      const response = await this.apiService.getUserByUsername( this.tenantUsername );
+      const response = await this.apiService.getUserByUsername(
+        this.tenantUsername,
+      );
 
-      if ( response.status !== 'true' ) throw new Error( 'Tenant cloud not find!' );
+      // NOTE: backend uses 'true' as status string here
+      if ( response.status !== 'success' ) {
+        throw new Error( 'Tenant could not be found!' );
+      }
 
-      this.tenant = response.user as User;
+      const tenant: User | undefined = response.data?.system?.user;
 
-      if ( !this.tenant ) throw new Error( 'No tenant found!' );
-    }
-    catch ( error ) {
-      console.error( error );
-      if ( error instanceof HttpErrorResponse ) this.NotificationDialogComponent.notification( 'error', error.message );
-      else if ( typeof error === 'string' ) this.NotificationDialogComponent.notification( 'error', error );
-      else if ( error instanceof Error ) this.NotificationDialogComponent.notification( 'error', error.message );
-      else this.NotificationDialogComponent.notification( 'error', 'Failed to load tenant data.' );
+      if ( !tenant ) {
+        throw new Error( 'No tenant found!' );
+      }
+      this.tenant = tenant;
+    } catch ( error ) {
+      this.notifyError( error, 'Failed to load tenant data.' );
     }
   }
-  //<============================================== END LOAD TENANT DATA ==============================================>
 
-  //<============================================== PAGE INDICATORS ==============================================>
-  protected goToTenantsDashboard() {
-    this.router.navigateByUrl( '/', { skipLocationChange: true } ).then( () => {
-      this.router.navigate( [ '/dashboard/tenant/tenant-home/' ] );
-    } );
+  // ────────────────────────────────────────────────────────────────────────────
+  // Navigation helpers
+  // ────────────────────────────────────────────────────────────────────────────
+
+  protected goToTenantsDashboard(): void {
+    this.router
+      .navigateByUrl( '/', { skipLocationChange: true } )
+      .then( () => {
+        this.router.navigate( [ '/dashboard/tenant/tenant-home/' ] );
+      } )
+      .catch( ( error ) => {
+        this.notifyError( error, 'Failed to navigate to tenants dashboard.' );
+      } );
   }
 
-  protected async goToTenant() {
+  protected async goToTenant(): Promise<void> {
     try {
       if ( !this.tenant ) {
         throw new Error( 'No tenant information available.' );
       }
 
-      const tenant = await this.apiService.generateToken( this.tenant.username );
+      const res = await this.apiService.generateToken( this.tenant.username );
 
-      if ( !tenant || !tenant.token ) {
+      if ( !res.success || res.status !== 'success' ) {
         throw new Error( 'Failed to generate tenant token.' );
       }
 
-      await this.router.navigateByUrl( '/', { skipLocationChange: true } );
-      await this.router.navigate( [ '/dashboard/tenant/tenant-view/', tenant.token ] );
+      const token = this.apiService.extractTokenFromMsg( res );
 
+      if ( !token ) {
+        throw new Error( 'Invalid token generated!' );
+      }
+
+      await this.router.navigateByUrl( '/', { skipLocationChange: true } );
+      await this.router.navigate( [
+        '/dashboard/tenant/tenant-view/',
+        token,
+      ] );
     } catch ( error ) {
-      console.error( error );
-      if ( error instanceof HttpErrorResponse ) this.NotificationDialogComponent.notification( 'error', error.message );
-      else if ( typeof error === 'string' ) this.NotificationDialogComponent.notification( 'error', error );
-      else if ( error instanceof Error ) this.NotificationDialogComponent.notification( 'error', error.message );
-      else this.NotificationDialogComponent.notification( 'error', 'Unable to load tenant view.' );
+      this.notifyError( error, 'Unable to load tenant view.' );
     }
   }
 
-  protected goLease() {
-    this.router.navigate( [ '/dashboard/tenant/view-lease', this.leaseID ] );
+  protected goLease(): void {
+    this.router.navigate( [ '/dashboard/tenant/view-lease', this.leaseID ] )
+      .catch( ( error ) => {
+        this.notifyError( error, 'Failed to navigate to lease view.' );
+      } );
   }
-  //<============================================== END PAGE INDICATORS ==============================================>
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // Tenant image helper
+  // ────────────────────────────────────────────────────────────────────────────
 
-  //<========================================================================= LOAD TENANT IMAGE DATA ========================================================================>
-  protected generateTenantImage( image: string, gender: string ): string {
+  protected generateTenantImage(
+    image: string,
+    gender: string,
+  ): string {
     try {
-      const imageArray: string[] = image ? image.split( '/' ) : [];
+      const segments: string[] = image ? image.split( '/' ) : [];
 
-      if ( Array.isArray( imageArray ) && imageArray.length > 0 ) {
-        const lastSegment = imageArray[ imageArray.length - 1 ];
-        const extension = lastSegment.split( '.' ).pop()?.toLowerCase();
+      if ( segments.length > 0 ) {
+        const lastSegment: string = segments[ segments.length - 1 ];
+        const extension: string | undefined = lastSegment
+          .split( '.' )
+          .pop()
+          ?.toLowerCase();
 
-        if ( extension && this.definedImageExtentionArray.includes( extension ) ) {
+        if (
+          extension &&
+          this.definedImageExtentionArray.includes( extension )
+        ) {
           this.definedImage = image;
         } else {
-          this.definedImage = gender.toLowerCase() === 'male'
-            ? this.definedMaleDummyImageURL
-            : this.definedWomanDummyImageURL;
+          this.definedImage = this.getDummyImageByGender( gender );
         }
       } else {
-        // Handle case where image is empty or malformed
-        this.definedImage = gender.toLowerCase() === 'male'
-          ? this.definedMaleDummyImageURL
-          : this.definedWomanDummyImageURL;
+        this.definedImage = this.getDummyImageByGender( gender );
       }
 
       return this.definedImage;
-
     } catch ( error ) {
       console.error( 'Error generating tenant image:', error );
-      return gender.toLowerCase() === 'male'
-        ? this.definedMaleDummyImageURL
-        : this.definedWomanDummyImageURL;
+      return this.getDummyImageByGender( gender );
     }
   }
-  //<========================================================================= END LOAD TENANT IMAGE DATA ========================================================================>
 
-  //<========================================================================= OPEN SCANNED DOCUMENT ========================================================================>
-  protected viewScannedDocument( document: ScannedFilePreview ) {
+  private getDummyImageByGender( gender: string ): string {
+    return gender.toLowerCase() === 'male'
+      ? this.definedMaleDummyImageURL
+      : this.definedWomanDummyImageURL;
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // View scanned document
+  // ────────────────────────────────────────────────────────────────────────────
+
+  protected viewScannedDocument(
+    document: ScannedFilePreview,
+  ): void {
     try {
       const dialogRef = this.dialog.open( FileOpener, {
         width: '100%',
@@ -326,24 +465,26 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
         minHeight: '25vh',
         maxWidth: '75vw',
         maxHeight: '75vh',
-        data: document
+        data: document,
       } );
 
-      dialogRef.afterClosed().subscribe( result => {
-        console.log( `Dialog result: ${ result }` );
+      dialogRef.afterClosed().subscribe( ( result ) => {
+        // Optional: handle result if needed
+        // console.debug('[FileOpener closed]:', result);
       } );
-
-    }
-    catch ( error ) {
-      console.log( error );
+    } catch ( error ) {
+      this.notifyError( error, 'Failed to open scanned document.' );
     }
   }
-  //<========================================================================= END OPEN SCANNED DOCUMENT ========================================================================>
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // Custom icons registration
+  // ────────────────────────────────────────────────────────────────────────────
 
-  //<=========================== ICON REGISTER ===========================>
   private registerCustomIcons(): void {
-    const iconMap = {
+    const iconBasePath: string = 'Images/Icons';
+
+    const iconMap: Record<string, string> = {
       document: 'documents.svg',
       upload: 'upload.svg',
       pdf: 'file-types/pdf.svg',
@@ -366,147 +507,184 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
       maid: 'maid.svg',
     };
 
-    for ( const [ name, path ] of Object.entries( iconMap ) ) {
+    Object.entries( iconMap ).forEach( ( [ name, path ] ) => {
       this.matIconRegistry.addSvgIcon(
         name,
         this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `Images/Icons/${ path }`
-        )
+          `${ iconBasePath }/${ path }`,
+        ),
       );
-    }
+    } );
   }
 
   protected amenityIconMaker( amenity: string ): string {
     return this.propertyService.investigateTheAmenityIcon( amenity );
   }
-  //<=========================== END ICON REGISTER ===========================>
 
-  //<=========================== FILE ICON CHOOSER ===========================>
+  // ────────────────────────────────────────────────────────────────────────────
+  // File icon chooser
+  // ────────────────────────────────────────────────────────────────────────────
+
   protected chooceFileIcon( type: string ): string {
-    switch ( type ) {
-      case 'doc':
-        return 'word';
-      case 'docx':
-        return 'word';
-      case 'dot':
-        return 'word';
-      case 'dotx':
-        return 'word';
-      case 'rtf':
-        return 'word';
-      case 'odt':
-        return 'word';
-      case 'txt':
-        return 'txt';
-      case 'xml':
-        return 'xml';
-      case 'xls':
-        return 'excel';
-      case 'xlsx':
-        return 'excel';
-      case 'xlsm':
-        return 'excel';
-      case 'xlt':
-        return 'excel';
-      case 'xltx':
-        return 'excel';
-      case 'ods':
-        return 'excel';
-      case 'csv':
-        return 'excel';
-      case 'tsv':
-        return 'excel';
-      case 'ppt':
-        return 'powerpoint';
-      case 'pptx':
-        return 'powerpoint';
-      case 'pptm':
-        return 'powerpoint';
-      case 'pot':
-        return 'powerpoint';
-      case 'potx':
-        return 'powerpoint';
-      case 'odp':
-        return 'powerpoint';
-      case 'pdf':
-        return 'pdf';
-      case 'zip':
-        return 'zip';
-      case 'png':
-        return 'image';
-      case 'jpeg':
-        return 'image';
-      case 'webp':
-        return 'image';
-      case 'gif':
-        return 'image';
-      case 'jpg':
-        return 'image';
-      case 'ico':
-        return 'image';
-      case 'svg':
-        return 'image';
-      default:
-        return 'file';
-    }
-  }
-  //<=========================== END FILE ICON CHOOSER ===========================>
+    const lower = type.toLowerCase();
 
-  //<=========================== MAKE THE STRING COMBINE WHEN THOSE STRING MIGHT UNDEFINED ===========================>
-  protected makeStringCombineWhenItMightUndefined( valueOne: string | undefined, valueTwo: string | undefined ) {
-    try {
-      if ( valueOne === undefined && valueTwo === undefined ) return '';
-      else if ( valueOne === undefined ) return valueTwo ?? '';
-      else if ( valueTwo === undefined ) return valueOne ?? '';
-      else return valueOne + ' ' + valueTwo;
+    const wordTypes: string[] = [
+      'doc',
+      'docx',
+      'dot',
+      'dotx',
+      'rtf',
+      'odt',
+    ];
+    const excelTypes: string[] = [
+      'xls',
+      'xlsx',
+      'xlsm',
+      'xlt',
+      'xltx',
+      'ods',
+      'csv',
+      'tsv',
+    ];
+    const pptTypes: string[] = [
+      'ppt',
+      'pptx',
+      'pptm',
+      'pot',
+      'potx',
+      'odp',
+    ];
+    const imageTypes: string[] = [
+      'png',
+      'jpeg',
+      'webp',
+      'gif',
+      'jpg',
+      'ico',
+      'svg',
+    ];
+
+    if ( wordTypes.includes( lower ) ) {
+      return 'word';
     }
-    catch ( error ) {
+    if ( excelTypes.includes( lower ) ) {
+      return 'excel';
+    }
+    if ( pptTypes.includes( lower ) ) {
+      return 'powerpoint';
+    }
+    if ( lower === 'txt' ) {
+      return 'txt';
+    }
+    if ( lower === 'xml' ) {
+      return 'xml';
+    }
+    if ( lower === 'pdf' ) {
+      return 'pdf';
+    }
+    if ( lower === 'zip' ) {
+      return 'zip';
+    }
+    if ( imageTypes.includes( lower ) ) {
+      return 'image';
+    }
+
+    return 'file';
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // String combine helper (optional)
+  // ────────────────────────────────────────────────────────────────────────────
+
+  protected makeStringCombineWhenItMightUndefined(
+    valueOne: string | undefined,
+    valueTwo: string | undefined,
+  ): string {
+    try {
+      const v1: string = ( valueOne ?? '' ).trim();
+      const v2: string = ( valueTwo ?? '' ).trim();
+
+      if ( !v1 && !v2 ) {
+        return '';
+      }
+      if ( !v1 ) {
+        return v2;
+      }
+      if ( !v2 ) {
+        return v1;
+      }
+
+      return `${ v1 } ${ v2 }`;
+    } catch ( error ) {
       console.error( error );
       return '';
     }
   }
 
-  //<=========================== END MAKE THE STRING COMBINE WHEN THOSE STRING MIGHT UNDEFINED ===========================>
+  // ────────────────────────────────────────────────────────────────────────────
+  // Visit property details
+  // ────────────────────────────────────────────────────────────────────────────
 
-  //<=========================== VISIT THE SELECTED PROPERTY ===========================>
-  protected viewPropertyDetails() {
+  protected viewPropertyDetails(): void {
     try {
-      const propertyID = this.selectedProperty?.id ?? '';
+      const propertyID: string = this.selectedProperty?.id ?? '';
 
-      if ( !propertyID ) throw new Error( 'No property ID found!' );
+      if ( !propertyID ) {
+        throw new Error( 'No property ID found!' );
+      }
 
-      this.router.navigate( [ '/dashboard/properties/property-view', propertyID ] );
-    }
-    catch ( error ) {
-      console.error( error );
-      if ( error instanceof HttpErrorResponse ) this.NotificationDialogComponent.notification( 'error', error.message );
-      else if ( typeof error === 'string' ) this.NotificationDialogComponent.notification( 'error', error );
-      else if ( error instanceof Error ) this.NotificationDialogComponent.notification( 'error', error.message );
-      else this.NotificationDialogComponent.notification( 'error', 'Unable to view property details.' );
+      this.router
+        .navigate( [ '/dashboard/properties/property-view', propertyID ] )
+        .catch( ( error ) => {
+          this.notifyError( error, 'Unable to view property details.' );
+        } );
+    } catch ( error ) {
+      this.notifyError( error, 'Unable to view property details.' );
     }
   }
-  //<=========================== END VISIT THE SELECTED PROPERTY ===========================>
 
-  //<=========================== EDIT LEASE AGREEMENT ===========================>
+  // ────────────────────────────────────────────────────────────────────────────
+  // Edit lease agreement
+  // ────────────────────────────────────────────────────────────────────────────
+
   protected onEditLease(): void {
-    this.router.navigate( [ '/dashboard/tenant/tenant-lease', this.lease?.leaseID ] );
+    if ( !this.lease?.leaseID ) {
+      this.notifyError( 'No lease ID found!', 'Unable to edit lease.' );
+      return;
+    }
+
+    this.router
+      .navigate( [ '/dashboard/tenant/edit-lease', this.lease.leaseID ] )
+      .catch( ( error ) => {
+        this.notifyError( error, 'Unable to edit lease.' );
+      } );
   }
-  //<=========================== END EDIT LEASE AGREEMENT ===========================>
-  //<=========================== VIEW LEASE AGREEMENT ===========================>
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // View lease agreement (dialog)
+  // ────────────────────────────────────────────────────────────────────────────
+
   protected async viewLeaseAgreement(): Promise<void> {
     try {
+      const leaseID: string | undefined = this.lease?.leaseID;
+      if ( !leaseID ) {
+        throw new Error( 'No lease ID found!' );
+      }
 
-      const leaseID = this.lease?.leaseID;
-      if ( !leaseID ) throw new Error( 'No lease ID found!' );
+      const tenant: User | null = this.tenant;
+      if ( !tenant ) {
+        throw new Error( 'Tenant not found!' );
+      }
 
-      const tenant = this.tenant;
-      if ( !tenant ) throw new Error( 'Tenant not found!' );
+      if ( !this.selectedProperty ) {
+        throw new Error( 'No property found!' );
+      }
 
-      if ( !this.selectedProperty ) throw new Error( 'No property found!' );
+      if ( !this.lease ) {
+        throw new Error( 'No lease found!' );
+      }
 
-      if ( !this.lease ) throw new Error( 'No lease found!' );
-
-      const LeaseWithProperty: LeaseWithProperty = {
+      const leaseWithProperty: LeaseWithProperty = {
         ...this.lease,
         property: this.selectedProperty,
       };
@@ -518,39 +696,110 @@ export class ViewLeaseAgreement implements OnInit, AfterViewInit, OnDestroy {
         maxHeight: '90vh',
         panelClass: 'fullscreen-dialog',
         data: {
-          lease: LeaseWithProperty,
-          tenant: tenant,
+          lease: leaseWithProperty,
+          tenant,
         },
       } );
 
       dialogRef.afterClosed().subscribe( () => {
-
+        // Optional: handle dialog result
       } );
-
     } catch ( error ) {
-      console.error( 'Error opening lease agreement:', error );
-      this.NotificationDialogComponent.notification( 'error', error as string );
+      this.notifyError(
+        error,
+        'Failed to open lease agreement preview dialog.',
+      );
     }
   }
-  //<=========================== END VIEW LEASE AGREEMENT ===========================>
 
-  //<=========================== CREATE COMPLAINT ===========================>
+  // ────────────────────────────────────────────────────────────────────────────
+  // Create complaint
+  // ────────────────────────────────────────────────────────────────────────────
+
   protected async createComplaint(): Promise<void> {
     try {
-      if ( !this.tenant ) throw new Error( 'Tenant is invalid!' );
-      if ( !this.leaseID ) throw new Error( 'Lease ID is empty!' );
-      const { token } = await this.apiService.generateToken( this.tenant.username );
-      if ( !token ) throw new Error( 'Invalid token' )!;
+      if ( !this.tenant ) {
+        throw new Error( 'Tenant is invalid!' );
+      }
+
+      if ( !this.leaseID ) {
+        throw new Error( 'Lease ID is empty!' );
+      }
+
+      const res = await this.apiService.generateToken( this.tenant.username );
+
+      if ( !res.success || res.status !== 'success' ) {
+        throw new Error( 'Failed to generate token!' );
+      }
+
+      const token = this.apiService.extractTokenFromMsg( res );
+
+      if ( !token ) {
+        throw new Error( 'Invalid token' );
+      }
+
       await this.router.navigate(
-        [ '/dashboard/tenant/complaints/create-complaint', encodeURIComponent( token ) ],
-        { queryParams: { leaseID: this.leaseID } }
+        [
+          '/dashboard/tenant/complaints/create-complaint',
+          encodeURIComponent( token ),
+        ],
+        { queryParams: { leaseID: this.leaseID } },
       );
     } catch ( error ) {
-      console.error( error );
-      this.NotificationDialogComponent.notification( 'error', 'Unexpected error occurred!' );
-      return;
+      this.notifyError( error, 'Unexpected error occurred while creating complaint.' );
     }
   }
-  //<=========================== END CREATE COMPLAINT ===========================>
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // Private helpers: scanned documents
+  // ────────────────────────────────────────────────────────────────────────────
+
+  private flattenScannedDocuments(
+    raw: unknown,
+  ): ScannedFileRecordJSON[] {
+    type ScannedDoc = ScannedFileRecordJSON;
+
+    if ( !Array.isArray( raw ) ) {
+      return [];
+    }
+
+    return raw.reduce<ScannedDoc[]>( ( acc, entry ) => {
+      if ( Array.isArray( entry ) ) {
+        acc.push( ...( entry as ScannedDoc[] ) );
+      } else if ( entry ) {
+        acc.push( entry as ScannedDoc );
+      }
+      return acc;
+    }, [] );
+  }
+
+  private buildScannedFilePreviews(
+    docs: ScannedFileRecordJSON[],
+  ): ScannedFilePreview[] {
+    const previews: ScannedFilePreview[] = [];
+
+    docs.forEach( ( item ) => {
+      item.files.forEach( ( doc ) => {
+        const name: string = doc.file.filename;
+        const type: string = doc.file.mimetype;
+        const size: number = doc.file.size;
+        const token: string = doc.token ?? '';
+        const URL: string = doc.file.URL;
+
+        const extension: string = name.split( '.' ).pop()?.toLowerCase() ?? '';
+        const icon: string = this.chooceFileIcon( extension );
+
+        previews.push( {
+          icon,
+          name,
+          size,
+          type,
+          token,
+          URL,
+        } );
+      } );
+    } );
+
+    return previews;
+  }
 }

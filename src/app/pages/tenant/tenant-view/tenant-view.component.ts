@@ -33,14 +33,17 @@ import {
 import { SkeletonLoaderComponent } from '../../../components/shared/skeleton-loader/skeleton-loader.component';
 
 // Services
-import { APIsService, User, type MSG } from '../../../services/APIs/apis.service';
+import { APIsService, User } from '../../../services/APIs/apis.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { CryptoService } from '../../../services/cryptoService/crypto.service';
-import { BackEndPropertyData, PropertyService } from '../../../services/property/property.service';
+import {
+  BackEndPropertyData,
+  PropertyService,
+} from '../../../services/property/property.service';
 import {
   Lease,
   LeaseWithProperty,
-  SWITCH_ON_ARRAY,
+  SWITCH_ON_ARRAY, // likely used in template
   TenantService,
 } from '../../../services/tenant/tenant.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
@@ -73,6 +76,7 @@ interface LeaseTableDataType {
 
 @Component( {
   selector: 'app-tenant-view',
+  standalone: true,
   imports: [
     CommonModule,
     SkeletonLoaderComponent,
@@ -84,6 +88,7 @@ interface LeaseTableDataType {
   styleUrl: './tenant-view.component.scss',
 } )
 export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
+
   // ─────────────────────────────────────────────────────────────────────────────
   // ViewChild references
   // ─────────────────────────────────────────────────────────────────────────────
@@ -107,7 +112,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   protected loggedUser: User | null = null;
 
   protected leases: Lease[] = [];
-  protected leaseLength: number = 0;
+  protected leaseLength: number = 0; // kept if used in template
   protected tableVisible: boolean = false;
 
   protected isLoading: boolean = true;
@@ -144,6 +149,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   private _leaseTablePageIndex: number = 0;
   private _leaseTabletSearch: string = '';
   private _leaseTableDateRang!: DateRange;
+
   protected leaseTableTotalCount: number = 0;
   protected leaseTableTitle: string = 'Lease';
 
@@ -193,25 +199,28 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly propertyService: PropertyService,
     private readonly authService: AuthService,
     private readonly dialog: MatDialog,
-    private readonly cryptoService: CryptoService, // currently unused in this file; might be used in template
-    protected readonly notificationService: NotificationService
+    private readonly cryptoService: CryptoService, // may be used in template
+    protected readonly notificationService: NotificationService,
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
 
-    // Optional route URL subscription (currently not used)
+    // Optional route URL subscription (currently not used, but kept)
     this.route.url.subscribe( ( segments ) => {
       const path = segments.map( ( s ) => s.path ).join( '/' );
       // console.log('Tenant view path:', path);
     } );
 
-    // Load tenant + leases as soon as we have the route param token
+    // Listen to token param, then load all dependent data
     this.route.params.subscribe( async ( params ) => {
       this.tenantID = params[ 'tenantID' ];
 
       await this.loadTenantData();
       await this.getLeaseAgreementsUnderUsername();
       await this.loadSelectedProperties();
-      await this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
+      await this.organizeLeaseTableData(
+        this._leaseTablePageIndex,
+        this._leaseTablePageSize,
+      );
     } );
 
     this.loggedUser = this.authService.getLoggedUser;
@@ -223,7 +232,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     if ( this.isBrowser ) {
-      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val: boolean | null ) => {
         this.mode = val;
       } );
     }
@@ -248,9 +257,11 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   set leaseTableIsReloading( value: boolean ) {
     this._leaseTableIsReloading = value;
 
-    // When the table requests a reload, rebuild the data
     if ( this._leaseTableIsReloading ) {
-      void this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
+      void this.organizeLeaseTableData(
+        this._leaseTablePageIndex,
+        this._leaseTablePageSize,
+      );
     }
   }
 
@@ -260,7 +271,10 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   set leaseTablePageSize( value: number ) {
     this._leaseTablePageSize = value;
-    void this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
+    void this.organizeLeaseTableData(
+      this._leaseTablePageIndex,
+      this._leaseTablePageSize,
+    );
   }
 
   get leaseTablePageIndex(): number {
@@ -269,7 +283,10 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   set leaseTablePageIndex( value: number ) {
     this._leaseTablePageIndex = value;
-    void this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
+    void this.organizeLeaseTableData(
+      this._leaseTablePageIndex,
+      this._leaseTablePageSize,
+    );
   }
 
   get leaseTabletSearch(): string {
@@ -278,7 +295,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   set leaseTabletSearch( value: string ) {
     this._leaseTabletSearch = value.trim();
-    this.leaseSearch( this._leaseTabletSearch );
+    void this.leaseSearch( this._leaseTabletSearch );
   }
 
   get leaseTableDateRang(): DateRange {
@@ -287,7 +304,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   set leaseTableDateRang( value: DateRange ) {
     this._leaseTableDateRang = value;
-    this.filterBaseOnDateRange( this._leaseTableDateRang );
+    void this.filterBaseOnDateRange( this._leaseTableDateRang );
   }
 
   get leaseSwitchButton(): SwitchButtonType {
@@ -296,7 +313,6 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   set leaseSwitchButton( value: SwitchButtonType ) {
     this._leaseSwitchButton = value;
-    // Any toggle from the custom table will be handled here
     void this.handleUpdateLeaseStatus( this._leaseSwitchButton );
   }
 
@@ -307,7 +323,10 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Centralised error notification to avoid repeated instanceof checks.
    */
-  private notifyError( error: unknown, fallbackMessage: string ): void {
+  private notifyError(
+    error: unknown,
+    fallbackMessage: string,
+  ): void {
     console.error( error );
 
     if ( error instanceof HttpErrorResponse ) {
@@ -332,7 +351,9 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   // Lease table: export
   // ─────────────────────────────────────────────────────────────────────────────
 
-  protected handleExportLeaseTableData( value: FileExport ): void {
+  protected handleExportLeaseTableData(
+    value: FileExport,
+  ): void {
     try {
       if ( this.leases.length === 0 ) {
         throw new Error( 'No lease agreements found!' );
@@ -344,7 +365,7 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const leasesWithProperty: LeaseWithProperty[] = [];
 
-      this.leases.forEach( ( lease ) => {
+      this.leases.forEach( ( lease: Lease ) => {
         const property = this.selectedProperties.find(
           ( p ) => p.id === lease.propertyID,
         );
@@ -365,7 +386,10 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         throw new Error( 'No leases with property found!' );
       }
 
-      this.exportLeasesDataAsExcel( leasesWithProperty, value.extention );
+      this.exportLeasesDataAsExcel(
+        leasesWithProperty,
+        value.extention,
+      );
     } catch ( error ) {
       this.notifyError( error, 'Failed to load tenant data.' );
     }
@@ -375,7 +399,9 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   // Lease table: switch / update status
   // ─────────────────────────────────────────────────────────────────────────────
 
-  private async handleUpdateLeaseStatus( data: SwitchButtonType ): Promise<void> {
+  private async handleUpdateLeaseStatus(
+    data: SwitchButtonType,
+  ): Promise<void> {
     try {
       this.isLoading = true;
 
@@ -395,7 +421,6 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         throw new Error( 'No lease ID found!' );
       }
 
-      // Find lease in local array
       const filteredLease = this.leases.find(
         ( lease ) => lease.leaseID === leaseId,
       );
@@ -415,34 +440,41 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         leaseId,
       );
 
-      const updatedLease: Lease = res.data;
+      if ( !res.success || res.status !== 'success' ) {
+        throw new Error( 'Failed to process lease status update!' );
+      }
+
+      const lease: Lease | undefined = res.data?.system?.lease;
+
+      if ( !lease ) {
+        throw new Error( 'Invalid updating lease agreement data!' );
+      }
 
       const isActive: SwitchButtonType[ 'isActive' ] =
-        updatedLease.systemMetadata.validationStatus.toLowerCase() ===
-        'active';
+        lease.systemMetadata.validationStatus.toLowerCase() === 'active';
 
-      // Update local lease status
       filteredLease.systemMetadata.validationStatus =
-        updatedLease.systemMetadata.validationStatus;
+        lease.systemMetadata.validationStatus;
 
-      // Update table row
       tableData.switch = {
         isActive,
         index: null,
         off: 'Inactive',
-        on: 'Active'
+        on: 'Active',
       };
 
-      tableData.status = updatedLease.systemMetadata.validationStatus;
+      tableData.status = lease.systemMetadata.validationStatus;
 
-      if ( typeof data.index !== 'number' || !Number.isFinite( data.index ) ) {
+      if (
+        typeof data.index !== 'number' ||
+        !Number.isFinite( data.index )
+      ) {
         throw new Error( 'Data index is invalid' );
       }
 
       this.leaseTableData[ data.index ] = tableData;
     } catch ( error ) {
       this.notifyError( error, 'Failed to update lease status!' );
-      return;
     } finally {
       this.isLoading = false;
     }
@@ -451,7 +483,11 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   // ─────────────────────────────────────────────────────────────────────────────
   // Lease table: organisation / mapping
   // ─────────────────────────────────────────────────────────────────────────────
-  private async organizeLeaseTableData( index: number, size: number ): Promise<void> {
+
+  private async organizeLeaseTableData(
+    index: number,
+    size: number,
+  ): Promise<void> {
     try {
       if ( !this.leases || this.leases.length === 0 ) {
         throw new Error( 'No lease agreements found!' );
@@ -467,39 +503,37 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.isLoading = true;
 
-      // Basic pagination defaults (integrate with paginator as needed)
       this.leaseTableTotalCount = this.leases.length;
 
-      const safeIndex = PaginationUtil.safeIndex( index, this.leaseTableTotalCount );
-      const safeSize = PaginationUtil.safeLimit( size, this.leaseTableTotalCount );
+      const safeIndex: number = PaginationUtil.safeIndex(
+        index,
+        this.leaseTableTotalCount,
+      );
+      const safeSize: number = PaginationUtil.safeLimit(
+        size,
+        this.leaseTableTotalCount,
+      );
 
       this._leaseTablePageIndex = safeIndex;
       this._leaseTablePageSize = safeSize;
 
-      const safeStart = safeIndex * safeSize;
-      const safeEnd = safeStart + safeSize;
+      const safeStart: number = safeIndex * safeSize;
+      const safeEnd: number = safeStart + safeSize;
 
-      const organisingData: Lease[] = this.leases.slice( safeStart, safeEnd );
-
-      this.leaseTableData = [];
-
-      const rowPromises: Array<Promise<LeaseTableDataType | null>> =
-        organisingData.map( ( item ) => this.organiseTableRow( item ) );
-
-      const rowsWithNulls: Array<LeaseTableDataType | null> = await Promise.all( rowPromises );
-
-      const leaseTableRows: LeaseTableDataType[] = rowsWithNulls.filter(
-        ( row ): row is LeaseTableDataType => row !== null,
+      const organisingData: Lease[] = this.leases.slice(
+        safeStart,
+        safeEnd,
       );
+
+      const leaseTableRows: LeaseTableDataType[] =
+        await this.buildRowsForLeases( organisingData );
 
       if ( leaseTableRows.length === 0 ) {
         throw new Error( 'No lease table rows could be built!' );
       }
 
       this.leaseTableData = [ ...leaseTableRows ];
-      if ( this.leaseTableData.length > 0 ) this.tableVisible = true;
-      else this.tableVisible = false;
-
+      this.tableVisible = this.leaseTableData.length > 0;
     } catch ( error ) {
       console.error( 'Error organizing lease table data:', error );
       this.notificationDialog.notification(
@@ -507,7 +541,6 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         ( error as Error ).message ?? 'Failed to organise lease table.',
       );
     } finally {
-      // Small delay for smoother spinner UX
       setTimeout( () => {
         this.isLoading = false;
       }, 500 );
@@ -515,154 +548,200 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Lease table: search (searches across *all* leases, not just current page)
+  // Lease table: search (across ALL leases)
   // ─────────────────────────────────────────────────────────────────────────────
-  private async leaseSearch( search: string ): Promise<void> {
+
+  private async leaseSearch(
+    search: string,
+  ): Promise<void> {
     try {
-      // Reset current table view
       this.leaseTableData = [];
-      console.log( search );
 
       const safeSearch: string = search.trim().toLowerCase();
       if ( !safeSearch ) {
+        await this.organizeLeaseTableData(
+          this._leaseTablePageIndex,
+          this._leaseTablePageSize,
+        );
         return;
       }
 
-      // Collect promises for matched leases
-      const tasks: Array<Promise<LeaseTableDataType | null>> = [];
+      const matchedLeases: Lease[] = this.leases.filter( ( item: Lease ) => {
+        const leaseIdMatch: boolean =
+          item.leaseID.trim().toLowerCase() === safeSearch;
 
-      for ( const item of this.leases ) {
-        const match: boolean =
-          item.leaseID.trim().toLowerCase() === safeSearch ||
-          ( item.propertyID && item.propertyID.trim().toLowerCase() === safeSearch ) ||
-          item.tenantInformation.fullName.trim().toLowerCase() === safeSearch ||
-          item.tenantInformation.tenantUsername.trim().toLowerCase() === safeSearch;
+        const propertyIdMatch: boolean =
+          !!item.propertyID &&
+          item.propertyID.trim().toLowerCase() === safeSearch;
 
-        if ( match ) {
-          // Do NOT await here – create a Promise and store it
-          tasks.push( this.organiseTableRow( item ) );
-        }
+        const tenantNameMatch: boolean =
+          item.tenantInformation.fullName.trim().toLowerCase() === safeSearch;
+
+        const tenantUsernameMatch: boolean =
+          item.tenantInformation.tenantUsername
+            .trim()
+            .toLowerCase() === safeSearch;
+
+        return (
+          leaseIdMatch ||
+          propertyIdMatch ||
+          tenantNameMatch ||
+          tenantUsernameMatch
+        );
+      } );
+
+      if ( matchedLeases.length === 0 ) {
+        this.leaseTableData = [];
+        return;
       }
 
-      if ( tasks.length === 0 ) {
-        throw new Error( 'Leases not found under the user!' );
-      }
-
-      // Resolve all build-row calls in parallel
-      const rowsWithNulls: Array<LeaseTableDataType | null> = await Promise.all( tasks );
-
-      // Remove any failed/null rows
-      const leaseTableRows: LeaseTableDataType[] = rowsWithNulls.filter(
-        ( row ): row is LeaseTableDataType => row !== null,
-      );
+      const leaseTableRows: LeaseTableDataType[] =
+        await this.buildRowsForLeases( matchedLeases );
 
       if ( leaseTableRows.length === 0 ) {
-        this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
+        await this.organizeLeaseTableData(
+          this._leaseTablePageIndex,
+          this._leaseTablePageSize,
+        );
         return;
       }
 
-      // Final table data
       this.leaseTableData = [ ...leaseTableRows ];
     } catch ( err ) {
       console.error( '[Failed in lease search]: ', err );
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────────
   // Lease table: filter by date range (correct overlap logic)
-  // ─────────────────────────────────────────────────────────────────────────────────────────────
-  private async filterBaseOnDateRange( range: DateRange ): Promise<void> {
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  private async filterBaseOnDateRange(
+    range: DateRange,
+  ): Promise<void> {
     try {
       if ( !Array.isArray( this.leases ) || this.leases.length === 0 ) {
         throw new Error( 'Leases are empty!' );
       }
 
-      const startDate = new Date( range.start );
-      const endDate = new Date( range.end );
+      const startDate: Date = new Date( range.start ?? '' );
+      const endDate: Date = new Date( range.end ?? '' );
 
-
-
-      if ( isNaN( startDate.getTime() ) || isNaN( endDate.getTime() ) ) {
+      if (
+        Number.isNaN( startDate.getTime() ) ||
+        Number.isNaN( endDate.getTime() )
+      ) {
         console.warn( 'Invalid date range input' );
-        this.notificationDialog.notification( 'warning', 'Invalid date range input' );
+        this.notificationDialog.notification(
+          'warning',
+          'Invalid date range input',
+        );
         return;
       }
 
-      const tasks: Array<Promise<LeaseTableDataType | null>> = [];
+      const overlappingLeases: Lease[] = this.leases.filter(
+        ( item: Lease ) => {
+          const leaseStart: Date = new Date(
+            item.leaseAgreement.startDate,
+          );
+          const leaseEnd: Date = new Date(
+            item.leaseAgreement.endDate,
+          );
 
-      for ( const item of this.leases ) {
-        const leaseStart = new Date( item.leaseAgreement.startDate );
-        const leaseEnd = new Date( item.leaseAgreement.endDate );
+          return leaseStart <= endDate && leaseEnd >= startDate;
+        },
+      );
 
-
-
-        // Correct overlap condition:
-        const isOverlapping =
-          leaseStart <= endDate &&
-          leaseEnd >= startDate;
-
-        if ( isOverlapping ) {
-          // Queue promises without awaiting inside loop
-          tasks.push( this.organiseTableRow( item ) );
-        }
-      }
-
-      if ( tasks.length === 0 ) {
+      if ( overlappingLeases.length === 0 ) {
         console.warn( 'No leases matched the date range' );
         this.leaseTableData = [];
         return;
       }
 
-      const rows = await Promise.all( tasks );
+      const filteredRows: LeaseTableDataType[] =
+        await this.buildRowsForLeases( overlappingLeases );
 
-      // Clean null values
-      const filtered = rows.filter(
-        ( row ): row is LeaseTableDataType => row !== null
-      );
-
-      if ( filtered.length === 0 ) {
-        console.warn( 'Date matches found, but row building returned empty.' );
-        this.notificationDialog.notification( 'warning', 'Date matches found, but row building returned empty.' );
+      if ( filteredRows.length === 0 ) {
+        console.warn(
+          'Date matches found, but row building returned empty.',
+        );
+        this.notificationDialog.notification(
+          'warning',
+          'Date matches found, but row building returned empty.',
+        );
         this.leaseTableData = [];
         return;
       }
 
-      // Final filtered table data
-      this.leaseTableData = [ ...filtered ];
+      this.leaseTableData = [ ...filteredRows ];
     } catch ( error ) {
       console.error( '[Date Range Filter Error] ', error );
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Lease table: shared row builder (used by list, search, date filter)
+  // ─────────────────────────────────────────────────────────────────────────────
 
+  private async buildRowsForLeases(
+    leases: Lease[],
+  ): Promise<LeaseTableDataType[]> {
+    const tasks: Array<Promise<LeaseTableDataType | null>> = leases.map(
+      ( item: Lease ) => this.organiseTableRow( item ),
+    );
+
+    const rowsWithNulls: Array<LeaseTableDataType | null> =
+      await Promise.all( tasks );
+
+    const leaseTableRows: LeaseTableDataType[] = rowsWithNulls.filter(
+      ( row ): row is LeaseTableDataType => row !== null,
+    );
+
+    return leaseTableRows;
+  }
 
   // ─────────────────────────────────────────────────────────────────────────────
   // Lease table: build single row for the lease table
   // ─────────────────────────────────────────────────────────────────────────────
-  private async organiseTableRow( item: Lease ): Promise<LeaseTableDataType | null> {
+
+  private async organiseTableRow(
+    item: Lease,
+  ): Promise<LeaseTableDataType | null> {
     try {
-      if ( !item ) throw new Error( 'Invalid lease!' );
-      if ( !item.propertyID ) throw new Error( 'Invalid property ID!' );
+      if ( !item ) {
+        throw new Error( 'Invalid lease!' );
+      }
 
-      const res: MSG = await this.propertyService.getPropertySectionById(
+      if ( !item.propertyID ) {
+        throw new Error( 'Invalid property ID!' );
+      }
+
+      const res = await this.propertyService.getPropertySectionById(
         item.propertyID,
-        [ 'images' ]
+        [ 'images' ],
       );
-      if ( res.status !== 'success' ) throw new Error( 'Property data fetch failed!' );
 
-      const values = res.data.values.images;
+      if ( !res.success || res.status.toLowerCase() !== 'success' ) {
+        throw new Error( 'Failed to fetch section of the property!' );
+      }
 
-      if ( !Array.isArray( values ) ) throw new Error( 'Invalid image array!' );
+      const values = this.apiService.extractObjectFromOther<{
+        images?: BackEndPropertyData[ 'images' ];
+      }>( res.data, 'values' );
 
-      const images: BackEndPropertyData[ 'images' ] = values;
+      if ( !values ) {
+        throw new Error( 'Invalid value container!' );
+      }
 
-      // Optional: guard for empty array to avoid images[0] undefined:
-      if ( images.length === 0 || !images[ 0 ]?.imageURL ) {
+      const images: BackEndPropertyData[ 'images' ] | undefined =
+        values.images;
+
+      if ( !Array.isArray( images ) || images.length === 0 ) {
         throw new Error( 'No images found for property!' );
       }
 
-      const image = images[ 0 ].imageURL;
-      const leaseid = item.leaseID;
+      const image: string = images[ 0 ].imageURL;
+      const leaseid: string = item.leaseID;
 
       const dateRange = {
         start: new Date( item.leaseAgreement.startDate ),
@@ -679,19 +758,18 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         throw new Error( 'Invalid date range!' );
       }
 
-      // Normalize today to midnight
-      const today = new Date();
+      const today: Date = new Date();
       today.setHours( 0, 0, 0, 0 );
 
-      // Normalize end date to midnight
-      const end = new Date( endDate );
+      const end: Date = new Date( endDate );
       end.setHours( 0, 0, 0, 0 );
 
-      const msDiff = end.getTime() - today.getTime();
-      const remainingDays: number = Math.ceil( msDiff / ( 1000 * 60 * 60 * 24 ) );
+      const msDiff: number = end.getTime() - today.getTime();
+      const remainingDays: number = Math.ceil(
+        msDiff / ( 1000 * 60 * 60 * 24 ),
+      );
 
-      const monthlyRent = `${ item.leaseAgreement.currency.currency } ${ item.leaseAgreement.monthlyRent }`;
-
+      const monthlyRent: string = `${ item.leaseAgreement.currency.currency } ${ item.leaseAgreement.monthlyRent }`;
       const notify: boolean = remainingDays <= 90;
 
       const viewButton: TableButton = {
@@ -733,7 +811,6 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-
   // ─────────────────────────────────────────────────────────────────────────────
   // Lease table: action buttons (view / download)
   // ─────────────────────────────────────────────────────────────────────────────
@@ -742,70 +819,80 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     value: TableButtonActionConfig,
   ): Promise<void> {
     try {
-      const action = value.action;
-      const data = value.data;
+      const action: string = value.action;
+      const data: LeaseTableDataType = value.data as LeaseTableDataType;
 
       if ( !action || !data ) {
         throw new Error( 'Invalid action or data from table' );
       }
 
-      const leaseID = data.leaseid;
+      const leaseID: string = data.leaseid;
       if ( !leaseID ) {
         throw new Error( 'Invalid lease ID' );
       }
 
       switch ( action ) {
-        case 'download': {
-          try {
-            this.progressBarComponent.start();
-
-            if ( this.authService.getLoggedUser === null ) {
-              throw new Error( 'User not logged in' );
-            }
-
-            // Download PDF blob from backend
-            const blob = await this.tenantService.downloadLeaseAgreement(
-              leaseID,
-              'download',
-              this.authService.getLoggedUser.username,
-            );
-
-            const actualName = `${ leaseID }-lease-agreement.pdf`;
-
-            // Create temporary link and trigger download
-            const fileURL = window.URL.createObjectURL( blob );
-            const a = document.createElement( 'a' );
-
-            a.href = fileURL;
-            a.download = actualName;
-            a.style.display = 'none';
-
-            document.body.appendChild( a );
-            a.click();
-
-            // Clean up
-            document.body.removeChild( a );
-            window.URL.revokeObjectURL( fileURL );
-          } catch ( error ) {
-            this.notifyError(
-              error,
-              'Failed to download lease agreement PDF.',
-            );
-          } finally {
-            this.progressBarComponent.complete();
-          }
+        case 'download':
+          await this.downloadLease( leaseID );
           break;
-        }
 
-        case 'view': {
-          await this.router.navigate( [ '/dashboard/tenant/view-lease', leaseID ] );
+        case 'view':
+          await this.router.navigate( [
+            '/dashboard/tenant/view-lease',
+            leaseID,
+          ] );
           break;
-        }
       }
     } catch ( error ) {
       this.notifyError( error, 'Failed to process lease action.' );
     } finally {
-      // In case of early failure, make sure progress bar is not stuck
+      this.progressBarComponent.complete();
+    }
+  }
+
+  private async downloadLease(
+    leaseID: string,
+  ): Promise<void> {
+    try {
+      this.progressBarComponent.start();
+
+      if ( this.authService.getLoggedUser === null ) {
+        throw new Error( 'User not logged in' );
+      }
+
+      const blob: Blob =
+        await this.tenantService.downloadLeaseAgreement(
+          leaseID,
+          'download',
+          this.authService.getLoggedUser.username,
+        );
+
+      const actualName: string = `${ leaseID }-lease-agreement.pdf`;
+
+      const nativeWindow: Window | null = this.windowRef.nativeWindow;
+      if ( !nativeWindow ) {
+        throw new Error( 'Window object is not available.' );
+      }
+
+      const fileURL: string = URL.createObjectURL( blob );
+      const anchor: HTMLAnchorElement =
+        nativeWindow.document.createElement( 'a' );
+
+      anchor.href = fileURL;
+      anchor.download = actualName;
+      anchor.style.display = 'none';
+
+      nativeWindow.document.body.appendChild( anchor );
+      anchor.click();
+      nativeWindow.document.body.removeChild( anchor );
+
+      URL.revokeObjectURL( fileURL );
+    } catch ( error ) {
+      this.notifyError(
+        error,
+        'Failed to download lease agreement PDF.',
+      );
+    } finally {
       this.progressBarComponent.complete();
     }
   }
@@ -822,32 +909,40 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.isLoading = true;
 
-      const seen = new Set<string>();
+      const seen: Set<string> = new Set<string>();
 
       for ( const lease of this.leases ) {
-        const propertyID = lease.propertyID;
+        const propertyID: string | undefined = lease.propertyID;
 
-        // Avoid duplicate calls for the same property
         if ( !propertyID || seen.has( propertyID ) ) {
           continue;
         }
 
         try {
-          const res = await this.propertyService.getPropertyById( propertyID );
+          const res = await this.propertyService.getPropertyById(
+            propertyID,
+          );
 
-          if ( res.status === 'success' ) {
-            const resData: BackEndPropertyData =
-              res.data as BackEndPropertyData;
-
-            this.selectedProperties.push( resData );
-            seen.add( propertyID );
-          } else {
-            console.error( 'Failed to fetch property:', res.message );
+          if ( res.status !== 'success' ) {
+            throw new Error( res.message ?? 'Failed to fetch property data!' );
           }
-        } catch ( error: any ) {
-          console.warn( 'Error fetching property:', error );
 
-          if ( error.status === 404 ) {
+          const property: BackEndPropertyData | undefined = res.data?.system?.property;
+
+          if ( !property ) {
+            throw new Error( 'Invalid property!' );
+          }
+
+          this.selectedProperties.push( property );
+
+          seen.add( property.id );
+
+        } catch ( error: unknown ) {
+          console.warn( 'Error fetching property:', error );
+          if (
+            error instanceof HttpErrorResponse &&
+            error.status === 404
+          ) {
             this.notificationDialog.notification(
               'error',
               'No property found for this lease.',
@@ -881,11 +976,17 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       const res = await this.apiService.getUserByToken( this.tenantID );
 
-      if ( !res || !res.user ) {
+      if ( res.status !== 'success' || !res.success ) {
         throw new Error( 'User data is missing from response.' );
       }
 
-      this.tenant = res.user as User;
+      const user: User | undefined = res.data?.system?.user;
+
+      if ( !user ) {
+        throw new Error( 'Invalid tenant data!' );
+      }
+
+      this.tenant = user;
     } catch ( error ) {
       console.error( 'Error loading tenant data:', error );
       this.notificationDialog?.notification?.(
@@ -911,13 +1012,25 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         throw new Error( 'Tenant username is missing.' );
       }
 
-      const res = await this.tenantService.getAllLeaseAgreementsByUsername(
-        username,
-      );
+      const res =
+        await this.tenantService.getAllLeaseAgreementsByUsername(
+          username,
+        );
 
       if ( res.status === 'success' ) {
-        this.leases = res.data as Lease[];
-        await this.organizeLeaseTableData( this._leaseTablePageIndex, this._leaseTablePageSize );
+        const leases: Lease[] | undefined =
+          res.data?.system?.leases;
+
+        if ( !Array.isArray( leases ) ) {
+          throw new Error( 'Invalid leases data in response.' );
+        }
+
+        this.leases = [ ...leases ];
+        this.leaseLength = this.leases.length;
+        await this.organizeLeaseTableData(
+          this._leaseTablePageIndex,
+          this._leaseTablePageSize,
+        );
       } else {
         console.error( 'Failed to fetch lease agreements:', res.message );
         this.leases = [];
@@ -926,10 +1039,13 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
           'Failed to fetch lease agreements. Please try again later.',
         );
       }
-    } catch ( error: any ) {
+    } catch ( error: unknown ) {
       console.error( 'Error fetching lease agreements:', error );
 
-      if ( error instanceof HttpErrorResponse && error.status === 404 ) {
+      if (
+        error instanceof HttpErrorResponse &&
+        error.status === 404
+      ) {
         this.notificationDialog.notification(
           'warning',
           'No lease agreements found for this tenant.',
@@ -949,13 +1065,19 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   // Tenant image selection
   // ─────────────────────────────────────────────────────────────────────────────
 
-  protected generateTenantImage( image: string, gender: string ): string {
+  protected generateTenantImage(
+    image: string,
+    gender: string,
+  ): string {
     try {
       const imageArray: string[] = image ? image.split( '/' ) : [];
 
       if ( Array.isArray( imageArray ) && imageArray.length > 0 ) {
-        const lastSegment = imageArray[ imageArray.length - 1 ];
-        const extension = lastSegment.split( '.' ).pop()?.toLowerCase();
+        const lastSegment: string = imageArray[ imageArray.length - 1 ];
+        const extension: string | undefined = lastSegment
+          .split( '.' )
+          .pop()
+          ?.toLowerCase();
 
         if (
           extension &&
@@ -991,28 +1113,16 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected async makeTenantLease(): Promise<void> {
     try {
-      if ( !this.isBrowser ) {
-        throw new Error( 'Not running in browser environment.' );
-      }
-
-      if ( !this.tenant || !this.tenant.username ) {
-        throw new Error( 'Tenant information is missing.' );
-      }
-
-      const tokenResult = await this.apiService.generateToken(
-        this.tenant.username,
-      );
-
-      if ( !tokenResult || !tokenResult.token ) {
-        throw new Error( 'Failed to generate tenant token.' );
-      }
-
+      const token: string = await this.generateTokenForCurrentTenant();
       await this.router.navigate( [
         '/dashboard/tenant/create-lease',
-        tokenResult.token,
+        token,
       ] );
     } catch ( error ) {
-      console.error( 'Error while trying to create tenant lease:', error );
+      console.error(
+        'Error while trying to create tenant lease:',
+        error,
+      );
       this.notificationDialog.notification(
         'error',
         'Unable to create tenant lease.',
@@ -1027,7 +1137,9 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
   protected async goToTenants(): Promise<void> {
     try {
       await this.router.navigateByUrl( '/', { skipLocationChange: true } );
-      await this.router.navigate( [ '/dashboard/tenant/tenant-home/' ] );
+      await this.router.navigate( [
+        '/dashboard/tenant/tenant-home/',
+      ] );
     } catch ( error ) {
       console.error( 'Navigation to tenants page failed:', error );
       this.notificationDialog.notification(
@@ -1043,20 +1155,12 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
 
   protected async goToTenant(): Promise<void> {
     try {
-      if ( !this.tenant ) {
-        throw new Error( 'No tenant information available.' );
-      }
-
-      const tenant = await this.apiService.generateToken( this.tenant.username );
-
-      if ( !tenant || !tenant.token ) {
-        throw new Error( 'Failed to generate tenant token.' );
-      }
+      const token: string = await this.generateTokenForCurrentTenant();
 
       await this.router.navigateByUrl( '/', { skipLocationChange: true } );
       await this.router.navigate( [
         '/dashboard/tenant/tenant-view/',
-        tenant.token,
+        token,
       ] );
     } catch ( error ) {
       console.error( 'Navigation to tenant view failed:', error );
@@ -1065,6 +1169,36 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
         'Unable to load tenant view.',
       );
     }
+  }
+
+  /**
+   * Shared helper for makeTenantLease / goToTenant
+   */
+  private async generateTokenForCurrentTenant(): Promise<string> {
+    if ( !this.isBrowser ) {
+      throw new Error( 'Not running in browser environment.' );
+    }
+
+    if ( !this.tenant || !this.tenant.username ) {
+      throw new Error( 'Tenant information is missing.' );
+    }
+
+    const tokenResult = await this.apiService.generateToken(
+      this.tenant.username,
+    );
+
+    if ( !tokenResult.success || tokenResult.status !== 'success' ) {
+      throw new Error( 'Failed to generate tenant token.' );
+    }
+
+    const token: string | null =
+      this.apiService.extractTokenFromMsg( tokenResult );
+
+    if ( !token ) {
+      throw new Error( 'Invalid token generated!' );
+    }
+
+    return token;
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -1080,74 +1214,87 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const exportData: Record<string, unknown>[] = leases.map( ( lease ) => {
-      const addr = lease.property?.address;
+    const exportData: Record<string, unknown>[] = leases.map(
+      ( lease: LeaseWithProperty ) => {
+        const addr = lease.property?.address;
 
-      return {
-        leaseID: lease.leaseID,
-        'Tenant name': lease.tenantInformation?.fullName ?? '',
-        'Tenant email': lease.tenantInformation?.email ?? '',
-        'Tenant contact': lease.tenantInformation?.phoneNumber ?? '',
-
-        'Co-Tenant name': lease.coTenant?.fullName ?? '',
-        'Co-Tenant relationship': lease.coTenant?.relationship ?? '',
-
-        'Property title': lease.property?.title ?? '',
-        'Property address':
-          ( addr?.houseNumber ?? '' ) +
-          ' ' +
-          ( addr?.street ?? '' ) +
-          ', ' +
-          ( addr?.city ?? '' ) +
-          ', ' +
-          ( addr?.stateOrProvince ?? '' ) +
-          ', ' +
-          ( addr?.country ?? '' ),
-
-        'Started date': new Date(
-          lease.leaseAgreement.startDate,
-        ).toISOString(),
-        'End date': new Date( lease.leaseAgreement.endDate ).toISOString(),
-        'Monthly rent': lease.leaseAgreement.monthlyRent,
-        'Rent currency': lease.leaseAgreement.currency?.currency ?? '',
-        'Payment frequency':
-          lease.leaseAgreement.paymentFrequency?.name ?? '',
-        'Payment method': lease.leaseAgreement.paymentMethod?.name ?? '',
-        Deposit: lease.leaseAgreement.securityDeposit?.name ?? '',
-        'Rent due date': lease.leaseAgreement.rentDueDate?.label ?? '',
-        'Notice period': lease.leaseAgreement.noticePeriodDays?.label ?? '',
-
-        'Late penalties':
-          lease.leaseAgreement.latePaymentPenalties
-            ?.map( ( p ) => p.label )
-            .join( ',\n' ) ?? '',
-        'Utility responsibilities':
-          lease.leaseAgreement.utilityResponsibilities
-            ?.map( ( u ) => `${ u.utility }: ${ u.paidBy }` )
-            .join( ',\n' ) ?? '',
-
-        'Rules and regulations':
-          lease.rulesAndRegulations?.map( ( r ) => r.rule ).join( ';\n' ) ?? '',
-
-        'Tenant signature URL': ( lease.signatures.tenantSignature as any )?.URL ?? '',
-        'Landlord signature URL': ( lease.signatures.landlordSignature as any )?.URL ?? '',
-        'Signed At': new Date( lease.signatures.signedAt ).toISOString(),
-        'Signed By': lease.signatures.userAgent?.name ?? '',
-        'ip Address': lease.signatures.ipAddress ?? '',
-
-        ocrStatus: lease.systemMetadata.ocrAutoFillStatus ? 'Yes' : 'No',
-        validationStatus: lease.systemMetadata.validationStatus,
-        leaseTemplateVersion: lease.systemMetadata.leaseTemplateVersion,
-        lastUpdated: lease.systemMetadata.lastUpdated,
-      };
-    } );
+        return {
+          leaseID: lease.leaseID,
+          'Tenant name': lease.tenantInformation?.fullName ?? '',
+          'Tenant email': lease.tenantInformation?.email ?? '',
+          'Tenant contact': lease.tenantInformation?.phoneNumber ?? '',
+          'Co-Tenant name': lease.coTenant?.fullName ?? '',
+          'Co-Tenant relationship': lease.coTenant?.relationship ?? '',
+          'Property title': lease.property?.title ?? '',
+          'Property address':
+            ( addr?.houseNumber ?? '' ) +
+            ' ' +
+            ( addr?.street ?? '' ) +
+            ', ' +
+            ( addr?.city ?? '' ) +
+            ', ' +
+            ( addr?.stateOrProvince ?? '' ) +
+            ', ' +
+            ( addr?.country ?? '' ),
+          'Started date': new Date(
+            lease.leaseAgreement.startDate,
+          ).toISOString(),
+          'End date': new Date(
+            lease.leaseAgreement.endDate,
+          ).toISOString(),
+          'Monthly rent': lease.leaseAgreement.monthlyRent,
+          'Rent currency':
+            lease.leaseAgreement.currency?.currency ?? '',
+          'Payment frequency':
+            lease.leaseAgreement.paymentFrequency?.name ?? '',
+          'Payment method':
+            lease.leaseAgreement.paymentMethod?.name ?? '',
+          Deposit: lease.leaseAgreement.securityDeposit?.name ?? '',
+          'Rent due date':
+            lease.leaseAgreement.rentDueDate?.label ?? '',
+          'Notice period':
+            lease.leaseAgreement.noticePeriodDays?.label ?? '',
+          'Late penalties':
+            lease.leaseAgreement.latePaymentPenalties
+              ?.map( ( p ) => p.label )
+              .join( ',\n' ) ?? '',
+          'Utility responsibilities':
+            lease.leaseAgreement.utilityResponsibilities
+              ?.map( ( u ) => `${ u.utility }: ${ u.paidBy }` )
+              .join( ',\n' ) ?? '',
+          'Rules and regulations':
+            lease.rulesAndRegulations
+              ?.map( ( r ) => r.rule )
+              .join( ';\n' ) ?? '',
+          'Tenant signature URL':
+            ( lease.signatures.tenantSignature as any )?.URL ??
+            '',
+          'Landlord signature URL':
+            ( lease.signatures.landlordSignature as any )?.URL ??
+            '',
+          'Signed At': new Date(
+            lease.signatures.signedAt,
+          ).toISOString(),
+          'Signed By': lease.signatures.userAgent?.name ?? '',
+          'ip Address': lease.signatures.ipAddress ?? '',
+          ocrStatus: lease.systemMetadata.ocrAutoFillStatus
+            ? 'Yes'
+            : 'No',
+          validationStatus: lease.systemMetadata.validationStatus,
+          leaseTemplateVersion:
+            lease.systemMetadata.leaseTemplateVersion,
+          lastUpdated: lease.systemMetadata.lastUpdated,
+        };
+      },
+    );
 
     const worksheet = XLSX.utils.json_to_sheet( exportData );
 
-    // Auto column width based on header length
-    worksheet[ '!cols' ] = Object.keys( exportData[ 0 ] ).map( ( key ) => ( {
-      wch: key.length + 10,
-    } ) );
+    worksheet[ '!cols' ] = Object.keys( exportData[ 0 ] ).map(
+      ( key: string ) => ( {
+        wch: key.length + 10,
+      } ),
+    );
 
     const workbook: XLSX.WorkBook = {
       Sheets: { LeaseData: worksheet },
@@ -1155,21 +1302,24 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     const mimeMap: Record<string, string> = {
-      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      xlsx:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       xls: 'application/vnd.ms-excel',
       csv: 'text/csv',
       ods: 'application/vnd.oasis.opendocument.spreadsheet',
     };
 
     const bookType: XLSX.BookType = fileExtension as XLSX.BookType;
-    const mimeType = mimeMap[ fileExtension ] || mimeMap[ 'xlsx' ];
+    const mimeType: string =
+      mimeMap[ fileExtension ] || mimeMap[ 'xlsx' ];
 
-    const excelBuffer = XLSX.write( workbook, {
+    const excelBuffer: ArrayBuffer = XLSX.write( workbook, {
       bookType,
       type: 'array',
     } );
 
-    const blob = new Blob( [ excelBuffer ], { type: mimeType } );
+    const blob: Blob = new Blob( [ excelBuffer ], { type: mimeType } );
+
     FileSaver.saveAs(
       blob,
       `Lease_Batch_Export_${ new Date().toISOString() }.${ fileExtension }`,

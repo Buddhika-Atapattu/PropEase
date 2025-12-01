@@ -9,8 +9,8 @@
 <div class="row my-2">
   <div class="col-12">
     <app-paginator
-      [(pageIndex)]="tablePageIndex"
-      [(pageSize)]="tablePageSize"
+      [(index)]="tablePageIndex"
+      [(limit)]="tableLimit"
       [(search)]="tableSearchValue"
       [(isReload)]="tableIsReload"
       [totalDataCount]="totalDataCount"
@@ -89,7 +89,7 @@
         ></app-skeleton-loader>
         } @else {
         <img
-          [src]="imageGenerator(element.image, 'userimage', element.gender)"
+          [src]="imageGenerator(element, 'userimage', element.gender)"
           alt="User image"
           class="table-user-image"
         />
@@ -102,7 +102,7 @@
         } @else {
         <div class="image-container">
           <img
-            [src]="imageGenerator(element.image, 'propertyImage')"
+            [src]="imageGenerator(element, 'propertyImage')"
             alt="Property image"
             class="table-property-image"
           />
@@ -116,7 +116,7 @@
         } @else {
         <div class="image-container">
           <img
-            [src]="imageGenerator(element.image, 'propertyImage')"
+            [src]="imageGenerator(element, 'propertyImage')"
             alt="Image"
             class="table-property-image"
           />
@@ -156,6 +156,14 @@
         <p [class.bg-danger]="element.notify">
           {{ formatDateRange(element.dateRange.start, element.dateRange.end) }}
         </p>
+        } } @case ('icon') { @if (isReload) {
+        <app-skeleton-loader
+          [width]="'5rem'"
+          [height]="'1.5rem'"
+          [borderRadius]="'0.159rem'"
+        ></app-skeleton-loader>
+        } @else {
+        <mat-icon>{{ chooseIcon(element.icon) }}</mat-icon>
         } } @case ('date') { @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
@@ -196,7 +204,10 @@
           [borderRadius]="'0.159rem'"
         ></app-skeleton-loader>
         } @else {
-        <div [innerHTML]="trimText(element[column.key])"></div>
+        <div
+          class="text-capitalize"
+          [innerHTML]="trimText(element[column.key])"
+        ></div>
         } } } }
       </td>
 

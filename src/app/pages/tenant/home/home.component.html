@@ -15,7 +15,7 @@
     <app-custom-table
       [(isReload)]="isLoading"
       [pagination]="true"
-      [(pageSize)]="leaseTablePageSize"
+      [(limit)]="leaseTablePageSize"
       [(index)]="leaseTablePageIndex"
       [tableTitle]="leaseTableTitle"
       [(search)]="leaseTabletSearch"
@@ -46,7 +46,7 @@
     <app-custom-table
       [(isReload)]="isLoading"
       [pagination]="true"
-      [(pageSize)]="adminPageSize"
+      [(limit)]="adminPageSize"
       [(index)]="adminPageIndex"
       [tableTitle]="adminTableTitle"
       [(search)]="adminSearch"
@@ -72,7 +72,7 @@
     <app-custom-table
       [(isReload)]="isLoading"
       [pagination]="true"
-      [(pageSize)]="tenantPageSize"
+      [(limit)]="tenantPageSize"
       [(index)]="tenantPageIndex"
       [tableTitle]="tenantTableTitle"
       [(search)]="tenantSearch"

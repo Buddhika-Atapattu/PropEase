@@ -12,8 +12,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { MSG } from '../APIs/apis.service';
+
 import { environment } from '../../../environments/environment';
+import { MSG } from '../../types/api-message.types';
 
 
 export interface Property {
@@ -654,15 +655,15 @@ export class PropertyService {
     return p;
   }
   private mapError( e: unknown ): MSG {
-    const fallback: MSG = { status: 'error', message: 'Unexpected error', data: e as any };
-    if ( typeof e === 'string' ) return { status: 'error', message: e, data: null };
+    const fallback: MSG = { success: false, status: 'error', message: 'Unexpected error', data: e as any };
+    if ( typeof e === 'string' ) return { success: false, status: 'error', message: e, data: null };
     if ( e && typeof e === 'object' ) {
       const anyE = e as { error?: any; message?: string; };
       if ( anyE?.error && typeof anyE.error === 'object' ) {
         const emsg = ( anyE.error as any ).message || anyE.message || 'Request failed';
-        return { status: 'error', message: emsg, data: anyE.error };
+        return { success: false, status: 'error', message: emsg, data: anyE.error };
       }
-      if ( anyE?.message ) return { status: 'error', message: anyE.message, data: anyE };
+      if ( anyE?.message ) return { success: false, status: 'error', message: anyE.message, data: null };
     }
     return fallback;
   }
@@ -672,9 +673,9 @@ export class PropertyService {
       const status = typeof r.success === 'boolean'
         ? ( r.success ? 'success' : 'error' )
         : ( typeof r.status === 'string' ? r.status : 'success' );
-      return { status, message: r.message, data: ( r.data ?? null ) as any };
+      return { success: r.success ?? false, status: r.status?.toLowerCase() === 'success' ? 'success' : 'error', message: r.message, data: ( r.data ?? null ) as any };
     }
-    return { status: 'success', message: 'OK', data: raw as any };
+    return { success: true, status: 'success', message: 'OK', data: raw as any };
   }
 
 }

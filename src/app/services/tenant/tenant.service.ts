@@ -21,7 +21,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { BackEndPropertyData, Property } from '../property/property.service';
 import { environment } from '../../../environments/environment';
-import { MSG } from '../APIs/apis.service';
+import { MSG } from '../../types/api-message.types';
 
 
 
@@ -36,6 +36,18 @@ export interface TenantTableElement {
   email: string;
   gender: string;
   addedBy?: string;
+}
+
+export interface Tenant {
+  username: string;      // Unique username (used for tenant login or linking)
+  image: string;         // Path or URL to tenant’s profile image
+  name: string;          // Full name of the tenant
+  contactNumber: string; // Tenant’s phone or mobile number
+  email: string;         // Tenant’s email address
+  gender: string;        // Gender ("Male", "Female", "Other", etc.)
+  addedBy: string;       // Username or ID of the admin/agent who added the tenant
+  createdAt: Date;       // via timestamps
+  updatedAt: Date;       // via timestamps
 }
 
 export interface ActionButtonType { type: 'add' | 'delete' | 'remove' | 'view'; }
@@ -457,33 +469,36 @@ export class TenantService {
   // Private utils
   // ───────────────────────────────────────────────────────────────────────────
   private safeSeg( value: string ): string { return encodeURIComponent( ( value || '' ).trim() ); }
+
   private toParams( record: Record<string, string | number | boolean | undefined | null> ): HttpParams {
     let p = new HttpParams();
     Object.entries( record ).forEach( ( [ k, v ] ) => { if ( v != null ) p = p.set( k, String( v ) ); } );
     return p;
   }
+
   private mapError( e: unknown ): MSG {
-    const fallback: MSG = { status: 'error', message: 'Unexpected error', data: e as any };
-    if ( typeof e === 'string' ) return { status: 'error', message: e, data: null };
+    const fallback: MSG = { success: false, status: 'error', message: 'Unexpected error', data: e as any };
+    if ( typeof e === 'string' ) return { success: false, status: 'error', message: e, data: null };
     if ( e && typeof e === 'object' ) {
       const anyE = e as { error?: any; message?: string; };
       if ( anyE?.error && typeof anyE.error === 'object' ) {
         const emsg = ( anyE.error as any ).message || anyE.message || 'Request failed';
-        return { status: 'error', message: emsg, data: anyE.error };
+        return { success: false, status: 'error', message: emsg, data: anyE.error };
       }
-      if ( anyE?.message ) return { status: 'error', message: anyE.message, data: anyE };
+      if ( anyE?.message ) return { success: false, status: 'error', message: anyE.message, data: null };
     }
     return fallback;
   }
+
   private normalizeToMSG( raw: unknown ): MSG {
     const r = raw as { success?: boolean; status?: string; message?: string; data?: unknown; };
     if ( typeof r?.message === 'string' ) {
       const status = typeof r.success === 'boolean'
         ? ( r.success ? 'success' : 'error' )
         : ( typeof r.status === 'string' ? r.status : 'success' );
-      return { status, message: r.message, data: ( r.data ?? null ) as any };
+      return { success: r.success ?? false, status: r.status?.toLowerCase() === 'success' ? 'success' : 'error', message: r.message, data: ( r.data ?? null ) as any };
     }
-    return { status: 'success', message: 'OK', data: raw as any };
+    return { success: true, status: 'success', message: 'OK', data: raw as any };
   }
   public asDate( value: string | Date | null | undefined ): Date | null {
     if ( !value ) {
@@ -657,13 +672,13 @@ export class TenantService {
   }
   public async createComplaint( payload: CreateComplaintPayload, attachments: File[] = [] ): Promise<MSG> {
     try {
-      if ( !payload.tenantId?.trim() ) return { status: 'error', message: 'tenantId is required', data: null };
-      if ( !payload.propertyId?.trim() ) return { status: 'error', message: 'propertyId is required', data: null };
-      if ( !payload.leaseId?.trim() ) return { status: 'error', message: 'leaseId is required', data: null };
-      if ( !payload.title?.trim() ) return { status: 'error', message: 'title is required', data: null };
-      if ( !payload.description?.trim() ) return { status: 'error', message: 'description is required', data: null };
-      if ( !this.isValidComplaintCategory( payload.category ) ) return { status: 'error', message: 'Invalid category', data: null };
-      if ( !this.isValidComplaintPriority( payload.priority ) ) return { status: 'error', message: 'Invalid priority', data: null };
+      if ( !payload.tenantId?.trim() ) return { success: false, status: 'error', message: 'tenantId is required', data: null };
+      if ( !payload.propertyId?.trim() ) return { success: false, status: 'error', message: 'propertyId is required', data: null };
+      if ( !payload.leaseId?.trim() ) return { success: false, status: 'error', message: 'leaseId is required', data: null };
+      if ( !payload.title?.trim() ) return { success: false, status: 'error', message: 'title is required', data: null };
+      if ( !payload.description?.trim() ) return { success: false, status: 'error', message: 'description is required', data: null };
+      if ( !this.isValidComplaintCategory( payload.category ) ) return { success: false, status: 'error', message: 'Invalid category', data: null };
+      if ( !this.isValidComplaintPriority( payload.priority ) ) return { success: false, status: 'error', message: 'Invalid priority', data: null };
 
       const resp = await firstValueFrom( this.http.post<MSG>( this.URLS_COMPLAINT.create(), this.buildCreateComplaintFormData( payload, attachments ) ) );
       return this.normalizeToMSG( resp );

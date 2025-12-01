@@ -120,7 +120,7 @@ export class LeaseAgreements implements OnInit, OnDestroy {
 
   protected onEditLease(): void {
     this.pannelClose();
-    this.router.navigate( [ '/dashboard/tenant/tenant-lease', this.lease?.leaseID ] );
+    this.router.navigate( [ '/dashboard/tenant/edit-lease', this.lease?.leaseID ] );
   }
 
   protected pannelClose() {

@@ -1,166 +1,121 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+// Path: src/app/components/tabs/components/user-creation-management/user-creation-management.component.ts
+
+import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
   Component,
-  Inject,
   Input,
   OnChanges,
   OnDestroy,
-  OnInit,
-  PLATFORM_ID,
-  ViewChild,
+  OnInit
 } from '@angular/core';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { Subscription } from 'rxjs';
-import { ActivityTrackerService } from '../../../../services/activityTacker/activity-tracker.service';
-import { User } from '../../../../services/APIs/apis.service';
-import { WindowsRefService } from '../../../../services/windowRef/windowRef.service';
-import { NotificationDialogComponent } from '../../../dialogs/notification/notificationBar.component';
-import { ProgressBarComponent } from '../../../dialogs/progress-bar/progress-bar.component';
+import { Router } from '@angular/router';
 
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip';
-
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatMomentDateModule } from '@angular/material-moment-adapter';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatSortModule, Sort } from '@angular/material/sort';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { ActivatedRoute, Router } from '@angular/router';
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
-import {
-  APIsService
-} from '../../../../services/APIs/apis.service';
-import { CryptoService } from '../../../../services/cryptoService/crypto.service';
-import { SkeletonLoaderComponent } from '../../../shared/skeleton-loader/skeleton-loader.component';
 
+import { ActivityTrackerService } from '../../../../services/activityTacker/activity-tracker.service';
+import { APIsService, User } from '../../../../services/APIs/apis.service';
+import { PaginationUtil } from '../../../../source/utility/pagination.utils';
+
+import {
+  CustomTableComponent,
+  TableButton,
+  TableColumn,
+  TableExtension,
+  type TableButtonActionConfig
+} from '../../../shared/custom-table/custom-table.component';
+
+import type { PaginationType } from '../../../../types/api-message.types';
+
+
+// ───────────────────────────────────────────────────────────────
+// Local Table Row Type
+// ───────────────────────────────────────────────────────────────
 interface Data {
+  userimage: string;
   name: string;
   username: string;
-  email: string;
-  dateOfBirth: string;
-  age: number;
   gender: string;
-  image: string;
+  email: string;
   phoneNumber: string;
   role: string;
-  isActive: boolean;
-  creator: string;
+  isactive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  viewButton: TableButton;
 }
+
 
 @Component( {
   selector: 'app-user-creatinon-management',
   standalone: true,
   imports: [
     CommonModule,
-    MatIconModule,
-    SkeletonLoaderComponent,
-    MatInputModule,
-    MatFormFieldModule,
-    MatButtonModule,
-    MatAutocompleteModule,
-    FormsModule,
-    ReactiveFormsModule,
-    NotificationDialogComponent,
-    ProgressBarComponent,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatMomentDateModule,
-    MatSelectModule,
-    MatDividerModule,
-    MatDialogModule,
-    MatDatepickerModule,
-    MatTooltipModule,
+    CustomTableComponent
   ],
   templateUrl: './user-creatinon-management.component.html',
   styleUrl: './user-creatinon-management.component.scss',
 } )
 export class UserCreatinonManagementComponent
   implements OnInit, OnChanges, AfterViewInit, OnDestroy {
-  @ViewChild( ProgressBarComponent, { static: true } )
-  progress!: ProgressBarComponent;
-  @ViewChild( NotificationDialogComponent, { static: true } )
-  notification!: NotificationDialogComponent;
 
-  @Input() user: User | null = null;
-  @Input() loggedUser: User | null = null;
-  @Input() mode: boolean | null = null;
+  private _user: User | null = null;
 
-  protected isBrowser: boolean;
-  private modeSub: Subscription | null = null;
-  protected isActive: boolean = false;
-  protected isLoading: boolean = true;
-  protected username: string = '';
+  @Input( { required: true } )
+  set user( value: User | null ) {
+    this._user = value;
 
-  //Table variables
-  protected dataSource = new MatTableDataSource<Data>();
+    // When a new user comes in, reset pagination and reload data
+    if ( this._user ) {
+      this._index = 0;         // optional: reset to first page
+      this._search = '';       // optional: clear search
+      void this.dataInit( this._index, this._limit, this._search );
+    }
+  }
 
-  // Core pagination variables
-  protected start: number = 0; // API offset (e.g., start=10 for page 2 with limit=10)
-  protected currentPage: number = 1; // Current visible page number
-  protected limit: number = 10; // Items per page
-  protected totalRecords: number = 0; // Total number of records from backend
-  protected pageStart: number = 1; // Calculated visible start of page button range
-  protected pageEnd: number = 1; // Calculated visible end of page button range
-  protected startDate: Date | null = null;
-  protected endDate: Date | null = null;
-  protected isPaginationDisabled: boolean = false;
+  get user(): User | null {
+    return this._user;
+  }
 
-  protected isTableEmpty: boolean = false;
-  protected displayedColumns: string[] = [
-    'Image',
-    'Name',
-    'Username',
-    'Email',
-    'DoB',
-    'Age',
-    'Gender',
-    'Phone',
-    'Role',
-    'Is Active',
-    'Creator',
-    'Created At',
-    'Updated At',
-    'Visit',
+  // ───────────────────────────────────────────────────────────────
+  // Table + Pagination State
+  // ───────────────────────────────────────────────────────────────
+  private _isLoading = false;
+  private _index = 0;
+  private _limit = 10;
+  private _search = '';
+
+  protected tableTitle = 'Users';
+  protected extension: TableExtension = 'xlsx';
+  protected total = 0;
+
+  protected data: Data[] = [];
+
+  protected columns: TableColumn[] = [
+    { key: 'userimage', label: 'Image' },
+    { key: 'name', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'phoneNumber', label: 'Contact' },
+    { key: 'role', label: 'Role' },
+    { key: 'isactive', label: 'Status' },
+    { key: 'createdAt', label: 'Created At' },
+    { key: 'updatedAt', label: 'Updated At' },
+    { key: 'viewButton', label: 'View' },
   ];
 
-  protected readonly definedMaleDummyImageURL =
-    'Images/user-images/dummy-user/dummy-user.jpg';
-  protected readonly definedWomanDummyImageURL =
-    'Images/user-images/dummy-user/dummy_woman.jpg';
-  protected definedImage: string =
-    'Images/user-images/dummy-user/dummy-user.jpg';
 
   constructor (
-    private windowRef: WindowsRefService,
-    @Inject( PLATFORM_ID ) private platformId: Object,
-    private matIconRegistry: MatIconRegistry,
-    private domSanitizer: DomSanitizer,
-    private activityTrackerService: ActivityTrackerService,
-    private crypto: CryptoService,
-    private router: Router,
-    private APIsService: APIsService,
-    private route: ActivatedRoute
-  ) {
-    this.isBrowser = isPlatformBrowser( this.platformId );
-    this.registerCustomIcons();
-  }
+    private readonly activityTrackerService: ActivityTrackerService,
+    private readonly router: Router,
+    private readonly apiService: APIsService,
+  ) {}
 
-  async ngOnInit(): Promise<void> {
-    this.apiCall( this.start, this.limit );
-  }
+
+  // ───────────────────────────────────────────────────────────────
+  // Lifecycle Hooks
+  // ───────────────────────────────────────────────────────────────
+  async ngOnInit(): Promise<void> {}
 
   ngOnChanges(): void {}
 
@@ -168,407 +123,192 @@ export class UserCreatinonManagementComponent
 
   ngOnDestroy(): void {}
 
-  public async refresh( username: string ): Promise<void> {
-    this.username = username;
-    this.currentPage = 1; // reset to page 1
-    const offset = 0;
 
-    // clear any filters (optional, or preserve if needed)
-    this.startDate = null;
-    this.endDate = null;
+  // ───────────────────────────────────────────────────────────────
+  // GETTERS / SETTERS → Auto-trigger dataInit()
+  // ───────────────────────────────────────────────────────────────
 
-    await this.apiCall( offset, this.limit );
+  get isLoading(): boolean {
+    return this._isLoading;
   }
-
-  protected imageGenerator( image: string, gender: string ): string {
-    if ( image ) {
-      const imagetype = image.split( '.' )[ 1 ];
-      if ( imagetype !== '' ) {
-        return image;
-      } else {
-        if ( gender === 'male' ) {
-          return this.definedMaleDummyImageURL;
-        } else {
-          return this.definedWomanDummyImageURL;
-        }
-      }
-    } else {
-      return this.definedImage;
+  set isLoading( value: boolean ) {
+    this._isLoading = value;
+    if ( this._isLoading ) {
+      void this.dataInit( this._index, this._limit, this._search );
     }
   }
 
-  private registerCustomIcons(): void {
-    const iconMap = {
-      document: 'documents.svg',
-      fileExcel: 'fileExcel.svg',
-      search: 'search.svg',
-      reset: 'reset.svg',
-      download: 'download.svg',
-      userID: 'userID.svg',
-      eye: 'eye',
-      upload: 'upload.svg',
-      pdf: 'file-types/pdf.svg',
-      txt: 'file-types/txt.svg',
-      xml: 'file-types/xml.svg',
-      excel: 'file-types/excel.svg',
-      word: 'file-types/word.svg',
-      powerpoint: 'file-types/powerpoint.svg',
-      zip: 'file-types/zip.svg',
-      file: 'file-types/file-empty.svg',
-      jpeg: 'file-types/jpeg.svg',
-      png: 'file-types/png.svg',
-      webp: 'file-types/webp.svg',
-      gif: 'file-types/gif.svg',
-      jpg: 'file-types/jpg.svg',
-      ico: 'file-types/ico.svg',
-      svg: 'file-types/svg.svg',
-      image: 'file-types/image.svg',
-    };
-
-    for ( const [ name, path ] of Object.entries( iconMap ) ) {
-      this.matIconRegistry.addSvgIcon(
-        name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl(
-          `Images/Icons/${ path }`
-        )
-      );
-    }
+  get index(): number {
+    return this._index;
+  }
+  set index( value: number ) {
+    this._index = value;
+    void this.dataInit( this._index, this._limit, this._search );
   }
 
-  protected chooceIcon( type: string ): string {
-    switch ( type ) {
-      case 'doc':
-        return 'word';
-      case 'docx':
-        return 'word';
-      case 'dot':
-        return 'word';
-      case 'dotx':
-        return 'word';
-      case 'rtf':
-        return 'word';
-      case 'odt':
-        return 'word';
-      case 'txt':
-        return 'txt';
-      case 'xml':
-        return 'xml';
-      case 'xls':
-        return 'excel';
-      case 'xlsx':
-        return 'excel';
-      case 'xlsm':
-        return 'excel';
-      case 'xlt':
-        return 'excel';
-      case 'xltx':
-        return 'excel';
-      case 'ods':
-        return 'excel';
-      case 'csv':
-        return 'excel';
-      case 'tsv':
-        return 'excel';
-      case 'ppt':
-        return 'powerpoint';
-      case 'pptx':
-        return 'powerpoint';
-      case 'pptm':
-        return 'powerpoint';
-      case 'pot':
-        return 'powerpoint';
-      case 'potx':
-        return 'powerpoint';
-      case 'odp':
-        return 'powerpoint';
-      case 'pdf':
-        return 'pdf';
-      case 'zip':
-        return 'zip';
-      case 'png':
-        return 'image';
-      case 'jpeg':
-        return 'image';
-      case 'webp':
-        return 'image';
-      case 'gif':
-        return 'image';
-      case 'jpg':
-        return 'image';
-      case 'ico':
-        return 'image';
-      case 'svg':
-        return 'image';
-      default:
-        return 'file';
-    }
+  get limit(): number {
+    return this._limit;
+  }
+  set limit( value: number ) {
+    this._limit = value;
+    void this.dataInit( this._index, this._limit, this._search );
   }
 
-  private async apiCall(
-    start: number,
-    limit: number,
-    startDate?: Date,
-    endDate?: Date
-  ): Promise<void> {
-    try {
-      this.isLoading = true;
-      await this.activityTrackerService
-        .getCreatedUsersBasedOnCreator(
-          this.user?.username as string,
-          start,
-          limit,
-          startDate,
-          endDate
-        )
-        .then( ( data ) => {
-          this.totalRecords = data.data.totalCount;
-          this.isPaginationDisabled = this.totalRecords < this.limit;
-
-          this.dataSource = new MatTableDataSource<Data>(
-            data.data.data as Data[]
-          );
-
-          this.isTableEmpty = this.dataSource.data.length === 0;
-          this.isLoading = false;
-          // this.paginate();
-        } )
-        .catch( ( error ) => {
-          if ( error ) {
-            this.isTableEmpty = true;
-            this.isLoading = true;
-            throw new Error( error );
-          }
-        } );
-    } catch ( error ) {
-      if ( error ) {
-        this.isLoading = true;
-        console.error( 'API ERROR: ', error );
-      }
-    }
+  get search(): string {
+    return this._search;
+  }
+  set search( value: string ) {
+    this._search = value.trim();
+    void this.dataInit( this._index, this._limit, this._search );
   }
 
-  protected generateColData( data: string, element: any ) {
-    switch ( data ) {
-      case 'Name':
-        return element.name;
-
-      case 'Email':
-        return element.email;
-
-      case 'DoB':
-        return element.dateOfBirth;
-
-      case 'Age':
-        return element.age;
-
-      case 'Gender':
-        return element.gender;
-
-      case 'Phone':
-        return element.phoneNumber;
-
-      case 'Role':
-        return element.role;
-
-      case 'Is Active':
-        return element.isActive ? 'Yes' : 'No';
-
-      case 'Creator':
-        return element.creator;
-
-      case 'Created At':
-        return this.formatDate( element.createdAt );
-
-      case 'UploadDate':
-        return this.formatDate( element.updatedAt );
-
-      default:
-        return '';
-    }
-  }
-
-  protected sortData( sort: Sort ): void {
-    const data = this.dataSource.data.slice();
-    const isAsc = sort.direction === 'asc';
-
-    if ( !sort.active || sort.direction === '' ) {
-      this.dataSource.data = data;
+  protected async fetch(): Promise<void> {
+    if ( Array.isArray( this.data ) && this.data.length > 0 ) {
       return;
     }
-
-    // Map displayed column labels to actual Data fields
-    const columnFieldMap: { [ key: string ]: keyof Data; } = {
-      Name: 'name',
-      Username: 'username',
-      Email: 'email',
-      DoB: 'dateOfBirth',
-      Age: 'age',
-      Gender: 'gender',
-      Phone: 'phoneNumber',
-      Role: 'role',
-      'Is Active': 'isActive',
-      Creator: 'creator',
-      'Created At': 'createdAt',
-      'Updated At': 'updatedAt',
-    };
-
-    const field = columnFieldMap[ sort.active ];
-
-    if ( field ) {
-      this.dataSource.data = data.sort( ( a, b ) =>
-        this.compare( a[ field ], b[ field ], isAsc )
-      );
-    }
+    setTimeout( () => ( void this.dataInit( this._index, this._limit, this._search ) ), 0 );
   }
 
-  private compare( a: any, b: any, isAsc: boolean ): number {
-    if ( a == null && b != null ) return isAsc ? -1 : 1;
-    if ( a != null && b == null ) return isAsc ? 1 : -1;
-    if ( a == null && b == null ) return 0;
 
-    if ( typeof a === 'string' && typeof b === 'string' ) {
-      return a.localeCompare( b ) * ( isAsc ? 1 : -1 );
-    }
+  // ───────────────────────────────────────────────────────────────
+  // DATA LOADING
+  // ───────────────────────────────────────────────────────────────
 
-    return ( a < b ? -1 : a > b ? 1 : 0 ) * ( isAsc ? 1 : -1 );
-  }
+  private async dataInit(
+    index: number,
+    limit: number,
+    search?: string,
+  ): Promise<void> {
+    try {
+      this._isLoading = true;
+      this.data = [];
 
-  // Called when user triggers a search (e.g., clicks "Search" button)
-  protected async search(): Promise<void> {
-    this.currentPage = 1; // Reset to first page
-    const offset = ( this.currentPage - 1 ) * this.limit;
-
-    if ( this.startDate && this.endDate ) {
-      // Call API with current filters
-      await this.apiCall( offset, this.limit, this.startDate, this.endDate );
-    }
-  }
-
-  // Called when user clicks "Reset" to clear filters and reload default data
-  protected async reset(): Promise<void> {
-    this.startDate = null;
-    this.endDate = null;
-    this.currentPage = 1;
-    const offset = 0;
-
-    await this.apiCall( offset, this.limit );
-  }
-
-  //<=========== Pagination ===========>
-  // Called when user clicks a specific page number
-  protected async setCurrentPage( index: number ): Promise<void> {
-    // index is based on visible range, so we normalize it
-    this.currentPage = this.getActualStart() + index;
-
-    // Calculate offset and call paginated API
-    const offset = ( this.currentPage - 1 ) * this.limit;
-    await this.paginate( offset, this.limit );
-  }
-
-  // Calculates the total number of pages
-  protected totalPages(): number {
-    return Math.ceil( this.totalRecords / this.limit );
-  }
-
-  // Calculate visible start page number (e.g., currentPage = 5 → show from 3)
-  protected getActualStart(): number {
-    return Math.max( 1, this.currentPage - 2 );
-  }
-
-  // Calculate visible end page number (e.g., currentPage = 5 → show to 7)
-  protected getActualEnd(): number {
-    return Math.min( this.totalPages(), this.currentPage + 2 );
-  }
-
-  // Jump back by 2 pages
-  protected async goTwoPagesBack(): Promise<void> {
-    if ( this.currentPage > 1 ) {
-      this.currentPage = Math.max( 1, this.currentPage - 2 );
-      const offset = ( this.currentPage - 1 ) * this.limit;
-      await this.paginate( offset, this.limit );
-    }
-  }
-
-  // Jump forward by 2 pages
-  protected async goTwoPagesForward(): Promise<void> {
-    const totalPages = this.totalPages();
-    if ( this.currentPage < totalPages ) {
-      this.currentPage = Math.min( totalPages, this.currentPage + 2 );
-      const offset = ( this.currentPage - 1 ) * this.limit;
-      await this.paginate( offset, this.limit );
-    }
-  }
-
-  // Pagination trigger wrapper that calls your API
-  protected async paginate( start: number, limit: number ): Promise<void> {
-    this.start = start; // store offset
-    await this.apiCall(
-      start,
-      limit,
-      this.startDate || undefined,
-      this.endDate || undefined
-    );
-  }
-
-  protected formatDate( date: Date ): string {
-    if ( !date ) return '';
-    const d = new Date( date );
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-    };
-    return d.toLocaleString( 'en-US', options );
-  }
-
-  protected download( url: string ) {
-    window.open( url, '_blank' );
-  }
-
-  protected async visitUser( data: string ) {
-    if ( this.isBrowser ) {
-      if ( data !== '' && this.crypto ) {
-        const username = await this.APIsService.generateToken( data );
-        // this.refreshService.triggerRefresh();
-        this.router.navigate( [ '/dashboard/users/user-profile', username.token ] );
+      // Guard: User required
+      if ( !this.user ) {
+        throw new Error( 'Invalid user data!' );
       }
+
+      const username = this.user.username.trim();
+
+      // ───────────────────────────────────────────
+      // 1) Get total count metadata
+      // ───────────────────────────────────────────
+      const totalRes = await this.activityTrackerService.getTotalOfCreatedUsersBasedOnCreator( username );
+
+      if ( !totalRes.success || totalRes.status !== 'success' ) {
+        throw new Error( 'Failed to fetch total count of created users!' );
+      }
+
+      const total: number | undefined = totalRes.data?.pagination?.total;
+
+      if ( !total || !Number.isFinite( total ) || !Number.isInteger( total ) || Number.isNaN( total ) ) {
+        throw new Error( 'Invalid total number!' );
+      }
+
+      this.total = total;
+
+      // Safe pagination values
+      const safeIndex = PaginationUtil.safeIndex( index, total );
+      const safeLimit = PaginationUtil.safeLimit( limit, total );
+      const safeSearch = search?.trim() || undefined;
+
+
+      // ───────────────────────────────────────────
+      // 2) Fetch paged results
+      // ───────────────────────────────────────────
+      const trackingRes = await this.activityTrackerService.getCreatedUsersBasedOnCreator(
+        username,
+        safeIndex,
+        safeLimit,
+        safeSearch
+      );
+
+
+
+      if ( !trackingRes.success || !trackingRes.data ) {
+        throw new Error( 'Failed to fetch user tracking data!' );
+      }
+
+      const users = trackingRes.data.system?.users;
+      if ( !Array.isArray( users ) ) {
+        throw new Error( 'Invalid users array!' );
+      }
+
+      // ───────────────────────────────────────────
+      // 3) Convert to table row model
+      // ───────────────────────────────────────────
+
+      const tableData: Data[] = [];
+
+      users.map( ( user ) => {
+
+        const data: Data = {
+          userimage: user.image as string,
+          username: user.username,
+          name: user.name,
+          email: user.email,
+          phoneNumber: user.phoneNumber ?? '',
+          gender: user.gender,
+          role: user.role,
+          isactive: user.isActive,
+          createdAt: new Date( user.createdAt ),
+          updatedAt: new Date( user.updatedAt ),
+          viewButton: {
+            icon: 'visibility',
+            action: 'view',
+            label: 'View'
+          }
+        };
+
+        tableData.push( data );
+      } );
+
+      if ( !Array.isArray( tableData ) || tableData.length === 0 ) {
+        throw new Error( 'Failed to create user array!' );
+      }
+
+      this.data = [ ...tableData ];
+
+
+    } catch ( error ) {
+      console.error( 'Error retrieving created users:', error );
+    } finally {
+      setTimeout( () => {
+        this._isLoading = false;
+      }, 500 );
     }
   }
+
+
+  // ───────────────────────────────────────────────────────────────
+  // EXPORT TO EXCEL
+  // ───────────────────────────────────────────────────────────────
 
   protected exportToExcel(): void {
-    // Convert dataSource (MatTableDataSource) to a plain array
-    const exportData = this.dataSource.data.map( ( row ) => ( {
+    const exportData = this.data.map( ( row ) => ( {
       Name: row.name,
-      Username: row.username,
       Email: row.email,
-      'Date of Birth': row.dateOfBirth,
-      Age: row.age,
       Gender: row.gender,
-      Image: row.image,
+      Image: row.userimage,
       'Phone Number': row.phoneNumber,
       Role: row.role,
-      'Is Active': row.isActive,
-      Creator: row.creator,
-      'Created At': new Date( row.createdAt ).toLocaleString(),
-      'Updated At': new Date( row.updatedAt ).toLocaleString(),
+      'Is Active': row.isactive ? 'Active' : 'Deactive',
+      'Created At': row.createdAt.toLocaleString(),
+      'Updated At': row.updatedAt.toLocaleString(),
     } ) );
 
-    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet( exportData );
+    const worksheet = XLSX.utils.json_to_sheet( exportData );
     const workbook: XLSX.WorkBook = {
       Sheets: { 'User Files': worksheet },
       SheetNames: [ 'User Files' ],
     };
 
-    const excelBuffer: any = XLSX.write( workbook, {
+    const excelBuffer = XLSX.write( workbook, {
       bookType: 'xlsx',
       type: 'array',
     } );
 
-    const blobData: Blob = new Blob( [ excelBuffer ], {
+    const blobData = new Blob( [ excelBuffer ], {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     } );
 
@@ -576,5 +316,43 @@ export class UserCreatinonManagementComponent
       blobData,
       `User_Creation_Export_${ new Date().toISOString() }.xlsx`
     );
+  }
+
+  // ───────────────────────────────────────────────────────────────
+  // VIEW USER
+  // ───────────────────────────────────────────────────────────────
+  protected async buttonCentra( value: TableButtonActionConfig ): Promise<void> {
+    try {
+      if ( !value.action || !value.data ) {
+        throw new Error( 'Invalid value!' );
+      }
+      const action: TableButtonActionConfig[ 'action' ] = value.action;
+      const data: Data = value.data;
+      const username = data.username;
+
+      switch ( action ) {
+        case 'view':
+          const tokenRes = await this.apiService.generateToken( username );
+          if ( !tokenRes.success ) {
+            throw new Error( 'Faild to make token!' );
+          }
+          const token: string | null = this.apiService.extractTokenFromMsg( tokenRes );
+
+          if ( !token ) {
+            throw new Error( 'Invalid token!' );
+          }
+
+          await this.router.navigate( [ '/dashboard/users/user-profile', token ] );
+
+          return;
+          break;
+        default:
+          return;
+      }
+
+    }
+    catch ( error ) {
+      console.error( error );
+    }
   }
 }

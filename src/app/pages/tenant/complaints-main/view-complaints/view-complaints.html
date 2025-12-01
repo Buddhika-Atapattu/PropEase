@@ -228,7 +228,7 @@
         <ng-container *ngIf="complaint">
           <app-comments-list
             [code]="complaint.code"
-            [pageSize]="5"
+            [(limit)]="complaintCount"
           ></app-comments-list>
         </ng-container>
       </div>

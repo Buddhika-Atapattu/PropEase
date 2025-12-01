@@ -1,5 +1,5 @@
 // Path: src/components/user-info-panel/user-info-panel.component.ts
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   Component,
   ElementRef,
@@ -11,22 +11,22 @@ import {
   Output,
   PLATFORM_ID,
 } from '@angular/core';
-import {Router} from '@angular/router';
-import {Subscription} from 'rxjs';
-import {APIsService, User} from '../../services/APIs/apis.service';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { APIsService, User } from '../../services/APIs/apis.service';
 import {
   AuthService
 } from '../../services/auth/auth.service';
-import {CryptoService} from '../../services/cryptoService/crypto.service';
-import {WindowsRefService} from '../../services/windowRef/windowRef.service';
+import { CryptoService } from '../../services/cryptoService/crypto.service';
+import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 
-@Component({
+@Component( {
   selector: 'app-user-info-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [ CommonModule ],
   templateUrl: './user-info-panel.component.html',
   styleUrl: './user-info-panel.component.scss',
-})
+} )
 export class UserInfoPanelComponent implements OnInit, OnDestroy {
   @Output() closePanel = new EventEmitter<boolean>();
   protected mode: boolean | null = null;
@@ -36,24 +36,24 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
 
   constructor (
     private windowRef: WindowsRefService,
-    @Inject(PLATFORM_ID) private platformId: Object,
+    @Inject( PLATFORM_ID ) private platformId: Object,
     protected authService: AuthService,
     protected router: Router,
     private elementRef: ElementRef,
     private crypto: CryptoService,
-    private APIsService: APIsService
+    private apiService: APIsService
   ) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    if(this.authService.getLoggedUser !== null) {
+    this.isBrowser = isPlatformBrowser( this.platformId );
+    if ( this.authService.getLoggedUser !== null ) {
       this.user = this.authService.getLoggedUser;
     }
   }
 
   ngOnInit(): void {
-    if(this.isBrowser) {
-      this.modeSub = this.windowRef.mode$.subscribe((val) => {
+    if ( this.isBrowser ) {
+      this.modeSub = this.windowRef.mode$.subscribe( ( val ) => {
         this.mode = val;
-      });
+      } );
     }
   }
 
@@ -61,11 +61,11 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
     this.modeSub?.unsubscribe();
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event): void {
-    const clickedInside = this.elementRef.nativeElement.contains(event.target);
-    if(!clickedInside) {
-      this.close(false);
+  @HostListener( 'document:click', [ '$event' ] )
+  onDocumentClick( event: Event ): void {
+    const clickedInside = this.elementRef.nativeElement.contains( event.target );
+    if ( !clickedInside ) {
+      this.close( false );
     }
   }
 
@@ -74,20 +74,36 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
     document.cookie = 'username=; Max-Age=0; path=/';
     document.cookie = 'password=; Max-Age=0; path=/';
     localStorage.clear();
-    this.router.navigate(['/login']);
+    this.router.navigate( [ '/login' ] );
   }
 
-  protected async open() {
-    if(this.isBrowser && this.user && this.crypto) {
-      this.close(false);
-      const username = await this.APIsService.generateToken(
-        this.user?.username
-      );
-      this.router.navigate(['/dashboard/users/user-profile', username.token]);
+  protected async open(): Promise<void> {
+    try {
+      if ( !this.user ) {
+        throw new Error( 'Invalid user!' );
+      }
+      const username = this.user.username;
+      const res = await this.apiService.generateToken( username );
+
+      if ( !res.success || res.status !== 'success' ) {
+        throw new Error( 'Faild to generate token' );
+      }
+
+      const token = this.apiService.extractTokenFromMsg( res );
+
+      if ( !token ) {
+        throw new Error( 'Invalid token!' );
+      }
+
+      await this.router.navigate( [ '/dashboard/users/user-profile', token ] );
+      return;
+    }
+    catch ( error ) {
+      console.error( error );
     }
   }
 
-  protected close(closed: boolean): void {
-    this.closePanel.emit(closed);
+  protected close( closed: boolean ): void {
+    this.closePanel.emit( closed );
   }
 }
