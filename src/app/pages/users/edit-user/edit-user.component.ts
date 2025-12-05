@@ -1,3 +1,4 @@
+// Path: src/app/pages/users/edit-user/edit-user.component.ts
 // ──────────────────────────────────────────────────────────────────────────────
 // Angular core / common
 // ──────────────────────────────────────────────────────────────────────────────
@@ -27,32 +28,32 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { MatMomentDateModule } from '@angular/material-moment-adapter';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatMomentDateModule } from '@angular/material-moment-adapter';
 import { MatSelectModule } from '@angular/material/select';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Router / platform
+// Angular router / platform
 // ──────────────────────────────────────────────────────────────────────────────
-import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DomSanitizer } from '@angular/platform-browser';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Third-party components
 // ──────────────────────────────────────────────────────────────────────────────
 import { EditorComponent } from '@tinymce/tinymce-angular';
 import {
-  ImageCroppedEvent,
   ImageCropperComponent,
+  ImageCroppedEvent,
 } from 'ngx-image-cropper';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -62,37 +63,46 @@ import { Observable, Subscription } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// App components / dialogs
+// Shared components / dialogs
 // ──────────────────────────────────────────────────────────────────────────────
-import { CameraBoxComponent } from '../../../components/dialogs/camera-box/camera-box.component';
-import { NotificationDialogComponent } from '../../../components/dialogs/notification/notificationBar.component';
+import {
+  NotificationDialogComponent,
+  msgTypes,
+} from '../../../components/dialogs/notification/notificationBar.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
+import { CameraBoxComponent } from '../../../components/dialogs/camera-box/camera-box.component';
 import { TextEditorComponent } from '../../../components/shared/textEditor/text-editor';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Services & types
+// Services and types
 // ──────────────────────────────────────────────────────────────────────────────
 import {
   APIsService,
-  User,
   Country,
+  DEFAULT_ROLES,
   PermissionEntry,
   ROLE_ACCESS_MAP,
+  type User,
 } from '../../../services/APIs/apis.service';
 import {
-  ACCESS_OPTIONS,
-  AccessMap,
-  AuthService,
-  DEFAULT_ROLE_ACCESS,
-  Role,
+  AuthService
 } from '../../../services/auth/auth.service';
+import { Role } from '../../../services/APIs/apis.service';
 import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { UserControllerService } from '../../../services/userController/user-controller.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
+import {
+  ACCESS_OPTIONS,
+  AccessModuleOption,
+  AccessModuleKey,
+  AccessActionKey,
+} from '../../../source/access-map.source';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Local interfaces
 // ──────────────────────────────────────────────────────────────────────────────
+
+
 interface userActiveStatusType {
   typeName: string;
   isActive: boolean;
@@ -242,7 +252,8 @@ export class EditUserComponent
   private readonly usernamePattern: RegExp = /^[a-zA-Z0-9._-]{4,20}$/;
   private readonly emailPattern: RegExp =
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  private readonly phonePattern: RegExp = /^\+?[0-9\s\-()]{10,15}$/; // (not used directly but kept)
+  private readonly phonePattern: RegExp =
+    /^\+?[0-9\s\-()]{10,15}$/; // reserved
 
   protected usernameMatchPattern: boolean = true;
   protected passwordMatchPattern: boolean = true;
@@ -284,19 +295,20 @@ export class EditUserComponent
   // ──────────────────────────────────────────────────────────────────────────
   // Access / roles
   // ──────────────────────────────────────────────────────────────────────────
-  protected accessOptions = ACCESS_OPTIONS;
-  protected autoSelectedRoleAccess: Record<Role, AccessMap> =
-    DEFAULT_ROLE_ACCESS;
 
-  protected selectedPermissions: {
-    [ module: string ]: { [ action: string ]: boolean; };
-  } = {};
+  /** Full access catalogue used by the template */
+  protected readonly accessOptions: ReadonlyArray<AccessModuleOption> = ACCESS_OPTIONS;
 
-  protected allSelected: { [ module: string ]: boolean; } = {};
+  /** Canonical permission catalogue – used for lookups (never mutated) */
+  protected readonly allPermissionAccesses: ReadonlyArray<AccessModuleOption> = ACCESS_OPTIONS;
 
-  // full user access payload (for current user being edited)
-  protected userAccess: ROLE_ACCESS_MAP = {} as ROLE_ACCESS_MAP;
+  /**
+   * Current selection of access for the chosen role.
+   * This is the ONLY source of truth we will send to backend.
+   */
+  private originalSelectionOfAccess: ROLE_ACCESS_MAP | null = null;
 
+  // defined roles
   protected readonly definedRole: Role[] = [
     'admin',
     'agent',
@@ -308,16 +320,19 @@ export class EditUserComponent
     'user',
   ];
 
+  // User status choices
+  protected readonly userActiveStatus: userActiveStatusType[] = [
+    { typeName: 'Active', isActive: true },
+    { typeName: 'Inactive', isActive: false },
+  ];
+
+  // Genders
   protected readonly definedGender: string[] = [
     'Male',
     'Female',
     'Other',
   ];
 
-  protected readonly userActiveStatus: userActiveStatusType[] = [
-    { typeName: 'Active', isActive: true },
-    { typeName: 'Inactive', isActive: false },
-  ];
 
   // ──────────────────────────────────────────────────────────────────────────
   // Constructor
@@ -461,46 +476,7 @@ export class EditUserComponent
     return this.user ?? null;
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Permission helpers
-  // ──────────────────────────────────────────────────────────────────────────
-  private hasPermissionAction(
-    action:
-      | 'change username'
-      | 'reset password'
-      | 'activate'
-      | 'deactivate'
-      | 'assign roles',
-  ): boolean {
-    const user = this.loggedUser;
-    if ( !user?.access?.permissions ) return false;
 
-    return user.access.permissions.some(
-      ( permission ) =>
-        permission.module === 'User Management' &&
-        permission.actions.includes( action ),
-    );
-  }
-
-  protected isUserCanChangeTheUserName(): boolean {
-    return this.hasPermissionAction( 'change username' );
-  }
-
-  protected isUserCanResetThePassword(): boolean {
-    return this.hasPermissionAction( 'reset password' );
-  }
-
-  protected isUserCanMakeUserActivate(): boolean {
-    return this.hasPermissionAction( 'activate' );
-  }
-
-  protected isUserCanMakeUserDeactivate(): boolean {
-    return this.hasPermissionAction( 'deactivate' );
-  }
-
-  protected isUserCanAssignUserRoles(): boolean {
-    return this.hasPermissionAction( 'assign roles' );
-  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // Load user data by token
@@ -565,7 +541,7 @@ export class EditUserComponent
 
       // address
       this.houseNumber = this.user.address.houseNumber;
-      this.street = this.user.address.street;
+      this.street = this.user.address.street ?? '';
       this.city = this.user.address.city;
       this.stateOrProvince = this.user.address.stateOrProvince ?? '';
       this.postcode = this.user.address.postcode;
@@ -576,18 +552,10 @@ export class EditUserComponent
       this.onCountryChange( country );
 
       // access
-      this.userAccess = this.user.access;
-      this.setPermissionsByRole( this.user.role as Role );
+      this.originalSelectionOfAccess = this.user.access;
 
-      this.userAccess.permissions.forEach( ( permission ) => {
-        this.hasModel( permission.module );
-        this.toggleModule( true, permission.module );
-        permission.actions.forEach( ( action ) => {
-          this.hasAccess( action, permission.module );
-          this.toggleAccess( true, permission.module, action );
-        } );
-      } );
-      this.updateAllSelectedStates();
+
+      this.normalizeExistingAccess();
 
       // image
       this.userExistedImage = this.user.image as string;
@@ -861,19 +829,19 @@ export class EditUserComponent
   // ──────────────────────────────────────────────────────────────────────────
   protected async checkUsername( event: Event ): Promise<void> {
     try {
-
       const input = event.target as HTMLInputElement;
       const value = input.value.trim();
 
       this.usernameMatchPattern = this.usernamePattern.test( value );
 
       if ( !this.usernameMatchPattern ) {
-        this.notification.notification( 'warning', 'Invalid username pattern!' );
+        this.notification.notification(
+          'warning',
+          'Invalid username pattern!',
+        );
       }
 
-      const res = await this.apiService.getUserByUsername(
-        value,
-      );
+      const res = await this.apiService.getUserByUsername( value );
 
       if ( res.status !== 'success' ) {
         throw new Error( 'Failed to fetch validation!' );
@@ -882,13 +850,14 @@ export class EditUserComponent
       const user = res.data?.system?.user;
 
       if ( user ) {
-        this.notification.notification( 'error', 'Username already exsited!' );
+        this.notification.notification(
+          'error',
+          'Username already exsited!',
+        );
       }
 
       this.isUsernameExist = !!user;
-
-    }
-    catch ( error ) {
+    } catch ( error ) {
       console.error( error );
     }
   }
@@ -909,15 +878,16 @@ export class EditUserComponent
         return;
       }
 
-      const checking: boolean = await this.emailValidator( input.trim(), 'User' );
+      const checking: boolean = await this.emailValidator(
+        input.trim(),
+        'User',
+      );
 
       if ( !checking ) {
         this.isEmailError = true;
         this.emailErrorMessage = 'Invalid email';
         throw new Error( 'Invalid email' );
       }
-
-
 
       this.isEmailError = !checking;
       this.emailErrorMessage = !checking ? 'Invalid email' : 'Valid email';
@@ -930,7 +900,11 @@ export class EditUserComponent
 
       const user: User | undefined = res.data?.system?.user;
 
-      const other = this.apiService.extractObjectFromOther<{ status: boolean; }>( res.data, 'other' );
+      const other =
+        this.apiService.extractObjectFromOther<{ status: boolean; }>(
+          res.data,
+          'other',
+        );
       const status = other?.status;
 
       if ( user && status ) {
@@ -954,7 +928,10 @@ export class EditUserComponent
     }
   }
 
-  private async emailValidator( email: string, user: string ): Promise<boolean> {
+  private async emailValidator(
+    email: string,
+    user: string,
+  ): Promise<boolean> {
     try {
       const rowEmail = email.trim();
       const rowUser = user.trim();
@@ -971,23 +948,38 @@ export class EditUserComponent
       const isMatched = emailRegex.test( rowEmail );
 
       if ( !isMatched ) {
-        this.notification.notification( 'warning', 'Invalid email format!' );
+        this.notification.notification(
+          'warning',
+          'Invalid email format!',
+        );
         throw new Error( 'Invalid email format!' );
       }
 
-      const res = await this.userControlService.emailValidator( rowEmail );
+      const res = await this.userControlService.emailValidator(
+        rowEmail,
+      );
 
       if ( res.status !== 'success' ) {
-        this.notification.notification( 'error', `Failed to validate email of ${ rowUser }` );
+        this.notification.notification(
+          'error',
+          `Failed to validate email of ${ rowUser }`,
+        );
         throw new Error( `Failed to validate email of ${ rowUser }` );
       }
 
-      const validatedEmail = this.apiService.extractStringFromOther( res.data, 'email' );
-      const validationObj = this.apiService.extractObjectFromOther<{
-        format: boolean,
-        mx: boolean;
-      }>( res.data, 'validation' );
-      const domain = this.apiService.extractStringFromOther( res.data, 'domain' );
+      const validatedEmail = this.apiService.extractStringFromOther(
+        res.data,
+        'email',
+      );
+      const validationObj =
+        this.apiService.extractObjectFromOther<{
+          format: boolean;
+          mx: boolean;
+        }>( res.data, 'validation' );
+      const domain = this.apiService.extractStringFromOther(
+        res.data,
+        'domain',
+      );
 
       if ( !validatedEmail ) {
         throw new Error( 'Invalid email!' );
@@ -998,14 +990,17 @@ export class EditUserComponent
       }
 
       if ( !validationObj?.format || !validationObj.mx ) {
-        this.notification.notification( 'error', `Please enter valid email address of ${ rowUser }` );
-        throw new Error( `Please enter valid email address of ${ rowUser }` );
+        this.notification.notification(
+          'error',
+          `Please enter valid email address of ${ rowUser }`,
+        );
+        throw new Error(
+          `Please enter valid email address of ${ rowUser }`,
+        );
       }
 
       return true;
-
-    }
-    catch ( error ) {
+    } catch ( error ) {
       console.error( error );
       return false;
     }
@@ -1046,130 +1041,300 @@ export class EditUserComponent
           error.error.message,
         );
       } else {
-        this.notification.notification(
-          'error',
-          error as string,
-        );
+        this.notification.notification( 'error', error as string );
       }
     }
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Role access autocomplete
+  // Role access helpers: role change, module toggle, action toggle
   // ──────────────────────────────────────────────────────────────────────────
+
+  private normalizeExistingAccess(): void {
+    if ( !this.originalSelectionOfAccess ) return;
+
+    const safeRole = this.role as Role;
+    const normalized: PermissionEntry[] = [];
+
+    for ( const perm of this.originalSelectionOfAccess.permissions ) {
+      // Find the canonical module definition
+      const moduleDef = this.allPermissionAccesses.find(
+        ( m ) => m.module.toLowerCase() === perm.module.toLowerCase(),
+      );
+      if ( !moduleDef ) continue;
+
+      const actionIds: string[] = [];
+
+      // For each stored action string, match it either by id or label
+      for ( const stored of perm.actions ) {
+        const found = moduleDef.actions.find(
+          ( opt ) =>
+            opt.id.toLowerCase() === stored.toLowerCase() ||
+            opt.label.toLowerCase() === stored.toLowerCase(),
+        );
+
+        if ( !found ) {
+          continue;
+        }
+
+        // avoid duplicates
+        if ( !actionIds.includes( found.id ) ) {
+          actionIds.push( found.id );
+        }
+      }
+
+      if ( actionIds.length > 0 ) {
+        normalized.push( {
+          module: moduleDef.module as AccessModuleKey,
+          actions: actionIds as AccessActionKey[],
+        } );
+      }
+    }
+
+    this.originalSelectionOfAccess = {
+      role: safeRole,
+      permissions: normalized,
+    };
+  }
+
+
+  /**
+   * 1) When role changes:
+   *    - validate role
+   *    - get default access map from AuthService
+   *    - build ROLE_ACCESS_MAP (all default actions pre-selected)
+   */
+  protected whileRoleChange( role: Role ): void {
+    try {
+      // Keep selected role in component state
+      this.role = role;
+
+      // Validate role against DEFAULT_ROLES (array, so use includes)
+      if ( !role || !DEFAULT_ROLES.includes( role ) ) {
+        this.notification.notification( 'warning', 'Invalid role selection!' );
+        this.originalSelectionOfAccess = null;
+        return;
+      }
+
+      // Default modules for this role
+      const defaultModules: ReadonlyArray<AccessModuleOption> =
+        this.authService.filterDefaultAccessBaseRole( role );
+
+      // Build canonical ROLE_ACCESS_MAP using ONLY ids from access map
+      const permissions: PermissionEntry[] = defaultModules.map(
+        ( mod ): PermissionEntry => ( {
+          module: mod.module as AccessModuleKey,
+          actions: mod.actions.map( ( a ) => a.id as AccessActionKey ),
+        } ),
+      );
+
+      this.originalSelectionOfAccess = {
+        role,
+        permissions,
+      };
+    } catch ( error ) {
+      console.error( error );
+      this.originalSelectionOfAccess = null;
+    }
+  }
+
+
+  /**
+   * Helper: check if a module is currently selected in originalSelectionOfAccess.
+   * Used by template:
+   *   [checked]="hasModel(mainItem.module)"
+   */
   protected hasModel( model: string ): boolean {
-    return (
-      this.role in this.autoSelectedRoleAccess &&
-      model in this.autoSelectedRoleAccess[ this.role as Role ]
+    if ( !this.originalSelectionOfAccess ) return false;
+
+    return this.originalSelectionOfAccess.permissions.some(
+      ( p ) => p.module.toLowerCase() === model.toLowerCase(),
     );
   }
 
-  protected hasAccess( access: string, model: string ): boolean {
-    if (
-      this.role in this.autoSelectedRoleAccess &&
-      model in this.autoSelectedRoleAccess[ this.role as Role ]
-    ) {
-      return this.autoSelectedRoleAccess[ this.role as Role ][
-        model
-      ].includes( access );
-    }
-    return false;
+
+  /**
+   * Helper: check if a concrete action (by id) is selected under a module.
+   * Used by template:
+   *   [checked]="hasAccess(subItem.id, mainItem.module)"
+   */
+  protected hasAccess( accessId: string, model: string ): boolean {
+    if ( !this.originalSelectionOfAccess ) return false;
+
+    const perm = this.originalSelectionOfAccess.permissions.find(
+      ( p ) => p.module.toLowerCase() === model.toLowerCase(),
+    );
+    if ( !perm ) return false;
+
+    return perm.actions.some(
+      ( a ) => a.toLowerCase() === accessId.toLowerCase(),
+    );
   }
 
+  /**
+   * 2) When a single action checkbox is toggled.
+   *    - We:
+   *        • validate role
+   *        • look up canonical module + action from allPermissionAccesses
+   *        • add/remove that action id from originalSelectionOfAccess
+   *    - If after removal, module has 0 actions, we also remove the module
+   *      (so the parent module checkbox will become unchecked).
+   */
   protected toggleAccess(
     isChecked: boolean,
     module: string,
-    action: string,
+    actionId: string, // this is subItem.id from template
   ): void {
-    if ( !( this.role in this.autoSelectedRoleAccess ) ) return;
+    const safeRole = this.role as Role | undefined;
+    if ( !safeRole || !DEFAULT_ROLES.includes( safeRole ) ) {
+      return;
+    }
 
-    const accessMap = this.autoSelectedRoleAccess[ this.role as Role ];
+    // Find canonical module definition
+    const moduleDef = this.allPermissionAccesses.find(
+      ( m ) => m.module.toLowerCase() === module.toLowerCase(),
+    );
+    if ( !moduleDef ) return;
+
+    // Find canonical action definition
+    const actionDef = moduleDef.actions.find(
+      ( a ) => a.id.toLowerCase() === actionId.toLowerCase(),
+    );
+    if ( !actionDef ) return;
+
+    // Lazily initialise our selection map if needed
+    if (
+      !this.originalSelectionOfAccess ||
+      this.originalSelectionOfAccess.role !== safeRole
+    ) {
+      this.originalSelectionOfAccess = {
+        role: safeRole,
+        permissions: [],
+      };
+    }
+
+    const perms = this.originalSelectionOfAccess.permissions;
+
+    // Find or create the module entry
+    let moduleEntry = perms.find(
+      ( p ) =>
+        p.module.toLowerCase() === moduleDef.module.toLowerCase(),
+    );
+
+    if ( !moduleEntry ) {
+      moduleEntry = {
+        module: moduleDef.module as AccessModuleKey,
+        actions: [],
+      };
+      perms.push( moduleEntry );
+    }
+
+    const actionKey = actionDef.id as AccessActionKey;
 
     if ( isChecked ) {
-      if ( !accessMap[ module ] ) {
-        accessMap[ module ] = [];
-      }
-
-      if ( !accessMap[ module ].includes( action ) ) {
-        accessMap[ module ].push( action );
+      // Add canonical action id if missing
+      if ( !moduleEntry.actions.includes( actionKey ) ) {
+        moduleEntry.actions.push( actionKey );
       }
     } else {
-      const index = accessMap[ module ]?.indexOf( action ) ?? -1;
-      if ( index !== -1 ) {
-        accessMap[ module ].splice( index, 1 );
+      // Remove the action id
+      const idx = moduleEntry.actions.indexOf( actionKey );
+      if ( idx !== -1 ) {
+        moduleEntry.actions.splice( idx, 1 );
       }
 
-      if ( accessMap[ module ]?.length === 0 ) {
-        delete accessMap[ module ];
-      }
-    }
-  }
-
-  protected toggleModule( isChecked: boolean, module: string ): void {
-    if ( !( this.role in this.autoSelectedRoleAccess ) ) return;
-
-    const accessMap = this.autoSelectedRoleAccess[ this.role as Role ];
-
-    if ( isChecked ) {
-      const fullActions =
-        ACCESS_OPTIONS.find( ( opt ) => opt.module === module )
-          ?.actions || [];
-      accessMap[ module ] = [ ...fullActions ];
-    } else {
-      delete accessMap[ module ];
-    }
-  }
-
-  protected setPermissionsByRole( role: Role ): void {
-    this.selectedPermissions =
-      this.authService.getDefaultAccessByRole( role );
-    this.updateAllSelectedStates();
-  }
-
-  protected updateAllSelectedStates(): void {
-    for ( const mod of this.accessOptions ) {
-      const allTrue = mod.actions.every(
-        ( act ) => this.selectedPermissions[ mod.module ]?.[ act ],
-      );
-      this.allSelected[ mod.module ] = allTrue;
-    }
-  }
-
-  protected toggleAllActions(
-    module: string,
-    isChecked: boolean,
-  ): void {
-    for ( const action in this.selectedPermissions[ module ] ) {
-      this.selectedPermissions[ module ][ action ] = isChecked;
-    }
-    this.updateAllSelectedStates();
-  }
-
-  protected onPermissionChange(): void {
-    this.updateAllSelectedStates();
-  }
-
-  protected getRoleAccessPayload(): ROLE_ACCESS_MAP {
-    const role = this.role;
-    const permissions: PermissionEntry[] = [];
-
-    if ( role in this.autoSelectedRoleAccess ) {
-      const modules = this.autoSelectedRoleAccess[ role as Role ];
-
-      for ( const [ module, actions ] of Object.entries( modules ) ) {
-        if ( actions.length > 0 ) {
-          permissions.push( { module, actions } );
+      // If no actions left → remove module entry
+      if ( moduleEntry.actions.length === 0 ) {
+        const mIdx = perms.indexOf( moduleEntry );
+        if ( mIdx !== -1 ) {
+          perms.splice( mIdx, 1 );
         }
       }
     }
-
-    return { role, permissions };
   }
+
+
+  /**
+   * 3) When the module “select all” checkbox is toggled.
+   *    - If checked → all actions in that module are selected
+   *    - If unchecked → whole module removed
+   */
+  protected toggleModule(
+    isChecked: boolean,
+    module: string,
+  ): void {
+    const safeRole = this.role as Role | undefined;
+    if ( !safeRole || !DEFAULT_ROLES.includes( safeRole ) ) {
+      return;
+    }
+
+    // Find canonical module definition
+    const moduleDef = this.allPermissionAccesses.find(
+      ( m ) => m.module.toLowerCase() === module.toLowerCase(),
+    );
+    if ( !moduleDef ) return;
+
+    // Lazily initialise selection map
+    if (
+      !this.originalSelectionOfAccess ||
+      this.originalSelectionOfAccess.role !== safeRole
+    ) {
+      this.originalSelectionOfAccess = {
+        role: safeRole,
+        permissions: [],
+      };
+    }
+
+    const perms = this.originalSelectionOfAccess.permissions;
+    const idx = perms.findIndex(
+      ( p ) => p.module.toLowerCase() === moduleDef.module.toLowerCase(),
+    );
+
+    if ( isChecked ) {
+      // All canonical action ids for this module
+      const allActionIds: AccessActionKey[] = moduleDef.actions.map(
+        ( a ) => a.id as AccessActionKey,
+      );
+
+      if ( idx === -1 ) {
+        perms.push( {
+          module: moduleDef.module as AccessModuleKey,
+          actions: allActionIds,
+        } );
+      } else {
+        perms[ idx ].actions = allActionIds;
+      }
+    } else {
+      // Remove entire module from permissions
+      if ( idx !== -1 ) {
+        perms.splice( idx, 1 );
+      }
+    }
+  }
+
+
+  /**
+   * Getter used by insertNewUser().
+   * If nothing was selected yet, returns an empty map for the current role.
+   */
+  protected getRoleAccessPayload(): ROLE_ACCESS_MAP {
+    const safeRole = this.role as Role;
+
+    if ( this.originalSelectionOfAccess && this.originalSelectionOfAccess.role === safeRole ) {
+      return this.originalSelectionOfAccess;
+    }
+
+    return {
+      role: safeRole,
+      permissions: [],
+    };
+  }
+
 
   // ──────────────────────────────────────────────────────────────────────────
   // Update user (method name kept as insertNewUser for template)
   // ──────────────────────────────────────────────────────────────────────────
-  protected async insertNewUser(): Promise<void> {
+  protected async updateUser(): Promise<void> {
     try {
       const verifyEmail: object =
         await this.crypto.generateEmailVerificationToken();
@@ -1178,16 +1343,6 @@ export class EditUserComponent
         new Date( now.setMonth( now.getMonth() + 1 ) ).getTime(),
       );
 
-      // permission check
-      if (
-        !this.isUserCanMakeUserActivate() &&
-        !this.isUserCanMakeUserDeactivate() &&
-        !this.isUserCanAssignUserRoles()
-      ) {
-        throw new Error(
-          'User does not have permission to perform the action.',
-        );
-      }
 
       // required fields
       if ( !this.fullname )
@@ -1310,11 +1465,17 @@ export class EditUserComponent
         'otpValidTime',
         JSON.stringify( { otpValidTime: oneMonth } ),
       );
+      const multiAuthEnabled: string =
+        this.user && this.user.multiAuthEnabled ? 'true' : 'false';
+      formData.append( 'multiAuthEnabled', multiAuthEnabled );
       formData.append( 'updatedAt', this.updatedAt.toString() );
       formData.append( 'creator', this.creator );
       formData.append( 'updator', this.updator );
 
-      const res = await this.apiService.updateUser( formData, this.username );
+      const res = await this.apiService.updateUser(
+        formData,
+        this.username,
+      );
 
       if ( res && res.status === 'success' ) {
         this.notification.notification( res.status, res.message );

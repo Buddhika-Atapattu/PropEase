@@ -476,7 +476,7 @@ export class DeletedItemNotificationsPage implements OnInit, AfterViewInit, OnDe
   private authHeaders(): HttpHeaders {
     let token: string | null = null;
     try {
-      token = localStorage.getItem( 'auth_token' );
+      token = localStorage.getItem( 'sessionToken' );
     } catch {}
     return token ? new HttpHeaders( { Authorization: `Bearer ${ token }` } ) : new HttpHeaders();
   }

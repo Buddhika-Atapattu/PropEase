@@ -492,7 +492,7 @@ export class PropertyService {
     Defalt: 'amenities/default.svg',
   };
 
-  private rootAPI: string = environment.apiOrigin;
+  private rootAPI: string = ( environment.apiOrigin ?? 'http://localhost:3000' ).replace( /\/+$/, '' );;
   private propertyAPI: string = `${ this.rootAPI }/api-property`;
 
   constructor (

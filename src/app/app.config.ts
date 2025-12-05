@@ -33,7 +33,7 @@ import {
   withHashLocation,
   TitleStrategy,
 } from '@angular/router';
-import {routes} from './app.routes';
+import { routes } from './app.routes';
 
 // ── HttpClient (Fetch backend, DI interceptors) ──────────────────────────────
 import {
@@ -44,10 +44,10 @@ import {
 } from '@angular/common/http';
 
 // ── Service Worker (PWA for web prod only) ───────────────────────────────────
-import {provideServiceWorker} from '@angular/service-worker';
+import { provideServiceWorker } from '@angular/service-worker';
 
 // ── Animations (Angular Material / transitions) ──────────────────────────────
-import {provideAnimations} from '@angular/platform-browser/animations';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 // ── Angular Material: date/locale ────────────────────────────────────────────
 import {
@@ -62,24 +62,23 @@ import {
 } from '@angular/material-moment-adapter';
 
 // ── Google Charts (for dashboard modules) ────────────────────────────────────
-import {GoogleChartsModule} from 'angular-google-charts';
+import { GoogleChartsModule } from 'angular-google-charts';
 
 // ── Environment (detects if Electron or Web build) ───────────────────────────
-import {environment} from '../environments/environment';
+import { environment } from '../environments/environment';
 
-// ── HTTP interceptor (Auth header / 401 handling) ────────────────────────────
-import {AuthInspectorService} from './services/inspectorService/auth-inspector-service';
+// ── HTTP interceptors (Auth headers + inspector) ─────────────────────────────
+import { AuthInspectorService } from './services/inspectorService/auth-inspector-service';
+import { AuthHeaderInterceptor } from './interceptors/auth-header.interceptor';
 
 // ── TinyMCE Angular wrapper (self-hosted, CSP-safe) ──────────────────────────
-import {EditorModule, TINYMCE_SCRIPT_SRC} from '@tinymce/tinymce-angular';
+import { EditorModule, TINYMCE_SCRIPT_SRC } from '@tinymce/tinymce-angular';
 
-import {AppTitleStrategy} from './core/routing/app-title.strategy';
-
-
+import { AppTitleStrategy } from './core/routing/app-title.strategy';
 
 // ── Custom Material date format (UK style: DD/MM/YYYY) ───────────────────────
 export const MY_DATE_FORMATS: MatDateFormats = {
-  parse: {dateInput: 'DD/MM/YYYY'},
+  parse: { dateInput: 'DD/MM/YYYY' },
   display: {
     dateInput: 'DD/MM/YYYY',
     monthYearLabel: 'MMM YYYY',
@@ -89,80 +88,80 @@ export const MY_DATE_FORMATS: MatDateFormats = {
 };
 
 // ── HTTP interceptors registration ───────────────────────────────────────────
-// Each interceptor is provided via multi:true to allow stacking multiple ones.
+// Order matters:
+//  - AuthHeaderInterceptor runs FIRST → attaches Authorization + x-guard-token
+//  - AuthInspectorService runs AFTER → can log/handle 401 knowing headers are set
 export const httpInterceptorProviders = [
-  {provide: HTTP_INTERCEPTORS, useClass: AuthInspectorService, multi: true},
+  {
+    provide: HTTP_INTERCEPTORS,
+    useClass: AuthHeaderInterceptor,
+    multi: true,
+  },
+  {
+    provide: HTTP_INTERCEPTORS,
+    useClass: AuthInspectorService,
+    multi: true,
+  },
 ];
 
-// ── Router configuration (auto-selects for platform) ─────────────────────────
+// ── Router configuration (platform-aware) ────────────────────────────────────
 // Electron → hash routing (avoids file:// deep-link reload issues)
 // Web      → normal path-based routing (server must fallback to index.html)
 const routerProviders = environment.electron
   ? provideRouter(
     routes,
     withHashLocation(),
-    withPreloading(PreloadAllModules),
-    withInMemoryScrolling({
+    withPreloading( PreloadAllModules ),
+    withInMemoryScrolling( {
       scrollPositionRestoration: 'top',
       anchorScrolling: 'enabled',
-    }),
+    } ),
   )
   : provideRouter(
     routes,
-    withPreloading(PreloadAllModules),
-    withInMemoryScrolling({
+    withPreloading( PreloadAllModules ),
+    withInMemoryScrolling( {
       scrollPositionRestoration: 'top',
       anchorScrolling: 'enabled',
-    }),
+    } ),
   );
 
 // ── Final Application Config ─────────────────────────────────────────────────
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes, withInMemoryScrolling({scrollPositionRestoration: 'top'})),
-    {provide: TitleStrategy, useClass: AppTitleStrategy},
-
-    // ── Router ───────────────────────────────────────────────────────────────
+    // Router + page title
     routerProviders,
+    { provide: TitleStrategy, useClass: AppTitleStrategy },
 
-    // ── Animations ───────────────────────────────────────────────────────────
-    // Required for Angular Material components and transitions.
-    provideAnimations(),
-
-    // ── Zone optimization ────────────────────────────────────────────────────
-    // Coalesces DOM events to cut redundant change detection cycles.
-    provideZoneChangeDetection({eventCoalescing: true}),
-
-    // ── HTTP Client (Fetch API) ──────────────────────────────────────────────
-    // - withFetch(): uses native Fetch under the hood.
-    // - withInterceptorsFromDi(): reads @Injectable interceptors like AuthInspectorService.
-    provideHttpClient(withFetch(), withInterceptorsFromDi()),
+    // HTTP Client (Fetch API + DI interceptors)
+    provideHttpClient( withFetch(), withInterceptorsFromDi() ),
     ...httpInterceptorProviders,
 
-    // ── Google Charts ────────────────────────────────────────────────────────
-    // Provides the ChartsModule globally without needing imports per component.
-    importProvidersFrom(GoogleChartsModule),
+    // Animations (Material)
+    provideAnimations(),
 
-    // ── Service Worker (PWA) ─────────────────────────────────────────────────
-    // Enabled only for production builds (disabled in dev/Electron).
-    provideServiceWorker('ngsw-worker.js', {
+    // Zone optimization
+    provideZoneChangeDetection( { eventCoalescing: true } ),
+
+    // Google Charts
+    importProvidersFrom( GoogleChartsModule ),
+
+    // Service Worker (PWA – disabled in dev / Electron)
+    provideServiceWorker( 'ngsw-worker.js', {
       enabled: !isDevMode(),
-    }),
+    } ),
 
-    // ── TinyMCE Editor ───────────────────────────────────────────────────────
-    // Loads the Angular TinyMCE wrapper and points to the self-hosted script.
-    // Make sure /public/tinymce/ exists with tinymce.min.js + skins/icons.
-    importProvidersFrom(EditorModule),
-    {provide: TINYMCE_SCRIPT_SRC, useValue: 'tinymce/tinymce.min.js'},
+    // TinyMCE editor (self-hosted)
+    importProvidersFrom( EditorModule ),
+    { provide: TINYMCE_SCRIPT_SRC, useValue: 'tinymce/tinymce.min.js' },
 
-    // ── Material Date/Locale configuration ───────────────────────────────────
-    // Sets UK date format and uses MomentDateAdapter for compatibility.
-    {provide: MAT_DATE_LOCALE, useValue: 'en-GB'},
+    // Material Date/Locale configuration
+    { provide: MAT_DATE_LOCALE, useValue: 'en-GB' },
     {
       provide: DateAdapter,
       useClass: MomentDateAdapter,
-      deps: [MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS],
+      deps: [ MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS ],
     },
-    {provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS},
+    { provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS },
   ],
 };

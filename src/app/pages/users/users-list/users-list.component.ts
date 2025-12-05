@@ -263,70 +263,6 @@ export class UsersListComponent implements OnInit, OnDestroy {
   }
 
   /* --------------------------------------------------------------------------
-   * PERMISSIONS (role-based access control)
-   * ------------------------------------------------------------------------ */
-
-  /**
-   * Check if logged user can create new users.
-   */
-  protected createUserAvailable(): boolean {
-    if ( !this.LOGGED_USER ) return false;
-
-    return (
-      this.LOGGED_USER.access?.permissions?.some(
-        ( permission ) =>
-          permission.module === 'User Management' &&
-          permission.actions.includes( 'create user' ),
-      ) ?? false
-    );
-  }
-
-  /**
-   * Check if logged user can view users.
-   */
-  protected viewUserAvailable(): boolean {
-    if ( !this.LOGGED_USER ) return false;
-
-    return (
-      this.LOGGED_USER.access?.permissions?.some(
-        ( permission ) =>
-          permission.module === 'User Management' &&
-          permission.actions.includes( 'view users' ),
-      ) ?? false
-    );
-  }
-
-  /**
-   * Check if logged user can update users.
-   */
-  protected updateUserAvailable(): boolean {
-    if ( !this.LOGGED_USER ) return false;
-
-    return (
-      this.LOGGED_USER.access?.permissions?.some(
-        ( permission ) =>
-          permission.module === 'User Management' &&
-          permission.actions.includes( 'update user' ),
-      ) ?? false
-    );
-  }
-
-  /**
-   * Check if logged user can delete users.
-   */
-  protected deleteUserAvailable(): boolean {
-    if ( !this.LOGGED_USER ) return false;
-
-    return (
-      this.LOGGED_USER.access?.permissions?.some(
-        ( permission ) =>
-          permission.module === 'User Management' &&
-          permission.actions.includes( 'delete user' ),
-      ) ?? false
-    );
-  }
-
-  /* --------------------------------------------------------------------------
    * USER IMAGE HANDLING
    * ------------------------------------------------------------------------ */
 
@@ -381,16 +317,8 @@ export class UsersListComponent implements OnInit, OnDestroy {
   /**
    * Navigate to the Add User form.
    */
-  protected addUser(): void {
-    if ( !this.createUserAvailable() ) {
-      this.notification.notification(
-        'error',
-        'You do not have permission to create users.',
-      );
-      return;
-    }
-
-    this.router.navigate( [ '/dashboard/users/add-new-user' ] );
+  protected async addUser(): Promise<void> {
+    await this.router.navigate( [ '/dashboard/users/add-new-user' ] );
   }
 
   /**
@@ -398,9 +326,6 @@ export class UsersListComponent implements OnInit, OnDestroy {
    */
   protected async viewUser( isView: boolean, user: User ): Promise<void> {
     try {
-      if ( !isView || !this.viewUserAvailable() ) {
-        throw new Error( 'Permission denied to view user.' );
-      }
 
       if ( !user || !user.username ) {
         throw new Error( 'Invalid user / username.' );
@@ -433,9 +358,6 @@ export class UsersListComponent implements OnInit, OnDestroy {
    */
   protected async editUser( isEdit: boolean, user: User ): Promise<void> {
     try {
-      if ( !isEdit || !this.updateUserAvailable() ) {
-        throw new Error( 'Permission denied to edit user.' );
-      }
 
       if ( !user || !user.username ) {
         throw new Error( 'Invalid user / username.' );

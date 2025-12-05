@@ -1,3 +1,4 @@
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -6,36 +7,35 @@ import {
   EventEmitter,
   Inject,
   Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   Output,
   PLATFORM_ID,
   Renderer2,
-  OnChanges, SimpleChanges, ViewChild
+  SimpleChanges, ViewChild
 } from '@angular/core';
+import { MatRippleModule } from '@angular/material/core';
+import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
+import { MatMenuTrigger } from '@angular/material/menu';
+import { DomSanitizer } from '@angular/platform-browser';
+import { Router } from '@angular/router';
+import { fromEvent, Observable, Subject, timer } from 'rxjs';
 import {
-  map,
-  takeUntil,
+  delayWhen,
   distinctUntilChanged,
-  startWith,
-  switchMap,
+  map,
   retryWhen,
   scan,
-  delayWhen,
+  startWith,
+  switchMap,
+  takeUntil,
 } from 'rxjs/operators';
-import { Observable, Subject, timer, fromEvent } from 'rxjs';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
-import { MatRippleModule } from '@angular/material/core';
-import { Router } from '@angular/router';
-import { type FullscreenMenuLink } from '../list-main-panel/list-main-panel.component';
-import { NotificationService, type Notification } from '../../services/notifications/notification-service';
-import { NotificationsRoutingService } from '../../services/notificationRouting/notifications-routing-service';
+import { APIsService, User } from '../../services/APIs/apis.service';
 import { AuthService } from '../../services/auth/auth.service';
-import { User } from '../../services/APIs/apis.service';
-import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
-import { APIsService } from '../../services/APIs/apis.service';
+import { NotificationsRoutingService } from '../../services/notificationRouting/notifications-routing-service';
+import { NotificationService, type Notification } from '../../services/notifications/notification-service';
+import { type FullscreenMenuLink } from '../list-main-panel/list-main-panel.component';
 import { UserInfoPanelComponent } from '../user-info-panel/user-info-panel.component';
 
 
@@ -326,7 +326,7 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
         { name: 'property-icon', icon: 'Images/Icons/property.svg' },
         { name: 'users-icon', icon: 'Images/Icons/users.svg' },
         { name: 'tenant-icon', icon: 'Images/Icons/tenant.svg' },
-        { name: 'agent-icon', icon: 'Images/Icons/agents.svg' },
+        { name: 'teams', icon: 'Images/Icons/agents.svg' },
         { name: 'report-icon', icon: 'Images/Icons/report.svg' },
         { name: 'owner-icon', icon: 'Images/Icons/owner.svg' },
         { name: 'payment-icon', icon: 'Images/Icons/payments.svg' },

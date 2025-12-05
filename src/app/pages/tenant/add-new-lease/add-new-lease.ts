@@ -739,38 +739,6 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ============================================================================
-  // 6. Permissions
-  // ============================================================================
-
-  private hasFullLeaseManagementPrivileges(): boolean {
-    const requiredModule = 'Lease Management';
-    const requiredActions: string[] = [
-      'view leases',
-      'create lease',
-      'update lease',
-      'terminate lease',
-      'renew lease',
-      'upload lease document',
-      'track lease expiry',
-    ];
-
-    const permissions: ROLE_ACCESS_MAP[ 'permissions' ] =
-      this.loggedUser?.access?.permissions ?? [];
-
-    const leasePermissions = permissions.find(
-      ( perm ) => perm.module.toLowerCase() === requiredModule.toLowerCase(),
-    );
-
-    if ( !leasePermissions ) {
-      return false;
-    }
-
-    return requiredActions.every( ( action ) =>
-      leasePermissions.actions.includes( action ),
-    );
-  }
-
-  // ============================================================================
   // 7. Icons (registration & mapping)
   // ============================================================================
 
@@ -2723,12 +2691,6 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
       if ( !this.leaseID ) {
         throw new Error( 'Failed to generate Lease ID!' );
-      }
-
-      if ( !this.hasFullLeaseManagementPrivileges() ) {
-        throw new Error(
-          "You don't have full lease management privileges!",
-        );
       }
 
       // --- Tenant information validations ---

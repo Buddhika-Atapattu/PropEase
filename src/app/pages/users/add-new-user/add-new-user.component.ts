@@ -80,17 +80,21 @@ import { TextEditorComponent } from '../../../components/shared/textEditor/text-
 import {
   APIsService,
   Country,
+  DEFAULT_ROLES,
   PermissionEntry,
   ROLE_ACCESS_MAP,
   type User,
 } from '../../../services/APIs/apis.service';
 import {
-  ACCESS_OPTIONS,
-  AccessMap,
-  AuthService,
-  DEFAULT_ROLE_ACCESS,
-  Role,
+  AuthService
 } from '../../../services/auth/auth.service';
+import { Role } from '../../../services/APIs/apis.service';
+import {
+  ACCESS_OPTIONS,
+  AccessModuleOption,
+  AccessModuleKey,
+  AccessActionKey,
+} from '../../../source/access-map.source';
 import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { UserControllerService } from '../../../services/userController/user-controller.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
@@ -98,9 +102,7 @@ import { WindowsRefService } from '../../../services/windowRef/windowRef.service
 // ──────────────────────────────────────────────────────────────────────────────
 // Local interfaces
 // ──────────────────────────────────────────────────────────────────────────────
-interface userAccessType {
-  access: string[];
-}
+
 
 interface userActiveStatusType {
   typeName: string;
@@ -150,7 +152,6 @@ interface MODEL_CHECK {
 } )
 export class AddNewUserComponent
   implements OnInit, OnDestroy, AfterViewInit {
-
   // ──────────────────────────────────────────────────────────────────────────
   // ViewChild references
   // ──────────────────────────────────────────────────────────────────────────
@@ -285,21 +286,17 @@ export class AddNewUserComponent
   // Access / roles
   // ──────────────────────────────────────────────────────────────────────────
 
-  protected accessOptions = ACCESS_OPTIONS;
+  /** Full access catalogue used by the template */
+  protected readonly accessOptions: ReadonlyArray<AccessModuleOption> = ACCESS_OPTIONS;
 
-  /** permissions selected from checkboxes UI */
-  protected selectedPermissions: {
-    [ module: string ]: { [ action: string ]: boolean; };
-  } = {};
+  /** Canonical permission catalogue – used for lookups (never mutated) */
+  protected readonly allPermissionAccesses: ReadonlyArray<AccessModuleOption> = ACCESS_OPTIONS;
 
-  /** true if entire module checkbox is “select all” */
-  protected allSelected: { [ module: string ]: boolean; } = {};
-
-  /** default role → access map */
-  protected autoSelectedRoleAccess: Record<Role, AccessMap> =
-    DEFAULT_ROLE_ACCESS;
-
-  protected userAccess: userAccessType[] = [];
+  /**
+   * Current selection of access for the chosen role.
+   * This is the ONLY source of truth we will send to backend.
+   */
+  private originalSelectionOfAccess: ROLE_ACCESS_MAP | null = null;
 
   // defined roles
   protected readonly definedRole: Role[] = [
@@ -325,6 +322,7 @@ export class AddNewUserComponent
     'Female',
     'Other',
   ];
+
 
   // ──────────────────────────────────────────────────────────────────────────
   // Constructor
@@ -416,32 +414,7 @@ export class AddNewUserComponent
     this.notification.notification( 'error', fallbackMessage );
   }
 
-  private hasPermissionAction( action: 'activate' | 'deactivate' | 'assign roles' ): boolean {
-    const user = this.loogedUser;
-    if ( !user?.access?.permissions ) return false;
 
-    return user.access.permissions.some(
-      ( permission ) =>
-        permission.module === 'User Management' &&
-        permission.actions.includes( action ),
-    );
-  }
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // Permission helpers (wrappers used by template)
-  // ──────────────────────────────────────────────────────────────────────────
-
-  protected isUserCanMakeUserActivate(): boolean {
-    return this.hasPermissionAction( 'activate' );
-  }
-
-  protected isUserCanMakeUserDeactivate(): boolean {
-    return this.hasPermissionAction( 'deactivate' );
-  }
-
-  protected isUserCanAssignUserRoles(): boolean {
-    return this.hasPermissionAction( 'assign roles' );
-  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // Icon registration
@@ -662,7 +635,10 @@ export class AddNewUserComponent
         this.router.navigate( [ '/dashboard/add-new-user' ] ),
       )
       .catch( ( err ) =>
-        this.notifyError( err, 'Failed to navigate to add new user.' ),
+        this.notifyError(
+          err,
+          'Failed to navigate to add new user.',
+        ),
       );
   }
 
@@ -743,19 +719,21 @@ export class AddNewUserComponent
 
   protected async checkUsername( event: Event ): Promise<void> {
     try {
-
       const input = event.target as HTMLInputElement;
       const value = input.value.trim();
 
-      this.usernameMatchPattern = this.usernamePattern.test( value );
-
-      if ( !this.usernameMatchPattern ) {
-        this.notification.notification( 'warning', 'Invalid username pattern!' );
-      }
-
-      const res = await this.apiService.getUserByUsername(
+      this.usernameMatchPattern = this.usernamePattern.test(
         value,
       );
+
+      if ( !this.usernameMatchPattern ) {
+        this.notification.notification(
+          'warning',
+          'Invalid username pattern!',
+        );
+      }
+
+      const res = await this.apiService.getUserByUsername( value );
 
       if ( res.status !== 'success' ) {
         throw new Error( 'Failed to fetch validation!' );
@@ -764,13 +742,14 @@ export class AddNewUserComponent
       const user = res.data?.system?.user;
 
       if ( user ) {
-        this.notification.notification( 'error', 'Username already exsited!' );
+        this.notification.notification(
+          'error',
+          'Username already exsited!',
+        );
       }
 
       this.isUsernameExist = !!user;
-
-    }
-    catch ( error ) {
+    } catch ( error ) {
       console.error( error );
     }
   }
@@ -778,7 +757,8 @@ export class AddNewUserComponent
   protected checkPassword( event: Event ): void {
     const input = event.target as HTMLInputElement;
     const password = input.value;
-    this.passwordMatchPattern = this.strongPasswordPattern.test( password );
+    this.passwordMatchPattern =
+      this.strongPasswordPattern.test( password );
   }
 
   protected async checkEmail( input: string ): Promise<void> {
@@ -789,7 +769,10 @@ export class AddNewUserComponent
         return;
       }
 
-      const checking: boolean = await this.emailValidator( input.trim(), 'User' );
+      const checking: boolean = await this.emailValidator(
+        input.trim(),
+        'User',
+      );
 
       if ( !checking ) {
         this.isEmailError = true;
@@ -797,20 +780,25 @@ export class AddNewUserComponent
         throw new Error( 'Invalid email' );
       }
 
-
-
       this.isEmailError = !checking;
-      this.emailErrorMessage = !checking ? 'Invalid email' : 'Valid email';
+      this.emailErrorMessage = !checking
+        ? 'Invalid email'
+        : 'Valid email';
 
       const res = await this.apiService.getUserByEmail( input );
 
       if ( res.status !== 'success' ) {
-        throw new Error( 'Failed to confirm is the email exist!' );
+        throw new Error(
+          'Failed to confirm is the email exist!',
+        );
       }
 
       const user: User | undefined = res.data?.system?.user;
 
-      const other = this.apiService.extractObjectFromOther<{ status: boolean; }>( res.data, 'other' );
+      const other =
+        this.apiService.extractObjectFromOther<{
+          status: boolean;
+        }>( res.data, 'other' );
       const status = other?.status;
 
       if ( user && status ) {
@@ -829,13 +817,18 @@ export class AddNewUserComponent
           error.error.message,
         );
       } else {
-        this.notification.notification( 'error', error as string );
+        this.notification.notification(
+          'error',
+          error as string,
+        );
       }
     }
   }
 
-
-  private async emailValidator( email: string, user: string ): Promise<boolean> {
+  private async emailValidator(
+    email: string,
+    user: string,
+  ): Promise<boolean> {
     try {
       const rowEmail = email.trim();
       const rowUser = user.trim();
@@ -852,23 +845,40 @@ export class AddNewUserComponent
       const isMatched = emailRegex.test( rowEmail );
 
       if ( !isMatched ) {
-        this.notification.notification( 'warning', 'Invalid email format!' );
+        this.notification.notification(
+          'warning',
+          'Invalid email format!',
+        );
         throw new Error( 'Invalid email format!' );
       }
 
-      const res = await this.userControlService.emailValidator( rowEmail );
+      const res =
+        await this.userControlService.emailValidator( rowEmail );
 
       if ( res.status !== 'success' ) {
-        this.notification.notification( 'error', `Failed to validate email of ${ rowUser }` );
-        throw new Error( `Failed to validate email of ${ rowUser }` );
+        this.notification.notification(
+          'error',
+          `Failed to validate email of ${ rowUser }`,
+        );
+        throw new Error(
+          `Failed to validate email of ${ rowUser }`,
+        );
       }
 
-      const validatedEmail = this.apiService.extractStringFromOther( res.data, 'email' );
-      const validationObj = this.apiService.extractObjectFromOther<{
-        format: boolean,
-        mx: boolean;
-      }>( res.data, 'validation' );
-      const domain = this.apiService.extractStringFromOther( res.data, 'domain' );
+      const validatedEmail =
+        this.apiService.extractStringFromOther(
+          res.data,
+          'email',
+        );
+      const validationObj =
+        this.apiService.extractObjectFromOther<{
+          format: boolean;
+          mx: boolean;
+        }>( res.data, 'validation' );
+      const domain = this.apiService.extractStringFromOther(
+        res.data,
+        'domain',
+      );
 
       if ( !validatedEmail ) {
         throw new Error( 'Invalid email!' );
@@ -879,27 +889,31 @@ export class AddNewUserComponent
       }
 
       if ( !validationObj?.format || !validationObj.mx ) {
-        this.notification.notification( 'error', `Please enter valid email address of ${ rowUser }` );
-        throw new Error( `Please enter valid email address of ${ rowUser }` );
+        this.notification.notification(
+          'error',
+          `Please enter valid email address of ${ rowUser }`,
+        );
+        throw new Error(
+          `Please enter valid email address of ${ rowUser }`,
+        );
       }
 
       return true;
-
-    }
-    catch ( error ) {
+    } catch ( error ) {
       console.error( error );
       return false;
     }
   }
 
-
   protected async checkPhone( input: string ): Promise<void> {
     try {
       const safeInput = input.trim();
-      const isValid = await this.userControlService.isPhoneNumberValid(
-        safeInput,
-      );
-      const isExistChecking = await this.apiService.getUserByPhone( safeInput );
+      const isValid =
+        await this.userControlService.isPhoneNumberValid(
+          safeInput,
+        );
+      const isExistChecking =
+        await this.apiService.getUserByPhone( safeInput );
 
       if ( isExistChecking.status === 'error' ) {
         if ( !isValid ) {
@@ -926,115 +940,239 @@ export class AddNewUserComponent
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Role access autocomplete helpers
+  // Role access helpers: role change, module toggle, action toggle
   // ──────────────────────────────────────────────────────────────────────────
 
+  /**
+   * 1) When role changes:
+   *    - validate role
+   *    - get default access map from AuthService
+   *    - build ROLE_ACCESS_MAP (all default actions pre-selected)
+   */
+  protected whileRoleChange( role: Role ): void {
+    try {
+      // Keep selected role in component state
+      this.role = role;
+
+      // Validate role against DEFAULT_ROLES (array, so use includes)
+      if ( !role || !DEFAULT_ROLES.includes( role ) ) {
+        this.notification.notification( 'warning', 'Invalid role selection!' );
+        this.originalSelectionOfAccess = null;
+        return;
+      }
+
+      // Default modules for this role
+      const defaultModules: ReadonlyArray<AccessModuleOption> =
+        this.authService.filterDefaultAccessBaseRole( role );
+
+      // Build canonical ROLE_ACCESS_MAP using ONLY ids from access map
+      const permissions: PermissionEntry[] = defaultModules.map(
+        ( mod ): PermissionEntry => ( {
+          module: mod.module as AccessModuleKey,
+          actions: mod.actions.map( ( a ) => a.id as AccessActionKey ),
+        } ),
+      );
+
+      this.originalSelectionOfAccess = {
+        role,
+        permissions,
+      };
+    } catch ( error ) {
+      console.error( error );
+      this.originalSelectionOfAccess = null;
+    }
+  }
+
+
+  /**
+   * Helper: check if a module is currently selected in originalSelectionOfAccess.
+   * Used by template:
+   *   [checked]="hasModel(mainItem.module)"
+   */
   protected hasModel( model: string ): boolean {
-    return (
-      this.role in this.autoSelectedRoleAccess &&
-      model in this.autoSelectedRoleAccess[ this.role as Role ]
+    if ( !this.originalSelectionOfAccess ) return false;
+
+    return this.originalSelectionOfAccess.permissions.some(
+      ( p ) => p.module.toLowerCase() === model.toLowerCase(),
     );
   }
 
-  protected hasAccess( access: string, model: string ): boolean {
-    if (
-      this.role in this.autoSelectedRoleAccess &&
-      model in this.autoSelectedRoleAccess[ this.role as Role ]
-    ) {
-      return this.autoSelectedRoleAccess[ this.role as Role ][ model ].includes(
-        access,
-      );
-    }
-    return false;
+
+  /**
+   * Helper: check if a concrete action (by id) is selected under a module.
+   * Used by template:
+   *   [checked]="hasAccess(subItem.id, mainItem.module)"
+   */
+  protected hasAccess( accessId: string, model: string ): boolean {
+    if ( !this.originalSelectionOfAccess ) return false;
+
+    const perm = this.originalSelectionOfAccess.permissions.find(
+      ( p ) => p.module.toLowerCase() === model.toLowerCase(),
+    );
+    if ( !perm ) return false;
+
+    return perm.actions.some(
+      ( a ) => a.toLowerCase() === accessId.toLowerCase(),
+    );
   }
 
+  /**
+   * 2) When a single action checkbox is toggled.
+   *    - We:
+   *        • validate role
+   *        • look up canonical module + action from allPermissionAccesses
+   *        • add/remove that action id from originalSelectionOfAccess
+   *    - If after removal, module has 0 actions, we also remove the module
+   *      (so the parent module checkbox will become unchecked).
+   */
   protected toggleAccess(
     isChecked: boolean,
     module: string,
-    action: string,
+    actionId: string, // this is subItem.id from template
   ): void {
-    if ( !( this.role in this.autoSelectedRoleAccess ) ) return;
-
-    const accessMap = this.autoSelectedRoleAccess[ this.role as Role ];
-
-    if ( isChecked ) {
-      if ( !accessMap[ module ] ) {
-        accessMap[ module ] = [];
-      }
-      if ( !accessMap[ module ].includes( action ) ) {
-        accessMap[ module ].push( action );
-      }
-    } else {
-      const index = accessMap[ module ]?.indexOf( action ) ?? -1;
-      if ( index !== -1 ) {
-        accessMap[ module ].splice( index, 1 );
-      }
-      if ( accessMap[ module ]?.length === 0 ) {
-        delete accessMap[ module ];
-      }
+    const safeRole = this.role as Role | undefined;
+    if ( !safeRole || !DEFAULT_ROLES.includes( safeRole ) ) {
+      return;
     }
-  }
 
-  protected toggleModule( isChecked: boolean, module: string ): void {
-    if ( !( this.role in this.autoSelectedRoleAccess ) ) return;
-
-    const accessMap = this.autoSelectedRoleAccess[ this.role as Role ];
-
-    if ( isChecked ) {
-      const fullActions =
-        ACCESS_OPTIONS.find( ( opt ) => opt.module === module )?.actions ||
-        [];
-      accessMap[ module ] = [ ...fullActions ];
-    } else {
-      delete accessMap[ module ];
-    }
-  }
-
-  protected setPermissionsByRole( role: Role ): void {
-    this.selectedPermissions = this.authService.getDefaultAccessByRole(
-      role,
+    // Find canonical module definition
+    const moduleDef = this.allPermissionAccesses.find(
+      ( m ) => m.module.toLowerCase() === module.toLowerCase(),
     );
-    this.updateAllSelectedStates();
-  }
+    if ( !moduleDef ) return;
 
-  protected updateAllSelectedStates(): void {
-    for ( const mod of this.accessOptions ) {
-      const allTrue = mod.actions.every(
-        ( act ) => this.selectedPermissions[ mod.module ]?.[ act ],
-      );
-      this.allSelected[ mod.module ] = allTrue;
+    // Find canonical action definition
+    const actionDef = moduleDef.actions.find(
+      ( a ) => a.id.toLowerCase() === actionId.toLowerCase(),
+    );
+    if ( !actionDef ) return;
+
+    // Lazily initialise our selection map if needed
+    if (
+      !this.originalSelectionOfAccess ||
+      this.originalSelectionOfAccess.role !== safeRole
+    ) {
+      this.originalSelectionOfAccess = {
+        role: safeRole,
+        permissions: [],
+      };
     }
-  }
 
-  protected toggleAllActions(
-    module: string,
-    isChecked: boolean,
-  ): void {
-    for ( const action in this.selectedPermissions[ module ] ) {
-      this.selectedPermissions[ module ][ action ] = isChecked;
+    const perms = this.originalSelectionOfAccess.permissions;
+
+    // Find or create the module entry
+    let moduleEntry = perms.find(
+      ( p ) =>
+        p.module.toLowerCase() === moduleDef.module.toLowerCase(),
+    );
+
+    if ( !moduleEntry ) {
+      moduleEntry = {
+        module: moduleDef.module as AccessModuleKey,
+        actions: [],
+      };
+      perms.push( moduleEntry );
     }
-    this.updateAllSelectedStates();
-  }
 
-  protected onPermissionChange(): void {
-    this.updateAllSelectedStates();
-  }
+    const actionKey = actionDef.id as AccessActionKey;
 
-  protected getRoleAccessPayload(): ROLE_ACCESS_MAP {
-    const role = this.role;
-    const permissions: PermissionEntry[] = [];
+    if ( isChecked ) {
+      // Add canonical action id if missing
+      if ( !moduleEntry.actions.includes( actionKey ) ) {
+        moduleEntry.actions.push( actionKey );
+      }
+    } else {
+      // Remove the action id
+      const idx = moduleEntry.actions.indexOf( actionKey );
+      if ( idx !== -1 ) {
+        moduleEntry.actions.splice( idx, 1 );
+      }
 
-    if ( role in this.autoSelectedRoleAccess ) {
-      const modules = this.autoSelectedRoleAccess[ role as Role ];
-
-      for ( const [ module, actions ] of Object.entries( modules ) ) {
-        if ( actions.length > 0 ) {
-          permissions.push( { module, actions } );
+      // If no actions left → remove module entry
+      if ( moduleEntry.actions.length === 0 ) {
+        const mIdx = perms.indexOf( moduleEntry );
+        if ( mIdx !== -1 ) {
+          perms.splice( mIdx, 1 );
         }
       }
     }
+  }
 
-    return { role, permissions };
+
+  /**
+   * 3) When the module “select all” checkbox is toggled.
+   *    - If checked → all actions in that module are selected
+   *    - If unchecked → whole module removed
+   */
+  protected toggleModule(
+    isChecked: boolean,
+    module: string,
+  ): void {
+    const safeRole = this.role as Role | undefined;
+    if ( !safeRole || !DEFAULT_ROLES.includes( safeRole ) ) {
+      return;
+    }
+
+    // Find canonical module definition
+    const moduleDef = this.allPermissionAccesses.find(
+      ( m ) => m.module.toLowerCase() === module.toLowerCase(),
+    );
+    if ( !moduleDef ) return;
+
+    // Lazily initialise selection map
+    if (
+      !this.originalSelectionOfAccess ||
+      this.originalSelectionOfAccess.role !== safeRole
+    ) {
+      this.originalSelectionOfAccess = {
+        role: safeRole,
+        permissions: [],
+      };
+    }
+
+    const perms = this.originalSelectionOfAccess.permissions;
+    const idx = perms.findIndex(
+      ( p ) => p.module.toLowerCase() === moduleDef.module.toLowerCase(),
+    );
+
+    if ( isChecked ) {
+      // All canonical action ids for this module
+      const allActionIds: AccessActionKey[] = moduleDef.actions.map(
+        ( a ) => a.id as AccessActionKey,
+      );
+
+      if ( idx === -1 ) {
+        perms.push( {
+          module: moduleDef.module as AccessModuleKey,
+          actions: allActionIds,
+        } );
+      } else {
+        perms[ idx ].actions = allActionIds;
+      }
+    } else {
+      // Remove entire module from permissions
+      if ( idx !== -1 ) {
+        perms.splice( idx, 1 );
+      }
+    }
+  }
+
+
+  /**
+   * Getter used by insertNewUser().
+   * If nothing was selected yet, returns an empty map for the current role.
+   */
+  protected getRoleAccessPayload(): ROLE_ACCESS_MAP {
+    const safeRole = this.role as Role;
+
+    if ( this.originalSelectionOfAccess && this.originalSelectionOfAccess.role === safeRole ) {
+      return this.originalSelectionOfAccess;
+    }
+
+    return {
+      role: safeRole,
+      permissions: [],
+    };
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -1044,26 +1182,23 @@ export class AddNewUserComponent
   protected async insertNewUser(): Promise<boolean> {
     try {
       // Permission check
-      if (
-        !this.isUserCanMakeUserActivate() &&
-        !this.isUserCanMakeUserDeactivate() &&
-        !this.isUserCanAssignUserRoles()
-      ) {
-        throw new Error(
-          'User does not have permission to perform the action.',
-        );
-      }
+
 
       // Required field checks (user info)
-      if ( !this.fullname ) throw new Error( 'User full name is required' );
+      if ( !this.fullname )
+        throw new Error( 'User full name is required' );
       if ( !this.userGender )
         throw new Error( 'User gender is required' );
-      if ( !this.email ) throw new Error( 'User email is required' );
-      if ( !this.phone ) throw new Error( 'User phone is required' );
+      if ( !this.email )
+        throw new Error( 'User email is required' );
+      if ( !this.phone )
+        throw new Error( 'User phone is required' );
       if ( !this.houseNumber )
         throw new Error( 'User house number is required' );
-      if ( !this.street ) throw new Error( 'User street is required' );
-      if ( !this.city ) throw new Error( 'User city is required' );
+      if ( !this.street )
+        throw new Error( 'User street is required' );
+      if ( !this.city )
+        throw new Error( 'User city is required' );
       if ( !this.postcode )
         throw new Error( 'User postcode is required' );
       if ( !this.countryControl.value )
@@ -1077,7 +1212,8 @@ export class AddNewUserComponent
         throw new Error( 'User active status is required' );
       if ( !this.userBio )
         throw new Error( 'User bio is required' );
-      if ( !this.role ) throw new Error( 'User role is required' );
+      if ( !this.role )
+        throw new Error( 'User role is required' );
 
       const roleAccess = this.getRoleAccessPayload();
       if ( !roleAccess || !roleAccess.permissions.length ) {
@@ -1097,13 +1233,19 @@ export class AddNewUserComponent
         throw new Error( 'Username already exist' );
       }
       if ( !this.passwordMatchPattern ) {
-        throw new Error( 'Password does not match the pattern' );
+        throw new Error(
+          'Password does not match the pattern',
+        );
       }
       if ( !this.usernameMatchPattern ) {
-        throw new Error( 'Username does not match the pattern' );
+        throw new Error(
+          'Username does not match the pattern',
+        );
       }
       if ( !this.isValidAge ) {
-        throw new Error( 'User does not fit the age criteria' );
+        throw new Error(
+          'User does not fit the age criteria',
+        );
       }
 
       if ( !this.userimage ) {
@@ -1184,6 +1326,8 @@ export class AddNewUserComponent
         JSON.stringify( { otpValidTime: oneMonth } ),
       );
 
+      formData.append( 'multiAuthEnabled', 'false' );
+
       formData.append( 'updatedAt', this.updatedAt.toString() );
       formData.append( 'createdAt', this.createdAt.toString() );
       formData.append(
@@ -1201,7 +1345,10 @@ export class AddNewUserComponent
     } catch ( error ) {
       console.error( error );
       if ( error instanceof Error ) {
-        this.notification?.notification( 'error', error.message );
+        this.notification?.notification(
+          'error',
+          error.message,
+        );
       } else {
         this.notifyError( error, 'Failed to create user.' );
       }

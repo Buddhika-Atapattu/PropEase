@@ -65,8 +65,6 @@ import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 import {
   APIsService,
   Country,
-  CountryDetails,
-  CountryDetailsCustomType,
   User,
 } from '../../../services/APIs/apis.service';
 import { AuthService } from '../../../services/auth/auth.service';
@@ -78,6 +76,8 @@ import {
   Property,
   PropertyService,
   propertyDocPreview,
+  CountryDetails,
+  CountryDetailsCustomType,
 } from '../../../services/property/property.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 
@@ -540,50 +540,6 @@ export class PropertyListingComponent
 
     this.modeSub?.unsubscribe();
     this.routeSub?.unsubscribe();
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // Permissions
-  // ─────────────────────────────────────────────────────────────
-
-  protected isUserCanAssignAgentToTheProperty(): boolean {
-    return (
-      this.loggedUser?.access.permissions.some(
-        ( permission ) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes( 'assign agent' ),
-      ) ?? false
-    );
-  }
-
-  protected isUserCanUploadDocumentsToTheProperty(): boolean {
-    return (
-      this.loggedUser?.access.permissions.some(
-        ( permission ) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes( 'upload documents' ),
-      ) ?? false
-    );
-  }
-
-  protected isUserCanManageAmenitiesToTheProperty(): boolean {
-    return (
-      this.loggedUser?.access.permissions.some(
-        ( permission ) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes( 'manage amenities' ),
-      ) ?? false
-    );
-  }
-
-  protected isUserCanChangeListingStatusOfTheProperty(): boolean {
-    return (
-      this.loggedUser?.access.permissions.some(
-        ( permission ) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes( 'change status' ),
-      ) ?? false
-    );
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -1343,14 +1299,6 @@ export class PropertyListingComponent
   protected async submit(): Promise<void> {
     try {
       // Permission guard
-      if (
-        !this.isUserCanAssignAgentToTheProperty() &&
-        !this.isUserCanUploadDocumentsToTheProperty() &&
-        !this.isUserCanManageAmenitiesToTheProperty() &&
-        !this.isUserCanChangeListingStatusOfTheProperty()
-      ) {
-        throw new Error( 'User does not have permission to perform this action.' );
-      }
 
       // Address
       const address: Address = {

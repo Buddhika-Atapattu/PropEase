@@ -206,6 +206,43 @@ export const routes: Routes = [
         ],
       },
 
+      {
+        path: 'team-management',
+        data: {title:'TEAM MANAGEMENT'},
+        loadComponent: ()=> import('./pages/team-management/team-management.component').then(m => m.TeamManagementComponent),
+        children:[
+          { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+
+          //dashboad
+          {
+            path:'dashboard',
+            data:{title: 'DASHBOARD'},
+            loadComponent: ()=> import('./pages/team-management/home/home.component').then(m => m.HomeComponent),
+          },
+
+          //create
+          {
+            path:'create',
+            data:{title: 'CREATE'},
+            loadComponent: ()=> import('./pages/team-management/create/create.component').then(m => m.CreateComponent),
+          },
+
+          //edit
+          {
+            path:'edit/:teamID',
+            data:{title: 'EDIT'},
+            loadComponent: ()=> import('./pages/team-management/edit/edit.component').then(m => m.EditComponent),
+          },
+
+          //view
+          {
+            path:'view/:teamID',
+            data:{title: 'VIEW'},
+            loadComponent: ()=> import('./pages/team-management/view/view.component').then(m => m.ViewComponent),
+          },
+        ]
+      },
+
       // NOTIFICATIONS (main branch; componentless parent)
       {
         path: 'notifications',

@@ -33,7 +33,7 @@ export class ImageService {
    *   https://api.propease.com
    * This is used to build full URLs to the /uploads folder.
    */
-  private readonly backendRoot: string = environment.apiOrigin;
+  private readonly backendRoot: string = environment.apiOrigin ?? 'http://localhost:3000';
 
   /**
    * List of MIME types our app treats as "supported image types".

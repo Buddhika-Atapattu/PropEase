@@ -14,7 +14,7 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root',
 } )
 export class UserControllerService {
-  private readonly root: string = environment.apiOrigin;
+  private readonly root: string = ( environment.apiOrigin ?? 'http://localhost:3000' ).replace( /\/+$/, '' );;
   constructor (
     private router: Router,
     private authService: AuthService,

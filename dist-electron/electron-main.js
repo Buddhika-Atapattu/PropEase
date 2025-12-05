@@ -40,6 +40,7 @@ const path = __importStar(require("path"));
 const USBScannerService_1 = require("./services/USBScannerService");
 const WIFIScannerService_1 = require("./services/WIFIScannerService");
 const child_process_1 = require("child_process");
+const environment_electron_1 = require("../src/environments/environment.electron");
 let cachedUSBDevices = [];
 let cachedWiFiScanners = [];
 const wifi = new WIFIScannerService_1.WIFIScannerService();
@@ -132,7 +133,7 @@ class ElectronApp {
             },
         });
         if (!electron_1.app.isPackaged) {
-            this.mainWindow.loadURL('http://localhost:4200');
+            this.mainWindow.loadURL(environment_electron_1.environment.localRoot);
             this.mainWindow.webContents.openDevTools();
         }
         else {

@@ -72,8 +72,6 @@ import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 import {
   APIsService,
   Country,
-  CountryDetails,
-  CountryDetailsCustomType,
   User,
 } from '../../../services/APIs/apis.service';
 import { AuthService } from '../../../services/auth/auth.service';
@@ -88,6 +86,8 @@ import {
   propertyDocPreview,
   propertyImages,
   BackEndPropertyData,
+  CountryDetails,
+  CountryDetailsCustomType,
 } from '../../../services/property/property.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 
@@ -567,50 +567,6 @@ export class EditPropertyListingComponent
     }
 
     this.modeSub?.unsubscribe();
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // Permissions / access helpers
-  // ─────────────────────────────────────────────────────────────
-
-  protected isUserCanAssignAgentToTheProperty(): boolean {
-    return (
-      this.loggedUser?.access.permissions.some(
-        ( permission ) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes( 'assign agent' ),
-      ) ?? false
-    );
-  }
-
-  protected isUserCanUploadDocumentsToTheProperty(): boolean {
-    return (
-      this.loggedUser?.access.permissions.some(
-        ( permission ) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes( 'upload documents' ),
-      ) ?? false
-    );
-  }
-
-  protected isUserCanManageAmenitiesToTheProperty(): boolean {
-    return (
-      this.loggedUser?.access.permissions.some(
-        ( permission ) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes( 'manage amenities' ),
-      ) ?? false
-    );
-  }
-
-  protected isUserCanChangeListingStatusOfTheProperty(): boolean {
-    return (
-      this.loggedUser?.access.permissions.some(
-        ( permission ) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes( 'change status' ),
-      ) ?? false
-    );
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -1690,15 +1646,6 @@ export class EditPropertyListingComponent
 
       const formData = new FormData();
 
-      // Permission checks
-      if (
-        !this.isUserCanAssignAgentToTheProperty() &&
-        !this.isUserCanUploadDocumentsToTheProperty() &&
-        !this.isUserCanManageAmenitiesToTheProperty() &&
-        !this.isUserCanChangeListingStatusOfTheProperty()
-      ) {
-        throw new Error( 'User does not have permission to perform the action.' );
-      }
 
       // Basic Property Details validation
       if ( !this.title ) throw new Error( 'Title is required!' );

@@ -18,6 +18,7 @@ import {
 } from '../../../services/property/property.service';
 import { NotificationDialogComponent } from '../notification/notificationBar.component';
 import { CloseBtnComponent } from '../../shared/buttons/close-btn/close-btn';
+import { environment } from '../../../../environments/environment';
 
 @Component( {
   selector: 'app-share',
@@ -36,6 +37,7 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
   protected property: BackEndPropertyData | null = null;
   protected link: string = '';
   protected isCopied: boolean = false;
+  private readonly localRoot: string = environment.localRoot;
   protected readonly socialMediaLinks = [
     {
       link: 'https://www.facebook.com/sharer/sharer.php?u=',
@@ -111,7 +113,7 @@ export class ShareComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   protected shareSocialMedia( type: string ): void {
-    const propertyUrl = `http://localhost:4200/dashboard/properties/property-view/${ this.property?.id }`; // update accordingly
+    const propertyUrl = `${this.localRoot}/dashboard/properties/property-view/${ this.property?.id }`; // update accordingly
 
     const text = `🏠 Check out this property listing!
 📍 Address: ${ this.property?.address?.houseNumber }, ${ this.property?.address?.street }, ${ this.property?.address?.city }, ${ this.property?.address?.stateOrProvince }, ${ this.property?.address?.country }, ${ this.property?.address?.postcode }

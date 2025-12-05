@@ -416,7 +416,7 @@ export class TenantService {
     //   ''                         -> same-origin (or via Angular dev proxy)
     //   'http://localhost:3000'    -> talk directly to local backend
     //   'https://api.propease.app' -> production API
-    const ORIGIN = ( environment.apiOrigin ?? '' ).replace( /\/+$/, '' );
+    const ORIGIN = ( environment.apiOrigin ?? 'http://localhost:3000' ).replace( /\/+$/, '' );;
 
     this.API_LEASE_ROOT = `${ ORIGIN }/api-lease`;
     this.API_TENANT_ROOT = `${ ORIGIN }/api-tenant`;

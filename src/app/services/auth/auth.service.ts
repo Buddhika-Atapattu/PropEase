@@ -1,38 +1,49 @@
 // src/app/services/auth/auth.service.ts
 // -----------------------------------------------------------------------------
 // AuthService
-// - Owns login/logout/session restore.
-// - Boots realtime stack ONCE per browser session:
-//     1) SocketService       (shared Socket.IO bus for chat/call/notifications)
-//     2) NotificationService (wires to shared socket, manages notification state)
 // -----------------------------------------------------------------------------
+// Responsibilities
+//   - Login / logout / session restore
+//   - Local persistence of:
+//       * sessionToken (JWT from backend)
+//       * encrypted logged user snapshot
+//       * "is user logged in" flag
+//   - Bootstraps realtime stack ONCE per browser session:
+//       1) SocketService       – shared Socket.IO bus for chat/call/notifications
+//       2) NotificationService – wires to shared socket, manages notification state
 //
-// Usage:
-//   await authService.sendVerifyUser();       // login
-//   await authService.getLocalLoggedUser();   // restore session on app start
-//   authService.clearCredentials();           // logout
-//
-// Exposed notification helpers (delegates to NotificationService):
-//   authService.notifications$
-//   authService.unreadNotifications$()
-//   authService.unreadNotificationsCount
-//   authService.markNotificationRead(id)
-//
-// Notes:
-// - SSR safe: guards with isPlatformBrowser.
-// - Token flow: reads and writes `auth_token` in localStorage.
-// - After login + restore: initializes SocketService + NotificationService once.
+// Token & Access Control (current vs. future)
+//   - CURRENT:
+//       * Uses role-based DEFAULTS as a FRONTEND FALLBACK map
+//         (used for quick UI gating, not security).
+//   - FUTURE (recommended):
+//       * Move ACCESS_OPTIONS + DEFAULT_ROLE_ACCESS to backend.
+//       * Backend issues JWT with role + permission claims.
+//       * Frontend reads from token / user.access to derive permissions.
+//       * This service becomes a thin consumer of backend rules.
 // -----------------------------------------------------------------------------
 
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
+
 import { CryptoService } from '../cryptoService/crypto.service';
-import { APIsService, type User } from '../APIs/apis.service';
+import { APIsService, User, Role, DEFAULT_ROLES, ROLE_ACCESS_MAP, PermissionEntry } from '../APIs/apis.service';
 import { ActivityTrackerService } from '../activityTacker/activity-tracker.service';
 import { NotificationService } from '../notifications/notification-service';
 import { SocketService } from '../socket/socket-service';
+import { AdminReportService } from '../adminReportService/admin-report.service';
+import {
+  ACCESS_OPTIONS,
+  AccessModuleOption,
+  AccessModuleKey,
+  AccessActionKey,
+} from '../../source/access-map.source';
+import { environment } from '../../../environments/environment';
 
-/* ==================== Types (unchanged) ==================== */
+/* ============================================================================
+ *  Types: User credentials & access model
+ * ========================================================================== */
 
 export interface UserCredentials {
   username: string;
@@ -49,442 +60,31 @@ export interface Address {
   stateOrProvince?: string;
 }
 
-export interface PermissionEntry {
-  module: string;
-  actions: string[];
-}
 
-export interface ROLE_ACCESS_MAP {
-  role: string;
-  permissions: PermissionEntry[];
-}
+/**
+ * Per-role default access config for FRONTEND FALLBACK:
+ *   moduleKey -> list of allowed action IDs
+ *
+ * This is derived from ACCESS_OPTIONS; can be mirrored to backend later.
+ */
+type DefaultRoleAccessConfig = Partial<
+  Record<AccessModuleKey, ReadonlyArray<AccessActionKey>>
+>;
 
-export type Role =
-  | 'admin'
-  | 'agent'
-  | 'tenant'
-  | 'owner'
-  | 'operator'
-  | 'manager'
-  | 'developer'
-  | 'user';
-
-export type AccessMap = { [ module: string ]: string[]; };
-
-// --- Access Catalog (standardized verb–object phrasing) ---
-export const ACCESS_OPTIONS: ReadonlyArray<{
-  module: string;
-  actions: ReadonlyArray<string>;
-}> = [
-    {
-      module: 'User Management',
-      actions: [
-        'view users',
-        'create user',
-        'update user',
-        'delete user',
-        'activate user',
-        'deactivate user',
-        'reset password',
-        'change username',
-        'assign roles',
-      ] as const,
-    },
-    {
-      module: 'Property Management',
-      actions: [
-        'view properties',
-        'create property',
-        'update property',
-        'delete property',
-        'assign agent',
-        'upload property documents',
-        'manage amenities',
-        'change property status',
-      ] as const,
-    },
-    {
-      module: 'Tenant Management',
-      actions: [
-        'view tenant profile',
-        'create tenant',
-        'update tenant',
-        'remove tenant',
-        'create lease',
-        'view lease',
-        'update lease',
-        'terminate lease',
-        'activate lease',
-        'renew lease',
-        'extend lease',
-        'assign tenant to unit',
-        'view lease history',
-        'send notification',
-        'send email',
-        'send sms',
-        'record manual payment',
-        'view payment history',
-        'upload payment proof',
-        'upload lease documents',
-        'view lease documents',
-        'download lease documents',
-        // Complaints (operator can edit per your rule)
-        'view complaint',
-        'create complaint',
-        'update complaint',
-        'delete complaint',
-        'submit complaint',
-        'view tenant activity',
-        'view tenant dashboard',
-      ] as const,
-    },
-    {
-      module: 'Team Management',
-      actions: [
-        'view teams',
-        'create team',
-        'update team',
-        'delete team',
-        'view team documents',
-        'assign member',
-        'promote member',
-        'demote member',
-        'reassign tasks',
-        'approve reports',
-        'monitor performance',
-        'generate team reports',
-        'invite member',
-        'remove member',
-        'manage shifts',
-        'allocate resources',
-        'audit team activity',
-        'schedule training',
-        'review feedback',
-        'set team goals',
-        'handle escalations',
-        'manage hierarchy',
-        'lock access',
-        'unlock access',
-        // New: for your operator requirement
-        'assign team to maintenance ticket',
-      ] as const,
-    },
-    {
-      module: 'Owner Management',
-      actions: [
-        'view owners',
-        'create owner',
-        'update owner',
-        'delete owner',
-        'view owner documents',
-        'assign owner to property',
-      ] as const,
-    },
-    {
-      module: 'Agent Management',
-      actions: [
-        'view agents',
-        'create agent',
-        'update agent',
-        'delete agent',
-        'assign properties',
-        'track performance',
-      ] as const,
-    },
-    {
-      module: 'Lease Management',
-      actions: [
-        'view leases',
-        'create lease',
-        'update lease',
-        'terminate lease',
-        'renew lease',
-        'upload lease document',
-        'track lease expiry',
-      ] as const,
-    },
-    {
-      module: 'Payment & Billing',
-      actions: [
-        'view payments',
-        'record manual payment',
-        'generate invoice',
-        'update invoice',
-        'delete invoice',
-        'view balance',
-        'export payment reports',
-        'configure rates',
-      ] as const,
-    },
-    {
-      module: 'Maintenance Requests',
-      actions: [
-        'view requests',
-        'create request',
-        'assign technician',
-        'assign maintenance team',
-        'update request status',
-        'close request',
-        'track progress',
-        'upload maintenance documents',
-        'add maintenance cost',
-        'generate maintenance report',
-      ] as const,
-    },
-    {
-      module: 'Compliance Management',
-      actions: [
-        'upload certificate',
-        'view compliance status',
-        'set compliance reminders',
-        'update compliance record',
-        'delete compliance record',
-        'notify parties',
-      ] as const,
-    },
-    {
-      module: 'Document Management',
-      actions: [
-        'upload document',
-        'download document',
-        'delete document',
-        'share document',
-        'categorize document',
-      ] as const,
-    },
-    {
-      module: 'Communication & Notification',
-      actions: [
-        'send message',
-        'view message logs',
-        'customize templates',
-        'schedule message',
-        'broadcast notification',
-      ] as const,
-    },
-    {
-      module: 'Report Management',
-      actions: [
-        'generate financial report',
-        'generate occupancy report',
-        'export lease report',
-        'customize report templates',
-        'view audit logs',
-        'download report',
-      ] as const,
-    },
-    {
-      module: 'Audit Logs',
-      actions: [
-        'view logs',
-        'filter logs',
-        'export logs',
-        'monitor logins',
-        'track role changes',
-      ] as const,
-    },
-    {
-      module: 'Dashboard & Analytics',
-      actions: [
-        'view analytics',
-        'customize widgets',
-        'download analytics',
-        'view realtime analytics',
-      ] as const,
-    },
-    {
-      module: 'System Settings',
-      actions: [
-        'manage roles',
-        'configure preferences',
-        'configure payments',
-        'manage integrations',
-        'backup and restore',
-      ] as const,
-    },
-    {
-      module: 'Support & Helpdesk',
-      actions: [
-        'view tickets',
-        'respond to ticket',
-        'assign support staff',
-        'close ticket',
-        'view ticket history',
-        'send satisfaction survey',
-      ] as const,
-    },
-    {
-      module: 'Access Control',
-      actions: [
-        'grant access',
-        'revoke access',
-        'set restrictions',
-        'control sessions',
-      ] as const,
-    },
-  ];
-
-export const DEFAULT_ROLE_ACCESS: Record<Role, AccessMap> = {
-  // Admin: everything (unchanged)
-  admin: Object.fromEntries( ACCESS_OPTIONS.map( ( m ) => [ m.module, [ ...m.actions ] ] ) ),
-
-  // Agent: focused on properties/tenants comms
-  agent: {
-    'Property Management': [
-      'view properties',
-      'update property',
-      'upload property documents',
-    ],
-    'Tenant Management': [
-      'view tenant profile',
-      'assign tenant to unit',
-      'send notification',
-      'send email',
-      'send sms',
-    ],
-    'Communication & Notification': [ 'send message', 'view message logs' ],
-    'Dashboard & Analytics': [ 'view analytics' ],
-  },
-
-  // Tenant: self-service
-  tenant: {
-    'Lease Management': [ 'view leases' ],
-    'Payment & Billing': [ 'view payments', 'view balance' ],
-    'Maintenance Requests': [ 'view requests', 'create request' ],
-    'Communication & Notification': [ 'view message logs' ],
-  },
-
-  // Owner: portfolio view + reports
-  owner: {
-    'Property Management': [ 'view properties' ],
-    'Tenant Management': [ 'view tenant profile', 'view lease' ],
-    'Report Management': [ 'generate financial report', 'download report' ],
-  },
-
-  // Operator: daily operations (key updates below)
-  operator: {
-    'User Management': [ 'view users', 'update user' ],
-    'Maintenance Requests': [
-      'view requests',
-      'create request',
-      'assign technician',
-      'assign maintenance team',
-      'update request status',
-      'close request',
-      'track progress',
-    ],
-    'Tenant Management': [
-      'view tenant profile',
-      'view complaint',
-      'create complaint',
-      'update complaint', // can edit complaints
-    ],
-    'Team Management': [
-      'view teams',
-      'assign team to maintenance ticket', // can route teams to tickets
-    ],
-    'Communication & Notification': [ 'send message', 'view message logs' ],
-    'Dashboard & Analytics': [ 'view analytics' ],
-  },
-
-  // Manager: ~half of admin (no deletes/security), with approvals/monitoring/reporting
-  manager: {
-    'User Management': [ 'view users', 'update user', 'assign roles' ],
-    'Property Management': [ 'view properties', 'assign agent', 'change property status' ],
-    'Lease Management': [
-      'view leases',
-      'create lease',
-      'update lease',
-      'terminate lease',
-      'renew lease',
-      'upload lease document',
-      'track lease expiry',
-    ],
-    'Tenant Management': [
-      'view tenant profile',
-      'create tenant',
-      'update tenant',
-      'remove tenant',
-      'create lease',
-      'view lease',
-      'update lease',
-      'terminate lease',
-      'activate lease',
-      'renew lease',
-      'extend lease',
-      'assign tenant to unit',
-      'view lease history',
-      'send notification',
-      'send email',
-      'send sms',
-      'record manual payment',
-      'view payment history',
-      'upload payment proof',
-      'upload lease documents',
-      'view lease documents',
-      'download lease documents',
-      // Complaints (operator can edit per your rule)
-      'view complaint',
-      'create complaint',
-      'update complaint',
-      'delete complaint',
-      'submit complaint',
-      'view tenant activity',
-      'view tenant dashboard',
-    ],
-    'Team Management': [
-      'view teams',
-      'approve reports',
-      'monitor performance',
-      'generate team reports',
-      'reassign tasks',
-      'review feedback',
-      'set team goals',
-      'handle escalations',
-    ],
-    'Maintenance Requests': [
-      'view requests',
-      'assign technician',
-      'update request status',
-      'close request',
-      'generate maintenance report',
-    ],
-    'Compliance Management': [
-      'view compliance status',
-      'update compliance record',
-      'set compliance reminders',
-    ],
-    'Report Management': [
-      'generate financial report',
-      'generate occupancy report',
-      'download report',
-    ],
-    'Audit Logs': [ 'view logs', 'filter logs' ],
-    'Dashboard & Analytics': [ 'view analytics', 'customize widgets' ],
-  },
-
-  // Developer: observability + integrations
-  developer: {
-    'System Settings': [ 'configure preferences', 'manage integrations' ],
-    'Dashboard & Analytics': [ 'customize widgets', 'view analytics' ],
-    'Audit Logs': [ 'view logs' ],
-  },
-
-  // General user
-  user: {
-    'Dashboard & Analytics': [ 'view analytics' ],
-    'Communication & Notification': [ 'view message logs' ],
-  },
-};
-
-/* ==================== Auth Service ==================== */
+/* ============================================================================
+ *  AuthService
+ * ========================================================================== */
 
 @Injectable( { providedIn: 'root' } )
 export class AuthService {
+  /** SSR flag – all browser-only code must check this first. */
   private readonly isBrowser: boolean;
 
+  /** Simple runtime flags. */
   private isLoggedIn = false;
   private rememberMe = false;
+
+  /** Raw credentials (last login attempt). */
   private username = '';
   private password = '';
   private user: UserCredentials = {
@@ -493,27 +93,62 @@ export class AuthService {
     rememberMe: false,
   };
 
+  /** Current session user state. */
   private loggedUser: User | null = null;
   private localUser: User | null = null;
   private isValidUser = false;
   private isUserActive = false;
+
+  /** Reserved for admin/operator features. */
   private users: User[] = [];
 
-  /** Ensure we boot the realtime layers once per session. */
+  /** Realtime bootstrap guard – initialise Sockets + Notifications once. */
   private notificationsInit = false;
+
+  /** LocalStorage keys centralised (avoid typos). */
+  private readonly STORAGE_KEYS = {
+    user: 'ENCRYPED_LOGGED_USER',
+    isLoggedIn: 'IS_USER_LOGGED_IN',
+    password: 'PASSWORD',
+    sessionToken: 'sessionToken',
+    guardToken: 'guardToken',
+  } as const;
+
+
+  /**
+   * Cached: for each Role, which MODULE definitions are visible in the UI.
+   *   {
+   *     admin:   AccessModuleOption[],
+   *     agent:   AccessModuleOption[],
+   *     ...
+   *   }
+   */
+  private readonly defaultRoleModulesMap: Record<
+    Role,
+    ReadonlyArray<AccessModuleOption>
+  >;
 
   constructor (
     @Inject( PLATFORM_ID ) platformId: Object,
     private readonly cryptoService: CryptoService,
-    private readonly APIs: APIsService,
+    private readonly apiService: APIsService,
     private readonly activityTrackerService: ActivityTrackerService,
     private readonly notificationService: NotificationService,
     private readonly socketService: SocketService,
+    private readonly router: Router,
+    private readonly adminReportService: AdminReportService,
   ) {
     this.isBrowser = isPlatformBrowser( platformId );
+
+    // Precompute which MODULES each role can see in the UI.
+    const map = {} as Record<Role, ReadonlyArray<AccessModuleOption>>;
+    for ( const role of DEFAULT_ROLES ) {
+      map[ role ] = this.filterDefaultAccessBaseRole( role );
+    }
+    this.defaultRoleModulesMap = map;
   }
 
-  /* ---------- Delegates: Notification convenience ---------- */
+  /* ───────────────────── Notification delegates ───────────────────── */
 
   get notifications$() {
     return this.notificationService.items$;
@@ -531,7 +166,7 @@ export class AuthService {
     return this.notificationService.markRead( notificationId );
   }
 
-  /* ---------- Getters / Setters ---------- */
+  /* ───────────────────── Getters / Setters ───────────────────────── */
 
   get getUserCredentials(): UserCredentials | null {
     return this.user ?? null;
@@ -561,10 +196,11 @@ export class AuthService {
     return this.isLoggedIn;
   }
 
+
   set loginUserCredentials( user: UserCredentials ) {
     this.username = user.username;
     this.password = user.password;
-    this.rememberMe = user.rememberMe || false;
+    this.rememberMe = user.rememberMe ?? false;
     this.user = user;
   }
 
@@ -580,51 +216,95 @@ export class AuthService {
     this.user = user;
   }
 
-  /* ---------- Login flow ---------- */
+  /* ============================================================================
+   *  Login flow
+   * ========================================================================== */
 
+  /**
+   * Main login entry.
+   *  - Calls backend `verifyUser`
+   *  - Stores token in localStorage
+   *  - Persists encrypted user snapshot
+   *  - Boots realtime stack
+   */
   public async sendVerifyUser(): Promise<boolean> {
     try {
-      const response = await this.APIs.verifyUser( this.user );
-      if ( response?.status !== 'success' ) {
-        throw new Error( 'Invalid credentials!' );
+      if ( !this.user?.username || !this.user?.password ) {
+        throw new Error( 'Login data is missing. Please provide username & password.' );
       }
 
-      const user: User | undefined = response.data?.system?.user as User;
+      const payload = {
+        username: this.user.username,
+        password: this.user.password,
+      };
+
+      const response = await this.apiService.login( payload );
+
+
+      if ( !response || response.status !== 'success' ) {
+        throw new Error( 'Invalid credentials or login failed.' );
+      }
+
+      const user: User | undefined = response.data?.system?.user;
       if ( !user ) {
-        throw new Error( 'User not found!' );
+        throw new Error( 'User payload is missing in login response.' );
       }
 
-      // Store state
+      // Store in-memory state
       this.setLoggedUser = user;
-      this.localUser = user; // ensure persistence methods see the same user
+      this.localUser = user;
       this.isUserLoggedIn = true;
       this.isValidUser = true;
       this.isUserActive = !!user.isActive;
 
-      // Persist JWT (server may also return via APIsService)
-      const token =
-        ( response as any )?.token ??
-        ( this.APIs as any )?.token ??
-        ( this.isBrowser ? localStorage.getItem( 'auth_token' ) : null );
+      // Extract & persist tokens
+      const sessionToken = this.apiService.extractStringFromOther(
+        response.data,
+        'sessionToken',
+      );
 
-      if ( this.isBrowser && token ) {
-        localStorage.setItem( 'auth_token', token );
+      const guardToken = this.apiService.extractStringFromOther(
+        response.data,
+        'guardToken',
+      );
+
+
+      if ( !sessionToken || !guardToken ) {
+        throw new Error( 'Auth tokens are missing in login response.' );
       }
 
-      // Boot realtime layers (SocketService + NotificationService)
+
+      this.writeTokenToStorage( sessionToken, guardToken );
+
+      // Boot realtime layers
       this.initRealtimeIfNeeded();
 
-      return true;
+      // Persist encrypted snapshot (user + password)
+      await this.afterUserLoggedInOperatios();
+
+      // Final guard on isActive
+      await this.finalInitialGuard( user );
+
+      const isActive = response.data?.system?.user?.isActive;
+      return !!isActive;
     } catch ( error ) {
-      console.error( '[sendVerifyUser]', error );
+      console.error( '[AuthService.sendVerifyUser] Login failed', error );
+      this.clearCredentials();
       return false;
     }
   }
 
-  /* ---------- Validate payload type helper ---------- */
+  /* ============================================================================
+   *  Type guards
+   * ========================================================================== */
 
-  public isUsersType( data: any ): data is User[] | User {
-    const isOne = ( item: any ) =>
+  /**
+   * Runtime type guard for User / User[]
+   *  - Used where backend returns untyped data.
+   *  - Keep this in sync with `User` interface in APIsService.
+   */
+  public isUsersType( data: unknown ): data is User[] | User {
+    const isOne = ( item: any ): boolean =>
       item &&
       typeof item.name === 'string' &&
       typeof item.username === 'string' &&
@@ -637,16 +317,7 @@ export class AuthService {
       ( typeof item.phoneNumber === 'string' ||
         typeof item.phoneNumber === 'undefined' ) &&
       typeof item.bio === 'string' &&
-      [
-        'admin',
-        'agent',
-        'tenant',
-        'owner',
-        'operator',
-        'manager',
-        'developer',
-        'user',
-      ].includes( item.role ) &&
+      DEFAULT_ROLES.includes( item.role as Role ) &&
       typeof item.gender === 'string' &&
       item.address &&
       typeof item.address === 'object' &&
@@ -681,200 +352,570 @@ export class AuthService {
     return Array.isArray( data ) ? data.every( isOne ) : isOne( data );
   }
 
-  /* ---------- Admin-only helper ---------- */
+  /* ============================================================================
+   *  Admin-only helper
+   * ========================================================================== */
 
-  public async sendUserCredentialsAndGetUserData( role: string ): Promise<boolean> {
-    if ( !this.isBrowser ) return false;
 
-    try {
-      const canSaveAllUsers = [ 'admin', 'operator' ].includes( role );
-      if ( !canSaveAllUsers ) {
-        throw new Error( 'User is not admin or operator' );
-      }
 
-      const users = await this.APIs.getAllUsers();
-      if ( !users ) {
-        throw new Error( 'Users are not fetched' );
-      }
+  /* ============================================================================
+   *  Post-login persistence
+   * ========================================================================== */
 
-      const encryptedUsers = await this.cryptoService.encrypt( users );
-      if ( !encryptedUsers ) {
-        throw new Error( 'Users are not encrypted' );
-      }
-
-      localStorage.setItem( 'USERS', encryptedUsers );
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /* ---------- Post-login persistence ---------- */
-
+  /**
+   * Persist encrypted user snapshot + password into localStorage.
+   *  This is called after successful login.
+   */
   public async afterUserLoggedInOperatios(): Promise<void> {
-    if ( !this.isBrowser ) return;
+    if ( !this.isBrowser ) {
+      return;
+    }
 
-    // Use localUser if available, otherwise fall back to loggedUser
     const baseUser = this.localUser ?? this.loggedUser;
 
-    if ( this.isValidUser && baseUser ) {
+    if ( !this.isValidUser || !baseUser ) {
+      return;
+    }
+
+    try {
       const encryptedUser = await this.cryptoService.encrypt( baseUser );
-      const encryptedPassword = await this.cryptoService.encrypt( this.password );
+      const encryptedPassword = await this.cryptoService.encrypt(
+        this.password,
+      );
 
       if ( encryptedUser && encryptedPassword ) {
-        // (kept original key spelling)
-        localStorage.setItem( 'ENCRYPED_LOGGED_USER', encryptedUser );
-        localStorage.setItem( 'IS_USER_LOGGED_IN', 'true' );
-        localStorage.setItem( 'PASSWORD', encryptedPassword );
+        localStorage.setItem( this.STORAGE_KEYS.user, encryptedUser );
+        localStorage.setItem( this.STORAGE_KEYS.isLoggedIn, 'true' );
+        localStorage.setItem(
+          this.STORAGE_KEYS.password,
+          encryptedPassword,
+        );
       }
+    } catch ( error ) {
+      console.error(
+        '[AuthService.afterUserLoggedInOperatios]',
+        error,
+      );
     }
   }
 
-  /* ---------- Session restore on app start ---------- */
+  /* ============================================================================
+   *  Session restore (app bootstrap)
+   * ========================================================================== */
 
+  /**
+   * Restore logged user from encrypted localStorage snapshot.
+   *  - Also boots realtime stack if data is valid.
+   */
   public async getLocalLoggedUser(): Promise<User | null> {
-    if ( !this.isBrowser ) return null;
+    if ( !this.isBrowser ) {
+      return null;
+    }
 
-    const encrypted = localStorage.getItem( 'ENCRYPED_LOGGED_USER' );
-    if ( !encrypted ) return null;
+    const encrypted = localStorage.getItem( this.STORAGE_KEYS.user );
+    if ( !encrypted ) {
+      return null;
+    }
 
     try {
-      const decryptedUser = ( await this.cryptoService.decrypt( encrypted ) ) as User;
+      const decryptedUser = ( await this.cryptoService.decrypt(
+        encrypted,
+      ) ) as User;
       this.localUser = decryptedUser;
       this.loggedUser = decryptedUser;
       this.isUserActive = !!decryptedUser.isActive;
       this.isValidUser = true;
       this.isLoggedIn = true;
 
-      // Boot realtime on session restore as well
+      // Boot realtime on restore
       this.initRealtimeIfNeeded();
 
       return decryptedUser;
-    } catch ( e ) {
-      console.error( '[getLocalLoggedUser] decrypt failed', e );
+    } catch ( error ) {
+      console.error(
+        '[AuthService.getLocalLoggedUser] decrypt failed',
+        error,
+      );
       return null;
     }
   }
 
-  /* ---------- Activity tracker ---------- */
+  /* ============================================================================
+   *  Activity tracker
+   * ========================================================================== */
 
   public async insertLoggedUserTracks(): Promise<void> {
-    const date = new Date();
-    const data = { username: this.user?.username, date };
-    await this.activityTrackerService
-      .saveLoggedUserDataToTracking( data )
-      .catch( ( error ) => {
-        console.error( error );
-      } );
+    try {
+      const date = new Date();
+      const data = { username: this.user?.username, date };
+      await this.activityTrackerService.saveLoggedUserDataToTracking(
+        data,
+      );
+    } catch ( error ) {
+      console.error(
+        '[AuthService.insertLoggedUserTracks]',
+        error,
+      );
+    }
   }
 
-  /* ==================== Realtime bootstrap ==================== */
+  /* ============================================================================
+   *  Realtime bootstrap (Sockets + Notifications)
+   * ========================================================================== */
 
   /**
-   * Build a backend base URL (prefers APIsService config; falls back to same-origin).
+   * Resolve backend HTTP base from APIsService or window.location.
+   *  - If you later centralise environment config, plug it here.
    */
   private resolveApiBase(): string {
-    if ( !this.isBrowser ) return '';
+    if ( !this.isBrowser ) {
+      return '';
+    }
 
-    const anyAPIs = this.APIs as any;
+    const anyAPIs = this.apiService as any;
+
     const base =
       anyAPIs.apiBase ??
       anyAPIs.baseUrl ??
       anyAPIs.API_BASE ??
-      window.location.origin;
+      environment.apiOrigin;
 
     return String( base ).replace( /\/+$/, '' );
   }
 
   /**
-   * Initialize:
-   *  - SocketService (shared Socket.IO bus for chat/calls/notifications)
-   *  - NotificationService (wires to shared socket, REST base)
-   *
-   * Runs once per session (guarded by `notificationsInit`).
+   * Initialise Socket.IO bus + NotificationService.
+   *  - Idempotent: runs ONCE per browser session (notificationsInit flag).
    */
   private initRealtimeIfNeeded(): void {
-    if ( !this.isBrowser || this.notificationsInit ) return;
+    try {
+      if ( !this.isBrowser || this.notificationsInit ) {
+        return;
+      }
 
-    const token =
-      ( this.APIs as any )?.token ||
-      ( this.isBrowser ? localStorage.getItem( 'auth_token' ) : null );
+      const tokenFromService = ( this.apiService as any )?.token;
+      const tokenFromStorage = this.readTokenFromStorage();
+      const token = tokenFromService ?? tokenFromStorage;
 
-    if ( !token ) {
-      console.warn( '[AuthService] initRealtimeIfNeeded: no token found, skipping realtime init' );
+      if ( !token ) {
+        throw new Error(
+          '[AuthService] initRealtimeIfNeeded: no token found, skipping realtime init',
+        );
+      }
+
+      const apiBase = this.resolveApiBase();
+      if ( !apiBase ) {
+        throw new Error(
+          '[AuthService] initRealtimeIfNeeded: no apiBase, skipping realtime init',
+        );
+      }
+
+      const wsBase = apiBase;
+
+      const tokenProvider = (): string =>
+        this.readTokenFromStorage()?.session ?? '';
+
+      this.socketService.init( { wsBase, token, tokenProvider } );
+
+      this.notificationService.initConnection( {
+        wsBase,
+        token,
+        tokenProvider,
+      } );
+
+      this.notificationService
+        .load( { limit: 20 } )
+        .catch( ( err ) =>
+          console.warn(
+            '[AuthService] initial notification load failed',
+            err,
+          ),
+        );
+
+      this.notificationsInit = true;
+    } catch ( error ) {
+      console.error( '[Failed to initialise notification:] ', error );
       return;
     }
+  }
 
-    const apiBase = this.resolveApiBase();
-    if ( !apiBase ) {
-      console.warn( '[AuthService] initRealtimeIfNeeded: no apiBase, skipping realtime init' );
+  /* ============================================================================
+   *  Cleanup (logout)
+   * ========================================================================== */
+
+  /**
+   * Full logout:
+   *  - Clears in-memory auth state
+   *  - Clears encrypted snapshot & flags from localStorage
+   *  - Disconnects realtime layers
+   *
+   * NOTE:
+   *  By default we also clear sessionToken and guardToken here. If you ever implement
+   *  backend-side blacklisting / revocation, you might adjust this.
+   */
+  public async clearCredentials(): Promise<void> {
+    const failures: string[] = [];
+
+    try {
+
+      if ( !this.loggedUser ) {
+        throw new Error( 'Logout failed due to the invalid user data!' );
+      }
+
+      const res = await this.apiService.logout();
+
+      if ( !res.success || res.status !== 'success' ) {
+        throw new Error( 'Failed to logout properly!' );
+      }
+
+      if ( this.isBrowser ) {
+        // 1) Attempt removals
+        localStorage.removeItem( this.STORAGE_KEYS.user );
+        localStorage.removeItem( this.STORAGE_KEYS.isLoggedIn );
+        localStorage.removeItem( this.STORAGE_KEYS.password );
+        localStorage.removeItem( this.STORAGE_KEYS.sessionToken );
+        localStorage.removeItem( this.STORAGE_KEYS.guardToken );
+
+        // 2) Validate each key and report anomalies
+
+        // 2.1 User object
+        const storedUser = localStorage.getItem( this.STORAGE_KEYS.user );
+        if ( storedUser !== null ) {
+          await this.adminReportService.reportCleanUser(
+            this.localUser?.username ??
+            this.loggedUser?.username ??
+            '',
+          );
+          failures.push( 'user' );
+        }
+
+        // 2.2 Login status flag
+        const storedLogin = localStorage.getItem(
+          this.STORAGE_KEYS.isLoggedIn,
+        );
+        if ( storedLogin !== null ) {
+          const actualStatus: boolean = storedLogin === 'true';
+          await this.adminReportService.reportLoginStatusFailure(
+            this.localUser?.username ??
+            this.loggedUser?.username ??
+            '',
+            false, // expected: logged out
+            actualStatus, // actual value in storage
+          );
+          failures.push( 'loginStatus' );
+        }
+
+        // 2.3 Password snapshot
+        const storedPassword = localStorage.getItem(
+          this.STORAGE_KEYS.password,
+        );
+        if ( storedPassword !== null ) {
+          await this.adminReportService.reportCleanPassword(
+            this.localUser?.username ??
+            this.loggedUser?.username ??
+            '',
+          );
+          failures.push( 'password' );
+        }
+
+        // 2.4 Token
+        const storedSessionToken = localStorage.getItem( this.STORAGE_KEYS.sessionToken );
+        const storedGuardToken = localStorage.getItem( this.STORAGE_KEYS.guardToken );
+        if ( storedSessionToken !== null ) {
+          await this.adminReportService.reportCleanToken(
+            this.loggedUser?.username ??
+            this.localUser?.username ??
+            '',
+          );
+          failures.push( 'token' );
+        }
+      }
+
+      // 3) Always clear in-memory state (even if storage ops misbehave)
+      this.user = { username: '', password: '', rememberMe: false };
+      this.isLoggedIn = false;
+      this.isValidUser = false;
+      this.isUserActive = false;
+      this.setLoggedUser = null;
+      this.localUser = null;
+
+      this.notificationService.disconnect();
+      this.socketService.disconnect();
+      this.notificationsInit = false;
+
+      if ( failures.length > 0 ) {
+        console.error(
+          '[AuthService.clearCredentials] Storage cleanup anomalies:',
+          failures.join( ', ' ),
+        );
+      }
+    } catch ( error ) {
+      console.error(
+        '[AuthService.clearCredentials] Failed to revoke user login:',
+        error,
+      );
+      // no rethrow — logout is best-effort
       return;
     }
-
-    // Point WS base to backend host (NOT Angular dev server)
-    const wsBase = apiBase;
-
-    // Token provider for refresh if server requests it
-    const tokenProvider = () =>
-      ( this.isBrowser ? localStorage.getItem( 'auth_token' ) : '' ) || '';
-
-    // 1) Shared realtime bus (for chat/calls/etc + notifications)
-    this.socketService.init( { wsBase, token, tokenProvider } );
-
-    // 2) Notification service: configure REST base + wire to shared socket
-    this.notificationService.initConnection( { apiBase, wsBase, token, tokenProvider } );
-
-    // 3) Initial notification snapshot via REST (fallback + initial state)
-    this.notificationService
-      .load( { limit: 20 } )
-      .catch( ( err ) => console.warn( '[AuthService] initial notification load failed', err ) );
-
-    this.notificationsInit = true;
   }
 
-  /* ==================== Cleanup (logout) ==================== */
+  /* ============================================================================
+   *  Guards & access helpers
+   * ========================================================================== */
 
-  /** Clears session and disconnects realtime. Call on logout. */
-  public clearCredentials(): void {
-    this.user = { username: '', password: '', rememberMe: false };
-    this.isLoggedIn = false;
-    this.isValidUser = false;
-    this.isUserActive = false;
-    this.setLoggedUser = null;
-    this.localUser = null;
+  /**
+   * Final guard immediately after login:
+   *  - Ensures `user.isActive === true`
+   *  - On failure clears state and routes to root.
+   */
+  private async finalInitialGuard( user: User ): Promise<void> {
+    try {
+      if ( !user ) {
+        throw new Error(
+          'Invalid login data, please try again later.',
+        );
+      }
 
-    // Optional: clear persisted user snapshot (kept original keys)
-    if ( this.isBrowser ) {
-      localStorage.removeItem( 'ENCRYPED_LOGGED_USER' );
-      localStorage.removeItem( 'IS_USER_LOGGED_IN' );
-      localStorage.removeItem( 'PASSWORD' );
-      // If you want to fully logout from backend token as well, uncomment:
-      // localStorage.removeItem('auth_token');
+      const isActive: boolean = !!user.isActive;
+
+      if ( !isActive ) {
+        throw new Error(
+          'Login privileges are denied – user is inactive.',
+        );
+      }
+
+      return;
+    } catch ( error ) {
+      console.error( '[AuthService.finalInitialGuard] Failed', error );
+      await this.clearCredentials();
+      this.router.navigate( [ '/' ] );
+      return;
+    }
+  }
+
+  /**
+   * filterModules
+   * -------------
+   * If no modules are passed → return ALL modules from ACCESS_OPTIONS.
+   * If a list is provided → return only those modules.
+   */
+  public filterModules(
+    modules?: AccessModuleKey[],
+  ): ReadonlyArray<AccessModuleOption> {
+    if ( !Array.isArray( modules ) || modules.length === 0 ) {
+      return ACCESS_OPTIONS;
     }
 
-    // Disconnect realtime layers
-    this.notificationService.disconnect();
-    this.socketService.disconnect();
-    this.notificationsInit = false;
+    const wanted = new Set<AccessModuleKey>( modules );
+    return ACCESS_OPTIONS.filter( ( m ) =>
+      wanted.has( m.module as AccessModuleKey ),
+    );
   }
 
-  /** ================== Helper Common Methods =================== */
+  /**
+   * filterDefaultAccessBaseRole
+   * ---------------------------
+   * Frontend helper to decide which MODULES a given role can see
+   * in the Access UI (checkbox tree, etc.).
+   *
+   * NOTE:
+   *  - This returns module *definitions* (AccessModuleOption[]),
+   *    not PermissionEntry[]. You’ll still choose which actions
+   *    inside each module to tick for that role in the UI.
+   */
+  public filterDefaultAccessBaseRole(
+    role: Role,
+  ): ReadonlyArray<AccessModuleOption> {
+    switch ( role ) {
+      // Full system visibility
+      case 'admin': {
+        return this.filterModules();
+      }
 
-  public getDefaultAccessByRole( role: Role ): Record<string, Record<string, boolean>> {
-    const allowed = DEFAULT_ROLE_ACCESS[ role ] ?? {};
-    const result: Record<string, Record<string, boolean>> = {};
+      // Typical agent: property + tenant + notifications
+      case 'agent': {
+        const permitModules: AccessModuleKey[] = [
+          'PropertyManagement',
+          'TenantManagement',
+          'NotificationCenter',
+        ];
+        return this.filterModules( permitModules );
+      }
 
-    for ( const { module, actions } of ACCESS_OPTIONS ) {
-      result[ module ] = {};
-      for ( const action of actions ) {
-        result[ module ][ action ] = allowed[ module ]?.includes( action ) ?? false;
+      // Manager: more oversight – user mgmt + tracking
+      case 'manager': {
+        const permitModules: AccessModuleKey[] = [
+          'UserManagement',
+          'PropertyManagement',
+          'TenantManagement',
+          'NotificationCenter',
+          'TrackingAndAudit',
+        ];
+        return this.filterModules( permitModules );
+      }
+
+      // Operator: similar to manager but maybe without some system-level stuff
+      case 'operator': {
+        const permitModules: AccessModuleKey[] = [
+          'UserManagement',
+          'PropertyManagement',
+          'TenantManagement',
+          'NotificationCenter',
+        ];
+        return this.filterModules( permitModules );
+      }
+
+      // Default (tenant / basic user / unknown role):
+      // only tenant & notifications
+      default: {
+        const permitModules: AccessModuleKey[] = [
+          'TenantManagement',
+          'NotificationCenter',
+        ];
+        return this.filterModules( permitModules );
       }
     }
-
-    return result;
   }
 
+  /**
+   * Build the per-role default access CONFIG for FRONTEND:
+   *   moduleKey -> list of allowed action IDs
+   *
+   * Currently: grants ALL actions in each visible module.
+   * If later you want per-action differences per role, customise here.
+   */
+  private buildDefaultRoleAccessConfig(
+    role: Role,
+  ): DefaultRoleAccessConfig {
+    const visibleModules = this.filterDefaultAccessBaseRole( role );
+    const config: DefaultRoleAccessConfig = {};
+
+    for ( const { module, actions } of visibleModules ) {
+      const moduleKey = module as AccessModuleKey;
+      const actionIds = actions.map(
+        ( action ) => action.id as AccessActionKey,
+      );
+      config[ moduleKey ] = actionIds;
+    }
+
+    return config;
+  }
+
+  /**
+   * Publish the per-role visible MODULE definitions for UI:
+   * {
+   *   admin:   [AccessModuleOption, ...],
+   *   agent:   [...],
+   *   ...
+   * }
+   */
+  public publishDefaultRoleAccessMap(): Record<
+    Role,
+    ReadonlyArray<AccessModuleOption>
+  > {
+    return this.defaultRoleModulesMap;
+  }
+
+  /**
+   * FRONTEND helper: build boolean matrix from per-role default config.
+   *  - PURELY for UI gating (buttons, menus).
+   *  - REAL security must be enforced on backend (guards + DB).
+   *
+   * Returns (example):
+   * {
+   *   UserManagement: {
+   *     view:   true/false,
+   *     create: true/false,
+   *     ...
+   *   },
+   *   PropertyManagement: { ... },
+   *   ...
+   * }
+   */
+  public getDefaultAccessByRole(
+    role: Role,
+  ): Record<AccessModuleKey, Record<AccessActionKey, boolean>> {
+    const allowedForRole: DefaultRoleAccessConfig =
+      this.buildDefaultRoleAccessConfig( role );
+
+    const matrix: Record<
+      AccessModuleKey,
+      Record<AccessActionKey, boolean>
+    > = {} as Record<
+      AccessModuleKey,
+      Record<AccessActionKey, boolean>
+    >;
+
+    // Walk the canonical access matrix (ACCESS_OPTIONS is the source-of-truth)
+    for ( const { module, actions } of ACCESS_OPTIONS ) {
+      const moduleKey = module as AccessModuleKey;
+
+      // From defaults: list of allowed action IDs for this module
+      const allowedActionsForModule: readonly AccessActionKey[] =
+        allowedForRole[ moduleKey ] ?? [];
+
+      const flags: Record<AccessActionKey, boolean> =
+        {} as Record<AccessActionKey, boolean>;
+
+      // Each `action` is AccessActionOption → use `action.id`
+      for ( const { id } of actions ) {
+        const actionKey = id as AccessActionKey;
+        flags[ actionKey ] = allowedActionsForModule.includes( actionKey );
+      }
+
+      matrix[ moduleKey ] = flags;
+    }
+
+    return matrix;
+  }
+
+  /**
+   * Reserved hook for future per-module defaults,
+   * once access rules are fully backend-driven.
+   */
   public getDefaultAccessByModel( _module: string ): void {
-    // reserved for future if you need per-module defaults
+    // reserved for future per-module defaults
+  }
+
+  /* ============================================================================
+   *  Token helpers (localStorage)
+   * ========================================================================== */
+
+  /** Read JWT from localStorage (if browser). */
+  private readTokenFromStorage(): { session: string, guard: string; } | null {
+    if ( !this.isBrowser ) {
+      return null;
+    }
+    const sessionToken = localStorage.getItem( this.STORAGE_KEYS.sessionToken ) ?? null;
+    const guardToken = localStorage.getItem( this.STORAGE_KEYS.guardToken ) ?? null;
+
+    if ( sessionToken && guardToken ) {
+      return {
+        session: sessionToken,
+        guard: guardToken
+      };
+    }
+    else return null;
+  }
+
+  /** Persist JWT into localStorage (if browser). */
+  private writeTokenToStorage( session: string, guard: string ): void {
+    if ( !this.isBrowser ) {
+      return;
+    }
+    if ( !session || !session.trim() ) {
+      console.warn(
+        '[AuthService] Attempted to write empty session token to storage.',
+      );
+      return;
+    }
+    if ( !guard || !guard.trim() ) {
+      console.warn(
+        '[AuthService] Attempted to write empty guard token to storage.',
+      );
+      return;
+    }
+    localStorage.setItem( this.STORAGE_KEYS.guardToken, guard.trim() );
+    localStorage.setItem( this.STORAGE_KEYS.sessionToken, session.trim() );
   }
 }

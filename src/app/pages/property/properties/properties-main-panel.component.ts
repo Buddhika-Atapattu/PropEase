@@ -198,16 +198,6 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
     this.viewMode = !!value;
   }
 
-  protected isUserCanCreateProperty(): boolean {
-    return (
-      this.LOGGED_USER?.access.permissions.some(
-        ( permission ) =>
-          permission.module === 'Property Management' &&
-          permission.actions.includes( 'create property' ),
-      ) ?? false
-    );
-  }
-
   // ─────────────────────────────────────────────────────────────
   // Icon registration
   // ─────────────────────────────────────────────────────────────
