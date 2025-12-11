@@ -74,6 +74,7 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
     document.cookie = 'username=; Max-Age=0; path=/';
     document.cookie = 'password=; Max-Age=0; path=/';
     localStorage.clear();
+    this.close( false );
     this.router.navigate( [ '/login' ] );
   }
 
@@ -100,6 +101,9 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
     }
     catch ( error ) {
       console.error( error );
+    }
+    finally {
+      this.close( false );
     }
   }
 

@@ -1,0 +1,63 @@
+<!-- Path: src/app/components/shared/date-time-picker/date-time-picker.component.html -->
+
+<div class="pe-datetime-picker">
+  <!-- DATE -->
+  <mat-form-field appearance="outline" class="pe-datetime-picker__date-field">
+    <mat-label>{{ label }}</mat-label>
+
+    <input
+      matInput
+      [matDatepicker]="picker"
+      [placeholder]="placeholder"
+      [value]="selectedDate"
+      [min]="min"
+      [max]="max"
+      [disabled]="disabled"
+      [required]="required"
+      (dateChange)="onDateChange($event)"
+    />
+
+    <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker touchUi #picker></mat-datepicker>
+  </mat-form-field>
+
+  <!-- TIME -->
+  <div
+    class="pe-datetime-picker__time-row"
+    [class.pe-datetime-picker__time-row--disabled]="disabled"
+  >
+    <!-- Hour -->
+    <mat-form-field appearance="outline" class="pe-datetime-picker__time-field">
+      <mat-label>HH</mat-label>
+      <mat-select
+        [disabled]="disabled || !selectedDate"
+        [ngModel]="selectedHour"
+        [required]="required"
+        (ngModelChange)="onHourChange($event)"
+      >
+        <mat-option [value]="null">--</mat-option>
+        <mat-option *ngFor="let h of hours" [value]="h">
+          {{ h < 10 ? "0" + h : h }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <span class="pe-datetime-picker__separator">:</span>
+
+    <!-- Minute -->
+    <mat-form-field appearance="outline" class="pe-datetime-picker__time-field">
+      <mat-label>MM</mat-label>
+      <mat-select
+        [disabled]="disabled || !selectedDate"
+        [ngModel]="selectedMinute"
+        [required]="required"
+        (ngModelChange)="onMinuteChange($event)"
+      >
+        <mat-option [value]="null">--</mat-option>
+        <mat-option *ngFor="let m of minutes" [value]="m">
+          {{ m < 10 ? "0" + m : m }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</div>

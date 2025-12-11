@@ -2449,8 +2449,13 @@ $notify-text-light: #2b1d00;
   height: 100%;
 }
 
+::ng-deep .mat-mdc-select-arrow {
+  width: 20px !important;
+  height: 20px !important;
+}
+
 /* =======================================================================================
-   10) GLOBAL CURSOR POINTER
+   11) GLOBAL CURSOR POINTER
    ======================================================================================= */
 
 /* ───────────────────────────────────────────────
@@ -2505,4 +2510,441 @@ $notify-text-light: #2b1d00;
   cursor: not-allowed !important;
   opacity: 0.6;
   pointer-events: none;
+}
+
+/** Dropdown container global style */
+/* ============================================================================
+ * Global Dropzone + Preview Styles (theme-aware, no legacy tokens)
+ * Uses CSS variables from global.scss:
+ *   --surface, --surface-variant, --elevated, --on-surface,
+ *   --border-color, --shadow-color, --hover-bg,
+ *   --primary, --on-primary, --muted, --danger
+ * ==========================================================================*/
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Dropzone shell
+ * --------------------------------------------------------------------------*/
+.dz-shell {
+  margin: 1.25rem 0;
+  height: 11rem;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  width: 100%;
+
+  border: 2px dashed var(--border-color);
+  background: radial-gradient(
+      120% 120% at 100% 0%,
+      color-mix(in srgb, var(--surface-variant) 80%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(
+      180deg,
+      var(--surface),
+      color-mix(in srgb, var(--surface-variant) 60%, var(--surface) 40%)
+    );
+  color: var(--on-surface);
+  box-shadow: 0 8px 24px var(--shadow-color);
+
+  display: grid;
+  place-items: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease,
+    border-color 0.2s ease, background 0.3s ease, color 0.2s ease;
+
+  /* Soft hover/focus lift */
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+    box-shadow: 0 12px 28px
+      color-mix(in srgb, var(--shadow-color) 80%, transparent);
+    background: radial-gradient(
+        130% 130% at 100% 0%,
+        color-mix(in srgb, var(--primary) 14%, var(--surface-variant) 86%),
+        transparent 60%
+      ),
+      linear-gradient(
+        180deg,
+        var(--surface),
+        color-mix(in srgb, var(--surface-variant) 70%, var(--surface) 30%)
+      );
+  }
+
+  /* ── ACTIVE DRAG STATE (when file/image is dragged over) ────────────────
+   * Add `.is-dragging` from TS when dragenter/dragover is active.
+   */
+  &.is-dragging {
+    border-style: solid;
+    border-color: var(--primary);
+    color: var(--on-primary);
+
+    background: radial-gradient(
+        150% 150% at 50% -20%,
+        color-mix(in srgb, var(--primary) 35%, transparent),
+        transparent 70%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--primary) 24%, var(--surface-variant) 76%),
+        color-mix(in srgb, var(--primary) 18%, var(--surface) 82%)
+      );
+
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 45%, transparent),
+      0 16px 36px color-mix(in srgb, var(--shadow-color) 80%, transparent);
+
+    transform: translateY(-1px) scale(1.01);
+  }
+
+  &.is-compact {
+    height: 8.5rem;
+  }
+
+  .dz-inner {
+    text-align: center;
+    padding: 0 1.25rem;
+
+    .dz-icon {
+      font-size: 2rem;
+      opacity: 0.9;
+      width: 3rem;
+      height: 2.5rem;
+      text-align: center;
+      margin-inline: auto;
+    }
+
+    .dz-title {
+      font-weight: 600;
+      margin-top: 0.35rem;
+      font-size: 0.98rem;
+    }
+
+    .dz-sub {
+      margin-top: 0.15rem;
+      font-size: 0.85rem;
+      opacity: 0.8;
+      color: var(--muted);
+    }
+  }
+
+  .dz-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* Grid for preview chips */
+.dz-previews {
+  display: grid;
+  margin-top: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.75rem;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Flip-card preview chip
+ * --------------------------------------------------------------------------*/
+.preview-chip {
+  width: 10rem;
+  height: 10rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  perspective: 900px;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 8px 18px
+    color-mix(in srgb, var(--shadow-color) 85%, transparent);
+  background: var(--surface-variant);
+  border: 1px solid var(--border-color);
+
+  .flip {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.2, 0.6, 0.2, 1);
+    border-radius: inherit;
+  }
+
+  &:hover .flip,
+  &:focus-within .flip {
+    transform: rotateY(180deg);
+  }
+
+  .front,
+  .back {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: grid;
+    place-items: center;
+  }
+
+  /* FRONT: image or file icon */
+  .front {
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .file-front {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(
+          100% 100% at 100% 0%,
+          color-mix(in srgb, var(--surface) 15%, transparent),
+          transparent 60%
+        ),
+        linear-gradient(
+          160deg,
+          color-mix(in srgb, var(--primary) 28%, var(--surface-variant) 72%),
+          color-mix(in srgb, var(--primary) 12%, var(--surface) 88%)
+        );
+
+      .file-icon {
+        font-size: 3rem;
+        color: var(--on-primary);
+        opacity: 0.95;
+        width: 5rem;
+        height: 5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .file-ext {
+        margin-top: 0.35rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        color: var(--on-primary);
+        background: color-mix(in srgb, var(--on-primary) 20%, transparent);
+        border: 1px solid color-mix(in srgb, var(--on-primary) 35%, transparent);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+    }
+  }
+
+  /* BACK: meta information */
+  .back {
+    transform: rotateY(180deg);
+    padding: 0.6rem;
+    color: var(--on-primary);
+    background: radial-gradient(
+        100% 100% at 100% 0%,
+        color-mix(in srgb, var(--primary) 18%, transparent),
+        transparent 50%
+      ),
+      linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--primary) 45%, var(--surface-variant) 55%),
+        color-mix(in srgb, var(--primary) 30%, var(--surface) 70%)
+      );
+    display: grid;
+    gap: 0.4rem;
+    grid-template-rows: 1fr auto;
+
+    .content {
+      display: grid;
+      grid-template-rows: auto auto;
+      align-content: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.4rem;
+      width: 100%;
+      font-size: 0.85rem;
+      line-height: 1.25;
+      text-align: center;
+      overflow: hidden;
+      max-width: 15rem;
+    }
+
+    .filename {
+      font-weight: 700;
+      font-size: 0.85rem;
+      line-height: 1.2;
+      max-width: 100%;
+      overflow: hidden;
+      word-break: break-word;
+      text-overflow: ellipsis;
+
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+
+      mask-image: linear-gradient(
+        to right,
+        #fff 70%,
+        rgba(255, 255, 255, 0.15)
+      );
+      -webkit-mask-image: linear-gradient(
+        to right,
+        #fff 70%,
+        rgba(255, 255, 255, 0.15)
+      );
+    }
+
+    .filesize {
+      opacity: 0.9;
+      font-size: 0.8rem;
+      max-width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      justify-self: center;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      opacity: 0.9;
+      flex-wrap: wrap;
+      row-gap: 0.25rem;
+      padding: 0 0.2rem;
+      min-width: 0;
+
+      .badge {
+        padding: 0.1rem 0.4rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.12);
+        max-width: 90%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+    }
+  }
+
+  button.remove {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+    z-index: 3;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 999px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--on-primary);
+    background: color-mix(in srgb, var(--danger) 55%, rgba(0, 0, 0, 0.35));
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: scale(1.06);
+      background: color-mix(in srgb, var(--danger) 70%, rgba(0, 0, 0, 0.6));
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.9);
+      outline-offset: 2px;
+    }
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Inline full preview panel
+ * --------------------------------------------------------------------------*/
+.inline-preview {
+  margin-top: 1.25rem;
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px var(--shadow-color);
+  overflow: clip;
+
+  .ip-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--surface-variant);
+
+    .ip-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--on-surface);
+
+      .ip-icon {
+        opacity: 0.9;
+      }
+
+      .name {
+        font-weight: 600;
+      }
+
+      .meta {
+        opacity: 0.7;
+        font-size: 0.9rem;
+      }
+    }
+
+    .ip-actions {
+      display: flex;
+      gap: 8px;
+
+      .btn {
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--elevated);
+        color: var(--on-surface);
+        font-size: 0.85rem;
+        line-height: 1;
+      }
+
+      .btn-close {
+        background: var(--hover-bg);
+      }
+    }
+  }
+
+  .ip-body {
+    padding: 12px 12px 16px;
+
+    .img-large {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      display: block;
+    }
+
+    app-file-preview {
+      display: block;
+    }
+  }
 }

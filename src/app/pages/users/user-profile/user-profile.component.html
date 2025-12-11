@@ -11,6 +11,8 @@
         type="button"
         class="btn-warning"
         *ngIf="isUserCanEdit"
+        matTooltip="Edit User"
+        matTooltipPosition="above"
         (click)="editUser()"
       >
         <i class="fa-solid fa-pen-to-square"></i>

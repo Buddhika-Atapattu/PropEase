@@ -1,0 +1,114 @@
+<close-btn [matDialogRef]="dialogRef" (click)="close(false)"></close-btn>
+<app-preloader></app-preloader>
+
+<div class="container-fluid mfa-dialog-container">
+  @if (!haveScanned) {
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <div class="mfa-card">
+        <!-- Header -->
+        <div class="mfa-header">
+          <div class="mfa-title-block">
+            <h2 class="mfa-title">Enable Multi-Factor Authentication</h2>
+            <p class="mfa-subtitle">
+              Step&nbsp;1 – Scan this QR code with your authenticator app.<br />
+              Step&nbsp;2 – Continue to enter the 6-digit code.
+            </p>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="mfa-body row g-3 align-items-center">
+          <!-- QR section -->
+          <div class="col-12 d-flex justify-content-center">
+            <div class="qr-wrapper">
+              <img [src]="QR" alt="Multi-Auth QR Code" class="qr-image" />
+            </div>
+          </div>
+
+          <!-- Footer action -->
+          <div class="col-12 d-flex justify-content-end">
+            <button
+              type="button"
+              class="mfa-btn-enter"
+              (click)="goToCodePanel()"
+            >
+              <span class="label">I’ve scanned the code – Enter code</span>
+              <mat-icon class="icon">arrow_right_alt</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Hint -->
+        <div class="mfa-hint">
+          <span class="dot"></span>
+          <span class="text">
+            Use Microsoft / Google Authenticator or any compatible TOTP app.
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  } @else {
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <div class="mfa-card mfa-card--code">
+        <!-- Header -->
+        <div class="mfa-header">
+          <div class="mfa-title-block">
+            <h2 class="mfa-title">Enter your 6-digit code</h2>
+            <p class="mfa-subtitle">
+              Open your authenticator app and type the current code for this
+              account.
+            </p>
+          </div>
+        </div>
+
+        <!-- Code boxes -->
+        <div class="mfa-code-body">
+          <div class="code-grid">
+            @for(digit of codeDigits; track $index; let i = $index){
+            <input
+              #codeBox
+              class="code-box"
+              type="text"
+              maxlength="1"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              [value]="digit"
+              (keydown)="onCodeKeyDown($event, i)"
+            />
+            }
+          </div>
+
+          <!-- (input)="onDigitInput($event, i)" -->
+
+          <div class="code-hint">
+            <span class="dot"></span>
+            <span class="text">
+              Codes refresh every 30 seconds. If a code fails, wait for the next
+              one.
+            </span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mfa-actions">
+          <button
+            type="button"
+            class="btn-primary"
+            [disabled]="!isCodeComplete()"
+            (click)="onVerifyCode()"
+          >
+            Verify &amp; activate
+          </button>
+
+          <button type="button" class="btn-ghost" (click)="backToQr()">
+            Back to QR
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  }
+</div>

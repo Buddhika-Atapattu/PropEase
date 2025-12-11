@@ -1,32 +1,25 @@
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
-  Component,
-  OnInit,
-  OnDestroy,
-  Inject,
-  PLATFORM_ID,
-  ViewChild,
   ChangeDetectorRef,
-  AfterViewInit,
-  OnChanges,
-  SimpleChanges,
+  Component,
+  Inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+  ViewChild
 } from '@angular/core';
-import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { Subscription } from 'rxjs';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
-import { LeaseWithProperty, TenantService } from '../../../services/tenant/tenant.service';
-import { User } from '../../../services/APIs/apis.service';
-import { NotificationDialogComponent } from '../notification/notificationBar.component';
-import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { SkeletonLoaderComponent } from '../../../components/shared/skeleton-loader/skeleton-loader.component';
-import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
-import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
 import { Router } from '@angular/router';
+import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
+import { User } from '../../../services/APIs/apis.service';
 import { AuthService } from '../../../services/auth/auth.service';
+import { LeaseWithProperty, TenantService } from '../../../services/tenant/tenant.service';
 import { CloseBtnComponent } from '../../shared/buttons/close-btn/close-btn';
 import { PreloaderComponent } from '../../shared/preloader/preloader.component';
+import { NotificationDialogComponent } from '../notification/notificationBar.component';
 
 // SkeletonLoaderComponent, SafeUrlPipe
 @Component( {

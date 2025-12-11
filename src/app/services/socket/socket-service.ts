@@ -6,21 +6,11 @@
 //  - Exposes connection telemetry (connected, RTT, clock skew)
 //  - Provides a generic event bus + typed emitWithAck
 //
-// Usage:
-//  1) After login:
-//       socketService.init({ wsBase: environment.wsBase, token, tokenProvider });
-//  2) Observables:
-//       socketService.connected$.subscribe(...);
-//       socketService.rtt$.subscribe(...);
-//       socketService.skewMs$.subscribe(...);
-//       socketService.guardToken$.subscribe(...);
-//  3) Listen to events:
-//       socketService.on<YourPayload>('notification:new', payload => { ... });
-//       socketService.events$.subscribe(({event, payload}) => { ... });
-//  4) Emit with ack:
-//       const resp = await socketService.emitWithAck<Resp>('chat:send', dto, 5000);
-//  5) On logout:
-//       socketService.disconnect();
+// Terminology:
+//  - "auth token" (token): JWT / session token used by SocketAuthHelper on BE
+//  - "sessionToken": same logical value used by GuardTokenService for guard
+//  - "wsToken": WebSocket-only token issued by WsTokenRegistryRedis and
+//               validated ONCE during initial Socket.IO handshake.
 
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
@@ -29,9 +19,7 @@ import { BehaviorSubject, Observable, Subject, fromEvent } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Backend ack payload types (keep in sync with src/socket/socket.ts)
-// ──────────────────────────────────────────────────────────────────────────────
-
+/** Ack shape for client→server hello. */
 type HelloAck = {
   ok: boolean;
   serverTime: number;
@@ -52,8 +40,32 @@ type PingAck = {
 export interface RealtimeOptions {
   wsBase?: string; // e.g. http://localhost:3000 (no trailing slash preferred)
   path?: string;   // default: /socket.io
-  token?: string;  // initial auth token
-  tokenProvider?: () => string | Promise<string>; // optional refresh provider
+
+  /**
+   * Auth token (typically JWT / sessionToken) used by SocketAuthHelper on BE.
+   * This is NOT the wsToken. Normally this is the same token you use for HTTP.
+   */
+  token?: string;
+
+  /**
+   * Optional provider to refresh the AUTH token (JWT) when needed.
+   * NOTE: this is for the JWT, not for the guard/session/ws token.
+   */
+  tokenProvider?: () => string | Promise<string>;
+
+  /**
+   * Session token used by GuardTokenService on backend to rotate guard tokens.
+   * In your design this is usually the same string as `token`.
+   */
+  sessionToken?: string;
+
+  /**
+   * WebSocket-only token issued by WsTokenRegistryRedis.
+   *  - Issued on login / MFA success (or via HTTP rotateWsToken controller)
+   *  - Validated once on first WS handshake
+   *  - Single-use (one connection)
+   */
+  wsToken?: string;
 }
 
 // Generic envelope for the event bus
@@ -62,11 +74,33 @@ export interface SocketEventEnvelope {
   payload: unknown;
 }
 
-// Guard token payload pushed from backend
+// Guard token payload pushed from backend (for HTTP ApiGuard)
 export interface GuardTokenPayload {
   token: string;
   issuedAt: number;
   expiresAt: number;
+}
+
+/**
+ * WS token payload pushed from backend (for NEXT WebSocket handshake).
+ *
+ * Backend event: `ws:token:update`
+ *   - token      : new wsToken string (single-use)
+ *   - issuedAt   : BE timestamp when token was created
+ *   - validUntil : milliseconds since epoch when this wsToken expires
+ */
+export interface WsTokenPushPayload {
+  token: string;
+  issuedAt: number;
+  validUntil: number;
+}
+
+export interface ServerTerminatePayload {
+  mode: string;          // e.g. 'security', 'maintenance', 'manual'
+  reason: string;        // human-readable reason
+  username?: string;     // may be omitted in some cases
+  socketId?: string;     // BE socket.id
+  ts?: number;           // server timestamp (ms since epoch, from Date.now())
 }
 
 @Injectable( { providedIn: 'root' } )
@@ -82,9 +116,13 @@ export class SocketService {
   // Default connection options; can be overridden via init()
   private opts: Required<Pick<RealtimeOptions, 'wsBase' | 'path'>> = {
     wsBase: ( environment.apiOrigin ?? 'http://localhost:3000' ).replace( /\/+$/, '' ),
-    path: '/socket.io'
+    path: '/socket.io',
   };
 
+  /**
+   * Provider for AUTH token (JWT / sessionToken).
+   * Does NOT provide wsToken or guardToken.
+   */
   private tokenProvider?: () => string | Promise<string>;
 
   // ── Connection telemetry exposed to the app ────────────────────────────────
@@ -100,10 +138,21 @@ export class SocketService {
   /** Estimated server clock skew vs client in ms (serverTime - clientEstimate). */
   readonly skewMs$ = this._skewMs$.asObservable();
 
-  // Guard token state (BE → FE, auto-refreshed ~5s)
+  // Guard token state (BE → FE, auto-refreshed via guard:update)
   private readonly _guardToken$ = new BehaviorSubject<GuardTokenPayload | null>( null );
   /** Latest guard token pushed from backend. */
   readonly guardToken$ = this._guardToken$.asObservable();
+
+  // WS token state (BE → FE, auto-refreshed via ws:token:update)
+  private readonly _wsToken$ = new BehaviorSubject<WsTokenPushPayload | null>( null );
+  /**
+   * Latest wsToken payload pushed from backend.
+   *
+   * IMPORTANT:
+   *  - This token is NOT used for the current connection (it is single-use).
+   *  - It is intended for the NEXT WebSocket handshake (reconnect / new tab).
+   */
+  readonly wsToken$ = this._wsToken$.asObservable();
 
   // Keep-alive & reconnection backoff
   private heartbeatTimer?: ReturnType<typeof setInterval>;
@@ -118,6 +167,26 @@ export class SocketService {
   private readonly _event$ = new Subject<SocketEventEnvelope>();
   readonly events$: Observable<SocketEventEnvelope> = this._event$.asObservable();
 
+  // --- Server-driven session termination (security / manual kill) -----------
+
+  private readonly _serverTerminate$ = new Subject<ServerTerminatePayload>();
+  /**
+   * Emits whenever the backend tells us "this session is terminated".
+   * Typical next step: start a short countdown and then force logout.
+   */
+  readonly serverTerminate$ = this._serverTerminate$.asObservable();
+
+  private readonly _terminationCountdown$ = new BehaviorSubject<number | null>( null );
+  /**
+   * If not null, represents "seconds until forced logout" after a
+   * session:terminated event. You can show a banner like:
+   *   "Your session will close in X seconds..."
+   */
+  readonly terminationCountdown$ = this._terminationCountdown$.asObservable();
+
+  private terminationTimerHandle: ReturnType<typeof setInterval> | null = null;
+
+
   constructor () {}
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -127,6 +196,19 @@ export class SocketService {
   /**
    * Initialize or reinitialize the socket connection.
    * Call after login or when you want to switch wsBase/path.
+   *
+   * IMPORTANT:
+   *  - opts.token        → AUTH token (JWT / sessionToken)
+   *  - opts.sessionToken → same logical value, used for GuardTokenService
+   *  - opts.wsToken      → WS-only token used by WsTokenRegistryRedis (handshake only)
+   *
+   * WS TOKEN FLOW (combined with backend):
+   *  - Login / MFA / HTTP rotateWsToken → BE issues wsToken for this user/session.
+   *  - You pass that wsToken into SocketService.init({ wsToken }).
+   *  - Socket.IO handshake uses that wsToken once (BE consumes it from Redis).
+   *  - While connected, backend periodically emits 'ws:token:update' with a
+   *    NEW wsToken, which we store and attach to socket.auth for the NEXT
+   *    reconnection / new tab.
    */
   public init( opts?: RealtimeOptions ): void {
     if ( !isPlatformBrowser( this.platformId ) ) {
@@ -142,15 +224,26 @@ export class SocketService {
     }
     this.tokenProvider = opts?.tokenProvider;
 
-    const token = opts?.token ?? this.readTokenSafe();
-    if ( !token ) {
-      console.error( '[realtime] No token – socket not started' );
+    // AUTH token for SocketAuthHelper (JWT / sessionToken)
+    const authToken = opts?.token ?? this.readTokenSafe();
+    if ( !authToken ) {
+      console.error( '[Error:] [realtime] No AUTH token – socket not started\n' );
       return;
     }
 
+    // Session token for GuardTokenService.rotateGuardToken (may be same as authToken)
+    const sessionToken = opts?.sessionToken ?? authToken;
+
+    // WebSocket-only token for WsTokenRegistryRedis (single-use, handshake only).
+    // Priority:
+    //   1) Explicit opts.wsToken (fresh from login / HTTP rotateWsToken).
+    //   2) Last rotated wsToken from BE (if any), via ws:token:update.
+    const lastWsTokenPayload = this._wsToken$.value;
+    const wsToken = opts?.wsToken ?? ( lastWsTokenPayload?.token ?? undefined );
+
     // Reuse existing instance → update auth only
     if ( this.socket ) {
-      this.setAuthToken( token );
+      this.setAuthToken( authToken, sessionToken, wsToken );
       if ( !this.socket.connected ) {
         this.socket.connect();
       }
@@ -161,17 +254,68 @@ export class SocketService {
     this.socket = io( this.opts.wsBase, {
       path: this.opts.path,
       transports: [ 'websocket' ],
-      auth: { token },
+      auth: {
+        token: authToken,   // used by SocketAuthHelper.extractAuthToken
+        sessionToken,       // used by SocketAuthHelper.extractSessionToken
+        wsToken             // used by SocketAuthHelper.extractWsToken / WsTokenRegistryRedis
+      },
       withCredentials: false,
       autoConnect: true,
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 500,
       reconnectionDelayMax: 5000,
-      randomizationFactor: 0.5
+      randomizationFactor: 0.5,
     } );
 
+    // ──────────────────────────────────────────────────────────────────────
+    // Catch the server termiation
+    // ──────────────────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────
+    // Server-driven session termination (security kill-switch)
+    // ──────────────────────────────────────────────────────────────────────
+    this.socket.on(
+      'session:terminated',
+      ( raw: ServerTerminatePayload | unknown ) => {
+        // Normalise payload to a safe structure
+        const payload: ServerTerminatePayload = {
+          mode: typeof ( raw as any )?.mode === 'string'
+            ? ( raw as any ).mode
+            : 'unknown',
+          reason: typeof ( raw as any )?.reason === 'string'
+            ? ( raw as any ).reason
+            : 'unknown',
+          username: typeof ( raw as any )?.username === 'string'
+            ? ( raw as any ).username
+            : undefined,
+          socketId: typeof ( raw as any )?.socketId === 'string'
+            ? ( raw as any ).socketId
+            : undefined,
+          ts: typeof ( raw as any )?.ts === 'number'
+            ? ( raw as any ).ts
+            : Date.now()
+        };
+
+        console.error(
+          '[Error:] [realtime] session:terminated from server:',
+          payload,
+          '\n'
+        );
+
+        // Notify whoever subscribes (your new SessionTerminationService, etc.)
+        this._serverTerminate$.next( payload );
+
+        // Start a 10s countdown for auto-logout.
+        // Actual logout will be done by a higher-level service.
+        this.startTerminationCountdown( 10 );
+      }
+    );
+
+
+
+    // ──────────────────────────────────────────────────────────────────────
     // Guard token auto injection from backend
+    // ──────────────────────────────────────────────────────────────────────
     this.socket.on( 'guard:update', ( payload: GuardTokenPayload ) => {
       if (
         !payload ||
@@ -179,26 +323,47 @@ export class SocketService {
         typeof payload.issuedAt !== 'number' ||
         typeof payload.expiresAt !== 'number'
       ) {
-        console.warn( '[realtime] invalid guard:update payload', payload );
+        console.warn( '[Warning:] [realtime] invalid guard:update payload', payload, '\n' );
         return;
       }
       this._guardToken$.next( payload );
     } );
 
+    // ──────────────────────────────────────────────────────────────────────
+    // WS token rotation from backend (primary wsToken cycle)
+    // ──────────────────────────────────────────────────────────────────────
+    //
+    // Backend logic:
+    //   - SocketConnectionHandler.registerWsTokenRotation(...) periodically
+    //     calls WsTokenRegistryRedis.rotateToken(sessionId) and emits
+    //     'ws:token:update' with a fresh wsToken.
+    //
+    // Frontend logic here:
+    //   - Validate ws:token:update payload.
+    //   - Store last payload in BehaviorSubject.
+    //   - Patch socket.auth.wsToken so NEXT reconnect uses the fresh wsToken.
+    //
+    this.socket.on( 'ws:token:update', ( payload: WsTokenPushPayload ) => {
+      this.handleWsTokenUpdate( payload );
+    } );
+
+    // ──────────────────────────────────────────────────────────────────────
     // Core connection lifecycle
+    // ──────────────────────────────────────────────────────────────────────
     this.socket.on( 'connect', () => {
       this._connected$.next( true );
       this.backoffMs = 1500;
       this.sendHello();      // measure RTT & clock skew
       this.startHeartbeat(); // start periodic pings
-      console.info( '[realtime] connected', this.socket?.id );
     } );
 
     this.socket.on( 'disconnect', ( reason: unknown ) => {
       this._connected$.next( false );
       this.stopHeartbeat();
+      // On generic disconnect we keep _wsToken$ as-is because the last token
+      // pushed from BE is intended for the NEXT connection attempt.
       this._guardToken$.next( null );
-      console.error( '[realtime] disconnected:', reason );
+      console.error( '[Error:] [realtime] disconnected:', reason, '\n' );
       this.scheduleHello( this.backoffMs );
       this.backoffMs = Math.min( this.backoffMs * 2, this.backoffMaxMs );
     } );
@@ -217,15 +382,14 @@ export class SocketService {
           ? String( ( err as { message: unknown; } ).message )
           : String( err );
 
-      console.error( '[realtime] connect_error:', msg );
+      console.error( '[Error:] [realtime] connect_error:', msg, '\n' );
 
       if ( msg.toLowerCase().includes( 'unauthorized' ) ) {
         await this.refreshTokenFromProvider();
       }
     } );
 
-    this.socket.on( 'reconnect', ( attempt: number ) => {
-      console.info( '[realtime] reconnected, attempt', attempt );
+    this.socket.on( 'reconnect', () => {
       this.sendHello();
       this.startHeartbeat();
     } );
@@ -238,7 +402,7 @@ export class SocketService {
         if ( ack ) {
           ack( Date.now() );
         }
-      }
+      },
     );
 
     // Browser visibility / network nudges
@@ -250,6 +414,11 @@ export class SocketService {
     return this._guardToken$.value;
   }
 
+  /** Latest wsToken payload snapshot (for debugging / last-resort flows). */
+  public getLatestWsToken(): WsTokenPushPayload | null {
+    return this._wsToken$.value;
+  }
+
   /**
    * Emit an event with ack and timeout.
    * Rejects on timeout or when the server callback comes back with an Error.
@@ -257,7 +426,7 @@ export class SocketService {
   public emitWithAck<TResp = unknown>(
     event: string,
     data: unknown,
-    timeoutMs = 5000
+    timeoutMs = 5000,
   ): Promise<TResp> {
     return new Promise<TResp>( ( resolve, reject ) => {
       if ( !this.socket ) {
@@ -274,7 +443,7 @@ export class SocketService {
             return;
           }
           resolve( resp as TResp );
-        }
+        },
       );
     } );
   }
@@ -285,7 +454,7 @@ export class SocketService {
    */
   public on<TPayload = unknown>(
     event: string,
-    handler: ( payload: TPayload ) => void
+    handler: ( payload: TPayload ) => void,
   ): void {
     this.socket?.on( event, handler as ( payload: unknown ) => void );
   }
@@ -301,7 +470,7 @@ export class SocketService {
     if ( handler ) {
       this.socket.off(
         event,
-        handler as unknown as ( ...args: any[] ) => void
+        handler as unknown as ( ...args: any[] ) => void,
       );
     } else {
       this.socket.off( event );
@@ -326,8 +495,9 @@ export class SocketService {
   }
 
   /**
-   * Push a fresh token to the server without recreating the socket.
-   * Backend will call jwt.verify again and rejoin base rooms accordingly.
+   * Push a fresh AUTH token (JWT / sessionToken) to the server without
+   * recreating the socket. Backend will call jwt.verify again and rejoin
+   * base rooms accordingly.
    */
   public updateToken( token: string ): void {
     if ( !this.socket ) return;
@@ -336,30 +506,172 @@ export class SocketService {
 
   /**
    * Cleanly disconnect and release resources (call on logout).
+   *
+   * IMPORTANT:
+   *  - This is a logical logout; we clear both guardToken and wsToken state.
+   *  - For transient disconnects (network issues), backend 'disconnect' handler
+   *    runs but we DO NOT clear _wsToken$ there, so the last rotated wsToken
+   *    can still be used for the next reconnect attempt.
    */
   public disconnect(): void {
     this.stopHeartbeat();
+
+    if ( this.terminationTimerHandle ) {
+      clearInterval( this.terminationTimerHandle );
+      this.terminationTimerHandle = null;
+    }
+    this._terminationCountdown$.next( null );
+
     if ( this.socket ) {
       this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
     }
+
     this._connected$.next( false );
     this._guardToken$.next( null );
+    this._wsToken$.next( null );
   }
+
 
   // ──────────────────────────────────────────────────────────────────────────
   // Internal helpers
   // ──────────────────────────────────────────────────────────────────────────
 
-  /** Update auth token on existing socket instance. */
-  private setAuthToken( token: string ): void {
+  /**
+   * Start a "forced logout in N seconds" countdown.
+   *
+   * This does NOT perform logout itself; it just:
+   *  - Emits countdown seconds via terminationCountdown$.
+   *  - Stops at 0 and leaves the actual logout to whoever listens.
+   */
+  private startTerminationCountdown( seconds: number ): void {
+    // Clean any previous countdown
+    if ( this.terminationTimerHandle ) {
+      clearInterval( this.terminationTimerHandle );
+      this.terminationTimerHandle = null;
+    }
+
+    let remaining = Math.max( 0, Math.floor( seconds ) );
+    this._terminationCountdown$.next( remaining );
+
+    if ( remaining === 0 ) {
+      return;
+    }
+
+    this.terminationTimerHandle = setInterval( () => {
+      remaining -= 1;
+
+      if ( remaining <= 0 ) {
+        this._terminationCountdown$.next( 0 );
+
+        if ( this.terminationTimerHandle ) {
+          clearInterval( this.terminationTimerHandle );
+          this.terminationTimerHandle = null;
+        }
+
+        // IMPORTANT:
+        //  - Do NOT logout here.
+        //  - Your new high-level service should be subscribed to
+        //    terminationCountdown$ and call AuthService.logout()
+        //    when it sees 0.
+        return;
+      }
+
+      this._terminationCountdown$.next( remaining );
+    }, 1_000 );
+  }
+
+
+  /**
+   * Update AUTH + session + ws tokens on existing socket instance.
+   *
+   * NOTE:
+   *  - For Socket.IO client, `socket.auth` is used on the *next* connect()
+   *    attempt. Changing it here will affect reconnection attempts triggered
+   *    by Socket.IO or by you explicitly calling socket.connect().
+   */
+  private setAuthToken(
+    token: string,
+    sessionToken?: string,
+    wsToken?: string,
+  ): void {
     if ( !this.socket ) return;
 
-    // socket.io client allows setting .auth before reconnect;
-    // we go through unknown to avoid the TS structural mismatch warning.
-    const sock = this.socket as unknown as { auth?: { token?: string; }; };
-    sock.auth = { token };
+    const sock = this.socket as unknown as {
+      auth?: { token?: string; sessionToken?: string; wsToken?: string; };
+    };
+
+    const previous = sock.auth ?? {};
+    sock.auth = {
+      token,
+      sessionToken: sessionToken ?? previous.sessionToken,
+      wsToken: wsToken ?? previous.wsToken,
+    };
+  }
+
+  /**
+   * Handle incoming ws:token:update payload from backend.
+   *
+   * Responsibilities:
+   *  - Validate payload.
+   *  - Store in _wsToken$ for observers / debugging.
+   *  - Patch socket.auth.wsToken so NEXT handshake uses this token.
+   *
+   * This does NOT affect the current connection; wsToken is consumed only
+   * during handshake on the backend side (WsTokenRegistryRedis.consumeToken).
+   */
+  private handleWsTokenUpdate( payload: WsTokenPushPayload ): void {
+    try {
+      if (
+        !payload ||
+        typeof payload.token !== 'string' ||
+        payload.token.trim().length === 0 ||
+        typeof payload.issuedAt !== 'number' ||
+        typeof payload.validUntil !== 'number'
+      ) {
+        console.warn(
+          '[Warning:] [realtime] invalid ws:token:update payload',
+          payload,
+          '\n'
+        );
+        return;
+      }
+
+      const normalized: WsTokenPushPayload = {
+        token: payload.token.trim(),
+        issuedAt: payload.issuedAt,
+        validUntil: payload.validUntil,
+      };
+
+      // Remember latest wsToken (for next handshake / debug).
+      this._wsToken$.next( normalized );
+
+      // Also patch socket.auth.wsToken so next reconnect uses this token.
+      if ( this.socket ) {
+        const sock = this.socket as unknown as {
+          auth?: { token?: string; sessionToken?: string; wsToken?: string; };
+        };
+
+        const previous = sock.auth ?? {};
+        sock.auth = {
+          ...previous,
+          wsToken: normalized.token,
+        };
+      }
+
+      // console.info(
+      //   '[Success:] [realtime] ws:token:update applied. validUntil=',
+      //   new Date(normalized.validUntil).toISOString(),
+      //   '\n'
+      // );
+    } catch ( err: unknown ) {
+      console.error(
+        '[Error:] [realtime] handleWsTokenUpdate failed:',
+        err,
+        '\n'
+      );
+    }
   }
 
   private scheduleHello( delayMs: number ): void {
@@ -372,7 +684,7 @@ export class SocketService {
 
     this.helloRetryTimer = setTimeout(
       () => this.sendHello(),
-      finalDelay
+      finalDelay,
     );
   }
 
@@ -392,7 +704,7 @@ export class SocketService {
       const resp = await this.emitWithAck<HelloAck>(
         'client:hello',
         { app: 'prop-ease-ui', ver: '1.0.0', t: t0 },
-        this.helloTimeoutMs
+        this.helloTimeoutMs,
       );
 
       if ( !resp?.ok ) {
@@ -417,7 +729,7 @@ export class SocketService {
           ? String( ( err as { message: unknown; } ).message )
           : String( err );
 
-      console.error( '[realtime] hello failed:', msg );
+      console.error( '[Error:] [realtime] hello failed:', msg, '\n' );
 
       this.scheduleHello( this.backoffMs );
       this.backoffMs = Math.min( this.backoffMs * 2, this.backoffMaxMs );
@@ -443,7 +755,7 @@ export class SocketService {
         await this.emitWithAck<PingAck>(
           'client:ping',
           { t0 },
-          this.helloTimeoutMs
+          this.helloTimeoutMs,
         );
 
         const rtt = Math.max( 0, Date.now() - t0 );
@@ -456,7 +768,7 @@ export class SocketService {
             ? String( ( err as { message: unknown; } ).message )
             : String( err );
 
-        console.error( '[realtime] heartbeat failed:', msg );
+        console.error( '[Error:] [realtime] heartbeat failed:', msg, '\n' );
       }
     }, this.heartbeatMs );
   }
@@ -475,7 +787,7 @@ export class SocketService {
 
     fromEvent( window, 'online' ).subscribe( () => {
       if ( this.socket && !this.socket.connected ) {
-        console.warn( '[realtime] browser online – trying to reconnect' );
+        console.warn( '[Warning:] [realtime] browser online – trying to reconnect\n' );
         this.socket.connect();
       }
     } );
@@ -486,20 +798,45 @@ export class SocketService {
         this.socket &&
         !this.socket.connected
       ) {
-        console.warn( '[realtime] tab visible – trying to reconnect' );
+        console.warn( '[Warning:] [realtime] tab visible – trying to reconnect\n' );
         this.socket.connect();
       }
     } );
   }
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // Token sources
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Read AUTH token (JWT / sessionToken) from storage.
+   *
+   * Supports both:
+   *  - 'auth_token'    (if you introduce a dedicated JWT key)
+   *  - 'sessionToken'  (current implementation from AuthService)
+   */
   private readTokenSafe(): string | null {
     try {
-      return localStorage.getItem( 'sessionToken' );
+      const authToken = localStorage.getItem( 'auth_token' );
+      if ( authToken && authToken.trim().length > 0 ) {
+        return authToken.trim();
+      }
+
+      const session = localStorage.getItem( 'sessionToken' );
+      if ( session && session.trim().length > 0 ) {
+        return session.trim();
+      }
+
+      return null;
     } catch {
       return null;
     }
   }
 
+  /**
+   * Refresh AUTH token (JWT / sessionToken) via tokenProvider and push it
+   * to backend using `auth:update`. SessionToken / wsToken are NOT touched.
+   */
   private async refreshTokenFromProvider(): Promise<void> {
     if ( !this.tokenProvider || !this.socket ) {
       return;
@@ -511,7 +848,7 @@ export class SocketService {
         this.socket.emit( 'auth:update', newToken );
       }
     } catch ( err: unknown ) {
-      console.error( '[realtime] token refresh failed', err );
+      console.error( '[Error:] [realtime] token refresh failed', err, '\n' );
     }
   }
 }

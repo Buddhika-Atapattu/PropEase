@@ -53,7 +53,7 @@ export interface PermissionEntry {
  * Convenience composite type if you want a richer user object
  * containing resolved access control.
  */
-export type IUserWithAccess = User & {
+export type UserWithAccess = User & {
   accessControl?: PermissionEntry[];
 };
 

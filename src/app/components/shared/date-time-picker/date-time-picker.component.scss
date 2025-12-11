@@ -1,0 +1,35 @@
+// Path: src/app/components/shared/date-time-picker/date-time-picker.component.scss
+
+.pe-datetime-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pe-datetime-picker__date-field {
+  width: 100%;
+}
+
+.pe-datetime-picker__time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &--disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+.pe-datetime-picker__time-field {
+  flex: 1 1 0;
+}
+
+.pe-datetime-picker__separator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 12px;
+  font-weight: 600;
+  color: var(--on-surface, #888);
+}

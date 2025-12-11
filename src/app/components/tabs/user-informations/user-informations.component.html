@@ -37,7 +37,7 @@
           ></app-skeleton-loader>
         </li>
         <li *ngIf="!isLoading" class="list-group-item user-info-sm">
-          {{ user.phoneNumber }}
+          {{ user.phoneNumber?.code?.code + "-" + user.phoneNumber?.number }}
         </li>
         <li class="list-group-item user-info-sm">
           <app-skeleton-loader

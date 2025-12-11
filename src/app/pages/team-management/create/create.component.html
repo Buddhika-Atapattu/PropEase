@@ -1,0 +1,194 @@
+<app-notification-dialog></app-notification-dialog>
+<app-progress-bar></app-progress-bar>
+<div class="container-fluid">
+  <form
+    action=""
+    method="POST"
+    enctype="multipart/form-data"
+    (ngSubmit)="submit()"
+    autocomplete="off"
+    #userForm="ngForm"
+  >
+    <!-- Title -->
+    <div class="row mb-3">
+      <h3 class="title">Create Team</h3>
+      <hr />
+    </div>
+    <!-- End Title -->
+
+    <!-- Team Logo Upload -->
+    <div class="row my-4">
+      <div class="col-12">
+        <h4 class="text-uppercase">Upload Team Logo</h4>
+        <app-dropdown
+          [accept]="'image/*'"
+          [multiple]="false"
+          (filesChange)="whileLogoUpload($event)"
+        ></app-dropdown>
+      </div>
+    </div>
+    <!-- End Team Logo Upload -->
+
+    <!-- Team name and domain -->
+    <div class="row">
+      <div class="col-xl-8 col-md-9 col-12">
+        <mat-form-field class="w-100" [ngClass]="teamNameExist ? 'danger' : ''">
+          <mat-label [ngClass]="teamNameExist ? 'text-danger' : ''">
+            {{ teamNameExist ? "Team name already exist" : "Team name" }}
+          </mat-label>
+          <input
+            matInput
+            type="text"
+            [(ngModel)]="teamName"
+            (ngModelChange)="validateTeamName($event)"
+            name="teamName"
+            id="teamName"
+            [ngClass]="teamNameExist ? 'text-danger' : ''"
+            placeholder="Team name..."
+            required="required"
+          />
+          <mat-error *ngIf="teamNameExist">Team name already exist</mat-error>
+        </mat-form-field>
+      </div>
+      <div class="col-xl-4 col-md-3 col-12">
+        <mat-form-field class="w-100">
+          <mat-label>Team Domain</mat-label>
+          <mat-select
+            [(ngModel)]="teamDomain"
+            name="teamDomain"
+            required="required"
+          >
+            @for(item of defaultDomains; track item; let i = $index){
+            <mat-option [value]="item">{{
+              sanitiseDefaultValues(item)
+            }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+    <!-- End team name and domain -->
+
+    <div class="row my-3">
+      <div class="col-12">
+        <hr />
+      </div>
+    </div>
+
+    <!-- All users table -->
+    <div class="row my-3">
+      <div class="col-12">
+        <app-custom-table
+          [pagination]="true"
+          [(isReload)]="isLoading"
+          [(limit)]="limit"
+          [(index)]="index"
+          [tableTitle]="tableTitle"
+          [(search)]="search"
+          [totalDataCount]="totalDataCount"
+          (buttonOperation)="actionButtonsOperation($event)"
+          [data]="tableData"
+          [columns]="tableColumns"
+          (fetchData)="reFetchData('members')"
+        ></app-custom-table>
+      </div>
+    </div>
+    <!-- End all users table -->
+
+    @if (memberTableData.length > 0){
+    <!-- Member table -->
+    <div class="row my-3">
+      <div class="col-12">
+        <app-custom-table
+          [pagination]="false"
+          [tableTitle]="memberTableTitle"
+          [totalDataCount]="memberTableData.length"
+          (buttonOperation)="memberActionButtonsOperation($event)"
+          [data]="memberTableData"
+          [columns]="memberTableColumn"
+          (cellEdit)="onMemberCellEdit($event)"
+        ></app-custom-table>
+      </div>
+    </div>
+    <!-- End member table -->
+    }
+
+    <div class="row my-3">
+      <div class="col-12">
+        <hr />
+      </div>
+    </div>
+
+    <!-- Team description -->
+    <div class="row">
+      <div class="col-12">
+        <h4 class="text-uppercase mb-3">Team Description</h4>
+        <app-text-editor
+          [name]="'description'"
+          [(modelValue)]="description"
+        ></app-text-editor>
+      </div>
+    </div>
+    <!-- End team description -->
+
+    <div class="row my-3">
+      <div class="col-12">
+        <hr />
+      </div>
+    </div>
+
+    <!-- Select captain table -->
+    <div class="row my-3">
+      <div class="col-12">
+        <app-custom-table
+          [pagination]="true"
+          [(isReload)]="captainIsLoading"
+          [(limit)]="captainLimit"
+          [(index)]="captainIndex"
+          [tableTitle]="captainTableTitle"
+          [(search)]="captainSearch"
+          [totalDataCount]="captainTotalDataCount"
+          (buttonOperation)="captainActionButtonOperationOnSelection($event)"
+          [data]="captainTableData"
+          [columns]="captainTableColumns"
+          (fetchData)="reFetchData('captain')"
+        ></app-custom-table>
+      </div>
+    </div>
+    <!-- End Select captain table -->
+
+    <div class="row my-3">
+      <div class="col-12">
+        <hr />
+      </div>
+    </div>
+
+    @if(captainSelectTableData.length > 0){
+    <!-- Selected captain table -->
+    <div class="row my-3">
+      <div class="col-12">
+        <app-custom-table
+          [pagination]="false"
+          [tableTitle]="captainSelectTableTitle"
+          (buttonOperation)="captainActionButtonOperationAfterSelected($event)"
+          [data]="captainSelectTableData"
+          [columns]="captainSelectTableColumn"
+          (cellEdit)="onCaptainCellEdit($event)"
+        ></app-custom-table>
+      </div>
+    </div>
+    <!-- End Selected captain table -->
+    }
+
+    <div class="row d-flex justify-content-end align-items-center">
+      <div
+        class="col-xl-3 col-md-4 col-12 d-flex justify-content-end align-items-center"
+      >
+        <button type="submit" class="btn btn-success">
+          <mat-icon class="me-3">cloud_upload</mat-icon
+          ><span class="text-uppercase">create team</span>
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

@@ -1019,7 +1019,10 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
   private async getAllCountries(): Promise<void> {
     try {
       const res = await this.apiService.getCountries();
-      this.tenantCountries = res;
+      if ( !Array.isArray( res ) ) {
+        throw new Error( 'Invalid array of countries!' );
+      }
+      this.tenantCountries = res as unknown as Country[];
     } catch ( err ) {
       console.error( err );
     }

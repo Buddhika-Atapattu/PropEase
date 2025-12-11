@@ -6,7 +6,6 @@ import {
   Component,
   ElementRef,
   EventEmitter,
-  HostListener,
   Inject,
   Input,
   OnChanges,
@@ -15,14 +14,14 @@ import {
   Output,
   PLATFORM_ID,
   SimpleChanges,
-  ViewChild,
+  ViewChild
 } from '@angular/core';
 import {
-  FormsModule,
-  ReactiveFormsModule,
   FormBuilder,
   FormControl,
   FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
 } from '@angular/forms';
 import { MatMomentDateModule } from '@angular/material-moment-adapter';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';

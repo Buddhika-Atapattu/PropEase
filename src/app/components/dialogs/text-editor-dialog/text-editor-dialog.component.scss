@@ -1,0 +1,16 @@
+:host {
+  display: block;
+}
+
+.pe-dialog-text-field textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+/* Optional: theme the dialog surface with your tokens */
+:host ::ng-deep .mat-mdc-dialog-surface {
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--on-surface);
+  box-shadow: 0 12px 30px var(--shadow-color, rgba(0, 0, 0, 0.25));
+}

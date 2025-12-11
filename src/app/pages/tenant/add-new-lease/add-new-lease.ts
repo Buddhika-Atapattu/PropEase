@@ -96,7 +96,7 @@ import {
 import { UserControllerService } from '../../../services/userController/user-controller.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { PaginationUtil } from '../../../source/utility/pagination.utils';
-import { LatePaymentPenalty } from '../../../../../../back-end/src/models/lease.model';
+import { LatePaymentPenalty } from '../../../services/tenant/tenant.service';
 
 // -----------------------------------------------------------------------------
 // Local interfaces for this component
@@ -646,8 +646,8 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       this.tenantGender = user.gender;
       this.tenantDateOfBirth = new Date( user.dateOfBirth ?? '' );
       this.tenantNationality = user.nationality ?? '';
-      this.tenantPhoneNumber = user.phoneNumber ?? '';
-      this.tenantPhoneCodeDetails = user.phoneCodeDetails ?? null;
+      this.tenantPhoneNumber = user.phoneNumber?.number ?? '';
+      this.tenantPhoneCodeDetails = user.phoneNumber?.code ?? null;
       // 03. Address
       if ( user.address ) {
         this.tenantHouseNumber = user.address.houseNumber ?? '';
@@ -836,7 +836,10 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   private async getAllCountries(): Promise<void> {
     try {
       const res = await this.apiService.getCountries();
-      this.tenantCountries = res;
+      if ( !Array.isArray( res ) ) {
+        throw new Error( 'Invalid array of countries!' );
+      }
+      this.tenantCountries = res as unknown as Country[];
     } catch ( err ) {
       console.error( err );
     }
@@ -981,6 +984,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   // ============================================================================
 
   protected phoneNumberValid( phoneNumber: string ): boolean {
+    // const code = this.
     return phoneNumber.trim().length > 0
       ? this.userControllerService.isPhoneNumberValid( phoneNumber )
       : true;

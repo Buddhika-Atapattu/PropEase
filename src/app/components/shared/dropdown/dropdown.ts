@@ -98,6 +98,12 @@ export class Dropdown implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   private dropUnsub?: () => void;
 
   private readonly isBrowser: boolean;
+  private readonly ACCEPT_DESC_MAX = 500;
+
+  // Getter so template stays super simple
+  get acceptDescription(): string {
+    return this.buildAcceptDescription( this.accept );
+  }
 
   public constructor (
     private readonly renderer: Renderer2,
@@ -141,7 +147,6 @@ export class Dropdown implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   // Lifecycle
   // ─────────────────────────────────────────────────────────────
   ngOnInit(): void {
-    this.applyAcceptProfile();
   }
 
   ngOnChanges( ch: SimpleChanges ): void {
@@ -249,6 +254,154 @@ export class Dropdown implements OnInit, OnChanges, AfterViewInit, OnDestroy {
       if ( justAdded.length > 0 ) { this.filesAdded.emit( justAdded ); this.emitAll(); }
       e.preventDefault();
     }
+  }
+
+  /**
+   * Convert an <input type="file" accept="..."> style string
+   * into friendly UI text.
+   *
+   * Examples:
+   *  - "*\/*"                           → "All file types"
+   *  - "image/*"                      → "Images (JPG, PNG, ...)"
+   *  - ".jpg,.png"                    → "Images (JPG, PNG)"
+   *  - "application/pdf"             → "PDF documents"
+   *  - "image/png,application/pdf"   → "PNG images, PDF documents"
+   */
+
+  private buildAcceptDescription( accept: string | null | undefined ): string {
+    const raw = ( accept ?? '' ).trim();
+    if ( !raw || raw === '*/*' ) {
+      return 'All file types';
+    }
+
+    const tokens = raw
+      .split( ',' )
+      .map( t => t.trim() )
+      .filter( t => t.length > 0 );
+
+    if ( tokens.length === 0 ) {
+      return 'All file types';
+    }
+
+    const labels: string[] = [];
+
+    for ( const token of tokens ) {
+      if ( token.startsWith( '.' ) ) {
+        labels.push( this.describeExtension( token.toLowerCase() ) );
+      } else if ( token.includes( '/' ) ) {
+        labels.push( this.describeMime( token.toLowerCase() ) );
+      } else {
+        labels.push( token );
+      }
+    }
+
+    const unique = Array.from( new Set( labels.filter( Boolean ) ) );
+
+    // If a lot of formats, show a short summary instead of a long list
+    if ( unique.length > 4 ) {
+      return this.truncateDesc( `Multiple file types (${ unique.length } formats allowed)` );
+    }
+
+    let desc: string;
+
+    if ( unique.length === 1 ) {
+      desc = unique[ 0 ];
+    } else if ( unique.length === 2 ) {
+      desc = `${ unique[ 0 ] } and ${ unique[ 1 ] }`;
+    } else {
+      const last = unique.pop();
+      desc = `${ unique.join( ', ' ) } and ${ last }`;
+    }
+
+    return this.truncateDesc( desc );
+  }
+
+
+  private describeMime( mime: string ): string {
+    // General groups
+    if ( mime === 'image/*' ) {
+      return 'Images (JPG, PNG, …)';
+    }
+    if ( mime === 'video/*' ) {
+      return 'Videos (MP4, WebM, …)';
+    }
+    if ( mime === 'audio/*' ) {
+      return 'Audio files (MP3, WAV, …)';
+    }
+
+    // Specific known types
+    const map: Record<string, string> = {
+      'image/jpeg': 'JPEG images',
+      'image/png': 'PNG images',
+      'image/gif': 'GIF images',
+      'image/webp': 'WebP images',
+
+      'application/pdf': 'PDF documents',
+      'application/msword': 'Word documents (.doc)',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        'Word documents (.docx)',
+      'application/vnd.ms-excel': 'Excel spreadsheets (.xls)',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+        'Excel spreadsheets (.xlsx)',
+      'text/plain': 'Text files (.txt)',
+      'text/csv': 'CSV files',
+    };
+
+    const label = map[ mime ];
+    if ( label ) {
+      return label;
+    }
+
+    // Generic fallback like "application/zip" → "application/zip files"
+    return `${ mime } ${ this.multiple ? 'files' : 'file' }`;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Helper to generate UI text and trimming
+  // ─────────────────────────────────────────────────────────────
+
+  private describeExtension( ext: string ): string {
+    // ext is like ".pdf", ".jpg", etc.
+    const imageExts = [ '.jpg', '.jpeg', '.png', '.gif', '.webp' ];
+    const docExts = [ '.doc', '.docx', '.odt', '.rtf' ];
+    const sheetExts = [ '.xls', '.xlsx', '.ods' ];
+
+    if ( imageExts.includes( ext ) ) {
+      // Collect all matching image extensions
+      const upper = imageExts
+        .filter( e => this.accept.includes( e ) )
+        .map( e => e.replace( '.', '' ).toUpperCase() );
+      const joined = upper.join( ', ' );
+      return `Images (${ joined })`;
+    }
+
+    if ( ext === '.pdf' ) {
+      return 'PDF documents';
+    }
+
+    if ( docExts.includes( ext ) ) {
+      return 'Word / document files';
+    }
+
+    if ( sheetExts.includes( ext ) ) {
+      return 'Spreadsheet files';
+    }
+
+    if ( ext === '.txt' ) {
+      return 'Text files (.TXT)';
+    }
+
+    if ( ext === '.csv' ) {
+      return 'CSV files';
+    }
+
+    // Generic fallback
+    return `Files (*${ ext })`;
+  }
+
+  private truncateDesc( text: string ): string {
+    if ( text.length <= this.ACCEPT_DESC_MAX ) return text;
+    return text.slice( 0, this.ACCEPT_DESC_MAX - 1 ) + '…';
   }
 
   // ─────────────────────────────────────────────────────────────

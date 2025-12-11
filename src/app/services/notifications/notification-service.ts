@@ -327,7 +327,7 @@ export class NotificationService {
    *  - Assumes assets are under top-level "public" per PropEase convention.
    *  - You can override this in initConnection if needed.
    */
-  private notificationSoundPath: string = 'public/sounds/notification.mp3';
+  private notificationSoundPath: string = 'sounds/notification.mp3';
   private notificationAudio: HTMLAudioElement | null = null;
 
   public constructor () {
@@ -1091,11 +1091,6 @@ export class NotificationService {
   public onNew(
     playSound: boolean = false,
   ): Observable<Notification> {
-    console.log(
-      '[NotificationService] onNew() called – playSound =',
-      playSound,
-    );
-
     const base$ = this.newSubject.asObservable();
 
     if ( !playSound ) {

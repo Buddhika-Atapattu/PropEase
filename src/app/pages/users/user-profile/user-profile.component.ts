@@ -10,6 +10,7 @@ import {
   PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -56,6 +57,7 @@ import { WindowsRefService } from '../../../services/windowRef/windowRef.service
     ActivitiesComponent,
     MatTabsModule,
     NotificationDialogComponent,
+    MatTooltipModule,
   ],
   templateUrl: './user-profile.component.html',
   styleUrl: './user-profile.component.scss',

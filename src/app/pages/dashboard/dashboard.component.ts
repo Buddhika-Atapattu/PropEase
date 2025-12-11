@@ -180,12 +180,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         } );
       } );
     }
-
-    /* Ensure user bootstrap */
-    const role = this.authService.getLoggedUser?.role;
-    if ( role && this.isBrowser ) {
-      await this.authService.afterUserLoggedInOperatios();
-    }
   }
 
   ngAfterViewInit(): void {}

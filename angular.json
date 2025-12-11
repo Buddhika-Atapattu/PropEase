@@ -59,7 +59,8 @@
               "node_modules/material-design-icons/iconfont/material-icons.css",
               "node_modules/material-symbols/index.css",
               "src/styles.scss",
-              "src/app/styles/global.scss"
+              "src/app/styles/global.scss",
+              "src/app/styles/material-overrides.scss"
             ],
             "scripts": [
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
@@ -77,7 +78,6 @@
             "electron": {
               "index": "src/index.html",
               "baseHref": "./",
-              "serviceWorker": false,
               "outputHashing": "all",
               "optimization": true,
               "sourceMap": false,
@@ -89,14 +89,26 @@
               ]
             },
             "development": {
+              "index": "src/index.html",
+              "baseHref": "/",
+              "serviceWorker": "ngsw-config.json",
               "optimization": false,
               "sourceMap": true,
               "outputHashing": "none"
             },
             "production": {
+              "index": "src/index.html",
+              "baseHref": "/",
+              "serviceWorker": "ngsw-config.json",
               "outputHashing": "all",
               "optimization": true,
-              "sourceMap": false
+              "sourceMap": false,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "web"
@@ -119,7 +131,7 @@
               "buildTarget": "propease-fontend:build:electron"
             },
             "production": {
-              "buildTarget": "propease-fontend:build:web"
+              "buildTarget": "propease-fontend:build:production"
             }
           },
           "defaultConfiguration": "development"
@@ -139,11 +151,14 @@
             "karmaConfig": "karma.conf.js",
             "assets": [{ "glob": "**/*", "input": "public", "output": "" }],
             "styles": [
-              "src/styles.scss",
-              "src/app/styles/global.scss",
               "@fortawesome/fontawesome-free/css/all.min.css",
               "leaflet/dist/leaflet.css",
-              "leaflet-geosearch/dist/geosearch.css"
+              "leaflet-geosearch/dist/geosearch.css",
+              "node_modules/material-design-icons/iconfont/material-icons.css",
+              "node_modules/material-symbols/index.css",
+              "src/styles.scss",
+              "src/app/styles/global.scss",
+              "src/app/styles/material-overrides.scss"
             ],
             "scripts": [
               "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"

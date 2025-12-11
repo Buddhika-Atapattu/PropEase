@@ -1,0 +1,40 @@
+<!-- Path: src/app/components/session-expiry-banner/session-expiry-banner.component.html -->
+
+<div
+  class="session-expiry-banner"
+  *ngIf="state?.show"
+>
+  <div class="banner-content">
+    <div class="banner-text">
+      <strong>{{ title }}</strong>
+
+      <span class="details">
+        {{ reason }}
+
+        <ng-container *ngIf="state?.countdownSeconds !== null">
+          &nbsp;You will be logged out in
+          <span class="time">{{ formattedTime }}</span>.
+        </ng-container>
+      </span>
+    </div>
+
+    <div class="banner-actions">
+      <button
+        type="button"
+        class="btn-outline"
+        (click)="dismiss()"
+      >
+        Dismiss
+      </button>
+
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="logoutNow()"
+        [disabled]="isLoggingOut"
+      >
+        {{ isLoggingOut ? 'Logging out…' : 'Logout now' }}
+      </button>
+    </div>
+  </div>
+</div>

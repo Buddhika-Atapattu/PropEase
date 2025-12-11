@@ -1,4 +1,5 @@
-@if(loggedUser){
+@if (loggedUser) {
+
 <div class="row mt-5">
   <div class="col-xl-12">
     <h5 class="title">{{ tableTitle }}</h5>
@@ -26,9 +27,10 @@
 </div>
 <!-- End Pagination -->
 
-@if(isArrayOfData){
+@if (isArrayOfData) {
+
 <div class="table-responsive mat-elevation-z8">
-  <!-- Table -->
+  <!-- Mat table -->
   <table
     mat-table
     [dataSource]="dataSource"
@@ -36,14 +38,14 @@
     (matSortChange)="sortData($event)"
   >
     <ng-container *ngFor="let column of columns" [matColumnDef]="column.key">
-      <!-- Table headers -->
+      <!-- ───────── HEADER CELL ───────── -->
       <th
         mat-header-cell
         *matHeaderCellDef
         [mat-sort-header]="column.label"
         class="w-50 text-default text-center"
       >
-        @if(isReload){
+        @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
           [height]="'1.5rem'"
@@ -53,12 +55,12 @@
         <span>{{ column.label }}</span>
         }
       </th>
-      <!-- End table headers -->
 
-      <!-- Table data for the columns -->
+      <!-- ───────── DATA CELL ───────── -->
       <td mat-cell *matCellDef="let element; let i = index">
         @if (isButtonColumn(column.key)) {
-        <!-- ───────── Button-only columns (viewButton, downloadBtn, etc.) ───────── -->
+
+        <!-- Button-only columns -->
         @let btn = getButtonForColumn(column.key); @if (btn) { @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
@@ -79,9 +81,12 @@
           <mat-icon>{{ btn.icon }}</mat-icon>
         </button>
         } } } @else {
-        <!-- ───────── Normal data columns (image, name, status, etc.) ───────── -->
-        @switch (column.key.toLowerCase()) { @case ('userimage') { @if
-        (isReload) {
+
+        <!-- Normal data / inline edit columns -->
+        @switch (column.key.toLowerCase()) {
+
+        <!-- User image -->
+        @case ('userimage') { @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
           [height]="'5rem'"
@@ -93,7 +98,10 @@
           alt="User image"
           class="table-user-image"
         />
-        } } @case ('propertyimage') { @if (isReload) {
+        } }
+
+        <!-- Property image -->
+        @case ('propertyimage') { @if (isReload) {
         <app-skeleton-loader
           [width]="'7rem'"
           [height]="'5rem'"
@@ -107,7 +115,10 @@
             class="table-property-image"
           />
         </div>
-        } } @case ('image') { @if (isReload) {
+        } }
+
+        <!-- Generic image -->
+        @case ('image') { @if (isReload) {
         <app-skeleton-loader
           [width]="'7rem'"
           [height]="'5rem'"
@@ -121,7 +132,10 @@
             class="table-property-image"
           />
         </div>
-        } } @case ('name') { @if (isReload) {
+        } }
+
+        <!-- Name -->
+        @case ('name') { @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
           [height]="'1.5rem'"
@@ -146,7 +160,10 @@
               : element.name
           }}
         </p>
-        } } @case ('daterange') { @if (isReload) {
+        } }
+
+        <!-- Date range text -->
+        @case ('daterange') { @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
           [height]="'1.5rem'"
@@ -156,7 +173,10 @@
         <p [class.bg-danger]="element.notify">
           {{ formatDateRange(element.dateRange.start, element.dateRange.end) }}
         </p>
-        } } @case ('icon') { @if (isReload) {
+        } }
+
+        <!-- Icon -->
+        @case ('icon') { @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
           [height]="'1.5rem'"
@@ -164,17 +184,21 @@
         ></app-skeleton-loader>
         } @else {
         <mat-icon>{{ chooseIcon(element.icon) }}</mat-icon>
-        } } @case ('date') { @if (isReload) {
+        } }
+
+        <!-- Plain date -->
+        @case ('date') { @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
           [height]="'1.5rem'"
           [borderRadius]="'0.159rem'"
         ></app-skeleton-loader>
         } @else {
-        <p>
-          {{ element.date | date : "dd/MM/yyyy" }}
-        </p>
-        } } @case ('switch') { @if (isReload) {
+        <p>{{ element.date | date : "dd/MM/yyyy" }}</p>
+        } }
+
+        <!-- Switch cell -->
+        @case ('switch') { @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
           [height]="'1.5rem'"
@@ -187,7 +211,10 @@
           [labelOn]="element.switch.on"
           [labelOff]="element.switch.off"
         ></switch-button>
-        } } @case ('status') { @if (isReload) {
+        } }
+
+        <!-- Status -->
+        @case ('status') { @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
           [height]="'1.5rem'"
@@ -197,21 +224,181 @@
         <div class="main-category" [ngClass]="statusClass(element.status)">
           {{ makeCapitalize(element.status) }}
         </div>
-        } } @default { @if (isReload) {
+        } }
+
+        <!-- ───────── DEFAULT CASE (inline editors / text) ───────── -->
+        @default { @if (isReload) {
         <app-skeleton-loader
           [width]="'5rem'"
           [height]="'2.5rem'"
           [borderRadius]="'0.159rem'"
         ></app-skeleton-loader>
         } @else {
+
+        <!-- ───────── INLINE EDITORS (Material) ───────── -->
+        @if (hasInlineEdit(column)) { @switch (column.edit?.kind) {
+
+        <!-- inline text -->
+        @case ('inlineText') {
+        <mat-form-field appearance="outline" class="pe-table-field">
+          <input
+            matInput
+            class="pe-table-input"
+            type="text"
+            [required]="column.edit?.required ?? false"
+            [placeholder]="column.edit?.placeholder || ''"
+            [attr.maxLength]="column.edit?.maxLength ?? null"
+            [ngModel]="getCellEditValue(i, column.key, element)"
+            (ngModelChange)="handleInlineEditChange($event, column, element, i)"
+          />
+        </mat-form-field>
+        }
+
+        <!-- inline number -->
+        @case ('inlineNumber') {
+        <mat-form-field appearance="outline" class="pe-table-field">
+          <input
+            matInput
+            class="pe-table-input pe-table-input-number"
+            type="number"
+            [required]="column.edit?.required ?? false"
+            [placeholder]="column.edit?.placeholder || ''"
+            [attr.min]="column.edit?.min ?? null"
+            [attr.max]="column.edit?.max ?? null"
+            [ngModel]="getCellEditValue(i, column.key, element)"
+            (ngModelChange)="handleInlineEditChange($event, column, element, i)"
+          />
+        </mat-form-field>
+        }
+
+        <!-- inline select -->
+        @case ('inlineSelect') {
+        <mat-form-field appearance="outline" class="pe-table-field">
+          <mat-select
+            class="pe-table-select"
+            [required]="column.edit?.required ?? false"
+            [placeholder]="column.edit?.placeholder || ''"
+            [ngModel]="getCellEditValue(i, column.key, element)"
+            (ngModelChange)="handleInlineEditChange($event, column, element, i)"
+          >
+            <mat-option
+              *ngIf="column.edit?.placeholder"
+              [value]="null"
+              disabled
+            >
+              {{ column.edit?.placeholder }}
+            </mat-option>
+
+            <mat-option
+              *ngFor="let opt of column.edit?.options || []"
+              [value]="opt.value"
+            >
+              {{ opt.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        }
+
+        <!-- inline switch -->
+        @case ('inlineSwitch') {
+        <switch-button
+          [checked]="!!getCellEditValue(i, column.key, element)"
+          (checkedChange)="handleInlineEditChange($event, column, element, i)"
+          [required]="column.edit?.required ?? false"
+          [labelOn]="'On'"
+          [labelOff]="'Off'"
+        ></switch-button>
+        }
+
+        <!-- inline date (Material datepicker) -->
+        @case ('inlineDate') {
+        <mat-form-field appearance="outline" class="pe-table-field">
+          <input
+            matInput
+            class="pe-table-input pe-table-input-date"
+            [matDatepicker]="inlineDate"
+            [required]="column.edit?.required ?? false"
+            [placeholder]="column.edit?.placeholder || ''"
+            [ngModel]="getCellEditValue(i, column.key, element)"
+            (ngModelChange)="handleInlineEditChange($event, column, element, i)"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="inlineDate"
+          ></mat-datepicker-toggle>
+          <mat-datepicker
+            #inlineDate
+            [touchUi]="true"
+            [startAt]="getCellEditValue(i, column.key, element)"
+          ></mat-datepicker>
+        </mat-form-field>
+        }
+
+        <!-- inline datetime (native datetime-local shell) -->
+        @case ('inlineDateTime') {
+        <ape-date-time-picker
+          [label]="column.label"
+          [value]="toDateOrNull(getCellEditValue(i, column.key, element))"
+          [min]="toDateOrNull(column.edit?.minDate ?? null)"
+          [max]="toDateOrNull(column.edit?.maxDate ?? null)"
+          [required]="column.edit?.required ?? false"
+          [disabled]="column.edit?.disabled || false"
+          (valueChange)="handleInlineEditChange($event, column, element, i)"
+        >
+        </ape-date-time-picker>
+        }
+
+        <!-- date RANGE via dialog (read-only text here) -->
+        @case ('dialogDateRange') {
+        <div class="pe-table-dialog-text">
+          <div
+            class="pe-table-dialog-text-preview text-capitalize"
+            [matTooltip]="element[column.key] || ''"
+            matTooltipPosition="above"
+          >
+            {{ trimText(element[column.key]) }}
+          </div>
+        </div>
+        }
+
+        <!-- fallback when edit kind unknown -->
+        @default {
         <div
           class="text-capitalize"
           [innerHTML]="trimText(element[column.key])"
         ></div>
-        } } } }
-      </td>
+        } }
 
-      <!-- End table data for the columns -->
+        <!-- ───────── DIALOG TEXT EDITOR ───────── -->
+        } @else if (isDialogTextEdit(column)) {
+
+        <div class="pe-table-dialog-text">
+          <div
+            class="pe-table-dialog-text-preview text-capitalize"
+            [matTooltip]="element[column.key] || ''"
+            matTooltipPosition="above"
+          >
+            {{ trimText(element[column.key]) }}
+          </div>
+          <button
+            type="button"
+            class="btn pe-table-dialog-edit-btn"
+            (click)="openTextEditorDialog(column, element, i)"
+            matTooltip="Edit full text"
+            matTooltipPosition="above"
+          >
+            <mat-icon>edit_note</mat-icon>
+          </button>
+        </div>
+
+        <!-- ───────── READ-ONLY CELL ───────── -->
+        } @else {
+        <div
+          class="text-capitalize"
+          [innerHTML]="trimText(element[column.key])"
+        ></div>
+        } } } } }
+      </td>
     </ng-container>
 
     <tr
@@ -227,7 +414,9 @@
   </table>
   <!-- End Table -->
 </div>
+
 } @else {
+
 <div class="no-users-container">
   <mat-icon class="no-users-icon" aria-hidden="true">report_problem</mat-icon>
   <p class="no-users-text">
@@ -238,6 +427,7 @@
     }}
   </p>
 </div>
+
 } } @else {
 
 <div class="no-users-container">
@@ -250,4 +440,5 @@
     }}
   </p>
 </div>
+
 }

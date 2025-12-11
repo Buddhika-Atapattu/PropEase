@@ -343,7 +343,7 @@ export class PropertyListingComponent
   protected AddedByName: AddedBy[ 'name' ] = '';
   protected AddedByEmail: AddedBy[ 'email' ] = '';
   protected AddedByRole: AddedBy[ 'role' ] = '';
-  protected AddedByContactNumber: AddedBy[ 'contactNumber' ] = '';
+  protected AddedByContactNumber: AddedBy[ 'contactNumber' ] | undefined = undefined;
   protected AddedByAddedAt: AddedBy[ 'addedAt' ] = new Date();
 
   private AddedBy: Property[ 'addedBy' ] = {
@@ -500,7 +500,7 @@ export class PropertyListingComponent
     this.AddedByName = this.loggedUser?.name ?? '';
     this.AddedByEmail = this.loggedUser?.email ?? '';
     this.AddedByRole = this.loggedUser?.role ?? '';
-    this.AddedByContactNumber = this.loggedUser?.phoneNumber ?? '';
+    this.AddedByContactNumber = this.loggedUser?.phoneNumber ?? undefined;
     this.AddedByAddedAt = new Date();
 
     this.registerCustomIcons();
@@ -1074,7 +1074,7 @@ export class PropertyListingComponent
       this.typeAddressCountry = '';
     }
 
-    const countries: Country[] = await this.apiService.getCountries();
+    const countries = await this.apiService.getCountries();
     if ( !Array.isArray( countries ) ) return;
 
     this.AddressCountries = countries;
@@ -1316,7 +1316,7 @@ export class PropertyListingComponent
         name: this.AddedByName.trim(),
         email: this.AddedByEmail.trim(),
         role: this.AddedByRole.trim(),
-        contactNumber: ( this.AddedByContactNumber ?? '' ).trim(),
+        contactNumber: this.AddedByContactNumber ?? undefined,
         addedAt:
           this.AddedByAddedAt instanceof Date
             ? this.AddedByAddedAt.toISOString().trim()

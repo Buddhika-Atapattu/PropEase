@@ -1,13 +1,17 @@
-// src/app/services/auth/auth.service.ts
+// Path: src/app/services/auth/auth.service.ts
 // -----------------------------------------------------------------------------
 // AuthService
 // -----------------------------------------------------------------------------
 // Responsibilities
 //   - Login / logout / session restore
 //   - Local persistence of:
-//       * sessionToken (JWT from backend)
+//       * sessionToken (opaque backend session token)
+//       * guardToken   (short-lived API guard token)
+//       * wsToken      (WebSocket-only token)
 //       * encrypted logged user snapshot
 //       * "is user logged in" flag
+//       * remember-me username/password snapshot
+//       * LAST_URL and MFA state
 //   - Bootstraps realtime stack ONCE per browser session:
 //       1) SocketService       – shared Socket.IO bus for chat/call/notifications
 //       2) NotificationService – wires to shared socket, manages notification state
@@ -18,7 +22,7 @@
 //         (used for quick UI gating, not security).
 //   - FUTURE (recommended):
 //       * Move ACCESS_OPTIONS + DEFAULT_ROLE_ACCESS to backend.
-//       * Backend issues JWT with role + permission claims.
+//       * Backend issues JWT / claims with role + permissions.
 //       * Frontend reads from token / user.access to derive permissions.
 //       * This service becomes a thin consumer of backend rules.
 // -----------------------------------------------------------------------------
@@ -28,7 +32,12 @@ import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { CryptoService } from '../cryptoService/crypto.service';
-import { APIsService, User, Role, DEFAULT_ROLES, ROLE_ACCESS_MAP, PermissionEntry } from '../APIs/apis.service';
+import {
+  APIsService,
+  User,
+  Role,
+  DEFAULT_ROLES,
+} from '../APIs/apis.service';
 import { ActivityTrackerService } from '../activityTacker/activity-tracker.service';
 import { NotificationService } from '../notifications/notification-service';
 import { SocketService } from '../socket/socket-service';
@@ -40,8 +49,9 @@ import {
   AccessActionKey,
 } from '../../source/access-map.source';
 import { environment } from '../../../environments/environment';
+import type { MSG } from '../../types/api-message.types';
 
-/* ============================================================================
+/* ============================================================================ *
  *  Types: User credentials & access model
  * ========================================================================== */
 
@@ -60,6 +70,26 @@ export interface Address {
   stateOrProvince?: string;
 }
 
+export interface TempLoginChallenge {
+  userId: string;
+  username: User[ 'username' ];
+
+  token: string;          // random challenge token given to FE
+  createdAt: Date;
+  expiresAt: Date;
+  used: boolean;
+  usedAt?: Date | null;   // null/undefined = never used, Date = consumed time
+
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export type MfaVerificationStatus =
+  | 'validated'
+  | 'not_validated'
+  | 'pending'
+  | 'no_mfa'
+  | 'unknown';
 
 /**
  * Per-role default access config for FRONTEND FALLBACK:
@@ -71,7 +101,7 @@ type DefaultRoleAccessConfig = Partial<
   Record<AccessModuleKey, ReadonlyArray<AccessActionKey>>
 >;
 
-/* ============================================================================
+/* ============================================================================ *
  *  AuthService
  * ========================================================================== */
 
@@ -106,14 +136,30 @@ export class AuthService {
   private notificationsInit = false;
 
   /** LocalStorage keys centralised (avoid typos). */
-  private readonly STORAGE_KEYS = {
+  private readonly STORAGE_KEYS: Readonly<{
+    user: 'ENCRYPED_LOGGED_USER';
+    isLoggedIn: 'IS_USER_LOGGED_IN';
+    password: 'PASSWORD';
+    sessionToken: 'sessionToken';
+    guardToken: 'guardToken';
+    wsToken: 'wsToken';
+    mfaVerify: 'mfa_verify';
+    lastUrl: 'LAST_URL';
+    rememberUsername: 'REMEMBER_USERNAME';
+  }> = {
     user: 'ENCRYPED_LOGGED_USER',
     isLoggedIn: 'IS_USER_LOGGED_IN',
     password: 'PASSWORD',
     sessionToken: 'sessionToken',
     guardToken: 'guardToken',
+      wsToken: 'wsToken',        // WebSocket-only token
+      mfaVerify: 'mfa_verify',
+      lastUrl: 'LAST_URL',
+      rememberUsername: 'REMEMBER_USERNAME',
   } as const;
 
+  private _temporyChallenge: TempLoginChallenge | null = null;
+  private _tempUsername = '';
 
   /**
    * Cached: for each Role, which MODULE definitions are visible in the UI.
@@ -162,7 +208,7 @@ export class AuthService {
     return this.notificationService.unreadCount();
   }
 
-  markNotificationRead( notificationId: string ): Promise<void> {
+  public markNotificationRead( notificationId: string ): Promise<void> {
     return this.notificationService.markRead( notificationId );
   }
 
@@ -196,6 +242,21 @@ export class AuthService {
     return this.isLoggedIn;
   }
 
+  get temporyChallenge(): TempLoginChallenge | null {
+    return this._temporyChallenge;
+  }
+
+  get tempUsername(): string {
+    return this._tempUsername;
+  }
+
+  set tempUsername( value: string ) {
+    this._tempUsername = value.trim();
+  }
+
+  set temporyChallenge( value: TempLoginChallenge | null ) {
+    this._temporyChallenge = value;
+  }
 
   set loginUserCredentials( user: UserCredentials ) {
     this.username = user.username;
@@ -216,21 +277,153 @@ export class AuthService {
     this.user = user;
   }
 
-  /* ============================================================================
-   *  Login flow
+  /* ============================================================================ *
+   *  High-level login API (for LoginComponent)
+   * ========================================================================== */
+
+  /**
+   * High-level login API for LoginComponent.
+   * Responsibilities:
+   *  - Validate input
+   *  - Call sendVerifyUser()
+   *  - Handle remember-me snapshot
+   *  - Branch MFA vs normal login
+   *  - On normal login, call assignToken(), afterUserLoggedInOperations()
+   */
+  public async loginWithCredentials(
+    username: string,
+    password: string,
+    rememberMe: boolean,
+  ): Promise<{
+    success: boolean;
+    mfaRequired?: boolean;
+    challenge?: TempLoginChallenge | null;
+    redirectUrl?: string;
+    errorMessage?: string;
+  }> {
+    try {
+      const trimmedUsername: string = username.trim();
+      const rawPassword: string = password;
+
+      if ( !trimmedUsername || !rawPassword ) {
+        return {
+          success: false,
+          errorMessage: 'Username and password are required.',
+        };
+      }
+
+      // Update internal state
+      this.loginUserCredentials = {
+        username: trimmedUsername,
+        password: rawPassword,
+        rememberMe,
+      };
+
+      const res: MSG | null = await this.sendVerifyUser();
+
+      if ( !res || !res.success ) {
+        const msg: string =
+          res?.message ?? 'Failed to validate user credentials.';
+        await this.clearCredentials();
+        return {
+          success: false,
+          errorMessage: msg,
+        };
+      }
+
+      // Credentials are valid → handle remember-me snapshot
+      await this.storeRememberMeSnapshot( trimmedUsername, rawPassword, rememberMe );
+
+      // MFA branch (no full session yet)
+      const mfaRequired: boolean | null =
+        this.apiService.extractBooleanFromOther( res.data, 'mfaRequired' );
+      const challenge =
+        this.apiService.extractObjectFromOther<TempLoginChallenge>(
+          res.data,
+          'challenge',
+        );
+
+      if ( mfaRequired === true && challenge ) {
+        this.tempUsername = trimmedUsername;
+        this.temporyChallenge = challenge;
+
+        if ( this.isBrowser ) {
+          localStorage.setItem( this.STORAGE_KEYS.mfaVerify, 'pending' );
+        }
+
+        return {
+          success: true,
+          mfaRequired: true,
+          challenge,
+        };
+      }
+
+      // Normal login flow – tokens + session
+      await this.assignToken( res );
+
+      if ( this.isBrowser ) {
+        // Default entry point after login
+        localStorage.setItem( this.STORAGE_KEYS.lastUrl, '/dashboard/home' );
+      }
+
+      return {
+        success: true,
+        mfaRequired: false,
+        redirectUrl: '/dashboard/home',
+      };
+    } catch ( error: any ) {
+      console.error( '[AuthService.loginWithCredentials]', error );
+      await this.clearCredentials();
+      return {
+        success: false,
+        errorMessage:
+          error?.message || 'Unexpected error occurred during login.',
+      };
+    }
+  }
+
+  /**
+   * Bootstrap helper for LoginComponent:
+   *  1) Try auto-login from storage.
+   *  2) If auto-login fails, try to pre-fill remembered credentials.
+   */
+  public async bootstrapLoginView(): Promise<{
+    autoLoggedIn: boolean;
+    redirectUrl?: string;
+    remembered?: UserCredentials | null;
+  }> {
+    const auto = await this.tryAutoLoginFromStorage();
+
+    if ( auto.autoLoggedIn ) {
+      return {
+        autoLoggedIn: true,
+        redirectUrl: auto.redirectUrl,
+        remembered: null,
+      };
+    }
+
+    const remembered = await this.getRememberedCredentials();
+
+    return {
+      autoLoggedIn: false,
+      remembered,
+    };
+  }
+
+  /* ============================================================================ *
+   *  Low-level login flow (called internally)
    * ========================================================================== */
 
   /**
    * Main login entry.
    *  - Calls backend `verifyUser`
-   *  - Stores token in localStorage
-   *  - Persists encrypted user snapshot
-   *  - Boots realtime stack
    */
-  public async sendVerifyUser(): Promise<boolean> {
+  public async sendVerifyUser(): Promise<MSG | null> {
     try {
       if ( !this.user?.username || !this.user?.password ) {
-        throw new Error( 'Login data is missing. Please provide username & password.' );
+        throw new Error(
+          'Login data is missing. Please provide username & password.',
+        );
       }
 
       const payload = {
@@ -240,9 +433,33 @@ export class AuthService {
 
       const response = await this.apiService.login( payload );
 
-
       if ( !response || response.status !== 'success' ) {
         throw new Error( 'Invalid credentials or login failed.' );
+      }
+
+      return response;
+    } catch ( error ) {
+      console.error( '[AuthService.sendVerifyUser] Login failed', error );
+      // Best-effort cleanup – robust against half-broken sessions
+      this.clearCredentials().catch( ( err ) =>
+        console.error( '[AuthService.sendVerifyUser] cleanup after failure:', err ),
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Consume the login response:
+   *  - Set in-memory user
+   *  - Extract & persist tokens
+   *  - Initialise realtime
+   *  - Persist encrypted snapshot
+   *  - Run final active-user guard
+   */
+  public async assignToken( response: MSG ): Promise<void> {
+    try {
+      if ( !response ) {
+        throw new Error( 'Invalid response!' );
       }
 
       const user: User | undefined = response.data?.system?.user;
@@ -262,46 +479,53 @@ export class AuthService {
         response.data,
         'sessionToken',
       );
-
       const guardToken = this.apiService.extractStringFromOther(
         response.data,
         'guardToken',
       );
 
+      // WebSocket-only token (optional)
+      const wsToken = this.apiService.extractStringFromOther(
+        response.data,
+        'wsToken',
+      );
+
+      const mfaVerify = this.apiService.extractBooleanFromOther(
+        response.data,
+        'mfaVerify',
+      );
 
       if ( !sessionToken || !guardToken ) {
         throw new Error( 'Auth tokens are missing in login response.' );
       }
 
+      if ( !wsToken ) {
+        console.warn(
+          '[AuthService.assignToken] wsToken is missing in login response – WebSocket handshake may fall back.',
+        );
+      }
 
-      this.writeTokenToStorage( sessionToken, guardToken );
+      this.writeTokenToStorage( sessionToken, guardToken, wsToken, mfaVerify );
 
-      // Boot realtime layers
+      // Boot realtime layers (will use sessionToken + wsToken from storage)
       this.initRealtimeIfNeeded();
 
-      // Persist encrypted snapshot (user + password)
-      await this.afterUserLoggedInOperatios();
+      // Persist encrypted snapshot (user only)
+      await this.afterUserLoggedInOperations();
 
       // Final guard on isActive
       await this.finalInitialGuard( user );
-
-      const isActive = response.data?.system?.user?.isActive;
-      return !!isActive;
     } catch ( error ) {
-      console.error( '[AuthService.sendVerifyUser] Login failed', error );
-      this.clearCredentials();
-      return false;
+      console.error( '[AuthService.assignToken] Failed to assign tokens', error );
     }
   }
 
-  /* ============================================================================
+  /* ============================================================================ *
    *  Type guards
    * ========================================================================== */
 
   /**
    * Runtime type guard for User / User[]
-   *  - Used where backend returns untyped data.
-   *  - Keep this in sync with `User` interface in APIsService.
    */
   public isUsersType( data: unknown ): data is User[] | User {
     const isOne = ( item: any ): boolean =>
@@ -314,8 +538,15 @@ export class AuthService {
         item.dateOfBirth instanceof Date ) &&
       typeof item.age === 'number' &&
       ( typeof item.image === 'string' || item.image instanceof File ) &&
-      ( typeof item.phoneNumber === 'string' ||
-        typeof item.phoneNumber === 'undefined' ) &&
+      (
+        typeof item.phoneNumber === 'string' ||
+        typeof item.phoneNumber === 'undefined' ||
+        (
+          item.phoneNumber &&
+          typeof item.phoneNumber === 'object' &&
+          typeof item.phoneNumber.number === 'string'
+        )
+      ) &&
       typeof item.bio === 'string' &&
       DEFAULT_ROLES.includes( item.role as Role ) &&
       typeof item.gender === 'string' &&
@@ -352,21 +583,15 @@ export class AuthService {
     return Array.isArray( data ) ? data.every( isOne ) : isOne( data );
   }
 
-  /* ============================================================================
-   *  Admin-only helper
-   * ========================================================================== */
-
-
-
-  /* ============================================================================
+  /* ============================================================================ *
    *  Post-login persistence
    * ========================================================================== */
 
   /**
-   * Persist encrypted user snapshot + password into localStorage.
+   * Persist encrypted user snapshot into localStorage.
    *  This is called after successful login.
    */
-  public async afterUserLoggedInOperatios(): Promise<void> {
+  public async afterUserLoggedInOperations(): Promise<void> {
     if ( !this.isBrowser ) {
       return;
     }
@@ -378,34 +603,217 @@ export class AuthService {
     }
 
     try {
+      // Always store encrypted user snapshot + login flag
       const encryptedUser = await this.cryptoService.encrypt( baseUser );
-      const encryptedPassword = await this.cryptoService.encrypt(
-        this.password,
-      );
 
-      if ( encryptedUser && encryptedPassword ) {
+      if ( encryptedUser ) {
         localStorage.setItem( this.STORAGE_KEYS.user, encryptedUser );
         localStorage.setItem( this.STORAGE_KEYS.isLoggedIn, 'true' );
-        localStorage.setItem(
-          this.STORAGE_KEYS.password,
-          encryptedPassword,
-        );
       }
+      // Remember-me password is handled separately by storeRememberMeSnapshot()
     } catch ( error ) {
-      console.error(
-        '[AuthService.afterUserLoggedInOperatios]',
-        error,
-      );
+      console.error( '[AuthService.afterUserLoggedInOperations]', error );
     }
   }
 
-  /* ============================================================================
-   *  Session restore (app bootstrap)
+  /**
+   * Store or clear remember-me snapshot (username + password).
+   * This is ONLY for pre-filling the login form.
+   * It does NOT control session validity.
+   */
+  private async storeRememberMeSnapshot(
+    username: string,
+    password: string,
+    rememberMe: boolean,
+  ): Promise<void> {
+    if ( !this.isBrowser ) {
+      return;
+    }
+
+    if ( !rememberMe ) {
+      await this.clearRememberMeSnapshot();
+      return;
+    }
+
+    const safeUsername: string = username.trim();
+    const safePassword: string = password;
+
+    if ( !safeUsername || !safePassword ) {
+      await this.clearRememberMeSnapshot();
+      return;
+    }
+
+    try {
+      const [ encUsername, encPassword ] = await Promise.all( [
+        this.cryptoService.encrypt( safeUsername ),
+        this.cryptoService.encrypt( safePassword ),
+      ] );
+
+      if ( encUsername ) {
+        localStorage.setItem( this.STORAGE_KEYS.rememberUsername, encUsername );
+      }
+
+      if ( encPassword ) {
+        localStorage.setItem( this.STORAGE_KEYS.password, encPassword );
+      }
+    } catch ( error ) {
+      console.error( '[AuthService.storeRememberMeSnapshot]', error );
+      await this.clearRememberMeSnapshot();
+    }
+  }
+
+  /**
+   * Remove remember-me username/password from storage.
+   */
+  private async clearRememberMeSnapshot(): Promise<void> {
+    if ( !this.isBrowser ) {
+      return;
+    }
+
+    try {
+      localStorage.removeItem( this.STORAGE_KEYS.rememberUsername );
+      localStorage.removeItem( this.STORAGE_KEYS.password );
+    } catch ( error ) {
+      console.error( '[AuthService.clearRememberMeSnapshot]', error );
+    }
+  }
+
+  /**
+   * Load remembered credentials (if any) for login pre-fill.
+   * Returns null if nothing valid is stored.
+   */
+  public async getRememberedCredentials(): Promise<UserCredentials | null> {
+    if ( !this.isBrowser ) {
+      return null;
+    }
+
+    const encUsername: string | null =
+      localStorage.getItem( this.STORAGE_KEYS.rememberUsername );
+    const encPassword: string | null =
+      localStorage.getItem( this.STORAGE_KEYS.password );
+
+    if ( !encUsername || !encPassword ) {
+      return null;
+    }
+
+    try {
+      const [ decUsername, decPassword ] = await Promise.all( [
+        this.cryptoService.decrypt( encUsername ),
+        this.cryptoService.decrypt( encPassword ),
+      ] );
+
+      if ( !decUsername || !decPassword ) {
+        return null;
+      }
+
+      return {
+        username: String( decUsername ),
+        password: String( decPassword ),
+        rememberMe: true,
+      };
+    } catch ( error ) {
+      console.error( '[AuthService.getRememberedCredentials]', error );
+      return null;
+    }
+  }
+
+  /* ============================================================================ *
+   *  Session restore (auto-login / app bootstrap)
    * ========================================================================== */
 
   /**
-   * Restore logged user from encrypted localStorage snapshot.
-   *  - Also boots realtime stack if data is valid.
+   * Try to restore a full session from localStorage.
+   * Conditions:
+   *  - sessionToken + ENCRYPED_LOGGED_USER must exist
+   *  - If mfaVerify is present and not "validated"/"no_mfa" → abort
+   */
+  private async tryAutoLoginFromStorage(): Promise<{
+    autoLoggedIn: boolean;
+    redirectUrl?: string;
+  }> {
+    if ( !this.isBrowser ) {
+      return { autoLoggedIn: false };
+    }
+
+    try {
+      const sessionToken: string | null =
+        localStorage.getItem( this.STORAGE_KEYS.sessionToken );
+      const encLoggedUser: string | null =
+        localStorage.getItem( this.STORAGE_KEYS.user );
+      const isLoggedFlag: string | null =
+        localStorage.getItem( this.STORAGE_KEYS.isLoggedIn );
+      const mfaVerify: string | null =
+        localStorage.getItem( this.STORAGE_KEYS.mfaVerify );
+      const lastUrlRaw: string | null =
+        localStorage.getItem( this.STORAGE_KEYS.lastUrl );
+
+      if ( !sessionToken || !encLoggedUser ) {
+        return { autoLoggedIn: false };
+      }
+
+      if ( isLoggedFlag !== null && isLoggedFlag !== 'true' ) {
+        return { autoLoggedIn: false };
+      }
+
+      if (
+        mfaVerify !== null &&
+        mfaVerify !== 'validated' &&
+        mfaVerify !== 'no_mfa'
+      ) {
+        return { autoLoggedIn: false };
+      }
+
+      const decryptedUser =
+        ( await this.cryptoService.decrypt( encLoggedUser ) ) as User | null;
+
+      if ( !decryptedUser || !decryptedUser.username?.trim() ) {
+        return { autoLoggedIn: false };
+      }
+
+      if ( decryptedUser.isActive === false ) {
+        return { autoLoggedIn: false };
+      }
+
+      // Restore into AuthService
+      this.loggedUser = decryptedUser;
+      this.localUser = decryptedUser;
+      this.isLoggedIn = true;
+      this.isValidUser = true;
+      this.isUserActive = !!decryptedUser.isActive;
+
+      // Boot realtime (will use tokens from storage)
+      this.initRealtimeIfNeeded();
+
+      // ─────────────────────────────────────────────────────────────
+      // NEW: ignore public/auth routes when picking redirect target
+      // ─────────────────────────────────────────────────────────────
+      const safeLastUrl: string = ( lastUrlRaw ?? '' ).trim();
+
+      const isPublicRoute: boolean =
+        !safeLastUrl ||
+        safeLastUrl === '/' ||
+        safeLastUrl === '/login' ||
+        safeLastUrl.startsWith( '/mfa' ) ||
+        safeLastUrl.startsWith( '/auth' );
+
+      const targetUrl: string = isPublicRoute
+        ? '/dashboard/home'
+        : safeLastUrl;
+
+      return {
+        autoLoggedIn: true,
+        redirectUrl: targetUrl,
+      };
+    }
+    catch ( error ) {
+      console.error( '[AuthService.tryAutoLoginFromStorage]', error );
+      return { autoLoggedIn: false };
+    }
+  }
+
+
+  /**
+   * Generic restore (for places that still call it directly).
    */
   public async getLocalLoggedUser(): Promise<User | null> {
     if ( !this.isBrowser ) {
@@ -427,20 +835,17 @@ export class AuthService {
       this.isValidUser = true;
       this.isLoggedIn = true;
 
-      // Boot realtime on restore
+      // Boot realtime on restore – guarded by tokens inside initRealtimeIfNeeded
       this.initRealtimeIfNeeded();
 
       return decryptedUser;
     } catch ( error ) {
-      console.error(
-        '[AuthService.getLocalLoggedUser] decrypt failed',
-        error,
-      );
+      console.error( '[AuthService.getLocalLoggedUser] decrypt failed', error );
       return null;
     }
   }
 
-  /* ============================================================================
+  /* ============================================================================ *
    *  Activity tracker
    * ========================================================================== */
 
@@ -448,24 +853,18 @@ export class AuthService {
     try {
       const date = new Date();
       const data = { username: this.user?.username, date };
-      await this.activityTrackerService.saveLoggedUserDataToTracking(
-        data,
-      );
+      await this.activityTrackerService.saveLoggedUserDataToTracking( data );
     } catch ( error ) {
-      console.error(
-        '[AuthService.insertLoggedUserTracks]',
-        error,
-      );
+      console.error( '[AuthService.insertLoggedUserTracks]', error );
     }
   }
 
-  /* ============================================================================
+  /* ============================================================================ *
    *  Realtime bootstrap (Sockets + Notifications)
    * ========================================================================== */
 
   /**
-   * Resolve backend HTTP base from APIsService or window.location.
-   *  - If you later centralise environment config, plug it here.
+   * Resolve backend HTTP base from APIsService or environment.
    */
   private resolveApiBase(): string {
     if ( !this.isBrowser ) {
@@ -493,13 +892,15 @@ export class AuthService {
         return;
       }
 
-      const tokenFromService = ( this.apiService as any )?.token;
-      const tokenFromStorage = this.readTokenFromStorage();
-      const token = tokenFromService ?? tokenFromStorage;
+      // Always read the canonical token bundle from localStorage.
+      const tokenBundle = this.readTokenFromStorage();
 
-      if ( !token ) {
+      const sessionToken: string | undefined = tokenBundle?.session;
+      const wsToken: string | undefined = tokenBundle?.wsToken;
+
+      if ( !sessionToken ) {
         throw new Error(
-          '[AuthService] initRealtimeIfNeeded: no token found, skipping realtime init',
+          '[AuthService] initRealtimeIfNeeded: no session token found, skipping realtime init',
         );
       }
 
@@ -512,17 +913,27 @@ export class AuthService {
 
       const wsBase = apiBase;
 
+      // For now, "tokenProvider" just re-reads the session token from storage.
       const tokenProvider = (): string =>
         this.readTokenFromStorage()?.session ?? '';
 
-      this.socketService.init( { wsBase, token, tokenProvider } );
-
-      this.notificationService.initConnection( {
+      // ── Socket.IO: use sessionToken + wsToken for handshake ──────────────
+      this.socketService.init( {
         wsBase,
-        token,
+        token: sessionToken,          // same opaque token as HTTP APIs
+        sessionToken: sessionToken,
+        wsToken,
         tokenProvider,
       } );
 
+      // ── Notification service: HTTP + (optional) WS integration ───────────
+      this.notificationService.initConnection( {
+        wsBase,
+        token: sessionToken,
+        tokenProvider,
+      } );
+
+      // Initial pull of notifications (guarded by ApiGuard)
       this.notificationService
         .load( { limit: 20 } )
         .catch( ( err ) =>
@@ -535,113 +946,178 @@ export class AuthService {
       this.notificationsInit = true;
     } catch ( error ) {
       console.error( '[Failed to initialise notification:] ', error );
-      return;
     }
   }
 
-  /* ============================================================================
+  /**
+   * getMfaVerificationStatus
+   * ------------------------
+   * Returns the MFA verification state for the CURRENT session.
+   */
+  public getMfaVerificationStatus(): MfaVerificationStatus {
+    if ( !this.isBrowser ) {
+      return 'unknown';
+    }
+
+    const user = this.loggedUser ?? this.localUser ?? null;
+
+    if ( !user || !user.multiAuthEnabled ) {
+      return 'no_mfa';
+    }
+
+    const raw = localStorage.getItem( this.STORAGE_KEYS.mfaVerify );
+
+    if ( !raw ) {
+      return 'pending';
+    }
+
+    const value = raw.trim().toLowerCase();
+
+    switch ( value ) {
+      case 'validated':
+        return 'validated';
+      case 'not_validated':
+        return 'not_validated';
+      case 'pending':
+        return 'pending';
+      case 'no_mfa':
+        return 'no_mfa';
+      default:
+        return 'unknown';
+    }
+  }
+
+  /* ============================================================================ *
    *  Cleanup (logout)
    * ========================================================================== */
 
   /**
    * Full logout:
-   *  - Clears in-memory auth state
+   *  - Backend /logout is BEST-EFFORT (idempotent)
    *  - Clears encrypted snapshot & flags from localStorage
+   *  - Clears sessionToken + guardToken + wsToken
    *  - Disconnects realtime layers
-   *
-   * NOTE:
-   *  By default we also clear sessionToken and guardToken here. If you ever implement
-   *  backend-side blacklisting / revocation, you might adjust this.
+   *  - Always clears in-memory state (even if something fails)
    */
   public async clearCredentials(): Promise<void> {
     const failures: string[] = [];
 
+    const username: string =
+      this.localUser?.username ??
+      this.loggedUser?.username ??
+      '';
+
     try {
+      // 1) Backend logout – BEST EFFORT only
+      try {
+        const res = await this.apiService.logout();
 
-      if ( !this.loggedUser ) {
-        throw new Error( 'Logout failed due to the invalid user data!' );
+        if ( !res?.success || res.status !== 'success' ) {
+          console.warn(
+            '[AuthService.clearCredentials] Backend logout reported failure:',
+            res,
+          );
+        }
+      } catch ( err ) {
+        console.warn(
+          '[AuthService.clearCredentials] Backend logout threw error:',
+          err,
+        );
       }
 
-      const res = await this.apiService.logout();
-
-      if ( !res.success || res.status !== 'success' ) {
-        throw new Error( 'Failed to logout properly!' );
-      }
-
+      // 2) LocalStorage cleanup + anomaly reporting
       if ( this.isBrowser ) {
-        // 1) Attempt removals
+        // 2.1 Attempt removals
         localStorage.removeItem( this.STORAGE_KEYS.user );
         localStorage.removeItem( this.STORAGE_KEYS.isLoggedIn );
         localStorage.removeItem( this.STORAGE_KEYS.password );
         localStorage.removeItem( this.STORAGE_KEYS.sessionToken );
         localStorage.removeItem( this.STORAGE_KEYS.guardToken );
+        localStorage.removeItem( this.STORAGE_KEYS.wsToken );
+        localStorage.removeItem( this.STORAGE_KEYS.mfaVerify );
+        localStorage.removeItem( this.STORAGE_KEYS.lastUrl );
+        localStorage.removeItem( this.STORAGE_KEYS.rememberUsername );
 
-        // 2) Validate each key and report anomalies
+        // 2.2 Validate each key and report anomalies
 
-        // 2.1 User object
+        // 2.2.1 User object
         const storedUser = localStorage.getItem( this.STORAGE_KEYS.user );
         if ( storedUser !== null ) {
-          await this.adminReportService.reportCleanUser(
-            this.localUser?.username ??
-            this.loggedUser?.username ??
-            '',
-          );
+          try {
+            await this.adminReportService.reportCleanUser( username );
+          } catch ( err ) {
+            console.warn(
+              '[AuthService.clearCredentials] reportCleanUser failed:',
+              err,
+            );
+          }
           failures.push( 'user' );
         }
 
-        // 2.2 Login status flag
+        // 2.2.2 Login status flag
         const storedLogin = localStorage.getItem(
           this.STORAGE_KEYS.isLoggedIn,
         );
         if ( storedLogin !== null ) {
           const actualStatus: boolean = storedLogin === 'true';
-          await this.adminReportService.reportLoginStatusFailure(
-            this.localUser?.username ??
-            this.loggedUser?.username ??
-            '',
-            false, // expected: logged out
-            actualStatus, // actual value in storage
-          );
+          try {
+            await this.adminReportService.reportLoginStatusFailure(
+              username,
+              false,        // expected: logged out
+              actualStatus, // actual value in storage
+            );
+          } catch ( err ) {
+            console.warn(
+              '[AuthService.clearCredentials] reportLoginStatusFailure failed:',
+              err,
+            );
+          }
           failures.push( 'loginStatus' );
         }
 
-        // 2.3 Password snapshot
+        // 2.2.3 Password snapshot
         const storedPassword = localStorage.getItem(
           this.STORAGE_KEYS.password,
         );
         if ( storedPassword !== null ) {
-          await this.adminReportService.reportCleanPassword(
-            this.localUser?.username ??
-            this.loggedUser?.username ??
-            '',
-          );
+          try {
+            await this.adminReportService.reportCleanPassword( username );
+          } catch ( err ) {
+            console.warn(
+              '[AuthService.clearCredentials] reportCleanPassword failed:',
+              err,
+            );
+          }
           failures.push( 'password' );
         }
 
-        // 2.4 Token
-        const storedSessionToken = localStorage.getItem( this.STORAGE_KEYS.sessionToken );
-        const storedGuardToken = localStorage.getItem( this.STORAGE_KEYS.guardToken );
-        if ( storedSessionToken !== null ) {
-          await this.adminReportService.reportCleanToken(
-            this.loggedUser?.username ??
-            this.localUser?.username ??
-            '',
-          );
+        // 2.2.4 Tokens (session + guard + ws)
+        const storedSessionToken = localStorage.getItem(
+          this.STORAGE_KEYS.sessionToken,
+        );
+        const storedGuardToken = localStorage.getItem(
+          this.STORAGE_KEYS.guardToken,
+        );
+        const storedWsToken = localStorage.getItem(
+          this.STORAGE_KEYS.wsToken,
+        );
+
+        if (
+          storedSessionToken !== null ||
+          storedGuardToken !== null ||
+          storedWsToken !== null
+        ) {
+          try {
+            await this.adminReportService.reportCleanToken( username );
+          } catch ( err ) {
+            console.warn(
+              '[AuthService.clearCredentials] reportCleanToken failed:',
+              err,
+            );
+          }
           failures.push( 'token' );
         }
       }
-
-      // 3) Always clear in-memory state (even if storage ops misbehave)
-      this.user = { username: '', password: '', rememberMe: false };
-      this.isLoggedIn = false;
-      this.isValidUser = false;
-      this.isUserActive = false;
-      this.setLoggedUser = null;
-      this.localUser = null;
-
-      this.notificationService.disconnect();
-      this.socketService.disconnect();
-      this.notificationsInit = false;
 
       if ( failures.length > 0 ) {
         console.error(
@@ -651,29 +1127,36 @@ export class AuthService {
       }
     } catch ( error ) {
       console.error(
-        '[AuthService.clearCredentials] Failed to revoke user login:',
+        '[AuthService.clearCredentials] Unexpected error during logout:',
         error,
       );
-      // no rethrow — logout is best-effort
-      return;
+    } finally {
+      // 3) ALWAYS clear in-memory state & realtime, even if something above failed
+      this.user = { username: '', password: '', rememberMe: false };
+      this.username = '';
+      this.password = '';
+      this.isLoggedIn = false;
+      this.isValidUser = false;
+      this.isUserActive = false;
+      this.setLoggedUser = null;
+      this.localUser = null;
+      this._tempUsername = '';
+      this._temporyChallenge = null;
+
+      this.notificationService.disconnect();
+      this.socketService.disconnect();
+      this.notificationsInit = false;
     }
   }
 
-  /* ============================================================================
+  /* ============================================================================ *
    *  Guards & access helpers
    * ========================================================================== */
 
-  /**
-   * Final guard immediately after login:
-   *  - Ensures `user.isActive === true`
-   *  - On failure clears state and routes to root.
-   */
   private async finalInitialGuard( user: User ): Promise<void> {
     try {
       if ( !user ) {
-        throw new Error(
-          'Invalid login data, please try again later.',
-        );
+        throw new Error( 'Invalid login data, please try again later.' );
       }
 
       const isActive: boolean = !!user.isActive;
@@ -693,12 +1176,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * filterModules
-   * -------------
-   * If no modules are passed → return ALL modules from ACCESS_OPTIONS.
-   * If a list is provided → return only those modules.
-   */
   public filterModules(
     modules?: AccessModuleKey[],
   ): ReadonlyArray<AccessModuleOption> {
@@ -712,27 +1189,14 @@ export class AuthService {
     );
   }
 
-  /**
-   * filterDefaultAccessBaseRole
-   * ---------------------------
-   * Frontend helper to decide which MODULES a given role can see
-   * in the Access UI (checkbox tree, etc.).
-   *
-   * NOTE:
-   *  - This returns module *definitions* (AccessModuleOption[]),
-   *    not PermissionEntry[]. You’ll still choose which actions
-   *    inside each module to tick for that role in the UI.
-   */
   public filterDefaultAccessBaseRole(
     role: Role,
   ): ReadonlyArray<AccessModuleOption> {
     switch ( role ) {
-      // Full system visibility
       case 'admin': {
         return this.filterModules();
       }
 
-      // Typical agent: property + tenant + notifications
       case 'agent': {
         const permitModules: AccessModuleKey[] = [
           'PropertyManagement',
@@ -742,7 +1206,6 @@ export class AuthService {
         return this.filterModules( permitModules );
       }
 
-      // Manager: more oversight – user mgmt + tracking
       case 'manager': {
         const permitModules: AccessModuleKey[] = [
           'UserManagement',
@@ -754,7 +1217,6 @@ export class AuthService {
         return this.filterModules( permitModules );
       }
 
-      // Operator: similar to manager but maybe without some system-level stuff
       case 'operator': {
         const permitModules: AccessModuleKey[] = [
           'UserManagement',
@@ -765,8 +1227,6 @@ export class AuthService {
         return this.filterModules( permitModules );
       }
 
-      // Default (tenant / basic user / unknown role):
-      // only tenant & notifications
       default: {
         const permitModules: AccessModuleKey[] = [
           'TenantManagement',
@@ -777,13 +1237,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Build the per-role default access CONFIG for FRONTEND:
-   *   moduleKey -> list of allowed action IDs
-   *
-   * Currently: grants ALL actions in each visible module.
-   * If later you want per-action differences per role, customise here.
-   */
   private buildDefaultRoleAccessConfig(
     role: Role,
   ): DefaultRoleAccessConfig {
@@ -801,14 +1254,6 @@ export class AuthService {
     return config;
   }
 
-  /**
-   * Publish the per-role visible MODULE definitions for UI:
-   * {
-   *   admin:   [AccessModuleOption, ...],
-   *   agent:   [...],
-   *   ...
-   * }
-   */
   public publishDefaultRoleAccessMap(): Record<
     Role,
     ReadonlyArray<AccessModuleOption>
@@ -816,22 +1261,6 @@ export class AuthService {
     return this.defaultRoleModulesMap;
   }
 
-  /**
-   * FRONTEND helper: build boolean matrix from per-role default config.
-   *  - PURELY for UI gating (buttons, menus).
-   *  - REAL security must be enforced on backend (guards + DB).
-   *
-   * Returns (example):
-   * {
-   *   UserManagement: {
-   *     view:   true/false,
-   *     create: true/false,
-   *     ...
-   *   },
-   *   PropertyManagement: { ... },
-   *   ...
-   * }
-   */
   public getDefaultAccessByRole(
     role: Role,
   ): Record<AccessModuleKey, Record<AccessActionKey, boolean>> {
@@ -846,18 +1275,15 @@ export class AuthService {
       Record<AccessActionKey, boolean>
     >;
 
-    // Walk the canonical access matrix (ACCESS_OPTIONS is the source-of-truth)
     for ( const { module, actions } of ACCESS_OPTIONS ) {
       const moduleKey = module as AccessModuleKey;
 
-      // From defaults: list of allowed action IDs for this module
       const allowedActionsForModule: readonly AccessActionKey[] =
         allowedForRole[ moduleKey ] ?? [];
 
       const flags: Record<AccessActionKey, boolean> =
         {} as Record<AccessActionKey, boolean>;
 
-      // Each `action` is AccessActionOption → use `action.id`
       for ( const { id } of actions ) {
         const actionKey = id as AccessActionKey;
         flags[ actionKey ] = allowedActionsForModule.includes( actionKey );
@@ -869,53 +1295,73 @@ export class AuthService {
     return matrix;
   }
 
-  /**
-   * Reserved hook for future per-module defaults,
-   * once access rules are fully backend-driven.
-   */
   public getDefaultAccessByModel( _module: string ): void {
     // reserved for future per-module defaults
   }
 
-  /* ============================================================================
+  /* ============================================================================ *
    *  Token helpers (localStorage)
    * ========================================================================== */
 
-  /** Read JWT from localStorage (if browser). */
-  private readTokenFromStorage(): { session: string, guard: string; } | null {
+  private readTokenFromStorage():
+    | { session: string; guard: string; wsToken?: string; }
+    | null {
     if ( !this.isBrowser ) {
       return null;
     }
-    const sessionToken = localStorage.getItem( this.STORAGE_KEYS.sessionToken ) ?? null;
-    const guardToken = localStorage.getItem( this.STORAGE_KEYS.guardToken ) ?? null;
+
+    const sessionToken =
+      localStorage.getItem( this.STORAGE_KEYS.sessionToken ) ?? null;
+    const guardToken =
+      localStorage.getItem( this.STORAGE_KEYS.guardToken ) ?? null;
+    const wsToken =
+      localStorage.getItem( this.STORAGE_KEYS.wsToken ) ?? null;
 
     if ( sessionToken && guardToken ) {
       return {
         session: sessionToken,
-        guard: guardToken
+        guard: guardToken,
+        wsToken: wsToken ?? undefined,
       };
     }
-    else return null;
+
+    return null;
   }
 
-  /** Persist JWT into localStorage (if browser). */
-  private writeTokenToStorage( session: string, guard: string ): void {
+  private writeTokenToStorage(
+    session: string,
+    guard: string,
+    wsToken?: string | null,
+    mfaValidation?: boolean | null,
+  ): void {
     if ( !this.isBrowser ) {
       return;
     }
-    if ( !session || !session.trim() ) {
+
+    if ( !session?.trim() || !guard?.trim() ) {
       console.warn(
-        '[AuthService] Attempted to write empty session token to storage.',
+        '[AuthService] Attempted to write empty tokens to storage.',
       );
       return;
     }
-    if ( !guard || !guard.trim() ) {
-      console.warn(
-        '[AuthService] Attempted to write empty guard token to storage.',
-      );
-      return;
-    }
-    localStorage.setItem( this.STORAGE_KEYS.guardToken, guard.trim() );
+
     localStorage.setItem( this.STORAGE_KEYS.sessionToken, session.trim() );
+    localStorage.setItem( this.STORAGE_KEYS.guardToken, guard.trim() );
+
+    if ( wsToken && wsToken.trim().length > 0 ) {
+      localStorage.setItem( this.STORAGE_KEYS.wsToken, wsToken.trim() );
+    }
+
+    if ( this.loggedUser?.multiAuthEnabled ) {
+      if ( mfaValidation === true ) {
+        localStorage.setItem( this.STORAGE_KEYS.mfaVerify, 'validated' );
+      } else if ( mfaValidation === false ) {
+        localStorage.setItem( this.STORAGE_KEYS.mfaVerify, 'not_validated' );
+      } else {
+        localStorage.setItem( this.STORAGE_KEYS.mfaVerify, 'pending' );
+      }
+    } else {
+      localStorage.setItem( this.STORAGE_KEYS.mfaVerify, 'no_mfa' );
+    }
   }
 }

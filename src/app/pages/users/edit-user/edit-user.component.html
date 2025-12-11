@@ -7,6 +7,7 @@
   (closeEvent)="closeCamera()"
 >
 </app-camera-box>
+@if (user){
 <div *ngIf="mode !== null" class="main-panel">
   <div class="container-fluid overflow-hidden">
     <form
@@ -23,13 +24,7 @@
         <div class="col-xl-12 d-flex justify-content-center align-items-center">
           <div class="main-image-container" *ngIf="!showCropper">
             <img
-              [src]="
-                userUploadedImage !== '' &&
-                userUploadedImage !== undefined &&
-                userUploadedImage !== null
-                  ? userUploadedImage
-                  : definedImage
-              "
+              [src]="detectUserImage(user.image ?? '', user.gender)"
               alt="User image"
               class="clickable-image"
             />
@@ -70,12 +65,12 @@
       <!-- Drop and down row -->
       <div class="row d-flex jsutify-content-center align-item-center my-5">
         <div
-          class="col-xl-8 d-flex jsutify-content-center align-item-center mx-auto"
+          class="col-12 d-flex jsutify-content-center align-item-center mx-auto"
         >
           <div
             *ngIf="!showCropper"
             #dropZone
-            class="drop-down-container"
+            class="dz-shell"
             [ngClass]="isDragOver ? 'active' : ''"
             (dragover)="onDragOver($event)"
             (drop)="onDrop($event)"
@@ -83,8 +78,18 @@
             [class.drag-over]="isDragOver"
             (paste)="handlePaste($event)"
             (click)="triggerFileInput()"
+            (keyup.enter)="triggerFileInput()"
+            (keyup.space)="triggerFileInput()"
+            aria-label="Upload files"
+            role="button"
           >
-            Drag and Drop / Copy and Paste
+            <div class="dz-inner">
+              <mat-icon class="dz-icon" aria-hidden="true"
+                >cloud_upload</mat-icon
+              >
+              <div class="dz-title">Drop image to upload</div>
+              <div class="dz-sub">or click to browse or Ctrl + v</div>
+            </div>
           </div>
         </div>
       </div>
@@ -185,7 +190,11 @@
           </ul>
         </div>
         <div class="col-xl-6">
-          <mat-form-field appearance="fill" class="form-field me-3 w-100">
+          <mat-form-field
+            appearance="fill"
+            class="form-field me-3 w-100"
+            [class.danger]="!passwordMatchPattern"
+          >
             <mat-label [ngClass]="passwordMatchPattern ? '' : 'text-danger'"
               >Password
               {{
@@ -226,6 +235,27 @@
         </div>
       </div>
       <!-- end username and password -->
+
+      <!-- user details row start -->
+      <div class="row mt-5">
+        <div
+          class="col-xl-9 col-md-8 col-12 d-flex justify-content-start align-items-center"
+        >
+          <h1>Multi-Authentication Activation</h1>
+        </div>
+        <div
+          class="col-xl-3 col-md-4 col-12 d-flex justify-content-end align-items-center"
+        >
+          <switch-button
+            [required]="false"
+            [(checked)]="isMultiAuthActive"
+            [labelOff]="'Deactive'"
+            [labelOn]="'Active'"
+          ></switch-button>
+        </div>
+        <hr />
+      </div>
+      <!-- end user details row end -->
 
       <!-- user details row start -->
       <div class="row mt-5">
@@ -274,7 +304,11 @@
           <div class="row d-flex justify-content-start align-items-center">
             <!-- Email -->
             <div class="col-xl-6">
-              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-form-field
+                appearance="fill"
+                class="form-field me-3 w-100"
+                [ngClass]="isEmailError ? 'danger' : ''"
+              >
                 <mat-label [ngClass]="isEmailError ? 'text-danger' : ''">{{
                   isEmailError ? emailErrorMessage : "Email"
                 }}</mat-label>
@@ -291,20 +325,71 @@
             </div>
             <!-- Contact Number -->
             <div class="col-xl-6">
-              <mat-form-field appearance="fill" class="form-field me-3 w-100">
-                <mat-label [ngClass]="isPhoneError ? 'text-danger' : ''">{{
-                  isPhoneError ? phoneErrorMessage : "Contact Number"
-                }}</mat-label>
-                <input
-                  matInput
-                  type="text"
-                  [(ngModel)]="phone"
-                  name="phone"
-                  (ngModelChange)="checkPhone($event)"
-                  required
-                  placeholder="Contact Number"
-                />
-              </mat-form-field>
+              <div class="row">
+                <div class="col-3">
+                  <mat-form-field
+                    appearance="fill"
+                    class="flex-grow-0 w-100"
+                    [ngClass]="isPhoneError ? 'danger' : ''"
+                  >
+                    <mat-label [ngClass]="isPhoneError ? 'text-danger' : ''"
+                      >Code</mat-label
+                    >
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="phoneCode"
+                      name="tenantPhoneCodeIdInput"
+                      placeholder="+1"
+                      required
+                      [matAutocomplete]="phoneCodeAutoComplete"
+                      (ngModelChange)="whilePhoneCodeChange($event)"
+                      [class.text-danger]="isPhoneError"
+                    />
+                    <mat-autocomplete
+                      #phoneCodeAutoComplete="matAutocomplete"
+                      (optionSelected)="
+                        onPhoneCodeSelectionChange($event, 'tenant')
+                      "
+                      [displayWith]="displayPhoneCode"
+                    >
+                      <mat-option
+                        *ngFor="let option of filterPhoneCodes | async"
+                        [value]="option"
+                      >
+                        <img
+                          [src]="option.flags.png"
+                          width="22"
+                          height="14"
+                          style="margin-right: 8px"
+                          alt="{{ option.flags.alt }}"
+                        />
+                        {{ option.code }}
+                      </mat-option>
+                    </mat-autocomplete>
+                  </mat-form-field>
+                </div>
+                <div class="col-9">
+                  <mat-form-field
+                    appearance="fill"
+                    class="form-field me-3 w-100"
+                    [ngClass]="isPhoneError ? 'danger' : ''"
+                  >
+                    <mat-label [ngClass]="isPhoneError ? 'text-danger' : ''">{{
+                      isPhoneError ? phoneErrorMessage : "Contact Number"
+                    }}</mat-label>
+                    <input
+                      matInput
+                      type="text"
+                      [(ngModel)]="phone"
+                      name="phone"
+                      (ngModelChange)="checkPhone($event)"
+                      required
+                      placeholder="Contact Number"
+                    />
+                  </mat-form-field>
+                </div>
+              </div>
             </div>
           </div>
           <!-- Address -->
@@ -419,7 +504,11 @@
           <!-- Age and date of birth -->
           <div class="row d-flex justify-content-bitween align-items-center">
             <div class="col-xl-6">
-              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+              <mat-form-field
+                appearance="fill"
+                class="form-field me-3 w-100"
+                [class.danger]="!isValidAge"
+              >
                 <mat-label [ngClass]="isValidAge ? '' : 'text-danger'">
                   {{ isValidAge ? "Age" : "Invalid Age" }}</mat-label
                 >
@@ -439,6 +528,7 @@
               <mat-form-field
                 appearance="fill"
                 class="form-field me-3 w-100 DOB"
+                [class.danger]="!isValidAge"
               >
                 <mat-label [ngClass]="isValidAge ? '' : 'text-danger'">
                   {{
@@ -465,7 +555,20 @@
           </div>
           <!-- Role if user is admin -->
           <div class="row">
-            <div class="col-xl-6">
+            <div class="col-xl-4">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label> Nationality </mat-label>
+                <input
+                  matInput
+                  type="text"
+                  name="nationality"
+                  [(ngModel)]="nationality"
+                  placeholder="Sri Lankan..."
+                  required
+                />
+              </mat-form-field>
+            </div>
+            <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>User role</mat-label>
                 <mat-select
@@ -485,9 +588,7 @@
                 </mat-select>
               </mat-form-field>
             </div>
-            <div
-              class="col-xl-6"
-            >
+            <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>User Active Status</mat-label>
                 <mat-select [(ngModel)]="isActive" name="isActive" required>
@@ -565,7 +666,7 @@
       <div class="row d-flex justify-content-center align-item-center mt-2">
         <div class="col-xl-12 d-flex justify-content-end align-item-center">
           <button type="submit" class="btn btn-success fw-bold">
-            <mat-icon>cloud_upload</mat-icon> Create
+            <mat-icon>cloud_upload</mat-icon> Update
           </button>
         </div>
       </div>
@@ -573,3 +674,4 @@
     </form>
   </div>
 </div>
+}

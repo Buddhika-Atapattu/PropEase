@@ -24,6 +24,17 @@ export type TeamDomain =
   | 'finance'
   | 'other';
 
+export const DEFAULT_TEAM_DOMAINS: ReadonlyArray<TeamDomain> = [
+  'development',
+  'finance',
+  'marketing',
+  'operations',
+  'other',
+  'sales',
+  'support',
+] as const;
+
+// Task-level status for TeamManagement.assignTasks
 export type TaskStatus =
   | 'draft'
   | 'pending'
@@ -32,7 +43,57 @@ export type TaskStatus =
   | 'completed'
   | 'cancelled';
 
+export const DEFAULT_TASK_STATUS: ReadonlyArray<TaskStatus> = [
+  'blocked',
+  'cancelled',
+  'completed',
+  'draft',
+  'in_progress',
+  'pending',
+] as const;
+
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
+
+export const DEFAULT_TASK_PRIORITYIES: ReadonlyArray<TaskPriority> = [
+  'critical',
+  'high',
+  'low',
+  'medium',
+];
+
+// ─────────────────────────────────────────────
+// Work item & event types (aligned with backend models)
+// ─────────────────────────────────────────────
+
+export type WorkItemKind =
+  | 'sales_lead'
+  | 'property_viewing'
+  | 'offer_negotiation'
+  | 'lease_signing'
+  | 'rent_collection'
+  | 'marketing_campaign'
+  | 'social_post'
+  | 'complaint_handling'
+  | 'maintenance_job'
+  | 'inspection'
+  | 'cleaning_job'
+  | 'dev_task'
+  | 'support_ticket'
+  | 'hr_recruitment'
+  | 'hr_training'
+  | 'hr_performance_review'
+  | 'other';
+
+export type WorkItemStatus =
+  | 'draft'
+  | 'pending'
+  | 'in_progress'
+  | 'blocked'
+  | 'completed'
+  | 'cancelled'
+  | 'backlog'
+  | 'open'
+  | 'done';
 
 export interface GeoLocation {
   lat: number;
@@ -50,8 +111,7 @@ export interface Address {
 
 /**
  * Frontend evidence model (for UI).
- * NOTE: Backend expects its own TaskEvidence shape; this interface is for UI
- * typing only. Components are responsible for mapping to DTOs.
+ * Backend has its own TaskEvidence shape. Components must map this DTO to backend format.
  */
 export interface TaskEvidence {
   name: string;
@@ -80,13 +140,47 @@ export interface AssignedTask {
   notes?: string;
 }
 
+export const TEAM_ROLES = [
+  // Core roles
+  'captain',
+  'member',
+  'lead',
+  'supervisor',
+  'observer',
+
+  // Trade-based / functional roles
+  'mechanic',
+  'carpenter',
+  'electrician',
+  'plumber',
+  'technician',
+  'welder',
+  'driver',
+  'cleaner',
+  'security',
+  'gardener',
+  'painter',
+  'mason',
+  'helper',
+] as const;
+
+export type RoleInTeam = ( typeof TEAM_ROLES )[ number ];
+
+export const DEFAULT_ROLES_IN_TEAM: ReadonlyArray<RoleInTeam> = TEAM_ROLES;
+
+export interface TeamMember extends User {
+  roleInTeam?: RoleInTeam;
+  reason?: string;          // why this user is in the team
+  joinedAt?: ISODateString;          // ✅ when this user joined THIS team
+}
+
 export interface TeamManagement {
   id: string;
   teamName: string;
   domain: TeamDomain;
   description: string;
-  members: User[];
-  captain: User;
+  members: TeamMember[];
+  captain: TeamMember;
   memberTotal: number;
   assignTasks: AssignedTask[];
   teamLogo?: TaskEvidence;
@@ -95,13 +189,118 @@ export interface TeamManagement {
   isActive?: boolean;
 }
 
+export interface AllUserWithTeams extends User {
+  domain?: TeamDomain,
+  teamName?: TeamManagement[ "teamName" ],
+  roleInTeam?: 'member' | 'lead' | 'supervisor' | 'observer' | null;
+  teamReason?: string | null;
+  teamJoinedAt?: ISODateString | null;
+  teams: {
+    domain?: TeamDomain,
+    teamName?: TeamManagement[ "teamName" ],
+  }[];
+}
+
+// WorkItem FE view (only fields we care about on UI; backend can have more)
+export interface WorkItem {
+  _id: string;
+  id: string;
+  teamId: string;
+  teamMongoId: string;
+  domain: TeamDomain;
+
+  kind: WorkItemKind;
+  status: WorkItemStatus;
+  priority: TaskPriority;
+
+  createdById: string;
+  createdByUsername: string;
+
+  assignedMembers?: string[];      // user ids
+  captainUserId?: string;
+
+  propertyId?: string;
+  tenantId?: string;
+  leaseId?: string;
+  complaintId?: string;
+  buildingId?: string;
+
+  title: string;
+  description?: string;
+
+  createdAt: ISODateString;
+  plannedStartAt?: ISODateString;
+  plannedEndAt?: ISODateString;
+  startedAt?: ISODateString;
+  completedAt?: ISODateString;
+  cancelledAt?: ISODateString;
+
+  expectedValue?: number;
+  actualValue?: number;
+  commissionAmount?: number;
+  timeSpentMinutes?: number;
+
+  location?: GeoLocation;
+  address?: Address;
+
+  evidence?: TaskEvidence[];
+  tags?: string[];
+}
+
+// WorkEvent types =================================================================
+
+export type WorkEventKind =
+  | 'workitem_created'
+  | 'status_changed'
+  | 'priority_changed'
+  | 'assigned_members_changed'
+  | 'value_updated'
+  | 'evidence_added'
+  | 'comment_added'
+  | 'team_changed'
+  | 'domain_changed';
+
+export interface WorkEvent {
+  _id: string;
+  workItemId: string;
+  workItemMongoId: string;
+  teamId: string;
+  teamMongoId: string;
+  domain: TeamDomain;
+  kind: WorkEventKind;
+
+  actorUserId?: string;
+  actorUsername?: string;
+  actorRole?: string;
+
+  fromStatus?: WorkItemStatus;
+  toStatus?: WorkItemStatus;
+  fromPriority?: TaskPriority;
+  toPriority?: TaskPriority;
+
+  payload?: Record<string, unknown>;
+
+  createdAt: ISODateString; // ISO string in backend model
+  year: number;
+  month: number;
+  day: number;
+  yearMonth: string;
+}
+
+export interface WorkEventStats {
+  workItemId: string;
+  byKind: Record<WorkEventKind, number>;
+}
+
 // ─────────────────────────────────────────────
-// API map key + helpers
+// API map keys + helpers
 // ─────────────────────────────────────────────
 
 type TeamAPIKey =
+  // Team management
   | 'getTeams'
   | 'getTeamById'
+  | 'getTeamByName'
   | 'createTeam'
   | 'updateTeam'
   | 'assignTask'
@@ -118,10 +317,23 @@ type TeamAPIKey =
   | 'usersNoTeamByDomain'
   | 'usersNoTeamByDomainCount'
   | 'usersInTeamsByDomain'
-  | 'usersInTeamsByDomainCount';
+  | 'usersInTeamsByDomainCount'
+  | 'allUsers'
+  // Work events
+  | 'workEventsAll'
+  | 'workEventsByWorkItem'
+  | 'workEventsByTeam'
+  | 'workEventsStatsByWorkItem';
 
 type Anchor = string | number;
 type Anchors = Anchor[];
+
+type ApiNamespace = 'team' | 'workEvent';
+
+interface ApiRouteDef {
+  ns: ApiNamespace;
+  path: string; // path relative to its namespace root, e.g. "/all", "/users/no-team"
+}
 
 // ─────────────────────────────────────────────
 // Service
@@ -131,16 +343,68 @@ type Anchors = Anchor[];
   providedIn: 'root',
 } )
 export class TeamManagementService {
+  private readonly root: string = ( environment.apiOrigin ?? 'http://localhost:3000' ).replace(
+    /\/+$/,
+    '',
+  );
 
-  private readonly root: string = ( environment.apiOrigin ?? 'http://localhost:3000' ).replace( /\/+$/, '' );;
   private readonly teamManagementAPIRoot: string = `${ this.root }/api-team-management`;
+  private readonly workEventAPIRoot: string = `${ this.root }/api-work-event`;
+
   private readonly isBrowser: boolean;
+
+  // Centralised route registry for both Team + WorkEvent APIs
+  private readonly apiRoutes: Record<TeamAPIKey, ApiRouteDef>;
 
   public constructor (
     private readonly http: HttpClient,
-    @Inject( PLATFORM_ID ) private readonly platformId: Object
+    @Inject( PLATFORM_ID ) private readonly platformId: Object,
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
+
+    // Initialise route table once.
+    this.apiRoutes = {
+      // ───── Team ─────
+      getTeams: { ns: 'team', path: '/all' },
+      getTeamById: { ns: 'team', path: '' }, // + /:teamId via anchors
+      getTeamByName: { ns: 'team', path: '/teamName' }, // + /:teamId via anchors
+      createTeam: { ns: 'team', path: '/create' },
+      updateTeam: { ns: 'team', path: '/update' }, // + /:teamId
+      assignTask: { ns: 'team', path: '/assign-task' }, // + /:teamId
+      attachEvidenceMeta: { ns: 'team', path: '/evidence/attach' }, // + /:teamId/:taskId
+      uploadTeamLogo: { ns: 'team', path: '/upload/logo' }, // + /:teamId
+      uploadTaskEvidence: { ns: 'team', path: '/upload/evidence' }, // + /:teamId/:taskId
+      deleteTeam: { ns: 'team', path: '/delete' }, // + /:teamId
+      getTeamTotals: { ns: 'team', path: '/stats/teams-total' },
+      getTeamTotalsByDomain: { ns: 'team', path: '/stats/teams-total/domain' }, // + /:domain
+      usersNoTeam: { ns: 'team', path: '/users/no-team' },
+      usersNoTeamCount: { ns: 'team', path: '/users/no-team/count' },
+      usersInTeams: { ns: 'team', path: '/users/in-teams' },
+      usersInTeamsCount: { ns: 'team', path: '/users/in-teams/count' },
+      usersNoTeamByDomain: { ns: 'team', path: '/users/no-team/domain' }, // + /:domain
+      usersNoTeamByDomainCount: {
+        ns: 'team',
+        path: '/users/no-team/domain',
+      }, // + /:domain/count
+      usersInTeamsByDomain: {
+        ns: 'team',
+        path: '/users/in-teams/domain',
+      }, // + /:domain
+      usersInTeamsByDomainCount: {
+        ns: 'team',
+        path: '/users/in-teams/domain',
+      }, // + /:domain/count
+      allUsers: { ns: 'team', path: '/users/all' },
+
+      // ───── Work events ─────
+      workEventsAll: { ns: 'workEvent', path: '/all' },
+      workEventsByWorkItem: { ns: 'workEvent', path: '/by-workitem' }, // + /:workItemId
+      workEventsByTeam: { ns: 'workEvent', path: '/by-team' }, // + /:teamId
+      workEventsStatsByWorkItem: {
+        ns: 'workEvent',
+        path: '/stats/workitem',
+      }, // + /:workItemId
+    };
   }
 
   // ─────────────────────────────────────────────
@@ -148,11 +412,13 @@ export class TeamManagementService {
   // ─────────────────────────────────────────────
 
   private toParams(
-    record: Record<string, string | number | boolean | undefined | null>
+    record: Record<string, string | number | boolean | undefined | null>,
   ): HttpParams {
     let p = new HttpParams();
     Object.entries( record ).forEach( ( [ k, v ] ) => {
-      if ( v != null ) p = p.set( k, String( v ) );
+      if ( v != null ) {
+        p = p.set( k, String( v ) );
+      }
     } );
     return p;
   }
@@ -178,9 +444,7 @@ export class TeamManagementService {
       const anyE = e as { error?: any; message?: string; };
       if ( anyE?.error && typeof anyE.error === 'object' ) {
         const emsg =
-          ( anyE.error as any ).message ||
-          anyE.message ||
-          'Request failed';
+          ( anyE.error as any ).message || anyE.message || 'Request failed';
         return {
           success: false,
           status: 'error',
@@ -227,104 +491,33 @@ export class TeamManagementService {
   }
 
   private buildUrl( base: string, anchors?: Anchors ): string {
-    if ( !anchors || anchors.length === 0 ) return base;
-    const encoded = anchors.map( a => encodeURIComponent( String( a ) ) );
+    if ( !anchors || anchors.length === 0 ) {
+      return base;
+    }
+    const encoded = anchors.map( ( a ) => encodeURIComponent( String( a ) ) );
     return `${ base }/${ encoded.join( '/' ) }`;
   }
 
   /**
    * Single source of truth for backend paths.
-   * Components only see logical keys.
+   * Uses apiRoutes + namespace to determine correct root.
    */
-  private apiMap(
+  private buildApiUrl(
     key: TeamAPIKey,
     params?: HttpParams,
-    anchors?: Anchors
+    anchors?: Anchors,
   ): string {
-    let base!: string;
-
-    switch ( key ) {
-      case 'getTeams':
-        base = `${ this.teamManagementAPIRoot }/all`;
-        break;
-
-      case 'getTeamById':
-        base = `${ this.teamManagementAPIRoot }`;
-        break;
-
-      case 'createTeam':
-        base = `${ this.teamManagementAPIRoot }/create`;
-        break;
-
-      case 'updateTeam':
-        base = `${ this.teamManagementAPIRoot }/update`;
-        break;
-
-      case 'assignTask':
-        base = `${ this.teamManagementAPIRoot }/assign-task`;
-        break;
-
-      case 'attachEvidenceMeta':
-        base = `${ this.teamManagementAPIRoot }/evidence/attach`;
-        break;
-
-      case 'uploadTeamLogo':
-        base = `${ this.teamManagementAPIRoot }/upload/logo`;
-        break;
-
-      case 'uploadTaskEvidence':
-        base = `${ this.teamManagementAPIRoot }/upload/evidence`;
-        break;
-
-      case 'deleteTeam':
-        base = `${ this.teamManagementAPIRoot }/delete`;
-        break;
-
-      case 'getTeamTotals':
-        base = `${ this.teamManagementAPIRoot }/stats/teams-total`;
-        break;
-
-      case 'getTeamTotalsByDomain':
-        base = `${ this.teamManagementAPIRoot }/stats/teams-total/domain`;
-        break;
-
-      case 'usersNoTeam':
-        base = `${ this.teamManagementAPIRoot }/users/no-team`;
-        break;
-
-      case 'usersNoTeamCount':
-        base = `${ this.teamManagementAPIRoot }/users/no-team/count`;
-        break;
-
-      case 'usersInTeams':
-        base = `${ this.teamManagementAPIRoot }/users/in-teams`;
-        break;
-
-      case 'usersInTeamsCount':
-        base = `${ this.teamManagementAPIRoot }/users/in-teams/count`;
-        break;
-
-      case 'usersNoTeamByDomain':
-        base = `${ this.teamManagementAPIRoot }/users/no-team/domain`;
-        break;
-
-      case 'usersNoTeamByDomainCount':
-        base = `${ this.teamManagementAPIRoot }/users/no-team/domain`;
-        break;
-
-      case 'usersInTeamsByDomain':
-        base = `${ this.teamManagementAPIRoot }/users/in-teams/domain`;
-        break;
-
-      case 'usersInTeamsByDomainCount':
-        base = `${ this.teamManagementAPIRoot }/users/in-teams/domain`;
-        break;
-
-      default:
-        throw new Error( `Unknown TeamAPIKey: ${ key }` );
+    const def = this.apiRoutes[ key ];
+    if ( !def ) {
+      throw new Error( `Unknown TeamAPIKey: ${ key }` );
     }
 
+    const nsRoot =
+      def.ns === 'team' ? this.teamManagementAPIRoot : this.workEventAPIRoot;
+
+    const base = `${ nsRoot }${ def.path }`;
     const url = this.buildUrl( base, anchors );
+
     if ( params ) {
       return `${ url }?${ params.toString() }`;
     }
@@ -338,14 +531,13 @@ export class TeamManagementService {
   /**
    * GET /all
    * Paginated list of teams with filters.
-   * Component is responsible for consuming pagination metadata from data.other.pagination.
    */
   public async getTeams(
     index: number = 0,
     limit: number = 10,
     search?: string,
     domain?: TeamDomain,
-    isActive?: boolean
+    isActive?: boolean,
   ): Promise<MSG> {
     try {
       const params = this.toParams( {
@@ -356,7 +548,7 @@ export class TeamManagementService {
         isActive,
       } );
 
-      const url = this.apiMap( 'getTeams', params );
+      const url = this.buildApiUrl( 'getTeams', params );
       const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
@@ -374,7 +566,24 @@ export class TeamManagementService {
         throw new Error( 'Team ID is required' );
       }
 
-      const url = this.apiMap( 'getTeamById', undefined, [ safeId ] );
+      const url = this.buildApiUrl( 'getTeamById', undefined, [ safeId ] );
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
+      return this.normalizeToMSG( raw );
+    } catch ( error ) {
+      return this.mapError( error );
+    }
+  }
+  /**
+   * GET /:teamName
+   */
+  public async getTeamByName( teamName: string ): Promise<MSG> {
+    try {
+      const safeName = ( teamName || '' ).trim();
+      if ( !safeName ) {
+        throw new Error( 'Team ID is required' );
+      }
+
+      const url = this.buildApiUrl( 'getTeamByName', undefined, [ safeName ] );
       const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
@@ -384,14 +593,12 @@ export class TeamManagementService {
 
   /**
    * POST /create
-   * Component builds the payload (JSON) and passes it here.
-   * No FormData logic inside the service.
    */
   public async createTeam( body: unknown ): Promise<MSG> {
     try {
-      const url = this.apiMap( 'createTeam' );
+      const url = this.buildApiUrl( 'createTeam' );
       const raw = await firstValueFrom(
-        this.http.post<MSG | unknown>( url, body )
+        this.http.post<MSG | unknown>( url, body ),
       );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
@@ -401,22 +608,36 @@ export class TeamManagementService {
 
   /**
    * PATCH /update/:teamId
-   * Component decides which fields to patch and shapes the payload.
+   *
+   * Accepts:
+   *  - FormData   → for multipart updates (e.g. team JSON + teamLogo)
+   *  - JSON patch → for pure JSON updates (no file upload)
+   *
+   * Example (multipart with logo):
+   *
+   *   const formData = new FormData();
+   *   formData.append('team', JSON.stringify(teamPayload));
+   *   if (logoFile) {
+   *     formData.append('teamLogo', logoFile);
+   *   }
+   *   await teamService.updateTeam(teamId, formData);
    */
   public async updateTeam(
     teamId: string,
-    patch: unknown
+    payload: FormData | Partial<TeamManagement>,
   ): Promise<MSG> {
     try {
-      const safeId = ( teamId || '' ).trim();
+      const safeId: string = ( teamId || '' ).trim();
       if ( !safeId ) {
         throw new Error( 'Team ID is required for update' );
       }
 
-      const url = this.apiMap( 'updateTeam', undefined, [ safeId ] );
+      const url: string = this.buildApiUrl( 'updateTeam', undefined, [ safeId ] );
+
       const raw = await firstValueFrom(
-        this.http.patch<MSG | unknown>( url, patch )
+        this.http.patch<MSG | unknown>( url, payload ),
       );
+
       return this.normalizeToMSG( raw );
     } catch ( error ) {
       return this.mapError( error );
@@ -426,10 +647,7 @@ export class TeamManagementService {
   /**
    * DELETE /delete/:teamId?soft=true|false
    */
-  public async deleteTeam(
-    teamId: string,
-    soft: boolean = true
-  ): Promise<MSG> {
+  public async deleteTeam( teamId: string, soft: boolean = true ): Promise<MSG> {
     try {
       const safeId = ( teamId || '' ).trim();
       if ( !safeId ) {
@@ -437,11 +655,9 @@ export class TeamManagementService {
       }
 
       const params = this.toParams( { soft } );
-      const url = this.apiMap( 'deleteTeam', params, [ safeId ] );
+      const url = this.buildApiUrl( 'deleteTeam', params, [ safeId ] );
 
-      const raw = await firstValueFrom(
-        this.http.delete<MSG | unknown>( url )
-      );
+      const raw = await firstValueFrom( this.http.delete<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
       return this.mapError( error );
@@ -454,22 +670,18 @@ export class TeamManagementService {
 
   /**
    * POST /assign-task/:teamId
-   * Component passes correct body:
-   *   { task: { ... } }
+   * body: { task: { ... } }
    */
-  public async assignTask(
-    teamId: string,
-    body: unknown
-  ): Promise<MSG> {
+  public async assignTask( teamId: string, body: unknown ): Promise<MSG> {
     try {
       const safeId = ( teamId || '' ).trim();
       if ( !safeId ) {
         throw new Error( 'Team ID is required for assignTask' );
       }
 
-      const url = this.apiMap( 'assignTask', undefined, [ safeId ] );
+      const url = this.buildApiUrl( 'assignTask', undefined, [ safeId ] );
       const raw = await firstValueFrom(
-        this.http.post<MSG | unknown>( url, body )
+        this.http.post<MSG | unknown>( url, body ),
       );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
@@ -479,31 +691,31 @@ export class TeamManagementService {
 
   /**
    * POST /evidence/attach/:teamId/:taskId
-   * Component passes:
-   *   { evidences: [ { ... } ] }
-   * aligned with backend `buildEvidenceFromMeta`.
+   * body: { evidences: [ { ... } ] }
    */
   public async attachEvidenceMeta(
     teamId: string,
     taskId: string,
-    body: unknown
+    body: unknown,
   ): Promise<MSG> {
     try {
       const safeTeamId = ( teamId || '' ).trim();
       const safeTaskId = ( taskId || '' ).trim();
 
       if ( !safeTeamId || !safeTaskId ) {
-        throw new Error( 'Team ID and Task ID are required for evidence attach' );
+        throw new Error(
+          'Team ID and Task ID are required for evidence attach',
+        );
       }
 
-      const url = this.apiMap(
+      const url = this.buildApiUrl(
         'attachEvidenceMeta',
         undefined,
-        [ safeTeamId, safeTaskId ]
+        [ safeTeamId, safeTaskId ],
       );
 
       const raw = await firstValueFrom(
-        this.http.post<MSG | unknown>( url, body )
+        this.http.post<MSG | unknown>( url, body ),
       );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
@@ -517,13 +729,10 @@ export class TeamManagementService {
 
   /**
    * POST /upload/logo/:teamId
-   * Component builds FormData:
-   *   const fd = new FormData();
-   *   fd.append('files', file);
    */
   public async uploadTeamLogo(
     teamId: string,
-    formData: FormData
+    formData: FormData,
   ): Promise<MSG> {
     try {
       if ( !this.isBrowser ) {
@@ -540,9 +749,9 @@ export class TeamManagementService {
         throw new Error( 'Team ID is required for logo upload' );
       }
 
-      const url = this.apiMap( 'uploadTeamLogo', undefined, [ safeId ] );
+      const url = this.buildApiUrl( 'uploadTeamLogo', undefined, [ safeId ] );
       const raw = await firstValueFrom(
-        this.http.post<MSG | unknown>( url, formData )
+        this.http.post<MSG | unknown>( url, formData ),
       );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
@@ -552,14 +761,11 @@ export class TeamManagementService {
 
   /**
    * POST /upload/evidence/:teamId/:taskId
-   * Component builds FormData with multiple files:
-   *   fd.append('files', file1);
-   *   fd.append('files', file2);
    */
   public async uploadTaskEvidence(
     teamId: string,
     taskId: string,
-    formData: FormData
+    formData: FormData,
   ): Promise<MSG> {
     try {
       if ( !this.isBrowser ) {
@@ -578,14 +784,14 @@ export class TeamManagementService {
         throw new Error( 'Team ID and Task ID are required for evidence upload' );
       }
 
-      const url = this.apiMap(
+      const url = this.buildApiUrl(
         'uploadTaskEvidence',
         undefined,
-        [ safeTeamId, safeTaskId ]
+        [ safeTeamId, safeTaskId ],
       );
 
       const raw = await firstValueFrom(
-        this.http.post<MSG | unknown>( url, formData )
+        this.http.post<MSG | unknown>( url, formData ),
       );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
@@ -599,15 +805,12 @@ export class TeamManagementService {
 
   /**
    * GET /stats/teams-total
-   * data.other:
-   *   { totalTeams, totalActive, totalInactive, domainTotals }
+   * data.other: { totalTeams, totalActive, totalInactive, domainTotals }
    */
   public async getTeamTotals(): Promise<MSG> {
     try {
-      const url = this.apiMap( 'getTeamTotals' );
-      const raw = await firstValueFrom(
-        this.http.get<MSG | unknown>( url )
-      );
+      const url = this.buildApiUrl( 'getTeamTotals' );
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
       return this.mapError( error );
@@ -619,7 +822,7 @@ export class TeamManagementService {
    */
   public async getTeamTotalsByDomain(
     domain: TeamDomain,
-    active?: boolean
+    active?: boolean,
   ): Promise<MSG> {
     try {
       const safeDomain = ( domain || '' ).trim();
@@ -628,15 +831,13 @@ export class TeamManagementService {
       }
 
       const params = this.toParams( { active } );
-      const url = this.apiMap(
+      const url = this.buildApiUrl(
         'getTeamTotalsByDomain',
         params,
-        [ safeDomain ]
+        [ safeDomain ],
       );
 
-      const raw = await firstValueFrom(
-        this.http.get<MSG | unknown>( url )
-      );
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
       return this.mapError( error );
@@ -649,18 +850,15 @@ export class TeamManagementService {
 
   /**
    * GET /users/no-team
-   * Users not in any team (paginated).
    */
   public async getUsersWithoutAnyTeam(
     index: number = 0,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<MSG> {
     try {
       const params = this.toParams( { index, limit } );
-      const url = this.apiMap( 'usersNoTeam', params );
-      const raw = await firstValueFrom(
-        this.http.get<MSG | unknown>( url )
-      );
+      const url = this.buildApiUrl( 'usersNoTeam', params );
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
       return this.mapError( error );
@@ -669,14 +867,11 @@ export class TeamManagementService {
 
   /**
    * GET /users/no-team/count
-   * Total users not in any team.
    */
   public async getUsersWithoutAnyTeamCount(): Promise<MSG> {
     try {
-      const url = this.apiMap( 'usersNoTeamCount' );
-      const raw = await firstValueFrom(
-        this.http.get<MSG | unknown>( url )
-      );
+      const url = this.buildApiUrl( 'usersNoTeamCount' );
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
       return this.mapError( error );
@@ -685,18 +880,15 @@ export class TeamManagementService {
 
   /**
    * GET /users/in-teams
-   * Users that belong to at least one team (paginated).
    */
   public async getUsersInAnyTeam(
     index: number = 0,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<MSG> {
     try {
       const params = this.toParams( { index, limit } );
-      const url = this.apiMap( 'usersInTeams', params );
-      const raw = await firstValueFrom(
-        this.http.get<MSG | unknown>( url )
-      );
+      const url = this.buildApiUrl( 'usersInTeams', params );
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
       return this.mapError( error );
@@ -705,14 +897,11 @@ export class TeamManagementService {
 
   /**
    * GET /users/in-teams/count
-   * Total users that belong to at least one team.
    */
   public async getUsersInAnyTeamCount(): Promise<MSG> {
     try {
-      const url = this.apiMap( 'usersInTeamsCount' );
-      const raw = await firstValueFrom(
-        this.http.get<MSG | unknown>( url )
-      );
+      const url = this.buildApiUrl( 'usersInTeamsCount' );
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
       return this.mapError( error );
@@ -725,12 +914,11 @@ export class TeamManagementService {
 
   /**
    * GET /users/no-team/domain/:domain
-   * Users not in any team of the given domain (paginated).
    */
   public async getUsersWithoutTeamByDomain(
     domain: TeamDomain,
     index: number = 0,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<MSG> {
     try {
       const safeDomain = ( domain || '' ).trim();
@@ -739,15 +927,13 @@ export class TeamManagementService {
       }
 
       const params = this.toParams( { index, limit } );
-      const url = this.apiMap(
+      const url = this.buildApiUrl(
         'usersNoTeamByDomain',
         params,
-        [ safeDomain ]
+        [ safeDomain ],
       );
 
-      const raw = await firstValueFrom(
-        this.http.get<MSG | unknown>( url )
-      );
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
       return this.mapError( error );
@@ -758,7 +944,7 @@ export class TeamManagementService {
    * GET /users/no-team/domain/:domain/count
    */
   public async getUsersWithoutTeamByDomainCount(
-    domain: TeamDomain
+    domain: TeamDomain,
   ): Promise<MSG> {
     try {
       const safeDomain = ( domain || '' ).trim();
@@ -766,15 +952,13 @@ export class TeamManagementService {
         throw new Error( 'Domain is required for usersWithoutTeamByDomainCount' );
       }
 
-      const url = this.apiMap(
+      const url = this.buildApiUrl(
         'usersNoTeamByDomainCount',
         undefined,
-        [ safeDomain, 'count' ]
+        [ safeDomain, 'count' ],
       );
 
-      const raw = await firstValueFrom(
-        this.http.get<MSG | unknown>( url )
-      );
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
       return this.mapError( error );
@@ -783,12 +967,11 @@ export class TeamManagementService {
 
   /**
    * GET /users/in-teams/domain/:domain
-   * Users that belong to at least one team in given domain (paginated).
    */
   public async getUsersInTeamByDomain(
     domain: TeamDomain,
     index: number = 0,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<MSG> {
     try {
       const safeDomain = ( domain || '' ).trim();
@@ -797,15 +980,13 @@ export class TeamManagementService {
       }
 
       const params = this.toParams( { index, limit } );
-      const url = this.apiMap(
+      const url = this.buildApiUrl(
         'usersInTeamsByDomain',
         params,
-        [ safeDomain ]
+        [ safeDomain ],
       );
 
-      const raw = await firstValueFrom(
-        this.http.get<MSG | unknown>( url )
-      );
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
       return this.normalizeToMSG( raw );
     } catch ( error ) {
       return this.mapError( error );
@@ -816,7 +997,7 @@ export class TeamManagementService {
    * GET /users/in-teams/domain/:domain/count
    */
   public async getUsersInTeamByDomainCount(
-    domain: TeamDomain
+    domain: TeamDomain,
   ): Promise<MSG> {
     try {
       const safeDomain = ( domain || '' ).trim();
@@ -824,14 +1005,220 @@ export class TeamManagementService {
         throw new Error( 'Domain is required for usersInTeamByDomainCount' );
       }
 
-      const url = this.apiMap(
+      const url = this.buildApiUrl(
         'usersInTeamsByDomainCount',
         undefined,
-        [ safeDomain, 'count' ]
+        [ safeDomain, 'count' ],
       );
 
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
+      return this.normalizeToMSG( raw );
+    } catch ( error ) {
+      return this.mapError( error );
+    }
+  }
+
+  /**
+   * GET /users/all?index=&limit=&search=
+   */
+  public async getAllUsersWithTeams(
+    index: number,
+    limit: number,
+    search?: string,
+  ): Promise<MSG> {
+    try {
+      const params = this.toParams( { index, limit, search } );
+      const url = this.buildApiUrl( 'allUsers', params );
+      const raw = await firstValueFrom( this.http.get<MSG | unknown>( url ) );
+      return this.normalizeToMSG( raw );
+    } catch ( error ) {
+      return this.mapError( error );
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // Work events – queries
+  // ─────────────────────────────────────────────
+
+  /**
+   * GET /api-work-event/all
+   * Optional filters:
+   *   workItemId, teamId, domain, kind, actor, fromStatus, toStatus,
+   *   fromPriority, toPriority, from, to
+   */
+  public async getWorkEvents(
+    index: number = 0,
+    limit: number = 20,
+    filters?: {
+      workItemId?: string;
+      teamId?: string;
+      domain?: TeamDomain;
+      kind?: WorkEventKind;
+      actor?: string;
+      fromStatus?: WorkItemStatus;
+      toStatus?: WorkItemStatus;
+      fromPriority?: TaskPriority;
+      toPriority?: TaskPriority;
+      from?: string | Date;
+      to?: string | Date;
+    },
+  ): Promise<MSG> {
+    try {
+      const paramsObject: Record<string, string | number | boolean | null> = {
+        index,
+        limit,
+      };
+
+      if ( filters ) {
+        if ( filters.workItemId ) paramsObject[ 'workItemId' ] = filters.workItemId;
+        if ( filters.teamId ) paramsObject[ 'teamId' ] = filters.teamId;
+        if ( filters.domain ) paramsObject[ 'domain' ] = filters.domain;
+        if ( filters.kind ) paramsObject[ 'kind' ] = filters.kind;
+        if ( filters.actor ) paramsObject[ 'actor' ] = filters.actor;
+        if ( filters.fromStatus ) paramsObject[ 'fromStatus' ] = filters.fromStatus;
+        if ( filters.toStatus ) paramsObject[ 'toStatus' ] = filters.toStatus;
+        if ( filters.fromPriority )
+          paramsObject[ 'fromPriority' ] = filters.fromPriority;
+        if ( filters.toPriority )
+          paramsObject[ 'toPriority' ] = filters.toPriority;
+
+        if ( filters.from ) {
+          const d = new Date( filters.from );
+          if ( !Number.isNaN( d.getTime() ) ) {
+            paramsObject[ 'from' ] = d.toISOString();
+          }
+        }
+        if ( filters.to ) {
+          const d = new Date( filters.to );
+          if ( !Number.isNaN( d.getTime() ) ) {
+            paramsObject[ 'to' ] = d.toISOString();
+          }
+        }
+      }
+
+      const params = this.toParams( paramsObject );
+      const url = this.buildApiUrl( 'workEventsAll', params );
       const raw = await firstValueFrom(
-        this.http.get<MSG | unknown>( url )
+        this.http.get<MSG | unknown>( url ),
+      );
+      return this.normalizeToMSG( raw );
+    } catch ( error ) {
+      return this.mapError( error );
+    }
+  }
+
+  /**
+   * GET /api-work-event/by-workitem/:workItemId
+   */
+  public async getWorkEventsByWorkItem(
+    workItemId: string,
+    index: number = 0,
+    limit: number = 20,
+    kind?: WorkEventKind,
+    from?: string | Date,
+    to?: string | Date,
+  ): Promise<MSG> {
+    try {
+      const safeId = ( workItemId || '' ).trim();
+      if ( !safeId ) {
+        throw new Error( 'workItemId is required for getWorkEventsByWorkItem' );
+      }
+
+      const paramsObject: Record<string, string | number | boolean | null> = {
+        index,
+        limit,
+      };
+
+      if ( kind ) paramsObject[ 'kind' ] = kind;
+      if ( from ) {
+        const d = new Date( from );
+        if ( !Number.isNaN( d.getTime() ) ) paramsObject[ 'from' ] = d.toISOString();
+      }
+      if ( to ) {
+        const d = new Date( to );
+        if ( !Number.isNaN( d.getTime() ) ) paramsObject[ 'to' ] = d.toISOString();
+      }
+
+      const params = this.toParams( paramsObject );
+      const url = this.buildApiUrl(
+        'workEventsByWorkItem',
+        params,
+        [ safeId ],
+      );
+      const raw = await firstValueFrom(
+        this.http.get<MSG | unknown>( url ),
+      );
+      return this.normalizeToMSG( raw );
+    } catch ( error ) {
+      return this.mapError( error );
+    }
+  }
+
+  /**
+   * GET /api-work-event/by-team/:teamId
+   */
+  public async getWorkEventsByTeam(
+    teamId: string,
+    index: number = 0,
+    limit: number = 20,
+    domain?: TeamDomain,
+    kind?: WorkEventKind,
+    from?: string | Date,
+    to?: string | Date,
+  ): Promise<MSG> {
+    try {
+      const safeTeamId = ( teamId || '' ).trim();
+      if ( !safeTeamId ) {
+        throw new Error( 'teamId is required for getWorkEventsByTeam' );
+      }
+
+      const paramsObject: Record<string, string | number | boolean | null> = {
+        index,
+        limit,
+      };
+
+      if ( domain ) paramsObject[ 'domain' ] = domain;
+      if ( kind ) paramsObject[ 'kind' ] = kind;
+      if ( from ) {
+        const d = new Date( from );
+        if ( !Number.isNaN( d.getTime() ) ) paramsObject[ 'from' ] = d.toISOString();
+      }
+      if ( to ) {
+        const d = new Date( to );
+        if ( !Number.isNaN( d.getTime() ) ) paramsObject[ 'to' ] = d.toISOString();
+      }
+
+      const params = this.toParams( paramsObject );
+      const url = this.buildApiUrl( 'workEventsByTeam', params, [ safeTeamId ] );
+      const raw = await firstValueFrom(
+        this.http.get<MSG | unknown>( url ),
+      );
+      return this.normalizeToMSG( raw );
+    } catch ( error ) {
+      return this.mapError( error );
+    }
+  }
+
+  /**
+   * GET /api-work-event/stats/workitem/:workItemId
+   * Returns MSG with data.other.byKind
+   */
+  public async getWorkItemEventStats(
+    workItemId: string,
+  ): Promise<MSG> {
+    try {
+      const safeId = ( workItemId || '' ).trim();
+      if ( !safeId ) {
+        throw new Error( 'workItemId is required for getWorkItemEventStats' );
+      }
+
+      const url = this.buildApiUrl(
+        'workEventsStatsByWorkItem',
+        undefined,
+        [ safeId ],
+      );
+      const raw = await firstValueFrom(
+        this.http.get<MSG | unknown>( url ),
       );
       return this.normalizeToMSG( raw );
     } catch ( error ) {

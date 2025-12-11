@@ -36,6 +36,7 @@ export class SwitchButton implements AfterViewInit, OnInit, OnChanges {
   @Input() labelOn: string = 'ON';
   @Input() labelOff: string = 'OFF';
   @Input() disabled: boolean = false;
+  @Input() required: boolean = false;
 
   @Output() checkedChange: EventEmitter<boolean> = new EventEmitter<boolean>();
 

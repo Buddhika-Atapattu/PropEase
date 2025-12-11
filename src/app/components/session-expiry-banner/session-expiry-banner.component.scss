@@ -1,0 +1,75 @@
+/* Path: src/app/components/session-expiry-banner/session-expiry-banner.component.scss */
+
+:host {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 2000;
+  pointer-events: none; // let inner container control clicks
+}
+
+.session-expiry-banner {
+  pointer-events: auto;
+  background: var(--warning, #ffbf47);
+  color: var(--on-warning, #1b1300);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  padding: 0.6rem 1.5rem;
+  display: flex;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.banner-content {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.banner-text {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  strong {
+    font-weight: 600;
+  }
+
+  .details {
+    opacity: 0.9;
+  }
+
+  .time {
+    font-weight: 700;
+    padding: 0 0.25rem;
+  }
+}
+
+.banner-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* simple button styles – you can switch to your global .btn-* classes */
+button {
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: transparent;
+}
+
+.btn-outline {
+  background: transparent;
+}
+
+.btn-primary {
+  background: var(--surface, #1f2933);
+  color: var(--on-surface, #ffffff);
+  border-color: transparent;
+}

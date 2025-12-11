@@ -6,17 +6,24 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
-  EventEmitter,
+  DoCheck,
   Inject,
   Input,
+  Output,
+  EventEmitter,
   OnChanges,
   OnDestroy,
   OnInit,
-  Output,
   PLATFORM_ID,
   SimpleChanges,
+  IterableDiffer,
+  IterableDiffers,
+  ViewChild,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Angular Material
@@ -25,6 +32,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Services & utilities
@@ -44,6 +57,17 @@ import {
 } from '../paginator/paginator.component';
 import { SwitchButton } from '../../../components/shared/buttons/switch-button/switch-button.component';
 import { SkeletonLoaderComponent } from '../skeleton-loader/skeleton-loader.component';
+import { DateTimePickerComponent } from '../date-time-picker/date-time-picker.component';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Dialog for long-text editing
+// ──────────────────────────────────────────────────────────────────────────────
+import {
+  TextEditorDialogComponent,
+  TextEditorDialogData,
+  TextEditorDialogResult,
+} from '../../dialogs/text-editor-dialog/text-editor-dialog.component';
+import { TextService } from '../../../services/text/text.service';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Re-exports for consumers
@@ -52,9 +76,8 @@ export type TableExtension = Extension;
 export type TableDateRange = DateRange;
 
 // ──────────────────────────────────────────────────────────────────────────────
-// File icon types + mapping (for Material icons)
+/** Material icons used for file-type representation */
 // ──────────────────────────────────────────────────────────────────────────────
-
 export type MaterialFileIcon =
   | 'description'
   | 'text_snippet'
@@ -170,9 +193,9 @@ export const ACTION_ICONS: Record<ActionId, ActionIcon> = {
 
 /**
  * Button configuration for a cell.
- * - action: emitted up to the parent when clicked
- * - icon: Material icon name
- * - label: tooltip / visible label
+ *  - action: emitted up to the parent when clicked
+ *  - icon: Material icon name
+ *  - label: tooltip / visible label
  */
 export interface TableButton {
   action: ActionId;
@@ -188,8 +211,54 @@ export interface TableButtonActionConfig {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Columns / events / switch types
+// Columns / events / switch types / edit types
 // ──────────────────────────────────────────────────────────────────────────────
+
+// How this column is edited
+export type TableEditKind =
+  | 'none'          // read-only
+  | 'inlineText'    // small single-line text
+  | 'inlineNumber'  // small numeric
+  | 'inlineSelect'  // small select dropdown
+  | 'inlineSwitch'  // boolean toggle
+  | 'dialogText'   // large text → open dialog editor
+  | 'inlineDate'   // inline date
+  | 'inlineDateTime'   // inline date and time
+  | 'dialogDateRange';   // inline date and time
+
+
+export interface TableEditOption {
+  label: string;
+  value: any;
+}
+
+export interface TableEditConfig {
+  kind: TableEditKind;
+
+  /** For inlineText / inlineNumber */
+  maxLength?: number;
+  min?: number;
+  max?: number;
+
+  /** For inlineSelect */
+  options?: TableEditOption[];
+
+  /** For dialogText */
+  dialogTitle?: string;
+  fieldLabel?: string;
+  maxDialogLength?: number; // e.g. 2000
+
+  /** For inlineDate / inlineDateTime */
+  minDate?: Date | string;
+  maxDate?: Date | string;
+
+  disabled?: boolean;
+
+  /** Generic */
+  placeholder?: string;
+  required: boolean;
+}
+
 
 /** Column descriptor for dynamic tables */
 export interface TableColumn {
@@ -197,6 +266,13 @@ export interface TableColumn {
   key: string;
   /** Header text */
   label: string;
+
+  /**
+   * Optional editing config:
+   *  - inlineText / inlineNumber / inlineSelect / inlineSwitch / dialogText
+   *  - if not provided → read-only
+   */
+  edit?: TableEditConfig;
 }
 
 /** File export payload bubbled to parent */
@@ -238,6 +314,15 @@ export interface SwitchButtonType {
   data?: any;
 }
 
+/** Single cell edit payload for parent */
+export interface TableCellEdit {
+  rowIndex: number;
+  columnKey: string;
+  value: any;
+  row: any;
+  editKind: TableEditKind;
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Component
 // ──────────────────────────────────────────────────────────────────────────────
@@ -247,26 +332,38 @@ export interface SwitchButtonType {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatTableModule,
     MatSortModule,
     MatTooltipModule,
     MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     SkeletonLoaderComponent,
     PaginatorComponent,
     SwitchButton,
+    DateTimePickerComponent,
   ],
   templateUrl: './custom-table.component.html',
   styleUrls: [ './custom-table.component.scss' ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 } )
 export class CustomTableComponent
-  implements OnInit, AfterViewInit, OnDestroy, OnChanges {
+  implements OnInit, AfterViewInit, OnDestroy, OnChanges, DoCheck {
+  @ViewChild( DateTimePickerComponent, { static: true } ) dateTimePicker !: DateTimePickerComponent;
 
   // ─────────────────────────────────────────────────────────────
   // @Inputs / @Outputs - Public API for parents
   // ─────────────────────────────────────────────────────────────
 
+  /** Enable/disable paginator row */
+  @Input( { required: true } ) pagination: boolean = false;
+
   /** Total number of records (for pagination) */
-  @Input( { required: true } ) totalDataCount = 0;
+  @Input( { required: false } ) totalDataCount: number = 0;
 
   /** Row data array (any object shape, see columns) */
   @Input( { required: true } ) data: any[] = [];
@@ -274,26 +371,23 @@ export class CustomTableComponent
   /** Columns configuration (key + label) */
   @Input( { required: true } ) columns: TableColumn[] = [];
 
-  /** Enable/disable paginator row */
-  @Input( { required: true } ) pagination = false;
-
   /** Page size (bound to paginator) */
-  @Input( { required: true } ) limit = 2;
+  @Input( { required: false } ) limit: number = 2;
   @Output() limitChange: EventEmitter<number> = new EventEmitter<number>();
 
   /** Page index (bound to paginator) */
-  @Input( { required: true } ) index = 0;
+  @Input( { required: false } ) index: number = 0;
   @Output() indexChange: EventEmitter<number> = new EventEmitter<number>();
 
   /** Table heading text */
-  @Input( { required: true } ) tableTitle = '';
+  @Input( { required: true } ) tableTitle: string = '';
 
   /** Search text (from parent) */
-  @Input() search = '';
+  @Input( { required: false } ) search: string = '';
   @Output() searchChange: EventEmitter<string> = new EventEmitter<string>();
 
   /** Reload flag (used to reset filters + refetch) */
-  @Input( { required: true } ) isReload = false;
+  @Input( { required: false } ) isReload: boolean = false;
   @Output() isReloadChange: EventEmitter<boolean> =
     new EventEmitter<boolean>();
 
@@ -324,6 +418,10 @@ export class CustomTableComponent
 
   /** Request the parent to fetch data (table-driven loading) */
   @Output() fetchData: EventEmitter<void> = new EventEmitter<void>();
+
+  /** Emits when a cell is edited (inline or dialog) */
+  @Output() cellEdit: EventEmitter<TableCellEdit> =
+    new EventEmitter<TableCellEdit>();
 
   // ─────────────────────────────────────────────────────────────
   // Internal state
@@ -358,8 +456,8 @@ export class CustomTableComponent
   protected readonly definedImage = 'Images/System-images/noImage.jpeg';
 
   // Cached row visibility flags (not used yet, kept for future)
-  protected canShowActionForRow: Map<string, boolean> = new Map();
-  protected canShowOperationForRow: Map<string, boolean> = new Map();
+  protected canShowActionForRow: Map<string, boolean> = new Map<string, boolean>();
+  protected canShowOperationForRow: Map<string, boolean> = new Map<string, boolean>();
 
   /**
    * Map of "button-like" column keys (viewButton, actionBtn, etc.)
@@ -368,11 +466,21 @@ export class CustomTableComponent
   protected buttonColumns: Map<string, TableButton> =
     new Map<string, TableButton>();
 
+  /**
+   * In-memory edited values:
+   *  Map<rowIndex, Record<columnKey, value>>
+   */
+  protected rowEditState: Map<number, Record<string, any>> =
+    new Map<number, Record<string, any>>();
+
   // Retry logic for "wait for parent API"
   private fetchAttempts = 0;
   private readonly maxFetchAttempts = 3;
   private readonly fetchRetryDelayMs = 400;
   private fetchRetryTimerId: ReturnType<typeof setTimeout> | null = null;
+
+  // Iterable differ: detect in-place mutations (push/splice) on `data`
+  private dataDiffer: IterableDiffer<any> | null = null;
 
   // ─────────────────────────────────────────────────────────────
   // DI & Constructor
@@ -381,8 +489,11 @@ export class CustomTableComponent
   public constructor (
     private readonly authService: AuthService,
     @Inject( PLATFORM_ID ) private readonly platformId: Object,
-    // Keep ImageService injected for potential future usage (e.g. offline caching)
     private readonly imageService: ImageService,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly differs: IterableDiffers,
+    private readonly dialog: MatDialog,
+    private readonly textService: TextService
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
     this.loggedUser = this.authService.getLoggedUser ?? null;
@@ -393,7 +504,13 @@ export class CustomTableComponent
   // ─────────────────────────────────────────────────────────────
 
   public async ngOnInit(): Promise<void> {
-    this.isArrayOfData = Array.isArray( this.data ) && this.data.length > 0;
+    const rows: any[] = Array.isArray( this.data ) ? this.data : [];
+    this.dataSource.data = rows;
+    this.dataCount = rows.length;
+    this.isArrayOfData = rows.length > 0;
+
+    this.dataDiffer = this.differs.find( this.data || [] ).create<any>();
+
     this.scheduleDataFetchIfNeeded();
   }
 
@@ -408,38 +525,107 @@ export class CustomTableComponent
   public ngOnChanges( changes: SimpleChanges ): void {
     let dataChanged = false;
 
-    // Data changed → refresh MatTable
     if ( changes[ 'data' ] ) {
       const rows: any[] = Array.isArray( this.data ) ? this.data : [];
       this.dataCount = rows.length;
-      this.dataSource.data = [ ...rows ];
+      this.dataSource.data = rows;
       this.isArrayOfData = rows.length > 0;
       dataChanged = true;
+
+      this.dataDiffer = this.differs.find( this.data || [] ).create<any>();
+      this.cdr.markForCheck();
     }
 
-    // Columns changed → normalize + detect button columns
     if ( changes[ 'columns' ] ) {
       this.normalizeColumnsAndDetectButtons();
+      this.cdr.markForCheck();
     }
 
-    // Total or data changed → check if we need to trigger fetch
     if ( changes[ 'totalDataCount' ] || dataChanged ) {
-      // Use microtask to avoid ExpressionChangedAfterItHasBeenCheckedError
       Promise.resolve().then( () => this.scheduleDataFetchIfNeeded() );
     }
   }
 
+  public ngDoCheck(): void {
+    if ( !this.dataDiffer || !Array.isArray( this.data ) ) {
+      return;
+    }
+
+    const changes = this.dataDiffer.diff( this.data );
+    if ( changes ) {
+      this.dataSource.data = this.data;
+      this.dataCount = this.data.length;
+      this.isArrayOfData = this.data.length > 0;
+      this.cdr.markForCheck();
+    }
+  }
+  // ─────────────────────────────────────────────────────────────
+  // Public helpers
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Convert an array of primitive values (string/number or literal unions)
+   * into a `{ label, value }[]` pair list for selects, etc.
+   *
+   * - Accepts *readonly* arrays (e.g. readonly RoleInTeam[])
+   * - Preserves the exact value type via generics
+   */
+  public convertArrayIntoObjectPair<T extends string | number>(
+    data: readonly T[],
+  ): { label: string; value: T; }[] {
+    try {
+      if ( !Array.isArray( data ) || data.length === 0 ) {
+        throw new Error( 'Data array is invalid!' );
+      }
+
+      const returnData: { label: string; value: T; }[] = [];
+
+      for ( const item of data ) {
+        // keyToLabel most likely expects string → normalize to string
+        const label: string = this.textService.keyToLabel( String( item ) );
+
+        const organised: { label: string; value: T; } = {
+          label,
+          value: item,
+        };
+
+        returnData.push( organised );
+      }
+
+      return returnData;
+    } catch ( error ) {
+      console.error( error );
+      return [];
+    }
+  }
+
+  protected toDateOrNull(
+    raw: string | Date | null | undefined,
+  ): Date | null {
+    if ( raw instanceof Date ) {
+      return raw;
+    }
+
+    if ( typeof raw === 'string' ) {
+      const trimmed: string = raw.trim();
+      if ( !trimmed ) {
+        return null;
+      }
+
+      const parsed: Date = new Date( trimmed );
+      if ( Number.isNaN( parsed.getTime() ) ) {
+        return null;
+      }
+
+      return parsed;
+    }
+
+    return null;
+  }
   // ─────────────────────────────────────────────────────────────
   // Column / button column normalization
   // ─────────────────────────────────────────────────────────────
 
-  /**
-   * Cleans up the columns array:
-   *  - removes duplicates
-   *  - strips empty keys
-   *  - sets displayedColumnKeys
-   *  - detects "button-like" columns (viewButton, actionBtn, etc.)
-   */
   private normalizeColumnsAndDetectButtons(): void {
     this.buttonColumns.clear();
 
@@ -449,7 +635,6 @@ export class CustomTableComponent
     const normalized: TableColumn[] = [];
     const seenKeys: Set<string> = new Set<string>();
 
-    // 1) Deduplicate + ignore invalid keys
     for ( const col of rawColumns ) {
       const key: string = ( col.key || '' ).trim();
       if ( !key ) continue;
@@ -466,7 +651,6 @@ export class CustomTableComponent
       ( c: TableColumn ): string => c.key,
     );
 
-    // Track if there is a "status" column for CSS helpers
     this.tableStatus =
       (
         normalized.find(
@@ -474,7 +658,6 @@ export class CustomTableComponent
         )?.key || ''
       ).toLowerCase();
 
-    // 2) Detect button-like columns and build per-column button configs
     for ( const col of normalized ) {
       const keyRaw: string = ( col.key || '' ).trim();
       if ( !keyRaw ) continue;
@@ -495,7 +678,6 @@ export class CustomTableComponent
           continue;
         }
 
-        // Allow parent override if provided
         const override: TableButton | null = this.findButtonConfig( action );
 
         const label: string =
@@ -511,19 +693,16 @@ export class CustomTableComponent
     }
   }
 
-  /** True if the column is a button-type column */
   protected isButtonColumn( columnKey: string ): boolean {
     const keyLower: string = ( columnKey || '' ).trim().toLowerCase();
     return this.buttonColumns.has( keyLower );
   }
 
-  /** Get the configured button for a given button column */
   protected getButtonForColumn( columnKey: string ): TableButton | null {
     const keyLower: string = ( columnKey || '' ).trim().toLowerCase();
     return this.buttonColumns.get( keyLower ) ?? null;
   }
 
-  /** Find a button configuration (if parent provided it) for a given ActionId */
   private findButtonConfig( action: ActionId ): TableButton | null {
     if ( !Array.isArray( this.buttons ) || this.buttons.length === 0 ) {
       return null;
@@ -535,13 +714,210 @@ export class CustomTableComponent
   }
 
   // ─────────────────────────────────────────────────────────────
+  // Edit-state helpers (inline + dialog)
+  // ─────────────────────────────────────────────────────────────
+
+  /** Ensure there is a mutable edit state object for a given row index */
+  private ensureRowEditState(
+    rowIndex: number,
+    row: any,
+  ): Record<string, any> {
+    if ( !this.rowEditState.has( rowIndex ) ) {
+      this.rowEditState.set( rowIndex, { ...row } );
+    }
+    // Map.get must be non-null because we just set it above when missing
+    return this.rowEditState.get( rowIndex ) as Record<string, any>;
+  }
+
+  /**
+   * Returns the current value for a cell, preferring edited state over
+   * the raw row value.
+   */
+  protected getCellEditValue(
+    rowIndex: number,
+    columnKey: string,
+    row: any,
+  ): any {
+    const state = this.rowEditState.get( rowIndex );
+    if (
+      state &&
+      Object.prototype.hasOwnProperty.call( state, columnKey )
+    ) {
+      return state[ columnKey ];
+    }
+    return row ? row[ columnKey ] : undefined;
+  }
+
+  /**
+   * Handle inline edit changes (text/number/select/switch).
+   * Updates edit map and emits a TableCellEdit payload.
+   */
+  protected handleInlineEditChange(
+    value: any,
+    column: TableColumn,
+    row: any,
+    rowIndex: number,
+  ): void {
+    try {
+      const columnKey: string = ( column.key || '' ).trim();
+      if ( !columnKey ) {
+        throw new Error( 'Column key is required for inline edit.' );
+      }
+
+      const editKind: TableEditKind = column.edit?.kind || 'none';
+      let normalisedValue: any = value;
+
+      switch ( editKind ) {
+        case 'inlineNumber': {
+          if ( value === '' || value === null || value === undefined ) {
+            normalisedValue = null;
+          } else {
+            const num = Number( value );
+            normalisedValue = Number.isNaN( num ) ? null : num;
+          }
+          break;
+        }
+
+        case 'inlineDate':
+        case 'inlineDateTime': {
+          if ( !value ) {
+            normalisedValue = null;
+          } else if ( value instanceof Date ) {
+            normalisedValue = isNaN( value.getTime() ) ? null : value;
+          } else {
+            const dt = new Date( value );
+            normalisedValue = isNaN( dt.getTime() ) ? null : dt;
+          }
+          break;
+        }
+
+        default:
+          normalisedValue = value;
+      }
+
+      const state: Record<string, any> = this.ensureRowEditState( rowIndex, row );
+      state[ columnKey ] = normalisedValue;
+
+      const payload: TableCellEdit = {
+        rowIndex,
+        columnKey,
+        value: normalisedValue,
+        row,
+        editKind,
+      };
+
+      this.cellEdit.emit( payload );
+    } catch ( error ) {
+      console.error( '[CustomTable] handleInlineEditChange error:', error );
+    }
+  }
+
+
+
+  /** True if this column should be edited inline in the table cell */
+  protected hasInlineEdit( column: TableColumn ): boolean {
+    const kind: TableEditKind | undefined = column.edit?.kind;
+    return !!kind && (
+      kind === 'inlineText' ||
+      kind === 'inlineNumber' ||
+      kind === 'inlineSelect' ||
+      kind === 'inlineSwitch' ||
+      kind === 'inlineDate' ||
+      kind === 'inlineDateTime'
+    );
+  }
+
+  /**
+ * Coerce a Date|string|undefined into a valid Date or null.
+ * Used for [min]/[max] inputs on Material date/datetime pickers.
+ */
+  protected coerceDate(
+    input: Date | string | null | undefined,
+  ): Date | null {
+    if ( !input ) return null;
+    if ( input instanceof Date ) {
+      return isNaN( input.getTime() ) ? null : input;
+    }
+    const parsed = new Date( input );
+    return isNaN( parsed.getTime() ) ? null : parsed;
+  }
+
+  /** True if this column uses the dialog text editor */
+  protected isDialogTextEdit( column: TableColumn ): boolean {
+    return column.edit?.kind === 'dialogText';
+  }
+
+  /**
+   * Open dialog text editor for large text columns.
+   * When user saves:
+   *  - update rowEditState
+   *  - emit cellEdit(event) with editKind = 'dialogText'
+   */
+  protected openTextEditorDialog(
+    column: TableColumn,
+    row: any,
+    rowIndex: number,
+  ): void {
+    try {
+      const key: string = ( column.key || '' ).trim();
+      if ( !key ) {
+        throw new Error( 'Column key is required for dialog text edit.' );
+      }
+
+      const current: string =
+        this.getCellEditValue( rowIndex, key, row ) ??
+        row?.[ key ] ??
+        '';
+
+      const data: TextEditorDialogData = {
+        title: column.edit?.dialogTitle || 'Edit text',
+        label: column.edit?.fieldLabel || column.label || key,
+        value: String( current ),
+        maxLength: column.edit?.maxDialogLength,
+      };
+
+      const dialogRef = this.dialog.open<
+        TextEditorDialogComponent,
+        TextEditorDialogData,
+        TextEditorDialogResult
+      >( TextEditorDialogComponent, {
+        width: '700px',
+        maxWidth: '90vw',
+        data,
+        disableClose: true,
+      } );
+
+      dialogRef.afterClosed().subscribe(
+        ( result: TextEditorDialogResult | undefined ) => {
+          if ( !result ) {
+            return;
+          }
+
+          const state: Record<string, any> =
+            this.ensureRowEditState( rowIndex, row );
+          state[ key ] = result.value;
+
+          const payload: TableCellEdit = {
+            rowIndex,
+            columnKey: key,
+            value: result.value,
+            row,
+            editKind: 'dialogText',
+          };
+
+          this.cellEdit.emit( payload );
+        },
+      );
+    }
+    catch ( error ) {
+      console.error( '[CustomTable] openTextEditorDialog error:', error );
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // Status / style helpers
   // ─────────────────────────────────────────────────────────────
 
-  /**
-   * Normalizes status text into CSS class name:
-   *  e.g. "In Progress" → "main-category in_progress"
-   */
   protected statusClass( status: string | null | undefined ): string {
     const norm: string = String( status ?? '' )
       .trim()
@@ -552,11 +928,6 @@ export class CustomTableComponent
     return `main-category ${ norm }`;
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Button helpers (derive action from column name, labels, bg color)
-  // ─────────────────────────────────────────────────────────────
-
-  /** Derive an ActionId from a button column's key / label */
   private deriveActionFromColumn( col: TableColumn ): ActionId | null {
     const rawSource: string = ( col.key || col.label || '' )
       .toString()
@@ -591,7 +962,6 @@ export class CustomTableComponent
     return match ?? null;
   }
 
-  /** Default label from action name ("view" → "View") */
   private buildButtonLabelFromAction( action: ActionId ): string {
     const text: string = action.toString();
     return text.charAt( 0 ).toUpperCase() + text.slice( 1 );
@@ -616,7 +986,7 @@ export class CustomTableComponent
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Paginator bindings (bridge between paginator component & parent)
+  // Paginator bindings
   // ─────────────────────────────────────────────────────────────
 
   get tablePageIndex(): number {
@@ -650,7 +1020,6 @@ export class CustomTableComponent
   set tableIsReload( value: boolean ) {
     this.isReload = value;
 
-    // Reset filters to "clean" state
     this.search = '';
     this.dateRange = null;
     this.index = this.tablePageIndex;
@@ -681,7 +1050,6 @@ export class CustomTableComponent
     this.rangeChange.emit( dateRange );
   }
 
-  // Toolbar → export click handler
   protected handleFileExport( extention: Extension, _data: any ): void {
     this.fileExportHandle( extention );
   }
@@ -699,7 +1067,6 @@ export class CustomTableComponent
   // Sorting
   // ─────────────────────────────────────────────────────────────
 
-  /** MatSort handler used by template */
   protected sortData( sort: Sort, data?: any[] ): void {
     const sourceData: any[] = ( data || this.dataSource.data ).slice();
     const isAsc: boolean = sort.direction === 'asc';
@@ -714,7 +1081,6 @@ export class CustomTableComponent
     );
   }
 
-  /** Universal comparator for numbers / strings / nulls */
   private universalCompare( a: any, b: any, isAsc: boolean ): number {
     if ( a == null && b != null ) return isAsc ? -1 : 1;
     if ( a != null && b == null ) return isAsc ? 1 : -1;
@@ -731,17 +1097,6 @@ export class CustomTableComponent
   // Image helpers
   // ─────────────────────────────────────────────────────────────
 
-  /**
-   * Image generator:
-   *  - resolves most likely image field on the row object (element)
-   *  - falls back to dummy user / generic image if needed
-   *
-   * Usage from template:
-   *   <img
-   *     [src]="imageGenerator(row, 'userimage', row.gender)"
-   *     class="table-user-image"
-   *   />
-   */
   protected imageGenerator(
     element: any,
     type: string,
@@ -753,16 +1108,13 @@ export class CustomTableComponent
 
     switch ( safeType ) {
       case 'userimage': {
-        // If we actually have a non-empty string, just use it
         if ( safeImage ) {
-          // simple "looks like a filename with extension" check
           const dotIndex: number = safeImage.lastIndexOf( '.' );
           if ( dotIndex > 0 && dotIndex < safeImage.length - 1 ) {
             return safeImage;
           }
         }
 
-        // No valid image → choose dummy by gender
         const safeGender: string = ( gender || '' ).toLowerCase().trim();
 
         if ( safeGender === 'male' ) {
@@ -777,33 +1129,21 @@ export class CustomTableComponent
 
       case 'propertyimage':
       case 'image': {
-        // For generic images, if we have something, use it; else fallback
         return safeImage || this.definedImage;
       }
 
       default: {
-        // Unknown type → generic fallback
         return this.definedImage;
       }
     }
   }
 
-  /**
-   * Resolve the most appropriate image field on a row object.
-   * Works case-insensitively and ignores underscores, dashes etc.
-   * Example matches:
-   *  - "image", "Image", "imageUrl"
-   *  - "user_image", "UserImage", "USER_IMAGE_URL"
-   *  - "propertyImage", "profile_image", "avatar", "photo", etc.
-   */
   private resolveImageField( record: any ): string | undefined {
     if ( !record || typeof record !== 'object' ) return undefined;
 
-    // Normalize key like "USER_IMAGE_URL" → "userimageurl"
     const normalize = ( k: string ): string =>
       k.toLowerCase().replace( /[^a-z]/g, '' );
 
-    // Accept these "tokens" inside the normalized key
     const accepted = [
       'image',
       'userimage',
@@ -825,10 +1165,51 @@ export class CustomTableComponent
   }
 
   // ─────────────────────────────────────────────────────────────
-  // Formatting helpers (dates, booleans, capitalization)
+  // Date input helpers
   // ─────────────────────────────────────────────────────────────
 
-  /** Formats date range into "12th of March 2025 to 13th of March 2025" */
+  /**
+   * Convert any date-like value (Date | string | number) to
+   * 'yyyy-MM-dd' for <input type="date">.
+   */
+  protected toDateInputValue( value: any ): string | null {
+    if ( !value ) return null;
+
+    const date: Date = value instanceof Date ? value : new Date( value );
+    if ( isNaN( date.getTime() ) ) return null;
+
+    const yyyy = date.getFullYear();
+    const mm = String( date.getMonth() + 1 ).padStart( 2, '0' );
+    const dd = String( date.getDate() ).padStart( 2, '0' );
+
+    return `${ yyyy }-${ mm }-${ dd }`;
+  }
+
+  /**
+   * Convert any date-like value to 'yyyy-MM-ddTHH:mm'
+   * for <input type="datetime-local">.
+   */
+  protected toDateTimeInputValue( value: any ): string | null {
+    if ( !value ) return null;
+
+    const date: Date = value instanceof Date ? value : new Date( value );
+    if ( isNaN( date.getTime() ) ) return null;
+
+    const yyyy = date.getFullYear();
+    const mm = String( date.getMonth() + 1 ).padStart( 2, '0' );
+    const dd = String( date.getDate() ).padStart( 2, '0' );
+
+    const hh = String( date.getHours() ).padStart( 2, '0' );
+    const min = String( date.getMinutes() ).padStart( 2, '0' );
+
+    return `${ yyyy }-${ mm }-${ dd }T${ hh }:${ min }`;
+  }
+
+
+  // ─────────────────────────────────────────────────────────────
+  // Formatting helpers
+  // ─────────────────────────────────────────────────────────────
+
   protected formatDateRange( start: Date, end: Date ): string {
     const formatWithSuffix = ( date: Date ): string => {
       const day: number = date.getDate();
@@ -854,15 +1235,6 @@ export class CustomTableComponent
     }
   }
 
-  /**
-   * Smart text formatter:
-   *  - if JSON representing object → builds lines "Key : Value"
-   *  - boolean values → colored circles
-   *  - date-like values → formatted as YYYY/MM/DD – hh:mm AM/PM
-   *  - otherwise → string with max length 30 (…)
-   *
-   * Intended for use with [innerHTML] in cell templates.
-   */
   protected trimText( text: any ): string {
     try {
       const stringValue: string =
@@ -870,67 +1242,95 @@ export class CustomTableComponent
 
       const parsed: any = JSON.parse( stringValue );
 
-      // 1) Object handling
-      if ( typeof parsed === 'object' && parsed !== null ) {
-        return Object.entries( parsed )
-          .map( ( [ key, value ] ) => {
-            if ( key.includes( '_' ) ) return '';
+      if ( Array.isArray( parsed ) ) {
+        if ( parsed.length === 0 ) {
+          return '';
+        }
 
-            // Boolean → colored circle
-            if ( typeof value === 'boolean' ) {
-              return `${ this.makeCapitalize( key ) } : ${ this.booleanCircle( value ) }`;
-            }
+        const allObjects: boolean = parsed.every(
+          ( item: any ) => item !== null && typeof item === 'object',
+        );
 
-            // Date → formatted (only on primitive values)
-            if ( ( typeof value === 'string' || typeof value === 'number' ) && this.isDateValue( value ) ) {
-              return `${ this.makeCapitalize( key ) } : ${ this.formatCustomDate( value ) }`;
-            }
+        if ( allObjects ) {
+          return parsed
+            .map( ( item: any ) => this.buildKeyValueLinesFromObject( item ) )
+            .filter( ( line: string ) => !!line )
+            .join( '<br>' );
+        }
 
-            return `${ this.makeCapitalize( key ) } : ${ this.makeCapitalize(
-              value,
-            ) }`;
-          } )
-          .filter( Boolean )
-          .join( '<br>' );
+        const flat: string = parsed
+          .map( ( item: any ) => String( item ?? '' ).trim() )
+          .filter( ( v: string ) => v.length > 0 )
+          .join( ', ' );
+
+        const safeFlat: string = flat.trim();
+        return safeFlat.length > 30 ? `${ safeFlat.slice( 0, 30 ) }...` : safeFlat;
       }
 
-      // 2) Single boolean handling
+      if ( typeof parsed === 'object' && parsed !== null ) {
+        return this.buildKeyValueLinesFromObject( parsed );
+      }
+
       if ( typeof parsed === 'boolean' ) {
         return this.booleanCircle( parsed );
       }
 
-      // 3) Single date string handling
       if ( this.isDateValue( parsed ) ) {
         return this.formatCustomDate( parsed );
       }
 
-      return String( parsed );
-    } catch {
+      const plain: string = String( parsed ?? '' ).trim();
+      return plain.length > 30 ? `${ plain.slice( 0, 30 ) }...` : plain;
+    }
+    catch {
       const safeText: string = String( text ?? '' ).trim();
-      return safeText.length > 30 ? safeText.slice( 0, 30 ) + '...' : safeText;
+      return safeText.length > 30 ? `${ safeText.slice( 0, 30 ) }...` : safeText;
     }
   }
 
-  /** Detect whether a value is a valid date or date-like string */
-  /** Detect whether a value is a valid *pure* date or date-time string/number */
+  private buildKeyValueLinesFromObject( input: any ): string {
+    if ( !input || typeof input !== 'object' ) {
+      return '';
+    }
+
+    return Object.entries( input )
+      .map( ( [ key, value ] ) => {
+        if ( key.includes( '_' ) ) {
+          return '';
+        }
+
+        if ( typeof value === 'boolean' ) {
+          return `${ this.makeCapitalize( key ) } : ${ this.booleanCircle( value ) }`;
+        }
+
+        if (
+          ( typeof value === 'string' || typeof value === 'number' ) &&
+          this.isDateValue( value )
+        ) {
+          return `${ this.makeCapitalize( key ) } : ${ this.formatCustomDate( value ) }`;
+        }
+
+        return `${ this.makeCapitalize( key ) } : ${ this.makeCapitalize( value ) }`;
+      } )
+      .filter( ( line: string ) => !!line )
+      .join( '<br>' );
+  }
+
   private isDateValue( value: any ): boolean {
     if ( value === null || value === undefined ) {
       return false;
     }
 
-    // Already a Date instance
     if ( value instanceof Date && !isNaN( value.getTime() ) ) {
       return true;
     }
 
-    // Numeric timestamp (ms since epoch)
     if ( typeof value === 'number' ) {
       if ( !Number.isFinite( value ) ) return false;
       const dateFromNumber: Date = new Date( value );
       return !isNaN( dateFromNumber.getTime() );
     }
 
-    // Only strings beyond this point
     if ( typeof value !== 'string' ) {
       return false;
     }
@@ -938,24 +1338,15 @@ export class CustomTableComponent
     const trimmed: string = value.trim();
     if ( !trimmed ) return false;
 
-    // ───────────────────────────────────────────────────────────────
-    // Strict patterns: the *entire* string must look like a date.
-    // This prevents "12/05/2024 Colombo" from being treated as a date.
-    // ───────────────────────────────────────────────────────────────
-
-    // ISO-like: 2025-11-30 or 2025-11-30T12:34:56Z
     const isoLike: RegExp =
       /^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
 
-    // 2025/11/30 or 2025/11/30 12:34
     const ymdSlash: RegExp =
       /^\d{4}\/\d{2}\/\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?$/;
 
-    // 30/11/2025 or 30/11/2025 12:34
     const dmySlash: RegExp =
       /^\d{2}\/\d{2}\/\d{4}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?$/;
 
-    // If it doesn’t *exactly* match one of these, it is NOT a date.
     if (
       !isoLike.test( trimmed ) &&
       !ymdSlash.test( trimmed ) &&
@@ -964,13 +1355,10 @@ export class CustomTableComponent
       return false;
     }
 
-    // Final safety: actually try constructing the Date
     const parsedDate: Date = new Date( trimmed );
     return !isNaN( parsedDate.getTime() );
   }
 
-
-  /** Format date into "YYYY/MM/DD – hh:mm AM/PM" */
   private formatCustomDate( value: any ): string {
     const date = value instanceof Date ? value : new Date( value );
 
@@ -985,29 +1373,23 @@ export class CustomTableComponent
     const ampm = hours >= 12 ? 'PM' : 'AM';
 
     hours = hours % 12;
-    if ( hours === 0 ) hours = 12; // midnight/noon case
+    if ( hours === 0 ) hours = 12;
 
     const hh = String( hours ).padStart( 2, '0' );
 
     return `${ yyyy }/${ mm }/${ dd } – ${ hh }:${ minutes } ${ ampm }`;
   }
 
-  /** Returns HTML span for boolean circle (styled via SCSS) */
   private booleanCircle( value: boolean ): string {
     return value
-      ? `<span class="bool-circle bool-true"></span>`
-      : `<span class="bool-circle bool-false"></span>`;
+      ? '<span class="bool-circle bool-true"></span>'
+      : '<span class="bool-circle bool-false"></span>';
   }
 
-  /**
-   * Capitalize every word, preserving inline HTML.
-   * Uses DOMParser only in browser. On SSR, falls back to simple capitalization.
-   */
   protected makeCapitalize( text: any ): string {
     const stringValue: string =
       typeof text === 'string' ? text : String( text ?? '' ).trim();
 
-    // SSR / non-browser safe: simple capitalization
     if ( !this.isBrowser ) {
       return stringValue
         .split( ' ' )
@@ -1056,7 +1438,8 @@ export class CustomTableComponent
         data: this.data,
       };
       this.fileExport.emit( payload );
-    } catch ( error ) {
+    }
+    catch ( error ) {
       console.error( '[File exporting error]: ', error );
     }
   }
@@ -1078,7 +1461,8 @@ export class CustomTableComponent
         data,
       };
       this.buttonOperation.emit( assemble );
-    } catch ( err ) {
+    }
+    catch ( err ) {
       console.error(
         '[Table action button error]' + `Action: ${ action }`,
         ' Error: ',
@@ -1091,7 +1475,6 @@ export class CustomTableComponent
   // Retry / fetch logic
   // ─────────────────────────────────────────────────────────────
 
-  /** Reset retry count + clear any pending timer */
   private resetFetchAttempts(): void {
     this.fetchAttempts = 0;
 
@@ -1101,26 +1484,15 @@ export class CustomTableComponent
     }
   }
 
-  /** Small helper to check if we currently have any rows */
   private hasTableData(): boolean {
     return Array.isArray( this.data ) && this.data.length > 0;
   }
 
-  /**
-   * Core retry logic:
-   *  - if we already have rows or total count → show table and stop
-   *  - else try up to maxFetchAttempts to ask parent for data
-   *  - after each attempt, wait fetchRetryDelayMs and re-check
-   *
-   * This supports patterns where the parent does async HTTP and
-   * fills [data] + [totalDataCount] later.
-   */
   private scheduleDataFetchIfNeeded(): void {
     const hasRows: boolean = this.hasTableData();
     const hasTotalCount: boolean =
       typeof this.totalDataCount === 'number' && this.totalDataCount > 0;
 
-    // Case 1: we already have some data or a count → show table, stop retrying
     if ( hasRows || hasTotalCount ) {
       this.isArrayOfData = hasRows;
       this.isTableVisible = true;
@@ -1128,30 +1500,24 @@ export class CustomTableComponent
       return;
     }
 
-    // Case 2: no data and we have exhausted retries → mark as empty state
     if ( this.fetchAttempts >= this.maxFetchAttempts ) {
       this.isArrayOfData = false;
       this.isTableVisible = true;
       return;
     }
 
-    // Case 3: no data yet, but still have attempts left → trigger one attempt
     this.fetchAttempts += 1;
 
-    // Ask parent to fetch data (1 attempt) – microtask to avoid CD clashes
     Promise.resolve().then( () => this.fetchData.emit() );
 
-    // While waiting, hide the table body if desired
     this.isArrayOfData = false;
     this.isTableVisible = false;
 
-    // Clear previous timer (avoid stacking)
     if ( this.fetchRetryTimerId !== null ) {
       clearTimeout( this.fetchRetryTimerId );
       this.fetchRetryTimerId = null;
     }
 
-    // After a delay, re-run the logic.
     this.fetchRetryTimerId = setTimeout( (): void => {
       this.scheduleDataFetchIfNeeded();
     }, this.fetchRetryDelayMs );
@@ -1161,29 +1527,18 @@ export class CustomTableComponent
   // MIME / extension → icon mapping
   // ─────────────────────────────────────────────────────────────
 
-  /**
-   * Normalize MIME type or extension/filename into an Extension enum value.
-   *  - "application/pdf" → "pdf"
-   *  - "image/png"       → "png"
-   *  - "report.docx"     → "docx"
-   *  - unknown           → "file"
-   */
   private mapMimeOrExtToExtension( type: string | undefined | null ): Extension {
     if ( !type ) return 'file';
 
     const lower = type.toLowerCase().trim();
 
-    // 1) MIME type (contains "/")
     if ( lower.includes( '/' ) ) {
       const mime = lower;
 
-      // Images
       if ( mime.startsWith( 'image/' ) ) return 'png';
 
-      // PDF
       if ( mime === 'application/pdf' ) return 'pdf';
 
-      // ZIP
       if (
         mime === 'application/zip' ||
         mime === 'application/x-zip-compressed' ||
@@ -1192,7 +1547,6 @@ export class CustomTableComponent
         return 'zip';
       }
 
-      // Word
       if (
         mime === 'application/msword' ||
         mime ===
@@ -1204,7 +1558,6 @@ export class CustomTableComponent
         return 'docx';
       }
 
-      // Excel
       if (
         mime === 'application/vnd.ms-excel' ||
         mime ===
@@ -1216,7 +1569,6 @@ export class CustomTableComponent
         return 'xlsx';
       }
 
-      // PowerPoint
       if (
         mime === 'application/vnd.ms-powerpoint' ||
         mime ===
@@ -1227,23 +1579,18 @@ export class CustomTableComponent
         return 'pptx';
       }
 
-      // Text
       if ( mime === 'text/plain' ) return 'txt';
 
-      // XML
       if ( mime === 'text/xml' || mime === 'application/xml' ) return 'xml';
 
-      // Fallback
       return 'file';
     }
 
-    // 2) Otherwise treat as extension or filename
     const parts = lower.split( '.' );
     const extOnly = ( parts.length > 1 ? parts.pop() : parts[ 0 ] ) || 'file';
     return extOnly as Extension;
   }
 
-  /** Top-level helper used by template to choose Material icon */
   protected chooseIcon( type: string | undefined | null ): MaterialFileIcon {
     const ext = this.mapMimeOrExtToExtension( type );
     return EXTENSION_ICON_MAP[ ext ] ?? 'insert_drive_file';

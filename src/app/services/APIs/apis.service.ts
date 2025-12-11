@@ -41,15 +41,6 @@ export interface Country {
   image: string;
 }
 
-export interface CountryCodes {
-  name: string;
-  code: string;
-  flags: {
-    png: string;
-    svg: string;
-    alt?: string;
-  };
-}
 
 /* ─────────────────────────────────────────────────────────────────────────────
  *  Access / role model (shared with FE + BE)
@@ -102,39 +93,60 @@ export const DEFAULT_ROLES: Role[] = [
   'user',
 ];
 
+/** Country code info for phone numbers. */
+export interface CountryCodes {
+  name: string;
+  code: string;
+  flags: {
+    png: string;
+    svg: string;
+    alt?: string;
+  };
+}
+
+/** Phone number structure attached to User. */
+export interface PhoneNumber {
+  code: CountryCodes;
+  number: string;
+}
+
 export interface User {
-  __id?: string;
-  __v?: number;
+  // Basic
   name: string;
   username: string;
   email: string;
-  dateOfBirth?: Date | null;
+  dateOfBirth: Date;
   age: number;
-  image?: string | File;
-  phoneNumber?: string;
-  phoneCodeDetails?: CountryCodes | null;
-  bio: string;
-  role: Role;
   gender: string;
+  image?: string | File;
+  phoneNumber?: PhoneNumber;
+  bio: string;
+  nationality: string;
+
+  // Role & access
+  role: Role;
   address: Address;
   isActive: boolean;
-
-  /**
-   * Canonical access payload.
-   *  - Stored in DB as user.access
-   *  - Used by guards and FE role editor
-   */
   access: ROLE_ACCESS_MAP;
 
-  nationality?: string;
-  nicOrPassport?: string;
+  // Verification
+  otpVerifycation: boolean;
+  otpToken: string;
+  otpTokenExpires: Date;
+  emailVerified: boolean;
+  emailVerificationToken?: string;
+  emailVerificationTokenExpires?: Date;
 
+  // Admin controls
+  autoDelete: boolean;
   creator: string;
   updator?: string;
 
-  multiAuthEnabled: boolean;
-  multiAuthActivatedAt?: Date;
+  // MFA
+  multiAuthEnabled: boolean;    // user chose to enable MFA
+  multiAuthActivatedAt?: Date;  // when QR + foreign app completed
 
+  // Timestamps (added automatically by Mongoose)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -155,6 +167,16 @@ export interface UDER_DOC_TYPES extends MSG {
   extension: string;
   uploadDate: Date;
   download: string;
+}
+
+export interface MultiAuthData {
+  username?: string;
+  qr?: string;
+  expiresAt?: string;
+  uri?: string;
+  pairingToken: string;
+  deviceName?: string;
+  devicePlatform?: string;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -209,6 +231,24 @@ export class APIsService {
     }
 
     return rawOther as Record<string, unknown>;
+  }
+
+  public extractBooleanFromOther(
+    data: MSG[ 'data' ] | undefined | null,
+    key: string,
+  ): boolean | null {
+    const other = this.getOtherRecord( data );
+    if ( !other || !( key in other ) ) {
+      return null;
+    }
+
+    const value = other[ key ];
+
+    if ( typeof value !== 'boolean' ) {
+      return null;
+    }
+
+    return value;
   }
 
   /**
@@ -412,6 +452,44 @@ export class APIsService {
     );
   }
 
+  public async generateMultiAuthQRCode( username: string ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/mfa/initiate`,
+      { username },
+    );
+  }
+
+  public async getConfirmationOfMultiAuth( data: MultiAuthData ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/mfa/confirm`,
+      data,
+    );
+  }
+
+  public async getMultiAuthStatus( pairingToken: string ): Promise<MSG> {
+    return firstValueFrom( this.http.get<MSG>( `${ this.baseURL }/api/mfa/status/${ pairingToken }` ) );
+  }
+
+  public async deactiveMultiAuth( username: string ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/mfa/deactive/${ username }`,
+      {},
+    );
+  }
+
+  public async mfaInitialVerify( data: { pairingToken: string, code: string; } ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/mfa/initial-verify`,
+      data,
+    );
+  }
+
+  public async mfaUserVerify( data: { token: string, code: string; } ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/mfa/user-verify`,
+      data,
+    );
+  }
   public async uploadDocuments(
     data: FormData,
     username: string,
@@ -422,6 +500,19 @@ export class APIsService {
     );
   }
 
+  public async regenerateChallenge( username: string ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/auth/regenerate-challenge`,
+      username,
+    );
+  }
+
+  public async rotateWsToken( username: string ): Promise<MSG> {
+    return await this.post(
+      `${ this.baseURL }/api/auth/ws-token/rotate/${ username }`,
+      {}
+    );
+  }
   public async getUserByUsername( username: string ): Promise<MSG> {
     return await firstValueFrom(
       this.http.get<MSG>(
@@ -444,11 +535,10 @@ export class APIsService {
     );
   }
 
-  public async getUserByPhone( phone: string ): Promise<MSG> {
-    return await firstValueFrom(
-      this.http.get<MSG>(
-        `${ this.baseURL }/${ this.userAPI }/user-phone/${ phone }`,
-      ),
+  public async getUserByPhone( phone: User[ 'phoneNumber' ] ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/${ this.userAPI }/user-phone`,
+      { phone },
     );
   }
 
@@ -557,9 +647,9 @@ export class APIsService {
     );
   }
 
-  public async getCountries(): Promise<Country[]> {
+  public async getCountries(): Promise<unknown> {
     const countries = await firstValueFrom(
-      this.http.get<Country[]>(
+      this.http.get<unknown>(
         'https://cdn.jsdelivr.net/npm/country-flag-emoji-json@2.0.0/dist/index.json',
       ),
     );

@@ -1,0 +1,491 @@
+/* ==========================================================================
+   Angular Material – Global Theme Alignment (MDC-based)
+   Scope:   Affects all Material components application-wide
+   Source:  Uses CSS variables defined on html.light / html.dark in global.scss
+
+   Required tokens:
+   - Surface tokens:   --surface, --surface-variant, --elevated
+   - Text tokens:      --on-surface, --on-primary, --muted
+   - Brand tokens:     --primary
+   - Border/shadow:    --border-color, --shadow-color
+   - State tokens:     --danger, --warning, --success, --info, --chip-bg
+   ========================================================================== */
+
+html.light,
+html.dark {
+  /* ──────────────────────────────────────────────────────────────
+   * 1. GENERIC SURFACES (menus, overlays, popups)
+   * ──────────────────────────────────────────────────────────── */
+
+  .mat-mdc-menu-panel,
+  .mat-mdc-select-panel,
+  .mat-mdc-autocomplete-panel,
+  .mat-mdc-dialog-container .mdc-dialog__surface,
+  .mat-mdc-snack-bar-container .mdc-snackbar__surface,
+  .mat-datepicker-content,
+  .mat-datepicker-popup,
+  .mat-mdc-tooltip .mdc-tooltip__surface {
+    background-color: var(--surface-variant);
+    color: var(--on-surface);
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 24px 0 var(--shadow-color);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * 2. DATEPICKER PANEL + CALENDAR
+   * ──────────────────────────────────────────────────────────── */
+
+  /* Calendar surface + text colour */
+  .mat-datepicker-content,
+  .mat-datepicker-content .mat-calendar {
+    background-color: var(--surface-variant);
+    overflow: hidden;
+    color: var(--on-surface);
+  }
+
+  /* Header (month/year text, weekdays row) */
+  .mat-calendar-header,
+  .mat-calendar-table-header,
+  .mat-calendar-table-header th,
+  .mat-calendar-body-label {
+    color: var(--on-surface);
+  }
+
+  /* Day cells */
+  .mat-calendar-body-cell,
+  .mat-calendar-body-cell-content {
+    color: var(--on-surface);
+  }
+
+  /* Selected / active date */
+  .mat-calendar-body-selected,
+  .mat-calendar-body-cell-content.mat-calendar-body-selected {
+    background-color: var(--chip-bg);
+    color: var(--on-surface);
+  }
+
+  /* Today indicator (only border when not selected) */
+  .mat-calendar-body-today:not(.mat-calendar-body-selected) {
+    border-color: var(--on-surface);
+  }
+
+  /* Footer action buttons inside datepicker popup */
+  .mat-datepicker-content .mat-mdc-button,
+  .mat-datepicker-content .mat-mdc-outlined-button,
+  .mat-datepicker-content .mat-mdc-unelevated-button {
+    color: var(--on-surface);
+  }
+
+  .mat-datepicker-content .mat-mdc-icon-button,
+  .mat-datepicker-content .mat-mdc-icon-button .mat-mdc-button-touch-target {
+    color: var(--on-surface);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * 3. SELECT + AUTOCOMPLETE PANELS
+   * ──────────────────────────────────────────────────────────── */
+
+  /* Option base text colour */
+  .mat-mdc-option,
+  .mat-mdc-option .mdc-list-item__primary-text {
+    color: var(--on-surface);
+  }
+
+  /* Disabled option (dimmed) */
+  .mat-mdc-option.mdc-list-item--disabled {
+    color: var(--muted);
+  }
+
+  /* Hover / keyboard-active option */
+  .mat-mdc-option.mat-mdc-option-active {
+    background-color: var(--chip-bg);
+    color: var(--on-surface);
+  }
+
+  /* Selected option background (single/multi) */
+  .mat-mdc-option.mdc-list-item--selected {
+    background-color: var(--chip-bg);
+    color: var(--on-surface);
+  }
+
+  .mat-mdc-option.mdc-list-item--selected .mdc-list-item__primary-text {
+    color: var(--on-surface);
+  }
+
+  /* When a checkbox is present inside option; sync to theme */
+  .mat-mdc-option.mdc-list-item--selected .mat-pseudo-checkbox,
+  .mat-mdc-option.mdc-list-item--selected .mat-pseudo-checkbox::after {
+    border-color: var(--on-surface);
+    background-color: var(--on-surface);
+  }
+
+  /* Panel behaviour (shared for select + autocomplete) */
+  .mat-mdc-autocomplete-panel {
+    max-height: 320px;
+    padding-block: 4px;
+  }
+
+  .mat-mdc-select-panel {
+    max-height: 320px;
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * 4. INPUTS / FORM-FIELDS (mat-form-field)
+   * ──────────────────────────────────────────────────────────── */
+
+  /* Input text + caret */
+  .mat-mdc-input-element,
+  .mdc-text-field__input {
+    color: var(--on-surface) !important;
+    caret-color: var(--primary) !important;
+  }
+
+  /* Floating label + hints + subscript */
+  .mat-mdc-floating-label,
+  .mat-mdc-form-field-subscript-wrapper,
+  .mat-mdc-form-field-hint {
+    color: var(--muted);
+  }
+
+  /* Error text */
+  .mat-mdc-form-field-error {
+    color: var(--danger);
+  }
+
+  /* Prefix/suffix and select/auto-complete trigger text */
+  .mat-mdc-select-value,
+  .mat-mdc-select-value-text,
+  .mat-mdc-form-field .mat-mdc-form-field-text-prefix,
+  .mat-mdc-form-field .mat-mdc-form-field-text-suffix {
+    color: var(--on-surface);
+  }
+
+  /* Text-field container (outlined & filled) */
+  .mat-mdc-text-field-wrapper {
+    background-color: var(--surface-variant);
+    color: var(--on-surface);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+  }
+
+  /* Default outline border (idle/hover) */
+  .mat-mdc-form-field-outline,
+  .mat-mdc-form-field-outline-start,
+  .mat-mdc-form-field-outline-end,
+  .mdc-text-field--outlined .mdc-notched-outline__leading,
+  .mdc-text-field--outlined .mdc-notched-outline__notch,
+  .mdc-text-field--outlined .mdc-notched-outline__trailing {
+    border-color: var(--border-color);
+  }
+
+  /* Hover – keep subtle */
+  .mat-mdc-form-field:not(.mat-form-field-disabled)
+    .mdc-text-field--outlined:hover
+    .mdc-notched-outline__leading,
+  .mat-mdc-form-field:not(.mat-form-field-disabled)
+    .mdc-text-field--outlined:hover
+    .mdc-notched-outline__notch,
+  .mat-mdc-form-field:not(.mat-form-field-disabled)
+    .mdc-text-field--outlined:hover
+    .mdc-notched-outline__trailing {
+    border-color: var(--border-color);
+  }
+
+  /* Focus – use primary as outline colour */
+  .mat-mdc-form-field.mat-focused
+    .mdc-text-field--outlined
+    .mdc-notched-outline__leading,
+  .mat-mdc-form-field.mat-focused
+    .mdc-text-field--outlined
+    .mdc-notched-outline__notch,
+  .mat-mdc-form-field.mat-focused
+    .mdc-text-field--outlined
+    .mdc-notched-outline__trailing {
+    border-color: var(--primary);
+  }
+
+  /* Error – use danger as outline colour */
+  .mat-mdc-form-field.mat-mdc-form-field-invalid
+    .mdc-text-field--outlined
+    .mdc-notched-outline__leading,
+  .mat-mdc-form-field.mat-mdc-form-field-invalid
+    .mdc-text-field--outlined
+    .mdc-notched-outline__notch,
+  .mat-mdc-form-field.mat-mdc-form-field-invalid
+    .mdc-text-field--outlined
+    .mdc-notched-outline__trailing {
+    border-color: var(--danger);
+  }
+
+  /* Disabled form-field (input + select + label) */
+  .mat-mdc-form-field.mat-form-field-disabled .mdc-text-field__input,
+  .mat-mdc-form-field.mat-form-field-disabled .mat-mdc-select-value,
+  .mat-mdc-form-field.mat-form-field-disabled .mat-mdc-floating-label {
+    color: var(--muted);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * 5. BUTTONS (text, outlined, raised, icon)
+   * ──────────────────────────────────────────────────────────── */
+
+  /* Text + outlined buttons inherit on-surface by default */
+  .mat-mdc-button,
+  .mat-mdc-outlined-button {
+    color: var(--on-surface);
+  }
+
+  .mat-mdc-outlined-button .mdc-button__ripple {
+    border-color: var(--border-color);
+  }
+
+  /* Raised / filled / unelevated buttons use primary surface */
+  .mat-mdc-raised-button,
+  .mat-mdc-unelevated-button {
+    background-color: var(--primary);
+    color: var(--on-primary);
+  }
+
+  .mat-mdc-raised-button:hover,
+  .mat-mdc-unelevated-button:hover {
+    filter: brightness(1.05);
+  }
+
+  /* Icon buttons – align icon + svg colour */
+  .mat-mdc-icon-button,
+  .mat-mdc-icon-button .mat-mdc-button-touch-target,
+  .mat-mdc-icon-button .mat-icon,
+  .mat-mdc-icon-button svg {
+    color: var(--on-surface);
+    fill: var(--on-surface);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * 6. CHIPS / TAGS
+   * ──────────────────────────────────────────────────────────── */
+
+  .mat-mdc-chip,
+  .mat-mdc-standard-chip {
+    background-color: var(--chip-bg);
+    color: var(--on-surface);
+  }
+
+  .mat-mdc-chip.mat-mdc-chip-selected {
+    background-color: var(--primary);
+    color: var(--on-primary);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * 7. PAGINATOR, TABS, SLIDE-TOGGLE
+   * ──────────────────────────────────────────────────────────── */
+
+  .mat-mdc-paginator,
+  .mat-mdc-paginator .mat-mdc-icon-button {
+    background-color: var(--surface-variant);
+    color: var(--on-surface);
+  }
+
+  .mat-mdc-tab-group,
+  .mat-mdc-tab-nav-bar {
+    background-color: var(--surface-variant);
+    color: var(--on-surface);
+  }
+
+  .mat-mdc-tab .mdc-tab__text-label {
+    color: var(--on-surface);
+  }
+
+  .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label {
+    color: var(--primary);
+  }
+
+  .mat-mdc-slide-toggle .mdc-switch__track {
+    background-color: var(--border-color);
+  }
+
+  .mat-mdc-slide-toggle.mat-mdc-slide-toggle-checked .mdc-switch__track {
+    background-color: var(--primary);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * 8. TOOLTIP
+   * ──────────────────────────────────────────────────────────── */
+
+  .mat-mdc-tooltip .mdc-tooltip__surface {
+    background-color: var(--elevated);
+    color: var(--on-surface);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * 9. MATERIAL MDC PSEUDO-CHECKBOX OVERRIDES
+   *    (multi-select, option checkboxes, etc.)
+   * ──────────────────────────────────────────────────────────── */
+
+  .mat-pseudo-checkbox,
+  .mat-mdc-option-pseudo-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background-color: var(--surface);
+    border: 2px solid var(--border-color);
+    color: var(--on-surface);
+    position: relative;
+    transition: all 120ms ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 12px;
+      height: 12px;
+      background-color: transparent;
+      mask-size: contain;
+      mask-position: center;
+      mask-repeat: no-repeat;
+      transition: background-color 120ms ease, opacity 120ms ease;
+      opacity: 0;
+    }
+  }
+
+  /* Hover (border only) */
+  .mat-pseudo-checkbox:hover,
+  .mat-mdc-option:hover .mat-mdc-option-pseudo-checkbox {
+    border-color: var(--primary);
+  }
+
+  /* Checked – solid primary background + check mark */
+  .mat-pseudo-checkbox-checked,
+  .mat-mdc-option-pseudo-checkbox.mat-pseudo-checkbox-checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+
+    &::after {
+      opacity: 1;
+      transform: rotate(0deg);
+      background-color: var(--on-primary);
+      mask-image: url("data:image/svg+xml,%3Csvg width='24' height='24' \
+viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E \
+%3Cpath d='M20 6L9 17L4 12' stroke='white' stroke-width='3' \
+stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+  }
+
+  /* Indeterminate – solid primary + horizontal bar */
+  .mat-pseudo-checkbox-indeterminate,
+  .mat-mdc-option-pseudo-checkbox.mat-pseudo-checkbox-indeterminate {
+    background-color: var(--primary);
+    border-color: var(--primary);
+
+    &::after {
+      opacity: 1;
+      transform: rotate(0deg);
+      background-color: var(--on-primary);
+      mask-image: url("data:image/svg+xml,%3Csvg width='24' height='24' \
+viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E \
+%3Crect x='5' y='11' width='14' height='3' rx='1.5' fill='white'/%3E%3C/svg%3E");
+    }
+  }
+
+  /* Minimal – border only, no fill/mark until selected */
+  .mat-pseudo-checkbox-minimal,
+  .mat-mdc-option-pseudo-checkbox.mat-pseudo-checkbox-minimal {
+    background-color: transparent !important;
+    border-color: var(--border-color);
+
+    &::after {
+      opacity: 0;
+    }
+  }
+
+  /* Minimal + checked – transparent background, primary outline + mark */
+  .mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-checked,
+  .mat-mdc-option-pseudo-checkbox.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-checked {
+    background-color: transparent;
+    border-color: var(--primary);
+
+    &::after {
+      opacity: 1;
+      background-color: var(--primary);
+      transform: rotate(0deg);
+      mask-image: url("data:image/svg+xml,%3Csvg width='24' height='24' \
+viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E \
+%3Cpath d='M20 6L9 17L4 12' stroke='currentColor' stroke-width='3' \
+stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    }
+  }
+
+  /* Disabled – muted appearance across all variants */
+  .mat-pseudo-checkbox-disabled,
+  .mat-mdc-option-pseudo-checkbox.mat-pseudo-checkbox-disabled {
+    background-color: var(--surface-variant);
+    border-color: var(--muted);
+    opacity: 0.4;
+    cursor: not-allowed;
+
+    &::after {
+      background-color: var(--muted);
+    }
+  }
+}
+
+/* ========================================================================== */
+/* 10. VALIDATION + CUSTOM DANGER / WARNING STATES (GLOBAL)                   */
+/* ========================================================================== */
+
+/* Angular built-in validation – invalid fields (required, pattern, etc.) */
+.mat-mdc-form-field.ng-invalid.ng-touched .mat-mdc-text-field-wrapper,
+.mat-mdc-form-field.ng-invalid.ng-dirty .mat-mdc-text-field-wrapper,
+.mat-mdc-form-field.mat-mdc-form-field-invalid .mat-mdc-text-field-wrapper,
+.mat-mdc-text-field-wrapper.mdc-text-field--invalid {
+  border: 1px solid var(--danger) !important;
+}
+
+/* Custom business / foreign validation: .danger
+   Example:
+   <mat-form-field [class.danger]="isNameTaken">...</mat-form-field>
+*/
+.danger .mat-mdc-text-field-wrapper {
+  border: 1px solid var(--danger) !important;
+}
+
+.danger .mat-mdc-text-field-wrapper {
+  border: 1px solid var(--danger) !important;
+}
+
+/* Custom foreign-validation line ripple (when parent has .danger)
+   Usage:
+   <mat-form-field class="danger" ...> ... </mat-form-field>
+*/
+
+/* Focus/active state (uses ::after) */
+.danger
+  .mdc-text-field--filled:not(.mdc-text-field--disabled)
+  .mdc-line-ripple::after {
+  border-bottom-color: var(--danger) !important;
+}
+
+/* Hover state when NOT focused (uses ::before) */
+.danger
+  .mdc-text-field--filled:not(.mdc-text-field--disabled):not(
+    .mdc-text-field--focused
+  ):hover
+  .mdc-line-ripple::before {
+  border-bottom-color: var(--danger) !important;
+}
+
+.text-danger
+  ~ .mat-mdc-form-field-required-marker.mdc-floating-label--required {
+  color: red;
+}
+
+/* Optional: softer warning state (yellow border)
+   Example:
+   <mat-form-field [class.warning]="isSuspiciousName">...</mat-form-field>
+*/
+.warning .mat-mdc-text-field-wrapper {
+  border: 1px solid var(--warning) !important;
+}

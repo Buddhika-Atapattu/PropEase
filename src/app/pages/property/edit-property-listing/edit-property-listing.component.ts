@@ -367,7 +367,7 @@ export class EditPropertyListingComponent
   protected AddedByName: AddedBy[ 'name' ] = '';
   protected AddedByEmail: AddedBy[ 'email' ] = '';
   protected AddedByRole: AddedBy[ 'role' ] = '';
-  protected AddedByContactNumber: AddedBy[ 'contactNumber' ] = '';
+  protected AddedByContactNumber: AddedBy[ 'contactNumber' ] | null = null;
   protected AddedByAddedAt: AddedBy[ 'addedAt' ] = new Date();
   protected AddesByAddedAtOld: AddedBy[ 'addedAt' ] = new Date();
   private AddedBy: Property[ 'addedBy' ] | null = null;
@@ -784,7 +784,7 @@ export class EditPropertyListingComponent
         this.AddedByName = '';
         this.AddedByEmail = '';
         this.AddedByRole = '';
-        this.AddedByContactNumber = '';
+        this.AddedByContactNumber = null;
         this.AddedByAddedAt = new Date();
         this.AddesByAddedAtOld = new Date();
         this.agentName = '';
@@ -1312,7 +1312,8 @@ export class EditPropertyListingComponent
       this.typeAddressCountry = '';
     }
 
-    const countries: Country[] = await this.apiService.getCountries();
+    const countries = await this.apiService.getCountries();
+
     if ( !Array.isArray( countries ) ) return;
 
     this.AddressCountries = countries;

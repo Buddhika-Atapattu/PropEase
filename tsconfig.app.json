@@ -4,11 +4,7 @@
     "outDir": "./out-tsc/app",
     "types": ["node", "@angular/localize", "google.maps"]
   },
-  "files": ["src/main.ts", "src/main.server.ts", "src/server.ts"],
-  "include": ["src/**/*.d.ts"],
-  "exclude": [
-    "../back-end",
-    "../back-end/tsconfig.json",
-    "../back-end/tsconfig.build.json"
-  ]
+  "files": [],
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "../back-end/**"]
 }

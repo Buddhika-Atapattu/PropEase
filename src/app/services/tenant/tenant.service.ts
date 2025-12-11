@@ -19,7 +19,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { BackEndPropertyData, Property } from '../property/property.service';
+import { BackEndPropertyData, Property, type AddedBy } from '../property/property.service';
 import { environment } from '../../../environments/environment';
 import { MSG } from '../../types/api-message.types';
 
@@ -101,11 +101,7 @@ export interface SystemMetadata {
   pdfDownloadUrl?: string;
   lastUpdated: string;
 }
-export interface AddedBy {
-  username: string; name: string; email: string;
-  role: 'admin' | 'agent' | 'owner' | string;
-  contactNumber?: string; addedAt: Date | string | null;
-}
+
 export interface Signatures {
   tenantSignature: FILE | File;
   landlordSignature: FILE | File;

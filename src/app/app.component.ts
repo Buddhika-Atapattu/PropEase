@@ -1,3 +1,5 @@
+// Path: src/app/app.component.ts
+
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   AfterViewInit,
@@ -12,19 +14,16 @@ import {
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
 
-import {
-  type User,
-} from './services/APIs/apis.service';
-import {
-  AuthService
-} from './services/auth/auth.service';
+import { type User } from './services/APIs/apis.service';
+import { AuthService } from './services/auth/auth.service';
 import { ImageService } from './services/imageService/image.service';
 import { WindowsRefService } from './services/windowRef/windowRef.service';
-
+import { AutoLogOutService } from './services/autoLogoutService/auto-log-out.service';
 
 import { CheckInternetStatusComponent } from './components/check-internet-status/check-internet-status.component';
 import { ModeChangerComponent } from './components/mode-changer/mode-changer.component';
 import { TopProgressBarComponent } from './components/top-progress-bar/top-progress-bar.component';
+import { SessionExpiryBannerComponent } from './components/session-expiry-banner/session-expiry-banner.component';
 
 import { environment } from '../environments/environment';
 
@@ -37,39 +36,29 @@ import { environment } from '../environments/environment';
     TopProgressBarComponent,
     RouterModule,
     CheckInternetStatusComponent,
+    SessionExpiryBannerComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 } )
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
-  /** App name shown in the browser tab/Electron title bar */
   public title: string = 'propease-fontend';
 
-  /** Current theme mode from WindowsRefService (true=dark, false=light) */
   protected mode: boolean | null = null;
-
-  /** Hydration/SSR guard – true only in real browsers (web or Electron renderer) */
   protected readonly isBrowser: boolean;
-
-  /** One-time app loaded flag (used by template to show/hide shell) */
   protected isAppLoad: boolean = false;
 
-  /** Logged user (if available) */
   private loggedUser: User | null = null;
-
-  /** Whether user is authenticated (cached for quick checks) */
   private userLoggedIn: boolean = false;
 
-  // ── Subscriptions & unlisteners (cleaned up on destroy) ─────────────────────
   private modeSub: Subscription | null = null;
   private navEndSub: Subscription | null = null;
   private beforeUnloadUnlisten: ( () => void ) | null = null;
   private imgErrorUnlisten: ( () => void ) | null = null;
 
-  /** Last URL restored after reload/login */
   private lastURL: string | null = null;
 
-  // ── Constructor ─────────────────────────────────────────────────────────────
+
   constructor (
     private readonly windowRef: WindowsRefService,
     private readonly authService: AuthService,
@@ -78,6 +67,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly cdRef: ChangeDetectorRef,
     private readonly renderer: Renderer2,
     private readonly imageService: ImageService,
+    private readonly autoLogOutService: AutoLogOutService,
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
     this.imageService.preload( 'Images/System-images/noImage.png' );
@@ -85,6 +75,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.imageService.preload( 'Images/company-images/logo/logo/animation-02.gif' );
     this.imageService.preload( 'Images/company-images/logo/logo/without-bg.webp' );
   }
+
+  /**
+   * Expose auto-logout banner state for the template.
+   * We rely on async pipe, so no manual subscribe/unsubscribe.
+   */
+  protected get autoLogoutBannerState$() {
+    return this.autoLogOutService.bannerState$;
+  }
+
 
   // ── Lifecycle: OnInit ───────────────────────────────────────────────────────
   /**

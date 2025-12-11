@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { MSG } from '../../types/api-message.types';
 import { environment } from '../../../environments/environment';
+import type { User } from '../APIs/apis.service';
 
 
 
@@ -21,8 +22,20 @@ export class UserControllerService {
     private http: HttpClient
   ) {}
 
-  public isPhoneNumberValid( number: string ): boolean {
-    const phoneNumber = parsePhoneNumberFromString( number.trim() );
+  public isPhoneNumberValid( data: User[ 'phoneNumber' ] | string ): boolean {
+
+    let fullPhoneNumber: string = '';
+    if ( typeof data === 'string' ) {
+      fullPhoneNumber = data;
+    }
+    else if ( typeof data === 'object' ) {
+      fullPhoneNumber = data.code.code + data.number;
+    }
+    else {
+      return false;
+    }
+
+    const phoneNumber = parsePhoneNumberFromString( fullPhoneNumber.trim() );
     return phoneNumber?.isValid() ?? false;
   }
 

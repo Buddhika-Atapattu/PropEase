@@ -8,6 +8,7 @@
   <input
     type="checkbox"
     #checkBox
+    [required]="required"
     [checked]="localCheck"
     [disabled]="disabled"
     (change)="onToggle()"
