@@ -22,6 +22,9 @@ import {WindowsRefService} from '../../services/windowRef/windowRef.service';
 import {BackEndPropertyData} from '../../services/property/property.service';
 import {ImageService} from '../../services/imageService/image.service';
 
+// Core
+import { PERM } from '../../core/security/permissions.const';
+
 // Components
 import {SkeletonLoaderComponent} from '../shared/skeleton-loader/skeleton-loader.component';
 
@@ -54,6 +57,7 @@ export class PropertyViewCardComponent implements OnInit, AfterViewInit, OnDestr
   protected readonly definedPropertyImage =
     'Images/System-images/noProperties.jpg';
   private propertyImage !: string;
+  protected readonly PERM = PERM;
 
   constructor (
     private readonly authService: AuthService,

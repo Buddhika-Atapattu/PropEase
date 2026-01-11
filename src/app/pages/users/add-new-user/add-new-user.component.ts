@@ -69,7 +69,7 @@ import { map, startWith } from 'rxjs/operators';
 import { CameraBoxComponent } from '../../../components/dialogs/camera-box/camera-box.component';
 import {
   NotificationDialogComponent
-} from '../../../components/dialogs/notification/notificationBar.component';
+} from '../../../components/dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
 import { TextEditorComponent } from '../../../components/shared/textEditor/text-editor';
 
@@ -291,6 +291,7 @@ export class AddNewUserComponent
   protected userGender: string = '';
   protected userBio: string = '';
   protected nationality: string = '';
+  protected nicOrPassport: string = '';
 
   protected modelCheck: MODEL_CHECK = {
     model: '',
@@ -1424,6 +1425,10 @@ export class AddNewUserComponent
         throw new Error( 'User nationality is required!' );
       }
 
+      if ( !this.nicOrPassport ) {
+        throw new Error( 'User identity number is required!' );
+      }
+
       if ( !this.role )
         throw new Error( 'User role is required' );
 
@@ -1483,6 +1488,7 @@ export class AddNewUserComponent
       );
       formData.append( 'bio', this.userBio.trim() );
       formData.append( 'nationality', this.nationality.trim() );
+      formData.append( 'nicOrPassport', this.nicOrPassport.trim() );
       formData.append( 'phoneNumber', JSON.stringify( this.phoneNumber ) );
 
       if ( this.userimage ) {

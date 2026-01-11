@@ -37,7 +37,7 @@ import {
 // Shared / UI components
 // ──────────────────────────────────────────────────────────────────────────────
 import { GoogleChartsModule } from 'angular-google-charts';
-import { NotificationDialogComponent } from '../../../../components/dialogs/notification/notificationBar.component';
+import { NotificationDialogComponent } from '../../../../components/dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../../../components/dialogs/progress-bar/progress-bar.component';
 import {
   CustomTableComponent,
@@ -57,7 +57,7 @@ import { PaginationUtil } from '../../../../source/utility/pagination.utils';
 // ──────────────────────────────────────────────────────────────────────────────
 interface ComplaintTableRow {
   id: string;
-  propertyid: string;
+  propertyID: string;
   tenantname: string;
   status: string;
   category: string;
@@ -130,7 +130,7 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
   /** Column configuration for the complaints table */
   protected complaintTableColumns: TableColumn[] = [
     { key: 'id', label: 'Complaint ID' },
-    { key: 'propertyid', label: 'Property ID' },
+    { key: 'propertyID', label: 'Property ID' },
     { key: 'tenantname', label: 'Tenant Name' },
     { key: 'status', label: 'Status' },
     { key: 'category', label: 'Category' },
@@ -779,7 +779,7 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
       // ─────────────────────────────────────────────
       const data: ComplaintTableRow = {
         id: item.code || '',
-        propertyid: item.propertyId || '',
+        propertyID: item.propertyId || '',
         tenantname: userFullName,
         status: item.status || '',
         category: item.category || '',
@@ -794,7 +794,7 @@ export class ComplaintsHome implements OnInit, AfterViewInit, OnDestroy {
 
       const fallback: ComplaintTableRow = {
         id: item.code || '',
-        propertyid: item.propertyId || '',
+        propertyID: item.propertyId || '',
         tenantname: item.tenantId,
         status: item.status || '',
         category: item.category || '',

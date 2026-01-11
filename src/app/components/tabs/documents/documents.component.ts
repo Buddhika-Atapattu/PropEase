@@ -26,7 +26,7 @@ import type {
 
 import {
   NotificationDialogComponent,
-} from '../../dialogs/notification/notificationBar.component';
+} from '../../dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../dialogs/progress-bar/progress-bar.component';
 import {
   CustomTableComponent,

@@ -555,7 +555,7 @@
           </div>
           <!-- Role if user is admin -->
           <div class="row">
-            <div class="col-xl-4">
+            <div class="col-xl-3">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label> Nationality </mat-label>
                 <input
@@ -568,7 +568,20 @@
                 />
               </mat-form-field>
             </div>
-            <div class="col-xl-4">
+            <div class="col-xl-3">
+              <mat-form-field appearance="fill" class="form-field me-3 w-100">
+                <mat-label> Identity Number </mat-label>
+                <input
+                  matInput
+                  type="text"
+                  name="nicOrPassport"
+                  [(ngModel)]="nicOrPassport"
+                  placeholder=""
+                  required
+                />
+              </mat-form-field>
+            </div>
+            <div class="col-xl-3">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>User role</mat-label>
                 <mat-select
@@ -588,7 +601,7 @@
                 </mat-select>
               </mat-form-field>
             </div>
-            <div class="col-xl-4">
+            <div class="col-xl-3">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>User Active Status</mat-label>
                 <mat-select [(ngModel)]="isActive" name="isActive" required>

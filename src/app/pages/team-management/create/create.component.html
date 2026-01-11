@@ -1,6 +1,23 @@
+<!-- Path: src/app/pages/team-management/create/create.component.html -->
+<!-- =========================================================================
+  Team Management - Create Team
+  ---------------------------------------------------------------------------
+  Template goals:
+   - Collect core team details (logo, basics, members, captain, description)
+   - Use reusable components for complex UI (Dropdown, CustomTable, TextEditor)
+   - Keep template declarative; table logic handled by TS through inputs/events
+   - Use modern Angular control flow (@if, @for)
+============================================================================ -->
+
 <app-notification-dialog></app-notification-dialog>
 <app-progress-bar></app-progress-bar>
+
 <div class="container-fluid">
+  <!-- =========================================================================
+    Form wrapper
+    - enctype multipart/form-data because logo upload uses File
+    - ngForm is mainly for submit + required field attributes
+  ========================================================================= -->
   <form
     action=""
     method="POST"
@@ -9,33 +26,56 @@
     autocomplete="off"
     #userForm="ngForm"
   >
-    <!-- Title -->
+    <!-- ==============================================================
+      Header
+    ============================================================== -->
     <div class="row mb-3">
       <h3 class="title">Create Team</h3>
       <hr />
     </div>
-    <!-- End Title -->
 
-    <!-- Team Logo Upload -->
+    <!-- ==============================================================
+      Team Logo Upload
+      - app-dropdown emits File[] via (filesChange)
+      - [multiple]="false" ensures a single logo is selected
+    ============================================================== -->
     <div class="row my-4">
       <div class="col-12">
         <h4 class="text-uppercase">Upload Team Logo</h4>
+
         <app-dropdown
-          [accept]="'image/*'"
+          [acceptCategory]="'image'"
           [multiple]="false"
           (filesChange)="whileLogoUpload($event)"
         ></app-dropdown>
       </div>
     </div>
-    <!-- End Team Logo Upload -->
 
-    <!-- Team name and domain -->
+    <div class="row my-3">
+      <div class="col-12">
+        <hr />
+      </div>
+    </div>
+
+    <!-- ==============================================================
+      Team Basics
+      - teamName: validated async in TS via validateTeamName()
+      - teamDomain: restricted to DEFAULT_TEAM_DOMAINS (defaultDomains)
+    ============================================================== -->
     <div class="row">
+      <div class="col-12">
+        <h4 class="text-uppercase mb-3">Team Basics</h4>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Team Name -->
       <div class="col-xl-8 col-md-9 col-12">
         <mat-form-field class="w-100" [ngClass]="teamNameExist ? 'danger' : ''">
           <mat-label [ngClass]="teamNameExist ? 'text-danger' : ''">
             {{ teamNameExist ? "Team name already exist" : "Team name" }}
           </mat-label>
+
           <input
             matInput
             type="text"
@@ -47,27 +87,26 @@
             placeholder="Team name..."
             required="required"
           />
+
           <mat-error *ngIf="teamNameExist">Team name already exist</mat-error>
         </mat-form-field>
       </div>
+
+      <!-- Team Domain -->
       <div class="col-xl-4 col-md-3 col-12">
         <mat-form-field class="w-100">
           <mat-label>Team Domain</mat-label>
-          <mat-select
-            [(ngModel)]="teamDomain"
-            name="teamDomain"
-            required="required"
-          >
-            @for(item of defaultDomains; track item; let i = $index){
-            <mat-option [value]="item">{{
-              sanitiseDefaultValues(item)
-            }}</mat-option>
+
+          <mat-select [(ngModel)]="teamDomain" name="teamDomain" required="required">
+            @for (item of defaultDomains; track item) {
+              <mat-option [value]="item">
+                {{ sanitiseDefaultValues(item) }}
+              </mat-option>
             }
           </mat-select>
         </mat-form-field>
       </div>
     </div>
-    <!-- End team name and domain -->
 
     <div class="row my-3">
       <div class="col-12">
@@ -75,42 +114,57 @@
       </div>
     </div>
 
-    <!-- All users table -->
+    <!-- ==============================================================
+      Members Source Table (All Users)
+      - pagination enabled
+      - buttonOperation: handles "add member"
+      - fetchData: invoked by CustomTable when it needs new page/search data
+      - isReload: table reload trigger/state (kept as your current design)
+    ============================================================== -->
     <div class="row my-3">
       <div class="col-12">
         <app-custom-table
           [pagination]="true"
           [(isReload)]="isLoading"
+          [tableTitle]="tableTitle"
           [(limit)]="limit"
           [(index)]="index"
-          [tableTitle]="tableTitle"
           [(search)]="search"
           [totalDataCount]="totalDataCount"
-          (buttonOperation)="actionButtonsOperation($event)"
           [data]="tableData"
           [columns]="tableColumns"
+          (buttonOperation)="actionButtonsOperation($event)"
           (fetchData)="reFetchData('members')"
         ></app-custom-table>
       </div>
     </div>
-    <!-- End all users table -->
 
-    @if (memberTableData.length > 0){
-    <!-- Member table -->
     <div class="row my-3">
       <div class="col-12">
-        <app-custom-table
-          [pagination]="false"
-          [tableTitle]="memberTableTitle"
-          [totalDataCount]="memberTableData.length"
-          (buttonOperation)="memberActionButtonsOperation($event)"
-          [data]="memberTableData"
-          [columns]="memberTableColumn"
-          (cellEdit)="onMemberCellEdit($event)"
-        ></app-custom-table>
+        <hr />
       </div>
     </div>
-    <!-- End member table -->
+
+    <!-- ==============================================================
+      Selected Members Table
+      - only visible when memberTableData has at least one row
+      - rowIdKey ensures stable row tracking for edits/removals
+    ============================================================== -->
+    @if (memberTableData.length > 0) {
+      <div class="row my-3">
+        <div class="col-12">
+          <app-custom-table
+            [pagination]="false"
+            [tableTitle]="memberTableTitle"
+            [totalDataCount]="memberTableData.length"
+            [data]="memberTableData"
+            [columns]="memberTableColumn"
+            rowIdKey="id"
+            (buttonOperation)="memberActionButtonsOperation($event)"
+            (cellEdit)="onMemberCellEdit($event)"
+          ></app-custom-table>
+        </div>
+      </div>
     }
 
     <div class="row my-3">
@@ -119,25 +173,11 @@
       </div>
     </div>
 
-    <!-- Team description -->
-    <div class="row">
-      <div class="col-12">
-        <h4 class="text-uppercase mb-3">Team Description</h4>
-        <app-text-editor
-          [name]="'description'"
-          [(modelValue)]="description"
-        ></app-text-editor>
-      </div>
-    </div>
-    <!-- End team description -->
-
-    <div class="row my-3">
-      <div class="col-12">
-        <hr />
-      </div>
-    </div>
-
-    <!-- Select captain table -->
+    <!-- ==============================================================
+      Captain Source Table (All Users)
+      - pagination enabled
+      - only one captain is allowed (enforced in TS)
+    ============================================================== -->
     <div class="row my-3">
       <div class="col-12">
         <app-custom-table
@@ -145,17 +185,16 @@
           [(isReload)]="captainIsLoading"
           [(limit)]="captainLimit"
           [(index)]="captainIndex"
-          [tableTitle]="captainTableTitle"
           [(search)]="captainSearch"
+          [tableTitle]="captainTableTitle"
           [totalDataCount]="captainTotalDataCount"
-          (buttonOperation)="captainActionButtonOperationOnSelection($event)"
           [data]="captainTableData"
           [columns]="captainTableColumns"
+          (buttonOperation)="captainActionButtonOperationOnSelection($event)"
           (fetchData)="reFetchData('captain')"
         ></app-custom-table>
       </div>
     </div>
-    <!-- End Select captain table -->
 
     <div class="row my-3">
       <div class="col-12">
@@ -163,30 +202,59 @@
       </div>
     </div>
 
-    @if(captainSelectTableData.length > 0){
-    <!-- Selected captain table -->
-    <div class="row my-3">
-      <div class="col-12">
-        <app-custom-table
-          [pagination]="false"
-          [tableTitle]="captainSelectTableTitle"
-          (buttonOperation)="captainActionButtonOperationAfterSelected($event)"
-          [data]="captainSelectTableData"
-          [columns]="captainSelectTableColumn"
-          (cellEdit)="onCaptainCellEdit($event)"
-        ></app-custom-table>
+    <!-- ==============================================================
+      Selected Captain Table
+      - only visible when captainSelectTableData has one row
+      - rowIdKey ensures stable tracking for edits/removals
+    ============================================================== -->
+    @if (captainSelectTableData.length > 0) {
+      <div class="row my-3">
+        <div class="col-12">
+          <app-custom-table
+            [pagination]="false"
+            [tableTitle]="captainSelectTableTitle"
+            [data]="captainSelectTableData"
+            [columns]="captainSelectTableColumn"
+            rowIdKey="id"
+            (buttonOperation)="captainActionButtonOperationAfterSelected($event)"
+            (cellEdit)="onCaptainCellEdit($event)"
+          ></app-custom-table>
+        </div>
       </div>
-    </div>
-    <!-- End Selected captain table -->
     }
 
-    <div class="row d-flex justify-content-end align-items-center">
-      <div
-        class="col-xl-3 col-md-4 col-12 d-flex justify-content-end align-items-center"
-      >
+    <div class="row my-3">
+      <div class="col-12">
+        <hr />
+      </div>
+    </div>
+
+    <!-- ==============================================================
+      Team Description
+      - app-text-editor manages rich text editing
+      - modelValue stores final content in `description`
+    ============================================================== -->
+    <div class="row">
+      <div class="col-12">
+        <h4 class="text-uppercase mb-3">Team Description</h4>
+
+        <app-text-editor
+          [name]="'description'"
+          [(modelValue)]="description"
+        ></app-text-editor>
+      </div>
+    </div>
+
+    <!-- ==============================================================
+      Submit
+      - Button label currently says "update team" in create page.
+        Keep as-is if intentional; otherwise rename to "create team".
+    ============================================================== -->
+    <div class="row d-flex justify-content-end align-items-center my-4">
+      <div class="col-xl-3 col-md-4 col-12 d-flex justify-content-end align-items-center">
         <button type="submit" class="btn btn-success">
-          <mat-icon class="me-3">cloud_upload</mat-icon
-          ><span class="text-uppercase">create team</span>
+          <mat-icon class="me-3">cloud_upload</mat-icon>
+          <span class="text-uppercase">update team</span>
         </button>
       </div>
     </div>

@@ -2,42 +2,140 @@
   width: 100%;
   display: block;
   color: var(--on-surface);
+
+  // Prevent iframe/video overflow in flex layouts
+  min-width: 0;
 }
+
+/* ─────────────────────────────────────────────
+   Media containers (PDF / Video / Audio)
+   ───────────────────────────────────────────── */
 iframe,
 video,
 audio {
   width: 100%;
+  display: block;
+
+  background: var(--surface);
+  color: var(--on-surface);
+
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  background: var(--surface);
+
+  box-shadow: 0 2px 6px var(--shadow-color);
+
+  // Smooth visual consistency
+  outline: none;
 }
+
 iframe {
   height: 60vh;
 }
+
+/* ─────────────────────────────────────────────
+   Text preview
+   ───────────────────────────────────────────── */
 .text-view {
   white-space: pre-wrap;
+  word-break: break-word;
+
   background: var(--surface-variant);
+  color: var(--on-surface);
+
   padding: 16px;
   border-radius: 16px;
   border: 1px solid var(--border-color);
+
   max-height: 60vh;
   overflow: auto;
+
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.6;
 }
+
+/* ─────────────────────────────────────────────
+   CSV table preview
+   ───────────────────────────────────────────── */
 .table-wrap {
   max-height: 60vh;
   overflow: auto;
+
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
 }
+
 table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 13px;
 }
+
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+
+  background: var(--surface-variant);
+}
+
 th,
 td {
-  padding: 8px;
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+
   border-bottom: 1px solid var(--border-color);
+  color: var(--on-surface);
 }
+
+th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+tbody tr:hover {
+  background: var(--hover-bg);
+}
+
+/* ─────────────────────────────────────────────
+   Fallback (unsupported preview)
+   ───────────────────────────────────────────── */
 .fallback {
   padding: 16px;
+
   border: 1px dashed var(--border-color);
   border-radius: 16px;
+
+  background: var(--surface-variant);
+  color: var(--on-surface);
+
+  text-align: center;
+
+  p {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+  }
+
+  button {
+    padding: 6px 14px;
+    border-radius: 12px;
+
+    background: var(--btn-default);
+    color: var(--on-primary);
+
+    border: none;
+    cursor: pointer;
+
+    transition: background 0.2s ease, transform 0.1s ease;
+
+    &:hover {
+      background: var(--hover-bg);
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
 }

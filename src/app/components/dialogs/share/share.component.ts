@@ -16,7 +16,7 @@ import { Subscription } from 'rxjs';
 import {
   BackEndPropertyData
 } from '../../../services/property/property.service';
-import { NotificationDialogComponent } from '../notification/notificationBar.component';
+import { NotificationDialogComponent } from '../notificationBar/notificationBar.component';
 import { CloseBtnComponent } from '../../shared/buttons/close-btn/close-btn';
 import { environment } from '../../../../environments/environment';
 

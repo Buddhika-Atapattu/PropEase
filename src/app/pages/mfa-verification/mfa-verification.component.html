@@ -1,106 +1,132 @@
+<!-- Path: src/app/pages/mfa-verification/mfa-verification.component.html -->
+
 <app-notification-dialog></app-notification-dialog>
-<app-preloader></app-preloader>
-<div class="mfa-page">
-  <div class="mfa-overlay"></div>
-  <div class="mfa-shell">
-    <div class="mfa-card">
-      <!-- Left side: title / info -->
-      <div class="mfa-left">
-        <div class="mfa-logo-block">
-          <div class="mfa-logo-circle">
-            <mat-icon class="mfa-logo-icon">shield_lock</mat-icon>
+
+<!-- Show preloader only while verifying -->
+<app-preloader *ngIf="isSubmitting"></app-preloader>
+
+<form
+  (ngSubmit)="onSubmitCode()"
+  autocomplete="off"
+  enctype="multipart/form-data"
+  method="POST"
+  novalidate
+  #userForm="ngForm"
+  [class.submitting]="isSubmitting"
+>
+  <div class="mfa-page">
+    <div class="mfa-overlay"></div>
+
+    <div class="mfa-shell">
+      <div class="mfa-card">
+        <!-- Left side: title / info -->
+        <div class="mfa-left">
+          <div class="mfa-logo-block">
+            <div class="mfa-logo-circle">
+              <mat-icon class="mfa-logo-icon">shield_lock</mat-icon>
+            </div>
+
+            <div class="mfa-logo-text">
+              <h1 class="mfa-title">Multi-Factor Verification</h1>
+              <p class="mfa-subtitle">
+                {{ subtitle }}
+              </p>
+            </div>
           </div>
-          <div class="mfa-logo-text">
-            <h1 class="mfa-title">Multi-Factor Verification</h1>
-            <p class="mfa-subtitle">
-              {{ subtitle }}
-            </p>
+
+          <!-- Only show account block if username is known -->
+          <div class="mfa-account" *ngIf="username">
+            <span class="mfa-account-label">Account</span>
+            <span class="mfa-account-value">{{ username }}</span>
+          </div>
+
+          <div class="mfa-hint-block">
+            <div class="hint-line">
+              <span class="dot"></span>
+              <span class="text">
+                Codes refresh every 30 seconds in your authenticator app.
+              </span>
+            </div>
+
+            <div class="hint-line secondary">
+              <span class="dot dot--muted"></span>
+              <span class="text">
+                If the code fails, wait for the next one and try again.
+              </span>
+            </div>
+          </div>
+
+          <div class="mfa-countdown" *ngIf="isBrowser">
+            <span class="label">Current code expires in</span>
+            <span class="value">{{ remainingSeconds }}s</span>
           </div>
         </div>
 
-        <div class="mfa-account" *ngIf="username">
-          <span class="mfa-account-label">Account</span>
-          <span class="mfa-account-value">{{ username }}</span>
-        </div>
+        <!-- Right side: code + actions -->
+        <div class="mfa-right">
+          <div class="code-panel">
+            <h2 class="code-title">Enter 6-digit code</h2>
 
-        <div class="mfa-hint-block">
-          <div class="hint-line">
-            <span class="dot"></span>
-            <span class="text">
-              Codes refresh every 30 seconds in your authenticator app.
-            </span>
-          </div>
-          <div class="hint-line secondary">
-            <span class="dot dot--muted"></span>
-            <span class="text">
-              If the code fails, wait for the next one and try again.
-            </span>
-          </div>
-        </div>
+            <div class="code-grid">
+              @for (digit of codeDigits; track $index; let i = $index) {
+                <input
+                  #codeBox
+                  class="code-box"
+                  type="text"
+                  maxlength="1"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  [value]="digit"
+                  (keydown)="onCodeKeyDown($event, i)"
+                />
+              }
+            </div>
 
-        <div class="mfa-countdown" *ngIf="isBrowser">
-          <span class="label">Current code expires in</span>
-          <span class="value"> {{ remainingSeconds }}s </span>
-        </div>
-      </div>
+            <div class="code-error" *ngIf="isError && errorMessage">
+              <mat-icon class="error-icon">error</mat-icon>
+              <span class="error-text">{{ errorMessage }}</span>
+            </div>
 
-      <!-- Right side: code + actions -->
-      <div class="mfa-right">
-        <div class="code-panel">
-          <h2 class="code-title">Enter 6-digit code</h2>
-
-          <div class="code-grid">
-            @for (digit of codeDigits; track $index; let i = $index) {
-            <input
-              #codeBox
-              class="code-box"
-              type="text"
-              maxlength="1"
-              inputmode="numeric"
-              autocomplete="one-time-code"
-              [value]="digit"
-              (keydown)="onCodeKeyDown($event, i)"
-            />
-            }
-          </div>
-
-          <div class="code-error" *ngIf="isError && errorMessage">
-            <mat-icon class="error-icon">error</mat-icon>
-            <span class="error-text">{{ errorMessage }}</span>
-          </div>
-
-          <div class="code-actions">
-            <button
-              type="button"
-              class="btn-primary"
-              [disabled]="!isCodeComplete() || isSubmitting"
-              (click)="onSubmitCode()"
-            >
-              <span class="label" *ngIf="!isSubmitting"
-                >Verify &amp; continue</span
+            <div class="code-actions">
+              <button
+                type="submit"
+                class="btn-primary"
+                [disabled]="!isCodeComplete() || isSubmitting"
               >
-              <span class="label" *ngIf="isSubmitting">Verifying...</span>
-            </button>
+                <span class="label" *ngIf="!isSubmitting">
+                  Verify &amp; continue
+                </span>
+                <span class="label" *ngIf="isSubmitting">
+                  Verifying...
+                </span>
+              </button>
 
-            <button
-              type="button"
-              class="btn-ghost"
-              (click)="onResendCode()"
-              [disabled]="isSubmitting"
-            >
-              <mat-icon class="btn-icon">refresh</mat-icon>
-              <span>New code</span>
-            </button>
-          </div>
+              <button
+                type="button"
+                class="btn-ghost"
+                (click)="onResendCode()"
+                [disabled]="isSubmitting"
+              >
+                <mat-icon class="btn-icon">refresh</mat-icon>
+                <span>New code</span>
+              </button>
+            </div>
 
-          <div class="code-footer">
-            <button type="button" class="link-btn" (click)="onBackToLogin()">
-              <mat-icon class="link-icon">arrow_back</mat-icon>
-              <span>Back to login</span>
-            </button>
+            <div class="code-footer">
+              <button
+                type="button"
+                class="link-btn"
+                (click)="onBackToLogin()"
+                [disabled]="isSubmitting"
+              >
+                <mat-icon class="link-icon">arrow_back</mat-icon>
+                <span>Back to login</span>
+              </button>
+            </div>
           </div>
         </div>
+        <!-- /Right -->
       </div>
     </div>
   </div>
-</div>
+</form>

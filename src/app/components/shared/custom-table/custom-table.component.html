@@ -1,444 +1,385 @@
 @if (loggedUser) {
 
-<div class="row mt-5">
-  <div class="col-xl-12">
-    <h5 class="title">{{ tableTitle }}</h5>
+  <div class="row mt-5">
+    <div class="col-xl-12">
+      <h5 class="title">{{ tableTitle }}</h5>
+    </div>
   </div>
-</div>
 
-<!-- Pagination -->
-<div class="row my-2">
-  <div class="col-12">
-    <app-paginator
-      [(index)]="tablePageIndex"
-      [(limit)]="tableLimit"
-      [(search)]="tableSearchValue"
-      [(isReload)]="tableIsReload"
-      [totalDataCount]="totalDataCount"
-      [isDateRageActive]="isDateRageActive"
-      [initialRange]="dateRange"
-      (dateRangeChange)="onDateRangeChange($event)"
-      (rangeChange)="onRangeChange($event)"
-      [pagination]="pagination"
-      [extension]="fileExportExtention"
-      (fileExport)="fileExportHandle($event)"
-    ></app-paginator>
+  <!-- Pagination -->
+  <div class="row my-2">
+    <div class="col-12">
+      <app-paginator
+        [(index)]="tablePageIndex"
+        [(limit)]="tableLimit"
+        [(search)]="tableSearchValue"
+        [(isReload)]="tableIsReload"
+        [totalDataCount]="totalDataCount"
+        [isDateRageActive]="isDateRageActive"
+        [initialRange]="dateRange"
+        (dateRangeChange)="onDateRangeChange($event)"
+        (rangeChange)="onRangeChange($event)"
+        [pagination]="pagination"
+        [extension]="fileExportExtention"
+        (fileExport)="handleFileExport($event, dataSource.data)"
+      ></app-paginator>
+    </div>
   </div>
-</div>
-<!-- End Pagination -->
+  <!-- End Pagination -->
 
-@if (isArrayOfData) {
+  @if (isArrayOfData) {
 
-<div class="table-responsive mat-elevation-z8">
-  <!-- Mat table -->
-  <table
-    mat-table
-    [dataSource]="dataSource"
-    matSort
-    (matSortChange)="sortData($event)"
-  >
-    <ng-container *ngFor="let column of columns" [matColumnDef]="column.key">
-      <!-- ───────── HEADER CELL ───────── -->
-      <th
-        mat-header-cell
-        *matHeaderCellDef
-        [mat-sort-header]="column.label"
-        class="w-50 text-default text-center"
+    <div class="table-responsive mat-elevation-z8">
+      <table
+        mat-table
+        [dataSource]="dataSource"
+        matSort
+        (matSortChange)="sortData($event)"
       >
-        @if (isReload) {
-        <app-skeleton-loader
-          [width]="'5rem'"
-          [height]="'1.5rem'"
-          [borderRadius]="'0.159rem'"
-        ></app-skeleton-loader>
-        } @else {
-        <span>{{ column.label }}</span>
-        }
-      </th>
 
-      <!-- ───────── DATA CELL ───────── -->
-      <td mat-cell *matCellDef="let element; let i = index">
-        @if (isButtonColumn(column.key)) {
+        @for (column of columns; track column.key) {
+          <ng-container [matColumnDef]="column.key">
 
-        <!-- Button-only columns -->
-        @let btn = getButtonForColumn(column.key); @if (btn) { @if (isReload) {
-        <app-skeleton-loader
-          [width]="'5rem'"
-          [height]="'1.5rem'"
-          [borderRadius]="'0.159rem'"
-        ></app-skeleton-loader>
-        } @else {
-        <button
-          type="button"
-          class="btn"
-          [class.btn-danger]="checkButtonBGforDanger(btn.action)"
-          [class.btn-success]="checkButtonBGforGood(btn.action)"
-          [class.btn-warning]="checkButtonBGforNormal(btn.action)"
-          (click)="handleButtonOperations(btn.action, element)"
-          [matTooltip]="btn.label || ''"
-          matTooltipPosition="above"
-        >
-          <mat-icon>{{ btn.icon }}</mat-icon>
-        </button>
-        } } } @else {
-
-        <!-- Normal data / inline edit columns -->
-        @switch (column.key.toLowerCase()) {
-
-        <!-- User image -->
-        @case ('userimage') { @if (isReload) {
-        <app-skeleton-loader
-          [width]="'5rem'"
-          [height]="'5rem'"
-          [borderRadius]="'10rem'"
-        ></app-skeleton-loader>
-        } @else {
-        <img
-          [src]="imageGenerator(element, 'userimage', element.gender)"
-          alt="User image"
-          class="table-user-image"
-        />
-        } }
-
-        <!-- Property image -->
-        @case ('propertyimage') { @if (isReload) {
-        <app-skeleton-loader
-          [width]="'7rem'"
-          [height]="'5rem'"
-          [borderRadius]="'0.5rem'"
-        ></app-skeleton-loader>
-        } @else {
-        <div class="image-container">
-          <img
-            [src]="imageGenerator(element, 'propertyImage')"
-            alt="Property image"
-            class="table-property-image"
-          />
-        </div>
-        } }
-
-        <!-- Generic image -->
-        @case ('image') { @if (isReload) {
-        <app-skeleton-loader
-          [width]="'7rem'"
-          [height]="'5rem'"
-          [borderRadius]="'0.5rem'"
-        ></app-skeleton-loader>
-        } @else {
-        <div class="image-container">
-          <img
-            [src]="imageGenerator(element, 'propertyImage')"
-            alt="Image"
-            class="table-property-image"
-          />
-        </div>
-        } }
-
-        <!-- Name -->
-        @case ('name') { @if (isReload) {
-        <app-skeleton-loader
-          [width]="'5rem'"
-          [height]="'1.5rem'"
-          [borderRadius]="'0.159rem'"
-        ></app-skeleton-loader>
-        } @else {
-        <p
-          class="m-0 p-0"
-          matTooltip="{{
-            loggedUser.name.toLocaleLowerCase() ===
-            element.name.toLocaleLowerCase()
-              ? 'You'
-              : element.name
-          }}"
-          matTooltipPosition="above"
-          matTooltipPositionAtOrigin="left"
-        >
-          {{
-            loggedUser.name.toLocaleLowerCase() ===
-            element.name.toLocaleLowerCase()
-              ? "You"
-              : element.name
-          }}
-        </p>
-        } }
-
-        <!-- Date range text -->
-        @case ('daterange') { @if (isReload) {
-        <app-skeleton-loader
-          [width]="'5rem'"
-          [height]="'1.5rem'"
-          [borderRadius]="'0.159rem'"
-        ></app-skeleton-loader>
-        } @else {
-        <p [class.bg-danger]="element.notify">
-          {{ formatDateRange(element.dateRange.start, element.dateRange.end) }}
-        </p>
-        } }
-
-        <!-- Icon -->
-        @case ('icon') { @if (isReload) {
-        <app-skeleton-loader
-          [width]="'5rem'"
-          [height]="'1.5rem'"
-          [borderRadius]="'0.159rem'"
-        ></app-skeleton-loader>
-        } @else {
-        <mat-icon>{{ chooseIcon(element.icon) }}</mat-icon>
-        } }
-
-        <!-- Plain date -->
-        @case ('date') { @if (isReload) {
-        <app-skeleton-loader
-          [width]="'5rem'"
-          [height]="'1.5rem'"
-          [borderRadius]="'0.159rem'"
-        ></app-skeleton-loader>
-        } @else {
-        <p>{{ element.date | date : "dd/MM/yyyy" }}</p>
-        } }
-
-        <!-- Switch cell -->
-        @case ('switch') { @if (isReload) {
-        <app-skeleton-loader
-          [width]="'5rem'"
-          [height]="'1.5rem'"
-          [borderRadius]="'0.159rem'"
-        ></app-skeleton-loader>
-        } @else {
-        <switch-button
-          [checked]="element.switch.isActive"
-          (checkedChange)="handleSwitchChange($event, element, i)"
-          [labelOn]="element.switch.on"
-          [labelOff]="element.switch.off"
-        ></switch-button>
-        } }
-
-        <!-- Status -->
-        @case ('status') { @if (isReload) {
-        <app-skeleton-loader
-          [width]="'5rem'"
-          [height]="'1.5rem'"
-          [borderRadius]="'0.159rem'"
-        ></app-skeleton-loader>
-        } @else {
-        <div class="main-category" [ngClass]="statusClass(element.status)">
-          {{ makeCapitalize(element.status) }}
-        </div>
-        } }
-
-        <!-- ───────── DEFAULT CASE (inline editors / text) ───────── -->
-        @default { @if (isReload) {
-        <app-skeleton-loader
-          [width]="'5rem'"
-          [height]="'2.5rem'"
-          [borderRadius]="'0.159rem'"
-        ></app-skeleton-loader>
-        } @else {
-
-        <!-- ───────── INLINE EDITORS (Material) ───────── -->
-        @if (hasInlineEdit(column)) { @switch (column.edit?.kind) {
-
-        <!-- inline text -->
-        @case ('inlineText') {
-        <mat-form-field appearance="outline" class="pe-table-field">
-          <input
-            matInput
-            class="pe-table-input"
-            type="text"
-            [required]="column.edit?.required ?? false"
-            [placeholder]="column.edit?.placeholder || ''"
-            [attr.maxLength]="column.edit?.maxLength ?? null"
-            [ngModel]="getCellEditValue(i, column.key, element)"
-            (ngModelChange)="handleInlineEditChange($event, column, element, i)"
-          />
-        </mat-form-field>
-        }
-
-        <!-- inline number -->
-        @case ('inlineNumber') {
-        <mat-form-field appearance="outline" class="pe-table-field">
-          <input
-            matInput
-            class="pe-table-input pe-table-input-number"
-            type="number"
-            [required]="column.edit?.required ?? false"
-            [placeholder]="column.edit?.placeholder || ''"
-            [attr.min]="column.edit?.min ?? null"
-            [attr.max]="column.edit?.max ?? null"
-            [ngModel]="getCellEditValue(i, column.key, element)"
-            (ngModelChange)="handleInlineEditChange($event, column, element, i)"
-          />
-        </mat-form-field>
-        }
-
-        <!-- inline select -->
-        @case ('inlineSelect') {
-        <mat-form-field appearance="outline" class="pe-table-field">
-          <mat-select
-            class="pe-table-select"
-            [required]="column.edit?.required ?? false"
-            [placeholder]="column.edit?.placeholder || ''"
-            [ngModel]="getCellEditValue(i, column.key, element)"
-            (ngModelChange)="handleInlineEditChange($event, column, element, i)"
-          >
-            <mat-option
-              *ngIf="column.edit?.placeholder"
-              [value]="null"
-              disabled
+            <!-- ───────── HEADER CELL ───────── -->
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              mat-sort-header
+              class="w-50 text-default text-center"
             >
-              {{ column.edit?.placeholder }}
-            </mat-option>
+              @if (isReload) {
+                <app-skeleton-loader
+                  [width]="'5rem'"
+                  [height]="'1.5rem'"
+                  [borderRadius]="'0.159rem'"
+                ></app-skeleton-loader>
+              } @else {
+                <span class="text-center text-uppercase">{{ column.label }}</span>
+              }
+            </th>
 
-            <mat-option
-              *ngFor="let opt of column.edit?.options || []"
-              [value]="opt.value"
-            >
-              {{ opt.label }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+            <!-- ───────── DATA CELL ───────── -->
+            <td mat-cell *matCellDef="let element; let i = index">
+              @if (isReload) {
+                <app-skeleton-loader
+                  [width]="'5rem'"
+                  [height]="'2.5rem'"
+                  [borderRadius]="'0.159rem'"
+                ></app-skeleton-loader>
+              } @else {
+
+                @switch (resolveRenderKind(column)) {
+
+                  <!-- ───────────────── MULTIPLE ACTIONS ───────────────── -->
+                  @case ('multipleActions') {
+                    <div class="pe-actions">
+                      @for (btn of getMultipleActionsForRow(column, element); track btn.id) {
+                        <button
+                          type="button"
+                          class="pe-action-btn"
+                          [class.tone-good]="btn.tone === 'good'"
+                          [class.tone-danger]="btn.tone === 'danger'"
+                          [disabled]="!!btn.disabled"
+                          (click)="handleUiButtonClick(btn, element)"
+                          [matTooltip]="btn.tooltip || btn.label || btn.id"
+                          matTooltipPosition="above"
+                        >
+                          <mat-icon>{{ resolveUiIcon(btn) }}</mat-icon>
+                        </button>
+                      }
+                    </div>
+                  }
+
+                  <!-- ───────────────── LEGACY SINGLE ACTION ───────────────── -->
+                  @case ('singleAction') {
+                    @let btn = getButtonForColumn(column.key);
+                    @if (btn) {
+                      <button
+                        type="button"
+                        class="pe-action-btn"
+                        [class.tone-danger]="checkButtonBGforDanger(btn.action)"
+                        [class.tone-good]="checkButtonBGforGood(btn.action)"
+                        (click)="handleButtonOperations(btn.action, element)"
+                        [matTooltip]="btn.label || ''"
+                        matTooltipPosition="above"
+                      >
+                        <mat-icon>{{ btn.icon }}</mat-icon>
+                      </button>
+                    }
+                  }
+
+                  <!-- ───────────────── IMAGE ───────────────── -->
+                  @case ('image') {
+                    @let imageType = inferImageRenderType(column.key);
+
+                    @switch (imageType) {
+                      @case ('userimage') {
+                        <img
+                          [src]="resolveColumnImage(element, column.key)"
+                          alt="User image"
+                          class="table-user-image"
+                        />
+                      }
+
+                      @case ('propertyImage') {
+                        <img
+                          [src]="resolveColumnImage(element, column.key)"
+                          alt="Property image"
+                          class="table-property-image"
+                        />
+                      }
+
+                      @default {
+                        <img
+                          [src]="resolveColumnImage(element, column.key)"
+                          [alt]="column.label || 'Image'"
+                          class="table-image"
+                        />
+                      }
+                    }
+                  }
+
+                  <!-- ───────────────── STATUS ───────────────── -->
+                  @case ('status') {
+                    <div class="pe-status" [ngClass]="statusClass(element[column.key])">
+                      {{ makeCapitalize(element[column.key]) }}
+                    </div>
+                  }
+
+                  <!-- ───────────────── ICON ───────────────── -->
+                  @case ('icon') {
+                    <mat-icon>{{ chooseIcon(element[column.key]) }}</mat-icon>
+                  }
+
+                  <!-- ───────────────── SWITCH ───────────────── -->
+                  @case ('switch') {
+                    <switch-button
+                      [checked]="!!element[column.key]?.isActive || !!element[column.key]"
+                      (checkedChange)="handleSwitchChange($event, element, i)"
+                      [labelOn]="element[column.key]?.on ?? 'On'"
+                      [labelOff]="element[column.key]?.off ?? 'Off'"
+                    ></switch-button>
+                  }
+
+                  <!-- ───────────────── KPI SPARK (NEW) ───────────────── -->
+                  @case ('kpiSpark') {
+                    @let cell = element[column.key];
+                    @let deltaVal = (cell?.delta ?? 0);
+
+                    <div
+                      class="pe-kpi-spark"
+                      [class.ok]="kpiToneClass(cell?.tone) === 'ok'"
+                      [class.warn]="kpiToneClass(cell?.tone) === 'warn'"
+                      [class.danger]="kpiToneClass(cell?.tone) === 'danger'"
+                    >
+                      <div class="top">
+                        <span class="score">{{ cell?.score ?? 0 }}%</span>
+
+                        <span
+                          class="delta"
+                          [class.pos]="deltaVal >= 0"
+                          [class.neg]="deltaVal < 0"
+                        >
+                          <mat-icon class="delta-ico">
+                            {{ deltaVal >= 0 ? 'arrow_drop_up' : 'arrow_drop_down' }}
+                          </mat-icon>
+
+                          <span class="delta-text">
+                            {{ deltaVal >= 0 ? '+' : '' }}{{ deltaVal }}
+                          </span>
+                        </span>
+                      </div>
+
+                      <svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none">
+                        <polyline [attr.points]="buildSparkPolyline(cell?.series)"></polyline>
+                      </svg>
+                    </div>
+                  }
+
+
+                  <!-- ───────────────── DEFAULT (inline editors / dialog / read-only) ───────────────── -->
+                  @default {
+
+                    @if (hasInlineEdit(column)) {
+
+                      @switch (column.edit?.kind) {
+
+                        @case ('inlineText') {
+                          <mat-form-field appearance="outline" class="pe-table-field">
+                            <input
+                              matInput
+                              class="pe-table-input"
+                              type="text"
+                              [required]="column.edit?.required ?? false"
+                              [placeholder]="column.edit?.placeholder || ''"
+                              [attr.maxLength]="column.edit?.maxLength ?? null"
+                              [ngModel]="getCellEditValue(i, column.key, element)"
+                              (ngModelChange)="handleInlineEditChange($event, column, element, i)"
+                            />
+                          </mat-form-field>
+                        }
+
+                        @case ('inlineNumber') {
+                          <mat-form-field appearance="outline" class="pe-table-field">
+                            <input
+                              matInput
+                              class="pe-table-input pe-table-input-number"
+                              type="number"
+                              [required]="column.edit?.required ?? false"
+                              [placeholder]="column.edit?.placeholder || ''"
+                              [attr.min]="column.edit?.min ?? null"
+                              [attr.max]="column.edit?.max ?? null"
+                              [ngModel]="getCellEditValue(i, column.key, element)"
+                              (ngModelChange)="handleInlineEditChange($event, column, element, i)"
+                            />
+                          </mat-form-field>
+                        }
+
+                        @case ('inlineSelect') {
+                          <mat-form-field appearance="outline" class="pe-table-field">
+                            <mat-select
+                              class="pe-table-select"
+                              [required]="column.edit?.required ?? false"
+                              [placeholder]="column.edit?.placeholder || ''"
+                              [ngModel]="getCellEditValue(i, column.key, element)"
+                              (ngModelChange)="handleInlineEditChange($event, column, element, i)"
+                            >
+                              @for (opt of (column.edit?.options || []); track opt.value) {
+                                <mat-option [value]="opt.value">
+                                  {{ opt.label }}
+                                </mat-option>
+                              }
+                            </mat-select>
+                          </mat-form-field>
+                        }
+
+                        @case ('inlineSwitch') {
+                          <switch-button
+                            [checked]="!!getCellEditValue(i, column.key, element)"
+                            (checkedChange)="handleInlineEditChange($event, column, element, i)"
+                            [required]="column.edit?.required ?? false"
+                            [labelOn]="'On'"
+                            [labelOff]="'Off'"
+                          ></switch-button>
+                        }
+
+                        @case ('inlineDate') {
+                          <mat-form-field appearance="outline" class="pe-table-field">
+                            <input
+                              matInput
+                              class="pe-table-input pe-table-input-date"
+                              [matDatepicker]="inlineDate"
+                              [required]="column.edit?.required ?? false"
+                              [placeholder]="column.edit?.placeholder || ''"
+                              [ngModel]="getCellEditValue(i, column.key, element)"
+                              (ngModelChange)="handleInlineEditChange($event, column, element, i)"
+                              [min]="toDateOrNull(column.edit?.minDate ?? null)"
+                              [max]="toDateOrNull(column.edit?.maxDate ?? null)"
+                            />
+                            <mat-datepicker-toggle matSuffix [for]="inlineDate"></mat-datepicker-toggle>
+                            <mat-datepicker #inlineDate [touchUi]="true"></mat-datepicker>
+                          </mat-form-field>
+                        }
+
+                        @case ('inlineDateTime') {
+                          <ape-date-time-picker
+                            [label]="column.label"
+                            [value]="getCellEditValue(i, column.key, element)"
+                            [min]="toDateOrNull(column.edit?.minDate ?? null)"
+                            [max]="toDateOrNull(column.edit?.maxDate ?? null)"
+                            [required]="column.edit?.required ?? false"
+                            [disabled]="column.edit?.disabled || false"
+                            (valueChange)="handleInlineEditChange($event, column, element, i)"
+                          ></ape-date-time-picker>
+                        }
+
+                        @default {
+                          <div
+                            class="text-capitalize text-center"
+                            [matTooltip]="getToolTip(element[column.key], column.key)"
+                            matTooltipPosition="above"
+                            [innerHTML]="trimText(element[column.key], column.key)"
+                          ></div>
+                        }
+                      }
+
+                    } @else if (isDialogTextEdit(column)) {
+
+                      <div class="pe-table-dialog-text">
+                        <div
+                          class="pe-table-dialog-text-preview text-capitalize"
+                          [matTooltip]="getToolTip(element[column.key], column.key)"
+                          matTooltipPosition="above"
+                        >
+                          {{ trimText(element[column.key], column.key) }}
+                        </div>
+
+                        <button
+                          type="button"
+                          class="pe-table-dialog-edit-btn"
+                          (click)="openTextEditorDialog(column, element, i)"
+                          matTooltip="Edit full text"
+                          matTooltipPosition="above"
+                        >
+                          <mat-icon>edit_note</mat-icon>
+                        </button>
+                      </div>
+
+                    } @else {
+
+                      <div
+                        class="text-capitalize text-center"
+                        [matTooltip]="getToolTip(element[column.key], column.key)"
+                        matTooltipPosition="above"
+                        [innerHTML]="trimText(element[column.key], column.key)"
+                      ></div>
+
+                    }
+                  }
+                }
+              }
+            </td>
+
+          </ng-container>
         }
 
-        <!-- inline switch -->
-        @case ('inlineSwitch') {
-        <switch-button
-          [checked]="!!getCellEditValue(i, column.key, element)"
-          (checkedChange)="handleInlineEditChange($event, column, element, i)"
-          [required]="column.edit?.required ?? false"
-          [labelOn]="'On'"
-          [labelOff]="'Off'"
-        ></switch-button>
-        }
+        <tr
+          mat-header-row
+          *matHeaderRowDef="displayedColumnKeys"
+          class="text-default border-bottom-custom"
+        ></tr>
 
-        <!-- inline date (Material datepicker) -->
-        @case ('inlineDate') {
-        <mat-form-field appearance="outline" class="pe-table-field">
-          <input
-            matInput
-            class="pe-table-input pe-table-input-date"
-            [matDatepicker]="inlineDate"
-            [required]="column.edit?.required ?? false"
-            [placeholder]="column.edit?.placeholder || ''"
-            [ngModel]="getCellEditValue(i, column.key, element)"
-            (ngModelChange)="handleInlineEditChange($event, column, element, i)"
-          />
-          <mat-datepicker-toggle
-            matSuffix
-            [for]="inlineDate"
-          ></mat-datepicker-toggle>
-          <mat-datepicker
-            #inlineDate
-            [touchUi]="true"
-            [startAt]="getCellEditValue(i, column.key, element)"
-          ></mat-datepicker>
-        </mat-form-field>
-        }
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumnKeys"
+          class="text-default border-bottom-custom"
+        ></tr>
 
-        <!-- inline datetime (native datetime-local shell) -->
-        @case ('inlineDateTime') {
-        <ape-date-time-picker
-          [label]="column.label"
-          [value]="toDateOrNull(getCellEditValue(i, column.key, element))"
-          [min]="toDateOrNull(column.edit?.minDate ?? null)"
-          [max]="toDateOrNull(column.edit?.maxDate ?? null)"
-          [required]="column.edit?.required ?? false"
-          [disabled]="column.edit?.disabled || false"
-          (valueChange)="handleInlineEditChange($event, column, element, i)"
-        >
-        </ape-date-time-picker>
-        }
+      </table>
+    </div>
 
-        <!-- date RANGE via dialog (read-only text here) -->
-        @case ('dialogDateRange') {
-        <div class="pe-table-dialog-text">
-          <div
-            class="pe-table-dialog-text-preview text-capitalize"
-            [matTooltip]="element[column.key] || ''"
-            matTooltipPosition="above"
-          >
-            {{ trimText(element[column.key]) }}
-          </div>
-        </div>
-        }
+  } @else {
 
-        <!-- fallback when edit kind unknown -->
-        @default {
-        <div
-          class="text-capitalize"
-          [innerHTML]="trimText(element[column.key])"
-        ></div>
-        } }
+    <div class="no-users-container">
+      <mat-icon class="no-users-icon" aria-hidden="true">report_problem</mat-icon>
+      <p class="no-users-text">
+        {{
+          tableSearchValue.length === 0
+            ? 'Data currently not available!'
+            : 'Search data not found!'
+        }}
+      </p>
+    </div>
 
-        <!-- ───────── DIALOG TEXT EDITOR ───────── -->
-        } @else if (isDialogTextEdit(column)) {
-
-        <div class="pe-table-dialog-text">
-          <div
-            class="pe-table-dialog-text-preview text-capitalize"
-            [matTooltip]="element[column.key] || ''"
-            matTooltipPosition="above"
-          >
-            {{ trimText(element[column.key]) }}
-          </div>
-          <button
-            type="button"
-            class="btn pe-table-dialog-edit-btn"
-            (click)="openTextEditorDialog(column, element, i)"
-            matTooltip="Edit full text"
-            matTooltipPosition="above"
-          >
-            <mat-icon>edit_note</mat-icon>
-          </button>
-        </div>
-
-        <!-- ───────── READ-ONLY CELL ───────── -->
-        } @else {
-        <div
-          class="text-capitalize"
-          [innerHTML]="trimText(element[column.key])"
-        ></div>
-        } } } } }
-      </td>
-    </ng-container>
-
-    <tr
-      mat-header-row
-      *matHeaderRowDef="displayedColumnKeys"
-      class="text-default border-bottom-custom"
-    ></tr>
-    <tr
-      mat-row
-      *matRowDef="let row; columns: displayedColumnKeys"
-      class="text-default border-bottom-custom"
-    ></tr>
-  </table>
-  <!-- End Table -->
-</div>
+  }
 
 } @else {
 
-<div class="no-users-container">
-  <mat-icon class="no-users-icon" aria-hidden="true">report_problem</mat-icon>
-  <p class="no-users-text">
-    {{
-      search.length === 0
-        ? "Data currently not available!"
-        : "Search data not found!"
-    }}
-  </p>
-</div>
-
-} } @else {
-
-<div class="no-users-container">
-  <mat-icon class="no-users-icon" aria-hidden="true">report_problem</mat-icon>
-  <p class="no-users-text">
-    {{
-      search.length === 0
-        ? "Data currently not available!"
-        : "Search data not found!"
-    }}
-  </p>
-</div>
+  <div class="no-users-container">
+    <mat-icon class="no-users-icon" aria-hidden="true">report_problem</mat-icon>
+    <p class="no-users-text">
+      User must login to view table data
+    </p>
+  </div>
 
 }

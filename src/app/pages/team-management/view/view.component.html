@@ -1,1 +1,284 @@
-<p>view.component works!</p>
+<app-notification-dialog></app-notification-dialog>
+
+<div class="container-fluid team-view">
+
+  <!-- Loading -->
+  @if (isLoading) {
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-secondary">Loading team view…</div>
+      </div>
+    </div>
+  }
+
+  <!-- No team -->
+  @if (!isLoading && !team) {
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-secondary">No team data available.</div>
+      </div>
+    </div>
+  }
+
+  <!-- Main -->
+  @if (!isLoading && team) {
+
+    <!-- Header / Hero -->
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-body">
+
+        <div class="row g-3 align-items-start">
+          <!-- Left -->
+          <div class="col-12 col-lg">
+            <div class="d-flex gap-3 align-items-start">
+
+              <!-- Logo -->
+              <div class="flex-shrink-0">
+                <img
+                  [src]="teamLogoSrc"
+                  alt="Team logo"
+                  class="rounded border"
+                  style="width: 84px; height: 84px; object-fit: cover;"
+                />
+              </div>
+
+              <!-- Title + meta -->
+              <div class="flex-grow-1">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                  <h4 class="mb-0" style="color: var(--on-surface);">
+                    {{ teamName }}
+                  </h4>
+
+                  <span class="badge rounded-pill text-bg-secondary">
+                    {{ teamDomain || 'domain' }}
+                  </span>
+
+                  <span class="badge rounded-pill text-bg-dark">
+                    {{ teamCodeLabel }}
+                  </span>
+                </div>
+
+                <div class="text-secondary mt-1">
+                  Captain: <strong>{{ captainName }}</strong>
+                  <span class="mx-2">•</span>
+                  Role: <strong>{{ captainRole }}</strong>
+
+                  @if (captainEmail) {
+                    <span class="mx-2">•</span>
+                    Email: <strong>{{ captainEmail }}</strong>
+                  }
+
+                  @if (captainJoinedAt) {
+                    <span class="mx-2">•</span>
+                    Joined: <strong>{{ captainJoinedAt }}</strong>
+                  }
+                </div>
+
+                @if (team.description) {
+                  <div class="mt-2" style="color: var(--on-surface); opacity: .9;">
+                    <div [innerHTML]="team.description"></div>
+                  </div>
+                }
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Right: quick metrics -->
+          <div class="col-12 col-lg-auto">
+            <div class="row g-2">
+              <div class="col-4 col-lg-12">
+                <div class="card border h-100">
+                  <div class="card-body py-2 px-3">
+                    <div class="small text-secondary">Members</div>
+                    <div class="fw-bold" style="color: var(--on-surface);">{{ memberRows.length }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-4 col-lg-12">
+                <div class="card border h-100">
+                  <div class="card-body py-2 px-3">
+                    <div class="small text-secondary">Tasks</div>
+                    <div class="fw-bold" style="color: var(--on-surface);">{{ totalTasksCount }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-4 col-lg-12">
+                <div class="card border h-100">
+                  <div class="card-body py-2 px-3">
+                    <div class="small text-secondary">Completed</div>
+                    <div class="fw-bold" style="color: var(--on-surface);">{{ completedTasksCount }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-3">
+      @for (k of kpiCards; track k.key) {
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="fw-semibold" style="color: var(--on-surface);">{{ k.title }}</div>
+
+                <!-- tone badge -->
+                <span
+                  class="badge rounded-pill"
+                  [class.text-bg-success]="k.tone==='ok'"
+                  [class.text-bg-warning]="k.tone==='warn'"
+                  [class.text-bg-danger]="k.tone==='danger'"
+                  [class.text-bg-secondary]="k.tone==='muted'">
+                  {{ k.tone }}
+                </span>
+              </div>
+
+              <div class="mt-2 fs-3 fw-bold" style="color: var(--on-surface);">
+                {{ k.value }}
+              </div>
+
+              <div class="small text-secondary mt-1">
+                {{ k.hint }}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-3 mb-3">
+
+      <div class="col-12 col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <div class="h6 mb-2" style="color: var(--on-surface);">Role Distribution</div>
+
+            @if (roleChart) {
+              <google-chart
+                [type]="roleChart.type"
+                [data]="roleChart.data"
+                [columns]="roleChart.columns"
+                [options]="roleChart.options">
+              </google-chart>
+            } @else {
+              <div class="text-secondary">No chart data.</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <div class="h6 mb-2" style="color: var(--on-surface);">Task Assignment</div>
+
+            @if (taskChart) {
+              <google-chart
+                [type]="taskChart.type"
+                [data]="taskChart.data"
+                [columns]="taskChart.columns"
+                [options]="taskChart.options">
+              </google-chart>
+            } @else {
+              <div class="text-secondary">No chart data.</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <div class="h6 mb-2" style="color: var(--on-surface);">Tenure Buckets</div>
+
+            @if (tenureChart) {
+              <google-chart
+                [type]="tenureChart.type"
+                [data]="tenureChart.data"
+                [columns]="tenureChart.columns"
+                [options]="tenureChart.options">
+              </google-chart>
+            } @else {
+              <div class="text-secondary">No chart data.</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="row g-3">
+
+          <div class="col-12">
+            <div class="card shadow-sm border-0">
+              <div class="card-body">
+                <div class="h6 mb-2" style="color: var(--on-surface);">Team Health</div>
+
+                @if (healthGauge) {
+                  <google-chart
+                    [type]="healthGauge.type"
+                    [data]="healthGauge.data"
+                    [columns]="healthGauge.columns"
+                    [options]="healthGauge.options">
+                  </google-chart>
+                } @else {
+                  <div class="text-secondary">No chart data.</div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="card shadow-sm border-0">
+              <div class="card-body">
+                <div class="h6 mb-2" style="color: var(--on-surface);">Engagement</div>
+
+                @if (engagementGauge) {
+                  <google-chart
+                    [type]="engagementGauge.type"
+                    [data]="engagementGauge.data"
+                    [columns]="engagementGauge.columns"
+                    [options]="engagementGauge.options">
+                  </google-chart>
+                } @else {
+                  <div class="text-secondary">No chart data.</div>
+                }
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Members Table -->
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+          <div class="h5 mb-0" style="color: var(--on-surface);">Members</div>
+          <span class="badge rounded-pill text-bg-secondary">{{ memberRows.length }} members</span>
+        </div>
+
+        <app-custom-table
+          [columns]="memberColumns"
+          [data]="memberRows"
+          [isReload]="false">
+        </app-custom-table>
+
+      </div>
+    </div>
+
+  }
+</div>

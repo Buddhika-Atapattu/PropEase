@@ -195,6 +195,8 @@
         matTooltip="View user"
         matTooltipPosition="above"
         class="btn btn-view"
+        [accessKey]="PERM.UserManagement.view"
+        accessMode="hide"
         (click)="viewUserFunction()"
       >
         <mat-icon>visibility</mat-icon>
@@ -204,6 +206,8 @@
         matTooltip="Edit user"
         matTooltipPosition="above"
         class="btn btn-warning"
+        [accessKey]="PERM.UserManagement.update"
+        accessMode="hide"
         (click)="editUserFunction()"
       >
         <mat-icon>create</mat-icon>
@@ -213,6 +217,8 @@
         matTooltip="Delete user"
         matTooltipPosition="above"
         class="btn btn-danger"
+        [accessKey]="PERM.UserManagement.delete"
+        accessMode="hide"
         (click)="deleteUserFunction()"
       >
         <mat-icon>delete</mat-icon>
@@ -302,6 +308,8 @@
         matTooltipPosition="above"
         class="btn btn-view"
         (click)="viewUserFunction()"
+        [accessKey]="PERM.UserManagement.view"
+        accessMode="hide"
       >
         <mat-icon>visibility</mat-icon>
       </button>
@@ -311,6 +319,8 @@
         matTooltipPosition="above"
         class="btn btn-warning"
         (click)="editUserFunction()"
+        [accessKey]="PERM.UserManagement.update"
+        accessMode="hide"
       >
         <mat-icon>create</mat-icon>
       </button>
@@ -320,6 +330,8 @@
         matTooltipPosition="above"
         class="btn btn-danger"
         (click)="deleteUserFunction()"
+        [accessKey]="PERM.UserManagement.delete"
+        accessMode="hide"
       >
         <mat-icon>delete</mat-icon>
       </button>

@@ -11,7 +11,7 @@
     #userForm="ngForm"
   >
     <div class="row d-flex justify-content-center align-items-center">
-      <app-dropdown (filesChange)="filesAdded($event)"></app-dropdown>
+      <app-dropdown (filesChange)="filesAdded($event)" [acceptCategory]="'all'"></app-dropdown>
     </div>
     <div class="row mt-4 d-flex justify-content-end align-items-center">
       <div

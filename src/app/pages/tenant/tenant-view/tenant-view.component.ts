@@ -16,7 +16,7 @@ import { Subscription } from 'rxjs';
 import * as XLSX from 'xlsx';
 
 // Shared / dialog components
-import { NotificationDialogComponent } from '../../../components/dialogs/notification/notificationBar.component';
+import { NotificationDialogComponent } from '../../../components/dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
 
 // Custom table

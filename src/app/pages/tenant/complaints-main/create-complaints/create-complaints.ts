@@ -64,7 +64,7 @@ import {
   TableColumn,
   CustomTableComponent,
 } from '../../../../components/shared/custom-table/custom-table.component';
-import { NotificationDialogComponent } from '../../../../components/dialogs/notification/notificationBar.component';
+import { NotificationDialogComponent } from '../../../../components/dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../../../components/dialogs/progress-bar/progress-bar.component';
 import { Dropdown } from '../../../../components/shared/dropdown/dropdown';
 import { TextEditorComponent } from '../../../../components/shared/textEditor/text-editor';

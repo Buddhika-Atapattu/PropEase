@@ -3,7 +3,29 @@
 import { User } from '../services/APIs/apis.service';
 import { Lease, LeaseWithProperty, Tenant, ComplaintClient } from '../services/tenant/tenant.service';
 import { BackEndPropertyData } from '../services/property/property.service';
+import type { TeamManagementDto, WorkEvent, WorkItem } from '../services/teamManagementService/team-management.service';
 
+
+/**
+ * Minimal file metadata used across backend.
+ * Pure JSON (no File, no Buffer here).
+ */
+export interface FileMetaBase {
+  /** Original filename sent by client (as uploaded) */
+  originalName: string;
+
+  /** Stored filename on disk or in bucket (unique) */
+  storedName: string;
+
+  /** File extension without dot, e.g. "pdf", "jpg" */
+  extension: string;
+
+  /** MIME type, e.g. "application/pdf", "image/jpeg" */
+  mimeType: string;
+
+  /** Size in bytes */
+  sizeBytes: number;
+}
 
 export interface UploadedFile {
   originalName?: string;
@@ -113,6 +135,19 @@ export interface SystemData {
 
   fileUpload?: UserDocumentEntity;
   fileUploads?: UserDocumentEntity[];
+
+  team?: TeamManagementDto;
+  teams?: TeamManagementDto[];
+
+  workItem?: WorkItem;
+  workItems?: WorkItem[];
+
+  event?: WorkEvent;
+  events?: WorkEvent[];
+
+  file?: FileMetaBase;
+  files?: FileMetaBase[];
+
 
   /** Optional numeric summaries – very common in dashboards */
   totalUsers?: number;

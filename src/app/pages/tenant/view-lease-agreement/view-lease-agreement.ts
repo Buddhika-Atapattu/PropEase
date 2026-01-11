@@ -31,7 +31,7 @@ import { Subscription } from 'rxjs';
 // ──────────────────────────────────────────────────────────────────────────────
 // Shared components / pipes
 // ──────────────────────────────────────────────────────────────────────────────
-import { NotificationDialogComponent } from '../../../components/dialogs/notification/notificationBar.component';
+import { NotificationDialogComponent } from '../../../components/dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
 import { SkeletonLoaderComponent } from '../../../components/shared/skeleton-loader/skeleton-loader.component';
 import { FileOpener } from '../../../components/dialogs/file-opener/file-opener';

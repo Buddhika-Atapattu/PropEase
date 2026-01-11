@@ -1,4 +1,28 @@
 // Path: src/app/services/APIs/apis.service.ts
+// ============================================================================
+// APIsService
+// ----------------------------------------------------------------------------
+// Responsibilities
+//   • Centralised HTTP client for:
+//       - User API          →   http://<baseURL>/api-user/*
+//       - Auth API          →   http://<baseURL>/api/auth/*
+//       - MFA API           →   http://<baseURL>/api/mfa/*
+//       - WS Token helpers  →   http://<baseURL>/api/auth/ws-token/*
+//       - External country / currency sources
+//
+//   • Safe helpers for reading `res.data.other`:
+//       - extractBooleanFromOther
+//       - extractStringFromOther
+//       - extractNumberFromOther
+//       - extractObjectFromOther
+//       - extractArrayFromOther
+//       - extractTokenFromMsg
+//
+// Design notes
+//   • `baseURL` is the root for your backend (TODO: wire from environment).
+//   • `userAPI` holds the segment for user routes ("api-user").
+//   • All public methods return a strongly-typed MSG wrapper.
+// ============================================================================
 
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -17,10 +41,11 @@ import {
   AccessModuleKey,
   AccessActionKey,
 } from '../../source/access-map.source';
+import { environment } from '../../../environments/environment';
 
-/* ─────────────────────────────────────────────────────────────────────────────
+/* ========================================================================== *
  *  Country / currency related types
- * ──────────────────────────────────────────────────────────────────────────── */
+ * ========================================================================== */
 
 export interface CurrencyFormat {
   country: string;
@@ -41,10 +66,9 @@ export interface Country {
   image: string;
 }
 
-
-/* ─────────────────────────────────────────────────────────────────────────────
+/* ========================================================================== *
  *  Access / role model (shared with FE + BE)
- * ──────────────────────────────────────────────────────────────────────────── */
+ * ========================================================================== */
 
 /**
  * Backend/DB-friendly permission block:
@@ -68,9 +92,9 @@ export interface ROLE_ACCESS_MAP {
   permissions: PermissionEntry[];
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
+/* ========================================================================== *
  *  User & roles
- * ──────────────────────────────────────────────────────────────────────────── */
+ * ========================================================================== */
 
 export type Role =
   | 'admin'
@@ -111,7 +135,7 @@ export interface PhoneNumber {
 }
 
 export interface User {
-  // Basic
+  // Basic identity
   name: string;
   username: string;
   email: string;
@@ -122,6 +146,7 @@ export interface User {
   phoneNumber?: PhoneNumber;
   bio: string;
   nationality: string;
+  nicOrPassport: string;
 
   // Role & access
   role: Role;
@@ -146,7 +171,7 @@ export interface User {
   multiAuthEnabled: boolean;    // user chose to enable MFA
   multiAuthActivatedAt?: Date;  // when QR + foreign app completed
 
-  // Timestamps (added automatically by Mongoose)
+  // Timestamps (Mongoose)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -179,39 +204,62 @@ export interface MultiAuthData {
   devicePlatform?: string;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
+/* ========================================================================== *
  *  APIsService
- * ──────────────────────────────────────────────────────────────────────────── */
+ * ========================================================================== */
 
 @Injectable( {
   providedIn: 'root',
 } )
 export class APIsService {
-  private isBrowser: boolean;
-  private baseURL: string = 'http://localhost:3000';
-  private userAPI: string = 'api-user';
+  // --------------------------------------------------------------------------
+  // Core configuration
+  // --------------------------------------------------------------------------
+
+  private readonly isBrowser: boolean;
+
+  /**
+   * Root backend URL.
+   * TODO: Replace with environment.apiOrigin / apiBase when wiring configs.
+   */
+  private readonly baseURL: string = environment.apiOrigin ?? 'http://localhost:3000';
+
+  /**
+   * Base segment for user-related routes.
+   * Full prefix: `${baseURL}/${userAPI}` → e.g. http://localhost:3000/api-user
+   */
+  private readonly userAPI: string = 'api-user';
 
   constructor (
-    private http: HttpClient,
-    @Inject( PLATFORM_ID ) private platformId: Object,
+    private readonly http: HttpClient,
+    @Inject( PLATFORM_ID ) private readonly platformId: Object,
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
   }
 
-  /* ─────────────────────────────────────────────────────────────
-     Small internal helpers (reuse & safety)
-  ───────────────────────────────────────────────────────────── */
+  // ==========================================================================
+  //  INTERNAL HELPERS
+  // ==========================================================================
+
+  // --------------------------------------------------------------------------
+  //  URL builders
+  // --------------------------------------------------------------------------
 
   /**
-   * Build a full URL like "http://localhost:3000/api-user/xyz".
+   * Build a full user API URL like:
+   *   http://localhost:3000/api-user/<path>
    */
   private buildUserUrl( path: string ): string {
     return `${ this.baseURL }/${ this.userAPI }/${ path }`;
   }
 
+  // --------------------------------------------------------------------------
+  //  Safe "other" extractors for MSG.data.other
+  // --------------------------------------------------------------------------
+
   /**
-   * Safely extract `data.other` as a plain Record, or undefined.
-   * This keeps all "other" logic in one place.
+   * Safely extract `data.other` as a plain Record<string, unknown>, or `undefined`.
+   * All other extractors are built on top of this helper.
    */
   private getOtherRecord(
     data: MSG[ 'data' ] | undefined | null,
@@ -233,6 +281,10 @@ export class APIsService {
     return rawOther as Record<string, unknown>;
   }
 
+  /**
+   * Generic extractor: get a boolean from `other[key]`.
+   * Returns null if key is missing or value is not a boolean.
+   */
   public extractBooleanFromOther(
     data: MSG[ 'data' ] | undefined | null,
     key: string,
@@ -305,7 +357,7 @@ export class APIsService {
 
   /**
    * Generic extractor: get an object from `other[key]` and cast to T.
-   * It only checks that it's a non-null object (no arrays).
+   * It only validates "non-null object and not an array".
    */
   public extractObjectFromOther<T extends object>(
     data: MSG[ 'data' ] | undefined | null,
@@ -339,23 +391,23 @@ export class APIsService {
       const other = this.getOtherRecord( data );
 
       if ( !other ) {
-        throw new Error( 'Invalid other data set!' );
+        throw new Error( 'Invalid "other" data set!' );
       }
 
       if ( !( key in other ) ) {
-        throw new Error( 'Invalid key in other data set!' );
+        throw new Error( `Key "${ key }" not found inside "other" data set!` );
       }
 
       const value = other[ key ];
 
       if ( !Array.isArray( value ) ) {
-        throw new Error( 'Invalid array of value set!' );
+        throw new Error( 'Expected array for "other[key]" value.' );
       }
 
       return value as T[];
     } catch ( error ) {
       // eslint-disable-next-line no-console
-      console.error( error );
+      console.error( '[Error:] [APIsService.extractArrayFromOther] ', error, '\n' );
       return null;
     }
   }
@@ -368,9 +420,9 @@ export class APIsService {
     return this.extractStringFromOther( res.data, 'token' );
   }
 
-  /* ─────────────────────────────────────────────────────────────
-     HTTP helper methods (optional but nice)
-  ───────────────────────────────────────────────────────────── */
+  // --------------------------------------------------------------------------
+  //  Minimal HTTP wrapper helpers
+  // --------------------------------------------------------------------------
 
   private async get<T>( url: string, params?: HttpParams ): Promise<T> {
     return await firstValueFrom(
@@ -378,8 +430,13 @@ export class APIsService {
     );
   }
 
-  private async post<T>( url: string, body: unknown ): Promise<T> {
-    return await firstValueFrom( this.http.post<T>( url, body ) );
+  private async post<T>(
+    url: string,
+    body: unknown,
+    extraHeaders?: Record<string, string>,
+  ): Promise<T> {
+    const headers = extraHeaders ?? {};
+    return await firstValueFrom( this.http.post<T>( url, body, { headers } ) );
   }
 
   private async put<T>( url: string, body: unknown ): Promise<T> {
@@ -390,14 +447,22 @@ export class APIsService {
     return await firstValueFrom( this.http.delete<T>( url ) );
   }
 
-  /* ─────────────────────────────────────────────────────────────
-     User API methods
-  ───────────────────────────────────────────────────────────── */
+  // ==========================================================================
+  //  USER API ( /api-user/* )
+  // ==========================================================================
 
+  /**
+   * GET /api-user/users
+   *   → All users (no pagination).
+   */
   public async getAllUsers(): Promise<MSG> {
     return await this.get<MSG>( this.buildUserUrl( 'users' ) );
   }
 
+  /**
+   * POST /api-user/verify-user
+   *   → Legacy login verification (mostly replaced by /api/auth/login).
+   */
   public async verifyUser( user: UserCredentials ): Promise<MSG> {
     return await this.post<MSG>(
       this.buildUserUrl( 'verify-user' ),
@@ -405,6 +470,10 @@ export class APIsService {
     );
   }
 
+  /**
+   * PUT /api-user/user-update/:username
+   *   → Update user profile (FormData for file/image support).
+   */
   public async updateUser(
     user: FormData,
     username: string,
@@ -415,6 +484,10 @@ export class APIsService {
     );
   }
 
+  /**
+   * GET /api-user/users-with-pagination/:start/:limit
+   *   → Paged list of users with optional "search" query param.
+   */
   public async getAllUsersWithPagination(
     start: number,
     limit: number,
@@ -427,17 +500,23 @@ export class APIsService {
     }
 
     return await this.get<MSG>(
-      this.buildUserUrl(
-        `users-with-pagination/${ start }/${ limit }`,
-      ),
+      this.buildUserUrl( `users-with-pagination/${ start }/${ limit }` ),
       params,
     );
   }
 
+  /**
+   * GET /api-user/users-count
+   *   → Total user count.
+   */
   public async getAllUserCount(): Promise<MSG> {
     return await this.get<MSG>( this.buildUserUrl( 'users-count' ) );
   }
 
+  /**
+   * POST /api-user/create-user
+   *   → Create user (FormData for avatar/document support).
+   */
   public async createNewUser( data: FormData ): Promise<MSG> {
     return await this.post<MSG>(
       this.buildUserUrl( 'create-user' ),
@@ -445,6 +524,10 @@ export class APIsService {
     );
   }
 
+  /**
+   * POST /api-user/generate-token
+   *   → Generate OTP / reset-token for a username.
+   */
   public async generateToken( username: string ): Promise<MSG> {
     return await this.post<MSG>(
       this.buildUserUrl( 'generate-token' ),
@@ -452,44 +535,10 @@ export class APIsService {
     );
   }
 
-  public async generateMultiAuthQRCode( username: string ): Promise<MSG> {
-    return await this.post<MSG>(
-      `${ this.baseURL }/api/mfa/initiate`,
-      { username },
-    );
-  }
-
-  public async getConfirmationOfMultiAuth( data: MultiAuthData ): Promise<MSG> {
-    return await this.post<MSG>(
-      `${ this.baseURL }/api/mfa/confirm`,
-      data,
-    );
-  }
-
-  public async getMultiAuthStatus( pairingToken: string ): Promise<MSG> {
-    return firstValueFrom( this.http.get<MSG>( `${ this.baseURL }/api/mfa/status/${ pairingToken }` ) );
-  }
-
-  public async deactiveMultiAuth( username: string ): Promise<MSG> {
-    return await this.post<MSG>(
-      `${ this.baseURL }/api/mfa/deactive/${ username }`,
-      {},
-    );
-  }
-
-  public async mfaInitialVerify( data: { pairingToken: string, code: string; } ): Promise<MSG> {
-    return await this.post<MSG>(
-      `${ this.baseURL }/api/mfa/initial-verify`,
-      data,
-    );
-  }
-
-  public async mfaUserVerify( data: { token: string, code: string; } ): Promise<MSG> {
-    return await this.post<MSG>(
-      `${ this.baseURL }/api/mfa/user-verify`,
-      data,
-    );
-  }
+  /**
+   * POST /api-user/user-document-upload/:username
+   *   → Upload user documents via FormData.
+   */
   public async uploadDocuments(
     data: FormData,
     username: string,
@@ -500,19 +549,10 @@ export class APIsService {
     );
   }
 
-  public async regenerateChallenge( username: string ): Promise<MSG> {
-    return await this.post<MSG>(
-      `${ this.baseURL }/api/auth/regenerate-challenge`,
-      username,
-    );
-  }
-
-  public async rotateWsToken( username: string ): Promise<MSG> {
-    return await this.post(
-      `${ this.baseURL }/api/auth/ws-token/rotate/${ username }`,
-      {}
-    );
-  }
+  /**
+   * GET /api-user/user-username/:username
+   *   → Fetch a user by username.
+   */
   public async getUserByUsername( username: string ): Promise<MSG> {
     return await firstValueFrom(
       this.http.get<MSG>(
@@ -521,12 +561,20 @@ export class APIsService {
     );
   }
 
+  /**
+   * GET /api-user/user-token/:token
+   *   → Fetch a user by token (password reset, verify token, etc).
+   */
   public async getUserByToken( token: string ): Promise<MSG> {
     return await this.get<MSG>(
       this.buildUserUrl( `user-token/${ token }` ),
     );
   }
 
+  /**
+   * GET /api-user/user-email/:email
+   *   → Fetch a user by email.
+   */
   public async getUserByEmail( email: string ): Promise<MSG> {
     return await firstValueFrom(
       this.http.get<MSG>(
@@ -535,6 +583,10 @@ export class APIsService {
     );
   }
 
+  /**
+   * POST /api-user/user-phone
+   *   → Fetch a user by phoneNumber payload.
+   */
   public async getUserByPhone( phone: User[ 'phoneNumber' ] ): Promise<MSG> {
     return await this.post<MSG>(
       `${ this.baseURL }/${ this.userAPI }/user-phone`,
@@ -542,6 +594,10 @@ export class APIsService {
     );
   }
 
+  /**
+   * DELETE /api-user/user-delete/:username/:deletedBy
+   *   → Soft/hard delete user with audit-field "deletedBy".
+   */
   public async deleteUserByUsername(
     username: string,
     deletedBy: string,
@@ -553,6 +609,10 @@ export class APIsService {
     );
   }
 
+  /**
+   * GET /api-user/user-section-key/:username/:section
+   *   → Fetch a specific section (field key) from the user document.
+   */
   public async getSectionKeyFromUser(
     username: string,
     section: UserSections,
@@ -564,6 +624,10 @@ export class APIsService {
     );
   }
 
+  /**
+   * GET /api-user/uploads/:username/documents
+   *   → List user documents for that username.
+   */
   public async getUserDocuments( username: string ): Promise<MSG> {
     const path = `uploads/${ username }/documents`;
     return await firstValueFrom(
@@ -571,12 +635,27 @@ export class APIsService {
     );
   }
 
+  // ==========================================================================
+  //  AUTH API ( /api/auth/* )
+  // ==========================================================================
 
-  public async login( data: { username: string; password: string; } ): Promise<MSG> {
+  /**
+   * POST /api/auth/login
+   *   → Main login endpoint (deviceId + credentials).
+   */
+  public async login(
+    data: { username: string; password: string; },
+    extraHeaders?: Record<string, string>,
+  ): Promise<MSG> {
+    const headers = extraHeaders ?? {};
     const url = `${ this.baseURL }/api/auth/login`;
-    return await this.post<MSG>( url, data ); // will be JSON
+    return await this.post<MSG>( url, data, headers ); // will be JSON
   }
 
+  /**
+   * POST /api/auth/logout
+   *   → Logout endpoint (relies on cookies / session).
+   */
   public async logout(): Promise<MSG> {
     const url = `${ this.baseURL }/api/auth/logout`;
 
@@ -584,14 +663,115 @@ export class APIsService {
       this.http.post<MSG>(
         url,
         {},                                 // empty body
-        { withCredentials: true }           // VERY IMPORTANT: send cookies
-      )
+        { withCredentials: true },         // VERY IMPORTANT: send cookies
+      ),
     );
   }
-  /* ─────────────────────────────────────────────────────────────
-     Country / currency helpers
-  ───────────────────────────────────────────────────────────── */
 
+  /**
+   * POST /api/auth/regenerate-challenge
+   *   → Issue a fresh MFA login challenge.
+   * NOTE: Backend currently accepts raw username/string – keep consistent.
+   */
+  public async regenerateChallenge( username: string ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/auth/regenerate-challenge`,
+      username,
+    );
+  }
+
+  /**
+   * POST /api/auth/ws-token/rotate/:username
+   *   → Rotate WS token for a given username (for WebSocket clients).
+   */
+  public async rotateWsToken( username: string ): Promise<MSG> {
+    return await this.post(
+      `${ this.baseURL }/api/auth/ws-token/rotate/${ username }`,
+      {},
+    );
+  }
+
+  // ==========================================================================
+  //  MFA API ( /api/mfa/* )
+  // ==========================================================================
+
+  /**
+   * POST /api/mfa/initiate
+   *   → Start MFA pairing (generate QR + secret for username).
+   */
+  public async generateMultiAuthQRCode( username: string ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/mfa/initiate`,
+      { username },
+    );
+  }
+
+  /**
+   * POST /api/mfa/confirm
+   *   → Confirm MFA pairing (foreign app confirms via pairingToken).
+   */
+  public async getConfirmationOfMultiAuth( data: MultiAuthData ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/mfa/confirm`,
+      data,
+    );
+  }
+
+  /**
+   * GET /api/mfa/status/:pairingToken
+   *   → Poll MFA pairing status from FE.
+   */
+  public async getMultiAuthStatus( pairingToken: string ): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.get<MSG>( `${ this.baseURL }/api/mfa/status/${ pairingToken }` ),
+    );
+  }
+
+  /**
+   * POST /api/mfa/deactive/:username
+   *   → Disable MFA for a given username.
+   */
+  public async deactiveMultiAuth( username: string ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/mfa/deactive/${ username }`,
+      {},
+    );
+  }
+
+  /**
+   * POST /api/mfa/initial-verify
+   *   → Verify the FIRST code during MFA setup (pairing stage).
+   */
+  public async mfaInitialVerify( data: { pairingToken: string; code: string; } ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/mfa/initial-verify`,
+      data,
+    );
+  }
+
+  /**
+   * POST /api/mfa/user-verify
+   *   → Verify MFA code during login (with login challenge token + deviceId).
+   */
+  public async mfaUserVerify(
+    data: { token: string; code: string; deviceId: string; },
+  ): Promise<MSG> {
+    return await this.post<MSG>(
+      `${ this.baseURL }/api/mfa/user-verify`,
+      data,
+    );
+  }
+
+  // ==========================================================================
+  //  COUNTRY / CURRENCY HELPERS (external APIs)
+  // ==========================================================================
+
+  /**
+   * getCustomCountryDetails
+   * -----------------------
+   * Uses @yusifaliyevpro/countries to fetch an enriched set of
+   * country details (name, currencies, IDD, flags, maps, postal codes).
+   */
   public async getCustomCountryDetails(): Promise<CountryDetailsCustomType[]> {
     const countries = ( await getCountries( {
       fields: [
@@ -608,6 +788,12 @@ export class APIsService {
     return countries;
   }
 
+  /**
+   * getCountryCodes
+   * ---------------
+   * Builds a compact list of country calling codes + flags, suitable
+   * for phone-code dropdowns.
+   */
   public async getCountryCodes(): Promise<CountryCodes[]> {
     const countries = await this.getCustomCountryDetails();
     const countriesCodes: CountryCodes[] = [];
@@ -629,6 +815,10 @@ export class APIsService {
     return countriesCodes;
   }
 
+  /**
+   * GET https://restcountries.com/v3.1/all
+   *   → Full country list with currency details.
+   */
   public async getAllCountryWithCurrency(): Promise<CountryDetails[]> {
     return await firstValueFrom(
       this.http.get<CountryDetails[]>(
@@ -637,6 +827,10 @@ export class APIsService {
     );
   }
 
+  /**
+   * GET https://restcountries.com/v3.1/name/:name?fullText=true
+   *   → Lookup a country by full name.
+   */
   public async getCountryByName(
     name: string,
   ): Promise<CountryDetails[]> {
@@ -647,6 +841,10 @@ export class APIsService {
     );
   }
 
+  /**
+   * GET country flag emoji JSON (3rd party CDN).
+   *   → General-purpose "flags library" response as unknown; caller casts.
+   */
   public async getCountries(): Promise<unknown> {
     const countries = await firstValueFrom(
       this.http.get<unknown>(

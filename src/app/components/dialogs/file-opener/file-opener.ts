@@ -29,7 +29,7 @@ import {
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { Subscription } from 'rxjs';
-import { NotificationDialogComponent } from '../notification/notificationBar.component';
+import { NotificationDialogComponent } from '../notificationBar/notificationBar.component';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HttpClient } from '@angular/common/http';
 import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';

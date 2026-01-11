@@ -64,7 +64,7 @@ import {
 
 import {
   NotificationDialogComponent,
-} from '../../../components/dialogs/notification/notificationBar.component';
+} from '../../../components/dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
 import { MapComponent } from '../../../components/shared/map/map.component';
 import { TextEditorComponent } from '../../../components/shared/textEditor/text-editor';

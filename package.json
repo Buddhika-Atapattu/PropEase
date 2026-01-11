@@ -8,6 +8,7 @@
     "start": "npm run electron-dev",
     "dev": "ng serve",
     "compile:electron": "tsc -p tsconfig.electron.json",
+    "gen:perm": "tsc -p tools/tsconfig.tools.json && node tools-dist/tools/gen-permissions.mjs",
     "watch:electron": "tsc -p tsconfig.electron.json --watch",
     "electron-dev": "concurrently \"npm run watch:electron\" \"ng serve\" \"wait-on http://localhost:4200 && electron .\"",
     "build": "ng build",
@@ -19,7 +20,9 @@
     "build:web": "ng build -c web",
     "build:prod": "ng build -c production",
     "build:electron": "ng build -c electron && npm run compile:electron",
-    "pack:electron": "npm run build:electron && electron-builder"
+    "pack:electron": "npm run build:electron && electron-builder",
+    "prestart": "npm run gen:perm",
+    "prebuild": "npm run gen:perm"
   },
   "dependencies": {
     "@angular/animations": "^20.0.2",
@@ -109,7 +112,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.3",
     "wait-on": "^8.0.3"
   },
   "overrides": {
@@ -152,6 +155,15 @@
         "AppImage",
         "deb"
       ]
+    }
+  },
+  "ts-node": {
+    "esm": true,
+    "transpileOnly": true,
+    "files": true,
+    "compilerOptions": {
+      "module": "NodeNext",
+      "moduleResolution": "NodeNext"
     }
   }
 }

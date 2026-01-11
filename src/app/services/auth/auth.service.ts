@@ -50,6 +50,8 @@ import {
 } from '../../source/access-map.source';
 import { environment } from '../../../environments/environment';
 import type { MSG } from '../../types/api-message.types';
+import { DeviceInfoService } from '../deviceInfo/device-info.service';
+import { AccessControlService } from '../../core/security/access-control.service';
 
 /* ============================================================================ *
  *  Types: User credentials & access model
@@ -146,20 +148,23 @@ export class AuthService {
     mfaVerify: 'mfa_verify';
     lastUrl: 'LAST_URL';
     rememberUsername: 'REMEMBER_USERNAME';
+    deviceId: 'propease_device_id';
   }> = {
     user: 'ENCRYPED_LOGGED_USER',
     isLoggedIn: 'IS_USER_LOGGED_IN',
     password: 'PASSWORD',
     sessionToken: 'sessionToken',
     guardToken: 'guardToken',
-      wsToken: 'wsToken',        // WebSocket-only token
+      wsToken: 'wsToken',            // WebSocket-only token
       mfaVerify: 'mfa_verify',
       lastUrl: 'LAST_URL',
       rememberUsername: 'REMEMBER_USERNAME',
+      deviceId: 'propease_device_id',
   } as const;
 
   private _temporyChallenge: TempLoginChallenge | null = null;
   private _tempUsername = '';
+  private _deviceId: string | null = null;
 
   /**
    * Cached: for each Role, which MODULE definitions are visible in the UI.
@@ -183,6 +188,8 @@ export class AuthService {
     private readonly socketService: SocketService,
     private readonly router: Router,
     private readonly adminReportService: AdminReportService,
+    private readonly deviceInfoService: DeviceInfoService,
+    private readonly accessControlService: AccessControlService,
   ) {
     this.isBrowser = isPlatformBrowser( platformId );
 
@@ -250,6 +257,14 @@ export class AuthService {
     return this._tempUsername;
   }
 
+  get deviceId(): string | null {
+    return this._deviceId;
+  }
+
+  set deviceId( value: string | null ) {
+    this._deviceId = value;
+  }
+
   set tempUsername( value: string ) {
     this._tempUsername = value.trim();
   }
@@ -312,6 +327,18 @@ export class AuthService {
         };
       }
 
+      // Store a temporary username snapshot for MFA flows (encrypted).
+      if ( this.isBrowser ) {
+        try {
+          const encryptedUsername = await this.cryptoService.encrypt( trimmedUsername );
+          if ( encryptedUsername ) {
+            localStorage.setItem( 'tempUsername', encryptedUsername );
+          }
+        } catch ( err ) {
+          console.error( '[Error:] [AuthService.loginWithCredentials] Failed to store tempUsername: ', err, '\n' );
+        }
+      }
+
       // Update internal state
       this.loginUserCredentials = {
         username: trimmedUsername,
@@ -343,11 +370,29 @@ export class AuthService {
           'challenge',
         );
 
+      const deviceIdFromRes = this.apiService.extractStringFromOther( res.data, 'deviceId' );
+
       if ( mfaRequired === true && challenge ) {
         this.tempUsername = trimmedUsername;
         this.temporyChallenge = challenge;
 
+        // Prefer deviceId from backend, fallback to local generator
+        const effectiveDeviceId: string = deviceIdFromRes || this.deviceInfoService.getDeviceId();
+
+        this.deviceId = effectiveDeviceId;
+
+        if ( this.isBrowser && effectiveDeviceId ) {
+          localStorage.setItem( this.STORAGE_KEYS.deviceId, effectiveDeviceId );
+        }
+
+        const encryptedChallenge = await this.cryptoService.encrypt( challenge );
+
+        if ( !encryptedChallenge ) {
+          throw new Error( 'Failed to encrypt login challenge!' );
+        }
+
         if ( this.isBrowser ) {
+          localStorage.setItem( 'temp-change', encryptedChallenge );
           localStorage.setItem( this.STORAGE_KEYS.mfaVerify, 'pending' );
         }
 
@@ -372,7 +417,7 @@ export class AuthService {
         redirectUrl: '/dashboard/home',
       };
     } catch ( error: any ) {
-      console.error( '[AuthService.loginWithCredentials]', error );
+      console.error( '[Error:] [AuthService.loginWithCredentials] ', error, '\n' );
       await this.clearCredentials();
       return {
         success: false,
@@ -426,26 +471,80 @@ export class AuthService {
         );
       }
 
+      const deviceId = this.deviceInfoService.getDeviceId();
+
       const payload = {
         username: this.user.username,
         password: this.user.password,
+        deviceId,
       };
 
-      const response = await this.apiService.login( payload );
+      const response = await this.apiService.login( payload, {
+        'x-device-id': deviceId,
+      } );
 
       if ( !response || response.status !== 'success' ) {
         throw new Error( 'Invalid credentials or login failed.' );
       }
 
+      // Persist deviceId in storage so auto-login can validate device.
+      if ( this.isBrowser && deviceId ) {
+        localStorage.setItem( this.STORAGE_KEYS.deviceId, deviceId );
+      }
+
+      this.deviceId = deviceId;
+
       return response;
     } catch ( error ) {
-      console.error( '[AuthService.sendVerifyUser] Login failed', error );
+      console.error( '[Error:] [AuthService.sendVerifyUser] Login failed: ', error, '\n' );
       // Best-effort cleanup – robust against half-broken sessions
       this.clearCredentials().catch( ( err ) =>
-        console.error( '[AuthService.sendVerifyUser] cleanup after failure:', err ),
+        console.error( '[Error:] [AuthService.sendVerifyUser] cleanup after failure: ', err, '\n' ),
       );
       return null;
     }
+  }
+
+  /**
+   * Submit MFA code + challenge token.
+   */
+  public async submitOnMFA( data: { token: string; code: string; } ): Promise<MSG> {
+    if ( !data ) {
+      throw new Error( 'Invalid data!' );
+    }
+
+    const safeToken = String( data.token ?? '' ).trim();
+    const safeCode = String( data.code ?? '' ).trim();
+    const effectiveDeviceId = this.deviceId ?? this.deviceInfoService.getDeviceId();
+
+    if ( !safeToken ) {
+      throw new Error( 'Invalid token!' );
+    }
+
+    if ( !safeCode ) {
+      throw new Error( 'Invalid code' );
+    }
+
+    if ( !effectiveDeviceId ) {
+      throw new Error( 'Invalid device ID' );
+    }
+
+    const payload: {
+      code: string;
+      token: string;
+      deviceId: string;
+    } = {
+      code: safeCode,
+      token: safeToken,
+      deviceId: effectiveDeviceId,
+    };
+
+    // Persist deviceId if not stored yet
+    if ( this.isBrowser && effectiveDeviceId ) {
+      localStorage.setItem( this.STORAGE_KEYS.deviceId, effectiveDeviceId );
+    }
+
+    return await this.apiService.mfaUserVerify( payload );
   }
 
   /**
@@ -466,6 +565,8 @@ export class AuthService {
       if ( !user ) {
         throw new Error( 'User payload is missing in login response.' );
       }
+
+      this.accessControlService.setUser( user );
 
       // Store in-memory state
       this.setLoggedUser = user;
@@ -501,7 +602,7 @@ export class AuthService {
 
       if ( !wsToken ) {
         console.warn(
-          '[AuthService.assignToken] wsToken is missing in login response – WebSocket handshake may fall back.',
+          '[Warning:] [AuthService.assignToken] wsToken is missing in login response – WebSocket handshake may fall back.\n',
         );
       }
 
@@ -516,7 +617,7 @@ export class AuthService {
       // Final guard on isActive
       await this.finalInitialGuard( user );
     } catch ( error ) {
-      console.error( '[AuthService.assignToken] Failed to assign tokens', error );
+      console.error( '[Error:] [AuthService.assignToken] Failed to assign tokens: ', error, '\n' );
     }
   }
 
@@ -612,7 +713,7 @@ export class AuthService {
       }
       // Remember-me password is handled separately by storeRememberMeSnapshot()
     } catch ( error ) {
-      console.error( '[AuthService.afterUserLoggedInOperations]', error );
+      console.error( '[Error:] [AuthService.afterUserLoggedInOperations] ', error, '\n' );
     }
   }
 
@@ -657,7 +758,7 @@ export class AuthService {
         localStorage.setItem( this.STORAGE_KEYS.password, encPassword );
       }
     } catch ( error ) {
-      console.error( '[AuthService.storeRememberMeSnapshot]', error );
+      console.error( '[Error:] [AuthService.storeRememberMeSnapshot] ', error, '\n' );
       await this.clearRememberMeSnapshot();
     }
   }
@@ -674,7 +775,7 @@ export class AuthService {
       localStorage.removeItem( this.STORAGE_KEYS.rememberUsername );
       localStorage.removeItem( this.STORAGE_KEYS.password );
     } catch ( error ) {
-      console.error( '[AuthService.clearRememberMeSnapshot]', error );
+      console.error( '[Error:] [AuthService.clearRememberMeSnapshot] ', error, '\n' );
     }
   }
 
@@ -712,7 +813,7 @@ export class AuthService {
         rememberMe: true,
       };
     } catch ( error ) {
-      console.error( '[AuthService.getRememberedCredentials]', error );
+      console.error( '[Error:] [AuthService.getRememberedCredentials] ', error, '\n' );
       return null;
     }
   }
@@ -726,6 +827,7 @@ export class AuthService {
    * Conditions:
    *  - sessionToken + ENCRYPED_LOGGED_USER must exist
    *  - If mfaVerify is present and not "validated"/"no_mfa" → abort
+   *  - deviceId must be present (bind session to device)
    */
   private async tryAutoLoginFromStorage(): Promise<{
     autoLoggedIn: boolean;
@@ -746,6 +848,8 @@ export class AuthService {
         localStorage.getItem( this.STORAGE_KEYS.mfaVerify );
       const lastUrlRaw: string | null =
         localStorage.getItem( this.STORAGE_KEYS.lastUrl );
+      const storedDeviceId: string | null =
+        localStorage.getItem( this.STORAGE_KEYS.deviceId );
 
       if ( !sessionToken || !encLoggedUser ) {
         return { autoLoggedIn: false };
@@ -760,6 +864,10 @@ export class AuthService {
         mfaVerify !== 'validated' &&
         mfaVerify !== 'no_mfa'
       ) {
+        return { autoLoggedIn: false };
+      }
+
+      if ( !storedDeviceId ) {
         return { autoLoggedIn: false };
       }
 
@@ -780,12 +888,13 @@ export class AuthService {
       this.isLoggedIn = true;
       this.isValidUser = true;
       this.isUserActive = !!decryptedUser.isActive;
+      this._deviceId = storedDeviceId;
 
       // Boot realtime (will use tokens from storage)
       this.initRealtimeIfNeeded();
 
       // ─────────────────────────────────────────────────────────────
-      // NEW: ignore public/auth routes when picking redirect target
+      // Ignore public/auth routes when picking redirect target
       // ─────────────────────────────────────────────────────────────
       const safeLastUrl: string = ( lastUrlRaw ?? '' ).trim();
 
@@ -804,13 +913,11 @@ export class AuthService {
         autoLoggedIn: true,
         redirectUrl: targetUrl,
       };
-    }
-    catch ( error ) {
-      console.error( '[AuthService.tryAutoLoginFromStorage]', error );
+    } catch ( error ) {
+      console.error( '[Error:] [AuthService.tryAutoLoginFromStorage] ', error, '\n' );
       return { autoLoggedIn: false };
     }
   }
-
 
   /**
    * Generic restore (for places that still call it directly).
@@ -840,7 +947,7 @@ export class AuthService {
 
       return decryptedUser;
     } catch ( error ) {
-      console.error( '[AuthService.getLocalLoggedUser] decrypt failed', error );
+      console.error( '[Error:] [AuthService.getLocalLoggedUser] decrypt failed: ', error, '\n' );
       return null;
     }
   }
@@ -855,7 +962,7 @@ export class AuthService {
       const data = { username: this.user?.username, date };
       await this.activityTrackerService.saveLoggedUserDataToTracking( data );
     } catch ( error ) {
-      console.error( '[AuthService.insertLoggedUserTracks]', error );
+      console.error( '[Error:] [AuthService.insertLoggedUserTracks] ', error, '\n' );
     }
   }
 
@@ -938,14 +1045,15 @@ export class AuthService {
         .load( { limit: 20 } )
         .catch( ( err ) =>
           console.warn(
-            '[AuthService] initial notification load failed',
+            '[Warning:] [AuthService] initial notification load failed: ',
             err,
+            '\n',
           ),
         );
 
       this.notificationsInit = true;
     } catch ( error ) {
-      console.error( '[Failed to initialise notification:] ', error );
+      console.error( '[Error:] [AuthService] Failed to initialise notification: ', error, '\n' );
     }
   }
 
@@ -1014,14 +1122,16 @@ export class AuthService {
 
         if ( !res?.success || res.status !== 'success' ) {
           console.warn(
-            '[AuthService.clearCredentials] Backend logout reported failure:',
+            '[Warning:] [AuthService.clearCredentials] Backend logout reported failure: ',
             res,
+            '\n',
           );
         }
       } catch ( err ) {
         console.warn(
-          '[AuthService.clearCredentials] Backend logout threw error:',
+          '[Warning:] [AuthService.clearCredentials] Backend logout threw error: ',
           err,
+          '\n',
         );
       }
 
@@ -1037,6 +1147,13 @@ export class AuthService {
         localStorage.removeItem( this.STORAGE_KEYS.mfaVerify );
         localStorage.removeItem( this.STORAGE_KEYS.lastUrl );
         localStorage.removeItem( this.STORAGE_KEYS.rememberUsername );
+        localStorage.removeItem( this.STORAGE_KEYS.deviceId );
+
+        // Temporary data that needs to be handled
+        localStorage.removeItem( 'preferred-mode' );
+        localStorage.removeItem( 'LAST_URL' );
+        localStorage.removeItem( 'temp-change' );
+        localStorage.removeItem( 'tempUsername' );
 
         // 2.2 Validate each key and report anomalies
 
@@ -1047,8 +1164,9 @@ export class AuthService {
             await this.adminReportService.reportCleanUser( username );
           } catch ( err ) {
             console.warn(
-              '[AuthService.clearCredentials] reportCleanUser failed:',
+              '[Warning:] [AuthService.clearCredentials] reportCleanUser failed: ',
               err,
+              '\n',
             );
           }
           failures.push( 'user' );
@@ -1068,8 +1186,9 @@ export class AuthService {
             );
           } catch ( err ) {
             console.warn(
-              '[AuthService.clearCredentials] reportLoginStatusFailure failed:',
+              '[Warning:] [AuthService.clearCredentials] reportLoginStatusFailure failed: ',
               err,
+              '\n',
             );
           }
           failures.push( 'loginStatus' );
@@ -1084,8 +1203,9 @@ export class AuthService {
             await this.adminReportService.reportCleanPassword( username );
           } catch ( err ) {
             console.warn(
-              '[AuthService.clearCredentials] reportCleanPassword failed:',
+              '[Warning:] [AuthService.clearCredentials] reportCleanPassword failed: ',
               err,
+              '\n',
             );
           }
           failures.push( 'password' );
@@ -1111,8 +1231,9 @@ export class AuthService {
             await this.adminReportService.reportCleanToken( username );
           } catch ( err ) {
             console.warn(
-              '[AuthService.clearCredentials] reportCleanToken failed:',
+              '[Warning:] [AuthService.clearCredentials] reportCleanToken failed: ',
               err,
+              '\n',
             );
           }
           failures.push( 'token' );
@@ -1121,14 +1242,16 @@ export class AuthService {
 
       if ( failures.length > 0 ) {
         console.error(
-          '[AuthService.clearCredentials] Storage cleanup anomalies:',
+          '[Error:] [AuthService.clearCredentials] Storage cleanup anomalies: ',
           failures.join( ', ' ),
+          '\n',
         );
       }
     } catch ( error ) {
       console.error(
-        '[AuthService.clearCredentials] Unexpected error during logout:',
+        '[Error:] [AuthService.clearCredentials] Unexpected error during logout: ',
         error,
+        '\n',
       );
     } finally {
       // 3) ALWAYS clear in-memory state & realtime, even if something above failed
@@ -1142,6 +1265,8 @@ export class AuthService {
       this.localUser = null;
       this._tempUsername = '';
       this._temporyChallenge = null;
+      this._deviceId = null;
+      this.accessControlService.setUser( null );
 
       this.notificationService.disconnect();
       this.socketService.disconnect();
@@ -1169,7 +1294,7 @@ export class AuthService {
 
       return;
     } catch ( error ) {
-      console.error( '[AuthService.finalInitialGuard] Failed', error );
+      console.error( '[Error:] [AuthService.finalInitialGuard] Failed: ', error, '\n' );
       await this.clearCredentials();
       this.router.navigate( [ '/' ] );
       return;
@@ -1340,7 +1465,7 @@ export class AuthService {
 
     if ( !session?.trim() || !guard?.trim() ) {
       console.warn(
-        '[AuthService] Attempted to write empty tokens to storage.',
+        '[Warning:] [AuthService] Attempted to write empty tokens to storage.\n',
       );
       return;
     }

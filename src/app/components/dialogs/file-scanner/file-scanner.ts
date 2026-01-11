@@ -33,7 +33,7 @@ import {
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { Subscription } from 'rxjs';
-import { NotificationDialogComponent } from '../notification/notificationBar.component';
+import { NotificationDialogComponent } from '../notificationBar/notificationBar.component';
 import { ScanService } from '../../../services/scan/scan.service';
 import { toDataURL } from 'qrcode';
 import { CloseBtnComponent } from '../../shared/buttons/close-btn/close-btn';

@@ -28,7 +28,7 @@ import {
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
-import { NotificationDialogComponent } from '../../../components/dialogs/notification/notificationBar.component';
+import { NotificationDialogComponent } from '../../../components/dialogs/notificationBar/notificationBar.component';
 import {
   RestoreNotificationPayload
 } from '../../../types/notification.types'; // If you keep these types in service, adjust import path

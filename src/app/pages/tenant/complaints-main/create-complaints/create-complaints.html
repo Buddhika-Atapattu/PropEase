@@ -200,16 +200,9 @@
       <!-- Attachments (drag & drop / paste / file select) -->
       <div class="row my-2">
         <div class="col-12">
-          <!--
-            app-dropdown:
-              - Handles drag & drop, paste and file input
-              - Emits:
-                  filesChange -> full queue
-                  filesAdded  -> newly added files
-                  fileRemoved -> single removed file
-          -->
+
           <app-dropdown
-            [accept]="'image/*'"
+            [acceptCategory]="'image'"
             [multiple]="true"
             [maxFiles]="12"
             [maxSizeBytes]="10 * 1024 * 1024"

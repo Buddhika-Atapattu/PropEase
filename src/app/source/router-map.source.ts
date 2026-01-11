@@ -1,3 +1,4 @@
+// Path: src/app/source/router-map.source.ts
 import {
   AccessActionKey,
   AccessModuleKey

@@ -1,17 +1,197 @@
-<div class="container-fluid">
-  <div class="row d-flex justify-content-center align-items-center">
-    <div
-      class="col-xl-3 col-md-4 col-12 d-flex justify-content-center align-items-center"
-    >
-      <button
-        type="button"
-        class="btn btn-success text-uppercase"
-        matTooltip="Create Team"
-        matTooltipPosition="above"
-        (click)="createTeamRouter()"
-      >
-        <mat-icon>groups</mat-icon> create
-      </button>
+<app-notification-dialog></app-notification-dialog>
+
+<div class="container-fluid team-view">
+
+  <!-- Loading -->
+  @if (allTeamIsLoading) {
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="text-secondary">Loading team dashboard…</div>
+      </div>
     </div>
-  </div>
+  }
+
+  <!-- MAIN -->
+  @if (!allTeamIsLoading) {
+
+    <!-- EXEC KPIs -->
+    <div class="row g-3 mb-3">
+      @for (k of executiveKpis; track k.key) {
+        <div class="col-12 col-md-6 col-xl-3">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="fw-semibold" style="color: var(--on-surface);">{{ k.title }}</div>
+
+                <span
+                  class="badge rounded-pill"
+                  [class.text-bg-success]="k.tone==='ok'"
+                  [class.text-bg-warning]="k.tone==='warn'"
+                  [class.text-bg-danger]="k.tone==='danger'"
+                  [class.text-bg-secondary]="k.tone==='muted'">
+                  {{ k.tone }}
+                </span>
+              </div>
+
+              <div class="mt-2 fs-3 fw-bold" style="color: var(--on-surface);">
+                {{ k.value }}
+              </div>
+
+              <div class="small text-secondary mt-1">
+                {{ k.hint }}
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- CHARTS: Company Performance -->
+    <div class="row g-3 mb-3">
+
+      <div class="col-12 col-lg-7">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <div class="h6 mb-2" style="color: var(--on-surface);">Company Performance by Domain</div>
+
+            @if (domainCompletionChart) {
+              <google-chart
+                [type]="domainCompletionChart.type"
+                [data]="domainCompletionChart.data"
+                [columns]="domainCompletionChart.columns"
+                [options]="domainCompletionChart.options">
+              </google-chart>
+            } @else {
+              <div class="text-secondary">No chart data.</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-5">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <div class="h6 mb-2" style="color: var(--on-surface);">Completion Rate by Domain</div>
+
+            @if (domainRateChart) {
+              <google-chart
+                [type]="domainRateChart.type"
+                [data]="domainRateChart.data"
+                [columns]="domainRateChart.columns"
+                [options]="domainRateChart.options">
+              </google-chart>
+            } @else {
+              <div class="text-secondary">No chart data.</div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-body">
+            <div class="h6 mb-2" style="color: var(--on-surface);">Top Teams (Completed Tasks)</div>
+
+            @if (topTeamsChart) {
+              <google-chart
+                [type]="topTeamsChart.type"
+                [data]="topTeamsChart.data"
+                [columns]="topTeamsChart.columns"
+                [options]="topTeamsChart.options">
+              </google-chart>
+            } @else {
+              <div class="text-secondary">No chart data.</div>
+            }
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DOMAIN PERFORMANCE TABLE (Exec-ready) -->
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-body">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+          <div class="h5 mb-0" style="color: var(--on-surface);">Domain Performance Summary</div>
+          <span class="badge rounded-pill text-bg-secondary">Company Overview</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead>
+              <tr class="text-secondary">
+                <th>Domain</th>
+                <th class="text-center">Teams</th>
+                <th class="text-center">Assigned</th>
+                <th class="text-center">Completed</th>
+                <th class="text-center">Pending</th>
+                <th class="text-center">Completion %</th>
+                <th>Top Team</th>
+                <th class="text-center">Team Completed</th>
+                <th>Top Performer</th>
+                <th class="text-center">Member Completed</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (r of domainPerformance; track r.domain) {
+                <tr>
+                  <td>
+                    <span class="badge rounded-pill text-bg-dark">{{ r.domain }}</span>
+                  </td>
+                  <td class="text-center fw-semibold">{{ r.teams }}</td>
+                  <td class="text-center">{{ r.assigned }}</td>
+                  <td class="text-center fw-semibold">{{ r.completed }}</td>
+                  <td class="text-center">{{ r.pending }}</td>
+                  <td class="text-center">
+                    <span
+                      class="badge rounded-pill"
+                      [class.text-bg-success]="r.completionRate>=75"
+                      [class.text-bg-warning]="r.completionRate>=55 && r.completionRate<75"
+                      [class.text-bg-danger]="r.completionRate<55">
+                      {{ r.completionRate }}%
+                    </span>
+                  </td>
+                  <td class="fw-semibold">{{ r.topTeamName }}</td>
+                  <td class="text-center">{{ r.topTeamCompleted }}</td>
+                  <td class="fw-semibold">{{ r.topMemberName }}</td>
+                  <td class="text-center">{{ r.topMemberCompleted }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALL TEAMS TABLE (your existing operational table) -->
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+          <div class="h5 mb-0" style="color: var(--on-surface);">{{ allTeamTableTitle }}</div>
+          <span class="badge rounded-pill text-bg-secondary">{{ allTeamTotal }} teams</span>
+        </div>
+
+        <app-custom-table
+              [pagination]="true"
+              [(isReload)]="allTeamIsLoading"
+              [(index)]="allTeamIndex"
+              [(limit)]="allTeamLimit"
+              [tableTitle]="allTeamTableTitle"
+              [(search)]="allTeamSearch"
+              [totalDataCount]="allTeamTotal"
+              (uiButtonClick)="allTeamActionButtonCentra($event)"
+              [data]="allTeamTableData"
+              [columns]="allTeamTableColumns"
+              (fetchData)="fetchAllTeamTableData()"
+            ></app-custom-table>
+      </div>
+    </div>
+
+  }
 </div>
+
+
+
+

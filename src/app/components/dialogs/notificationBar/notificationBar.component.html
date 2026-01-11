@@ -1,0 +1,28 @@
+<div
+  *ngIf="showNotification"
+  class="notification"
+  [ngClass]="status"
+  id="notification"
+  #notification
+  (mouseover)="onMouseOver()"
+  (mouseout)="onMouseOut()"
+>
+  <div class="text py-0">
+    @switch (status) { @case ('success'){
+    <mat-icon>check_circle</mat-icon>
+    } @case ('error'){
+    <mat-icon>error</mat-icon>
+    } @case ('warning'){
+    <mat-icon>warning</mat-icon>
+    } @case ('info'){
+    <mat-icon>info</mat-icon>
+    } @default{
+    <mat-icon>notifications</mat-icon>
+    } }
+    <span class="ms-1">{{ message }}</span>
+  </div>
+  <button class="notification-close-button py-0" (click)="close()">
+    <i class="fa-solid fa-xmark"></i>
+    <span class="sr-only">Close</span>
+  </button>
+</div>

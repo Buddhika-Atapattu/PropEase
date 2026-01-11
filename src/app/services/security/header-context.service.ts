@@ -17,6 +17,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 import { SocketService, GuardTokenPayload } from '../socket/socket-service';
+import { DeviceInfoService } from '../deviceInfo/device-info.service'
 
 export interface AuthTokenSnapshot {
   /** Long-lived API session token (Authorization: Bearer). */
@@ -32,7 +33,8 @@ export class HeaderContextService {
   // Centralised keys (use these instead of duplicating in AuthService later)
   private readonly STORAGE_KEYS = {
     sessionToken: 'sessionToken',
-    guardToken: 'guardToken'
+    guardToken: 'guardToken',
+    deviceId: 'propease_device_id'
   } as const;
 
   /** Latest guard token from Socket or storage. */
@@ -41,7 +43,8 @@ export class HeaderContextService {
 
   constructor (
     @Inject( PLATFORM_ID ) platformId: Object,
-    private readonly socketService: SocketService
+    private readonly socketService: SocketService,
+    private readonly deviceIdInfoService: DeviceInfoService
   ) {
     this.isBrowser = isPlatformBrowser( platformId );
 
@@ -96,6 +99,8 @@ export class HeaderContextService {
       try {
         localStorage.removeItem( this.STORAGE_KEYS.sessionToken );
         localStorage.removeItem( this.STORAGE_KEYS.guardToken );
+        localStorage.removeItem( this.STORAGE_KEYS.deviceId );
+
       } catch ( error ) {
         console.error( '[HeaderContextService.clearAllTokens] Failed to clear storage:', error );
       }
@@ -148,6 +153,9 @@ export class HeaderContextService {
 
       // 2) ALSO support ApiGuard, which expects x-session-token
       headers[ 'x-session-token' ] = tokens.session;
+
+      // 3)  ALSO SET DEVICE ID TO THE HEADER
+      headers[ 'x-device-id' ] = this.deviceIdInfoService.getDeviceId()
     }
 
     if ( tokens.guard ) {

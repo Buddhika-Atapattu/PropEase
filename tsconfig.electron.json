@@ -15,6 +15,7 @@
   "include": [
     "electron/**/*.ts",
     "src/environments/environment.electron.ts",
-    "src/environments/environment.types.ts"
+    "src/environments/environment.types.ts",
+    "types/**/*.ts",
   ]
 }

@@ -245,6 +245,11 @@ export const routes: Routes = [
             data: { title: 'VIEW' },
             loadComponent: () => import( './pages/team-management/view/view.component' ).then( m => m.ViewComponent ),
           },
+          {
+            path: 'asign-task/:teamID',
+            data: { title: 'ASSIGN TASK' },
+            loadComponent: () => import( './pages/team-management/assignTask/assign-task.component' ).then( m => m.AssignTaskComponent ),
+          },
         ]
       },
 

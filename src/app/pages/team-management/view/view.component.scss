@@ -1,0 +1,30 @@
+/* Path: src/app/team-management/view/view.component.scss */
+
+/**
+ * Keep custom styles minimal.
+ * Bootstrap handles most of the layout.
+ */
+
+.pe-team-view {
+  .pe-logo {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+    background: var(--surface);
+  }
+
+  .pe-muted {
+    color: var(--muted);
+  }
+
+  /**
+   * Optional: Make Google chart container behave nicely in cards.
+   * You can remove if your google-chart wrapper already sizes well.
+   */
+  .gc-card {
+    width: 100%;
+    min-height: 220px;
+  }
+}

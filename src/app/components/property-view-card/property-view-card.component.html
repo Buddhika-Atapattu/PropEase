@@ -106,6 +106,8 @@
           matTooltipPosition="above"
           class="btn btn-view"
           (click)="viewPropertyFunction()"
+          [accessKey]="PERM.PropertyManagement.view"
+          accessMode="hide"
         >
           <mat-icon>visibility</mat-icon>
         </button>
@@ -117,6 +119,7 @@
           matTooltipPosition="above"
           class="btn btn-warning"
           (click)="editPropertyFunction()"
+          [accessKey]="PERM.PropertyManagement.update"
         >
           <mat-icon>create</mat-icon>
         </button>
@@ -128,6 +131,7 @@
           matTooltipPosition="above"
           class="btn btn-danger"
           (click)="deletePropertyFunction()"
+          [accessKey]="PERM.PropertyManagement.delete"
         >
           <mat-icon>delete</mat-icon>
         </button>
@@ -230,6 +234,7 @@
         matTooltipPosition="above"
         class="btn btn-view"
         (click)="viewPropertyFunction()"
+        [accessKey]="PERM.PropertyManagement.view"
       >
         <mat-icon>visibility</mat-icon>
       </button>
@@ -239,6 +244,7 @@
         matTooltipPosition="above"
         class="btn btn-warning"
         (click)="editPropertyFunction()"
+        [accessKey]="PERM.PropertyManagement.update"
       >
         <mat-icon>create</mat-icon>
       </button>
@@ -248,6 +254,7 @@
         matTooltipPosition="above"
         class="btn btn-danger"
         (click)="deletePropertyFunction()"
+        [accessKey]="PERM.PropertyManagement.delete"
       >
         <mat-icon>delete</mat-icon>
       </button>

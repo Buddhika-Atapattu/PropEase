@@ -79,13 +79,20 @@
     flex: 1;
     line-height: 1.4;
     color: inherit;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
-  .btn {
+  .notification-close-button {
     border: none;
     background: transparent;
     color: inherit;
     font-weight: bold;
+    width: 25px;
+    height: 25px;
+    border-radius: 100%;
+    border: none;
     padding: 0.25rem 0.5rem;
     cursor: pointer;
     transition: color 0.2s ease;

@@ -24,7 +24,7 @@ import {
 } from '../../../services/notifications/notification-service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { NotificationsRoutingService } from '../../../services/notificationRouting/notifications-routing-service';
-import { NotificationDialogComponent } from '../../dialogs/notification/notificationBar.component';
+import { NotificationDialogComponent } from '../../dialogs/notificationBar/notificationBar.component';
 
 @Component( {
   selector: 'app-notification',

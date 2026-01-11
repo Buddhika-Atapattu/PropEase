@@ -19,7 +19,7 @@ import { AuthService } from '../../../services/auth/auth.service';
 import { LeaseWithProperty, TenantService } from '../../../services/tenant/tenant.service';
 import { CloseBtnComponent } from '../../shared/buttons/close-btn/close-btn';
 import { PreloaderComponent } from '../../shared/preloader/preloader.component';
-import { NotificationDialogComponent } from '../notification/notificationBar.component';
+import { NotificationDialogComponent } from '../notificationBar/notificationBar.component';
 
 // SkeletonLoaderComponent, SafeUrlPipe
 @Component( {

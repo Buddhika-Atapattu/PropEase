@@ -68,7 +68,7 @@ import { map, startWith } from 'rxjs/operators';
 import { CameraBoxComponent } from '../../../components/dialogs/camera-box/camera-box.component';
 import {
   NotificationDialogComponent
-} from '../../../components/dialogs/notification/notificationBar.component';
+} from '../../../components/dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
 import { TextEditorComponent } from '../../../components/shared/textEditor/text-editor';
 
@@ -296,6 +296,7 @@ export class EditUserComponent
   protected userGender: string = '';
   protected userBio: string = '';
   protected nationality: string = '';
+  protected nicOrPassport: string = '';
 
   protected modelCheck: MODEL_CHECK = {
     model: '',
@@ -650,6 +651,7 @@ export class EditUserComponent
       this.role = this.user.role;
       this.userBio = this.user.bio;
       this.nationality = this.user.nationality;
+      this.nicOrPassport = this.user.nicOrPassport;
 
       this.updatedAt = new Date( this.user.updatedAt ?? '' );
       this.createdAt = new Date( this.user.createdAt ?? '' );
@@ -1633,6 +1635,9 @@ export class EditUserComponent
       if ( !this.nationality ) {
         throw new Error( 'User nationality is required!' );
       }
+      if ( !this.nicOrPassport ) {
+        throw new Error( 'User identity number is required!' );
+      }
 
       if ( !this.role )
         throw new Error( 'User role is required' );
@@ -1687,6 +1692,7 @@ export class EditUserComponent
       );
       formData.append( 'bio', this.userBio.trim() );
       formData.append( 'nationality', this.nationality.trim() );
+      formData.append( 'nicOrPassport', this.nicOrPassport.trim() );
       formData.append( 'phoneNumber', JSON.stringify( this.phoneNumber ) );
 
       if ( this.userimage ) {

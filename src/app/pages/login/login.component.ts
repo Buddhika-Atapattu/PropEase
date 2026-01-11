@@ -23,7 +23,7 @@ import { Subscription } from 'rxjs';
 
 import {
   NotificationDialogComponent,
-} from '../../components/dialogs/notification/notificationBar.component';
+} from '../../components/dialogs/notificationBar/notificationBar.component';
 import { AuthService } from '../../services/auth/auth.service';
 import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 

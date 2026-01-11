@@ -14,7 +14,7 @@ import { ImageCroppedEvent, ImageCropperComponent } from 'ngx-image-cropper';
 import { Subscription } from 'rxjs';
 import { TenantService } from '../../services/tenant/tenant.service';
 import { TokenService, type fileType } from '../../services/token/token.service';
-import { NotificationDialogComponent } from '../../components/dialogs/notification/notificationBar.component';
+import { NotificationDialogComponent } from '../../components/dialogs/notificationBar/notificationBar.component';
 import { APIsService } from '../../services/APIs/apis.service';
 
 

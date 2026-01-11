@@ -17,7 +17,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
-import { NotificationDialogComponent } from '../../../components/dialogs/notification/notificationBar.component';
+import { NotificationDialogComponent } from '../../../components/dialogs/notificationBar/notificationBar.component';
 import { LayoutSwitchBtn } from '../../../components/shared/buttons/layout-switch-btn/layout-switch-btn';
 import { ConfirmationComponent } from '../../../components/shared/confirmation/confirmation.component';
 import { UserViewCardComponent } from '../../../components/user-view-card/user-view-card.component';

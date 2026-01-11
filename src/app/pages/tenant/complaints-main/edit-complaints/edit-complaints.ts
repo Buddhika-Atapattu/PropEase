@@ -46,7 +46,7 @@ import { WindowsRefService } from '../../../../services/windowRef/windowRef.serv
 // ─────────────────────────────────────────────────────────────────────────────
 // Standalone components
 // ─────────────────────────────────────────────────────────────────────────────
-import { NotificationDialogComponent } from '../../../../components/dialogs/notification/notificationBar.component';
+import { NotificationDialogComponent } from '../../../../components/dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../../../components/dialogs/progress-bar/progress-bar.component';
 import { CommentsListComponent } from '../../../../components/shared/comments/comments-list.component';
 import { Dropdown } from '../../../../components/shared/dropdown/dropdown';

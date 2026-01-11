@@ -28,7 +28,7 @@ import { Subscription } from 'rxjs';
 // ──────────────────────────────────────────────────────────────────────────────
 import {
   NotificationDialogComponent,
-} from '../../../components/dialogs/notification/notificationBar.component';
+} from '../../../components/dialogs/notificationBar/notificationBar.component';
 import { SkeletonLoaderComponent } from '../../../components/shared/skeleton-loader/skeleton-loader.component';
 import { AccessabilitiesComponent } from '../../../components/tabs/accessabilities/accessabilities.component';
 import { ActivitiesComponent } from '../../../components/tabs/activities/activities.component';

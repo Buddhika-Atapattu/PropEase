@@ -43,7 +43,7 @@ import { FileScanner } from '../../../components/dialogs/file-scanner/file-scann
 import { FileViewer } from '../../../components/dialogs/file-viewer/file-viewer';
 import {
   NotificationDialogComponent
-} from '../../../components/dialogs/notification/notificationBar.component';
+} from '../../../components/dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
 import { SignSignature } from '../../../components/dialogs/sign-signature/sign-signature.component';
 import { SwitchButton } from '../../../components/shared/buttons/switch-button/switch-button.component';

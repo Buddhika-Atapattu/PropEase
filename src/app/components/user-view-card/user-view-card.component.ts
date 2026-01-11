@@ -1,7 +1,8 @@
 // Path: src/app/components/user-view-card/user-view-card.component.ts
 // Angular core
-import {CommonModule, isPlatformBrowser} from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
+  AfterViewInit,
   Component,
   EventEmitter,
   Inject,
@@ -9,21 +10,23 @@ import {
   OnDestroy,
   OnInit,
   Output,
-  PLATFORM_ID, AfterViewInit, HostListener
+  PLATFORM_ID
 } from '@angular/core';
 
 // Material UI
-import {MatIconModule} from '@angular/material/icon';
-import {MatTooltipModule} from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 // Services
-import {type User} from '../../services/APIs/apis.service';
-import {AuthService} from '../../services/auth/auth.service';
-import {WindowsRefService} from '../../services/windowRef/windowRef.service';
-import {ImageService} from '../../services/imageService/image.service';
+import { type User } from '../../services/APIs/apis.service';
+import { AuthService } from '../../services/auth/auth.service';
+
+// Core
+import { AccessControlService } from '../../core/security/access-control.service';
+import { PERM } from '../../core/security/permissions.const';
 
 // Components
-import {SkeletonLoaderComponent} from '../shared/skeleton-loader/skeleton-loader.component';
+import { SkeletonLoaderComponent } from '../shared/skeleton-loader/skeleton-loader.component';
 
 
 
@@ -60,12 +63,12 @@ export class UserViewCardComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly definedWomanDummyImageURL =
     'Images/user-images/dummy-user/dummy_woman.jpg';
   ;
+  protected readonly PERM = PERM;
 
   constructor (
     private readonly authService: AuthService,
     @Inject(PLATFORM_ID) private readonly platformId: Object,
-    private readonly windiwRef: WindowsRefService,
-    private readonly imageService: ImageService
+    private readonly accessService: AccessControlService,
   ) {
   }
 

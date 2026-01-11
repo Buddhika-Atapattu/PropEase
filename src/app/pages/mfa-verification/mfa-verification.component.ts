@@ -15,16 +15,15 @@ import {
 } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+
 import { APIsService } from '../../services/APIs/apis.service';
 import { AuthService, type TempLoginChallenge } from '../../services/auth/auth.service';
-import { PreloaderComponent } from '../../components/shared/preloader/preloader.component';
-import { NotificationDialogComponent } from '../../components/dialogs/notification/notificationBar.component';
-import { HttpErrorResponse } from '@angular/common/http';
-// If you already have shared button / preloader / notification components, import them here.
+import { CryptoService } from '../../services/cryptoService/crypto.service';
 
-// import { NotificationService } from '../../services/notification/notification.service';
-// import { AuthService } from '../../services/auth/auth.service';
-// import { APIsService } from '../../services/APIs/apis.service';
+import { PreloaderComponent } from '../../components/shared/preloader/preloader.component';
+import { NotificationDialogComponent } from '../../components/dialogs/notificationBar/notificationBar.component';
 
 @Component( {
   selector: 'app-mfa-verification',
@@ -32,6 +31,7 @@ import { HttpErrorResponse } from '@angular/common/http';
   imports: [
     CommonModule,
     RouterModule,
+    FormsModule,
     MatIconModule,
     PreloaderComponent,
     NotificationDialogComponent,
@@ -40,7 +40,8 @@ import { HttpErrorResponse } from '@angular/common/http';
   styleUrl: './mfa-verification.component.scss',
 } )
 export class MfaVerificationComponent implements OnInit, OnDestroy {
-  @ViewChild( NotificationDialogComponent, { static: true } ) notificationDialog !: NotificationDialogComponent;
+  @ViewChild( NotificationDialogComponent, { static: true } )
+  public notificationDialog!: NotificationDialogComponent;
 
   // ──────────────────────────────────────────────────────────
   // State
@@ -67,17 +68,18 @@ export class MfaVerificationComponent implements OnInit, OnDestroy {
   protected remainingSeconds: number = 30;
   private countdownTimerId: number | null = null;
 
-  constructor (
+  private readonly TEMP_USERNAME_KEY: string = 'tempUsername';
+  private readonly TEMP_CHALLENGE_KEY: string = 'temp-change';
+
+  public constructor (
     @Inject( PLATFORM_ID ) private readonly platformId: Object,
     private readonly router: Router,
     private readonly apiService: APIsService,
     private readonly authService: AuthService,
     private readonly cdr: ChangeDetectorRef,
+    private readonly cryptoService: CryptoService,
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
-
-    // If you store pending MFA user in AuthService, you can pull it here.
-    // this.username = this.authService.pendingMfaUsername ?? '';
   }
 
   // ──────────────────────────────────────────────────────────
@@ -119,27 +121,108 @@ export class MfaVerificationComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ──────────────────────────────────────────────────────────
+  // MFA username helpers (for resend)
+  // ──────────────────────────────────────────────────────────
+
+  /**
+   * Persist the temporary MFA username into localStorage (encrypted),
+   * so that reloads / new tabs can recover it.
+   */
+  private async persistTempUsername( username: string ): Promise<void> {
+    if ( !this.isBrowser ) {
+      return;
+    }
+
+    const safeUsername: string = username.trim();
+    if ( !safeUsername ) {
+      return;
+    }
+
+    try {
+      const encrypted: string | null = await this.cryptoService.encrypt( safeUsername );
+      if ( encrypted ) {
+        localStorage.setItem( this.TEMP_USERNAME_KEY, encrypted );
+      }
+    } catch ( error ) {
+      console.error(
+        '[Warning:] [MFA] Failed to persist temp username:',
+        error,
+        '\n'
+      );
+    }
+  }
+
+  /**
+   * Resolve username for MFA operations:
+   *   1) Prefer in-memory authService.tempUsername
+   *   2) Fallback to encrypted username from localStorage
+   */
+  private async resolveUsernameForChallenge(): Promise<string | null> {
+    const fromService: string = this.authService.tempUsername?.trim() ?? '';
+    if ( fromService ) {
+      // Also persist for future reloads
+      await this.persistTempUsername( fromService );
+      return fromService;
+    }
+
+    if ( !this.isBrowser ) {
+      return null;
+    }
+
+    const encUsername: string | null = localStorage.getItem( this.TEMP_USERNAME_KEY );
+    if ( !encUsername ) {
+      return null;
+    }
+
+    try {
+      const decrypted: unknown = await this.cryptoService.decrypt( encUsername );
+
+      if ( typeof decrypted === 'string' ) {
+        const safe = decrypted.trim();
+        return safe || null;
+      }
+
+      return null;
+    } catch ( error ) {
+      console.error(
+        '[Error:] [MFA] Failed to decrypt stored temp username:',
+        error,
+        '\n'
+      );
+      return null;
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // Resend code
+  // ──────────────────────────────────────────────────────────
+
   protected async onResendCode(): Promise<void> {
     try {
-      const username = this.authService.tempUsername;
-      if ( !username ) {
-        throw new Error( 'Invalid username' );
+      const safeUsername: string | null = await this.resolveUsernameForChallenge();
+
+      if ( !safeUsername ) {
+        throw new Error( 'Username is missing – please login again.' );
       }
-      const payloadRes = await this.apiService.regenerateChallenge( username );
+
+      const payloadRes = await this.apiService.regenerateChallenge( safeUsername );
 
       if ( !payloadRes.success ) {
-        throw new Error( payloadRes.message ?? '' );
+        throw new Error( payloadRes.message ?? 'Failed to regenerate challenge.' );
       }
 
-      const newChallenge = this.apiService.extractObjectFromOther<TempLoginChallenge>( payloadRes.data, 'challenge' );
+      const newChallenge =
+        this.apiService.extractObjectFromOther<TempLoginChallenge>(
+          payloadRes.data,
+          'challenge',
+        );
 
       if ( !newChallenge ) {
         throw new Error( 'Invalid new challenge!' );
       }
 
-      const newToken = newChallenge?.token;
-
-      if ( !newToken ) {
+      if ( !newChallenge.token ) {
         throw new Error( 'Invalid new token!' );
       }
 
@@ -148,16 +231,16 @@ export class MfaVerificationComponent implements OnInit, OnDestroy {
       this.remainingSeconds = 30;
       this.resetCodeDigits();
       this.startCountdown();
-    }
-    catch ( error ) {
-      console.error( error );
-      let message = 'Unexpected error ocured while generating code!';
-      if ( error instanceof Error ) {
+    } catch ( error: any ) {
+      console.error( '[Error:] [MFA] onResendCode error:', error, '\n' );
+
+      let message: string = 'Unexpected error occurred while generating code!';
+      if ( error instanceof HttpErrorResponse ) {
+        message = error.error?.message ?? error.message;
+      } else if ( error instanceof Error ) {
         message = error.message;
       }
-      else if ( error instanceof HttpErrorResponse ) {
-        message = error.error.message;
-      }
+
       this.notificationDialog.notification( 'error', message );
     }
   }
@@ -235,6 +318,57 @@ export class MfaVerificationComponent implements OnInit, OnDestroy {
   }
 
   // ──────────────────────────────────────────────────────────
+  // Local challenge loader
+  // ──────────────────────────────────────────────────────────
+
+  /**
+   * Load MFA challenge from localStorage (encrypted).
+   * Supports both:
+   *   - stringified JSON
+   *   - direct object (if decrypt already returns object)
+   */
+  private async loadLocalChallenge(): Promise<TempLoginChallenge | null> {
+    if ( !this.isBrowser ) {
+      return null;
+    }
+
+    const raw: string | null = localStorage.getItem( this.TEMP_CHALLENGE_KEY );
+    if ( !raw ) {
+      return null;
+    }
+
+    try {
+      const decrypted: unknown = await this.cryptoService.decrypt( raw );
+
+      if ( typeof decrypted === 'string' ) {
+        try {
+          return JSON.parse( decrypted ) as TempLoginChallenge;
+        } catch ( parseError ) {
+          console.error(
+            '[Error:] [MFA] Failed to parse decrypted local challenge JSON:',
+            parseError,
+            '\n'
+          );
+          return null;
+        }
+      }
+
+      if ( decrypted && typeof decrypted === 'object' ) {
+        return decrypted as TempLoginChallenge;
+      }
+
+      return null;
+    } catch ( error ) {
+      console.error(
+        '[Error:] [MFA] Failed to decrypt local challenge:',
+        error,
+        '\n'
+      );
+      return null;
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────
   // Actions
   // ──────────────────────────────────────────────────────────
 
@@ -249,7 +383,14 @@ export class MfaVerificationComponent implements OnInit, OnDestroy {
         return;
       }
 
-      if ( !this.authService.temporyChallenge ) {
+      // Resolve challenge from service or localStorage
+      const localChallenge: TempLoginChallenge | null =
+        await this.loadLocalChallenge();
+
+      const challenge: TempLoginChallenge | null =
+        this.authService.temporyChallenge ?? localChallenge ?? null;
+
+      if ( !challenge || !challenge.token ) {
         throw new Error( 'Login challenge is required!' );
       }
 
@@ -258,32 +399,50 @@ export class MfaVerificationComponent implements OnInit, OnDestroy {
       this.isSubmitting = true;
       this.cdr.markForCheck();
 
-      const payload: { token: string, code: string; } = {
-        token: this.authService.temporyChallenge.token,
-        code: code
+      const payload: { token: string; code: string; } = {
+        token: challenge.token,
+        code,
       };
 
-      // TODO: call real backend for MFA verify.
-      // Example:
-      const res = await this.apiService.mfaUserVerify( payload );
+      const res = await this.authService.submitOnMFA( payload );
 
-      if ( !res.success ) { throw new Error( res.message ?? 'Invalid code' ); }
+      if ( !res.success ) {
+        throw new Error( res.message ?? 'Invalid code' );
+      }
 
-      // For now, just simulate success delay
+      // UX: small delay for smoother transition
       await new Promise<void>( ( resolve ) => {
         setTimeout( () => resolve(), 600 );
       } );
 
       await this.authService.assignToken( res );
 
+      if ( this.isBrowser ) {
+        localStorage.removeItem( this.TEMP_CHALLENGE_KEY );
+      }
+
       // On success: navigate to dashboard / home
       await this.router.navigate( [ '/dashboard/home' ] );
     } catch ( error: any ) {
-      console.error( '[MfaVerificationComponent] verify error:', error );
+      console.error(
+        '[Error:] [MfaVerificationComponent] verify error:',
+        error,
+        '\n'
+      );
       this.isError = true;
-      this.errorMessage = error?.message ?? 'Invalid or expired code. Please try again.';
-      // If you have notification service:
-      // this.notification.notification('error', this.errorMessage);
+
+      let errorMessage = '';
+
+      if ( error instanceof HttpErrorResponse ) {
+        errorMessage = error.error?.message ?? error.message;
+      } else if ( error instanceof Error ) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = 'Invalid or expired code. Please try again.';
+      }
+
+      this.errorMessage = errorMessage;
+      this.notificationDialog.notification( 'error', this.errorMessage );
     } finally {
       this.isSubmitting = false;
       this.cdr.markForCheck();
@@ -294,5 +453,4 @@ export class MfaVerificationComponent implements OnInit, OnDestroy {
     void await this.authService.clearCredentials();
     return void await this.router.navigate( [ '/login' ] );
   }
-
 }

@@ -19,7 +19,7 @@ import { PaginationUtil } from '../../../../source/utility/pagination.utils';
 
 import {
   NotificationDialogComponent
-} from '../../../dialogs/notification/notificationBar.component';
+} from '../../../dialogs/notificationBar/notificationBar.component';
 import { SkeletonLoaderComponent } from '../../../shared/skeleton-loader/skeleton-loader.component';
 
 import {

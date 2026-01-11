@@ -25,7 +25,7 @@ import {
 
 import {
   NotificationDialogComponent,
-} from '../../../components/dialogs/notification/notificationBar.component';
+} from '../../../components/dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
 import {
   PropertyFilterDialogComponent,
