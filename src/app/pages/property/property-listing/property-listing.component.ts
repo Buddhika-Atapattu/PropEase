@@ -64,9 +64,9 @@ import { TextEditorComponent } from '../../../components/shared/textEditor/text-
 import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 import {
   APIsService,
-  Country,
   User,
 } from '../../../services/APIs/apis.service';
+import { UserCountryDto } from '../../../services/auth/user.contract';
 import { AuthService } from '../../../services/auth/auth.service';
 import {
   AddedBy,
@@ -190,9 +190,9 @@ export class PropertyListingComponent
   protected AddressStateOrProvince: Address[ 'stateOrProvince' ] = '';
   protected AddressPostcode: Address[ 'postcode' ] = '';
 
-  protected AddressCountry: Country | string = '';
-  protected AddressFilteredCountries!: Observable<Country[]>;
-  protected AddressCountries: Country[] = [];
+  protected AddressCountry: UserCountryDto | string = '';
+  protected AddressFilteredCountries!: Observable<UserCountryDto[]>;
+  protected AddressCountries: UserCountryDto[] = [];
   protected AddressCountryControl: FormControl = new FormControl( '' );
   protected countryMissMatch = false;
   private typeAddressCountry = '';
@@ -1082,7 +1082,7 @@ export class PropertyListingComponent
     this.AddressFilteredCountries =
       this.AddressCountryControl.valueChanges.pipe(
         startWith( this.typeAddressCountry ),
-        map( ( value: string | Country | null ) => {
+        map( ( value: string | UserCountryDto | null ) => {
           const name =
             typeof value === 'string'
               ? value.toLowerCase()
@@ -1097,14 +1097,14 @@ export class PropertyListingComponent
       );
   }
 
-  protected addressFilterCountries( name: string ): Country[] {
+  protected addressFilterCountries( name: string ): UserCountryDto[] {
     const filterValue = name.toLowerCase();
     return this.AddressCountries.filter( ( c ) =>
       c.name.toLowerCase().includes( filterValue ),
     );
   }
 
-  protected addressDisplayFlag( country: Country | string ): string {
+  protected addressDisplayFlag( country: UserCountryDto | string ): string {
     return typeof country === 'string' ? country : country?.name ?? '';
   }
 

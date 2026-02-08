@@ -37,6 +37,7 @@ import { NotificationsRoutingService } from '../../services/notificationRouting/
 import { NotificationService, type Notification } from '../../services/notifications/notification-service';
 import { type FullscreenMenuLink } from '../list-main-panel/list-main-panel.component';
 import { UserInfoPanelComponent } from '../user-info-panel/user-info-panel.component';
+import type { Role } from '../../services/auth/user.contract';
 
 
 
@@ -94,16 +95,7 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
 
   protected isLoggedIn = false;
   private username = '';
-  private role:
-    | 'admin'
-    | 'agent'
-    | 'tenant'
-    | 'owner'
-    | 'operator'
-    | 'manager'
-    | 'developer'
-    | 'user'
-    | '' = '';
+  private role: Role = 'user';
 
   private destroy$ = new Subject<void>();
 
@@ -138,7 +130,7 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
     this.isLoggedIn = this.authService.isUserLoggedIn;
     const me = this.authService.getLoggedUser;
     this.username = me?.username || '';
-    this.role = me?.role || '';
+    this.role = me?.role || 'user';
 
     // Predicates
     const isDirect = ( n: Notification ) => {

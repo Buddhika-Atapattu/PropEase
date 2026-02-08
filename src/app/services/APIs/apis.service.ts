@@ -30,151 +30,16 @@ import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { getCountries } from '@yusifaliyevpro/countries';
 import { firstValueFrom } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
 import { MSG } from '../../types/api-message.types';
 import type { UserCredentials } from '../auth/auth.service';
+import { CountryCodesDto, UserSafeDto } from '../auth/user.contract';
 import {
-  CountryDetailsCustomType,
   CountryDetails,
-  Address,
+  CountryDetailsCustomType
 } from '../property/property.service';
-import {
-  AccessModuleKey,
-  AccessActionKey,
-} from '../../source/access-map.source';
-import { environment } from '../../../environments/environment';
 
-/* ========================================================================== *
- *  Country / currency related types
- * ========================================================================== */
-
-export interface CurrencyFormat {
-  country: string;
-  symbol: any;
-  flags: {
-    png: string;
-    svg: string;
-    alt?: string;
-  };
-  currency: string;
-}
-
-export interface Country {
-  name: string;
-  code: string;
-  emoji: string;
-  unicode: string;
-  image: string;
-}
-
-/* ========================================================================== *
- *  Access / role model (shared with FE + BE)
- * ========================================================================== */
-
-/**
- * Backend/DB-friendly permission block:
- *  - module  → machine key from ACCESS_OPTIONS (AccessModuleKey)
- *  - actions → list of action IDs from that module (AccessActionKey[])
- */
-export interface PermissionEntry {
-  module: AccessModuleKey;
-  actions: AccessActionKey[];
-}
-
-/**
- * Wrapper around permissions stored on the user:
- *  - role        → effective role name
- *  - permissions → list of (module, actions[])
- *
- * This should mirror your backend user.access shape.
- */
-export interface ROLE_ACCESS_MAP {
-  role: Role;
-  permissions: PermissionEntry[];
-}
-
-/* ========================================================================== *
- *  User & roles
- * ========================================================================== */
-
-export type Role =
-  | 'admin'
-  | 'agent'
-  | 'tenant'
-  | 'owner'
-  | 'operator'
-  | 'manager'
-  | 'developer'
-  | 'user';
-
-export const DEFAULT_ROLES: Role[] = [
-  'admin',
-  'agent',
-  'developer',
-  'manager',
-  'operator',
-  'owner',
-  'tenant',
-  'user',
-];
-
-/** Country code info for phone numbers. */
-export interface CountryCodes {
-  name: string;
-  code: string;
-  flags: {
-    png: string;
-    svg: string;
-    alt?: string;
-  };
-}
-
-/** Phone number structure attached to User. */
-export interface PhoneNumber {
-  code: CountryCodes;
-  number: string;
-}
-
-export interface User {
-  // Basic identity
-  name: string;
-  username: string;
-  email: string;
-  dateOfBirth: Date;
-  age: number;
-  gender: string;
-  image?: string | File;
-  phoneNumber?: PhoneNumber;
-  bio: string;
-  nationality: string;
-  nicOrPassport: string;
-
-  // Role & access
-  role: Role;
-  address: Address;
-  isActive: boolean;
-  access: ROLE_ACCESS_MAP;
-
-  // Verification
-  otpVerifycation: boolean;
-  otpToken: string;
-  otpTokenExpires: Date;
-  emailVerified: boolean;
-  emailVerificationToken?: string;
-  emailVerificationTokenExpires?: Date;
-
-  // Admin controls
-  autoDelete: boolean;
-  creator: string;
-  updator?: string;
-
-  // MFA
-  multiAuthEnabled: boolean;    // user chose to enable MFA
-  multiAuthActivatedAt?: Date;  // when QR + foreign app completed
-
-  // Timestamps (Mongoose)
-  createdAt: Date;
-  updatedAt: Date;
-}
+export interface User extends UserSafeDto {};
 
 export type UserSections = keyof User;
 
@@ -562,6 +427,19 @@ export class APIsService {
   }
 
   /**
+   * GET /api-user/user-id/:id
+   *   → Fetch a user by ID.
+   */
+  public async getUserById( userId: string ): Promise<MSG> {
+    return await firstValueFrom(
+      this.http.get<MSG>(
+        `${ this.baseURL }/${ this.userAPI }/user-id/${ userId }`,
+      ),
+    );
+  }
+
+
+  /**
    * GET /api-user/user-token/:token
    *   → Fetch a user by token (password reset, verify token, etc).
    */
@@ -794,9 +672,9 @@ export class APIsService {
    * Builds a compact list of country calling codes + flags, suitable
    * for phone-code dropdowns.
    */
-  public async getCountryCodes(): Promise<CountryCodes[]> {
+  public async getCountryCodes(): Promise<CountryCodesDto[]> {
     const countries = await this.getCustomCountryDetails();
-    const countriesCodes: CountryCodes[] = [];
+    const countriesCodes: CountryCodesDto[] = [];
 
     countries.forEach( ( country ) => {
       countriesCodes.push( {

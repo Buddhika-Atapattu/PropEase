@@ -4,23 +4,23 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 
 import {
   DEFAULT_TEAM_DOMAINS,
-  TeamManagementService,
   TeamDomain,
   TeamManagementDto,
   type TeamMemberDto
-} from '../../../services/teamManagementService/team-management.service';
+} from '../../../services/teamManagementService/team-management.types';
 
-import { ChartService, ChartBuild, PieEntry, SeriesEntry } from '../../../services/chartService/chart-service'; // <-- use your real path
+import { TeamManagementService } from '../../../services/teamManagementService/team-management.service';
 
+import { ChartService, ChartBuild, PieEntry, SeriesEntry } from '../../../services/chartService/chart-service';
 import { NotificationDialogComponent } from '../../../components/dialogs/notificationBar/notificationBar.component';
 import { CustomTableComponent } from '../../../components/shared/custom-table/custom-table.component';
 import { GoogleChartsModule } from 'angular-google-charts';
 import { APIsService } from '../../../services/APIs/apis.service';
 
-// If you already have a ColumnConfig type in CustomTable, use it instead of this local type.
 type TableColumn = Readonly<{
   key: string;
   label: string;
@@ -38,9 +38,9 @@ type TeamKpiCard = Readonly<{
 }>;
 
 type KpiSparkCell = Readonly<{
-  score: number;              // 0..100 (proxy score)
-  delta: number;              // +/- (proxy)
-  series: number[];           // deterministic points for sparkline
+  score: number;     // 0..100
+  delta: number;     // +/- proxy
+  series: number[];
   tone: 'ok' | 'warn' | 'danger' | 'muted';
 }>;
 
@@ -53,7 +53,61 @@ type TeamMemberRow = Readonly<{
   joinedAt: string | null;
   tenureDays: number | null;
   teamsCount: number;
-  perf: KpiSparkCell;
+
+  // new: real KPI columns
+  participationPct: number;     // 0..100 (based on tasks)
+  accuracyPct: number;          // 0..100 (based on dueAt/completedAt when available)
+  perf: KpiSparkCell;           // composite
+}>;
+
+type PeriodKey = '7d' | '30d' | '90d' | 'thisMonth' | 'all';
+
+type PeriodOption = Readonly<{ key: PeriodKey; label: string; }>;
+
+type TeamFilters = Readonly<{
+  period: PeriodKey;
+  role: 'all' | 'captain' | 'lead' | 'supervisor' | 'member' | 'observer';
+  minParticipation: number; // 0..100
+  minPerformance: number;   // 0..100
+}>;
+
+type TeamBenchmark = Readonly<{
+  rank: number;
+  totalTeams: number;
+  percentile: number; // 0..100 (higher is better)
+}>;
+
+// Minimal task shape (safe)
+type TaskDto = Readonly<{
+  id?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+
+  // if exists => real accuracy possible
+  dueAt?: string;
+  completedAt?: string;
+
+  // assignment can be various shapes depending on your backend
+  assignedToId?: string;
+  assignedToUsername?: string;
+
+  assignedTo?: Readonly<{
+    id?: string;
+    username?: string;
+  }>;
+}>;
+
+// Snapshot from backend for comparing teams (keep minimal)
+type TeamSnapshot = Readonly<{
+  teamCode: string;
+  teamName: string;
+  domain?: string;
+  memberTotal?: number;
+  updatedAt?: string;
+
+  // optional precomputed values if your backend provides (best case)
+  healthScore?: number;
 }>;
 
 @Component({
@@ -61,6 +115,7 @@ type TeamMemberRow = Readonly<{
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     NotificationDialogComponent,
     CustomTableComponent,
     GoogleChartsModule,
@@ -74,28 +129,51 @@ export class ViewComponent implements OnInit {
 
   protected readonly defaultDomains: ReadonlyArray<TeamDomain> = DEFAULT_TEAM_DOMAINS;
 
-  // Keep ID/code from route
   private teamCode: string | null = null;
 
   protected team: TeamManagementDto | null = null;
-
-  protected completedTasksCount: number = 0;
-  protected totalTasksCount: number = 0; // real from BE task API
 
   protected isLoading: boolean = false;
   protected readonly DEFAULT_TEAM_LOGO: string = 'Images/System-images/noImage.png';
 
   // =======================
-  // Bootstrap view state
+  // Filters
+  // =======================
+  protected readonly periodOptions: PeriodOption[] = [
+    { key: '7d', label: 'Last 7 days' },
+    { key: '30d', label: 'Last 30 days' },
+    { key: '90d', label: 'Last 90 days' },
+    { key: 'thisMonth', label: 'This month' },
+    { key: 'all', label: 'All time' },
+  ];
+
+  protected filters: TeamFilters = {
+    period: '30d',
+    role: 'all',
+    minParticipation: 0,
+    minPerformance: 0,
+  };
+
+  // =======================
+  // Data
+  // =======================
+  protected allTasks: TaskDto[] = [];
+  protected periodTasks: TaskDto[] = [];
+
+  protected periodTaskTotal: number = 0;
+  protected periodTaskCompleted: number = 0;
+
+  // =======================
+  // UI state
   // =======================
   protected kpiCards: TeamKpiCard[] = [];
 
   protected memberRows: TeamMemberRow[] = [];
+  protected filteredMemberRows: TeamMemberRow[] = [];
   protected memberColumns: TableColumn[] = [];
 
   // =======================
-  // ChartService outputs
-  // (bind directly in template)
+  // Charts
   // =======================
   protected roleChart: ChartBuild | null = null;
   protected taskChart: ChartBuild | null = null;
@@ -103,48 +181,65 @@ export class ViewComponent implements OnInit {
   protected healthGauge: ChartBuild | null = null;
   protected engagementGauge: ChartBuild | null = null;
 
-  // Counts used for legend and KPI logic
+  protected participationChart: ChartBuild | null = null;
+  protected memberPerfChart: ChartBuild | null = null;
+
+  // team vs teams
+  protected teamCompareChart: ChartBuild | null = null;
+  protected benchmark: TeamBenchmark | null = null;
+
+  // Role counts
   protected roleCounts: { lead: number; member: number; supervisor: number; observer: number; captain: number; } =
     { lead: 0, member: 0, supervisor: 0, observer: 0, captain: 0 };
 
+  // comparison snapshot cache
+  private teamSnapshots: TeamSnapshot[] = [];
+
   // ---------- UI helpers ----------
   protected get teamLogoSrc(): string {
-    const anyTeam: any = this.team as any;
-    const url = String( anyTeam?.teamLogo?.url ?? anyTeam?.teamLogoUrl ?? '' ).trim();
+    const anyTeam: unknown = this.team;
+    const t = anyTeam as { teamLogo?: { url?: string; }, teamLogoUrl?: string; } | null;
+    const url = String( t?.teamLogo?.url ?? t?.teamLogoUrl ?? '' ).trim();
     return url || this.DEFAULT_TEAM_LOGO;
   }
 
   protected get teamName(): string {
-    return String( ( this.team as any )?.teamName ?? 'Team' ).trim();
+    const t = this.team as unknown as { teamName?: string; } | null;
+    return String( t?.teamName ?? 'Team' ).trim();
   }
 
   protected get teamDomain(): string {
-    return String( ( this.team as any )?.domain ?? '' ).trim();
+    const t = this.team as unknown as { domain?: string; } | null;
+    return String( t?.domain ?? '' ).trim();
   }
 
   protected get teamCodeLabel(): string {
-    return String( ( this.team as any )?.teamCode ?? this.teamCode ?? '' ).trim();
+    const t = this.team as unknown as { teamCode?: string; } | null;
+    return String( t?.teamCode ?? this.teamCode ?? '' ).trim();
   }
 
   protected get captainName(): string {
-    const cap: any = ( this.team as any )?.captain ?? null;
+    const anyTeam = this.team as unknown as { captain?: any; } | null;
+    const cap = anyTeam?.captain ?? null;
     const name = String( cap?.user?.name ?? cap?.user?.username ?? cap?.username ?? 'Captain' ).trim();
     return name || 'Captain';
   }
 
   protected get captainRole(): string {
-    const cap: any = ( this.team as any )?.captain ?? null;
-    const role = String( cap?.roleInTeam ?? 'captain' ).trim().toLowerCase();
-    return role || 'captain';
+    const anyTeam = this.team as unknown as { captain?: any; } | null;
+    const cap = anyTeam?.captain ?? null;
+    return String( cap?.roleInTeam ?? 'captain' ).trim().toLowerCase() || 'captain';
   }
 
   protected get captainEmail(): string {
-    const cap: any = ( this.team as any )?.captain ?? null;
+    const anyTeam = this.team as unknown as { captain?: any; } | null;
+    const cap = anyTeam?.captain ?? null;
     return String( cap?.user?.email ?? '' ).trim();
   }
 
   protected get captainJoinedAt(): string | null {
-    const cap: any = ( this.team as any )?.captain ?? null;
+    const anyTeam = this.team as unknown as { captain?: any; } | null;
+    const cap = anyTeam?.captain ?? null;
     return this.tryIso( cap?.joinedAt );
   }
 
@@ -155,26 +250,22 @@ export class ViewComponent implements OnInit {
     private readonly chartService: ChartService,
     private readonly apiService: APIsService
   ) {
-    // Route param -> load
     this.activeRouter.params.subscribe( async ( params ): Promise<void> => {
       try {
-        const teamCode: string = params[ 'teamID' ];
+        const teamCode: string = String( params[ 'teamID' ] ?? '' ).trim();
         if ( !teamCode ) throw new Error( 'Team code is invalid' );
 
         await this.loadInit( teamCode );
       } catch ( error ) {
         console.error( '[Error:] [TeamView] Route param resolve failed.\n', error );
-
-        const message: string =
-          ( error instanceof Error ) ? error.message : 'Unexpected error occured!';
-
+        const message: string = ( error instanceof Error ) ? error.message : 'Unexpected error occured!';
         this.notificationBar.notification( 'error', message );
       }
     } );
   }
 
   public async ngOnInit(): Promise<void> {
-    // Intentionally empty – route params subscription triggers loadInit()
+    // route subscription triggers loadInit()
   }
 
   // =========================================================================
@@ -188,31 +279,27 @@ export class ViewComponent implements OnInit {
         throw new Error( 'Invalid team code!' );
       }
 
-      // 1) Load TEAM (real)
+      // 1) Load TEAM
       const res = await this.teamService.getTeamById( teamCode.trim() );
+      if ( !res?.success ) throw new Error( res?.message ?? 'Failed to fetch data!' );
 
-      if ( !res?.success ) {
-        throw new Error( res?.message ?? 'Failed to fetch data!' );
-      }
-
-      // 2) Extract TEAM safely (supports multiple BE envelopes)
       const team = this.extractTeamFromResponse( res );
-      if ( !team ) {
-        throw new Error( 'Team payload not found in response.' );
-      }
+      if ( !team ) throw new Error( 'Team payload not found in response.' );
 
       this.team = team;
       this.teamCode = String( ( team as any )?.teamCode ?? teamCode ).trim() || teamCode;
 
-      // 3) Build UI state
-      //    - tasks -> counts (real)
-      //    - members -> rows, columns
-      //    - KPI cards
-      //    - charts
-      await this.loadTaskAssignmentView();
+      // 2) Load tasks (all) for this team, then apply period slicing
+      await this.loadTeamTasks();
+
+      // 3) Load team snapshots (for benchmarking) - safe if API not ready
+      await this.loadTeamSnapshotsForBenchmark();
+
+      // 4) Build UI
       this.buildMemberColumns();
-      this.buildMemberRows();
-      this.buildKpis();
+      this.buildMemberRowsFromPeriod();   // participation + accuracy computed from periodTasks
+      this.applyFilters();                // builds filteredMemberRows
+      this.buildKpisFromPeriod();
       this.buildCharts();
 
     } catch ( error ) {
@@ -225,80 +312,294 @@ export class ViewComponent implements OnInit {
 
       this.notificationBar.notification( 'error', message );
 
-      // Reset view state on failure (avoid stale UI)
       this.team = null;
       this.memberRows = [];
+      this.filteredMemberRows = [];
       this.kpiCards = [];
       this.roleCounts = { lead: 0, member: 0, supervisor: 0, observer: 0, captain: 0 };
+
       this.roleChart = null;
       this.taskChart = null;
       this.tenureChart = null;
       this.healthGauge = null;
       this.engagementGauge = null;
-      this.completedTasksCount = 0;
-      this.totalTasksCount = 0;
+      this.participationChart = null;
+      this.memberPerfChart = null;
+
+      this.teamCompareChart = null;
+      this.benchmark = null;
+
+      this.allTasks = [];
+      this.periodTasks = [];
+      this.periodTaskTotal = 0;
+      this.periodTaskCompleted = 0;
 
     } finally {
       this.isLoading = false;
     }
   }
 
-  /**
-   * Supports multiple back-end envelopes without breaking the UI.
-   * You already used: res.data.system.team
-   * This also supports: res.data.team, res.data.system.team.team, res.data.data.team etc.
-   */
-  private extractTeamFromResponse( res: any ): TeamManagementDto | null {
-    const t1 = res?.data?.system?.team;
-    const t2 = res?.data?.team;
-    const t3 = res?.data?.system?.team?.team; // in case BE nests again
-    const t4 = res?.data?.data?.team;
+  private extractTeamFromResponse( res: unknown ): TeamManagementDto | null {
+    const r = res as any;
+    const t1 = r?.data?.system?.team;
+    const t2 = r?.data?.team;
+    const t3 = r?.data?.system?.team?.team;
+    const t4 = r?.data?.data?.team;
 
     const team = ( t1 ?? t2 ?? t3 ?? t4 ?? null ) as TeamManagementDto | null;
     return team && typeof team === 'object' ? team : null;
   }
 
   // =========================================================================
-  // LOAD ASSIGN TASKS VIEW (REAL)
+  // FILTERS (public because template calls it)
   // =========================================================================
-  private async loadTaskAssignmentView(): Promise<void> {
+  protected applyFilters(): void {
+    // 1) rebuild period tasks when period changes
+    this.sliceTasksByPeriod();
+
+    // 2) rebuild members from period (so participation/accuracy reflect selected time period)
+    this.buildMemberRowsFromPeriod();
+
+    // 3) apply member filters on top
+    const role = this.filters.role;
+    const minPart = this.clamp( this.filters.minParticipation, 0, 100 );
+    const minPerf = this.clamp( this.filters.minPerformance, 0, 100 );
+
+    this.filteredMemberRows = this.memberRows.filter( ( m ): boolean => {
+      const roleOk = role === 'all' ? true : m.roleInTeam === role;
+      const partOk = m.participationPct >= minPart;
+      const perfOk = m.perf.score >= minPerf;
+      return roleOk && partOk && perfOk;
+    } );
+
+    // 4) refresh KPIs + charts (because they are filter/period-aware)
+    this.buildKpisFromPeriod();
+    this.buildCharts();
+  }
+
+  protected resetFilters(): void {
+    this.filters = {
+      period: '30d',
+      role: 'all',
+      minParticipation: 0,
+      minPerformance: 0,
+    };
+
+    this.applyFilters();
+  }
+
+  // =========================================================================
+  // LOAD TASKS
+  // =========================================================================
+  private async loadTeamTasks(): Promise<void> {
     try {
-      if ( !this.teamCode ) {
-        throw new Error( 'Team code is missing, cannot load task assignment view.' );
-      }
+      if ( !this.teamCode ) throw new Error( 'Team code is missing, cannot load tasks.' );
 
       const res = await this.teamService.getAllTasksForTeam( this.teamCode );
-      if ( !res?.success ) {
-        throw new Error( res?.message ?? 'Failed to fetch task assignment data!' );
-      }
+      if ( !res?.success ) throw new Error( res?.message ?? 'Failed to fetch task assignment data!' );
 
-      // Expecting tasks somewhere in res.data
       const tasksRaw = this.apiService.extractArrayFromOther( res.data, 'tasks' );
 
-      // Flatten if API returns nested arrays
-      const tasks: any[] = Array.isArray( tasksRaw )
-        ? tasksRaw.flat().filter( Boolean )
+      const tasks: TaskDto[] = Array.isArray( tasksRaw )
+        ? ( tasksRaw.flat().filter( Boolean ) as TaskDto[] )
         : [];
 
-      this.totalTasksCount = tasks.length;
-      this.completedTasksCount = tasks.filter( ( t: any ) =>
-        String( t?.status ?? '' ).trim().toLowerCase() === 'completed'
-      ).length;
+      this.allTasks = tasks;
+
+      // initial slice uses current filter period
+      this.sliceTasksByPeriod();
 
     } catch ( error ) {
-      console.error( '[Error:] [TeamView] Failed to load task assignment view.\n', error );
+      console.error( '[Error:] [TeamView] Failed to load tasks.\n', error );
+      this.notificationBar.notification( 'error', ( error instanceof Error ) ? error.message : 'Failed to load tasks.' );
 
-      const message: string =
-        ( error instanceof HttpErrorResponse )
-          ? ( error.error?.message ?? 'Request failed!' )
-          : ( ( error instanceof Error ) ? error.message : 'Unexpected error occured!' );
-
-      this.notificationBar.notification( 'error', message );
-
-      // keep charts/kpis consistent
-      this.totalTasksCount = 0;
-      this.completedTasksCount = 0;
+      this.allTasks = [];
+      this.periodTasks = [];
+      this.periodTaskTotal = 0;
+      this.periodTaskCompleted = 0;
     }
+  }
+
+  private sliceTasksByPeriod(): void {
+    const range = this.getPeriodRange( this.filters.period );
+    if ( !range ) {
+      this.periodTasks = [ ...this.allTasks ];
+    } else {
+      this.periodTasks = this.allTasks.filter( ( t ): boolean => {
+        const iso = this.pickTaskTimeIso( t );
+        if ( !iso ) return false;
+
+        const ms = Date.parse( iso );
+        if ( Number.isNaN( ms ) ) return false;
+
+        return ms >= range.fromMs && ms <= range.toMs;
+      } );
+    }
+
+    this.periodTaskTotal = this.periodTasks.length;
+    this.periodTaskCompleted = this.periodTasks.filter( ( t ) =>
+      String( t.status ?? '' ).trim().toLowerCase() === 'completed'
+    ).length;
+  }
+
+  /**
+   * Task “time” for period filtering:
+   * - prefer completedAt
+   * - else updatedAt
+   * - else createdAt
+   */
+  private pickTaskTimeIso( t: TaskDto ): string | null {
+    const c1 = this.tryIso( t.completedAt );
+    if ( c1 ) return c1;
+
+    const c2 = this.tryIso( t.updatedAt );
+    if ( c2 ) return c2;
+
+    const c3 = this.tryIso( t.createdAt );
+    if ( c3 ) return c3;
+
+    return null;
+  }
+
+  private getPeriodRange( key: PeriodKey ): { fromMs: number; toMs: number; } | null {
+    const now = Date.now();
+
+    if ( key === 'all' ) return null;
+
+    if ( key === '7d' ) return { fromMs: now - ( 7 * 86400000 ), toMs: now };
+    if ( key === '30d' ) return { fromMs: now - ( 30 * 86400000 ), toMs: now };
+    if ( key === '90d' ) return { fromMs: now - ( 90 * 86400000 ), toMs: now };
+
+    // thisMonth
+    const d = new Date( now );
+    const from = new Date( d.getFullYear(), d.getMonth(), 1 ).getTime();
+    return { fromMs: from, toMs: now };
+  }
+
+  // =========================================================================
+  // TEAM SNAPSHOTS (BENCHMARK)
+  // =========================================================================
+  private async loadTeamSnapshotsForBenchmark(): Promise<void> {
+    try {
+      // You must implement this API in your service/backend:
+      // - returns small list: teamCode, teamName, memberTotal, updatedAt, optional healthScore
+      const res = await this.teamService.getTeamsSnapshotForBenchmark();
+
+      if ( !res?.success ) {
+        this.teamSnapshots = [];
+        this.benchmark = null;
+        this.teamCompareChart = null;
+        return;
+      }
+
+      const raw = this.apiService.extractArrayFromOther( res.data, 'teams' );
+      const teams: TeamSnapshot[] = Array.isArray( raw ) ? ( raw as TeamSnapshot[] ) : [];
+
+      this.teamSnapshots = teams.filter( ( x ) => Boolean( x?.teamCode ) );
+
+      this.buildBenchmarkAndCompareChart();
+
+    } catch ( error ) {
+      console.error( '[Warning:] [TeamView] Benchmark snapshot not available.\n', error );
+      this.teamSnapshots = [];
+      this.benchmark = null;
+      this.teamCompareChart = null;
+    }
+  }
+
+  private buildBenchmarkAndCompareChart(): void {
+    if ( !this.teamCode || !this.team ) {
+      this.benchmark = null;
+      this.teamCompareChart = null;
+      return;
+    }
+
+    if ( !Array.isArray( this.teamSnapshots ) || this.teamSnapshots.length === 0 ) {
+      this.benchmark = null;
+      this.teamCompareChart = null;
+      return;
+    }
+
+    // if backend already provides healthScore => use it
+    // else compute locally with same algorithm using available fields (memberTotal + updatedAt)
+    const scored = this.teamSnapshots.map( ( s ) => {
+      const score = Number.isFinite( s.healthScore as number )
+        ? Number( s.healthScore )
+        : this.computeTeamHealthScoreFromSnapshot( s );
+
+      return { snap: s, score: this.clamp( score, 0, 100 ) };
+    } );
+
+    scored.sort( ( a, b ) => b.score - a.score );
+
+    const total = scored.length;
+    const idx = scored.findIndex( ( x ) => x.snap.teamCode === this.teamCode );
+    if ( idx < 0 ) {
+      this.benchmark = null;
+      this.teamCompareChart = null;
+      return;
+    }
+
+    const rank = idx + 1;
+    const percentile = total <= 1 ? 100 : Math.round( ( ( total - rank ) / ( total - 1 ) ) * 100 );
+
+    this.benchmark = {
+      rank,
+      totalTeams: total,
+      percentile,
+    };
+
+    // compare chart: show top 7 + current team (if not top)
+    const top = scored.slice( 0, 7 );
+    const current = scored[ idx ];
+    const list = top.some( ( x ) => x.snap.teamCode === current.snap.teamCode )
+      ? top
+      : [ ...top, current ];
+
+    const categories = list.map( ( x ) => String( x.snap.teamName ?? x.snap.teamCode ).trim() );
+    const values = list.map( ( x ) => Math.round( x.score ) );
+
+    const series: SeriesEntry[] = [
+      { name: 'Health', values, type: 'bars' }
+    ];
+
+    this.teamCompareChart = this.chartService.buildColumn(
+      'Team Health vs Teams',
+      categories,
+      series,
+      {
+        height: 260,
+        legend: { position: 'none' },
+        vAxis: { title: 'Health (0-100)', minValue: 0, maxValue: 100 },
+        hAxis: { title: 'Teams' },
+      }
+    );
+  }
+
+  /**
+   * Local fallback scoring when backend does NOT provide healthScore.
+   * Uses same mental model you already used:
+   * - engagement from updatedAt recency
+   * - capacity from memberTotal
+   */
+  private computeTeamHealthScoreFromSnapshot( s: TeamSnapshot ): number {
+    const memberTotal = Number( s.memberTotal ?? 0 );
+    const updatedIso = this.tryIso( s.updatedAt );
+    const updatedDaysAgo = updatedIso ? this.daysFrom( updatedIso ) : null;
+
+    const engagementScore = updatedDaysAgo === null ? 50 : this.clamp( 100 - ( updatedDaysAgo * 4.2 ), 0, 100 );
+    const capacityScore = this.capacityScore( memberTotal, 5, 12 );
+
+    // if we don't know leadership/stability for other teams, don't fake it heavily:
+    const stabilityScore = this.clamp( 55 + ( memberTotal * 2 ), 0, 100 );
+
+    return this.clamp(
+      stabilityScore * 0.45 +
+      engagementScore * 0.35 +
+      capacityScore * 0.20,
+      0,
+      100
+    );
   }
 
   // =========================================================================
@@ -311,30 +612,29 @@ export class ViewComponent implements OnInit {
       { key: 'roleInTeam', label: 'Role', type: 'badge', width: '140px', align: 'center' },
       { key: 'joinedAt', label: 'Joined', type: 'date', width: '160px' },
       { key: 'teamsCount', label: 'Teams', type: 'text', width: '110px', align: 'center' },
+
+      // new KPI columns
+      { key: 'participationPct', label: 'Participation', type: 'text', width: '130px', align: 'center' },
+      { key: 'accuracyPct', label: 'Accuracy', type: 'text', width: '110px', align: 'center' },
+
       { key: 'perf', label: 'Performance', type: 'kpiSpark', width: '260px' },
     ];
   }
 
   // =========================================================================
-  // TABLE DATA (REAL TEAM MEMBERS)
+  // MEMBERS FROM PERIOD TASKS (participation + accuracy)
   // =========================================================================
-  private buildMemberRows(): void {
+  private buildMemberRowsFromPeriod(): void {
     if ( !this.team ) {
-      throw new Error( 'Team data is not loaded.' );
-    }
-
-    const team: TeamManagementDto = this.team;
-
-    if ( !team ) {
       this.memberRows = [];
+      this.filteredMemberRows = [];
       this.roleCounts = { lead: 0, member: 0, supervisor: 0, observer: 0, captain: 0 };
       return;
     }
 
-    // Members array can be missing/null depending on backend
-    const members: any[] = Array.isArray( team?.members ) ? team.members : [];
+    const team = this.team as any;
+    const members: TeamMemberDto[] = Array.isArray( team?.members ) ? team.members : [];
 
-    // role donut includes captain + members
     const allPeople: any[] = [
       ...( team?.captain ? [ team.captain ] : [] ),
       ...members
@@ -342,27 +642,83 @@ export class ViewComponent implements OnInit {
 
     this.roleCounts = this.computeRoleCounts( allPeople );
 
-    // table shows members only
-    this.memberRows = members.map( ( m ) => this.mapMemberToRow( m ) );
+    // map tasks -> per member counts
+    const memberTaskMap = this.buildMemberTaskStatsFromPeriod( this.periodTasks );
+
+    this.memberRows = members.map( ( m ) => this.mapMemberToRow( m, memberTaskMap ) );
+    this.filteredMemberRows = [ ...this.memberRows ];
   }
 
-  private mapMemberToRow( m: TeamMemberDto ): TeamMemberRow {
-    const avatar: string = String( m.user?.image ?? '' ).trim();
+  private buildMemberTaskStatsFromPeriod( tasks: TaskDto[] ): Map<string, { assigned: number; completed: number; onTimeCompleted: number; }> {
+    const map = new Map<string, { assigned: number; completed: number; onTimeCompleted: number; }>();
+
+    for ( const t of tasks ) {
+      const key = this.pickAssigneeKey( t );
+      if ( !key ) continue;
+
+      const prev = map.get( key ) ?? { assigned: 0, completed: 0, onTimeCompleted: 0 };
+      prev.assigned += 1;
+
+      const status = String( t.status ?? '' ).trim().toLowerCase();
+      if ( status === 'completed' ) {
+        prev.completed += 1;
+
+        // "accuracy": on-time completion when we have dueAt + completedAt
+        const dueIso = this.tryIso( t.dueAt );
+        const doneIso = this.tryIso( t.completedAt );
+        if ( dueIso && doneIso ) {
+          const dueMs = Date.parse( dueIso );
+          const doneMs = Date.parse( doneIso );
+          if ( !Number.isNaN( dueMs ) && !Number.isNaN( doneMs ) && doneMs <= dueMs ) {
+            prev.onTimeCompleted += 1;
+          }
+        }
+      }
+
+      map.set( key, prev );
+    }
+
+    return map;
+  }
+
+  private pickAssigneeKey( t: TaskDto ): string | null {
+    const id = String( t.assignedToId ?? t.assignedTo?.id ?? '' ).trim();
+    if ( id ) return `id:${ id }`;
+
+    const u = String( t.assignedToUsername ?? t.assignedTo?.username ?? '' ).trim();
+    if ( u ) return `u:${ u.toLowerCase() }`;
+
+    return null;
+  }
+
+  private mapMemberToRow(
+    m: TeamMemberDto,
+    taskStats: Map<string, { assigned: number; completed: number; onTimeCompleted: number; }>
+  ): TeamMemberRow {
     const safeName: string = String( m?.user?.name ?? '' ).trim();
     const safeUsername: string = String( m?.user?.username ?? m?.username ?? '' ).trim();
     const safeEmail: string = String( m?.user?.email ?? '' ).trim();
 
     const role: string = String( m?.roleInTeam ?? 'member' ).trim().toLowerCase();
-
     const joinedAt: string | null = this.tryIso( m?.joinedAt );
     const tenureDays: number | null = joinedAt ? this.daysFrom( joinedAt ) : null;
 
     const teamsCount: number = Array.isArray( m?.teams ) ? m.teams.length : 0;
 
-    const perf = this.computeMemberPerfProxy( role, tenureDays, teamsCount );
+    // participation based on period tasks
+    const keyId = String( m?.id ?? '' ).trim();
+    const lookupA = keyId ? taskStats.get( `id:${ keyId }` ) : undefined;
+    const lookupB = safeUsername ? taskStats.get( `u:${ safeUsername.toLowerCase() }` ) : undefined;
+    const stats = lookupA ?? lookupB ?? { assigned: 0, completed: 0, onTimeCompleted: 0 };
+
+    const participationPct = this.computeParticipationPct( stats.assigned, this.periodTaskTotal );
+    const accuracyPct = this.computeAccuracyPct( stats.completed, stats.onTimeCompleted );
+
+    // performance: combine role/tenure + participation + accuracy
+    const perf = this.computeMemberPerformance( role, tenureDays, teamsCount, participationPct, accuracyPct );
 
     return {
-      avatarText: avatar,
+      avatarText: String( m?.user?.image ?? '' ).trim(),
       name: safeName,
       username: safeUsername,
       email: safeEmail,
@@ -370,16 +726,92 @@ export class ViewComponent implements OnInit {
       joinedAt,
       tenureDays,
       teamsCount,
+      participationPct,
+      accuracyPct,
       perf,
     };
   }
 
-  // =========================================================================
-  // KPI CARDS (REAL + DERIVED)
-  // =========================================================================
-  private buildKpis(): void {
-    const team: any = this.team as any;
+  private computeParticipationPct( assigned: number, totalTasksInPeriod: number ): number {
+    if ( !Number.isFinite( assigned ) || !Number.isFinite( totalTasksInPeriod ) || totalTasksInPeriod <= 0 ) return 0;
+    return this.clamp( ( assigned / totalTasksInPeriod ) * 100, 0, 100 );
+  }
 
+  /**
+   * Accuracy definition:
+   * - If dueAt+completedAt exist => onTimeCompleted / completed
+   * - If not available => fallback to "completed rate" (completed/assigned) is handled via perf, not accuracy
+   */
+  private computeAccuracyPct( completed: number, onTimeCompleted: number ): number {
+    if ( !Number.isFinite( completed ) || completed <= 0 ) return 0;
+    if ( !Number.isFinite( onTimeCompleted ) ) return 0;
+    return this.clamp( ( onTimeCompleted / completed ) * 100, 0, 100 );
+  }
+
+  private computeMemberPerformance(
+    role: string,
+    tenureDays: number | null,
+    teamsCount: number,
+    participationPct: number,
+    accuracyPct: number
+  ): KpiSparkCell {
+    const roleBoost =
+      role === 'lead' ? 10 :
+        role === 'supervisor' ? 8 :
+          role === 'captain' ? 12 :
+            role === 'observer' ? -6 : 0;
+
+    const tenureScore = tenureDays === null ? 45 : this.clamp( ( tenureDays / 180 ) * 100, 0, 100 );
+    const loadPenalty = this.clamp( teamsCount * 12, 0, 40 );
+
+    // participation drives real contribution in selected period
+    const participationScore = this.clamp( participationPct, 0, 100 );
+
+    // accuracy is meaningful only when dueAt/completedAt exist; otherwise stays 0 (neutralized by weighting)
+    const hasAccuracySignal = accuracyPct > 0;
+    const accWeight = hasAccuracySignal ? 0.20 : 0.00;
+
+    const base = this.clamp(
+      ( tenureScore * 0.35 ) +
+      ( participationScore * 0.35 ) +
+      ( ( 60 - loadPenalty ) * 0.30 ) +
+      ( accuracyPct * accWeight ) +
+      roleBoost,
+      0,
+      100
+    );
+
+    const series = this.buildDeterministicSparkSeries( base, tenureDays ?? 0, teamsCount );
+    const delta = series.length >= 2 ? ( series[ series.length - 1 ] - series[ 0 ] ) : 0;
+
+    return {
+      score: Math.round( base ),
+      delta: Math.round( delta ),
+      series,
+      tone: this.scoreTone( base ),
+    };
+  }
+
+  private buildDeterministicSparkSeries( base: number, tenureDays: number, teamsCount: number ): number[] {
+    const pts: number[] = [];
+    const seed = ( tenureDays % 31 ) + ( teamsCount * 7 );
+
+    for ( let i = 0; i < 10; i++ ) {
+      const wave = Math.sin( ( i + seed ) / 2.0 ) * 5;
+      const drift = ( i - 5 ) * 0.6;
+      const load = -teamsCount * 0.8;
+      const val = this.clamp( base + wave + drift + load, 0, 100 );
+      pts.push( Math.round( val ) );
+    }
+
+    return pts;
+  }
+
+  // =========================================================================
+  // KPI CARDS (PERIOD-AWARE)
+  // =========================================================================
+  private buildKpisFromPeriod(): void {
+    const team: any = this.team as any;
     if ( !team ) {
       this.kpiCards = [];
       return;
@@ -387,101 +819,101 @@ export class ViewComponent implements OnInit {
 
     const memberTotal: number = Number( team?.memberTotal ?? this.memberRows.length ?? 0 );
 
-    // Updated recency -> engagement proxy
     const updatedAtIso: string | null = this.tryIso( team?.updatedAt );
     const updatedDaysAgo: number | null = updatedAtIso ? this.daysFrom( updatedAtIso ) : null;
 
-    // Avg tenure & avg teams
-    const avgTenureDays: number =
-      this.avg( this.memberRows.map( x => x.tenureDays ).filter( ( x ): x is number => typeof x === 'number' ) );
+    // avg participation & accuracy (from members)
+    const avgParticipation = this.avg( this.memberRows.map( ( x ) => x.participationPct ) );
+    const avgAccuracy = this.avg( this.memberRows.map( ( x ) => x.accuracyPct ) );
 
-    const avgTeams: number = this.avg( this.memberRows.map( x => x.teamsCount ) );
-
-    // Leadership coverage = (lead + supervisor + captain) / total
+    // leadership coverage
     const leadershipCount: number = ( this.roleCounts.lead + this.roleCounts.supervisor + this.roleCounts.captain );
     const leadershipCoverage: number = memberTotal > 0 ? ( leadershipCount / memberTotal ) * 100 : 0;
 
-    // Stability (tenure helps, many parallel teams hurts)
+    // stability proxy (tenure + multi-team load)
+    const avgTenureDays: number =
+      this.avg( this.memberRows.map( ( x ) => x.tenureDays ).filter( ( x ): x is number => typeof x === 'number' ) );
+
+    const avgTeams: number = this.avg( this.memberRows.map( ( x ) => x.teamsCount ) );
+
     const stabilityScore: number = this.clamp(
       ( avgTenureDays / 180 ) * 60 + ( 100 - this.clamp( avgTeams * 18, 0, 100 ) ) * 0.40,
       0,
       100
     );
 
-    // Engagement (more recently updated => higher)
     const engagementScore: number = updatedDaysAgo === null
       ? 50
       : this.clamp( 100 - ( updatedDaysAgo * 4.2 ), 0, 100 );
 
-    // Capacity: tune thresholds for your org
     const capacityScore: number = this.capacityScore( memberTotal, 5, 12 );
-
-    // Leadership: aim 10–30% of people in leadership
     const leadershipScore: number = this.bandScore( leadershipCoverage, 10, 30 );
 
-    // Composite
     const healthScore: number = this.clamp(
-      stabilityScore * 0.35 +
-      engagementScore * 0.25 +
-      leadershipScore * 0.20 +
-      capacityScore * 0.20,
+      stabilityScore * 0.30 +
+      engagementScore * 0.20 +
+      leadershipScore * 0.15 +
+      capacityScore * 0.15 +
+      avgParticipation * 0.20,
       0,
       100
     );
 
-    // Task completion (real from BE)
     const completionRate: number =
-      this.totalTasksCount > 0 ? ( this.completedTasksCount / this.totalTasksCount ) * 100 : 0;
+      this.periodTaskTotal > 0 ? ( this.periodTaskCompleted / this.periodTaskTotal ) * 100 : 0;
 
     this.kpiCards = [
       {
         key: 'health',
         title: 'Team Health',
         value: `${ Math.round( healthScore ) }/100`,
-        hint: 'Composite (stability + engagement + leadership + capacity)',
+        hint: 'Composite (stability + engagement + leadership + capacity + participation)',
         tone: this.scoreTone( healthScore ),
       },
       {
-        key: 'tasks',
+        key: 'taskCompletion',
         title: 'Task Completion',
-        value: this.totalTasksCount > 0 ? `${ completionRate.toFixed( 0 ) }%` : '-',
-        hint: `${ this.completedTasksCount }/${ this.totalTasksCount } completed`,
+        value: this.periodTaskTotal > 0 ? `${ completionRate.toFixed( 0 ) }%` : '-',
+        hint: `${ this.periodTaskCompleted }/${ this.periodTaskTotal } completed (${ this.filters.period })`,
         tone: this.scoreTone( completionRate ),
       },
       {
-        key: 'stability',
-        title: 'Stability',
-        value: `${ Math.round( stabilityScore ) }/100`,
-        hint: `Avg tenure ${ Math.round( avgTenureDays ) }d • Avg teams ${ avgTeams.toFixed( 1 ) }`,
-        tone: this.scoreTone( stabilityScore ),
+        key: 'participation',
+        title: 'Participation',
+        value: `${ Math.round( avgParticipation ) }%`,
+        hint: 'Avg member participation (tasks assigned / team tasks in period)',
+        tone: this.scoreTone( avgParticipation ),
       },
       {
-        key: 'engagement',
-        title: 'Engagement',
-        value: `${ Math.round( engagementScore ) }/100`,
-        hint: updatedDaysAgo === null ? 'No updatedAt available' : `Updated ${ updatedDaysAgo } days ago`,
-        tone: this.scoreTone( engagementScore ),
+        key: 'accuracy',
+        title: 'Accuracy',
+        value: avgAccuracy > 0 ? `${ Math.round( avgAccuracy ) }%` : '-',
+        hint: avgAccuracy > 0 ? 'Avg on-time completion (requires dueAt + completedAt)' : 'No due/completion timing available',
+        tone: avgAccuracy > 0 ? this.scoreTone( avgAccuracy ) : 'muted',
       },
     ];
+
+    // benchmark depends on health card; refresh snapshot compare too
+    this.buildBenchmarkAndCompareChart();
   }
 
   // =========================================================================
-  // CHARTS (ChartService)
+  // CHARTS
   // =========================================================================
   private buildCharts(): void {
-    const team: any = this.team as any;
-
-    if ( !team ) {
+    if ( !this.team ) {
       this.roleChart = null;
       this.taskChart = null;
       this.tenureChart = null;
       this.healthGauge = null;
       this.engagementGauge = null;
+      this.participationChart = null;
+      this.memberPerfChart = null;
       return;
     }
 
     // -----------------------------
-    // 1) Role distribution donut
+    // Role donut
     // -----------------------------
     const roleEntries: PieEntry[] = [
       { label: 'Captain', value: this.roleCounts.captain },
@@ -489,36 +921,46 @@ export class ViewComponent implements OnInit {
       { label: 'Supervisor', value: this.roleCounts.supervisor },
       { label: 'Member', value: this.roleCounts.member },
       { label: 'Observer', value: this.roleCounts.observer },
-    ].filter( e => e.value > 0 );
+    ].filter( ( e ) => e.value > 0 );
 
     this.roleChart = this.chartService.buildDonut(
       'Role Distribution',
       roleEntries,
       0.45,
-      {
-        height: 260,
-        legend: { position: 'right' },
-      }
+      { height: 260, legend: { position: 'right' } }
     );
 
     // -----------------------------
-    // 2) Tenure buckets (column)
+    // Task completion donut (period)
+    // -----------------------------
+    const completed = this.periodTaskCompleted;
+    const pending = Math.max( 0, this.periodTaskTotal - completed );
+
+    const taskEntries: PieEntry[] = [
+      { label: 'Completed', value: completed },
+      { label: 'Pending', value: pending },
+    ].filter( ( e ) => e.value > 0 );
+
+    this.taskChart = this.chartService.buildDonut(
+      'Task Completion',
+      taskEntries,
+      0.50,
+      { height: 260, legend: { position: 'right' } }
+    );
+
+    // -----------------------------
+    // Tenure buckets (all members)
     // -----------------------------
     const buckets = this.buildTenureBuckets( this.memberRows );
     const categories: string[] = Object.keys( buckets );
-
-    const series: SeriesEntry[] = [
-      {
-        name: 'Members',
-        values: categories.map( k => buckets[ k ] ?? 0 ),
-        type: 'bars',
-      }
+    const seriesTenure: SeriesEntry[] = [
+      { name: 'Members', values: categories.map( ( k ) => buckets[ k ] ?? 0 ), type: 'bars' }
     ];
 
     this.tenureChart = this.chartService.buildColumn(
       'Tenure Buckets',
       categories,
-      series,
+      seriesTenure,
       {
         height: 260,
         legend: { position: 'none' },
@@ -528,13 +970,12 @@ export class ViewComponent implements OnInit {
     );
 
     // -----------------------------
-    // 3) Gauges (health + engagement)
+    // Gauges (Health + Engagement)
     // -----------------------------
-    const healthCard = this.kpiCards.find( x => x.key === 'health' );
-    const engagementCard = this.kpiCards.find( x => x.key === 'engagement' );
+    const healthCard = this.kpiCards.find( ( x ) => x.key === 'health' );
+    const engagementValue = this.computeEngagementFromUpdatedAt();
 
     const healthValue = this.extractScoreFromCard( healthCard?.value );
-    const engagementValue = this.extractScoreFromCard( engagementCard?.value );
 
     this.healthGauge = this.chartService.buildGauge(
       'Team Health',
@@ -563,29 +1004,80 @@ export class ViewComponent implements OnInit {
     );
 
     // -----------------------------
-    // 4) Task assignment donut (real counts)
+    // Member Participation chart (TOP 8)
+    // (use FILTERED rows)
     // -----------------------------
-    const completed = this.completedTasksCount;
-    const pending = Math.max( 0, this.totalTasksCount - completed );
+    const partTop = [ ...this.filteredMemberRows ]
+      .sort( ( a, b ) => b.participationPct - a.participationPct )
+      .slice( 0, 8 );
 
-    const taskEntries: PieEntry[] = [
-      { label: 'Completed', value: completed },
-      { label: 'Pending', value: pending },
-    ].filter( e => e.value > 0 );
+    if ( partTop.length > 0 ) {
+      const cats = partTop.map( ( m ) => this.memberLabel( m ) );
+      const values = partTop.map( ( m ) => Math.round( m.participationPct ) );
 
-    this.taskChart = this.chartService.buildDonut(
-      'Task Assignment',
-      taskEntries,
-      0.50,
-      {
-        height: 260,
-        legend: { position: 'right' },
-      }
-    );
+      const s: SeriesEntry[] = [ { name: 'Participation', values, type: 'bars' } ];
+
+      this.participationChart = this.chartService.buildColumn(
+        'Member Participation',
+        cats,
+        s,
+        {
+          height: 260,
+          legend: { position: 'none' },
+          vAxis: { title: '%', minValue: 0, maxValue: 100 },
+          hAxis: { title: 'Members' },
+        }
+      );
+    } else {
+      this.participationChart = null;
+    }
+
+    // -----------------------------
+    // Member Performance chart (TOP 8)
+    // -----------------------------
+    const perfTop = [ ...this.filteredMemberRows ]
+      .sort( ( a, b ) => b.perf.score - a.perf.score )
+      .slice( 0, 8 );
+
+    if ( perfTop.length > 0 ) {
+      const cats = perfTop.map( ( m ) => this.memberLabel( m ) );
+      const values = perfTop.map( ( m ) => Math.round( m.perf.score ) );
+
+      const s: SeriesEntry[] = [ { name: 'Performance', values, type: 'bars' } ];
+
+      this.memberPerfChart = this.chartService.buildColumn(
+        'Member Performance',
+        cats,
+        s,
+        {
+          height: 260,
+          legend: { position: 'none' },
+          vAxis: { title: 'Score (0-100)', minValue: 0, maxValue: 100 },
+          hAxis: { title: 'Members' },
+        }
+      );
+    } else {
+      this.memberPerfChart = null;
+    }
+  }
+
+  private memberLabel( m: TeamMemberRow ): string {
+    const name = String( m.name ?? '' ).trim();
+    const u = String( m.username ?? '' ).trim();
+    if ( name ) return name;
+    if ( u ) return u;
+    return 'Member';
+  }
+
+  private computeEngagementFromUpdatedAt(): number {
+    const t = this.team as any;
+    const updatedAtIso: string | null = this.tryIso( t?.updatedAt );
+    const updatedDaysAgo: number | null = updatedAtIso ? this.daysFrom( updatedAtIso ) : null;
+    return updatedDaysAgo === null ? 50 : this.clamp( 100 - ( updatedDaysAgo * 4.2 ), 0, 100 );
   }
 
   // =========================================================================
-  // ROLE COUNTS (REAL)
+  // ROLE COUNTS
   // =========================================================================
   private computeRoleCounts( allPeople: any[] ): { lead: number; member: number; supervisor: number; observer: number; captain: number; } {
     const out = { lead: 0, member: 0, supervisor: 0, observer: 0, captain: 0 };
@@ -593,9 +1085,6 @@ export class ViewComponent implements OnInit {
     for ( const p of allPeople ) {
       const r = String( p?.roleInTeam ?? '' ).trim().toLowerCase();
 
-      // IMPORTANT:
-      // - captain must increment captain (not lead)
-      // - everything else mapped normally
       if ( r === 'captain' ) out.captain += 1;
       else if ( r === 'lead' ) out.lead += 1;
       else if ( r === 'supervisor' ) out.supervisor += 1;
@@ -604,49 +1093,6 @@ export class ViewComponent implements OnInit {
     }
 
     return out;
-  }
-
-  // =========================================================================
-  // MEMBER PERFORMANCE PROXY (DETERMINISTIC, uses REAL fields)
-  // =========================================================================
-  private computeMemberPerfProxy( role: string, tenureDays: number | null, teamsCount: number ): KpiSparkCell {
-    const roleBoost =
-      role === 'lead' ? 10 :
-        role === 'supervisor' ? 8 :
-          role === 'captain' ? 12 :
-            role === 'observer' ? -6 : 0;
-
-    const tenureScore = tenureDays === null ? 45 : this.clamp( ( tenureDays / 180 ) * 100, 0, 100 );
-
-    const loadPenalty = this.clamp( teamsCount * 12, 0, 40 );
-
-    const base = this.clamp( ( tenureScore * 0.65 ) + ( 60 - loadPenalty ) * 0.35 + roleBoost, 0, 100 );
-
-    const series = this.buildDeterministicSparkSeries( base, tenureDays ?? 0, teamsCount );
-
-    const delta = series.length >= 2 ? ( series[ series.length - 1 ] - series[ 0 ] ) : 0;
-
-    return {
-      score: Math.round( base ),
-      delta: Math.round( delta ),
-      series,
-      tone: this.scoreTone( base ),
-    };
-  }
-
-  private buildDeterministicSparkSeries( base: number, tenureDays: number, teamsCount: number ): number[] {
-    const pts: number[] = [];
-    const seed = ( tenureDays % 31 ) + ( teamsCount * 7 );
-
-    for ( let i = 0; i < 10; i++ ) {
-      const wave = Math.sin( ( i + seed ) / 2.0 ) * 5;
-      const drift = ( i - 5 ) * 0.6;
-      const load = -teamsCount * 0.8;
-      const val = this.clamp( base + wave + drift + load, 0, 100 );
-      pts.push( Math.round( val ) );
-    }
-
-    return pts;
   }
 
   // =========================================================================
@@ -698,14 +1144,7 @@ export class ViewComponent implements OnInit {
     const ms = Date.parse( iso );
     const now = Date.now();
     const diff = now - ms;
-    return Math.max( 0, Math.floor( diff / ( 1000 * 60 * 60 * 24 ) ) );
-  }
-
-  private initials( name: string ): string {
-    const parts = name.split( ' ' ).map( x => x.trim() ).filter( Boolean );
-    const a = parts[ 0 ]?.[ 0 ] ?? 'U';
-    const b = parts.length > 1 ? ( parts[ parts.length - 1 ]?.[ 0 ] ?? '' ) : '';
-    return ( a + b ).toUpperCase();
+    return Math.max( 0, Math.floor( diff / 86400000 ) );
   }
 
   private avg( nums: number[] ): number {

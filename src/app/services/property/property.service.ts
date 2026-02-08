@@ -15,7 +15,7 @@ import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 
 import { environment } from '../../../environments/environment';
 import { MSG } from '../../types/api-message.types';
-import type { PhoneNumber } from '../APIs/apis.service';
+import { PhoneNumberDto } from '../auth/user.contract';
 
 
 export interface Property {
@@ -275,7 +275,7 @@ export interface AddedBy {
   name: string;
   email: string;
   role: 'admin' | 'agent' | 'owner' | string;
-  contactNumber?: PhoneNumber;
+  contactNumber?: PhoneNumberDto;
   addedAt: Date | string | null;
 }
 

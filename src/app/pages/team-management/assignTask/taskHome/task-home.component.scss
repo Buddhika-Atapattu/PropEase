@@ -1,0 +1,290 @@
+/* =============================================================================
+   Path: src/app/pages/team-management/assignTask/assign-task.component.scss
+   Purpose:
+   - UI styling for Assign Task screen
+   - MUST NOT interfere with Google Charts rendering
+   - MUST NOT clip HTML tooltips
+   - MUST remain theme-token driven
+   ============================================================================= */
+
+.pe-assign-task {
+  padding: 16px;
+
+  /* ===========================================================================
+     CARD SHELLS
+     NOTE:
+     - Cards MUST NOT use overflow:hidden
+     - Google Charts HTML tooltips are rendered outside SVG
+     =========================================================================== */
+  .pe-card {
+    position: relative;
+    overflow: visible;
+
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+  }
+
+  /* ===========================================================================
+     HEADERS
+     =========================================================================== */
+  .pe-header {
+    .pe-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--on-surface);
+      letter-spacing: 0.2px;
+    }
+
+    .pe-sub {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+
+      .dot {
+        opacity: 0.65;
+      }
+    }
+  }
+
+  /* ===========================================================================
+     AVATARS
+     =========================================================================== */
+  .team-avatar-wrapper {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+  }
+
+  .team-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+    background: var(--surface-variant);
+  }
+
+  .placeholder-avatar {
+    display: grid;
+    place-items: center;
+    color: var(--on-surface);
+    opacity: 0.8;
+
+    i {
+      font-size: 18px;
+    }
+  }
+
+  /* ===========================================================================
+     BADGES / COUNTERS
+     =========================================================================== */
+  .pe-badge {
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .pe-badge-info {
+    background: rgba(33, 150, 243, 0.12);
+    color: var(--on-surface);
+  }
+
+  .pe-badge-neutral {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--on-surface);
+  }
+
+  /* ===========================================================================
+     SECTIONS
+     =========================================================================== */
+  .pe-section-head {
+    margin-bottom: 8px;
+  }
+
+  .pe-section-title {
+    font-weight: 700;
+    color: var(--on-surface);
+  }
+
+  .pe-section-sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .pe-empty {
+    padding: 14px 10px;
+    border-radius: 12px;
+    border: 1px dashed var(--border-color);
+    color: var(--muted);
+    background: var(--surface-variant);
+  }
+
+  /* ===========================================================================
+     BLOCK HEADERS
+     =========================================================================== */
+  .pe-block-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .pe-block-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--on-surface);
+  }
+
+  .pe-block-sub {
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  /* ===========================================================================
+     PILLS / MINI COUNTERS
+     =========================================================================== */
+  .pe-mini-pill,
+  .pe-counter {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-variant);
+    color: var(--on-surface);
+    font-weight: 700;
+    font-size: 12px;
+  }
+
+  /* ===========================================================================
+     SELECTED MEMBERS (CHIPS)
+     =========================================================================== */
+  .pe-selected-wrap {
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-variant);
+  }
+
+  .pe-selected-title {
+    font-weight: 800;
+    color: var(--on-surface);
+    margin-bottom: 10px;
+  }
+
+  .pe-selected-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pe-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: var(--surface);
+    color: var(--on-surface);
+    font-weight: 700;
+    font-size: 12.5px;
+    line-height: 1;
+  }
+
+  .pe-chip-captain {
+    border-color: rgba(255, 193, 7, 0.55);
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.10);
+  }
+
+  .pe-chip-name {
+    max-width: 240px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pe-chip-x {
+    border: none;
+    outline: none;
+    cursor: pointer;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: rgba(244, 67, 54, 0.15);
+    color: var(--on-surface);
+    font-weight: 900;
+  }
+
+  .pe-chip-x:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .pe-empty-inline {
+    color: var(--muted);
+    font-size: 12.5px;
+    padding: 6px 2px;
+  }
+
+  /* ===========================================================================
+     FORM LABELS / ERRORS
+     =========================================================================== */
+  .pe-label {
+    color: var(--on-surface);
+    font-weight: 700;
+  }
+
+  .pe-error {
+    color: var(--danger);
+    font-weight: 700;
+    font-size: 12.5px;
+  }
+
+  /* ===========================================================================
+     GOOGLE CHART SAFE ZONE
+     IMPORTANT:
+     - Prevent tooltip clipping
+     - Do NOT override SVG styles
+     =========================================================================== */
+  .pe-chart-shell {
+    position: relative;
+    overflow: visible;
+
+    /* visual container only */
+    border-radius: 14px;
+    background: var(--surface);
+    padding: 8px;
+  }
+
+  .pe-chart-shell google-chart,
+  .pe-chart-shell .google-visualization-chart,
+  .pe-chart-shell .google-visualization-chart > div {
+    overflow: visible !important;
+  }
+
+  /* ===========================================================================
+     MATERIAL FORM FIELD THEME POLISH (SAFE)
+     =========================================================================== */
+  :host ::ng-deep .mat-mdc-form-field {
+    --mdc-outlined-text-field-outline-color: var(--border-color);
+    --mdc-filled-text-field-container-color: var(--surface-variant);
+    --mdc-filled-text-field-label-text-color: var(--muted);
+    --mdc-outlined-text-field-label-text-color: var(--muted);
+    --mdc-filled-text-field-input-text-color: var(--on-surface);
+    --mdc-outlined-text-field-input-text-color: var(--on-surface);
+  }
+
+  :host ::ng-deep .mat-mdc-select-value,
+  :host ::ng-deep .mat-mdc-select-arrow {
+    color: var(--on-surface);
+  }
+}

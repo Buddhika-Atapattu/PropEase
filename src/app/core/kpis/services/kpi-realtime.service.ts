@@ -6,7 +6,7 @@ import { environment } from '../../../../environments/environment';
 
 import type { RealtimeEventEnvelope } from '../types/kpi-realtime.types';
 import type { KpiInvalidateEvent } from '../types/kpi-events';
-import { KpiAuthBridgeService } from './kpi-auth-bridge';
+import { KpiAuthBridgeService } from './kpi-auth-bridge.service';
 
 type ConnectionState = 'disconnected' | 'connecting' | 'connected';
 

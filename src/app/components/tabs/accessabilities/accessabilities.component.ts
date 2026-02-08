@@ -16,11 +16,16 @@ import { APIsService, User } from '../../../services/APIs/apis.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { SkeletonLoaderComponent } from '../../shared/skeleton-loader/skeleton-loader.component';
+import { MatTooltipModule } from '@angular/material/tooltip';
+
+// add these imports from your access map source
+import type { AccessActionKey, AccessModuleKey } from '../../../source/access-map.source';
+import { ACCESS_OPTIONS } from '../../../source/access-map.source';
 
 @Component( {
   selector: 'app-accessabilities',
   standalone: true,
-  imports: [ CommonModule, MatIconModule, SkeletonLoaderComponent ],
+  imports: [ CommonModule, MatIconModule, MatTooltipModule, SkeletonLoaderComponent ],
   templateUrl: './accessabilities.component.html',
   styleUrl: './accessabilities.component.scss',
 } )
@@ -61,6 +66,22 @@ export class AccessabilitiesComponent implements OnInit, OnDestroy {
   protected isLoading = true;
   protected accessabilities: User[ 'access' ] | null = null;
 
+  // ─────────────────────────────────────────────
+  // Access Map Lookups (UI meta by key)
+  // ─────────────────────────────────────────────
+
+  protected readonly moduleMetaByKey: Record<string, ( typeof ACCESS_OPTIONS )[ number ]> =
+    Object.fromEntries( ACCESS_OPTIONS.map( m => [ m.module, m ] ) );
+
+  protected getModuleMeta( moduleKey: string ) {
+    return this.moduleMetaByKey[ moduleKey ] ?? null;
+  }
+
+  protected getActionMeta( moduleKey: string, actionId: string ) {
+    const mod = this.getModuleMeta( moduleKey );
+    if ( !mod ) return null;
+    return ( mod.actions as readonly any[] ).find( a => a.id === actionId ) ?? null;
+  }
   // ─────────────────────────────────────────────
   // DI
   // (some of these are not used *here* but may be

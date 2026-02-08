@@ -1,13 +1,36 @@
-<div class="main-container-loader" *ngIf="show">
-  <div class="progress-container" *ngIf="show">
-    <div class="progress-bar" [style.width.%]="progressValue"></div>
-    <p
-      class="progress-text"
-      [ngClass]="isError ? 'error' : ''"
-      [ngClass]="isSuccess ? 'success' : ''"
-      [ngClass]="isWarning ? 'warning' : ''"
+<div class="pe-progress" *ngIf="show" role="status" aria-live="polite">
+  <div class="pe-progress-head">
+    <div class="pe-progress-title">
+      <mat-icon class="ic">hourglass_top</mat-icon>
+      <span>Processing</span>
+
+      <span
+        class="pe-progress-badge"
+        [class.error]="isError"
+        [class.success]="isSuccess"
+        [class.warning]="isWarning"
+      >
+        {{ progressValue }}%
+      </span>
+    </div>
+
+    <button
+      type="button"
+      class="pe-close-btn"
+      aria-label="Close progress"
+      (click)="close()"
     >
-      {{ progressValue }}%
-    </p>
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="pe-progress-track">
+    <div
+      class="pe-progress-bar"
+      [class.error]="isError"
+      [class.success]="isSuccess"
+      [class.warning]="isWarning"
+      [style.width.%]="progressValue"
+    ></div>
   </div>
 </div>

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subscription } from 'rxjs';
 
-import { KpiFacadeService } from './kpi-facade';
+import { KpiFacadeService } from './kpi-facade.service';
 
 @Injectable({ providedIn: 'root' })
 export class KpiRuntimeService {

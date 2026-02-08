@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { filter, Observable } from 'rxjs';
 
-import { KpiApiService } from './kpi-api';
-import { KpiRealtimeService } from './kpi-realtime';
-import { KpiTopicRouterService } from './kpi-topic-router';
+import { KpiApiService } from './kpi-api.service';
+import { KpiRealtimeService } from './kpi-realtime.service';
+import { KpiTopicRouterService } from './kpi-topic-router.service';
 
 import type { RealtimeEventEnvelope } from '../types/kpi-realtime.types';
 import type { KpiInvalidateEvent } from '../types/kpi-events';

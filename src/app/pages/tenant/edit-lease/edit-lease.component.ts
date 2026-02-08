@@ -56,11 +56,9 @@ import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 
 import {
   APIsService,
-  Country,
-  CountryCodes,
-  ROLE_ACCESS_MAP,
   User,
 } from '../../../services/APIs/apis.service';
+import { CountryCodesDto, UserCountryDto, RoleAccessMapDto } from '../../../services/auth/user.contract';
 import { AuthService } from '../../../services/auth/auth.service';
 import {
   AddedBy,
@@ -294,8 +292,8 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
     'image/*',
   ];
 
-  protected phoneCodes: CountryCodes[] = [];
-  protected filterPhoneCodes!: Observable<CountryCodes[]>;
+  protected phoneCodes: CountryCodesDto[] = [];
+  protected filterPhoneCodes!: Observable<CountryCodesDto[]>;
 
   // ============================================================================
   // 3. Core domain state
@@ -319,7 +317,7 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
   protected tenantNationality: string = '';
   protected tenantDateOfBirth: Date = new Date();
   protected tenantPhoneNumber: string = '';
-  protected tenantPhoneCodeDetails: CountryCodes | null = null;
+  protected tenantPhoneCodeDetails: CountryCodesDto | null = null;
   protected isValidTenantPhoneNumber: boolean = true;
   protected tenantGender: string = '';
 
@@ -346,9 +344,9 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
   protected tenantCity: string = '';
   protected tenantStateOrProvince: string = '';
   protected tenantPostalCode: string = '';
-  protected tenantCountry: Country | null = null;
-  protected tenantCountries: Country[] = [];
-  protected filterTenantCountries!: Observable<Country[]>;
+  protected tenantCountry: UserCountryDto | null = null;
+  protected tenantCountries: UserCountryDto[] = [];
+  protected filterTenantCountries!: Observable<UserCountryDto[]>;
 
   // --- Emergency contact ---
 
@@ -364,7 +362,7 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
   protected coTenantEmail: string = '';
   protected isCoTenantEmailValid: boolean = true;
   protected coTenantPhoneNumber: string = '';
-  protected coTenantPhoneCodeDetails: CountryCodes | null = null;
+  protected coTenantPhoneCodeDetails: CountryCodesDto | null = null;
   protected isValidCoTenantPhoneNumber: boolean = true;
   protected coTenantGender: string = '';
   protected coTenantNicOrPassport: string = '';
@@ -993,7 +991,7 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private filterCountryFromFilterList( countryName: string ): Country | null {
+  private filterCountryFromFilterList( countryName: string ): UserCountryDto | null {
     {
       try {
         const safeInput = countryName.trim().toLowerCase();
@@ -1022,13 +1020,13 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
       if ( !Array.isArray( res ) ) {
         throw new Error( 'Invalid array of countries!' );
       }
-      this.tenantCountries = res as unknown as Country[];
+      this.tenantCountries = res as unknown as UserCountryDto[];
     } catch ( err ) {
       console.error( err );
     }
   }
 
-  protected onTenantCountryChange( input: string | Country ): Observable<Country[]> {
+  protected onTenantCountryChange( input: string | UserCountryDto ): Observable<UserCountryDto[]> {
     try {
       const safeInput = typeof input === 'string' ? input.trim().toLowerCase() : ( typeof input === 'object' && 'name' in input ? input.name.trim().toLowerCase() : '' );
       if ( !safeInput ) {
@@ -1053,11 +1051,11 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
   protected onTenantCountrySelectionChange(
     input: MatAutocompleteSelectedEvent,
   ): void {
-    const value = input.option.value as Country;
+    const value = input.option.value as UserCountryDto;
     this.tenantCountry = value;
   }
 
-  protected displayFn( country: Country ): string {
+  protected displayFn( country: UserCountryDto ): string {
     return country?.name ?? '';
   }
 
@@ -1108,7 +1106,7 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
       // Sanitising the input
       const safeInput = ( typeof input === 'string' && input.trim().toLowerCase() )
         || ( typeof input === 'object' && 'code' in input
-          ? ( input as CountryCodes ).code.toLowerCase()
+        ? ( input as CountryCodesDto ).code.toLowerCase()
           : '' );
       // Filtering based on tenant type
       this.filterPhoneCodes = of(
@@ -1119,7 +1117,7 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
 
       switch ( typeOfCode ) {
         case 'tenant':
-          this.filterPhoneCodes.subscribe( ( codes: CountryCodes[] ) => {
+          this.filterPhoneCodes.subscribe( ( codes: CountryCodesDto[] ) => {
             if ( codes.length === 1 ) {
               this.tenantPhoneCodeDetails = codes[ 0 ];
             } else {
@@ -1128,7 +1126,7 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
           } );
           break;
         case 'co-tenant':
-          this.filterPhoneCodes.subscribe( ( codes: CountryCodes[] ) => {
+          this.filterPhoneCodes.subscribe( ( codes: CountryCodesDto[] ) => {
             if ( codes.length === 1 ) {
               this.coTenantPhoneCodeDetails = codes[ 0 ];
             } else {
@@ -1148,7 +1146,7 @@ export class LeaseEditComponent implements OnInit, AfterViewInit, OnDestroy {
   protected onPhoneCodeSelectionChange(
     input: MatAutocompleteSelectedEvent, type: string,
   ): void {
-    const value = input.option.value as CountryCodes;
+    const value = input.option.value as CountryCodesDto;
     switch ( type.trim().toLowerCase() ) {
       case 'tenant':
         this.tenantPhoneCodeDetails = value;

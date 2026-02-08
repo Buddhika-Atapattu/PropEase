@@ -16,7 +16,7 @@ import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 
 // Permissions source
 import { AuthService } from '../../services/auth/auth.service';
-import { Role } from '../../services/APIs/apis.service';
+import { Role } from '../../services/auth/user.contract';
 import {
   AccessModuleKey,
   AccessModuleOption,
@@ -141,7 +141,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     this.canViewLeases = hasModule( 'TenantManagement' );        // and later: 'LeaseManagement'
     this.canViewPayments = hasModule( 'PropertyManagement' );      // TEMP until Payment module is fully wired
     this.canViewMaintenance = hasModule( 'TenantManagement' );        // TEMP until Maintenance module is added
-    this.canViewAudit = hasModule( 'TrackingAndAudit' );
+    this.canViewAudit = hasModule( 'AuditLogs' );
     this.canViewNotifications = hasModule( 'NotificationCenter' );
 
     // ── Quick actions ─────────────────────────────────────────────────
@@ -151,7 +151,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     this.canAssignAgent = hasModule( 'PropertyManagement' );
     this.canRecordPayment = hasModule( 'PropertyManagement' );      // TEMP → later: PaymentAndBilling
     this.canOpenRequests = hasModule( 'TenantManagement' );        // TEMP → later: MaintenanceRequests
-    this.canGenerateReports = hasModule( 'TrackingAndAudit' );
+    this.canGenerateReports = hasModule( 'AuditLogs' );
     this.canTerminateLease = hasModule( 'TenantManagement' );        // TEMP → later: LeaseManagement
   }
 

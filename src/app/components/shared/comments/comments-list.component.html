@@ -1,94 +1,615 @@
-<!-- comments-list.component.html -->
-<div class="row d-flex justify-content-end align-items-center my-4">
-  <div
-    class="col-3 d-flex justify-content-end align-items-center position-relative my-4"
-  >
-    <button
-      type="button"
-      class="btn btn-outline-warning d-flex justify-content-center align-items-center position-absolute top-0"
-      [ngClass]="(ds.loading$ | async) ? 'refresh' : ''"
-      (click)="refresh()"
+<!-- Path: src/app/components/shared/comments/comments-list.component.html -->
+<app-notification-dialog></app-notification-dialog>
+<app-progress-bar></app-progress-bar>
+
+<div class="container-fluid">
+  <!-- =========================
+       ROOT COMPOSER (attachments allowed)
+       ========================= -->
+  @if (showComposer) {
+    <form
+      (ngSubmit)="onCommentSubmit()"
+      enctype="multipart/form-data"
+      autocomplete="off"
+      #userForm="ngForm"
     >
-      <mat-icon>autorenew</mat-icon>
-    </button>
-  </div>
-</div>
-<ng-container *ngIf="(ds?.items$ | async)?.length; else noComments">
-  <div class="pe-comments-list position-sticky">
-    <div
-      class="comment"
-      *ngFor="let c of ds.items$ | async; trackBy: trackById"
-    >
-      <img
-        class="avatar"
-        [src]="c.image || 'public/system/user.png'"
-        alt=""
-        loading="lazy"
-      />
-      <div class="bubble">
-        <div class="meta">
-          <span class="name">{{ c.byName }}</span>
-          <span class="dot">•</span>
-          <time [attr.datetime]="c.createdAt">{{
-            c.createdAt | date : "medium"
-          }}</time>
-          <span class="audience">/{{ c.audience }}</span>
+      <!-- Audience selector -->
+      <div class="row d-flex justify-content-end align-items-center">
+        <div
+          class="col-xl-2 col-md-3 col-12 d-flex justify-content-end align-items-center"
+        >
+          <mat-form-field class="w-100" appearance="fill">
+            <mat-select
+              name="audience"
+              [(ngModel)]="composerAudience"
+              [disabled]="!canSelectAudience"
+            >
+              @for (aud of composerAudienceOptions; track aud) {
+                <mat-option [value]="aud">
+                  {{ convertRoleIntoHumanReadable(aud) }}
+                </mat-option>
+              }
+            </mat-select>
+
+            @if (!canSelectAudience) {
+              <mat-hint>You don’t have permission to change audience.</mat-hint>
+            }
+          </mat-form-field>
         </div>
-        <div class="text" [innerHTML]="c.message"></div>
+      </div>
 
-        <div class="attachments" *ngIf="c.attachments?.length">
-          <div class="file" *ngFor="let a of c.attachments; let i = index">
-            <button
-              type="button"
-              class="btn btn-link p-0"
-              (click)="onDownload(a, attachmentId(c._id, i))"
-            >
-              Download {{ a.name }}
-            </button>
-
-            <span
-              class="progress"
-              *ngIf="downloadingIds.has(attachmentId(c._id, i))"
-            >
-              {{ progressMap.get(attachmentId(c._id, i)) || 0 }}%
-            </span>
+      <!-- Editor -->
+      @if (canUseRichEditor) {
+        <div class="row my-3">
+          <div class="col-12">
+            <app-text-editor
+              [id]="'admin_comment_text_editor'"
+              [name]="'admin_comment_text_editor'"
+              [(modelValue)]="comment"
+            ></app-text-editor>
           </div>
         </div>
+      } @else {
+        <div class="row my-3">
+          <div class="col-12">
+            <app-textarea
+              [name]="'user_comment_textarea'"
+              [(text)]="comment"
+              [rows]="5"
+            ></app-textarea>
+          </div>
+        </div>
+      }
+
+      <!-- Attachments (root only) -->
+      <div class="row my-3">
+        <div class="col-12">
+          <app-dropdown
+            #attachmentsDropdown
+            [(clearFiles)]="clearFiles"
+            (filesChange)="onAttachmentsSelected($event)"
+          ></app-dropdown>
+        </div>
       </div>
-    </div>
 
-    <div #sentinel class="sentinel" aria-hidden="true"></div>
+      <!-- Submit -->
+      <div class="row">
+        <div class="col-12 d-flex justify-content-end">
+          <button
+            type="submit"
+            class="btn btn-success fs-small d-inline-flex align-items-center gap-2"
+            [disabled]="isLoading"
+          >
+            <mat-icon>upload</mat-icon>
+            <span class="text-uppercase">Comment</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  }
 
-    <div class="footer">
-      <button
-        mat-button
-        class="load-more"
-        matTooltip="Load more"
-        matTooltipPosition="above"
-        (click)="onLoadMore()"
-        [disabled]="(ds.loading$ | async) || (ds.ended$ | async)"
-        *ngIf="!(ds.ended$ | async)"
-      >
-        <ng-container *ngIf="!(ds.loading$ | async); else spinner"
-          >Load more</ng-container
+  <!-- =========================
+     COMMENTS VIEW
+     ========================= -->
+  <section class="pe-comments my-4">
+    <!-- Toolbar -->
+    <div class="pe-comments-toolbar">
+      <div class="toolbar-left">
+        <div class="title">
+          <mat-icon class="title-ic">forum</mat-icon>
+          <span>Comments</span>
+          <span class="count-pill">{{ totalTarget }}</span>
+        </div>
+
+        <div class="subtitle">
+          Showing <b>{{ limit }}</b> per page • Page
+          <b>{{ pageIndex + 1 }}</b> of <b>{{ totalPages }}</b>
+          @if (isLoading) {
+            <span class="dot">•</span>
+            <span class="muted">Loading…</span>
+          }
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <div class="search-wrap">
+          <mat-icon class="search-ic">search</mat-icon>
+
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search by name, audience, message, file name..."
+            [(ngModel)]="searchText"
+            (ngModelChange)="onSearchInputChange($event)"
+            (keydown.enter)="$event.preventDefault()"
+            [ngModelOptions]="{ standalone: true }"
+          />
+
+          @if (searchText && searchText.length > 0) {
+            <button
+              type="button"
+              class="clear-btn"
+              (click)="clearSearch()"
+              matTooltip="Clear"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="pg-btn"
+          (click)="onRefreshClick()"
+          [disabled]="isLoading"
+          matTooltip="Refresh"
         >
-        <ng-template #spinner
-          ><mat-spinner diameter="18"></mat-spinner
-        ></ng-template>
-      </button>
-      <div class="end" *ngIf="ds.ended$ | async">No more comments</div>
-    </div>
-  </div>
-</ng-container>
-
-<ng-template #noComments>
-  <div class="row d-flex justify-content-center align-items-center">
-    <div
-      class="col-xl-4 col-md-5 col-12 d-flex justify-content-center align-items-center"
-    >
-      <div class="image-container no-comment-container">
-        <img [src]="DEFINED_NO_COMMENT" alt="No comment posted yet image" />
+          <mat-icon>refresh</mat-icon>
+          <span>Refresh</span>
+        </button>
       </div>
     </div>
-  </div>
-</ng-template>
+
+    <!-- Loading skeleton -->
+    @if (isLoading && (!comments || comments.length === 0)) {
+      <div
+        class="pe-comments-viewport"
+        role="region"
+        aria-label="Comments list loading"
+      >
+        <div class="comments-stack">
+          @for (_ of [1, 2, 3, 4, 5, 6]; track _) {
+            <article class="comment-card" aria-hidden="true">
+              <div class="accent-rail" data-audience="internal"></div>
+              <div class="comment-main">
+                <div class="comment-head">
+                  <div class="avatar-wrap">
+                    <img
+                      [src]="DUMMY_AVATAR"
+                      class="avatar-img"
+                      alt="Loading"
+                    />
+                  </div>
+                  <div class="head-meta min-w-0">
+                    <div class="row-1">
+                      <div class="author text-truncate">Loading…</div>
+                      <span class="aud-chip" data-audience="internal">…</span>
+                      <span class="spacer"></span>
+                      <div class="time text-nowrap">—</div>
+                    </div>
+                    <div class="row-2 text-truncate">
+                      <span class="mono">—</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="comment-body">
+                  <div class="message-html">
+                    <p class="text-muted">Fetching comments…</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Threaded list -->
+    @if (!isLoading || (comments && comments.length > 0)) {
+      @if (threadRoots && threadRoots.length > 0) {
+        <div
+          class="pe-comments-viewport"
+          role="region"
+          aria-label="Comments list"
+        >
+          <div class="comments-stack">
+            <!-- Recursive node template -->
+            <ng-template #nodeTpl let-node>
+              <article
+                class="comment-card"
+                [class.is-reply]="node.depth > 0"
+                [class.is-pinned]="isRootNode(node) && isPinned(node.comment)"
+              >
+                <div
+                  class="accent-rail"
+                  [attr.data-audience]="audLower(node.comment)"
+                ></div>
+
+                <div class="comment-main">
+                  <!-- Header -->
+                  <div class="comment-head">
+                    <div class="avatar-wrap">
+                      <img
+                        [src]="avatarUrl(node.comment)"
+                        class="avatar-img"
+                        alt="User Avatar"
+                        loading="lazy"
+                      />
+                    </div>
+
+                    <div class="head-meta min-w-0">
+                      <div class="row-1">
+                        <div class="author text-truncate">
+                          {{ byName(node.comment) }}
+                        </div>
+
+                        <span
+                          class="aud-chip"
+                          [attr.data-audience]="audLower(node.comment)"
+                        >
+                          {{ audienceLabel(node.comment) }}
+                        </span>
+
+                        @if (isRootNode(node) && isPinned(node.comment)) {
+                          <span class="pin-badge">
+                            <mat-icon>push_pin</mat-icon>
+                            PINNED
+                          </span>
+                        }
+
+                        <span class="spacer"></span>
+
+                        <div class="time text-nowrap">
+                          {{
+                            createdAtIso(node.comment)
+                              | date: "MMM d, yyyy • h:mm a"
+                          }}
+                        </div>
+                      </div>
+
+                      <div class="row-2 text-truncate">
+                        <span class="muted">By:</span>
+                        <span class="mono">{{ byUserId(node.comment) }}</span>
+
+                        @if (authorRole(node.comment)) {
+                          <span class="dot">•</span>
+                          <span class="muted">{{
+                            authorRole(node.comment)
+                          }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Body -->
+                  <div class="comment-body">
+                    <div
+                      class="message-html"
+                      [innerHTML]="messageHtml(node.comment)"
+                    ></div>
+
+                    <!-- Attachments -->
+                    @if (hasAttachments(node.comment)) {
+                      <div class="attach-block">
+                        <div class="attach-title">
+                          <mat-icon class="attach-ic">attach_file</mat-icon>
+                          <span>Attachments</span>
+                          <span class="attach-count">{{
+                            attachments(node.comment).length
+                          }}</span>
+                        </div>
+
+                        <div class="attach-grid">
+                          @for (
+                            att of attachments(node.comment);
+                            track att.name
+                          ) {
+                            <div class="attach-pill">
+                              <div class="att-left">
+                                <div class="att-icon">
+                                  <mat-icon>description</mat-icon>
+                                </div>
+
+                                <div
+                                  class="att-meta min-w-0"
+                                  [matTooltip]="att.name"
+                                  [matTooltipPosition]="'above'"
+                                >
+                                  <div class="att-name text-truncate">
+                                    {{ displayFileName(att.name) }}
+                                  </div>
+                                  <div class="att-sub text-truncate">
+                                    {{ att.mimetype || "file" }}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div class="att-actions">
+                                <a
+                                  class="icon-btn"
+                                  matTooltip="Open"
+                                  [href]="att.url"
+                                  target="_blank"
+                                  rel="noopener"
+                                >
+                                  <mat-icon>open_in_new</mat-icon>
+                                </a>
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Actions -->
+                    <div class="comment-actions">
+                      <!-- Reply -->
+                      <button
+                        type="button"
+                        class="action-btn"
+                        (click)="toggleReplyBox(node)"
+                        [disabled]="isLoading"
+                      >
+                        <mat-icon class="action-ic">reply</mat-icon>
+                        <span>Reply</span>
+                      </button>
+
+                      <!-- Pin/Unpin (ROOT ONLY) -->
+                      @if (isRootNode(node)) {
+                        <button
+                          type="button"
+                          class="action-btn"
+                          (click)="togglePin(node)"
+                          [disabled]="isLoading"
+                        >
+                          <mat-icon class="action-ic">push_pin</mat-icon>
+                          <span>{{
+                            isPinned(node.comment) ? "Unpin" : "Pin"
+                          }}</span>
+                        </button>
+                      }
+
+                      <!-- Edit/Delete (OWN ONLY) -->
+                      @if (canManageOwn(node.comment)) {
+                        <button
+                          type="button"
+                          class="action-btn"
+                          (click)="toggleEdit(node)"
+                          [disabled]="isLoading"
+                        >
+                          <mat-icon class="action-ic">edit</mat-icon>
+                          <span>{{
+                            isEditOpen(node) ? "Cancel edit" : "Edit"
+                          }}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          class="action-btn danger"
+                          (click)="deleteOwn(node)"
+                          [disabled]="isLoading"
+                        >
+                          <mat-icon class="action-ic">delete</mat-icon>
+                          <span>Delete</span>
+                        </button>
+                      }
+                    </div>
+
+                    <!-- Inline Edit box -->
+                    @if (isEditOpen(node)) {
+                      <div class="edit-box">
+                        <textarea
+                          class="edit-textarea"
+                          rows="4"
+                          placeholder="Edit your comment..."
+                          [ngModel]="getEditText(node)"
+                          (ngModelChange)="setEditText(node, $event)"
+                          [ngModelOptions]="{ standalone: true }"
+                        ></textarea>
+
+                        <div class="edit-actions">
+                          <button
+                            type="button"
+                            class="mini-btn"
+                            (click)="cancelEdit(node)"
+                            [disabled]="!!isEditSubmittingById[node.id]"
+                          >
+                            Cancel
+                          </button>
+
+                          <button
+                            type="button"
+                            class="mini-btn primary"
+                            (click)="submitEdit(node)"
+                            [disabled]="!!isEditSubmittingById[node.id]"
+                          >
+                            <mat-icon>save</mat-icon>
+                            <span>Save</span>
+                          </button>
+                        </div>
+
+                        <div class="reply-hint">
+                          Editing updates this comment for everyone who can view
+                          it.
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Reply composer (TEXT ONLY) -->
+                    @if (isReplyOpen(node)) {
+                      <div class="reply-composer">
+                        <div class="reply-connector">
+                          <mat-icon class="curve-ic"
+                            >subdirectory_arrow_right</mat-icon
+                          >
+                        </div>
+
+                        <div class="reply-box">
+                          <textarea
+                            class="reply-textarea"
+                            rows="3"
+                            placeholder="Write a reply..."
+                            [ngModel]="getReplyText(node)"
+                            (ngModelChange)="setReplyText(node, $event)"
+                            [ngModelOptions]="{ standalone: true }"
+                          ></textarea>
+
+                          <div class="reply-actions">
+                            <button
+                              type="button"
+                              class="mini-btn"
+                              (click)="cancelReply(node)"
+                              [disabled]="!!isReplySubmittingById[node.id]"
+                            >
+                              Cancel
+                            </button>
+
+                            <button
+                              type="button"
+                              class="mini-btn primary"
+                              (click)="submitReply(node)"
+                              [disabled]="!!isReplySubmittingById[node.id]"
+                            >
+                              <mat-icon>send</mat-icon>
+                              <span>Reply</span>
+                            </button>
+                          </div>
+
+                          <div class="reply-hint">
+                            Replies are text-only (attachments supported on main
+                            comments).
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Children -->
+                  @if (node.children && node.children.length > 0) {
+                    <div class="replies-wrap">
+                      <div class="replies-rail"></div>
+
+                      <div class="replies-stack">
+                        @for (child of node.children; track child.id) {
+                          <div
+                            class="reply-node"
+                            [style.marginLeft.px]="
+                              Math.min(child.depth, 6) * 18
+                            "
+                          >
+                            <ng-container
+                              [ngTemplateOutlet]="nodeTpl"
+                              [ngTemplateOutletContext]="{ $implicit: child }"
+                            ></ng-container>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </article>
+            </ng-template>
+
+            <!-- Pinned roots on top -->
+            @if (pinnedRoots && pinnedRoots.length > 0) {
+              <div class="pinned-section">
+                <div class="pinned-head">
+                  <mat-icon class="pin-ic">push_pin</mat-icon>
+                  <span class="label">Pinned</span>
+                  <span class="pill">{{ pinnedRoots.length }}</span>
+                  <span class="spacer"></span>
+                  <span class="hint text-muted">Always shown on top</span>
+                </div>
+
+                <div class="comments-stack mt-2">
+                  @for (root of pinnedRoots; track root.id) {
+                    <ng-container
+                      [ngTemplateOutlet]="nodeTpl"
+                      [ngTemplateOutletContext]="{ $implicit: root }"
+                    ></ng-container>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Normal roots -->
+            @for (root of normalRoots; track root.id) {
+              <ng-container
+                [ngTemplateOutlet]="nodeTpl"
+                [ngTemplateOutletContext]="{ $implicit: root }"
+              ></ng-container>
+            }
+          </div>
+        </div>
+
+        <!-- Pagination footer -->
+        <div class="pe-comments-footer">
+          <div class="left">
+            <span class="hint">
+              {{ totalFiltered }} results
+              @if (searchText && searchText.length > 0) {
+                <span class="muted">• filtered</span>
+              }
+              @if (hasMoreFromServer) {
+                <span class="muted">• more available</span>
+              }
+            </span>
+          </div>
+
+          <div class="right">
+            <button
+              type="button"
+              class="pg-btn"
+              (click)="onPreviousPage()"
+              [disabled]="pageIndex <= 0 || isLoading"
+            >
+              <mat-icon>chevron_left</mat-icon>
+              <span>Prev</span>
+            </button>
+
+            <div class="page-indicator">
+              Page <b>{{ pageIndex + 1 }}</b> / <b>{{ totalPages }}</b>
+            </div>
+
+            <button
+              type="button"
+              class="pg-btn"
+              (click)="onNextPage()"
+              [disabled]="
+                isLoading || (!hasMoreFromServer && pageIndex >= totalPages - 1)
+              "
+            >
+              <span>Next</span>
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+        </div>
+      } @else {
+        <!-- Empty state -->
+        <div class="empty-state">
+          <div class="empty-ic">
+            <mat-icon>forum</mat-icon>
+          </div>
+
+          <div class="empty-title">No comments found</div>
+          <div class="empty-sub text-muted">
+            @if (searchText && searchText.length > 0) {
+              Try clearing the search.
+            } @else {
+              Be the first to add a comment.
+            }
+          </div>
+
+          @if (searchText && searchText.length > 0) {
+            <button type="button" class="pg-btn mt-3" (click)="clearSearch()">
+              <mat-icon>restart_alt</mat-icon>
+              <span>Clear search</span>
+            </button>
+          }
+
+          @if (!searchText || searchText.trim().length === 0) {
+            <button
+              type="button"
+              class="pg-btn mt-3"
+              (click)="onRefreshClick()"
+              [disabled]="isLoading"
+            >
+              <mat-icon>refresh</mat-icon>
+              <span>Refresh</span>
+            </button>
+          }
+        </div>
+      }
+    }
+  </section>
+</div>

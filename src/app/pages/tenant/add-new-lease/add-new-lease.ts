@@ -36,7 +36,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EditorComponent } from '@tinymce/tinymce-angular';
 import { ImageCropperComponent } from 'ngx-image-cropper';
-import { Observable, of, Subscription, firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable, of, Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CameraBoxComponent } from '../../../components/dialogs/camera-box/camera-box.component';
 import { FileScanner } from '../../../components/dialogs/file-scanner/file-scanner';
@@ -57,13 +57,12 @@ import { SkeletonLoaderComponent } from '../../../components/shared/skeleton-loa
 import { SafeUrlPipe } from '../../../pipes/safe-url.pipe';
 import {
   APIsService,
-  Country,
-  CountryCodes, ROLE_ACCESS_MAP,
   User
 } from '../../../services/APIs/apis.service';
 import {
   AuthService,
 } from '../../../services/auth/auth.service';
+import { CountryCodesDto, PhoneNumberDto, UserCountryDto } from '../../../services/auth/user.contract';
 import {
   AddedBy,
   Address,
@@ -76,6 +75,7 @@ import {
   DEFAULT_COMPANY_POLICY,
   DEFAULT_RULES_AND_REGULATIONS,
   LATE_PAYMENT_PENALTY_OPTIONS,
+  LatePaymentPenalty,
   Lease,
   LeaseAgreement,
   NOTICE_PERIOD_OPTIONS,
@@ -96,7 +96,6 @@ import {
 import { UserControllerService } from '../../../services/userController/user-controller.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 import { PaginationUtil } from '../../../source/utility/pagination.utils';
-import { LatePaymentPenalty } from '../../../services/tenant/tenant.service';
 
 // -----------------------------------------------------------------------------
 // Local interfaces for this component
@@ -291,8 +290,8 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     'image/*',
   ];
 
-  protected phoneCodes: CountryCodes[] = [];
-  protected filterPhoneCodes!: Observable<CountryCodes[]>;
+  protected phoneCodes: CountryCodesDto[] = [];
+  protected filterPhoneCodes!: Observable<CountryCodesDto[]>;
 
   // ============================================================================
   // 3. Core domain state
@@ -316,7 +315,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   protected tenantNationality: string = '';
   protected tenantDateOfBirth: Date = new Date();
   protected tenantPhoneNumber: string = '';
-  protected tenantPhoneCodeDetails: CountryCodes | null = null;
+  protected tenantPhoneCodeDetails: CountryCodesDto | null = null;
   protected isValidTenantPhoneNumber: boolean = true;
   protected tenantGender: string = '';
 
@@ -343,9 +342,9 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   protected tenantCity: string = '';
   protected tenantStateOrProvince: string = '';
   protected tenantPostalCode: string = '';
-  protected tenantCountry: Country | null = null;
-  protected tenantCountries: Country[] = [];
-  protected filterTenantCountries!: Observable<Country[]>;
+  protected tenantCountry: UserCountryDto | null = null;
+  protected tenantCountries: UserCountryDto[] = [];
+  protected filterTenantCountries!: Observable<UserCountryDto[]>;
 
   // --- Emergency contact ---
 
@@ -361,7 +360,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   protected coTenantEmail: string = '';
   protected isCoTenantEmailValid: boolean = true;
   protected coTenantPhoneNumber: string = '';
-  protected coTenantPhoneCodeDetails: CountryCodes | null = null;
+  protected coTenantPhoneCodeDetails: CountryCodesDto | null = null;
   protected isValidCoTenantPhoneNumber: boolean = true;
   protected coTenantGender: string = '';
   protected coTenantNicOrPassport: string = '';
@@ -655,7 +654,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
         this.tenantCity = user.address.city ?? '';
         this.tenantStateOrProvince = user.address.stateOrProvince ?? '';
         this.tenantPostalCode = user.address.postcode ?? '';
-        this.tenantCountry = this.filterCountryFromFilterList( user.address.country ?? '' );
+        this.tenantCountry = this.filterCountryFromFilterList( user.address.country?.name ?? '' );
       }
     }
     catch ( err ) {
@@ -671,7 +670,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private filterCountryFromFilterList( countryName: string ): Country | null {
+  private filterCountryFromFilterList( countryName: string ): UserCountryDto | null {
     {
       try {
         const safeInput = countryName.trim().toLowerCase();
@@ -839,13 +838,13 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       if ( !Array.isArray( res ) ) {
         throw new Error( 'Invalid array of countries!' );
       }
-      this.tenantCountries = res as unknown as Country[];
+      this.tenantCountries = res as unknown as UserCountryDto[];
     } catch ( err ) {
       console.error( err );
     }
   }
 
-  protected onTenantCountryChange( input: string | Country ): Observable<Country[]> {
+  protected onTenantCountryChange( input: string | UserCountryDto ): Observable<UserCountryDto[]> {
     try {
       const safeInput = typeof input === 'string' ? input.trim().toLowerCase() : ( typeof input === 'object' && 'name' in input ? input.name.trim().toLowerCase() : '' );
       if ( !safeInput ) {
@@ -870,11 +869,11 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   protected onTenantCountrySelectionChange(
     input: MatAutocompleteSelectedEvent,
   ): void {
-    const value = input.option.value as Country;
+    const value = input.option.value as UserCountryDto;
     this.tenantCountry = value;
   }
 
-  protected displayFn( country: Country ): string {
+  protected displayFn( country: UserCountryDto ): string {
     return country?.name ?? '';
   }
 
@@ -925,7 +924,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
       // Sanitising the input
       const safeInput = ( typeof input === 'string' && input.trim().toLowerCase() )
         || ( typeof input === 'object' && 'code' in input
-          ? ( input as CountryCodes ).code.toLowerCase()
+        ? ( input as PhoneNumberDto[ 'code' ] ).code.toLowerCase()
           : '' );
       // Filtering based on tenant type
       this.filterPhoneCodes = of(
@@ -936,7 +935,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
 
       switch ( typeOfCode ) {
         case 'tenant':
-          this.filterPhoneCodes.subscribe( ( codes: CountryCodes[] ) => {
+          this.filterPhoneCodes.subscribe( ( codes: CountryCodesDto[] ) => {
             if ( codes.length === 1 ) {
               this.tenantPhoneCodeDetails = codes[ 0 ];
             } else {
@@ -945,7 +944,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
           } );
           break;
         case 'co-tenant':
-          this.filterPhoneCodes.subscribe( ( codes: CountryCodes[] ) => {
+          this.filterPhoneCodes.subscribe( ( codes: CountryCodesDto[] ) => {
             if ( codes.length === 1 ) {
               this.coTenantPhoneCodeDetails = codes[ 0 ];
             } else {
@@ -965,7 +964,7 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
   protected onPhoneCodeSelectionChange(
     input: MatAutocompleteSelectedEvent, type: string,
   ): void {
-    const value = input.option.value as CountryCodes;
+    const value = input.option.value as CountryCodesDto;
     switch ( type.trim().toLowerCase() ) {
       case 'tenant':
         this.tenantPhoneCodeDetails = value;

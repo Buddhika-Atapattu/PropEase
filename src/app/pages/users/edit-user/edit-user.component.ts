@@ -77,15 +77,18 @@ import { TextEditorComponent } from '../../../components/shared/textEditor/text-
 // ──────────────────────────────────────────────────────────────────────────────
 import {
   APIsService,
-  Country,
-  DEFAULT_ROLES,
-  PermissionEntry,
-  Role,
-  ROLE_ACCESS_MAP,
-  type CountryCodes,
-  type MultiAuthData,
   type User,
 } from '../../../services/APIs/apis.service';
+import {
+  DEFAULT_ROLES,
+  type CountryCodesDto,
+  type PermissionEntryDto,
+  type Role,
+  type RoleAccessMapDto,
+  type UserCountryDto,
+  type PhoneNumberDto,
+  UserRoleLabelHelper,
+} from "../../../services/auth/user.contract";
 import {
   AuthService
 } from '../../../services/auth/auth.service';
@@ -242,10 +245,10 @@ export class EditUserComponent
   // ──────────────────────────────────────────────────────────────────────────
   // Country / autocomplete
   // ──────────────────────────────────────────────────────────────────────────
-  protected countryControl = new FormControl<string>( '' );
-  protected countries: Country[] = [];
-  protected filteredCountries!: Observable<Country[]>;
-  protected typedCountry: Country | string | null = '';
+  protected countryControl = new FormControl<UserCountryDto | null>( null );
+  protected countries: UserCountryDto[] = [];
+  protected filteredCountries!: Observable<UserCountryDto[]>;
+  protected typedCountry: UserCountryDto | string | null = '';
 
   // ──────────────────────────────────────────────────────────────────────────
   // Validation patterns / state
@@ -278,7 +281,7 @@ export class EditUserComponent
   protected email: string = '';
   private oldEmail: string = '';
   protected phone: string = '';
-  protected phoneCode: CountryCodes | null = null;
+  protected phoneCode: CountryCodesDto | null = null;
   private phoneNumber: User[ 'phoneNumber' ] | null = null;
   protected street: string = '';
   protected houseNumber: string = '';
@@ -318,19 +321,10 @@ export class EditUserComponent
    * Current selection of access for the chosen role.
    * This is the ONLY source of truth we will send to backend.
    */
-  private originalSelectionOfAccess: ROLE_ACCESS_MAP | null = null;
+  private originalSelectionOfAccess: RoleAccessMapDto | null = null;
 
   // defined roles
-  protected readonly definedRole: Role[] = [
-    'admin',
-    'agent',
-    'tenant',
-    'owner',
-    'operator',
-    'manager',
-    'developer',
-    'user',
-  ];
+  protected readonly definedRole: readonly Role[] = DEFAULT_ROLES;
 
   // User status choices
   protected readonly userActiveStatus: userActiveStatusType[] = [
@@ -345,8 +339,8 @@ export class EditUserComponent
     'Other',
   ];
 
-  protected phoneCodes: CountryCodes[] = [];
-  protected filterPhoneCodes: Observable<CountryCodes[]> | null = null;
+  protected phoneCodes: CountryCodesDto[] = [];
+  protected filterPhoneCodes: Observable<CountryCodesDto[]> | null = null;
 
   private navigationTimeoutId: number | null = null;
 
@@ -503,6 +497,16 @@ export class EditUserComponent
     return gender.toLowerCase() === 'male'
       ? this.definedMaleDummyImageURL
       : this.definedWomanDummyImageURL;
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Convert the role to human readable
+  // ──────────────────────────────────────────────────────────────────────────
+  protected convertToHumanReadable( role: string ): string {
+    if ( !role || typeof role !== 'string' ) {
+      return '';
+    }
+    return UserRoleLabelHelper.toHuman( role );
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -665,7 +669,7 @@ export class EditUserComponent
       this.stateOrProvince = this.user.address.stateOrProvince ?? '';
       this.postcode = this.user.address.postcode;
 
-      const country = this.user.address.country ?? '';
+      const country = this.user.address.country ?? null;
       this.countryControl.setValue( country );
       this.typedCountry = country;
       this.onCountryChange( country );
@@ -711,7 +715,7 @@ export class EditUserComponent
       // Sanitising the input
       const safeInput = ( typeof text === 'string' && text.trim().toLowerCase() )
         || ( typeof text === 'object' && 'code' in text
-          ? ( text as CountryCodes ).code.toLowerCase()
+        ? ( text as CountryCodesDto ).code.toLowerCase()
           : '' );
       // Filtering based on tenant type
       this.filterPhoneCodes = of(
@@ -729,7 +733,7 @@ export class EditUserComponent
   protected onPhoneCodeSelectionChange(
     input: MatAutocompleteSelectedEvent, type: string,
   ): void {
-    const value = input.option.value as CountryCodes;
+    const value = input.option.value as CountryCodesDto;
     this.phoneCode = value;
   }
 
@@ -985,15 +989,15 @@ export class EditUserComponent
       console.error( error );
     }
   }
-  protected onCountryChange( value: string ): void {
+  protected onCountryChange( value: UserCountryDto | null ): void {
     this.typedCountry = value;
     this.mainFilterCountries();
   }
 
-  private mainFilterCountries(): Country[] {
+  private mainFilterCountries(): UserCountryDto[] {
     this.filteredCountries = this.countryControl.valueChanges.pipe(
       startWith( this.typedCountry ),
-      map( ( value: string | Country | null ) => {
+      map( ( value: string | UserCountryDto | null ) => {
         const name = typeof value === 'string' ? value : value?.name;
         return name
           ? this.filterCountries( name )
@@ -1004,14 +1008,14 @@ export class EditUserComponent
     return this.countries;
   }
 
-  private filterCountries( name: string ): Country[] {
+  private filterCountries( name: string ): UserCountryDto[] {
     const filterValue = name.toLowerCase();
     return this.countries.filter( ( c ) =>
       c.name.toLowerCase().includes( filterValue ),
     );
   }
 
-  protected displayFn( country: Country | string | null ): string {
+  protected displayFn( country: UserCountryDto | string | null ): string {
     if ( typeof country === 'string' ) return country;
     return country?.name ?? '';
   }
@@ -1285,7 +1289,7 @@ export class EditUserComponent
     if ( !this.originalSelectionOfAccess ) return;
 
     const safeRole = this.role as Role;
-    const normalized: PermissionEntry[] = [];
+    const normalized: PermissionEntryDto[] = [];
 
     for ( const perm of this.originalSelectionOfAccess.permissions ) {
       // Find the canonical module definition
@@ -1352,8 +1356,8 @@ export class EditUserComponent
         this.authService.filterDefaultAccessBaseRole( role );
 
       // Build canonical ROLE_ACCESS_MAP using ONLY ids from access map
-      const permissions: PermissionEntry[] = defaultModules.map(
-        ( mod ): PermissionEntry => ( {
+      const permissions: PermissionEntryDto[] = defaultModules.map(
+        ( mod ): PermissionEntryDto => ( {
           module: mod.module as AccessModuleKey,
           actions: mod.actions.map( ( a ) => a.id as AccessActionKey ),
         } ),
@@ -1548,7 +1552,7 @@ export class EditUserComponent
    * Getter used by insertNewUser().
    * If nothing was selected yet, returns an empty map for the current role.
    */
-  protected getRoleAccessPayload(): ROLE_ACCESS_MAP {
+  protected getRoleAccessPayload(): RoleAccessMapDto {
     const safeRole = this.role as Role;
 
     if ( this.originalSelectionOfAccess && this.originalSelectionOfAccess.role === safeRole ) {
@@ -1713,7 +1717,7 @@ export class EditUserComponent
       );
       formData.append( 'postcode', this.postcode.toString().trim() );
 
-      const countryValue = this.countryControl.value ?? '';
+      const countryValue = JSON.stringify( this.countryControl.value ) ?? '';
       formData.append( 'country', countryValue.trim() );
 
       formData.append(

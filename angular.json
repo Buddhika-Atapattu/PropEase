@@ -60,6 +60,7 @@
               "node_modules/material-symbols/index.css",
               "src/styles.scss",
               "src/app/styles/global.scss",
+              "src/app/styles/chart-style.scss",
               "src/app/styles/material-overrides.scss"
             ],
             "scripts": [
@@ -158,6 +159,7 @@
               "node_modules/material-symbols/index.css",
               "src/styles.scss",
               "src/app/styles/global.scss",
+              "src/app/styles/chart-style.scss",
               "src/app/styles/material-overrides.scss"
             ],
             "scripts": [

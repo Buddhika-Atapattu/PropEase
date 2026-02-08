@@ -1,14 +1,25 @@
 // Path: src/app/types/api-message.types.ts
-//Imports
+// ============================================================================
+// PropEase FE API Message Types (Backend-Contract Aligned)
+// ----------------------------------------------------------------------------
+// Key fixes vs your previous version:
+// ✅ All backend JSON date/time fields are typed as ISO strings (NOT Date)
+//    - Angular receives JSON => dates arrive as strings unless you manually convert.
+// ✅ Pagination keys aligned with backend (index/limit/total/hasMore)
+//    - Extra optional fields kept, but NOT assumed to be provided by backend.
+// ✅ SystemData keys match backend ApiResponseBuilder + ApiDataBuilder contracts.
+// ============================================================================
+
+// Imports (domain DTOs used inside "system")
 import { User } from '../services/APIs/apis.service';
 import { Lease, LeaseWithProperty, Tenant, ComplaintClient } from '../services/tenant/tenant.service';
 import { BackEndPropertyData } from '../services/property/property.service';
-import type { TeamManagementDto, WorkEvent, WorkItem } from '../services/teamManagementService/team-management.service';
-
+import type { TeamManagementDto, WorkEvent, WorkItem } from '../services/teamManagementService/team-management.types';
+import { CommentDto } from '../services/comments/contracts/comment.contract'
 
 /**
  * Minimal file metadata used across backend.
- * Pure JSON (no File, no Buffer here).
+ * Pure JSON only.
  */
 export interface FileMetaBase {
   /** Original filename sent by client (as uploaded) */
@@ -27,25 +38,39 @@ export interface FileMetaBase {
   sizeBytes: number;
 }
 
+/**
+ * NOTE:
+ * - Backend sends JSON values; dates come as ISO strings.
+ * - If you want Date objects in UI, parse them in UI/service layer.
+ */
 export interface UploadedFile {
   originalName?: string;
   storedName?: string;
   mimeType?: string;
+
+  /** (Legacy) your previous type used string; keep as string for compatibility */
   size?: string;
+
   path?: string;
   URL?: string;
   extension?: string;
   download?: string;
   uploader?: string;
-  uploadDate?: Date;
+
+  /** ✅ ISO string from backend */
+  uploadDate?: string;
 }
 
 /** Main document interface for each user's uploaded file set */
 export interface UserDocumentEntity {
   username: string;
   files: UploadedFile[];
-  createdAt: Date;
-  updatedAt: Date;
+
+  /** ✅ ISO string from backend */
+  createdAt: string;
+
+  /** ✅ ISO string from backend */
+  updatedAt: string;
 }
 
 /* ──────────────────────────────────────────────────────────────
@@ -56,63 +81,62 @@ export type ApiStatus = 'success' | 'error' | 'fail';
 /* ──────────────────────────────────────────────────────────────
    Pagination meta sent from backend to frontend
    ────────────────────────────────────────────────────────────── */
+
+/**
+ * When you send filters to backend, you may use string/Date in UI.
+ * But backend responses should be treated as string if echoed back.
+ */
 export interface DateRange {
   start: string | Date;
   end: string | Date;
 }
 
+/**
+ * Backend currently sends (commonly):
+ *  - index, limit, total, hasMore
+ *
+ * Extra fields are kept OPTIONAL for future expansion,
+ * but frontend must not assume backend always provides them.
+ */
 export interface PaginationMeta {
-  /** Zero-based page index used internally (ex: 0, 1, 2...) */
+  /** Zero-based page index */
   index?: number;
 
-  /** Page size (limit per page) */
+  /** Page size */
   limit?: number;
 
-  /** Total number of records in DB (after filters/search) */
+  /** Total DB records count */
   total?: number;
 
-  /** First record position in this page (0-based) */
-  start?: number | undefined;
-
-  /** Last record position in this page (0-based, inclusive) */
-  end?: number;
-
-  /** Optional search term used to filter data */
-  search?: string;
-
-  /** Optional date range term used to filter data */
-  dateRange?: DateRange;
-
-  /** Convenience flags – can be calculated on backend or frontend */
-  hasNext?: boolean;
-
-  hasPrevious?: boolean;
-
-  hasResults?: boolean;
-
+  /** Backend convenience flag */
   hasMore?: boolean;
 
-  nextCursor?: string | undefined;
+  // Optional / future / UI-computed fields (keep optional)
+  start?: number;
+  end?: number;
+  search?: string;
+  dateRange?: DateRange;
+
+  hasNext?: boolean;
+  hasPrevious?: boolean;
+  hasResults?: boolean;
+
+  nextCursor?: string;
 }
 
 /* ──────────────────────────────────────────────────────────────
    Validation payload (JWT, CSRF, etc.)
-   Extend this later if you want more validation info.
    ────────────────────────────────────────────────────────────── */
 export interface ValidationUnit {
-  /** Access / session / CSRF token */
   token?: string;
-
-  /** Explicit flag for validity – optional */
   isValid?: boolean;
 
-  /** ISO string expiry time if relevant (ex: JWT exp) */
+  /** ✅ ISO string expiry time if relevant */
   expiresAt?: string;
 }
 
 /* ──────────────────────────────────────────────────────────────
    Strongly-typed system data payload
-   (All your core domain models live here)
    ────────────────────────────────────────────────────────────── */
 export interface SystemData {
   user?: User;
@@ -139,6 +163,12 @@ export interface SystemData {
   team?: TeamManagementDto;
   teams?: TeamManagementDto[];
 
+  /**
+   * IMPORTANT:
+   * These MUST match backend DTO shapes:
+   * - IDs should be string (teamMongoId, userId, etc.)
+   * - dates should be ISO strings (timing.createdAt, createdAt, etc.)
+   */
   workItem?: WorkItem;
   workItems?: WorkItem[];
 
@@ -148,8 +178,10 @@ export interface SystemData {
   file?: FileMetaBase;
   files?: FileMetaBase[];
 
+  comment?: CommentDto;
+  comments?: CommentDto[];
 
-  /** Optional numeric summaries – very common in dashboards */
+  /** Common dashboard summaries */
   totalUsers?: number;
   totalProperties?: number;
   totalTenants?: number;
@@ -158,8 +190,6 @@ export interface SystemData {
 
 /* ──────────────────────────────────────────────────────────────
    Generic Data wrapper
-   - TSystem: shape of "system" (domain) payload
-   - TOther:  any extra payload (charts, filters, etc.) WITHOUT using `any`
    ────────────────────────────────────────────────────────────── */
 export interface ApiData<
   TSystem = SystemData,
@@ -183,25 +213,20 @@ export interface ApiData<
    Base API response shape used everywhere
    ────────────────────────────────────────────────────────────── */
 export interface ApiResponse<TData = ApiData> {
-  /** Quick boolean flag for client checks (if (!res.success) ...) */
   success: boolean;
-
-  /** Narrowed status values for better type safety */
   status: ApiStatus;
-
-  /** Human-readable message (toast/alert) */
   message: string;
 
   /** Main payload */
   data: TData | null;
 
-  /** Optional: ISO timestamp of response generation */
+  /** ✅ Backend sends ISO string */
   timestamp?: string;
 
-  /** Optional: backend route path (useful for logging/debugging) */
+  /** Optional: backend route path */
   path?: string;
 
-  /** Optional: correlation ID / request ID for tracing */
+  /** Optional: correlation ID / request ID */
   requestId?: string;
 }
 
@@ -211,10 +236,6 @@ export interface ApiResponse<TData = ApiData> {
 export type MSG<TData = ApiData> = ApiResponse<TData>;
 
 export type PaginationType = NonNullable<MSG[ 'data' ]>[ 'pagination' ];
-
 export type ValidationType = NonNullable<MSG[ 'data' ]>[ 'validation' ];
-
 export type SystemType = NonNullable<MSG[ 'data' ]>[ 'system' ];
-
 export type OtherType = NonNullable<MSG[ 'data' ]>[ 'other' ];
-

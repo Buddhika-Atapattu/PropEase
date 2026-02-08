@@ -185,6 +185,7 @@ export const routes: Routes = [
                   import( './pages/tenant/complaints-main/complaints/complaints' )
                     .then( m => m.ComplaintsHome ),
               },
+              // TaskViewComponent
               {
                 path: 'create-complaint/:tenantID',
                 data: { title: 'CREATE COMPLAINT' },
@@ -214,44 +215,85 @@ export const routes: Routes = [
       {
         path: 'team-management',
         data: { title: 'TEAM MANAGEMENT' },
-        loadComponent: () => import( './pages/team-management/team-management.component' ).then( m => m.TeamManagementComponent ),
+        loadComponent: () =>
+          import( './pages/team-management/team-management.component' )
+            .then( m => m.TeamManagementComponent ),
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
 
-          //dashboad
           {
             path: 'dashboard',
             data: { title: 'DASHBOARD' },
-            loadComponent: () => import( './pages/team-management/home/home.component' ).then( m => m.HomeComponent ),
+            loadComponent: () =>
+              import( './pages/team-management/home/home.component' )
+                .then( m => m.HomeComponent ),
           },
 
-          //create
           {
             path: 'create',
             data: { title: 'CREATE' },
-            loadComponent: () => import( './pages/team-management/create/create.component' ).then( m => m.CreateComponent ),
+            loadComponent: () =>
+              import( './pages/team-management/create/create.component' )
+                .then( m => m.CreateComponent ),
           },
 
-          //edit
           {
-            path: 'edit/:teamID',
+            path: 'edit/:teamId',
             data: { title: 'EDIT' },
-            loadComponent: () => import( './pages/team-management/edit/edit.component' ).then( m => m.EditComponent ),
+            loadComponent: () =>
+              import( './pages/team-management/edit/edit.component' )
+                .then( m => m.EditComponent ),
           },
 
-          //view
           {
-            path: 'view/:teamID',
+            path: 'view/:teamId',
             data: { title: 'VIEW' },
-            loadComponent: () => import( './pages/team-management/view/view.component' ).then( m => m.ViewComponent ),
+            loadComponent: () =>
+              import( './pages/team-management/view/view.component' )
+                .then( m => m.ViewComponent ),
           },
+
           {
-            path: 'asign-task/:teamID',
-            data: { title: 'ASSIGN TASK' },
-            loadComponent: () => import( './pages/team-management/assignTask/assign-task.component' ).then( m => m.AssignTaskComponent ),
+            path: 'member/:token',
+            data: { title: 'MEMBER VIEW' },
+            loadComponent: () =>
+              import( './pages/team-management/member/member.component' )
+                .then( m => m.MemberComponent ),
           },
-        ]
+
+          {
+            path: 'assign-task/:teamId',
+            data: { title: 'ASSIGN TASK' },
+            loadComponent: () =>
+              import( './pages/team-management/assignTask/assign-task.component' )
+                .then( m => m.AssignTaskComponent ),
+            children: [
+              // default child (no params here — teamId already in parent)
+              { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+
+              {
+                path: 'dashboard',
+                data: { title: 'DASHBOARD' },
+                loadComponent: () =>
+                  import( './pages/team-management/assignTask/taskHome/task-home.component' )
+                    .then( m => m.TaskHomeComponent ),
+              },
+
+              {
+                path: 'view/:taskId',
+                data: { title: 'TASK VIEW' },
+                loadComponent: () =>
+                  import( './pages/team-management/assignTask/taskView/task-view.component' )
+                    .then( m => m.TaskViewComponent ),
+              },
+
+              // future edit:
+              // { path: 'edit/:taskId', loadComponent: ... }
+            ],
+          },
+        ],
       },
+
 
       // NOTIFICATIONS (main branch; componentless parent)
       {

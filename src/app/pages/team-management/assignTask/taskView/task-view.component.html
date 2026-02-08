@@ -1,0 +1,317 @@
+<!-- Path: src/app/pages/team-management/assignTask/taskView/task-view.component.html -->
+
+<app-notification-dialog></app-notification-dialog>
+<app-progress-bar></app-progress-bar>
+
+<div class="container-fluid py-3">
+  <!-- Top bar -->
+  <div class="card mb-3">
+    <div
+      class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3"
+    >
+      <!-- Left -->
+      <div
+        class="d-flex align-items-center gap-3 flex-grow-1"
+        style="min-width: 0"
+      >
+        <div class="flex-grow-1" style="min-width: 0">
+          <div class="h6 mb-0 fw-bold text-truncate">Task View</div>
+
+          <div class="text-secondary small mt-1 text-truncate">
+            @if (teamId) {
+              <span class="me-1">Team:</span>
+              <span class="font-monospace">{{ teamId }}</span>
+            }
+            @if (taskId) {
+              <span class="mx-2">•</span>
+              <span class="me-1">Task:</span>
+              <span class="font-monospace">{{ taskId }}</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Right -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        @if (task) {
+          <span class="{{ statusPillClass }}">{{ task.status ?? "—" }}</span>
+          <span class="{{ priorityPillClass }}">{{
+            task.priority ?? "—"
+          }}</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="card">
+      <div class="card-body">
+        <div class="text-secondary">Loading task view…</div>
+      </div>
+    </div>
+  }
+
+  @if (!isLoading && errorMsg) {
+    <div class="card border border-danger">
+      <div class="card-body">
+        <div class="fw-bold text-danger mb-1">Unable to load task</div>
+        <div class="text-secondary">{{ errorMsg }}</div>
+      </div>
+    </div>
+  }
+
+  @if (!isLoading && !errorMsg && task) {
+    <!-- TOP SECTION -->
+    <div class="row g-3">
+      <!-- LEFT -->
+      <div class="col-12 col-xl-8">
+        <!-- Task summary -->
+        <div class="card mb-3">
+          <div class="card-body">
+            <div
+              class="d-flex flex-wrap align-items-start justify-content-between gap-3"
+            >
+              <div class="flex-grow-1" style="min-width: 220px">
+                <div class="h5 mb-1 fw-bold">{{ task.name || "—" }}</div>
+                <div class="text-secondary small">
+                  Created: {{ formatDateTime(task.createdAt) }}
+                  <span class="mx-2">•</span>
+                  Planned: {{ formatDateTime(task.plannedStartAt) }} →
+                  {{ formatDateTime(task.plannedEndAt) }}
+                </div>
+              </div>
+
+              <div class="d-flex flex-wrap justify-content-end gap-2">
+                <div class="border rounded-3 p-2" style="min-width: 120px">
+                  <div class="text-secondary small">People</div>
+                  <div class="fw-bold">{{ assignedCount }}</div>
+                </div>
+
+                <div class="border rounded-3 p-2" style="min-width: 120px">
+                  <div class="text-secondary small">Due Health</div>
+                  <div class="fw-bold">{{ dueHealthText }}</div>
+                </div>
+
+                <div class="border rounded-3 p-2" style="min-width: 140px">
+                  <div class="text-secondary small">Importance</div>
+                  <div class="fw-bold">{{ importanceScore }}%</div>
+                  <div class="text-secondary small">{{ importanceLabel }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mt-3 p-3 border rounded-3">
+              <div class="text-secondary small fw-semibold mb-2">
+                Description
+              </div>
+              <div [innerHTML]="task.description"></div>
+            </div>
+
+            <!-- Meta -->
+            <div class="row g-2 mt-3">
+              <div class="col-12 col-md-6">
+                <div class="p-3 border rounded-3">
+                  <div class="text-secondary small fw-semibold mb-1">
+                    Captain
+                  </div>
+                  <div class="small">{{ task.assignedTaskCaptain ?? "—" }}</div>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="p-3 border rounded-3">
+                  <div class="text-secondary small fw-semibold mb-1">
+                    Complaint
+                  </div>
+                  <div class="small font-monospace">
+                    {{ task.compliantId ?? "—" }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <div class="p-3 border rounded-3">
+                  <div class="text-secondary small fw-semibold mb-1">Notes</div>
+                  <div class="small" style="white-space: pre-wrap">
+                    {{ task.notes ?? "—" }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage indicator -->
+        <div class="card mb-3">
+          <div class="card-body">
+            <div
+              class="d-flex align-items-start justify-content-between gap-3 mb-2"
+            >
+              <div>
+                <div class="fw-bold">Stage / Process</div>
+                <div class="text-secondary small">
+                  Visual task pipeline position
+                </div>
+              </div>
+              <span class="badge text-bg-primary"
+                >{{ STATUS_CURRENT_VALUE }}%</span
+              >
+            </div>
+
+            <app-stage-indicator
+              [stages]="STATUS_STAGE"
+              [currentValue]="STATUS_CURRENT_VALUE"
+              [showDisabled]="false"
+            ></app-stage-indicator>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="col-12 col-xl-4">
+        <!-- Realtime Progress -->
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="mb-2">
+              <div class="fw-bold">Realtime Progress</div>
+              <div class="text-secondary small">
+                Updates every {{ pollSeconds }}s
+              </div>
+            </div>
+
+            @if (kpiProgressGauge) {
+              <div class="border rounded-3 p-2 gc-card">
+                <google-chart
+                  [type]="kpiProgressGauge.type"
+                  [columns]="kpiProgressGauge.columns"
+                  [data]="kpiProgressGauge.data"
+                  [options]="kpiProgressGauge.options"
+                ></google-chart>
+              </div>
+            } @else {
+              <div class="border border-dashed rounded-3 p-3 text-secondary">
+                No progress chart.
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Status Pie -->
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="mb-2">
+              <div class="fw-bold">Team Task Status</div>
+              <div class="text-secondary small">Live distribution (team)</div>
+            </div>
+
+            @if (kpiStatusPie) {
+              <div class="border rounded-3 p-2 gc-card">
+                <google-chart
+                  [type]="kpiStatusPie.type"
+                  [columns]="kpiStatusPie.columns"
+                  [data]="kpiStatusPie.data"
+                  [options]="kpiStatusPie.options"
+                ></google-chart>
+              </div>
+            } @else {
+              <div class="border border-dashed rounded-3 p-3 text-secondary">
+                No status data.
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Priority Pie -->
+        <div class="card">
+          <div class="card-body">
+            <div class="mb-2">
+              <div class="fw-bold">Team Task Priority</div>
+              <div class="text-secondary small">Live distribution (team)</div>
+            </div>
+
+            @if (kpiPriorityPie) {
+              <div class="border rounded-3 p-2 gc-card">
+                <google-chart
+                  [type]="kpiPriorityPie.type"
+                  [columns]="kpiPriorityPie.columns"
+                  [data]="kpiPriorityPie.data"
+                  [options]="kpiPriorityPie.options"
+                ></google-chart>
+              </div>
+            } @else {
+              <div class="border border-dashed rounded-3 p-3 text-secondary">
+                No priority data.
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assigned Members -->
+    <div class="card mt-3">
+      <div class="card-body">
+        <div
+          class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3"
+        >
+          <div>
+            <div class="fw-bold">Assigned Members</div>
+            <div class="text-secondary small">
+              People currently assigned to this task
+            </div>
+          </div>
+
+          <div class="border rounded-3 p-2" style="min-width: 120px">
+            <div class="text-secondary small">Total</div>
+            <div class="fw-bold">{{ memberTotal }}</div>
+          </div>
+        </div>
+
+        <app-custom-table
+          [pagination]="false"
+          [tableTitle]="'Assigned Members'"
+          [columns]="assignedMemberColumns"
+          [data]="assignedMemberRowsPaged"
+          (buttonOperation)="onMemberTableButtonClick($event)"
+        ></app-custom-table>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <!-- Comments -->
+    <div class="card mt-3">
+      <div class="card-body">
+        <div class="mb-3">
+          <div class="fw-bold">Comments</div>
+          <div class="text-secondary small">Live comments for this task</div>
+        </div>
+
+
+        <!-- List -->
+        <div class="mt-3">
+          @if(team){
+            <app-comments-list
+            [context]="{
+                        section: 'Teams',
+                        subSection: 'Teams',
+                        refId: team.teamCode,
+                        module: 'teamManagement',
+                        scope: { teamCode: team.teamCode, taskId: task.id}
+                      }"
+            [mode]="'advanced'"
+            [enableCounts]="true"
+            [enableClientSearch]="true"
+            [enableServerSearch]="true"
+            [showComposer]="true"
+            [limit]="6"
+          ></app-comments-list>
+          }
+          @else {
+
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -54,10 +54,10 @@ import {
   RoleInTeam,
   TeamDomain,
   TeamManagementDto,
-  TeamManagementService,
   TeamMemberDto,
   type UserWithTeams,
-} from '../../../services/teamManagementService/team-management.service';
+} from '../../../services/teamManagementService/team-management.types';
+import { TeamManagementService } from '../../../services/teamManagementService/team-management.service';
 import { APIsService } from '../../../services/APIs/apis.service';
 import { DownloadService } from '../../../services/downloadService/download.service';
 import { TextService } from '../../../services/text/text.service';

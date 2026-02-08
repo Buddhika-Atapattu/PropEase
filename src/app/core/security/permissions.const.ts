@@ -42,6 +42,14 @@ export const PERM = {
     "assignRole": {
       "module": "UserManagement",
       "action": "assignRole"
+    },
+    "export": {
+      "module": "UserManagement",
+      "action": "export"
+    },
+    "impersonate": {
+      "module": "UserManagement",
+      "action": "impersonate"
     }
   },
   "PropertyManagement": {
@@ -69,9 +77,17 @@ export const PERM = {
       "module": "PropertyManagement",
       "action": "upload"
     },
+    "publish": {
+      "module": "PropertyManagement",
+      "action": "publish"
+    },
     "configure": {
       "module": "PropertyManagement",
       "action": "configure"
+    },
+    "export": {
+      "module": "PropertyManagement",
+      "action": "export"
     }
   },
   "TenantManagement": {
@@ -103,115 +119,9 @@ export const PERM = {
       "module": "TenantManagement",
       "action": "sendNotification"
     },
-    "recordPayment": {
+    "export": {
       "module": "TenantManagement",
-      "action": "recordPayment"
-    },
-    "viewHistory": {
-      "module": "TenantManagement",
-      "action": "viewHistory"
-    },
-    "terminate": {
-      "module": "TenantManagement",
-      "action": "terminate"
-    },
-    "renew": {
-      "module": "TenantManagement",
-      "action": "renew"
-    }
-  },
-  "TeamManagement": {
-    "view": {
-      "module": "TeamManagement",
-      "action": "view"
-    },
-    "create": {
-      "module": "TeamManagement",
-      "action": "create"
-    },
-    "update": {
-      "module": "TeamManagement",
-      "action": "update"
-    },
-    "delete": {
-      "module": "TeamManagement",
-      "action": "delete"
-    },
-    "assign": {
-      "module": "TeamManagement",
-      "action": "assign"
-    },
-    "upload": {
-      "module": "TeamManagement",
-      "action": "upload"
-    },
-    "monitor": {
-      "module": "TeamManagement",
-      "action": "monitor"
-    },
-    "generate": {
-      "module": "TeamManagement",
-      "action": "generate"
-    },
-    "lock": {
-      "module": "TeamManagement",
-      "action": "lock"
-    },
-    "unlock": {
-      "module": "TeamManagement",
-      "action": "unlock"
-    }
-  },
-  "OwnerManagement": {
-    "view": {
-      "module": "OwnerManagement",
-      "action": "view"
-    },
-    "create": {
-      "module": "OwnerManagement",
-      "action": "create"
-    },
-    "update": {
-      "module": "OwnerManagement",
-      "action": "update"
-    },
-    "delete": {
-      "module": "OwnerManagement",
-      "action": "delete"
-    },
-    "assign": {
-      "module": "OwnerManagement",
-      "action": "assign"
-    },
-    "upload": {
-      "module": "OwnerManagement",
-      "action": "upload"
-    }
-  },
-  "AgentManagement": {
-    "view": {
-      "module": "AgentManagement",
-      "action": "view"
-    },
-    "create": {
-      "module": "AgentManagement",
-      "action": "create"
-    },
-    "update": {
-      "module": "AgentManagement",
-      "action": "update"
-    },
-    "delete": {
-      "module": "AgentManagement",
-      "action": "delete"
-    },
-    "assign": {
-      "module": "AgentManagement",
-      "action": "assign"
-    },
-    "monitor": {
-      "module": "AgentManagement",
-      "action": "monitor"
+      "action": "export"
     }
   },
   "LeaseManagement": {
@@ -239,9 +149,47 @@ export const PERM = {
       "module": "LeaseManagement",
       "action": "upload"
     },
-    "monitor": {
+    "approve": {
       "module": "LeaseManagement",
-      "action": "monitor"
+      "action": "approve"
+    },
+    "export": {
+      "module": "LeaseManagement",
+      "action": "export"
+    }
+  },
+  "ComplaintsManagement": {
+    "view": {
+      "module": "ComplaintsManagement",
+      "action": "view"
+    },
+    "create": {
+      "module": "ComplaintsManagement",
+      "action": "create"
+    },
+    "update": {
+      "module": "ComplaintsManagement",
+      "action": "update"
+    },
+    "delete": {
+      "module": "ComplaintsManagement",
+      "action": "delete"
+    },
+    "assign": {
+      "module": "ComplaintsManagement",
+      "action": "assign"
+    },
+    "close": {
+      "module": "ComplaintsManagement",
+      "action": "close"
+    },
+    "reopen": {
+      "module": "ComplaintsManagement",
+      "action": "reopen"
+    },
+    "export": {
+      "module": "ComplaintsManagement",
+      "action": "export"
     }
   },
   "PaymentBilling": {
@@ -249,21 +197,33 @@ export const PERM = {
       "module": "PaymentBilling",
       "action": "view"
     },
+    "create": {
+      "module": "PaymentBilling",
+      "action": "create"
+    },
+    "update": {
+      "module": "PaymentBilling",
+      "action": "update"
+    },
+    "delete": {
+      "module": "PaymentBilling",
+      "action": "delete"
+    },
     "recordPayment": {
       "module": "PaymentBilling",
       "action": "recordPayment"
     },
-    "create": {
+    "refund": {
       "module": "PaymentBilling",
-      "action": "create"
+      "action": "refund"
     },
-    "update": {
+    "reverse": {
       "module": "PaymentBilling",
-      "action": "update"
+      "action": "reverse"
     },
-    "delete": {
+    "approve": {
       "module": "PaymentBilling",
-      "action": "delete"
+      "action": "approve"
     },
     "export": {
       "module": "PaymentBilling",
@@ -274,133 +234,217 @@ export const PERM = {
       "action": "configure"
     }
   },
-  "MaintenanceRequests": {
+  "TeamManagement.Teams": {
     "view": {
-      "module": "MaintenanceRequests",
+      "module": "TeamManagement.Teams",
       "action": "view"
     },
     "create": {
-      "module": "MaintenanceRequests",
+      "module": "TeamManagement.Teams",
       "action": "create"
     },
     "update": {
-      "module": "MaintenanceRequests",
+      "module": "TeamManagement.Teams",
       "action": "update"
     },
-    "assign": {
-      "module": "MaintenanceRequests",
-      "action": "assign"
+    "delete": {
+      "module": "TeamManagement.Teams",
+      "action": "delete"
+    },
+    "assignMembers": {
+      "module": "TeamManagement.Teams",
+      "action": "assignMembers"
+    },
+    "assignCaptain": {
+      "module": "TeamManagement.Teams",
+      "action": "assignCaptain"
     },
     "upload": {
-      "module": "MaintenanceRequests",
+      "module": "TeamManagement.Teams",
       "action": "upload"
     },
-    "close": {
-      "module": "MaintenanceRequests",
-      "action": "close"
+    "generate": {
+      "module": "TeamManagement.Teams",
+      "action": "generate"
+    },
+    "lock": {
+      "module": "TeamManagement.Teams",
+      "action": "lock"
+    },
+    "unlock": {
+      "module": "TeamManagement.Teams",
+      "action": "unlock"
+    },
+    "export": {
+      "module": "TeamManagement.Teams",
+      "action": "export"
     },
     "monitor": {
-      "module": "MaintenanceRequests",
+      "module": "TeamManagement.Teams",
       "action": "monitor"
-    },
-    "generate": {
-      "module": "MaintenanceRequests",
-      "action": "generate"
     }
   },
-  "ComplianceManagement": {
+  "TeamManagement.WorkItems": {
     "view": {
-      "module": "ComplianceManagement",
+      "module": "TeamManagement.WorkItems",
       "action": "view"
     },
     "create": {
-      "module": "ComplianceManagement",
+      "module": "TeamManagement.WorkItems",
       "action": "create"
     },
     "update": {
-      "module": "ComplianceManagement",
+      "module": "TeamManagement.WorkItems",
       "action": "update"
     },
     "delete": {
-      "module": "ComplianceManagement",
+      "module": "TeamManagement.WorkItems",
       "action": "delete"
     },
-    "configure": {
-      "module": "ComplianceManagement",
-      "action": "configure"
+    "assign": {
+      "module": "TeamManagement.WorkItems",
+      "action": "assign"
     },
-    "sendNotification": {
-      "module": "ComplianceManagement",
-      "action": "sendNotification"
+    "changeStatus": {
+      "module": "TeamManagement.WorkItems",
+      "action": "changeStatus"
+    },
+    "prioritize": {
+      "module": "TeamManagement.WorkItems",
+      "action": "prioritize"
+    },
+    "uploadEvidence": {
+      "module": "TeamManagement.WorkItems",
+      "action": "uploadEvidence"
+    },
+    "requestApproval": {
+      "module": "TeamManagement.WorkItems",
+      "action": "requestApproval"
+    },
+    "approveCompletion": {
+      "module": "TeamManagement.WorkItems",
+      "action": "approveCompletion"
+    },
+    "rejectCompletion": {
+      "module": "TeamManagement.WorkItems",
+      "action": "rejectCompletion"
+    },
+    "reopen": {
+      "module": "TeamManagement.WorkItems",
+      "action": "reopen"
+    },
+    "monitor": {
+      "module": "TeamManagement.WorkItems",
+      "action": "monitor"
+    },
+    "export": {
+      "module": "TeamManagement.WorkItems",
+      "action": "export"
     }
   },
-  "DocumentManagement": {
-    "upload": {
-      "module": "DocumentManagement",
-      "action": "upload"
-    },
-    "download": {
-      "module": "DocumentManagement",
-      "action": "download"
-    },
-    "delete": {
-      "module": "DocumentManagement",
-      "action": "delete"
-    },
-    "share": {
-      "module": "DocumentManagement",
-      "action": "share"
-    },
-    "configure": {
-      "module": "DocumentManagement",
-      "action": "configure"
-    },
+  "TeamManagement.WorkEvents": {
     "view": {
-      "module": "DocumentManagement",
-      "action": "view"
-    }
-  },
-  "NotificationCenter": {
-    "view": {
-      "module": "NotificationCenter",
+      "module": "TeamManagement.WorkEvents",
       "action": "view"
     },
     "create": {
-      "module": "NotificationCenter",
+      "module": "TeamManagement.WorkEvents",
       "action": "create"
     },
-    "sendNotification": {
-      "module": "NotificationCenter",
-      "action": "sendNotification"
+    "update": {
+      "module": "TeamManagement.WorkEvents",
+      "action": "update"
     },
-    "configure": {
-      "module": "NotificationCenter",
-      "action": "configure"
+    "delete": {
+      "module": "TeamManagement.WorkEvents",
+      "action": "delete"
     },
-    "restore": {
-      "module": "NotificationCenter",
-      "action": "restore"
+    "assign": {
+      "module": "TeamManagement.WorkEvents",
+      "action": "assign"
     },
-    "permanentDelete": {
-      "module": "NotificationCenter",
-      "action": "permanentDelete"
-    }
-  },
-  "ReportManagement": {
-    "view": {
-      "module": "ReportManagement",
-      "action": "view"
+    "acknowledge": {
+      "module": "TeamManagement.WorkEvents",
+      "action": "acknowledge"
     },
-    "generate": {
-      "module": "ReportManagement",
-      "action": "generate"
+    "resolve": {
+      "module": "TeamManagement.WorkEvents",
+      "action": "resolve"
+    },
+    "reopen": {
+      "module": "TeamManagement.WorkEvents",
+      "action": "reopen"
+    },
+    "uploadEvidence": {
+      "module": "TeamManagement.WorkEvents",
+      "action": "uploadEvidence"
+    },
+    "monitor": {
+      "module": "TeamManagement.WorkEvents",
+      "action": "monitor"
     },
     "export": {
-      "module": "ReportManagement",
+      "module": "TeamManagement.WorkEvents",
+      "action": "export"
+    }
+  },
+  "CommentEngine": {
+    "view": {
+      "module": "CommentEngine",
+      "action": "view"
+    },
+    "create": {
+      "module": "CommentEngine",
+      "action": "create"
+    },
+    "updateOwn": {
+      "module": "CommentEngine",
+      "action": "updateOwn"
+    },
+    "deleteOwn": {
+      "module": "CommentEngine",
+      "action": "deleteOwn"
+    },
+    "moderate": {
+      "module": "CommentEngine",
+      "action": "moderate"
+    },
+    "upload": {
+      "module": "CommentEngine",
+      "action": "upload"
+    },
+    "pin": {
+      "module": "CommentEngine",
+      "action": "pin"
+    },
+    "unpin": {
+      "module": "CommentEngine",
+      "action": "unpin"
+    },
+    "pinToggle": {
+      "module": "CommentEngine",
+      "action": "pinToggle"
+    }
+  },
+  "KpiMonitoring": {
+    "view": {
+      "module": "KpiMonitoring",
+      "action": "view"
+    },
+    "create": {
+      "module": "KpiMonitoring",
+      "action": "create"
+    },
+    "update": {
+      "module": "KpiMonitoring",
+      "action": "update"
+    },
+    "export": {
+      "module": "KpiMonitoring",
       "action": "export"
     },
     "configure": {
-      "module": "ReportManagement",
+      "module": "KpiMonitoring",
       "action": "configure"
     }
   },
@@ -422,34 +466,6 @@ export const PERM = {
       "action": "monitor"
     }
   },
-  "TrackingAndAudit": {
-    "view": {
-      "module": "TrackingAndAudit",
-      "action": "view"
-    },
-    "export": {
-      "module": "TrackingAndAudit",
-      "action": "export"
-    }
-  },
-  "DashboardAnalytics": {
-    "view": {
-      "module": "DashboardAnalytics",
-      "action": "view"
-    },
-    "configure": {
-      "module": "DashboardAnalytics",
-      "action": "configure"
-    },
-    "download": {
-      "module": "DashboardAnalytics",
-      "action": "download"
-    },
-    "monitor": {
-      "module": "DashboardAnalytics",
-      "action": "monitor"
-    }
-  },
   "SystemSettings": {
     "configure": {
       "module": "SystemSettings",
@@ -468,28 +484,6 @@ export const PERM = {
       "action": "backupRestore"
     }
   },
-  "SupportHelpdesk": {
-    "view": {
-      "module": "SupportHelpdesk",
-      "action": "view"
-    },
-    "update": {
-      "module": "SupportHelpdesk",
-      "action": "update"
-    },
-    "assign": {
-      "module": "SupportHelpdesk",
-      "action": "assign"
-    },
-    "close": {
-      "module": "SupportHelpdesk",
-      "action": "close"
-    },
-    "sendNotification": {
-      "module": "SupportHelpdesk",
-      "action": "sendNotification"
-    }
-  },
   "AccessControl": {
     "grantAccess": {
       "module": "AccessControl",
@@ -506,49 +500,39 @@ export const PERM = {
     "controlSessions": {
       "module": "AccessControl",
       "action": "controlSessions"
+    },
+    "auditChanges": {
+      "module": "AccessControl",
+      "action": "auditChanges"
     }
   },
-  "FileManagement": {
+  "NotificationCenter": {
     "view": {
-      "module": "FileManagement",
+      "module": "NotificationCenter",
       "action": "view"
     },
-    "create": {
-      "module": "FileManagement",
-      "action": "create"
-    },
-    "update": {
-      "module": "FileManagement",
-      "action": "update"
+    "markRead": {
+      "module": "NotificationCenter",
+      "action": "markRead"
     },
     "delete": {
-      "module": "FileManagement",
+      "module": "NotificationCenter",
       "action": "delete"
     },
-    "convert": {
-      "module": "FileManagement",
-      "action": "convert"
+    "restore": {
+      "module": "NotificationCenter",
+      "action": "restore"
     },
-    "download": {
-      "module": "FileManagement",
-      "action": "download"
+    "clear": {
+      "module": "NotificationCenter",
+      "action": "clear"
     },
-    "share": {
-      "module": "FileManagement",
-      "action": "share"
-    }
-  },
-  "PlacesAndMaps": {
-    "view": {
-      "module": "PlacesAndMaps",
-      "action": "view"
-    },
-    "autocomplete": {
-      "module": "PlacesAndMaps",
-      "action": "autocomplete"
+    "broadcast": {
+      "module": "NotificationCenter",
+      "action": "broadcast"
     },
     "configure": {
-      "module": "PlacesAndMaps",
+      "module": "NotificationCenter",
       "action": "configure"
     }
   }

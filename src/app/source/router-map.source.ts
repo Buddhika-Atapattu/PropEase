@@ -121,22 +121,22 @@ export const DEFINED_ROUTES_URLS: ReadonlyArray<RouteRequirement> = [
   // ---------- Team Management ----------
   {
     url: '/dashboard/team-management/dashboard',
-    module: 'TeamManagement',
+    module: 'TeamManagement.Teams',
     action: 'monitor', // dashboard / performance overview
   },
   {
     url: '/dashboard/team-management/create',
-    module: 'TeamManagement',
+    module: 'TeamManagement.Teams',
     action: 'create',
   },
   {
     url: '/dashboard/team-management/edit/:teamID',
-    module: 'TeamManagement',
+    module: 'TeamManagement.Teams',
     action: 'update',
   },
   {
     url: '/dashboard/team-management/view/:teamID',
-    module: 'TeamManagement',
+    module: 'TeamManagement.Teams',
     action: 'view',
   },
 ];

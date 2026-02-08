@@ -594,7 +594,7 @@
                   @for (role of definedRole; track role) {
                   <mat-option [value]="role"
                     ><p class="text-capitalize">
-                      {{ role }}
+                      {{ convertToHumanReadable(role) }}
                     </p></mat-option
                   >
                   }

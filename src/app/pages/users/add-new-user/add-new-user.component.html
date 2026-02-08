@@ -468,7 +468,7 @@
                     [value]="option"
                   >
                     <img
-                      [src]="option.image"
+                      [src]="option.flags.png"
                       width="24"
                       height="16"
                       style="margin-right: 8px"
@@ -573,7 +573,7 @@
                   @for (role of definedRole; track role) {
                   <mat-option [value]="role"
                     ><p class="text-capitalize">
-                      {{ role }}
+                      {{ convertToHumanReadable(role) }}
                     </p></mat-option
                   >
                   }

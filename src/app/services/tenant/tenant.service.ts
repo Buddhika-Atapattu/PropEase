@@ -15,14 +15,23 @@
 //   - Query strings via toParams().
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { BackEndPropertyData, Property, type AddedBy } from '../property/property.service';
 import { environment } from '../../../environments/environment';
 import { MSG } from '../../types/api-message.types';
+import { BackEndPropertyData, Property, type AddedBy } from '../property/property.service';
 
+
+
+// Add this payload type near other complaint payloads
+export interface UpdateComplaintBasicPayload {
+  title: string;
+  description: string;
+  category: ComplaintsCategory;
+  priority: ComplaintPriority;
+}
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -291,10 +300,7 @@ export interface ComplaintAttachmentClient {
   _id?: string; name: string; mimetype: string; size: number; url: string; width?: number; height?: number;
 }
 export interface PendingAttachmentClient { source: AttachmentSource; file: File; previewDataUrl?: string; }
-export interface ComplaintCommentClient {
-  _id?: string; byUserId: string; byName: string; image: string; audience: ComplaintAudience; message: string;
-  createdAt: string; attachments?: ComplaintAttachmentClient[];
-}
+
 export interface ComplaintTimelineEventClient {
   _id?: string;
   at: string; // ID
@@ -322,7 +328,6 @@ export interface ComplaintClient {
   updatedAt: string;
   dueAt?: string;
   attachments?: ComplaintAttachmentClient[];
-  comments?: ComplaintCommentClient[];
   timeline?: ComplaintTimelineEventClient[];
 }
 export interface CreateComplaintPayload {
@@ -390,16 +395,34 @@ export class TenantService {
   } as const;
 
   /** Complaint endpoints registry (readonly) */
+  /** Complaint endpoints registry (readonly) */
   private readonly URLS_COMPLAINT = {
     create: () => `${ this.API_TENANT_ROOT }/create-complaint`,
-    byId: ( complaintID: string ) => `${ this.API_TENANT_ROOT }/complaint/${ this.safeSeg( complaintID ) }`,
-    byTenant: ( username: string ) => `${ this.API_TENANT_ROOT }/complaints/tenant/${ this.safeSeg( username ) }`,
-    countByTenant: ( username: string ) => `${ this.API_TENANT_ROOT }/complaints-count/tenant/${ this.safeSeg( username ) }`,
-    allComplaints: () => `${ this.API_TENANT_ROOT }/complaints/all`,
-    allComplaintsCount: () => `${ this.API_TENANT_ROOT }/complaints-count/all`,
-    allComplaintsBySection: ( section: ComplaintSection ) => `${ this.API_TENANT_ROOT }/complaints-by-section/all/${ section }`,
-    postComment: () => `${ this.API_TENANT_ROOT }/complaints/post-comments`,
+    byId: ( complaintID: string ) =>
+      `${ this.API_TENANT_ROOT }/complaint/${ this.safeSeg( complaintID ) }`,
+
+    // ✅ ADD THIS
+    updateBasic: ( complaintID: string ) =>
+      `${ this.API_TENANT_ROOT }/complaint/${ this.safeSeg( complaintID ) }`,
+
+    byTenant: ( username: string ) =>
+      `${ this.API_TENANT_ROOT }/complaints/tenant/${ this.safeSeg( username ) }`,
+    countByTenant: ( username: string ) =>
+      `${ this.API_TENANT_ROOT }/complaints-count/tenant/${ this.safeSeg( username ) }`,
+    allComplaints: () =>
+      `${ this.API_TENANT_ROOT }/complaints/all`,
+    allComplaintsCount: () =>
+      `${ this.API_TENANT_ROOT }/complaints-count/all`,
+    allComplaintsBySection: ( section: ComplaintSection ) =>
+      `${ this.API_TENANT_ROOT }/complaints-by-section/all/${ this.safeSeg( section ) }`,
+    allByStatus: ( status: string ) =>
+      `${ this.API_TENANT_ROOT }/complaints/all/status/${ this.safeSeg( status ) }`,
+    countByStatus: ( status: string ) =>
+      `${ this.API_TENANT_ROOT }/complaints/all/count/status/${ this.safeSeg( status ) }`,
+    postComment: () =>
+      `${ this.API_TENANT_ROOT }/complaints/post-comments`,
   } as const;
+
 
   constructor (
     @Inject( PLATFORM_ID ) platformId: Object,
@@ -464,6 +487,19 @@ export class TenantService {
   // ───────────────────────────────────────────────────────────────────────────
   // Private utils
   // ───────────────────────────────────────────────────────────────────────────
+  private buildUpdateComplaintBasicFormData( payload: UpdateComplaintBasicPayload ): FormData {
+    const normalized: UpdateComplaintBasicPayload = {
+      title: String( payload.title ?? '' ).trim(),
+      description: String( payload.description ?? '' ).trim(),
+      category: payload.category,
+      priority: payload.priority,
+    };
+
+    const form = new FormData();
+    form.set( 'data', JSON.stringify( normalized ) );
+    return form;
+  }
+
   private safeSeg( value: string ): string { return encodeURIComponent( ( value || '' ).trim() ); }
 
   private toParams( record: Record<string, string | number | boolean | undefined | null> ): HttpParams {
@@ -682,6 +718,34 @@ export class TenantService {
       return this.mapError( e );
     }
   }
+
+  /**
+ * Update complaint basic fields only (title/description/category/priority)
+ * Matches:
+ *   PUT /api-tenant/complaint/:complaintID
+ */
+  public async updateComplaintBasic(
+    complaintID: string,
+    payload: UpdateComplaintBasicPayload
+  ): Promise<MSG> {
+    try {
+      const id = String( complaintID ?? '' ).trim();
+      if ( !id ) return { success: false, status: 'error', message: 'complaintID is required', data: null };
+
+      if ( !payload.title?.trim() ) return { success: false, status: 'error', message: 'title is required', data: null };
+      if ( !payload.description?.trim() ) return { success: false, status: 'error', message: 'description is required', data: null };
+      if ( !this.isValidComplaintCategory( payload.category ) ) return { success: false, status: 'error', message: 'Invalid category', data: null };
+      if ( !this.isValidComplaintPriority( payload.priority ) ) return { success: false, status: 'error', message: 'Invalid priority', data: null };
+
+      const resp = await firstValueFrom(
+        this.http.put<MSG>( this.URLS_COMPLAINT.updateBasic( id ), this.buildUpdateComplaintBasicFormData( payload ) )
+      );
+      return this.normalizeToMSG( resp );
+    } catch ( e ) {
+      return this.mapError( e );
+    }
+  }
+
   public async getComplaintById( complaintID: string ): Promise<MSG> {
     try { return this.normalizeToMSG( await firstValueFrom( this.http.get<MSG>( this.URLS_COMPLAINT.byId( complaintID ) ) ) ); }
     catch ( e ) { return this.mapError( e ); }
@@ -717,4 +781,44 @@ export class TenantService {
     try { return this.normalizeToMSG( await firstValueFrom( this.http.post<MSG>( this.URLS_COMPLAINT.postComment(), data ) ) ); }
     catch ( e ) { return this.mapError( e ); }
   }
+
+  /**
+ * Get all complaints filtered by status
+ * Matches:
+ *   GET /api-tenant/complaints/all/status/:status
+ */
+  public async getAllComplaintByStatus(
+    status: string,
+    start: number,
+    limit: number,
+    search?: string
+  ): Promise<MSG> {
+    try {
+      return this.normalizeToMSG(
+        await firstValueFrom(
+          this.http.get<MSG>( this.URLS_COMPLAINT.allByStatus( status ), { params: this.toParams( { start, limit, search } ) } )
+        )
+      );
+    } catch ( e ) {
+      return this.mapError( e );
+    }
+  }
+
+  /**
+   * Get complaint count filtered by status
+   * Matches:
+   *   GET /api-tenant/complaints/all/count/status/:status
+   */
+  public async getComplaintCountByStatus( status: string ): Promise<MSG> {
+    try {
+      return this.normalizeToMSG(
+        await firstValueFrom(
+          this.http.get<MSG>( this.URLS_COMPLAINT.countByStatus( status ) )
+        )
+      );
+    } catch ( e ) {
+      return this.mapError( e );
+    }
+  }
+
 }

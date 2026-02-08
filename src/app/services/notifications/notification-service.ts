@@ -43,6 +43,7 @@ import {
   BackendRestoreResponse,
 } from '../../types/notification.types';
 import { environment } from '../../../environments/environment';
+import type { Role } from '../auth/user.contract';
 
 /* ============================================================================
  * Shared Types
@@ -158,7 +159,7 @@ export type Title =
 export interface NotificationAudience {
   mode: AudienceMode;
   usernames?: string[];
-  roles?: UserRole[];
+  roles?: Role[];
 }
 
 export type DefinedTypes =

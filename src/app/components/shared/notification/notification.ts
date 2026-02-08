@@ -25,6 +25,7 @@ import {
 import { AuthService } from '../../../services/auth/auth.service';
 import { NotificationsRoutingService } from '../../../services/notificationRouting/notifications-routing-service';
 import { NotificationDialogComponent } from '../../dialogs/notificationBar/notificationBar.component';
+import type { Role } from '../../../services/auth/user.contract';
 
 @Component( {
   selector: 'app-notification',
@@ -47,16 +48,7 @@ export class NotificationComponent implements OnInit, OnDestroy {
 
   protected isLoggedIn = false;
   private username = '';
-  private role:
-    | 'admin'
-    | 'agent'
-    | 'tenant'
-    | 'owner'
-    | 'operator'
-    | 'manager'
-    | 'developer'
-    | 'user'
-    | '' = '';
+  private role: Role | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -77,7 +69,7 @@ export class NotificationComponent implements OnInit, OnDestroy {
     this.isLoggedIn = this.authService.isUserLoggedIn;
     const me = this.authService.getLoggedUser;
     this.username = me?.username || '';
-    this.role = me?.role || '';
+    this.role = me?.role || null;
 
     // Predicates
     const isDirect = ( n: Notification ) => {

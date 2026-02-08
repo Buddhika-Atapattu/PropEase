@@ -49,7 +49,7 @@ type TinyEditor = any;
 } )
 export class TextEditorComponent implements ControlValueAccessor, OnInit, OnDestroy, AfterViewInit {
   // ── External API ───────────────────────────────────────────────────────────
-  @Input() public id: string = 'pe-editor';
+  @Input( { required: true } ) public id: string = 'pe-editor';
   @Input( { required: true } ) public name: string = 'description';
   @Input() public placeholder: string = 'Type here...';
   public disabled: boolean = false;

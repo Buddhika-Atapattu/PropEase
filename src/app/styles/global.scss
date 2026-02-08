@@ -857,7 +857,9 @@ body.dark {
   align-items: center;
   cursor: pointer;
 
-  transition: transform 0.2s ease, box-shadow 0.2s ease,
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
     background-color 0.2s ease;
 
   // Optional: make text wrap nicely and avoid weird breaks
@@ -922,7 +924,9 @@ body.dark {
   border-radius: 1.25rem !important;
   box-shadow: 0 0.75rem 1.25rem 0 $shadow !important;
   overflow: hidden;
-  transition: transform 180ms ease, box-shadow 220ms ease;
+  transition:
+    transform 180ms ease,
+    box-shadow 220ms ease;
   .card-body,
   .card-title,
   .card-subtitle,
@@ -986,92 +990,247 @@ body.dark {
   max-width: 100%;
 }
 /* =======================================================================================
-   5) CHART VARIABLES + GOOGLE CHARTS CONTAINER
+   GOOGLE CHARTS — CONTAINER + THEME + HTML TOOLTIP (SINGLE SYSTEM)
    ======================================================================================= */
-:root {
-  --chart-surface: #fff;
-  --chart-border: #e5e7eb;
-  --chart-shadow: 0 0.75rem 1.25rem rgba(0, 0, 0, 0.12);
-  --chart-on-surface: #111827;
-  --chart-legend-text: #374151;
-  --chart-axis-text: #374151;
-  --chart-grid: #e5e7eb;
-  --chart-tooltip-bg: #111827;
-  --chart-tooltip-fg: #f9fafb;
-  --chart-tooltip-border: rgba(255, 255, 255, 0.12);
-}
-html.light {
-  --chart-surface: #{$light-card-color};
-  --chart-border: #{$light-border-color};
-  --chart-shadow: 0 0.75rem 1.25rem #{$light-shadow-color};
-  --chart-on-surface: #{$light-text-color};
-  --chart-legend-text: #{color.scale($light-text-color, $lightness: -10%)};
-  --chart-axis-text: #{color.scale($light-text-color, $lightness: -10%)};
-  --chart-grid: #{color.scale($light-border-color, $lightness: -5%)};
-  --chart-tooltip-bg: #fff;
-  --chart-tooltip-fg: #111;
-  --chart-tooltip-border: #{color.scale($light-border-color, $lightness: -10%)};
-}
-html.dark {
-  --chart-surface: #{$dark-card-color};
-  --chart-border: #{$dark-border-color};
-  --chart-shadow: 0 0.75rem 1.25rem #{$dark-shadow-color};
-  --chart-on-surface: #{$dark-text-color};
-  --chart-legend-text: #{color.scale($dark-text-color, $lightness: -12%)};
-  --chart-axis-text: #{color.scale($dark-text-color, $lightness: -12%)};
-  --chart-grid: #{color.scale($dark-divider-color, $lightness: 5%)};
-  --chart-tooltip-bg: #1f2937;
-  --chart-tooltip-fg: #e5e7eb;
-  --chart-tooltip-border: #{color.scale($dark-border-color, $lightness: 5%)};
-}
+
+/* Chart card shell — uses your new global tokens */
 .gc-card {
-  background: var(--chart-surface);
-  color: var(--chart-on-surface);
-  border: 1px solid var(--chart-border);
+  position: relative;
+  overflow: visible !important;
+
+  background: var(--elevated);
+  color: var(--on-surface);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 16px;
-  box-shadow: var(--chart-shadow);
+
+  /* keep shadows consistent with your system */
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+
+  /* IMPORTANT:
+     - Do NOT use overflow:hidden on chart wrappers
+     - Tooltips need to escape */
   google-chart,
   .google-chart-container,
-  .google-visualization-chart {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
+  .google-visualization-chart,
+  .google-visualization-chart > div {
+    overflow: visible !important;
     width: 100%;
     height: 100%;
   }
 }
+
+/* Improve text color inside SVG (legend/axis/title) */
+/* ============================================================================
+   Google Charts – SVG Theming Overrides (PropEase tokens)
+   Scope: .gc-card (wrap your chart in this container)
+   ========================================================================== */
+
+/* Text */
 .gc-card svg text {
-  fill: var(--chart-on-surface) !important;
-}
-.gc-card svg g[aria-label="Legend"] text {
-  fill: var(--chart-legend-text) !important;
-}
-.gc-card svg g[aria-label="x-axis"] text,
-.gc-card svg g[aria-label="y-axis"] text {
-  fill: var(--chart-axis-text) !important;
-}
-.gc-card .google-visualization-tooltip {
-  background: var(--chart-tooltip-bg) !important;
-  color: var(--chart-tooltip-fg) !important;
-  border: 1px solid var(--chart-tooltip-border) !important;
-  border-radius: 10px !important;
-  box-shadow: var(--chart-shadow) !important;
-  padding: 8px 10px !important;
-}
-.gc-card .google-visualization-tooltip-item,
-.gc-card .google-visualization-tooltip-item span {
-  color: var(--chart-tooltip-fg) !important;
-}
-.gc-card .google-visualization-tooltip-action:hover {
-  background: color.scale(#fff, $lightness: -92%) !important;
+  fill: var(--on-surface) !important;
 }
 
+.gc-card svg text[text-anchor="middle"] {
+  font-size: medium !important;
+  fill: var(--on-surface) !important;
+}
+
+
+
+/* Legend */
+.gc-card svg g[aria-label="Legend"] text {
+  fill: var(--muted) !important;
+}
+
+/* Axes */
+.gc-card svg g[aria-label="x-axis"] text,
+.gc-card svg g[aria-label="y-axis"] text {
+  fill: var(--muted) !important;
+}
+
+/* Remove forced white rect backgrounds that Google injects sometimes */
 ::ng-deep google-chart svg rect[fill="#ffffff"],
-::ng-deep google-chart svg rect[fill="#fff"] {
+::ng-deep google-chart svg rect[fill="#fff"],
+::ng-deep google-chart svg rect[fill="white"] {
   fill: transparent !important;
+}
+
+/* ============================================================================
+   ✅ Custom style for "SVG circle" / series markers / pie slices
+   IMPORTANT:
+   - Pie/3D pie slices are usually <path> not <circle>
+   - Scatter/Line points are usually <circle>
+   - Google may set inline fills; we override with !important
+   ========================================================================== */
+
+/* 1) Scatter / Line / Area markers (actual circles) */
+::ng-deep .gc-card google-chart svg g[aria-label^="Series"] circle {
+  /* Keep Google’s color but improve presence */
+  opacity: 0.95 !important;
+
+  /* “Stroke ring” around points (nice on dark surfaces) */
+  stroke: var(--surface) !important;
+  stroke-width: 2px !important;
+
+  /* Slightly larger hit/visual feel without breaking layout */
+  r: 4.5px !important;
+
+  /* Smoothness */
+  shape-rendering: geometricPrecision !important;
+}
+
+/* 2) Pie / 3D Pie slices (paths) – add a subtle border to separate slices */
+::ng-deep .gc-card google-chart svg g[aria-label^="Series"] path {
+  /* Keep fill (chart color) but add slice separation */
+  stroke: color-mix(in srgb, transparent 25%) !important;
+  stroke-width: 1.25px !important;
+  opacity: 0.98 !important;
+}
+
+/* 3) Hover/focus “highlight” circle Google injects (often looks ugly) */
+::ng-deep .gc-card google-chart svg g[aria-label^="Series"] circle[stroke] {
+  /* Ensure highlight ring matches theme */
+  stroke: var(--primary) !important;
+  stroke-width: 2px !important;
+  opacity: 1 !important;
+}
+
+/* 4) If you want ALL circles to have a consistent ring, even outside Series */
+::ng-deep .gc-card google-chart svg circle {
+  stroke-linejoin: round !important;
+  stroke-linecap: round !important;
+}
+
+/* 5) Optional: soften chart “background” rects (some charts use rect for plot area) */
+::ng-deep .gc-card google-chart svg rect[fill-opacity] {
+  fill: transparent !important;
+}
+
+/* ============================================================================
+   Optional: dark-theme “glow” on hover (works only when browser supports filter)
+   ========================================================================== */
+::ng-deep .gc-card google-chart svg g[aria-label^="Series"] circle:hover,
+::ng-deep .gc-card google-chart svg g[aria-label^="Series"] path:hover {
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25)) !important;
+}
+
+/* ============================================================================
+   Google Gauge – SVG color overrides (CSS-only)
+   Scope: .gc-card
+   ========================================================================== */
+
+/* 1) Center hub (the blue circle in your screenshot) */
+::ng-deep .gc-card google-chart svg circle {
+  fill: var(--surface) !important;
+  stroke: var(--on-surface) !important;
+  stroke-width: 2px !important;
+}
+
+/* 2) Needle / pointer (thin red/orange hand) */
+::ng-deep .gc-card google-chart svg path[stroke] {
+  stroke: var(--on-surface) !important;
+}
+
+/* 3) Arc segments (green / yellow / red) – LIMITED control */
+::ng-deep .gc-card google-chart svg path[fill] {
+  opacity: 0.92 !important;
+}
+
+/* Optional: soften arc borders for dark theme */
+::ng-deep html.dark .gc-card google-chart svg path[fill] {
+  opacity: 0.85 !important;
+}
+
+/* 4) Remove white plate behind gauge */
+::ng-deep .gc-card google-chart svg rect[fill="#ffffff"],
+::ng-deep .gc-card google-chart svg rect[fill="#fff"],
+::ng-deep .gc-card google-chart svg rect[fill="white"] {
+  fill: transparent !important;
+}
+
+/* =======================================================================================
+   HTML TOOLTIP — modern bubble, theme responsive, always on top
+   Requires ChartService tooltip.isHtml = true
+   ======================================================================================= */
+
+.google-visualization-tooltip {
+  z-index: 999999 !important;
+
+  background: var(--elevated) !important;
+  color: var(--on-surface) !important;
+
+  border: 1px solid var(--border-color) !important;
+  border-radius: 16px !important;
+
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28) !important;
+
+  padding: 12px 14px !important;
+
+  overflow: hidden !important;
+
+  /* visually above the hovered point */
+  transform: translateY(-10px) !important;
+
+  max-width: min(260px, 80vw) !important;
+}
+
+/* Table cleanup */
+.google-visualization-tooltip table {
+  margin: 0 !important;
+  border-collapse: collapse !important;
+}
+
+.google-visualization-tooltip td {
+  padding: 4px 0 !important;
+  vertical-align: middle !important;
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+  color: var(--on-surface) !important;
+}
+
+/* Color dot */
+.google-visualization-tooltip .google-visualization-tooltip-square {
+  border-radius: 999px !important;
+  width: 10px !important;
+  height: 10px !important;
+  margin-right: 8px !important;
+}
+
+/* Label and value styling */
+.google-visualization-tooltip td:first-child {
+  opacity: 0.92 !important;
+  font-weight: 600 !important;
+}
+
+.google-visualization-tooltip td:last-child {
+  opacity: 0.92 !important;
+  font-weight: 700 !important;
+  padding-left: 10px !important;
+}
+
+/* Bootstrap cards sometimes clip — allow escape */
+.card,
+.card-body {
+  overflow: visible;
+}
+
+/* Mobile tightening */
+@media (max-width: 420px) {
+  .gc-card {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .google-visualization-tooltip {
+    border-radius: 14px !important;
+    padding: 10px 12px !important;
+    transform: translateY(-8px) !important;
+  }
+
+  .google-visualization-tooltip td {
+    font-size: 12px !important;
+  }
 }
 
 /* =======================================================================================
@@ -1097,7 +1256,9 @@ html.dark {
   align-items: center;
   cursor: pointer;
 
-  transition: transform 0.2s ease, box-shadow 0.2s ease,
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
     background-color 0.2s ease;
 
   // Optional: make text wrap nicely and avoid weird breaks
@@ -1215,7 +1376,9 @@ html.dark {
   align-items: center;
   cursor: pointer;
 
-  transition: transform 0.2s ease, box-shadow 0.2s ease,
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
     background-color 0.2s ease;
 
   // Optional: make text wrap nicely and avoid weird breaks
@@ -1268,7 +1431,8 @@ html.dark {
 
 .btn {
   --bs-btn-color: var(--on-primary); /* readable text on filled buttons */
-  --bs-btn-focus-shadow-rgb: 43, 89, 255; /* fallback for Bootstrap APIs that use it */
+  --bs-btn-focus-shadow-rgb:
+    43, 89, 255; /* fallback for Bootstrap APIs that use it */
 }
 
 .btn-primary {
@@ -1332,7 +1496,9 @@ html.dark {
   align-items: center;
   cursor: pointer;
 
-  transition: transform 0.2s ease, box-shadow 0.2s ease,
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
     background-color 0.2s ease;
 
   // Optional: make text wrap nicely and avoid weird breaks
@@ -2536,7 +2702,8 @@ $notify-text-light: #2b1d00;
   width: 100%;
 
   border: 2px dashed var(--border-color);
-  background: radial-gradient(
+  background:
+    radial-gradient(
       120% 120% at 100% 0%,
       color-mix(in srgb, var(--surface-variant) 80%, transparent),
       transparent 60%
@@ -2551,8 +2718,12 @@ $notify-text-light: #2b1d00;
 
   display: grid;
   place-items: center;
-  transition: transform 0.25s ease, box-shadow 0.25s ease,
-    border-color 0.2s ease, background 0.3s ease, color 0.2s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.2s ease,
+    background 0.3s ease,
+    color 0.2s ease;
 
   /* Soft hover/focus lift */
   &:hover,
@@ -2561,7 +2732,8 @@ $notify-text-light: #2b1d00;
     border-color: var(--primary);
     box-shadow: 0 12px 28px
       color-mix(in srgb, var(--shadow-color) 80%, transparent);
-    background: radial-gradient(
+    background:
+      radial-gradient(
         130% 130% at 100% 0%,
         color-mix(in srgb, var(--primary) 14%, var(--surface-variant) 86%),
         transparent 60%
@@ -2581,7 +2753,8 @@ $notify-text-light: #2b1d00;
     border-color: var(--primary);
     color: var(--on-primary);
 
-    background: radial-gradient(
+    background:
+      radial-gradient(
         150% 150% at 50% -20%,
         color-mix(in srgb, var(--primary) 35%, transparent),
         transparent 70%
@@ -2592,7 +2765,8 @@ $notify-text-light: #2b1d00;
         color-mix(in srgb, var(--primary) 18%, var(--surface) 82%)
       );
 
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 45%, transparent),
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--primary) 45%, transparent),
       0 16px 36px color-mix(in srgb, var(--shadow-color) 80%, transparent);
 
     transform: translateY(-1px) scale(1.01);
@@ -2705,7 +2879,8 @@ $notify-text-light: #2b1d00;
       height: 100%;
       display: grid;
       place-items: center;
-      background: radial-gradient(
+      background:
+        radial-gradient(
           100% 100% at 100% 0%,
           color-mix(in srgb, var(--surface) 15%, transparent),
           transparent 60%
@@ -2746,7 +2921,8 @@ $notify-text-light: #2b1d00;
     transform: rotateY(180deg);
     padding: 0.6rem;
     color: var(--on-primary);
-    background: radial-gradient(
+    background:
+      radial-gradient(
         100% 100% at 100% 0%,
         color-mix(in srgb, var(--primary) 18%, transparent),
         transparent 50%
@@ -2856,7 +3032,10 @@ $notify-text-light: #2b1d00;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
     cursor: pointer;
     padding: 0;
-    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      background 0.2s ease,
+      box-shadow 0.2s ease;
 
     &:hover {
       transform: scale(1.06);

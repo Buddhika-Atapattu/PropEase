@@ -24,6 +24,7 @@ import { CheckInternetStatusComponent } from './components/check-internet-status
 import { ModeChangerComponent } from './components/mode-changer/mode-changer.component';
 import { TopProgressBarComponent } from './components/top-progress-bar/top-progress-bar.component';
 import { SessionExpiryBannerComponent } from './components/session-expiry-banner/session-expiry-banner.component';
+import { SessionGuardService } from './core/security/session/session-guard.service';
 
 import { environment } from '../environments/environment';
 
@@ -68,6 +69,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly renderer: Renderer2,
     private readonly imageService: ImageService,
     private readonly autoLogOutService: AutoLogOutService,
+    private readonly sessionGuard: SessionGuardService,
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
     this.imageService.preload( 'Images/System-images/noImage.png' );
@@ -92,6 +94,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   public ngOnInit(): void {
     this.loggedUser = this.authService.getLoggedUser;
+    this.sessionGuard.init();
     // No-op for now; reserved for future lightweight init
   }
 

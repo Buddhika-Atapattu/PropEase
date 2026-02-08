@@ -1,0 +1,102 @@
+/* Path: src/app/pages/tenant-management/complaints/edit/edit-complaints.scss */
+
+.pe-complaint-edit {
+  padding: 16px;
+
+  .panel-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .page-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--on-surface);
+  }
+
+  .page-sub {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 13px;
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      color: var(--on-surface);
+    }
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .pill {
+      border: 1px solid var(--border-color);
+      background: var(--surface-variant);
+      color: var(--on-surface);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+
+  .section-title {
+    font-weight: 700;
+    color: var(--on-surface);
+    margin-bottom: 12px;
+  }
+
+  .small-hint {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .mini-loading {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .lock-note {
+    border: 1px dashed rgba(255, 193, 7, 0.45);
+    background: rgba(255, 193, 7, 0.10);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: var(--on-surface);
+    font-size: 13px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-top: 1px;
+    }
+  }
+
+  /* The critical part: lock custom controls too (TextEditor etc.) */
+  .edit-surface {
+    border-radius: 14px;
+
+    &.locked {
+      opacity: 0.72;
+      pointer-events: none; /* disables all interactions inside wrapper */
+      filter: grayscale(0.12);
+    }
+  }
+
+  @media (max-width: 576px) {
+    padding: 12px;
+
+    .panel-card {
+      padding: 12px;
+      border-radius: 14px;
+    }
+  }
+}

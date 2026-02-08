@@ -1,26 +1,108 @@
 <div class="container-fluid" *ngIf="accessabilities !== null">
-  <div class="row">
-    <div class="col-xl-4 my-2" *ngFor="let item of accessabilities.permissions">
+  <div class="row g-3">
+
+    <!-- each permission module -->
+    <div class="col-12 col-lg-6 col-xl-4" *ngFor="let item of accessabilities.permissions">
+
+      <!-- Skeleton: module header -->
       <app-skeleton-loader
         *ngIf="isLoading"
         [width]="'20rem'"
-        [height]="'1.5rem'"
+        [height]="'2.6rem'"
         [Mode]="mode"
-        [borderRadius]="'0.2rem'"
+        [borderRadius]="'0.6rem'"
       ></app-skeleton-loader>
-      <h4 *ngIf="!isLoading" class="text-capitalize">{{ item.module }}</h4>
+
+      <!-- Module header -->
+      <div *ngIf="!isLoading" class="d-flex align-items-start gap-2 mb-2">
+
+        <!-- module icon -->
+        <mat-icon
+          class="mt-1 fs-6"
+          [matTooltip]="'module: ' + item.module"
+          matTooltipPosition="above"
+        >
+          {{ (getModuleMeta(item.module).icon) ?? 'apps' }}
+        </mat-icon>
+
+        <div class="flex-grow-1">
+          <!-- module label -->
+          <div class="d-flex align-items-center gap-2">
+            <h5 class="m-0">
+              {{ (getModuleMeta(item.module).label) ?? (item.module | titlecase) }}
+            </h5>
+
+            <!-- module key pill (tooltip already on icon; this is also useful visually) -->
+            <span
+              class="badge rounded-pill text-bg-secondary"
+              [matTooltip]="'module key: ' + item.module"
+              matTooltipPosition="above"
+            >
+              {{ item.module }}
+            </span>
+          </div>
+
+          <!-- module description -->
+          <div class="text-muted small">
+            {{ (getModuleMeta(item.module).description) ?? 'No module description found in ACCESS_OPTIONS.' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions list -->
       <ul class="list-group">
-        <li *ngFor="let permission of item.actions" class="list-group-item">
+
+        <li *ngFor="let actionId of item.actions" class="list-group-item">
+
+          <!-- Skeleton: action row -->
           <app-skeleton-loader
             *ngIf="isLoading"
             [width]="'20rem'"
-            [height]="'0.7rem'"
+            [height]="'1.2rem'"
             [Mode]="mode"
-            [borderRadius]="'0.2rem'"
+            [borderRadius]="'0.4rem'"
           ></app-skeleton-loader>
-          <p *ngIf="!isLoading" class="m-0 p-0 text-capitalize">{{ permission }}</p>
+
+          <!-- Action row -->
+          <div *ngIf="!isLoading" class="d-flex align-items-start gap-2">
+
+            <!-- action icon -->
+            <mat-icon
+              class="mt-1 fs-6"
+              [matTooltip]="'action id: ' + actionId"
+              matTooltipPosition="above"
+            >
+              {{ (getActionMeta(item.module, actionId)?.icon) ?? 'key' }}
+            </mat-icon>
+
+            <div class="flex-grow-1">
+
+              <!-- action label + id tooltip -->
+              <div class="d-flex align-items-center gap-2">
+                <div class="fw-semibold">
+                  {{ (getActionMeta(item.module, actionId)?.label) ?? (actionId | titlecase) }}
+                </div>
+
+                <span
+                  class="badge rounded-pill text-bg-light border"
+                  [matTooltip]="'action id: ' + actionId"
+                  matTooltipPosition="above"
+                >
+                  {{ actionId }}
+                </span>
+              </div>
+
+              <!-- action description -->
+              <div class="text-muted small">
+                {{ (getActionMeta(item.module, actionId).description) ?? 'No action description found for this id.' }}
+              </div>
+
+            </div>
+          </div>
+
         </li>
       </ul>
     </div>
+
   </div>
 </div>

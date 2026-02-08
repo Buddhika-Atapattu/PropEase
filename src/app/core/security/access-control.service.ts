@@ -11,7 +11,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-import type { PermissionEntry, UserWithAccess } from '../../source/access-map.source';
+import type { PermissionEntryDto, UserSafeDto } from '../../services/auth/user.contract';
 import type { PermPair } from './permissions.const';
 
 @Injectable({ providedIn: 'root' })
@@ -20,9 +20,9 @@ export class AccessControlService {
   private permissionSet: Set<string> = new Set<string>();
 
   // Current user (optional but useful for UI or debugging)
-  private readonly user$ = new BehaviorSubject<UserWithAccess | null>(null);
+  private readonly user$ = new BehaviorSubject<UserSafeDto | null>( null );
 
-  public get currentUser$(): Observable<UserWithAccess | null> {
+  public get currentUser$(): Observable<UserSafeDto | null> {
     return this.user$.asObservable();
   }
 
@@ -34,9 +34,9 @@ export class AccessControlService {
    * Call this after login / verify-user (or whenever user changes).
    * It rebuilds the permissionSet from user.accessControl[].
    */
-  public setUser(user: UserWithAccess | null): void {
+  public setUser( user: UserSafeDto | null ): void {
     this.user$.next(user);
-    this.permissionSet = this.buildPermissionSet(user?.accessControl ?? []);
+    this.permissionSet = this.buildPermissionSet( user?.access.permissions ?? [] );
   }
 
   /**
@@ -97,7 +97,7 @@ export class AccessControlService {
    * Build Set("Module.action") from stored user entries:
    *   { module: "TeamManagement", actions: ["view","delete"] }
    */
-  private buildPermissionSet(entries: PermissionEntry[]): Set<string> {
+  private buildPermissionSet( entries: PermissionEntryDto[] ): Set<string> {
     const set = new Set<string>();
 
     for (const entry of Array.isArray(entries) ? entries : []) {

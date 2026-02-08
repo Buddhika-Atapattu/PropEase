@@ -1,261 +1,179 @@
+<!-- Path: src/app/pages/tenant-management/complaints/edit/edit-complaints.html -->
+
 <app-notification-dialog></app-notification-dialog>
 <app-progress-bar></app-progress-bar>
-<div class="container-fluid">if()</div>
-<!--==================================================== Templates ================================================================-->
 
-<!-- ===================
-Common Section
-=================== -->
+<div class="container-fluid pe-complaint-edit">
+  @if (isLoading && !complaint) {
+  <div class="panel-card">
+    <div class="text-muted-custom">Loading complaint…</div>
+  </div>
+  } @if (!isLoading && complaint) {
 
-<!-- Stage indicator -->
-<ng-template #statusIndicator>
-  <div class="row my-3">
-    <div class="col-12">
-      <app-stage-indicator
-        [stages]="STATUS_STAGE"
-        [currentValue]="STATUS_CURRENT_VALUE"
-        [showDisabled]="false"
-      ></app-stage-indicator>
+  <!-- Header -->
+  <div class="panel-card mb-3">
+    <div
+      class="d-flex flex-wrap align-items-start justify-content-between gap-2"
+    >
+      <div>
+        <div class="page-title">Edit Complaint</div>
+        <div class="page-sub">
+          Complaint ID: <span class="mono">{{ code }}</span>
+        </div>
+
+        <div class="meta mt-2">
+          <span class="pill">
+            Status: <strong class="ms-1 text-capitalize">{{ status }}</strong>
+          </span>
+          @if (tenantName) {
+          <span class="pill"
+            >Tenant: <strong class="ms-1">{{ tenantName }}</strong></span
+          >
+          } @if (propertyName) {
+          <span class="pill"
+            >Property: <strong class="ms-1">{{ propertyName }}</strong></span
+          >
+          }
+        </div>
+      </div>
+
+      @if (isEditLocked) {
+      <div class="lock-note">
+        <mat-icon class="me-2">lock</mat-icon>
+        <span
+          >Complaint is <strong>In Progress</strong> — basic details are
+          locked.</span
+        >
+      </div>
+      }
     </div>
   </div>
-</ng-template>
-<!-- End stage indicator -->
 
-<!-- Complaint ID -->
-<ng-template #complaintID>
-  <div class="row my-3">
-    <div class="col-12">
-      <h3>Complaint ID: {{code}}</h3>
+  <!-- Basic edit -->
+  <div class="panel-card mb-3">
+    <div class="section-title">Basic Details</div>
+
+    <form #editForm="ngForm" (ngSubmit)="submit()" novalidate>
+      <!-- Lock wrapper disables custom components too (TextEditor) -->
+      <div class="edit-surface" [class.locked]="isEditLocked">
+        <div class="row g-3">
+          <div class="col-12 col-lg-6">
+            <mat-form-field class="w-100">
+              <mat-label>Title</mat-label>
+              <input
+                matInput
+                name="title"
+                [(ngModel)]="title"
+                required
+                [disabled]="isEditLocked"
+              />
+            </mat-form-field>
+          </div>
+
+          <div class="col-12 col-lg-3">
+            <mat-form-field class="w-100">
+              <mat-label>Category</mat-label>
+              <mat-select
+                name="category"
+                [(ngModel)]="category"
+                required
+                [disabled]="isEditLocked"
+              >
+                @for (item of DEFINED_CATEGORIES; track item) {
+                <mat-option [value]="item">{{ item }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="col-12 col-lg-3">
+            <mat-form-field class="w-100">
+              <mat-label>Priority</mat-label>
+              <mat-select
+                name="priority"
+                [(ngModel)]="priority"
+                required
+                [disabled]="isEditLocked"
+              >
+                @for (item of DEFINED_PRIORITIES; track item) {
+                <mat-option [value]="item" class="text-capitalize"
+                  >{{ item }}</mat-option
+                >
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="col-12">
+            <!-- Your shared editor: lock wrapper will disable interaction -->
+            <app-text-editor
+              [id]="'description'"
+              [name]="'description'"
+              [placeholder]="'Details about complaint'"
+              [(modelValue)]="description"
+            ></app-text-editor>
+
+            <div class="small-hint mt-2">
+              This screen edits only: Title, Description, Category, Priority.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2 justify-content-end mt-3">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="onCancel()"
+        >
+          <mat-icon class="me-2">undo</mat-icon>
+          Reset
+        </button>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isSaving || isEditLocked || editForm?.invalid"
+        >
+          <mat-icon class="me-2">save</mat-icon>
+          @if (isSaving) { Saving… } @else { Save Changes }
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Comments (reconstructed to use CommentsListComponent properly) -->
+  <div class="panel-card">
+    <div
+      class="section-title d-flex align-items-center justify-content-between"
+    >
+      <span>Comments</span>
+      @if (isCommentLoading) {
+      <span class="mini-loading">Updating…</span>
+      }
+    </div>
+
+    <app-comments-list
+      [context]="{
+                  section: 'Complaints',
+                  subSection: undefined,
+                  refId: complaint.code,
+                  module: 'complaints',
+                  scope: { companyId: complaint.code}
+                }"
+      [mode]="'advanced'"
+      [enableCounts]="true"
+      [enableClientSearch]="true"
+      [enableServerSearch]="true"
+      [showComposer]="true"
+      [limit]="6"
+    ></app-comments-list>
+
+    <div class="small-hint mt-2">
+      Comments UI is owned by <code>CommentsListComponent</code>. This screen
+      owns the API calls and data mapping.
     </div>
   </div>
-</ng-template>
-<!-- End complaint ID -->
 
-<!-- Divider indicator -->
-<ng-template #divider>
-  <div class="row my-4">
-    <div class="col-12">
-      <hr />
-    </div>
-  </div>
-</ng-template>
-<!-- End divider indicator -->
-
-<!-- Action button reusable -->
-<ng-template
-  #actionButton
-  let-text="text"
-  let-icon="icon"
-  let-action="action"
-  let-class="class"
-  let-type="type"
->
-  <button
-    [type]="type"
-    class="btn d-flex align-items-center"
-    [ngClass]="class"
-    (click)="action()"
-  >
-    <mat-icon class="me-2">{{ icon }}</mat-icon>
-    {{ text }}
-  </button>
-</ng-template>
-<!-- End action button reusable -->
-<!-- ===================
-End Common Section
-=================== -->
-
-<!-- ===================
-Team Tables
-=================== -->
-<!-- Team add -->
-<ng-template #teamAddTable>
-  <app-custom-table
-    [(isReload)]="teamAddIsReloading"
-    [(limit)]="teamAddLimit"
-    [pagination]="true"
-    [(index)]="teamAddIndex"
-    [tableTitle]="teamAddTableTitle"
-    [(search)]="teamAddSearch"
-    [totalDataCount]="teamAddDataCount"
-    [data]="teamAddData"
-    [columns]="teamAddTableColumns"
-    (fetchData)="handelFetchingOnTeamAdd()"
-    (buttonOperation)="teamAddActionButtonCenter($event)"
-  ></app-custom-table>
-</ng-template>
-<!-- End team add -->
-
-<!-- Team remove -->
-<ng-template #teamRemoveTable>
-  <app-custom-table
-    [(isReload)]="teamRemoveIsReloading"
-    [(limit)]="teamRemoveLimit"
-    [pagination]="true"
-    [(index)]="teamRemoveIndex"
-    [tableTitle]="teamRemoveTableTitle"
-    [(search)]="teamRemoveSearch"
-    [totalDataCount]="teamRemoveDataCount"
-    [data]="teamRemoveData"
-    [columns]="teamRemoveTableColumns"
-    (fetchData)="handelFetchingOnTeamRemove()"
-    (buttonOperation)="teamRemoveActionButtonCenter($event)"
-  ></app-custom-table>
-</ng-template>
-<!-- End team remove -->
-<!-- ===================
-End Team Tables
-=================== -->
-
-<!-- ===================
-Comments
-=================== -->
-<!-- Complaint comments -->
-<ng-template #complaintsComments>
-  <app-comments-list [code]="code" [limit]="5"></app-comments-list>
-</ng-template>
-<!-- End complaint comments -->
-
-<!-- Complaint audience changer -->
-<ng-template #complaintAudienceChanger>
-  <mat-form-field class="w-100">
-    <mat-label>Change the audience</mat-label>
-    <mat-select
-      name="audience"
-      [(ngModel)]="audience"
-      class="text-capitalize"
-      required
-    >
-      @for (item of DEFINED_AUDIENCES; track item) {
-      <mat-option [value]="item" class="text-capitalize">{{item}}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-</ng-template>
-<!-- End complaint audience changer -->
-
-<!-- Comment file upload -->
-<ng-template #commentDropDown>
-  <app-dropdown
-    [multiple]="true"
-    [maxFiles]="12"
-    [acceptCategory]="'all'"
-    [maxSizeBytes]="2 * 10 * 1024 * 1024"
-    [showPreviews]="true"
-    [compact]="false"
-    [enablePaste]="true"
-    (filesChange)="getCommentFileUploads($event)"
-  >
-  </app-dropdown>
-</ng-template>
-<!-- End comment fle upload -->
-
-<!-- Comment admin template -->
-<ng-template #commentAdmin>
-  <app-text-editor
-    [id]="'comment'"
-    [name]="'comment'"
-    [placeholder]="'Comment about complaint'"
-    [(modelValue)]="comment"
-  >
-  </app-text-editor>
-</ng-template>
-<!-- End comment admin template -->
-
-<!-- Comment tenant template -->
-<ng-template #commentTenant>
-  <app-textarea
-    [id]="'comment'"
-    [name]="'comment'"
-    [placeholder]="'Comment about complaint'"
-    [(text)]="comment"
-  ></app-textarea>
-</ng-template>
-<!-- End comment tenant template -->
-
-<!-- ===================
-End Comments
-=================== -->
-
-<!-- ===================
-Complaint Main Operations
-=================== -->
-<!-- Complaint status changer -->
-<ng-template #ngComplaintStatusChanger>
-  <mat-form-field class="w-100">
-    <mat-label>Change the status</mat-label>
-    <mat-select
-      name="status"
-      [(ngModel)]="status"
-      class="text-capitalize"
-      required
-    >
-      @for (item of DEFINED_STATUS; track item) {
-      <mat-option [value]="item" class="text-capitalize">{{item}}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-</ng-template>
-<!-- End complaint status changer -->
-
-<!-- Complaint priority changer -->
-<ng-template #complaintPriorityChanger>
-  <mat-form-field class="w-100">
-    <mat-label>Change the priority</mat-label>
-    <mat-select
-      name="priority"
-      [(ngModel)]="priority"
-      class="text-capitalize"
-      required
-    >
-      @for (item of COMPLAINT_PRIORITIES; track item) {
-      <mat-option [value]="item" class="text-capitalize">{{item}}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-</ng-template>
-<!-- End complaint priority changer -->
-
-<!-- Complaint title -->
-<ng-template #complaintTitle>
-  <mat-form-field class="w-100">
-    <mat-label>Complaint Title</mat-label>
-    <input
-      type="text"
-      matInput
-      required
-      [(ngModel)]="title"
-      name="complaintTitle"
-      #complaintTitle="ngModel"
-    />
-  </mat-form-field>
-</ng-template>
-<!-- End complaint title -->
-
-<!-- Admin complaint description -->
-<ng-template #descriptionAdmin>
-  <app-text-editor
-    [id]="'description'"
-    [name]="'description'"
-    [placeholder]="'Details about complaint'"
-    [(modelValue)]="description"
-  >
-  </app-text-editor>
-</ng-template>
-<!-- End admin complaint description -->
-
-<!-- Tenant complaint description -->
-<ng-template #descriptionTenant>
-  <app-textarea
-    [id]="'description'"
-    [name]="'description'"
-    [placeholder]="'Details about complaint'"
-    [(text)]="description"
-  ></app-textarea>
-</ng-template>
-<!-- End tenant complaint description -->
-
-<!-- ===================
-End Complaint Main Operations
-=================== -->
-<!--==================================================== End Templates ================================================================-->
+  }
+</div>

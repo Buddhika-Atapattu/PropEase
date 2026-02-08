@@ -1,3 +1,5 @@
+<!-- Path: src/app/components/shared/custom-table/custom-table.component.html -->
+
 @if (loggedUser) {
 
   <div class="row mt-5">
@@ -40,7 +42,7 @@
         @for (column of columns; track column.key) {
           <ng-container [matColumnDef]="column.key">
 
-            <!-- ───────── HEADER CELL ───────── -->
+            <!-- Header -->
             <th
               mat-header-cell
               *matHeaderCellDef
@@ -58,7 +60,7 @@
               }
             </th>
 
-            <!-- ───────── DATA CELL ───────── -->
+            <!-- Cell -->
             <td mat-cell *matCellDef="let element; let i = index">
               @if (isReload) {
                 <app-skeleton-loader
@@ -70,7 +72,7 @@
 
                 @switch (resolveRenderKind(column)) {
 
-                  <!-- ───────────────── MULTIPLE ACTIONS ───────────────── -->
+                  <!-- MULTIPLE ACTIONS -->
                   @case ('multipleActions') {
                     <div class="pe-actions">
                       @for (btn of getMultipleActionsForRow(column, element); track btn.id) {
@@ -90,7 +92,7 @@
                     </div>
                   }
 
-                  <!-- ───────────────── LEGACY SINGLE ACTION ───────────────── -->
+                  <!-- SINGLE ACTION (legacy) -->
                   @case ('singleAction') {
                     @let btn = getButtonForColumn(column.key);
                     @if (btn) {
@@ -108,7 +110,7 @@
                     }
                   }
 
-                  <!-- ───────────────── IMAGE ───────────────── -->
+                  <!-- IMAGE -->
                   @case ('image') {
                     @let imageType = inferImageRenderType(column.key);
 
@@ -139,19 +141,19 @@
                     }
                   }
 
-                  <!-- ───────────────── STATUS ───────────────── -->
+                  <!-- STATUS -->
                   @case ('status') {
                     <div class="pe-status" [ngClass]="statusClass(element[column.key])">
                       {{ makeCapitalize(element[column.key]) }}
                     </div>
                   }
 
-                  <!-- ───────────────── ICON ───────────────── -->
+                  <!-- ICON -->
                   @case ('icon') {
                     <mat-icon>{{ chooseIcon(element[column.key]) }}</mat-icon>
                   }
 
-                  <!-- ───────────────── SWITCH ───────────────── -->
+                  <!-- SWITCH -->
                   @case ('switch') {
                     <switch-button
                       [checked]="!!element[column.key]?.isActive || !!element[column.key]"
@@ -161,7 +163,7 @@
                     ></switch-button>
                   }
 
-                  <!-- ───────────────── KPI SPARK (NEW) ───────────────── -->
+                  <!-- KPI SPARK -->
                   @case ('kpiSpark') {
                     @let cell = element[column.key];
                     @let deltaVal = (cell?.delta ?? 0);
@@ -175,11 +177,7 @@
                       <div class="top">
                         <span class="score">{{ cell?.score ?? 0 }}%</span>
 
-                        <span
-                          class="delta"
-                          [class.pos]="deltaVal >= 0"
-                          [class.neg]="deltaVal < 0"
-                        >
+                        <span class="delta" [class.pos]="deltaVal >= 0" [class.neg]="deltaVal < 0">
                           <mat-icon class="delta-ico">
                             {{ deltaVal >= 0 ? 'arrow_drop_up' : 'arrow_drop_down' }}
                           </mat-icon>
@@ -196,8 +194,7 @@
                     </div>
                   }
 
-
-                  <!-- ───────────────── DEFAULT (inline editors / dialog / read-only) ───────────────── -->
+                  <!-- DEFAULT -->
                   @default {
 
                     @if (hasInlineEdit(column)) {

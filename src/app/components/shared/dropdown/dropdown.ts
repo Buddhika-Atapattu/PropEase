@@ -103,12 +103,15 @@ export class Dropdown implements OnInit, OnChanges, AfterViewInit, DoCheck, OnDe
   /** Parent previews: real File objects (optional) */
   @Input() previewFilesFromParent: File[] = [];
 
+  @Input() clearFiles: boolean = false;
+
   // ─────────────────────────────────────────────────────────────
   // Outputs
   // ─────────────────────────────────────────────────────────────
   @Output() filesChange = new EventEmitter<File[]>();
   @Output() filesAdded = new EventEmitter<File[]>();
   @Output() fileRemoved = new EventEmitter<File>();
+  @Output() clearFilesChange: EventEmitter<boolean> = new EventEmitter();
 
   // ─────────────────────────────────────────────────────────────
   // Refs & state
@@ -210,6 +213,10 @@ export class Dropdown implements OnInit, OnChanges, AfterViewInit, DoCheck, OnDe
       this.setupDiffers();
       this.requestParentPreviewRebuild( '[Info:] [Dropdown] ngOnChanges parent preview inputs changed.\n' );
     }
+
+    if ( ch[ 'clearFiles' ] ) {
+      this.clearSelectedFiles();
+    }
   }
 
   public ngAfterViewInit(): void {
@@ -275,6 +282,13 @@ export class Dropdown implements OnInit, OnChanges, AfterViewInit, DoCheck, OnDe
   // ─────────────────────────────────────────────────────────────
   // Public API
   // ─────────────────────────────────────────────────────────────
+  private clearSelectedFiles(): void {
+    if ( this.clearFiles ) {
+      this.clear();
+      this.clearFilesChange.emit( false );
+    }
+  }
+
   public clear(): void {
     this.revokeAllQueueObjectUrls( this.queue );
 

@@ -21,13 +21,13 @@ import {
 } from '@angular/router';
 
 import { AuthService } from '../auth/auth.service';
-import { User, Role } from '../APIs/apis.service';
+import { User } from '../APIs/apis.service';
 import {
   ACCESS_OPTIONS,
   AccessModuleKey,
   AccessActionKey,
-  PermissionEntry,
 } from '../../source/access-map.source';
+import { PermissionEntryDto } from '../auth/user.contract';
 import { RouteRequirement, DEFINED_ROUTES_URLS } from '../../source/router-map.source';
 
 /**
@@ -171,7 +171,7 @@ export class AuthGuard implements CanActivate, CanActivateChild {
     user: User,
   ): boolean {
     const allowedRoles =
-      ( route.data?.[ 'roles' ] as Role[] | undefined ) ?? undefined;
+      ( route.data?.[ 'roles' ] as User[ 'role' ][] | undefined ) ?? undefined;
 
     if ( !allowedRoles || allowedRoles.length === 0 ) {
       return true;
@@ -246,18 +246,18 @@ export class AuthGuard implements CanActivate, CanActivateChild {
     const effective: AccessMap = {};
 
     // 1) Prefer per-user access if present
-    const perms = user.access?.permissions as PermissionEntry[] | undefined;
+    const perms = user.access?.permissions as PermissionEntryDto[] | undefined;
     if ( Array.isArray( perms ) && perms.length > 0 ) {
       for ( const p of perms ) {
-        const moduleKey: AccessModuleKey = p.module;
+        const moduleKey: AccessModuleKey = p.module as AccessModuleKey;
         if ( !effective[ moduleKey ] ) {
           effective[ moduleKey ] = [];
         }
 
         const list = effective[ moduleKey ] as AccessActionKey[];
         for ( const action of p.actions ) {
-          if ( !list.includes( action ) ) {
-            list.push( action );
+          if ( !list.includes( action as AccessActionKey ) ) {
+            list.push( action as AccessActionKey );
           }
         }
       }

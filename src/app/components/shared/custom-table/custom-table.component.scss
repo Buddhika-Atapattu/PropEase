@@ -111,14 +111,14 @@
 
 .pe-action-btn {
   @include button-reset();
-  font-size: 1.15rem;
+  font-size: 12pt;
   display: flex;
   justify-content: center;
   align-items: center;
   justify-self: center;
   align-self: center;
-  width: 4rem;
-  height: 3rem;
+  width: 3rem;
+  height: 2rem;
   border-radius: 0.75rem;
   border: 1px solid color-mix(in srgb, var(--border-color) 55%, transparent);
   background: var(--elevated);
@@ -127,7 +127,7 @@
     color-mix(in srgb, var(--shadow-color) 30%, transparent);
 
   mat-icon {
-    font-size: 1.75rem;
+    font-size: 15pt;
     display: flex;
     justify-content: center;
     align-items: center;

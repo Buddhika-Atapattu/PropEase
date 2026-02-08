@@ -225,10 +225,12 @@ export class ChartService {
     };
   }
 
-  /**
-   * Apply transparent background + theme-aware text/grid colors.
-   * Merges with user-provided options (user wins).
-   */
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Path: src/app/services/chart-service/chart-service.ts
+  // Change: Make tooltips HTML-based globally so we can fully theme them with CSS.
+  // Also keep it overridable per-chart via build methods.
+  // ─────────────────────────────────────────────────────────────────────────────
+
   private applyThemeDefaults( options?: GoogleChartOptions ): GoogleChartOptions {
     const theme = this.getThemeColors();
 
@@ -245,10 +247,17 @@ export class ChartService {
         position: 'right',
         textStyle: { color: theme.onSurface, fontSize: 12 },
       },
+
+      // ✅ IMPORTANT: enable HTML tooltip for consistent styled bubble UI.
+      // (Google default tooltip is SVG and looks like the "white box" in your screenshot.)
       tooltip: {
-        isHtml: false,
+        isHtml: true,
+        trigger: 'focus',
+        showColorCode: true,
+        // Note: textStyle is ignored for HTML tooltips, CSS handles it.
         textStyle: { color: theme.onSurface, fontSize: 12 },
       },
+
       hAxis: {
         textStyle: { color: theme.onSurface, fontSize: 12 },
         titleTextStyle: { color: theme.muted, fontSize: 12 },
@@ -260,13 +269,10 @@ export class ChartService {
         gridlines: { color: theme.border },
       },
       titleTextStyle: { color: theme.onSurface, fontSize: 14 },
-      // Allow pointer/hover interactions
       enableInteractivity: true,
-      // Smooth default animations without being slow
       animation: { startup: true, duration: 300, easing: 'out' },
     };
 
-    // Merge user overrides last (user wins)
     const merged: GoogleChartOptions = {
       ...base,
       ...( options ?? {} ),
@@ -279,6 +285,7 @@ export class ChartService {
 
     return merged;
   }
+
 
   // ───────────────────────────────── SMART BUILDER ──────────────────────────
   public buildSmart( opts: {

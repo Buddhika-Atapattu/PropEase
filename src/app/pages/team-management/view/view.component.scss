@@ -1,10 +1,5 @@
 /* Path: src/app/team-management/view/view.component.scss */
 
-/**
- * Keep custom styles minimal.
- * Bootstrap handles most of the layout.
- */
-
 .pe-team-view {
   .pe-logo {
     width: 52px;
@@ -19,12 +14,34 @@
     color: var(--muted);
   }
 
-  /**
-   * Optional: Make Google chart container behave nicely in cards.
-   * You can remove if your google-chart wrapper already sizes well.
-   */
   .gc-card {
     width: 100%;
     min-height: 220px;
+  }
+
+  .pe-filter-card {
+    border: 1px solid var(--border-color);
+    background: var(--surface);
+  }
+
+  .pe-kpi-chip {
+    border: 1px solid var(--border-color);
+    background: var(--surface-variant);
+    color: var(--on-surface);
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .pe-rank-badge {
+    border: 1px solid var(--border-color);
+    background: var(--elevated);
+    border-radius: 14px;
+    padding: 10px 12px;
+  }
+
+  .pe-table-hint {
+    font-size: 12px;
+    color: var(--muted);
   }
 }

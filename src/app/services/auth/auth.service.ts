@@ -34,10 +34,12 @@ import { Router } from '@angular/router';
 import { CryptoService } from '../cryptoService/crypto.service';
 import {
   APIsService,
-  User,
+} from '../APIs/apis.service';
+import {
+  UserSafeDto as User,
   Role,
   DEFAULT_ROLES,
-} from '../APIs/apis.service';
+} from './user.contract';
 import { ActivityTrackerService } from '../activityTacker/activity-tracker.service';
 import { NotificationService } from '../notifications/notification-service';
 import { SocketService } from '../socket/socket-service';
@@ -1337,7 +1339,7 @@ export class AuthService {
           'PropertyManagement',
           'TenantManagement',
           'NotificationCenter',
-          'TrackingAndAudit',
+          'AuditLogs',
         ];
         return this.filterModules( permitModules );
       }

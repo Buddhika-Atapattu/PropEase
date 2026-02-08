@@ -97,7 +97,11 @@
         <mat-form-field class="w-100">
           <mat-label>Team Domain</mat-label>
 
-          <mat-select [(ngModel)]="teamDomain" name="teamDomain" required="required">
+          <mat-select
+            [(ngModel)]="teamDomain"
+            name="teamDomain"
+            required="required"
+          >
             @for (item of defaultDomains; track item) {
               <mat-option [value]="item">
                 {{ sanitiseDefaultValues(item) }}
@@ -216,7 +220,9 @@
             [data]="captainSelectTableData"
             [columns]="captainSelectTableColumn"
             rowIdKey="id"
-            (buttonOperation)="captainActionButtonOperationAfterSelected($event)"
+            (buttonOperation)="
+              captainActionButtonOperationAfterSelected($event)
+            "
             (cellEdit)="onCaptainCellEdit($event)"
           ></app-custom-table>
         </div>
@@ -239,6 +245,7 @@
         <h4 class="text-uppercase mb-3">Team Description</h4>
 
         <app-text-editor
+          [id]="'team_description'"
           [name]="'description'"
           [(modelValue)]="description"
         ></app-text-editor>
@@ -251,7 +258,9 @@
         Keep as-is if intentional; otherwise rename to "create team".
     ============================================================== -->
     <div class="row d-flex justify-content-end align-items-center my-4">
-      <div class="col-xl-3 col-md-4 col-12 d-flex justify-content-end align-items-center">
+      <div
+        class="col-xl-3 col-md-4 col-12 d-flex justify-content-end align-items-center"
+      >
         <button type="submit" class="btn btn-success">
           <mat-icon class="me-3">cloud_upload</mat-icon>
           <span class="text-uppercase">update team</span>

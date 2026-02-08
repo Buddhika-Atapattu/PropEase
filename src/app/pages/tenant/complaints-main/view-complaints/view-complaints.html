@@ -109,112 +109,6 @@
         </div>
       </div>
       <!-- End Divider -->
-
-      <form
-        action=""
-        method="POST"
-        enctype="multipart/form-data"
-        (ngSubmit)="commentPost()"
-        class="profile-form"
-        autocomplete="off"
-        #comaplaintForm="ngForm"
-      >
-        <div class="row my-2">
-          <div class="col-12">
-            <h1 class="text-default">Comments</h1>
-            <hr />
-          </div>
-        </div>
-
-        <ng-container *ngIf="adminAccess; else tenantComment">
-          <div class="row d-flex justify-content-start align-items-center">
-            <div
-              class="col-xl-3 col-md-4 col-12 justify-content-start align-items-center"
-            >
-              <mat-form-field class="w-100">
-                <mat-label>Select the audience</mat-label>
-                <mat-select
-                  [(ngModel)]="audience"
-                  name="audience"
-                  class="text-capitalize"
-                  required
-                >
-                  @for (option of DEFINED_AUDIENCES; track option) {
-                  <mat-option [value]="option" class="text-capitalize"
-                    >{{option}}</mat-option
-                  >
-                  }
-                </mat-select>
-              </mat-form-field>
-            </div>
-          </div>
-          <!-- Text editor -->
-          <div class="row">
-            <div class="col-12">
-              <app-text-editor
-                [id]="'adminComment'"
-                [name]="'adminComment'"
-                [placeholder]="'Comment of complaint add by admins'"
-                [(modelValue)]="adminComment"
-              ></app-text-editor>
-            </div>
-          </div>
-          <!-- End text editor -->
-
-          <!-- Drag and drop file upload -->
-          <div class="row my-3">
-            <div class="col-12">
-              <app-dropdown
-                [acceptCategory]="'all'"
-                [multiple]="true"
-                [maxFiles]="12"
-                [maxSizeBytes]="10 * 1024 * 1024"
-                [showPreviews]="true"
-                [compact]="false"
-                [enablePaste]="true"
-                (filesChange)="onQueueChanged($event)"
-              ></app-dropdown>
-            </div>
-          </div>
-          <!-- End drag and drop file upload -->
-        </ng-container>
-
-        <ng-template #tenantComment>
-          <div class="row my-4">
-            <div class="col-12">
-              <app-textarea
-                id="complaint-notes"
-                name="complaint-notes"
-                [label]="'Complaint comment'"
-                [placeholder]="'Type details here…'"
-                [hint]="'Max 1000 characters. Markdown supported later.'"
-                [required]="true"
-                [autoGrow]="true"
-                [rows]="4"
-                [resize]="'vertical'"
-                [showCounter]="true"
-                [maxLength]="1000"
-                [(text)]="comment"
-              ></app-textarea>
-            </div>
-          </div>
-        </ng-template>
-
-        <!-- Submit button -->
-        <div class="row my-3 d-flex justify-content-end align-items-center">
-          <div
-            class="col-xl-3 col-md-4 col-12 d-flex justify-content-end align-items-center"
-          >
-            <button
-              type="submit"
-              class="btn btn-lg btn-warning d-flex justify-content-center align-items-center"
-            >
-              <mat-icon class="me-2">done_all</mat-icon> Post
-            </button>
-          </div>
-        </div>
-        <!-- End submit button -->
-      </form>
     </ng-container>
 
     <div class="row my-4">
@@ -227,8 +121,19 @@
       <div class="col-12">
         <ng-container *ngIf="complaint">
           <app-comments-list
-            [code]="complaint.code"
-            [(limit)]="complaintCount"
+            [context]="{
+                        section: 'Complaints',
+                        subSection: undefined,
+                        refId: complaint.code,
+                        module: 'complaints',
+                        scope: { companyId: complaint.code}
+                      }"
+            [mode]="'advanced'"
+            [enableCounts]="true"
+            [enableClientSearch]="true"
+            [enableServerSearch]="true"
+            [showComposer]="true"
+            [limit]="6"
           ></app-comments-list>
         </ng-container>
       </div>

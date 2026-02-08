@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { CommentsService } from './comments.service';
+import { IdleLogoutServiceTs } from './idle-logout.service.ts';
 
-describe('CommentsService', () => {
-  let service: CommentsService;
+describe('IdleLogoutServiceTs', () => {
+  let service: IdleLogoutServiceTs;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(CommentsService);
+    service = TestBed.inject(IdleLogoutServiceTs);
   });
 
   it('should be created', () => {

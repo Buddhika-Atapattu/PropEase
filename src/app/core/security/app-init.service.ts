@@ -1,7 +1,7 @@
 // Path: src/app/core/app-init.service.ts
 import { Injectable } from '@angular/core';
 import { AccessControlService } from './access-control.service';
-import type { UserWithAccess } from '../../source/access-map.source';
+import type { UserSafeDto } from '../../services/auth/user.contract';
 
 @Injectable({ providedIn: 'root' })
 export class AppInitService {
@@ -11,7 +11,7 @@ export class AppInitService {
     const raw = localStorage.getItem('loggedUser');
     if (!raw) return;
 
-    const user = JSON.parse(raw) as UserWithAccess;
+    const user = JSON.parse( raw ) as UserSafeDto;
     this.access.setUser(user);
   }
 }

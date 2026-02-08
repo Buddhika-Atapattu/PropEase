@@ -15,7 +15,7 @@ import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx';
 
 import { ActivityTrackerService } from '../../../../services/activityTacker/activity-tracker.service';
-import { APIsService, User, PhoneNumber } from '../../../../services/APIs/apis.service';
+import { APIsService, User } from '../../../../services/APIs/apis.service';
 import { PaginationUtil } from '../../../../source/utility/pagination.utils';
 
 import {
@@ -26,7 +26,6 @@ import {
   type TableButtonActionConfig
 } from '../../../shared/custom-table/custom-table.component';
 
-import type { PaginationType } from '../../../../types/api-message.types';
 
 
 // ───────────────────────────────────────────────────────────────
