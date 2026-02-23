@@ -6,6 +6,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { firstValueFrom, Subscription, pipe, take } from 'rxjs';
 import * as QRCode from 'qrcode';
 import { isPlatformBrowser } from '@angular/common';
+import type { MSG } from '../../types/api-message.types';
 
 export interface DeviceInfo {
   name: string;
@@ -75,9 +76,9 @@ export class ScanService {
 
   public async getReasonFileUploadsByTenantUsername(
     tenantUsername: string
-  ): Promise<ScanMessageReturnType> {
+  ): Promise<MSG> {
     return await firstValueFrom(
-      this.http.get<ScanMessageReturnType>(
+      this.http.get<MSG>(
         `${this.apiRootForTenantToken}get-reason-file-uploads-by-tenant-username/${tenantUsername}`
       )
     );

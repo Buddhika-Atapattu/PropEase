@@ -33,7 +33,7 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { MSG } from '../../types/api-message.types';
 import type { UserCredentials } from '../auth/auth.service';
-import { CountryCodesDto, UserSafeDto } from '../auth/user.contract';
+import { CountryCodesDto, UserSafeDto, type MultiAuthData } from '../auth/user.contract';
 import {
   CountryDetails,
   CountryDetailsCustomType
@@ -59,15 +59,7 @@ export interface UDER_DOC_TYPES extends MSG {
   download: string;
 }
 
-export interface MultiAuthData {
-  username?: string;
-  qr?: string;
-  expiresAt?: string;
-  uri?: string;
-  pairingToken: string;
-  deviceName?: string;
-  devicePlatform?: string;
-}
+
 
 /* ========================================================================== *
  *  APIsService

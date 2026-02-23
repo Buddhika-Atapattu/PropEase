@@ -35,7 +35,7 @@ import type { FileMetaBase } from '../../types/api-message.types';
 import type {
   AddTaskCommentRequestDto,
   TaskCommentDto,
-} from './team-management.types';
+} from '../../types/team-management/team-main/team-management.types';
 
 // If you already have environment.ts, use it.
 // Otherwise, replace with your base URL provider.

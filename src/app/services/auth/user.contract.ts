@@ -863,3 +863,14 @@ export interface UserMiniDto {
 
   socialHandle?: string;
 }
+
+
+export interface MultiAuthData {
+  username?: string;
+  qr?: string;
+  expiresAt?: string;
+  uri?: string;
+  pairingToken: string;
+  deviceName?: string;
+  devicePlatform?: string;
+}

@@ -41,7 +41,7 @@ import type {
   WorkItemPriority,
   AddTaskCommentRequestDto,
   TaskEvidenceDto,
-} from './team-management.types';
+} from '../../types/team-management/team-main/team-management.types';
 
 @Injectable( { providedIn: 'root' } )
 export class TeamManagementService {

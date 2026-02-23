@@ -1,117 +1,68 @@
-// Path: src/app/types/api-message.types.ts
-// ============================================================================
-// PropEase FE API Message Types (Backend-Contract Aligned)
-// ----------------------------------------------------------------------------
-// Key fixes vs your previous version:
-// ✅ All backend JSON date/time fields are typed as ISO strings (NOT Date)
-//    - Angular receives JSON => dates arrive as strings unless you manually convert.
-// ✅ Pagination keys aligned with backend (index/limit/total/hasMore)
-//    - Extra optional fields kept, but NOT assumed to be provided by backend.
-// ✅ SystemData keys match backend ApiResponseBuilder + ApiDataBuilder contracts.
-// ============================================================================
-
-// Imports (domain DTOs used inside "system")
-import { User } from '../services/APIs/apis.service';
-import { Lease, LeaseWithProperty, Tenant, ComplaintClient } from '../services/tenant/tenant.service';
-import { BackEndPropertyData } from '../services/property/property.service';
-import type { TeamManagementDto, WorkEvent, WorkItem } from '../services/teamManagementService/team-management.types';
-import { CommentDto } from '../services/comments/contracts/comment.contract'
-
-/**
- * Minimal file metadata used across backend.
- * Pure JSON only.
- */
-export interface FileMetaBase {
-  /** Original filename sent by client (as uploaded) */
-  originalName: string;
-
-  /** Stored filename on disk or in bucket (unique) */
-  storedName: string;
-
-  /** File extension without dot, e.g. "pdf", "jpg" */
-  extension: string;
-
-  /** MIME type, e.g. "application/pdf", "image/jpeg" */
-  mimeType: string;
-
-  /** Size in bytes */
-  sizeBytes: number;
-}
-
-/**
- * NOTE:
- * - Backend sends JSON values; dates come as ISO strings.
- * - If you want Date objects in UI, parse them in UI/service layer.
- */
-export interface UploadedFile {
-  originalName?: string;
-  storedName?: string;
-  mimeType?: string;
-
-  /** (Legacy) your previous type used string; keep as string for compatibility */
-  size?: string;
-
-  path?: string;
-  URL?: string;
-  extension?: string;
-  download?: string;
-  uploader?: string;
-
-  /** ✅ ISO string from backend */
-  uploadDate?: string;
-}
-
-/** Main document interface for each user's uploaded file set */
-export interface UserDocumentEntity {
-  username: string;
-  files: UploadedFile[];
-
-  /** ✅ ISO string from backend */
-  createdAt: string;
-
-  /** ✅ ISO string from backend */
-  updatedAt: string;
-}
-
-/* ──────────────────────────────────────────────────────────────
-   Basic status type for consistency across all APIs
-   ────────────────────────────────────────────────────────────── */
-export type ApiStatus = 'success' | 'error' | 'fail';
-
-/* ──────────────────────────────────────────────────────────────
-   Pagination meta sent from backend to frontend
-   ────────────────────────────────────────────────────────────── */
-
-/**
- * When you send filters to backend, you may use string/Date in UI.
- * But backend responses should be treated as string if echoed back.
- */
-export interface DateRange {
-  start: string | Date;
-  end: string | Date;
-}
-
-/**
- * Backend currently sends (commonly):
- *  - index, limit, total, hasMore
+/* ============================================================================
+ * PropEase FE API Message Types (Backend → Frontend contract aligned)
+ * ----------------------------------------------------------------------------
+ * Source of truth: backend `src/types/api-message.ts`
  *
- * Extra fields are kept OPTIONAL for future expansion,
- * but frontend must not assume backend always provides them.
- */
+ * Key rules:
+ * ✅ This file models the *envelope* only (ApiResponse/ApiData/SystemData)
+ * ✅ Domain objects inside `system` must be DTO-safe (no Mongoose/Document)
+ * ✅ Dates from backend arrive as ISO strings
+ * ✅ exactOptionalPropertyTypes-safe: optional props must be omitted when absent
+ * ========================================================================== */
+
+import type { User } from "../services/APIs/apis.service";
+
+// Leases (use whatever your FE already uses as a DTO-safe payload)
+import { Lease, LeaseWithProperty, Tenant, ComplaintClient } from '../services/tenant/tenant.service';
+
+// Properties / Tenants / Complaints (DTO-safe client types)
+import type { BackEndPropertyData } from "../services/property/property.service";
+
+// Team Management DTOs (DTO-safe)
+import type {
+  TeamManagementDto
+} from "./team-management/team-main/team-management.types";
+
+import { WorkEventDto } from './team-management/work-events/work-event.types';
+
+import { WorkItemDto } from './team-management/work-items/work-item.types';
+
+import { TeamTaskDto } from './team-management/team-task/team-task.types';
+
+import { MemberActivityDto } from './team-management/member-activities/member-activities.types';
+
+import { MilestoneDto } from './team-management/milestone/milestone.types';
+
+// RecycleBin DTO
+import type { RecycleBinEntryDto } from "./recyclebin/recyclebin.types";
+
+// Comments DTO
+import type { CommentDto } from "../services/comments/contracts/comment.contract";
+import type { ISODateString } from "./common";
+import type { NotificationInboxItemDto } from "./notifications/notification.types";
+
+/* ──────────────────────────────────────────────────────────────
+   01) Core primitives
+   ────────────────────────────────────────────────────────────── */
+
+export type ApiStatus = "success" | "error" | "fail";
+
+/* ──────────────────────────────────────────────────────────────
+   02) Common envelope types
+   ────────────────────────────────────────────────────────────── */
+
+export interface DateRange {
+  start: ISODateString;
+  end: ISODateString;
+}
+
 export interface PaginationMeta {
-  /** Zero-based page index */
   index?: number;
-
-  /** Page size */
   limit?: number;
-
-  /** Total DB records count */
   total?: number;
-
-  /** Backend convenience flag */
   hasMore?: boolean;
 
-  // Optional / future / UI-computed fields (keep optional)
+  // Optional / future / UI computed
   start?: number;
   end?: number;
   search?: string;
@@ -124,64 +75,138 @@ export interface PaginationMeta {
   nextCursor?: string;
 }
 
-/* ──────────────────────────────────────────────────────────────
-   Validation payload (JWT, CSRF, etc.)
-   ────────────────────────────────────────────────────────────── */
 export interface ValidationUnit {
   token?: string;
   isValid?: boolean;
 
-  /** ✅ ISO string expiry time if relevant */
+  /** ISO string */
   expiresAt?: string;
 }
 
 /* ──────────────────────────────────────────────────────────────
-   Strongly-typed system data payload
+   03) File metadata (align with backend FileMetaPacket)
+   NOTE:
+   - If you already have a canonical FileMetaPacket in FE, import that instead.
+   - This is a DTO-safe minimal mirror.
    ────────────────────────────────────────────────────────────── */
+
+export interface FileMetaPacket {
+  /** Public-relative disk path under "public/..." (NO leading "/") */
+  relPath: string;
+
+  /** Client URL (may start with "/" or be absolute) */
+  url: string;
+
+  originalName: string;
+  storedName: string;
+  mimeType: string;
+  sizeBytes: number;
+
+  /** ISO string */
+  uploadedAt?: string;
+
+  /** Optional label/grouping */
+  label?: string;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   04) Files entity (legacy user document storage)
+   ────────────────────────────────────────────────────────────── */
+
+export interface UploadedFile {
+  originalName?: string;
+  storedName?: string;
+  mimeType?: string;
+
+  size?: string;
+
+  path?: string;
+  URL?: string;
+  extension?: string;
+  download?: string;
+  uploader?: string;
+
+  uploadDate?: string;
+}
+
+export interface UserDocumentEntity {
+  username: string;
+  files: UploadedFile[];
+
+  createdAt: string;
+  updatedAt: string;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   05) Domain payload dictionary (SystemData)
+   MUST match backend keys.
+   ────────────────────────────────────────────────────────────── */
+
 export interface SystemData {
+  // Users
   user?: User;
   users?: User[];
 
+  // Leases
   lease?: Lease;
   leases?: Lease[];
 
   leaseWithProperty?: LeaseWithProperty;
   leaseWithProperties?: LeaseWithProperty[];
 
+  // Properties
   property?: BackEndPropertyData;
   properties?: BackEndPropertyData[];
 
+  // Tenants
   tenant?: Tenant;
   tenants?: Tenant[];
 
+  // Complaints
   complaint?: ComplaintClient;
   complaints?: ComplaintClient[];
 
+  // Files
   fileUpload?: UserDocumentEntity;
   fileUploads?: UserDocumentEntity[];
+  file?: FileMetaPacket;
+  files?: FileMetaPacket[];
 
+  // Team Management
   team?: TeamManagementDto;
   teams?: TeamManagementDto[];
 
-  /**
-   * IMPORTANT:
-   * These MUST match backend DTO shapes:
-   * - IDs should be string (teamMongoId, userId, etc.)
-   * - dates should be ISO strings (timing.createdAt, createdAt, etc.)
-   */
-  workItem?: WorkItem;
-  workItems?: WorkItem[];
+  // Team Tasks
+  teamTask?: TeamTaskDto;
+  teamTasks?: TeamTaskDto[];
 
-  event?: WorkEvent;
-  events?: WorkEvent[];
+  // Work items / events
+  workItem?: WorkItemDto;
+  workItems?: WorkItemDto[];
+  event?: WorkEventDto;
+  events?: WorkEventDto[];
 
-  file?: FileMetaBase;
-  files?: FileMetaBase[];
+  // Member Activities (✅ OPTIONAL to match backend)
+  memberActivity?: MemberActivityDto;
+  memberActivities?: MemberActivityDto[];
 
+  // Milestones (✅ OPTIONAL to match backend)
+  milestone?: MilestoneDto;
+  milestones?: MilestoneDto[];
+
+  // Comments (✅ OPTIONAL)
   comment?: CommentDto;
   comments?: CommentDto[];
 
-  /** Common dashboard summaries */
+  // RecycleBin (✅ OPTIONAL)
+  recycleBinItem?: RecycleBinEntryDto;
+  recycleBinItems?: RecycleBinEntryDto[];
+
+  // Notification
+  notification?: NotificationInboxItemDto;
+  notifications?: NotificationInboxItemDto[];
+
+  // Dashboard summaries
   totalUsers?: number;
   totalProperties?: number;
   totalTenants?: number;
@@ -189,53 +214,99 @@ export interface SystemData {
 }
 
 /* ──────────────────────────────────────────────────────────────
-   Generic Data wrapper
+   06) Generic wrappers (ApiData, ApiResponse)
    ────────────────────────────────────────────────────────────── */
+
 export interface ApiData<
   TSystem = SystemData,
   TOther extends Record<string, unknown> = Record<string, unknown>
 > {
   pagination?: PaginationMeta;
   validation?: ValidationUnit;
-  system?: TSystem;
 
-  /**
-   * Extra data that doesn’t belong to core domain models.
-   * Example:
-   *  - chartData
-   *  - filters
-   *  - temporary UI hints
-   */
+  system?: TSystem;
   other?: TOther;
 }
 
-/* ──────────────────────────────────────────────────────────────
-   Base API response shape used everywhere
-   ────────────────────────────────────────────────────────────── */
 export interface ApiResponse<TData = ApiData> {
   success: boolean;
   status: ApiStatus;
   message: string;
 
-  /** Main payload */
   data: TData | null;
 
-  /** ✅ Backend sends ISO string */
   timestamp?: string;
-
-  /** Optional: backend route path */
   path?: string;
-
-  /** Optional: correlation ID / request ID */
   requestId?: string;
 }
 
-/* ──────────────────────────────────────────────────────────────
-   Backwards-compatible alias (your old MSG name)
-   ────────────────────────────────────────────────────────────── */
+// Backwards-compatible alias
 export type MSG<TData = ApiData> = ApiResponse<TData>;
 
-export type PaginationType = NonNullable<MSG[ 'data' ]>[ 'pagination' ];
-export type ValidationType = NonNullable<MSG[ 'data' ]>[ 'validation' ];
-export type SystemType = NonNullable<MSG[ 'data' ]>[ 'system' ];
-export type OtherType = NonNullable<MSG[ 'data' ]>[ 'other' ];
+/* ──────────────────────────────────────────────────────────────
+   07) Convenience extraction types (null-safe)
+   Matches backend pattern (double NonNullable)
+   ────────────────────────────────────────────────────────────── */
+
+export type PaginationType =
+  NonNullable<NonNullable<MSG[ "data" ]>[ "pagination" ]>;
+
+export type ValidationType =
+  NonNullable<NonNullable<MSG[ "data" ]>[ "validation" ]>;
+
+export type SystemType =
+  NonNullable<NonNullable<MSG[ "data" ]>[ "system" ]>;
+
+export type OtherType =
+  NonNullable<NonNullable<MSG[ "data" ]>[ "other" ]>;
+
+/* ──────────────────────────────────────────────────────────────
+   08) System slices (module-specific strong typing)
+   Mirrors backend slice exports.
+   ────────────────────────────────────────────────────────────── */
+
+export type LeaseSystemData = Pick<SystemData, "lease" | "leases">;
+export type PropertySystemData = Pick<SystemData, "property" | "properties">;
+export type TenantSystemData = Pick<SystemData, "tenant" | "tenants">;
+export type ComplaintSystemData = Pick<SystemData, "complaint" | "complaints">;
+export type FileUploadSystemData = Pick<SystemData, "fileUpload" | "fileUploads">;
+
+export type TeamManagementSystemData = Pick<SystemData, "team" | "teams">;
+
+export type WorkSystemData = Pick<SystemData, "workItem" | "workItems" | "event" | "events">;
+
+export type TeamTaskSystemData = Pick<SystemData, "teamTask" | "teamTasks">;
+
+export type FileMetaSystemData = Pick<SystemData, "file" | "files">;
+
+export type DashboardSystemData = Pick<
+  SystemData,
+  "totalUsers" | "totalProperties" | "totalTenants" | "totalComplaints"
+>;
+
+export type CommentSystemData = Pick<SystemData, "comment" | "comments">;
+
+export type MemberActivitySystemData = Pick<SystemData, "memberActivity" | "memberActivities">;
+
+export type MilestoneSystemData = Pick<SystemData, "milestone" | "milestones">;
+
+export type RecycleBinSystemData = Pick<SystemData, "recycleBinItem" | "recycleBinItems">;
+
+/* ──────────────────────────────────────────────────────────────
+   09) ApiData aliases per module (same idea as backend)
+   ────────────────────────────────────────────────────────────── */
+
+export type LeaseApiData = ApiData<LeaseSystemData>;
+export type PropertyApiData = ApiData<PropertySystemData>;
+export type TenantApiData = ApiData<TenantSystemData>;
+export type ComplaintApiData = ApiData<ComplaintSystemData>;
+export type FileUploadApiData = ApiData<FileUploadSystemData>;
+export type TeamManagementApiData = ApiData<TeamManagementSystemData>;
+export type WorkApiData = ApiData<WorkSystemData>;
+export type TeamTaskApiData = ApiData<TeamTaskSystemData>;
+export type FileMetaApiData = ApiData<FileMetaSystemData>;
+export type DashboardApiData = ApiData<DashboardSystemData>;
+export type CommentApiData = ApiData<CommentSystemData>;
+export type MemberActivityApiData = ApiData<MemberActivitySystemData>;
+export type MilestoneApiData = ApiData<MilestoneSystemData>;
+export type RecycleBinApiData = ApiData<RecycleBinSystemData>;

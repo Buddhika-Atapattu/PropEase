@@ -1,18 +1,7 @@
 // Path: src/app/types/common.ts
 
-import type { MultiAuthData, User } from "../services/APIs/apis.service";
+import type { MultiAuthData, UserSafeDto } from "../services/auth/user.contract";
 
-/** Standard ISO timestamp used across the system */
-export type ISODateString = string;
-
-/** Generic entity ID string */
-export type EntityId = string;
-
-/** Mongo ID string reference */
-export type MongoIdString = string;
-
-/** User-friendly display string */
-export type DisplayText = string;
 
 
 type MultiAuthDialogReason =
@@ -28,4 +17,386 @@ export interface MultiAuthDialogResult {
   authData: MultiAuthData | null;
 }
 
+// Path: src/app/types/common.ts
+// =============================================================================
+// Common Types (Frontend Shared Contracts)
+// -----------------------------------------------------------------------------
+// PURPOSE
+// - Shared foundational types used across the Angular app.
+// - Mirrors backend DTO contracts (NO mongoose Types here).
+//
+// NOTES (PropEase rules)
+// - File paths: relativePath is under "public/" (no leading "/").
+// - publicUrl is a client URL and MAY start with "/" or be absolute.
+// =============================================================================
 
+
+export type Role =
+  | "executive"
+  | "board"
+  | "director"
+  | "ceo"
+  | "cfo"
+  | "coo"
+  | "cto"
+  | "cio"
+  | "admin"
+  | "system"
+  | "user"
+  | "owner"
+  | "tenant"
+  | "agent"
+  | "broker"
+  | "landlord"
+  | "leasing"
+  | "leasing_manager"
+  | "property_manager"
+  | "facility_manager"
+  | "estate_manager"
+  | "operator"
+  | "manager"
+  | "lead"
+  | "supervisor"
+  | "captain"
+  | "member"
+  | "observer"
+  | "finance"
+  | "accountant"
+  | "accounts_payable"
+  | "accounts_receivable"
+  | "billing"
+  | "payroll"
+  | "procurement"
+  | "legal"
+  | "compliance"
+  | "auditor"
+  | "hr"
+  | "reception"
+  | "customer_support"
+  | "call_center"
+  | "developer"
+  | "qa"
+  | "devops"
+  | "it_support"
+  | "data_analyst"
+  | "mechanic"
+  | "carpenter"
+  | "electrician"
+  | "plumber"
+  | "technician"
+  | "welder"
+  | "driver"
+  | "cleaner"
+  | "security"
+  | "gardener"
+  | "painter"
+  | "mason"
+  | "helper"
+  | "inspector"
+  | "surveyor"
+  | "visitor"
+  ;
+
+export const DEFAULT_ROLES: Role[] = [
+  "executive",
+  "board",
+  "director",
+  "ceo",
+  "cfo",
+  "coo",
+  "cto",
+  "cio",
+  "admin",
+  "system",
+  "user",
+  "owner",
+  "tenant",
+  "agent",
+  "broker",
+  "landlord",
+  "leasing",
+  "leasing_manager",
+  "property_manager",
+  "facility_manager",
+  "estate_manager",
+  "operator",
+  "manager",
+  "lead",
+  "supervisor",
+  "captain",
+  "member",
+  "observer",
+  "finance",
+  "accountant",
+  "accounts_payable",
+  "accounts_receivable",
+  "billing",
+  "payroll",
+  "procurement",
+  "legal",
+  "compliance",
+  "auditor",
+  "hr",
+  "reception",
+  "customer_support",
+  "call_center",
+  "developer",
+  "qa",
+  "devops",
+  "it_support",
+  "data_analyst",
+  "mechanic",
+  "carpenter",
+  "electrician",
+  "plumber",
+  "technician",
+  "welder",
+  "driver",
+  "cleaner",
+  "security",
+  "gardener",
+  "painter",
+  "mason",
+  "helper",
+  "inspector",
+  "surveyor",
+  "visitor",
+];
+
+// -----------------------------------------------------------------------------
+// 01) Primitive aliases (readability + consistent DTO naming)
+// -----------------------------------------------------------------------------
+
+/** Standard ISO timestamp used across the system */
+export type ISODateString = string;
+
+/** Generic entity ID string */
+export type EntityId = string;
+
+/** Mongo ID string reference (when serialized) */
+export type MongoIdString = string;
+
+/** User-friendly display string */
+export type DisplayText = string;
+
+// -----------------------------------------------------------------------------
+// 02) Location & Address types (shared between Property / Lease / etc.)
+// -----------------------------------------------------------------------------
+
+/**
+ * Minimal address used across modules.
+ * Keep it lightweight. Anything country-specific should live in module types.
+ */
+export interface Address {
+  houseNumber: string;
+  street: string;
+  city: string;
+  stateOrProvince: string;
+  postcode: string;
+  country: string | Country; // allow both simple string or detailed country object
+}
+
+/**
+ * Geo-location for map embedding.
+ * embeddedUrl is typically used for static maps/iframes.
+ */
+export interface GeoLocation {
+  lat: number;
+  lng: number;
+  embeddedUrl: string;
+}
+
+// -----------------------------------------------------------------------------
+// 03) Country + Phone types (used by Tenant/Lease/Users/etc.)
+// -----------------------------------------------------------------------------
+
+/**
+ * Country dialing code metadata.
+ * Used by PhoneNumber and sometimes for UI country pickers.
+ */
+export interface CountryCodes {
+  name: string;
+  code: string;
+  flags: {
+    png: string;
+    svg: string;
+    alt?: string;
+  };
+}
+
+/**
+ * Minimal country identity (used in some modules)
+ */
+export interface Country {
+  name: string;
+  code: string;
+  emoji: string;
+  unicode: string;
+  image: string;
+}
+
+/**
+ * Phone number with country dialing metadata.
+ * NOTE: number is a number in your current design (keep as-is).
+ * If you ever need leading zeros, switch to string system-wide.
+ */
+export interface PhoneNumber {
+  code: CountryCodes;
+  number: string;
+}
+
+/**
+ * Large country details type (for autocomplete / API country datasets).
+ * Used mostly on FE, but can appear in shared DTOs.
+ */
+export interface CountryDetailsAdvance {
+  name: {
+    common: string;
+    official: string;
+    nativeName?: {
+      [ langCode: string ]: {
+        official: string;
+        common: string;
+      };
+    };
+  };
+  tld?: string[];
+  cca2: string;
+  cca3?: string;
+  ccn3?: string;
+  cioc?: string;
+  independent?: boolean;
+  status?: string;
+  unMember?: boolean;
+  currencies?: {
+    [ code: string ]: { name: string; symbol: string; };
+  };
+  idd?: { root: string; suffixes: string[]; };
+  capital?: string[];
+  altSpellings?: string[];
+  region: string;
+  subregion?: string;
+  languages?: { [ langCode: string ]: string; };
+  latlng: [ number, number ];
+  landlocked?: boolean;
+  borders?: string[];
+  area: number;
+  demonyms?: { [ langCode: string ]: { m: string; f: string; }; };
+  translations?: { [ langCode: string ]: { official: string; common: string; }; };
+  flag?: string;
+  flags: { png: string; svg: string; alt?: string; };
+  coatOfArms?: { png?: string; svg?: string; };
+  maps?: { googleMaps: string; openStreetMaps: string; };
+  population: number;
+  fifa?: string;
+  car?: { signs: string[]; side: "left" | "right"; };
+  timezones: string[];
+  continents: string[];
+  startOfWeek?: string;
+  capitalInfo?: { latlng: [ number, number ]; };
+  postalCode?: { format?: string; regex?: string; };
+}
+
+// -----------------------------------------------------------------------------
+// 04) AuthUser (security scope identity for guards, WS, auditing)
+// -----------------------------------------------------------------------------
+
+/**
+ * Auth identity attached by ApiGuardExport.GetAuthUser(req).
+ * IMPORTANT:
+ * - userId is Types.ObjectId at runtime.
+ * - use AuthUserNormalized in contracts/DTOs (string userId).
+ */
+export type AuthUser = {
+  // Human identity
+  userId: string;
+  username: string;
+  role: Role;
+  name: string;
+
+  // JWT standard subject (user id)
+  sub?: string;
+
+  // KPI / scoping hints (OPTIONAL)
+  // one user can be in multiple teams
+  teamCodes?: string[]; // e.g. ["TEAM-A", "TEAM-B"]
+  branchId?: string; // optional org structure
+};
+
+/**
+ * Normalized AuthUser used for DTOs/contracts
+ * (never leak Mongoose Types.ObjectId into FE contracts)
+ */
+export type AuthUserNormalized = Omit<AuthUser, "userId"> & { userId: string; };
+
+// -----------------------------------------------------------------------------
+// 05) File metadata packet (standard upload result across the platform)
+// -----------------------------------------------------------------------------
+
+/**
+ * FileMetaPacket is the canonical upload result structure.
+ * Used by Comments/WorkItems/TeamTasks/Lease evidence/signatures/etc.
+ */
+export interface FileMetaPacket {
+  // Identity
+  originalName: string;
+  storedName: string;
+
+  // Type + size
+  extension: string;
+  mimeType: string;
+  sizeBytes: number;
+
+  // Where it lives (filesystem + public mapping)
+  relativePath: string; // under "public/" no leading "/" (PropEase rule)
+  publicUrl: string; // absolute URL that clients can use
+  absDiskPath: string; // full path on disk (useful for internal ops)
+
+  // Upload context
+  fieldName: string; // multer fieldname ("attachments", "files", "images"...)
+  uploadedAtIso: ISODateString;
+
+  // Optional but valuable diagnostics/integrity
+  encoding?: string;
+  checksumSha256?: string;
+}
+
+// -----------------------------------------------------------------------------
+// 06) Pagination + filtering helpers
+// -----------------------------------------------------------------------------
+
+export interface DateRange {
+  start: ISODateString;
+  end: ISODateString;
+}
+
+export interface PaginationMeta {
+  index?: number;
+  page?: number;
+  limit?: number;
+  total?: number;
+  offset?: number;
+
+  start?: number;
+  end?: number;
+
+  search?: string;
+  dateRange?: DateRange;
+
+  hasNext?: boolean;
+  hasPrevious?: boolean;
+  hasResults?: boolean;
+  hasMore?: boolean;
+
+  nextCursor?: string;
+}
+
+// -----------------------------------------------------------------------------
+// 07) Generic validation unit (token-based validation patterns)
+// -----------------------------------------------------------------------------
+
+export interface ValidationUnit {
+  token?: string;
+  isValid?: boolean;
+  expiresAt?: string;
+}

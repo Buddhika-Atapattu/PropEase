@@ -22,7 +22,7 @@ import {
   TeamManagementDto,
   TaskStatus,
   DEFAULT_TEAM_DOMAINS,
-} from '../../../services/teamManagementService/team-management.types';
+} from '../../../types/team-management/team-main/team-management.types';
 import {
 
   TeamManagementService,
