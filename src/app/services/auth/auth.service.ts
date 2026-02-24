@@ -41,7 +41,7 @@ import {
   DEFAULT_ROLES,
 } from './user.contract';
 import { ActivityTrackerService } from '../activityTacker/activity-tracker.service';
-import { NotificationService } from '../notifications/notification-service';
+import { NotificationCenterService } from '../notifications/notification-center.service';
 import { SocketService } from '../socket/socket-service';
 import { AdminReportService } from '../adminReportService/admin-report.service';
 import {
@@ -186,7 +186,7 @@ export class AuthService {
     private readonly cryptoService: CryptoService,
     private readonly apiService: APIsService,
     private readonly activityTrackerService: ActivityTrackerService,
-    private readonly notificationService: NotificationService,
+    private readonly notificationService: NotificationCenterService,
     private readonly socketService: SocketService,
     private readonly router: Router,
     private readonly adminReportService: AdminReportService,
@@ -205,21 +205,6 @@ export class AuthService {
 
   /* ───────────────────── Notification delegates ───────────────────── */
 
-  get notifications$() {
-    return this.notificationService.items$;
-  }
-
-  get unreadNotifications$() {
-    return this.notificationService.unreadNotifications$();
-  }
-
-  get unreadNotificationsCount(): number {
-    return this.notificationService.unreadCount();
-  }
-
-  public markNotificationRead( notificationId: string ): Promise<void> {
-    return this.notificationService.markRead( notificationId );
-  }
 
   /* ───────────────────── Getters / Setters ───────────────────────── */
 
@@ -996,66 +981,53 @@ export class AuthService {
    *  - Idempotent: runs ONCE per browser session (notificationsInit flag).
    */
   private initRealtimeIfNeeded(): void {
+    if ( !this.isBrowser || this.notificationsInit ) {
+      return;
+    }
+
     try {
-      if ( !this.isBrowser || this.notificationsInit ) {
-        return;
-      }
-
-      // Always read the canonical token bundle from localStorage.
       const tokenBundle = this.readTokenFromStorage();
-
-      const sessionToken: string | undefined = tokenBundle?.session;
-      const wsToken: string | undefined = tokenBundle?.wsToken;
+      const sessionToken = tokenBundle?.session;
+      const wsToken = tokenBundle?.wsToken;
 
       if ( !sessionToken ) {
-        throw new Error(
-          '[AuthService] initRealtimeIfNeeded: no session token found, skipping realtime init',
-        );
+        return;
       }
 
       const apiBase = this.resolveApiBase();
       if ( !apiBase ) {
-        throw new Error(
-          '[AuthService] initRealtimeIfNeeded: no apiBase, skipping realtime init',
-        );
+        return;
       }
 
-      const wsBase = apiBase;
+      const tokenProvider = (): string => {
+        const bundle = this.readTokenFromStorage();
+        return bundle?.wsToken ?? bundle?.session ?? "";
+      };
 
-      // For now, "tokenProvider" just re-reads the session token from storage.
-      const tokenProvider = (): string =>
-        this.readTokenFromStorage()?.session ?? '';
-
-      // ── Socket.IO: use sessionToken + wsToken for handshake ──────────────
       this.socketService.init( {
-        wsBase,
-        token: sessionToken,          // same opaque token as HTTP APIs
-        sessionToken: sessionToken,
+        wsBase: apiBase,
+        token: sessionToken,
+        sessionToken,
         wsToken,
         tokenProvider,
       } );
 
-      // ── Notification service: HTTP + (optional) WS integration ───────────
-      this.notificationService.initConnection( {
-        wsBase,
-        token: sessionToken,
-        tokenProvider,
+      // Start notification engine (WS-first, REST fallback)
+      this.notificationService.start( {
+        scope: "user",
+        priorityScope: "all",
+        page: 1,
+        limit: 10,
+        filters: {},
       } );
-
-      // Initial pull of notifications (guarded by ApiGuard)
-      this.notificationService
-        .load( { limit: 20 } )
-        .catch( ( err ) =>
-          console.warn(
-            '[Warning:] [AuthService] initial notification load failed: ',
-            err,
-            '\n',
-          ),
-        );
 
       this.notificationsInit = true;
     } catch ( error ) {
-      console.error( '[Error:] [AuthService] Failed to initialise notification: ', error, '\n' );
+      console.error( "[Error:] [AuthService.initRealtimeIfNeeded] ", error, "\n" );
+
+      this.notificationService.stop();
+      this.socketService.disconnect();
+      this.notificationsInit = false;
     }
   }
 
@@ -1270,7 +1242,7 @@ export class AuthService {
       this._deviceId = null;
       this.accessControlService.setUser( null );
 
-      this.notificationService.disconnect();
+      this.notificationService.stop();
       this.socketService.disconnect();
       this.notificationsInit = false;
     }
@@ -1437,22 +1409,24 @@ export class AuthService {
       return null;
     }
 
-    const sessionToken =
-      localStorage.getItem( this.STORAGE_KEYS.sessionToken ) ?? null;
-    const guardToken =
-      localStorage.getItem( this.STORAGE_KEYS.guardToken ) ?? null;
-    const wsToken =
-      localStorage.getItem( this.STORAGE_KEYS.wsToken ) ?? null;
+    const sessionToken = localStorage.getItem( this.STORAGE_KEYS.sessionToken );
+    const guardToken = localStorage.getItem( this.STORAGE_KEYS.guardToken );
+    const wsToken = localStorage.getItem( this.STORAGE_KEYS.wsToken );
 
-    if ( sessionToken && guardToken ) {
-      return {
-        session: sessionToken,
-        guard: guardToken,
-        wsToken: wsToken ?? undefined,
-      };
+    if ( !sessionToken || !guardToken ) {
+      return null;
     }
 
-    return null;
+    const base: { session: string; guard: string; wsToken?: string; } = {
+      session: sessionToken,
+      guard: guardToken,
+    };
+
+    if ( wsToken && wsToken.trim().length > 0 ) {
+      base.wsToken = wsToken;
+    }
+
+    return base;
   }
 
   private writeTokenToStorage(

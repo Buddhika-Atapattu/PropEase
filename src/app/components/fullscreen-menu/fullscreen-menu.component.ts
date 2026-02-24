@@ -1,4 +1,17 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+// Path: src/app/components/fullscreen-menu/fullscreen-menu.component.ts
+// =============================================================================
+// FullscreenMenuComponent (NotificationCenterService — New Contracts Compatible)
+// -----------------------------------------------------------------------------
+// Key fixes for the new notification system:
+// 1) ✅ Use NotificationCenterService consistently (remove old notificationService refs)
+// 2) ✅ Replace legacy `audience.usernames/roles` logic with NEW `audiences[]` model
+// 3) ✅ Avoid browser `Notification` name collision → use UiNotification alias
+// 4) ✅ SSR-safe: guard ALL window/document usage with isBrowser
+// 5) ✅ Standalone imports fixed: MatMenuModule added for MatMenuTrigger
+// 6) ✅ Robust ID handling: supports `notificationId` (new) + `_id` (legacy)
+// =============================================================================
+
+import { CommonModule, isPlatformBrowser } from "@angular/common";
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -13,14 +26,17 @@ import {
   Output,
   PLATFORM_ID,
   Renderer2,
-  SimpleChanges, ViewChild
-} from '@angular/core';
-import { MatRippleModule } from '@angular/material/core';
-import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
-import { MatMenuTrigger } from '@angular/material/menu';
-import { DomSanitizer } from '@angular/platform-browser';
-import { Router } from '@angular/router';
-import { fromEvent, Observable, Subject, timer } from 'rxjs';
+  SimpleChanges,
+  ViewChild,
+} from "@angular/core";
+
+import { MatRippleModule } from "@angular/material/core";
+import { MatIconModule, MatIconRegistry } from "@angular/material/icon";
+import { MatMenuModule, MatMenuTrigger } from "@angular/material/menu";
+import { DomSanitizer } from "@angular/platform-browser";
+import { Router } from "@angular/router";
+
+import { fromEvent, Observable, Subject, timer } from "rxjs";
 import {
   delayWhen,
   distinctUntilChanged,
@@ -30,17 +46,26 @@ import {
   startWith,
   switchMap,
   takeUntil,
-} from 'rxjs/operators';
-import { APIsService, User } from '../../services/APIs/apis.service';
-import { AuthService } from '../../services/auth/auth.service';
-import { NotificationsRoutingService } from '../../services/notificationRouting/notifications-routing-service';
-import { NotificationService, type Notification } from '../../services/notifications/notification-service';
-import { type FullscreenMenuLink } from '../list-main-panel/list-main-panel.component';
-import { UserInfoPanelComponent } from '../user-info-panel/user-info-panel.component';
-import type { Role } from '../../services/auth/user.contract';
+} from "rxjs/operators";
 
+import { APIsService, User } from "../../services/APIs/apis.service";
+import { AuthService } from "../../services/auth/auth.service";
+import type { Role } from "../../services/auth/user.contract";
+import { NotificationCenterService } from "../../services/notifications/notification-center.service";
+import { NotificationRouteMapService } from '../../services/notifications/notification-route-map.service';
+import { type FullscreenMenuLink } from "../list-main-panel/list-main-panel.component";
+import { UserInfoPanelComponent } from "../user-info-panel/user-info-panel.component";
 
+// NOTE:
+// We intentionally DO NOT use the global browser `Notification` type name.
+// Import your canonical FE mirror type here.
+// If your file path differs, adjust it once and keep it consistent everywhere.
+import type {
+  NotificationAudience,
+  NotificationInboxItemDto
+} from "../../types/notifications/notification.types";
 
+type UiNotification = NotificationInboxItemDto;
 
 export interface FullscreenMenuProfile {
   name: string;
@@ -49,11 +74,11 @@ export interface FullscreenMenuProfile {
 }
 
 @Component( {
-  selector: 'app-fullscreen-menu',
+  selector: "app-fullscreen-menu",
   standalone: true,
-  imports: [ CommonModule, MatIconModule, MatRippleModule, UserInfoPanelComponent ],
-  templateUrl: './fullscreen-menu.component.html',
-  styleUrls: [ './fullscreen-menu.component.scss' ],
+  imports: [ CommonModule, MatIconModule, MatRippleModule, MatMenuModule, UserInfoPanelComponent ],
+  templateUrl: "./fullscreen-menu.component.html",
+  styleUrls: [ "./fullscreen-menu.component.scss" ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 } )
 export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
@@ -67,7 +92,7 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
   @Input( { required: true } ) links: FullscreenMenuLink[] = [];
 
   /** Current router url fragment to highlight active route */
-  @Input() currentUrl = '';
+  @Input() currentUrl = "";
 
   /** Emits when the overlay requests close */
   @Output() closed = new EventEmitter<void>();
@@ -75,39 +100,38 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
   /** Emits (parent, child, grandchild) path triplet for navigation */
   @Output() navigate = new EventEmitter<{ p: string | null; c: string | null; g: string | null; }>();
 
-  @ViewChild( 'menuTrigger', { static: false } ) menuTrigger!: MatMenuTrigger;
+  @ViewChild( "menuTrigger", { static: false } ) menuTrigger?: MatMenuTrigger;
 
-  private isBrowser: boolean;
-
-  private unlisteners: Array<() => void> = [];
+  private readonly isBrowser: boolean;
+  private readonly destroy$ = new Subject<void>();
+  private readonly unlisteners: Array<() => void> = [];
 
   /** Which body to show */
-  protected activeView: 'menu' | 'notifications' = 'menu';
+  protected activeView: "menu" | "notifications" = "menu";
 
-  // Notification
-  protected notifications$!: Observable<Notification[]>;
+  // Notification streams (NEW system)
+  protected notifications$!: Observable<ReadonlyArray<UiNotification>>;
   protected unreadCount$!: Observable<number>;
   protected connected$!: Observable<boolean>;
 
-  protected activeTab: 'direct' | 'overall' = 'direct';
-  protected directNotifications$!: Observable<Notification[]>;
-  protected overallNotifications$!: Observable<Notification[]>;
+  protected activeTab: "direct" | "overall" = "direct";
+  protected directNotifications$!: Observable<ReadonlyArray<UiNotification>>;
+  protected overallNotifications$!: Observable<ReadonlyArray<UiNotification>>;
 
   protected isLoggedIn = false;
-  private username = '';
-  private role: Role = 'user';
+  private username = "";
+  private userId = "";
+  private role: Role = "user";
 
-  private destroy$ = new Subject<void>();
+  protected menuOpen = false;
 
-  protected menuOpen: boolean = false;
-
-  constructor (
+  public constructor (
     private readonly el: ElementRef<HTMLElement>,
     private readonly r2: Renderer2,
     private readonly router: Router,
     @Inject( PLATFORM_ID ) platformId: object,
-    private readonly notificationService: NotificationService,
-    private readonly notificationsRoutingService: NotificationsRoutingService,
+    private readonly notificationCenter: NotificationCenterService,
+    private readonly notificationRouter: NotificationRouteMapService,
     private readonly authService: AuthService,
     private readonly matIconRegistry: MatIconRegistry,
     private readonly domSanitizer: DomSanitizer,
@@ -117,116 +141,107 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
   }
 
   // === Life-cycle ===========================================================
-  ngOnInit(): void {
-
-    // Register Menu Item Icons
+  public ngOnInit(): void {
     this.makeIcons();
-    // Streams
-    this.notifications$ = this.notificationService.items$;
-    this.unreadCount$ = this.notificationService.unreadCount$();
-    this.connected$ = this.notificationService.connected$;
 
-    // Auth
+    // Auth snapshot (safe defaults)
     this.isLoggedIn = this.authService.isUserLoggedIn;
     const me = this.authService.getLoggedUser;
-    this.username = me?.username || '';
-    this.role = me?.role || 'user';
+    this.username = String( me?.username ?? "" ).trim();
+    this.userId = String( ( me as unknown as { userId?: string; } )?.userId ?? "" ).trim(); // if your UserSafeDto uses "userId"
+    this.role = ( me?.role ?? "user" ) as Role;
 
-    // Predicates
-    const isDirect = ( n: Notification ) => {
-      const names = n.audience?.usernames ?? [];
-      const roles = n.audience?.roles ?? [];
-      const modeOk =
-        n.audience?.mode === 'broadcast' ||
-        n.audience?.mode === 'user' ||
-        n.audience?.mode === 'role';
+    // ─────────────────────────────────────────────────────────────────────
+    // Streams from NotificationCenterService (NEW)
+    // Assumed API (matches the style you used elsewhere):
+    //   - notifications$(): Observable<UiNotification[]>
+    //   - unreadCount$(): Observable<number>
+    //   - connected$: Observable<boolean>
+    //   - load({limit}): Promise<void>
+    //   - load$({limit}): Observable<void> (optional helper)
+    //   - onNew(playSound): Observable<UiNotification>
+    //   - markRead(notificationId): Promise<void>
+    //   - markAllRead(): Promise<void>
+    // ─────────────────────────────────────────────────────────────────────
+    this.notifications$ = this.notificationCenter.notifications$();
+    this.unreadCount$ = this.notificationCenter.unreadCount$();
+    this.connected$ = this.notificationCenter.onConnected$();
 
-      const includesMeByName = names.includes( this.username );
-      const includesMeByRole = !!this.role && roles.includes( this.role as Exclude<typeof this.role, ''> );
-      return modeOk && ( includesMeByName || includesMeByRole );
-    };
+    // Split predicates (NEW audiences[] model)
+    const isDirect = ( n: UiNotification ): boolean => this.isTargetingMe( n );
+    const isOverall = ( n: UiNotification ): boolean => this.isAdminOverall( n );
 
-    const isOverall = ( n: Notification ) => {
-      if ( this.role !== 'admin' ) return false;
-      const names = n.audience?.usernames ?? [];
-      const roles = n.audience?.roles ?? [];
-      const modeOk =
-        n.audience?.mode === 'broadcast' ||
-        n.audience?.mode === 'user' ||
-        n.audience?.mode === 'role';
-
-      const targetsMeByName = names.includes( this.username );
-      const targetsMeByRole = !!this.role && roles.includes( this.role as Exclude<typeof this.role, ''> );
-      return modeOk && !( targetsMeByName || targetsMeByRole );
-    };
-
-    // Split views
-    this.directNotifications$ = this.notifications$.pipe( map( list => list.filter( isDirect ) ) );
-    this.overallNotifications$ = this.notifications$.pipe( map( list => list.filter( isOverall ) ) );
+    this.directNotifications$ = this.notifications$.pipe( map( ( list ) => list.filter( isDirect ) ) );
+    this.overallNotifications$ = this.notifications$.pipe( map( ( list ) => list.filter( isOverall ) ) );
 
     // Initial fetch
-    this.notificationService.load( { limit: 30 } ).catch( ( error ) => {
-      console.error( '[notif] initial load failed', error );
-    } );
+    this.notificationCenter
+      .load( { limit: 30 } )
+      .catch( ( error: unknown ) => console.error( "[Error:] [FullscreenMenu] initial load failed: ", error, "\n" ) );
 
-    // Optional real-time
-    this.notificationService
-      .onNew( true ) // true = play sound on each new notification
+    // Optional real-time stream
+    this.notificationCenter
+      .onNew( true )
       .pipe( takeUntil( this.destroy$ ) )
       .subscribe( {
-        next: ( n: Notification ) => {
-          // No need to upsert here; service already does it in handleIncoming.
-          // You can add extra UI-side effects here if needed.
-          console.log( '[fullscreen-menu] new notification received:', n._id );
+        next: ( n: UiNotification ) => {
+          console.log( "[Info:] [FullscreenMenu] new notification received: ", this.getNotifId( n ), "\n" );
         },
-        error: ( err ) => {
-          console.error( '[fullscreen-menu] realtime notifications error', err );
-          // Polling already handles resilience, so we just log here.
+        error: ( err: unknown ) => {
+          console.error( "[Error:] [FullscreenMenu] realtime notifications error: ", err, "\n" );
         },
       } );
 
-    // Visibility-aware polling with backoff
-    const visible$ = fromEvent( document, 'visibilitychange' ).pipe(
-      map( () => document.visibilityState === 'visible' ),
-      startWith( document.visibilityState === 'visible' ),
-      distinctUntilChanged()
-    );
+    // Visibility-aware polling with backoff (SSR-safe)
+    if ( this.isBrowser ) {
+      const visible$ = fromEvent( document, "visibilitychange" ).pipe(
+        map( () => document.visibilityState === "visible" ),
+        startWith( document.visibilityState === "visible" ),
+        distinctUntilChanged(),
+      );
 
-    visible$
-      .pipe(
-        switchMap( ( isVisible ) => {
-          const intervalMs = isVisible ? 30_000 : 180_000; // 30s vs 3min
-          return timer( intervalMs, intervalMs ).pipe( map( () => undefined ) );
-        } ),
-        switchMap( () =>
-          this.notificationService.load$?.( { limit: 30 } ) ??
-          new Observable<void>( ( sub ) => {
-            this.notificationService
-              .load( { limit: 30 } )
-              .then( () => {
-                sub.next();
-                sub.complete();
-              } )
-              .catch( ( e ) => sub.error( e ) );
-          } )
-        ),
-        retryWhen( ( errors ) =>
-          errors.pipe(
-            scan( ( acc: number ) => Math.min( acc ? acc * 3 : 5000, 300000 ), 0 ),
-            delayWhen( ( ms: number ) => timer( ms ) )
-          )
-        ),
-        takeUntil( this.destroy$ )
-      )
-      .subscribe();
+      visible$
+        .pipe(
+          switchMap( ( isVisible ) => {
+            const intervalMs = isVisible ? 30_000 : 180_000; // 30s vs 3min
+            return timer( intervalMs, intervalMs ).pipe( map( () => undefined ) );
+          } ),
+          switchMap( () => {
+            const load$Maybe = this.notificationCenter.load$?.( { limit: 30 } );
+            if ( load$Maybe ) {
+              return load$Maybe;
+            }
+
+            // Promise → Observable adapter (typed, no `any`)
+            return new Observable<void>( ( sub ) => {
+              this.notificationCenter
+                .load( { limit: 30 } )
+                .then( () => {
+                  sub.next();
+                  sub.complete();
+                } )
+                .catch( ( e: unknown ) => sub.error( e ) );
+            } );
+          } ),
+          retryWhen( ( errors ) =>
+            errors.pipe(
+              scan( ( acc: number ) => Math.min( acc ? acc * 3 : 5_000, 300_000 ), 0 ),
+              delayWhen( ( ms: number ) => timer( ms ) ),
+            ),
+          ),
+          takeUntil( this.destroy$ ),
+        )
+        .subscribe();
+    }
   }
 
-  ngAfterViewInit(): void {
+  public ngAfterViewInit(): void {
     this.applyBodyScrollLock( this.open );
+
     // Close on ESC (browser only)
     if ( this.isBrowser ) {
-      const offKey = this.r2.listen( 'document', 'keydown', ( e: KeyboardEvent ) => {
-        if ( e.key === 'Escape' && this.open ) {
+      const offKey = this.r2.listen( "document", "keydown", ( e: KeyboardEvent ) => {
+        if ( e.key === "Escape" && this.open ) {
           this.requestClose();
         }
       } );
@@ -234,249 +249,207 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
     }
   }
 
-  ngOnChanges( changes: SimpleChanges ): void {
-    if ( changes[ 'open' ] && !changes[ 'open' ].firstChange ) {
+  public ngOnChanges( changes: SimpleChanges ): void {
+    if ( changes[ "open" ] && !changes[ "open" ].firstChange ) {
       this.applyBodyScrollLock( this.open );
     }
   }
 
-  ngOnDestroy(): void {
-    // release listeners + scroll lock
-    this.unlisteners.forEach( u => u() );
+  public ngOnDestroy(): void {
+    this.unlisteners.forEach( ( u ) => u() );
     this.applyBodyScrollLock( false );
 
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  /** Toggle helpers (called by header pills) */
+  // === View toggles =========================================================
   protected showMenu(): void {
-    this.activeView = 'menu';
+    this.activeView = "menu";
   }
 
   protected showNotifications(): void {
-    this.activeView = 'notifications';
+    this.activeView = "notifications";
   }
 
-
-  /**
-   * FIX: Actually navigate.
-   * We use the routing service’s convenience method which builds the UrlTree and navigates.
-   * Then we mark as read and close the menu.
-   */
-  /* Ensure selecting a notification also closes the overlay at end */
-  protected async markOneRead( notification: Notification, ev?: MouseEvent ) {
+  // === Notification actions =================================================
+  protected async markOneRead( notification: UiNotification, ev?: MouseEvent ): Promise<void> {
     ev?.stopPropagation();
     ev?.preventDefault();
+
     try {
-      const ok = await this.notificationsRoutingService.navigateToAny( notification );
-      await this.notificationService.markRead( notification._id );
-      if ( ok ) this.requestClose();  // close overlay after action
-    } catch ( e ) {
-      console.error( '[notif] markOneRead failed', e );
+      // 1) Navigate (NEW system: prefer target.route if you have it)
+      // If your notification DTO contains `target.route` / `target.params`,
+      // you can wire it here in a single place.
+      const didNavigate = await this.navigateByNotificationTarget( notification );
+
+      // 2) Mark as read
+      const id = this.getNotifId( notification );
+      if ( id ) {
+        await this.notificationCenter.markRead$( id );
+      }
+
+      // 3) Close overlay after action
+      if ( didNavigate ) {
+        this.requestClose();
+      }
+    } catch ( e: unknown ) {
+      console.error( "[Error:] [FullscreenMenu] markOneRead failed: ", e, "\n" );
     }
   }
 
-  protected async markAllAsRead() {
+  protected async markAllAsRead(): Promise<void> {
     try {
-      await this.notificationService.markAllRead();
-    } catch ( e ) {
-      console.error( '[notif] markAllAsRead failed', e );
+      await this.notificationCenter.markAllRead$();
+    } catch ( e: unknown ) {
+      console.error( "[Error:] [FullscreenMenu] markAllAsRead failed: ", e, "\n" );
     }
   }
 
-  protected iconFor( n: Notification ): string {
-    switch ( n.severity ) {
-      case 'success': return 'check_circle';
-      case 'warning': return 'warning';
-      case 'error': return 'error';
-      default: return 'notifications';
+  protected iconFor( n: UiNotification ): string {
+    switch ( n.notification.severity ) {
+      case "success":
+        return "check_circle";
+      case "warning":
+        return "warning";
+      case "error":
+        return "error";
+      default:
+        return "notifications";
     }
-  }
-
-  private closeMenu() {
-    this.menuTrigger?.closeMenu();
   }
 
   protected viewAllNotifications(): void {
-    if ( !this.authService.getLoggedUser ) return;
+    if ( !this.authService.getLoggedUser ) {
+      return;
+    }
     this.requestClose();
-    this.router.navigate( [ '/dashboard/notifications/all-notifications' ] );
+    this.router.navigate( [ "/dashboard/notifications/all-notifications" ] );
   }
 
-  protected trackById( _: number, item: Notification ) {
-    return item._id;
-  }
+  protected trackById = ( _: number, item: UiNotification ): string => this.getNotifId( item ) ?? String( _ );
 
-  private makeIcons() {
-
-    const icons: {
-      name: string;
-      icon: string;
-    }[] = [
-        { name: 'home-icon', icon: 'Images/Icons/home.svg' },
-        { name: 'property-icon', icon: 'Images/Icons/property.svg' },
-        { name: 'users-icon', icon: 'Images/Icons/users.svg' },
-        { name: 'tenant-icon', icon: 'Images/Icons/tenant.svg' },
-        { name: 'teams', icon: 'Images/Icons/agents.svg' },
-        { name: 'report-icon', icon: 'Images/Icons/report.svg' },
-        { name: 'owner-icon', icon: 'Images/Icons/owner.svg' },
-        { name: 'payment-icon', icon: 'Images/Icons/payments.svg' },
-        { name: 'access-icon', icon: 'Images/Icons/access-control.svg' },
-        { name: 'bill-list-icon', icon: 'Images/Icons/bill-list.svg' },
-        { name: 'certification-icon', icon: 'Images/Icons/certification.svg' },
-        { name: 'create-icon', icon: 'Images/Icons/create.svg' },
-        { name: 'documents-icon', icon: 'Images/Icons/documents.svg' },
-        { name: 'notifications-icon', icon: 'Images/Icons/notification.svg' },
-        { name: 'log-icon', icon: 'Images/Icons/log.svg' },
-        { name: 'complaints-icon', icon: 'Images/Icons/complaints.svg' },
-      ];
-    icons.forEach( ( icon ) => {
-      this.matIconRegistry.addSvgIcon(
-        icon.name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl( icon.icon )
-      );
-    } );
-  }
-
-  protected activeItem(
-    parent: FullscreenMenuLink | null,
-    child: FullscreenMenuLink | null
-  ): boolean {
+  // === Menu helpers =========================================================
+  protected activeItem( parent: FullscreenMenuLink | null, child: FullscreenMenuLink | null ): boolean {
     try {
-      if ( !parent?.url ) return false;
+      if ( !parent?.url ) {
+        return false;
+      }
 
-      // Current path → segments (lowercased, no empty parts, no query/hash)
-      const rawPath = window.location.pathname.split( '?' )[ 0 ].split( '#' )[ 0 ];
-      const segs = rawPath.split( '/' ).filter( Boolean ).map( s => s.toLowerCase() );
+      // SSR-safe: use Router url if possible; fallback to input currentUrl
+      const rawPath = this.isBrowser
+        ? ( this.router.url || this.currentUrl || "/" )
+        : ( this.currentUrl || "/" );
 
-      // Helper to get last segment of a link
+      const cleanPath = rawPath.split( "?" )[ 0 ].split( "#" )[ 0 ];
+      const segs = cleanPath.split( "/" ).filter( Boolean ).map( ( s ) => s.toLowerCase() );
+
       const parentSeg = this.lastSeg( parent.url );
       const childSeg = child?.url ? this.lastSeg( child.url ) : null;
 
-      // True if current path contains the parent segment OR the child segment
       const matchParent = !!parentSeg && segs.includes( parentSeg );
       const matchChild = !!childSeg && segs.includes( childSeg );
 
       return matchParent || matchChild;
-    } catch ( err ) {
-      console.error( 'activeItem() failed:', err );
+    } catch ( err: unknown ) {
+      console.error( "[Error:] [FullscreenMenu.activeItem] failed: ", err, "\n" );
       return false;
     }
   }
 
-  /** Extract last path segment from a link URL, normalized to lowercase. */
   private lastSeg( url: string ): string {
-    return url.split( '/' ).filter( Boolean ).pop()!.toLowerCase();
+    return url.split( "/" ).filter( Boolean ).pop()!.toLowerCase();
   }
-
 
   // === Public API (template) ================================================
-  /** Backdrop click */
-  onBackdrop(): void {
+  public onBackdrop(): void {
     this.requestClose();
   }
 
-  /** Navigate helper that emits to parent; parent can call router */
-  go( item: FullscreenMenuLink ): void {
-    if ( !item.commands ) return;
-    this.router.navigate( [ 'dashboard', ...item.commands ] );
+  public go( item: FullscreenMenuLink ): void {
+    if ( !item.commands ) {
+      return;
+    }
+    this.router.navigate( [ "dashboard", ...item.commands ] );
     this.requestClose();
   }
 
-  /** Top-level expand/collapse */
-  toggleTop( index: number ): void {
+  public toggleTop( index: number ): void {
     this.toggleSection( `.lvl-1[data-idx="${ index }"]` );
   }
 
-  /** Second-level expand/collapse */
-  toggleSub( i: number, j: number ): void {
+  public toggleSub( i: number, j: number ): void {
     this.toggleSection( `.lvl-2[data-idx="${ i }-${ j }"]` );
   }
 
-  /** Trackers for *ngFor performance */
-  trackTop = ( _: number, it: FullscreenMenuLink ) => it.url ?? it.icon_text;
-  trackSub = ( _: number, it: FullscreenMenuLink ) => it.url ?? it.icon_text;
-  trackChild = ( _: number, it: FullscreenMenuLink ) => it.url ?? it.icon_text;
+  public trackTop = ( _: number, it: FullscreenMenuLink ): string => it.url ?? it.icon_text;
+  public trackSub = ( _: number, it: FullscreenMenuLink ): string => it.url ?? it.icon_text;
+  public trackChild = ( _: number, it: FullscreenMenuLink ): string => it.url ?? it.icon_text;
 
   public get firstName(): string {
-    const raw = ( this.profile?.name ?? '' ).trim();
-    if ( !raw ) return 'User';
+    const raw = ( this.profile?.name ?? "" ).trim();
+    if ( !raw ) {
+      return "User";
+    }
     const first = raw.split( /\s+/ )[ 0 ];
-    return first || 'User';
+    return first || "User";
   }
 
   protected async viewUserProfile(): Promise<void> {
     try {
-      // 1) Get logged user safely
       const user: User | null = this.authService.getLoggedUser;
-
-      if ( !user ) {
-        throw new Error( 'Invalid login!' );
+      if ( !user?.username ) {
+        throw new Error( "Invalid login / username!" );
       }
 
-      if ( !user.username ) {
-        throw new Error( 'Invalid username!' );
-      }
-
-      // 2) Call the API (still using your loose ApiResponse<ApiData> type)
       const res = await this.apiService.generateToken( user.username );
-
-      if ( !res.success || res.status !== 'success' || !res.data ) {
-        throw new Error( 'Failed to fetch data!' );
+      if ( !res.success || res.status !== "success" || !res.data ) {
+        throw new Error( "Failed to fetch data!" );
       }
 
-      // 3) Safely extract token from res.data.other
       const token: string | null = this.apiService.extractTokenFromMsg( res );
-
       if ( !token ) {
-        throw new Error( 'Token missing from response!' );
+        throw new Error( "Token missing from response!" );
       }
 
-      // 4) Navigate using token
-      await this.router.navigate( [ '/dashboard/users/user-profile', token ] );
-    }
-    catch ( error ) {
-      console.error( error );
-      return;
-    }
-    finally {
+      await this.router.navigate( [ "/dashboard/users/user-profile", token ] );
+    } catch ( error: unknown ) {
+      console.error( "[Error:] [FullscreenMenu.viewUserProfile] ", error, "\n" );
+    } finally {
       this.requestClose();
     }
   }
 
-
   // === Private helpers (class-based) ========================================
-  /** Smooth height toggle for collapsibles */
   private toggleSection( selector: string ): void {
     const host = this.el.nativeElement;
     const section = host.querySelector<HTMLElement>( selector );
-    if ( !section ) return;
-    const body = section.querySelector<HTMLElement>( '.collapse-body' );
-    if ( !body ) return;
+    if ( !section ) {
+      return;
+    }
 
-    const isOpen = section.classList.contains( 'open' );
+    const body = section.querySelector<HTMLElement>( ".collapse-body" );
+    if ( !body ) {
+      return;
+    }
+
+    const isOpen = section.classList.contains( "open" );
     if ( isOpen ) {
-      // collapse
       const start = body.scrollHeight;
       body.style.height = `${ start }px`;
-      // force reflow to ensure transition
       void body.offsetHeight;
-      body.style.height = '0px';
-      section.classList.remove( 'open' );
+      body.style.height = "0px";
+      section.classList.remove( "open" );
     } else {
-      // expand
-      body.style.height = 'auto';
+      body.style.height = "auto";
       const end = body.scrollHeight;
-      body.style.height = '0px';
-      // force reflow
+      body.style.height = "0px";
       void body.offsetHeight;
       body.style.height = `${ end }px`;
-      section.classList.add( 'open' );
+      section.classList.add( "open" );
     }
   }
 
-  /** Close request with cleanup */
   private requestClose(): void {
     this.open = false;
     this.applyBodyScrollLock( false );
@@ -488,20 +461,165 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
     this.requestClose();
   }
 
-  /** Prevent background scroll when open */
   private applyBodyScrollLock( lock: boolean ): void {
-    if ( !this.isBrowser ) return;
-    const body = document.body;
-    if ( lock ) {
-      body.style.overflow = 'hidden';
-    } else {
-      body.style.overflow = '';
+    if ( !this.isBrowser ) {
+      return;
     }
+    const body = document.body;
+    body.style.overflow = lock ? "hidden" : "";
   }
 
-  /** Active state utility for top/sub/grandchild items */
   protected isActive( candidate: string | null ): boolean {
-    if ( !candidate ) return false;
+    if ( !candidate ) {
+      return false;
+    }
     return this.currentUrl.includes( candidate );
+  }
+
+  private closeMenu(): void {
+    this.menuTrigger?.closeMenu();
+  }
+
+  private makeIcons(): void {
+    const icons: Array<{ name: string; icon: string; }> = [
+      { name: "home-icon", icon: "Images/Icons/home.svg" },
+      { name: "property-icon", icon: "Images/Icons/property.svg" },
+      { name: "users-icon", icon: "Images/Icons/users.svg" },
+      { name: "tenant-icon", icon: "Images/Icons/tenant.svg" },
+      { name: "teams", icon: "Images/Icons/agents.svg" },
+      { name: "report-icon", icon: "Images/Icons/report.svg" },
+      { name: "owner-icon", icon: "Images/Icons/owner.svg" },
+      { name: "payment-icon", icon: "Images/Icons/payments.svg" },
+      { name: "access-icon", icon: "Images/Icons/access-control.svg" },
+      { name: "bill-list-icon", icon: "Images/Icons/bill-list.svg" },
+      { name: "certification-icon", icon: "Images/Icons/certification.svg" },
+      { name: "create-icon", icon: "Images/Icons/create.svg" },
+      { name: "documents-icon", icon: "Images/Icons/documents.svg" },
+      { name: "notifications-icon", icon: "Images/Icons/notification.svg" },
+      { name: "log-icon", icon: "Images/Icons/log.svg" },
+      { name: "complaints-icon", icon: "Images/Icons/complaints.svg" },
+    ];
+
+    icons.forEach( ( i ) => {
+      this.matIconRegistry.addSvgIcon(
+        i.name,
+        this.domSanitizer.bypassSecurityTrustResourceUrl( i.icon ),
+      );
+    } );
+  }
+
+  // =============================================================================
+  // NEW NOTIFICATION MODEL HELPERS
+  // =============================================================================
+
+  /**
+   * Extract a stable notification ID.
+   * - NEW contracts commonly use `notificationId`
+   * - LEGACY code used `_id`
+   */
+  private getNotifId( n: UiNotification ): string | null {
+    const asAny = n as unknown as { notificationId?: string; _id?: string; };
+    const id = String( asAny.notificationId ?? asAny._id ?? "" ).trim();
+    return id ? id : null;
+  }
+
+  /**
+   * Does this notification target the currently logged user?
+   * NEW model: `audiences: NotificationAudience[]`
+   */
+  private isTargetingMe( n: UiNotification ): boolean {
+    if ( !this.isLoggedIn ) {
+      return false;
+    }
+
+    const audiences = ( n.notification.audiences ?? [] ) as ReadonlyArray<NotificationAudience>;
+    if ( !audiences.length ) {
+      return false;
+    }
+
+    const myUsername = this.username;
+    const myUserId = this.userId;
+    const myRole = this.role;
+
+    return audiences.some( ( a ) => {
+      // Your canonical union:
+      // mode: "Company" | "Role" | "Team" | "User"
+      switch ( a.mode ) {
+        case "User": {
+          const au = a as unknown as { userId?: string; username?: string; };
+          const byId = myUserId ? String( au.userId ?? "" ) === myUserId : false;
+          const byName = myUsername ? String( au.username ?? "" ) === myUsername : false;
+          return byId || byName;
+        }
+        case "Role": {
+          const ar = a as unknown as { role?: string; };
+          return !!myRole && String( ar.role ?? "" ) === myRole;
+        }
+        case "Company": {
+          // Company-wide broadcast targets everyone (including me)
+          return true;
+        }
+        case "Team": {
+          // If you later add teamCodes in AuthUser, you can match here.
+          // For now: treat team audience as direct only if you know team membership in FE.
+          return false;
+        }
+        default:
+          return false;
+      }
+    } );
+  }
+
+  /**
+   * "Overall" tab behavior:
+   * - Only admin sees it
+   * - Shows notifications that DO NOT target me directly
+   *   (still useful for admin monitoring)
+   */
+  private isAdminOverall( n: UiNotification ): boolean {
+    if ( this.role !== "admin" ) {
+      return false;
+    }
+    return !this.isTargetingMe( n );
+  }
+
+  /**
+   * Navigation strategy for the new system.
+   * Preferred: notification.target contains an action/route.
+   * If your NotificationCoreDto has `target: { actionKey, params }`,
+   * this is where you translate it into a router navigation.
+   *
+   * Return true if navigation happened, false otherwise.
+   */
+  private async navigateByNotificationTarget( n: UiNotification ): Promise<boolean> {
+    try {
+      const target = n.notification.target;
+      if ( !target ) {
+        return false;
+      }
+
+      // Minimal safe support for a route-style target:
+      // target: { route: string, params?: any }
+      const asRoute = target;
+      const route = String( asRoute.route ?? "" ).trim();
+
+      if ( route ) {
+        // If params exist, you can append them as segments or queryParams based on your convention.
+        await this.router.navigate( [ route ] );
+        return true;
+      }
+
+      // If you use actionKey/params (NotificationActionKey),
+      // implement a map here:
+      // target: { actionKey: "lease:view", params: { leaseId: "..." } }
+      // and translate to router paths.
+
+      const router = await this.notificationRouter.resolveTargetToUrlTree( target );
+
+      return this.router.navigate( [ router ] ) ?? false;
+    } catch ( e: unknown ) {
+      console.error( "[Error:] [FullscreenMenu.navigateByNotificationTarget] ", e, "\n" );
+      return false;
+    }
   }
 }

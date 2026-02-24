@@ -23,20 +23,23 @@
     </div>
 
     <div class="uip-meta">
-      <h3 id="uip-title" class="uip-name" title="{{ user?.name || '' }}">
+      <h3 id="uip-title" class="uip-name" [title]="user?.name || ''">
         {{ user?.name || "User" }}
       </h3>
+
       <div class="uip-sub">
         <span
           class="uip-role"
           [attr.aria-label]="'Role: ' + (user?.role || 'user')"
         >
-          {{ user?.role || "user" | titlecase }}
+          {{ (user?.role || "user") | titlecase }}
         </span>
+
         <span class="uip-dot" aria-hidden="true">•</span>
-        <span class="uip-email" title="{{ user?.email || '' }}">{{
-          user?.email || "—"
-        }}</span>
+
+        <span class="uip-email" [title]="user?.email || ''">
+          {{ user?.email || "—" }}
+        </span>
       </div>
     </div>
 
@@ -50,7 +53,7 @@
     </button>
   </header>
 
-  <!-- Body: quick stats (optional placeholders) -->
+  <!-- Body: quick stats -->
   <section class="uip-stats" aria-label="Account quick stats">
     <div class="uip-stat">
       <span class="uip-stat-label">Status</span>
@@ -58,16 +61,18 @@
         {{ user?.isActive ? "Active" : "Inactive" }}
       </span>
     </div>
+
     <div class="uip-stat">
       <span class="uip-stat-label">Access</span>
       <span class="uip-stat-value">
-        {{ user?.role || "user" | titlecase }}
+        {{ (user?.role || "user") | titlecase }}
       </span>
     </div>
+
     <div class="uip-stat">
       <span class="uip-stat-label">Notifications</span>
       <span class="uip-stat-value">
-        {{ authService.unreadNotificationsCount }} unread
+        {{ (unreadCountNumber$ | async) ?? 0 }} unread
       </span>
     </div>
   </section>
@@ -81,10 +86,7 @@
     <button
       type="button"
       class="uip-btn"
-      (click)="
-        close(false);
-        router.navigate(['/dashboard/notifications/all-notifications'])
-      "
+      (click)="close(false); router.navigate(['/dashboard/notifications/all-notifications'])"
     >
       Notifications
     </button>

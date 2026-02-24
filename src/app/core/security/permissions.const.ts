@@ -14,6 +14,408 @@
 export type PermPair = Readonly<{ module: string; action: string }>;
 
 export const PERM = {
+  "Dashboard": {
+    "view": {
+      "module": "Dashboard",
+      "action": "view"
+    },
+    "create": {
+      "module": "Dashboard",
+      "action": "create"
+    },
+    "update": {
+      "module": "Dashboard",
+      "action": "update"
+    },
+    "delete": {
+      "module": "Dashboard",
+      "action": "delete"
+    },
+    "configure": {
+      "module": "Dashboard",
+      "action": "configure"
+    },
+    "export": {
+      "module": "Dashboard",
+      "action": "export"
+    }
+  },
+  "Reports": {
+    "view": {
+      "module": "Reports",
+      "action": "view"
+    },
+    "create": {
+      "module": "Reports",
+      "action": "create"
+    },
+    "update": {
+      "module": "Reports",
+      "action": "update"
+    },
+    "delete": {
+      "module": "Reports",
+      "action": "delete"
+    },
+    "run": {
+      "module": "Reports",
+      "action": "run"
+    },
+    "schedule": {
+      "module": "Reports",
+      "action": "schedule"
+    },
+    "export": {
+      "module": "Reports",
+      "action": "export"
+    },
+    "share": {
+      "module": "Reports",
+      "action": "share"
+    },
+    "audit": {
+      "module": "Reports",
+      "action": "audit"
+    }
+  },
+  "OrganizationManagement": {
+    "view": {
+      "module": "OrganizationManagement",
+      "action": "view"
+    },
+    "create": {
+      "module": "OrganizationManagement",
+      "action": "create"
+    },
+    "update": {
+      "module": "OrganizationManagement",
+      "action": "update"
+    },
+    "delete": {
+      "module": "OrganizationManagement",
+      "action": "delete"
+    },
+    "policy": {
+      "module": "OrganizationManagement",
+      "action": "policy"
+    },
+    "approve": {
+      "module": "OrganizationManagement",
+      "action": "approve"
+    },
+    "audit": {
+      "module": "OrganizationManagement",
+      "action": "audit"
+    },
+    "export": {
+      "module": "OrganizationManagement",
+      "action": "export"
+    },
+    "import": {
+      "module": "OrganizationManagement",
+      "action": "import"
+    }
+  },
+  "BranchManagement": {
+    "view": {
+      "module": "BranchManagement",
+      "action": "view"
+    },
+    "create": {
+      "module": "BranchManagement",
+      "action": "create"
+    },
+    "update": {
+      "module": "BranchManagement",
+      "action": "update"
+    },
+    "delete": {
+      "module": "BranchManagement",
+      "action": "delete"
+    },
+    "assign": {
+      "module": "BranchManagement",
+      "action": "assign"
+    },
+    "policy": {
+      "module": "BranchManagement",
+      "action": "policy"
+    },
+    "audit": {
+      "module": "BranchManagement",
+      "action": "audit"
+    },
+    "export": {
+      "module": "BranchManagement",
+      "action": "export"
+    }
+  },
+  "EmployeeManagement": {
+    "view": {
+      "module": "EmployeeManagement",
+      "action": "view"
+    },
+    "create": {
+      "module": "EmployeeManagement",
+      "action": "create"
+    },
+    "update": {
+      "module": "EmployeeManagement",
+      "action": "update"
+    },
+    "delete": {
+      "module": "EmployeeManagement",
+      "action": "delete"
+    },
+    "assign": {
+      "module": "EmployeeManagement",
+      "action": "assign"
+    },
+    "documents": {
+      "module": "EmployeeManagement",
+      "action": "documents"
+    },
+    "audit": {
+      "module": "EmployeeManagement",
+      "action": "audit"
+    },
+    "export": {
+      "module": "EmployeeManagement",
+      "action": "export"
+    },
+    "import": {
+      "module": "EmployeeManagement",
+      "action": "import"
+    }
+  },
+  "HRManagement": {
+    "view": {
+      "module": "HRManagement",
+      "action": "view"
+    },
+    "create": {
+      "module": "HRManagement",
+      "action": "create"
+    },
+    "update": {
+      "module": "HRManagement",
+      "action": "update"
+    },
+    "delete": {
+      "module": "HRManagement",
+      "action": "delete"
+    },
+    "scorecards": {
+      "module": "HRManagement",
+      "action": "scorecards"
+    },
+    "reviews": {
+      "module": "HRManagement",
+      "action": "reviews"
+    },
+    "policy": {
+      "module": "HRManagement",
+      "action": "policy"
+    },
+    "approve": {
+      "module": "HRManagement",
+      "action": "approve"
+    },
+    "audit": {
+      "module": "HRManagement",
+      "action": "audit"
+    },
+    "export": {
+      "module": "HRManagement",
+      "action": "export"
+    }
+  },
+  "HR.Attendance": {
+    "view": {
+      "module": "HR.Attendance",
+      "action": "view"
+    },
+    "create": {
+      "module": "HR.Attendance",
+      "action": "create"
+    },
+    "update": {
+      "module": "HR.Attendance",
+      "action": "update"
+    },
+    "delete": {
+      "module": "HR.Attendance",
+      "action": "delete"
+    },
+    "capture": {
+      "module": "HR.Attendance",
+      "action": "capture"
+    },
+    "approve": {
+      "module": "HR.Attendance",
+      "action": "approve"
+    },
+    "audit": {
+      "module": "HR.Attendance",
+      "action": "audit"
+    },
+    "export": {
+      "module": "HR.Attendance",
+      "action": "export"
+    }
+  },
+  "HR.Leave": {
+    "view": {
+      "module": "HR.Leave",
+      "action": "view"
+    },
+    "create": {
+      "module": "HR.Leave",
+      "action": "create"
+    },
+    "update": {
+      "module": "HR.Leave",
+      "action": "update"
+    },
+    "delete": {
+      "module": "HR.Leave",
+      "action": "delete"
+    },
+    "approve": {
+      "module": "HR.Leave",
+      "action": "approve"
+    },
+    "policy": {
+      "module": "HR.Leave",
+      "action": "policy"
+    },
+    "audit": {
+      "module": "HR.Leave",
+      "action": "audit"
+    },
+    "export": {
+      "module": "HR.Leave",
+      "action": "export"
+    }
+  },
+  "HR.Payroll": {
+    "view": {
+      "module": "HR.Payroll",
+      "action": "view"
+    },
+    "create": {
+      "module": "HR.Payroll",
+      "action": "create"
+    },
+    "update": {
+      "module": "HR.Payroll",
+      "action": "update"
+    },
+    "delete": {
+      "module": "HR.Payroll",
+      "action": "delete"
+    },
+    "inputs": {
+      "module": "HR.Payroll",
+      "action": "inputs"
+    },
+    "run": {
+      "module": "HR.Payroll",
+      "action": "run"
+    },
+    "approve": {
+      "module": "HR.Payroll",
+      "action": "approve"
+    },
+    "payslips": {
+      "module": "HR.Payroll",
+      "action": "payslips"
+    },
+    "audit": {
+      "module": "HR.Payroll",
+      "action": "audit"
+    },
+    "export": {
+      "module": "HR.Payroll",
+      "action": "export"
+    }
+  },
+  "HR.Recruitment": {
+    "view": {
+      "module": "HR.Recruitment",
+      "action": "view"
+    },
+    "create": {
+      "module": "HR.Recruitment",
+      "action": "create"
+    },
+    "update": {
+      "module": "HR.Recruitment",
+      "action": "update"
+    },
+    "delete": {
+      "module": "HR.Recruitment",
+      "action": "delete"
+    },
+    "pipeline": {
+      "module": "HR.Recruitment",
+      "action": "pipeline"
+    },
+    "offer": {
+      "module": "HR.Recruitment",
+      "action": "offer"
+    },
+    "approve": {
+      "module": "HR.Recruitment",
+      "action": "approve"
+    },
+    "audit": {
+      "module": "HR.Recruitment",
+      "action": "audit"
+    },
+    "export": {
+      "module": "HR.Recruitment",
+      "action": "export"
+    }
+  },
+  "HR.Training": {
+    "view": {
+      "module": "HR.Training",
+      "action": "view"
+    },
+    "create": {
+      "module": "HR.Training",
+      "action": "create"
+    },
+    "update": {
+      "module": "HR.Training",
+      "action": "update"
+    },
+    "delete": {
+      "module": "HR.Training",
+      "action": "delete"
+    },
+    "assign": {
+      "module": "HR.Training",
+      "action": "assign"
+    },
+    "certify": {
+      "module": "HR.Training",
+      "action": "certify"
+    },
+    "monitor": {
+      "module": "HR.Training",
+      "action": "monitor"
+    },
+    "audit": {
+      "module": "HR.Training",
+      "action": "audit"
+    },
+    "export": {
+      "module": "HR.Training",
+      "action": "export"
+    }
+  },
   "UserManagement": {
     "view": {
       "module": "UserManagement",
@@ -31,25 +433,117 @@ export const PERM = {
       "module": "UserManagement",
       "action": "delete"
     },
-    "activate": {
+    "disable": {
       "module": "UserManagement",
-      "action": "activate"
+      "action": "disable"
     },
-    "resetPassword": {
+    "reset": {
       "module": "UserManagement",
-      "action": "resetPassword"
+      "action": "reset"
     },
-    "assignRole": {
+    "roles": {
       "module": "UserManagement",
-      "action": "assignRole"
+      "action": "roles"
+    },
+    "sessions": {
+      "module": "UserManagement",
+      "action": "sessions"
+    },
+    "audit": {
+      "module": "UserManagement",
+      "action": "audit"
     },
     "export": {
       "module": "UserManagement",
       "action": "export"
     },
-    "impersonate": {
+    "import": {
       "module": "UserManagement",
-      "action": "impersonate"
+      "action": "import"
+    }
+  },
+  "AccessControl": {
+    "view": {
+      "module": "AccessControl",
+      "action": "view"
+    },
+    "create": {
+      "module": "AccessControl",
+      "action": "create"
+    },
+    "update": {
+      "module": "AccessControl",
+      "action": "update"
+    },
+    "delete": {
+      "module": "AccessControl",
+      "action": "delete"
+    },
+    "grant": {
+      "module": "AccessControl",
+      "action": "grant"
+    },
+    "revoke": {
+      "module": "AccessControl",
+      "action": "revoke"
+    },
+    "restrict": {
+      "module": "AccessControl",
+      "action": "restrict"
+    },
+    "mfa": {
+      "module": "AccessControl",
+      "action": "mfa"
+    },
+    "audit": {
+      "module": "AccessControl",
+      "action": "audit"
+    },
+    "export": {
+      "module": "AccessControl",
+      "action": "export"
+    }
+  },
+  "SecurityOps": {
+    "view": {
+      "module": "SecurityOps",
+      "action": "view"
+    },
+    "create": {
+      "module": "SecurityOps",
+      "action": "create"
+    },
+    "update": {
+      "module": "SecurityOps",
+      "action": "update"
+    },
+    "delete": {
+      "module": "SecurityOps",
+      "action": "delete"
+    },
+    "monitor": {
+      "module": "SecurityOps",
+      "action": "monitor"
+    },
+    "enforce": {
+      "module": "SecurityOps",
+      "action": "enforce"
+    },
+    "incidents": {
+      "module": "SecurityOps",
+      "action": "incidents"
+    },
+    "quarantine": {
+      "module": "SecurityOps",
+      "action": "quarantine"
+    },
+    "audit": {
+      "module": "SecurityOps",
+      "action": "audit"
+    },
+    "export": {
+      "module": "SecurityOps",
+      "action": "export"
     }
   },
   "PropertyManagement": {
@@ -73,21 +567,25 @@ export const PERM = {
       "module": "PropertyManagement",
       "action": "assign"
     },
-    "upload": {
-      "module": "PropertyManagement",
-      "action": "upload"
-    },
     "publish": {
       "module": "PropertyManagement",
       "action": "publish"
     },
-    "configure": {
+    "documents": {
       "module": "PropertyManagement",
-      "action": "configure"
+      "action": "documents"
+    },
+    "audit": {
+      "module": "PropertyManagement",
+      "action": "audit"
     },
     "export": {
       "module": "PropertyManagement",
       "action": "export"
+    },
+    "import": {
+      "module": "PropertyManagement",
+      "action": "import"
     }
   },
   "TenantManagement": {
@@ -111,17 +609,25 @@ export const PERM = {
       "module": "TenantManagement",
       "action": "assign"
     },
-    "upload": {
+    "documents": {
       "module": "TenantManagement",
-      "action": "upload"
+      "action": "documents"
     },
-    "sendNotification": {
+    "notify": {
       "module": "TenantManagement",
-      "action": "sendNotification"
+      "action": "notify"
+    },
+    "audit": {
+      "module": "TenantManagement",
+      "action": "audit"
     },
     "export": {
       "module": "TenantManagement",
       "action": "export"
+    },
+    "import": {
+      "module": "TenantManagement",
+      "action": "import"
     }
   },
   "LeaseManagement": {
@@ -137,21 +643,29 @@ export const PERM = {
       "module": "LeaseManagement",
       "action": "update"
     },
-    "terminate": {
+    "delete": {
       "module": "LeaseManagement",
-      "action": "terminate"
+      "action": "delete"
     },
-    "renew": {
+    "workflow": {
       "module": "LeaseManagement",
-      "action": "renew"
-    },
-    "upload": {
-      "module": "LeaseManagement",
-      "action": "upload"
+      "action": "workflow"
     },
     "approve": {
       "module": "LeaseManagement",
       "action": "approve"
+    },
+    "sign": {
+      "module": "LeaseManagement",
+      "action": "sign"
+    },
+    "documents": {
+      "module": "LeaseManagement",
+      "action": "documents"
+    },
+    "audit": {
+      "module": "LeaseManagement",
+      "action": "audit"
     },
     "export": {
       "module": "LeaseManagement",
@@ -179,16 +693,92 @@ export const PERM = {
       "module": "ComplaintsManagement",
       "action": "assign"
     },
-    "close": {
+    "workflow": {
       "module": "ComplaintsManagement",
-      "action": "close"
+      "action": "workflow"
     },
-    "reopen": {
+    "sla": {
       "module": "ComplaintsManagement",
-      "action": "reopen"
+      "action": "sla"
+    },
+    "evidence": {
+      "module": "ComplaintsManagement",
+      "action": "evidence"
+    },
+    "audit": {
+      "module": "ComplaintsManagement",
+      "action": "audit"
     },
     "export": {
       "module": "ComplaintsManagement",
+      "action": "export"
+    }
+  },
+  "AgentManagement": {
+    "view": {
+      "module": "AgentManagement",
+      "action": "view"
+    },
+    "create": {
+      "module": "AgentManagement",
+      "action": "create"
+    },
+    "update": {
+      "module": "AgentManagement",
+      "action": "update"
+    },
+    "delete": {
+      "module": "AgentManagement",
+      "action": "delete"
+    },
+    "assign": {
+      "module": "AgentManagement",
+      "action": "assign"
+    },
+    "kpis": {
+      "module": "AgentManagement",
+      "action": "kpis"
+    },
+    "audit": {
+      "module": "AgentManagement",
+      "action": "audit"
+    },
+    "export": {
+      "module": "AgentManagement",
+      "action": "export"
+    }
+  },
+  "OwnerManagement": {
+    "view": {
+      "module": "OwnerManagement",
+      "action": "view"
+    },
+    "create": {
+      "module": "OwnerManagement",
+      "action": "create"
+    },
+    "update": {
+      "module": "OwnerManagement",
+      "action": "update"
+    },
+    "delete": {
+      "module": "OwnerManagement",
+      "action": "delete"
+    },
+    "assign": {
+      "module": "OwnerManagement",
+      "action": "assign"
+    },
+    "statements": {
+      "module": "OwnerManagement",
+      "action": "statements"
+    },
+    "audit": {
+      "module": "OwnerManagement",
+      "action": "audit"
+    },
+    "export": {
+      "module": "OwnerManagement",
       "action": "export"
     }
   },
@@ -209,29 +799,143 @@ export const PERM = {
       "module": "PaymentBilling",
       "action": "delete"
     },
-    "recordPayment": {
+    "invoice": {
       "module": "PaymentBilling",
-      "action": "recordPayment"
+      "action": "invoice"
     },
-    "refund": {
+    "record": {
       "module": "PaymentBilling",
-      "action": "refund"
-    },
-    "reverse": {
-      "module": "PaymentBilling",
-      "action": "reverse"
+      "action": "record"
     },
     "approve": {
       "module": "PaymentBilling",
       "action": "approve"
     },
+    "refund": {
+      "module": "PaymentBilling",
+      "action": "refund"
+    },
+    "reconcile": {
+      "module": "PaymentBilling",
+      "action": "reconcile"
+    },
+    "audit": {
+      "module": "PaymentBilling",
+      "action": "audit"
+    },
     "export": {
       "module": "PaymentBilling",
       "action": "export"
+    }
+  },
+  "Finance.Accounting": {
+    "view": {
+      "module": "Finance.Accounting",
+      "action": "view"
     },
-    "configure": {
-      "module": "PaymentBilling",
-      "action": "configure"
+    "create": {
+      "module": "Finance.Accounting",
+      "action": "create"
+    },
+    "update": {
+      "module": "Finance.Accounting",
+      "action": "update"
+    },
+    "delete": {
+      "module": "Finance.Accounting",
+      "action": "delete"
+    },
+    "post": {
+      "module": "Finance.Accounting",
+      "action": "post"
+    },
+    "close": {
+      "module": "Finance.Accounting",
+      "action": "close"
+    },
+    "approve": {
+      "module": "Finance.Accounting",
+      "action": "approve"
+    },
+    "audit": {
+      "module": "Finance.Accounting",
+      "action": "audit"
+    },
+    "export": {
+      "module": "Finance.Accounting",
+      "action": "export"
+    }
+  },
+  "Finance.Procurement": {
+    "view": {
+      "module": "Finance.Procurement",
+      "action": "view"
+    },
+    "create": {
+      "module": "Finance.Procurement",
+      "action": "create"
+    },
+    "update": {
+      "module": "Finance.Procurement",
+      "action": "update"
+    },
+    "delete": {
+      "module": "Finance.Procurement",
+      "action": "delete"
+    },
+    "request": {
+      "module": "Finance.Procurement",
+      "action": "request"
+    },
+    "approve": {
+      "module": "Finance.Procurement",
+      "action": "approve"
+    },
+    "vendors": {
+      "module": "Finance.Procurement",
+      "action": "vendors"
+    },
+    "audit": {
+      "module": "Finance.Procurement",
+      "action": "audit"
+    },
+    "export": {
+      "module": "Finance.Procurement",
+      "action": "export"
+    }
+  },
+  "Finance.Treasury": {
+    "view": {
+      "module": "Finance.Treasury",
+      "action": "view"
+    },
+    "create": {
+      "module": "Finance.Treasury",
+      "action": "create"
+    },
+    "update": {
+      "module": "Finance.Treasury",
+      "action": "update"
+    },
+    "delete": {
+      "module": "Finance.Treasury",
+      "action": "delete"
+    },
+    "settle": {
+      "module": "Finance.Treasury",
+      "action": "settle"
+    },
+    "approve": {
+      "module": "Finance.Treasury",
+      "action": "approve"
+    },
+    "audit": {
+      "module": "Finance.Treasury",
+      "action": "audit"
+    },
+    "export": {
+      "module": "Finance.Treasury",
+      "action": "export"
     }
   },
   "TeamManagement.Teams": {
@@ -251,37 +955,63 @@ export const PERM = {
       "module": "TeamManagement.Teams",
       "action": "delete"
     },
-    "assignMembers": {
+    "members": {
       "module": "TeamManagement.Teams",
-      "action": "assignMembers"
+      "action": "members"
     },
-    "assignCaptain": {
+    "captain": {
       "module": "TeamManagement.Teams",
-      "action": "assignCaptain"
-    },
-    "upload": {
-      "module": "TeamManagement.Teams",
-      "action": "upload"
-    },
-    "generate": {
-      "module": "TeamManagement.Teams",
-      "action": "generate"
-    },
-    "lock": {
-      "module": "TeamManagement.Teams",
-      "action": "lock"
-    },
-    "unlock": {
-      "module": "TeamManagement.Teams",
-      "action": "unlock"
-    },
-    "export": {
-      "module": "TeamManagement.Teams",
-      "action": "export"
+      "action": "captain"
     },
     "monitor": {
       "module": "TeamManagement.Teams",
       "action": "monitor"
+    },
+    "audit": {
+      "module": "TeamManagement.Teams",
+      "action": "audit"
+    },
+    "export": {
+      "module": "TeamManagement.Teams",
+      "action": "export"
+    }
+  },
+  "TeamManagement.TeamTasks": {
+    "view": {
+      "module": "TeamManagement.TeamTasks",
+      "action": "view"
+    },
+    "create": {
+      "module": "TeamManagement.TeamTasks",
+      "action": "create"
+    },
+    "update": {
+      "module": "TeamManagement.TeamTasks",
+      "action": "update"
+    },
+    "delete": {
+      "module": "TeamManagement.TeamTasks",
+      "action": "delete"
+    },
+    "assign": {
+      "module": "TeamManagement.TeamTasks",
+      "action": "assign"
+    },
+    "workflow": {
+      "module": "TeamManagement.TeamTasks",
+      "action": "workflow"
+    },
+    "evidence": {
+      "module": "TeamManagement.TeamTasks",
+      "action": "evidence"
+    },
+    "audit": {
+      "module": "TeamManagement.TeamTasks",
+      "action": "audit"
+    },
+    "export": {
+      "module": "TeamManagement.TeamTasks",
+      "action": "export"
     }
   },
   "TeamManagement.WorkItems": {
@@ -305,37 +1035,21 @@ export const PERM = {
       "module": "TeamManagement.WorkItems",
       "action": "assign"
     },
-    "changeStatus": {
+    "workflow": {
       "module": "TeamManagement.WorkItems",
-      "action": "changeStatus"
+      "action": "workflow"
     },
-    "prioritize": {
+    "approve": {
       "module": "TeamManagement.WorkItems",
-      "action": "prioritize"
+      "action": "approve"
     },
-    "uploadEvidence": {
+    "evidence": {
       "module": "TeamManagement.WorkItems",
-      "action": "uploadEvidence"
+      "action": "evidence"
     },
-    "requestApproval": {
+    "audit": {
       "module": "TeamManagement.WorkItems",
-      "action": "requestApproval"
-    },
-    "approveCompletion": {
-      "module": "TeamManagement.WorkItems",
-      "action": "approveCompletion"
-    },
-    "rejectCompletion": {
-      "module": "TeamManagement.WorkItems",
-      "action": "rejectCompletion"
-    },
-    "reopen": {
-      "module": "TeamManagement.WorkItems",
-      "action": "reopen"
-    },
-    "monitor": {
-      "module": "TeamManagement.WorkItems",
-      "action": "monitor"
+      "action": "audit"
     },
     "export": {
       "module": "TeamManagement.WorkItems",
@@ -363,28 +1077,92 @@ export const PERM = {
       "module": "TeamManagement.WorkEvents",
       "action": "assign"
     },
-    "acknowledge": {
+    "workflow": {
       "module": "TeamManagement.WorkEvents",
-      "action": "acknowledge"
+      "action": "workflow"
     },
-    "resolve": {
+    "evidence": {
       "module": "TeamManagement.WorkEvents",
-      "action": "resolve"
+      "action": "evidence"
     },
-    "reopen": {
+    "audit": {
       "module": "TeamManagement.WorkEvents",
-      "action": "reopen"
-    },
-    "uploadEvidence": {
-      "module": "TeamManagement.WorkEvents",
-      "action": "uploadEvidence"
-    },
-    "monitor": {
-      "module": "TeamManagement.WorkEvents",
-      "action": "monitor"
+      "action": "audit"
     },
     "export": {
       "module": "TeamManagement.WorkEvents",
+      "action": "export"
+    }
+  },
+  "TeamManagement.MemberActivities": {
+    "view": {
+      "module": "TeamManagement.MemberActivities",
+      "action": "view"
+    },
+    "create": {
+      "module": "TeamManagement.MemberActivities",
+      "action": "create"
+    },
+    "update": {
+      "module": "TeamManagement.MemberActivities",
+      "action": "update"
+    },
+    "delete": {
+      "module": "TeamManagement.MemberActivities",
+      "action": "delete"
+    },
+    "blockers": {
+      "module": "TeamManagement.MemberActivities",
+      "action": "blockers"
+    },
+    "evidence": {
+      "module": "TeamManagement.MemberActivities",
+      "action": "evidence"
+    },
+    "audit": {
+      "module": "TeamManagement.MemberActivities",
+      "action": "audit"
+    },
+    "export": {
+      "module": "TeamManagement.MemberActivities",
+      "action": "export"
+    }
+  },
+  "TeamManagement.Milestones": {
+    "view": {
+      "module": "TeamManagement.Milestones",
+      "action": "view"
+    },
+    "create": {
+      "module": "TeamManagement.Milestones",
+      "action": "create"
+    },
+    "update": {
+      "module": "TeamManagement.Milestones",
+      "action": "update"
+    },
+    "delete": {
+      "module": "TeamManagement.Milestones",
+      "action": "delete"
+    },
+    "workflow": {
+      "module": "TeamManagement.Milestones",
+      "action": "workflow"
+    },
+    "tags": {
+      "module": "TeamManagement.Milestones",
+      "action": "tags"
+    },
+    "evidence": {
+      "module": "TeamManagement.Milestones",
+      "action": "evidence"
+    },
+    "audit": {
+      "module": "TeamManagement.Milestones",
+      "action": "audit"
+    },
+    "export": {
+      "module": "TeamManagement.Milestones",
       "action": "export"
     }
   },
@@ -397,33 +1175,67 @@ export const PERM = {
       "module": "CommentEngine",
       "action": "create"
     },
-    "updateOwn": {
+    "update": {
       "module": "CommentEngine",
-      "action": "updateOwn"
+      "action": "update"
     },
-    "deleteOwn": {
+    "delete": {
       "module": "CommentEngine",
-      "action": "deleteOwn"
-    },
-    "moderate": {
-      "module": "CommentEngine",
-      "action": "moderate"
-    },
-    "upload": {
-      "module": "CommentEngine",
-      "action": "upload"
+      "action": "delete"
     },
     "pin": {
       "module": "CommentEngine",
       "action": "pin"
     },
-    "unpin": {
+    "moderate": {
       "module": "CommentEngine",
-      "action": "unpin"
+      "action": "moderate"
     },
-    "pinToggle": {
+    "export": {
       "module": "CommentEngine",
-      "action": "pinToggle"
+      "action": "export"
+    },
+    "audit": {
+      "module": "CommentEngine",
+      "action": "audit"
+    }
+  },
+  "NotificationCenter": {
+    "view": {
+      "module": "NotificationCenter",
+      "action": "view"
+    },
+    "create": {
+      "module": "NotificationCenter",
+      "action": "create"
+    },
+    "update": {
+      "module": "NotificationCenter",
+      "action": "update"
+    },
+    "delete": {
+      "module": "NotificationCenter",
+      "action": "delete"
+    },
+    "markRead": {
+      "module": "NotificationCenter",
+      "action": "markRead"
+    },
+    "broadcast": {
+      "module": "NotificationCenter",
+      "action": "broadcast"
+    },
+    "configure": {
+      "module": "NotificationCenter",
+      "action": "configure"
+    },
+    "audit": {
+      "module": "NotificationCenter",
+      "action": "audit"
+    },
+    "export": {
+      "module": "NotificationCenter",
+      "action": "export"
     }
   },
   "KpiMonitoring": {
@@ -439,13 +1251,33 @@ export const PERM = {
       "module": "KpiMonitoring",
       "action": "update"
     },
-    "export": {
+    "delete": {
       "module": "KpiMonitoring",
-      "action": "export"
+      "action": "delete"
+    },
+    "ingest": {
+      "module": "KpiMonitoring",
+      "action": "ingest"
+    },
+    "rebuild": {
+      "module": "KpiMonitoring",
+      "action": "rebuild"
     },
     "configure": {
       "module": "KpiMonitoring",
       "action": "configure"
+    },
+    "alerts": {
+      "module": "KpiMonitoring",
+      "action": "alerts"
+    },
+    "audit": {
+      "module": "KpiMonitoring",
+      "action": "audit"
+    },
+    "export": {
+      "module": "KpiMonitoring",
+      "action": "export"
     }
   },
   "AuditLogs": {
@@ -453,87 +1285,297 @@ export const PERM = {
       "module": "AuditLogs",
       "action": "view"
     },
+    "create": {
+      "module": "AuditLogs",
+      "action": "create"
+    },
+    "update": {
+      "module": "AuditLogs",
+      "action": "update"
+    },
+    "delete": {
+      "module": "AuditLogs",
+      "action": "delete"
+    },
     "filter": {
       "module": "AuditLogs",
       "action": "filter"
     },
+    "investigate": {
+      "module": "AuditLogs",
+      "action": "investigate"
+    },
+    "alerts": {
+      "module": "AuditLogs",
+      "action": "alerts"
+    },
+    "retain": {
+      "module": "AuditLogs",
+      "action": "retain"
+    },
     "export": {
       "module": "AuditLogs",
       "action": "export"
+    }
+  },
+  "Compliance": {
+    "view": {
+      "module": "Compliance",
+      "action": "view"
     },
-    "monitor": {
-      "module": "AuditLogs",
-      "action": "monitor"
+    "create": {
+      "module": "Compliance",
+      "action": "create"
+    },
+    "update": {
+      "module": "Compliance",
+      "action": "update"
+    },
+    "delete": {
+      "module": "Compliance",
+      "action": "delete"
+    },
+    "controls": {
+      "module": "Compliance",
+      "action": "controls"
+    },
+    "evidence": {
+      "module": "Compliance",
+      "action": "evidence"
+    },
+    "incidents": {
+      "module": "Compliance",
+      "action": "incidents"
+    },
+    "approve": {
+      "module": "Compliance",
+      "action": "approve"
+    },
+    "audit": {
+      "module": "Compliance",
+      "action": "audit"
+    },
+    "export": {
+      "module": "Compliance",
+      "action": "export"
+    }
+  },
+  "DataGovernance": {
+    "view": {
+      "module": "DataGovernance",
+      "action": "view"
+    },
+    "create": {
+      "module": "DataGovernance",
+      "action": "create"
+    },
+    "update": {
+      "module": "DataGovernance",
+      "action": "update"
+    },
+    "delete": {
+      "module": "DataGovernance",
+      "action": "delete"
+    },
+    "privacy": {
+      "module": "DataGovernance",
+      "action": "privacy"
+    },
+    "retain": {
+      "module": "DataGovernance",
+      "action": "retain"
+    },
+    "quality": {
+      "module": "DataGovernance",
+      "action": "quality"
+    },
+    "export": {
+      "module": "DataGovernance",
+      "action": "export"
+    },
+    "audit": {
+      "module": "DataGovernance",
+      "action": "audit"
+    }
+  },
+  "BackupRecovery": {
+    "view": {
+      "module": "BackupRecovery",
+      "action": "view"
+    },
+    "create": {
+      "module": "BackupRecovery",
+      "action": "create"
+    },
+    "update": {
+      "module": "BackupRecovery",
+      "action": "update"
+    },
+    "delete": {
+      "module": "BackupRecovery",
+      "action": "delete"
+    },
+    "backup": {
+      "module": "BackupRecovery",
+      "action": "backup"
+    },
+    "restore": {
+      "module": "BackupRecovery",
+      "action": "restore"
+    },
+    "drill": {
+      "module": "BackupRecovery",
+      "action": "drill"
+    },
+    "approve": {
+      "module": "BackupRecovery",
+      "action": "approve"
+    },
+    "audit": {
+      "module": "BackupRecovery",
+      "action": "audit"
+    },
+    "export": {
+      "module": "BackupRecovery",
+      "action": "export"
     }
   },
   "SystemSettings": {
-    "configure": {
-      "module": "SystemSettings",
-      "action": "configure"
-    },
-    "manageRoles": {
-      "module": "SystemSettings",
-      "action": "manageRoles"
-    },
-    "manageIntegrations": {
-      "module": "SystemSettings",
-      "action": "manageIntegrations"
-    },
-    "backupRestore": {
-      "module": "SystemSettings",
-      "action": "backupRestore"
-    }
-  },
-  "AccessControl": {
-    "grantAccess": {
-      "module": "AccessControl",
-      "action": "grantAccess"
-    },
-    "revokeAccess": {
-      "module": "AccessControl",
-      "action": "revokeAccess"
-    },
-    "setRestrictions": {
-      "module": "AccessControl",
-      "action": "setRestrictions"
-    },
-    "controlSessions": {
-      "module": "AccessControl",
-      "action": "controlSessions"
-    },
-    "auditChanges": {
-      "module": "AccessControl",
-      "action": "auditChanges"
-    }
-  },
-  "NotificationCenter": {
     "view": {
-      "module": "NotificationCenter",
+      "module": "SystemSettings",
       "action": "view"
     },
-    "markRead": {
-      "module": "NotificationCenter",
-      "action": "markRead"
+    "create": {
+      "module": "SystemSettings",
+      "action": "create"
+    },
+    "update": {
+      "module": "SystemSettings",
+      "action": "update"
     },
     "delete": {
-      "module": "NotificationCenter",
+      "module": "SystemSettings",
       "action": "delete"
     },
-    "restore": {
-      "module": "NotificationCenter",
-      "action": "restore"
+    "configure": {
+      "module": "SystemSettings",
+      "action": "configure"
     },
-    "clear": {
-      "module": "NotificationCenter",
-      "action": "clear"
+    "roles": {
+      "module": "SystemSettings",
+      "action": "roles"
     },
-    "broadcast": {
-      "module": "NotificationCenter",
-      "action": "broadcast"
+    "security": {
+      "module": "SystemSettings",
+      "action": "security"
+    },
+    "policy": {
+      "module": "SystemSettings",
+      "action": "policy"
+    },
+    "audit": {
+      "module": "SystemSettings",
+      "action": "audit"
+    },
+    "export": {
+      "module": "SystemSettings",
+      "action": "export"
+    }
+  },
+  "Integrations": {
+    "view": {
+      "module": "Integrations",
+      "action": "view"
+    },
+    "create": {
+      "module": "Integrations",
+      "action": "create"
+    },
+    "update": {
+      "module": "Integrations",
+      "action": "update"
+    },
+    "delete": {
+      "module": "Integrations",
+      "action": "delete"
     },
     "configure": {
-      "module": "NotificationCenter",
+      "module": "Integrations",
       "action": "configure"
+    },
+    "secrets": {
+      "module": "Integrations",
+      "action": "secrets"
+    },
+    "sync": {
+      "module": "Integrations",
+      "action": "sync"
+    },
+    "monitor": {
+      "module": "Integrations",
+      "action": "monitor"
+    },
+    "audit": {
+      "module": "Integrations",
+      "action": "audit"
+    },
+    "export": {
+      "module": "Integrations",
+      "action": "export"
+    }
+  },
+  "RecycleBin": {
+    "view": {
+      "module": "RecycleBin",
+      "action": "view"
+    },
+    "create": {
+      "module": "RecycleBin",
+      "action": "create"
+    },
+    "update": {
+      "module": "RecycleBin",
+      "action": "update"
+    },
+    "delete": {
+      "module": "RecycleBin",
+      "action": "delete"
+    },
+    "list": {
+      "module": "RecycleBin",
+      "action": "list"
+    },
+    "count": {
+      "module": "RecycleBin",
+      "action": "count"
+    },
+    "view_snapshot": {
+      "module": "RecycleBin",
+      "action": "view_snapshot"
+    },
+    "view_files": {
+      "module": "RecycleBin",
+      "action": "view_files"
+    },
+    "restore": {
+      "module": "RecycleBin",
+      "action": "restore"
+    },
+    "purge": {
+      "module": "RecycleBin",
+      "action": "purge"
+    },
+    "audit": {
+      "module": "RecycleBin",
+      "action": "audit"
+    },
+    "policy": {
+      "module": "RecycleBin",
+      "action": "policy"
+    },
+    "export": {
+      "module": "RecycleBin",
+      "action": "export"
     }
   }
 } as const satisfies Record<

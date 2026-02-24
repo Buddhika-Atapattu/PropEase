@@ -44,7 +44,7 @@ export const DEFINED_ROUTES_URLS: ReadonlyArray<RouteRequirement> = [
   {
     url: '/dashboard/access-control',
     module: 'AccessControl',
-    action: 'controlSessions',
+    action: 'controls',
   },
 
   // ---------- Property Management ----------

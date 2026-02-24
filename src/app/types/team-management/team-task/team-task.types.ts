@@ -1,40 +1,19 @@
 // Path: src/app/types/team-management/team-task/team-task.types.ts
-// =============================================================================
-// Team Task Types (FE ↔ BE aligned)
-// -----------------------------------------------------------------------------
-// Mirrors: src/models/teamManagement/teamTask.types.ts (backend)
-// Rules:
-// - NO mongoose Types here (ObjectId => string)
-// - NO Date objects here (Date => ISODateString)
-// - Optional fields are OMITTED (never undefined)
-// =============================================================================
+// ============================================================================
+// TeamTask Types (Frontend Mirror) — DTO-safe contract
+// ----------------------------------------------------------------------------
+// PURPOSE
+// - FE mirror of backend TeamTaskDto (NO Mongoose Types here)
+// - ISO date strings from backend
+// - exactOptionalPropertyTypes-safe: optional props should be omitted (not undefined)
+// ============================================================================
 
-import type { User } from "../../../services/APIs/apis.service";
-import type {
-  ISODateString,
-  Address,
-  GeoLocation,
-  FileMetaPacket,
-} from "../../common";
-import {TeamDomain} from '../team-main/team-management.types'
+export type ISODateString = string;
 
-// ─────────────────────────────────────────────
-// Deadline policy (formerly SLA)
-// ─────────────────────────────────────────────
-
-export type TaskUrgencyLevel = "low" | "medium" | "high" | "critical";
-
-export interface TaskDeadlinePolicyDto {
-  dueAt?: ISODateString | null;
-  breachAt?: ISODateString | null;
-  urgency?: TaskUrgencyLevel | null;
-}
-
-// ─────────────────────────────────────────────
-// Task enums
-// ─────────────────────────────────────────────
-
-export const TASK_STATUSES = [
+// ----------------------------------------------------------------------------
+// Enums (const arrays to keep strict union types)
+// ----------------------------------------------------------------------------
+export const TEAM_TASK_STATUS = [
   "draft",
   "pending",
   "in_progress",
@@ -44,405 +23,197 @@ export const TASK_STATUSES = [
   "completed_pending_confirmation",
 ] as const;
 
-export type TaskStatus = (typeof TASK_STATUSES)[number];
+export type TeamTaskStatus = ( typeof TEAM_TASK_STATUS )[ number ];
 
-export const TASK_PRIORITIES = ["low", "medium", "high", "critical"] as const;
-export type TaskPriority = (typeof TASK_PRIORITIES)[number];
+export const TEAM_TASK_PRIORITY = [ "low", "medium", "high", "urgent" ] as const;
+export type TeamTaskPriority = ( typeof TEAM_TASK_PRIORITY )[ number ];
 
-// ─────────────────────────────────────────────
-// Task timing (anchors for KPI / lifecycle)
-// ─────────────────────────────────────────────
+export const DEADLINE_POLICY = [ "soft", "hard" ] as const;
+export type DeadlinePolicy = ( typeof DEADLINE_POLICY )[ number ];
 
-export interface TaskTimingDto {
-  createdAt?: ISODateString | null;
-  updatedAt?: ISODateString | null;
-
-  firstResponseAt?: ISODateString | null;
-  startedAt?: ISODateString | null;
-
-  lastBlockedAt?: ISODateString | null;
-
-  completedAt?: ISODateString | null;
-  confirmedAt?: ISODateString | null;
-
-  cancelledAt?: ISODateString | null;
-}
-
-// ─────────────────────────────────────────────
-// Runtime metrics (KPI-ready)
-// ─────────────────────────────────────────────
-
-export interface TaskRuntimeMetricsDto {
-  effortPoints?: number;
-  complexity?: number;
-
-  estimatedMinutes?: number;
-  actualMinutes?: number;
-
-  reopenedCount?: number;
-  rejectedCount?: number;
-
-  customerSatisfactionScore?: number;
-  supervisorQualityScore?: number;
-}
-
-// ─────────────────────────────────────────────
-// Audit meta (security + analytics)
-// ─────────────────────────────────────────────
-
-export type WorkSource = "ui" | "system" | "automation" | "import";
-
-export interface TaskAuditMetaDto {
-  source?: WorkSource;
-
-  requestId?: string;
-  deviceId?: string;
-
-  createdByUserId?: string;
-  createdByUsername?: User["username"];
-
-  lastUpdatedByUserId?: string;
-  lastUpdatedByUsername?: User["username"];
-}
-
-// ─────────────────────────────────────────────
-// Blocked window
-// ─────────────────────────────────────────────
-
-export interface TaskBlockedWindowDto {
-  from: ISODateString;
-  to?: ISODateString | null;
-
-  reason?: string | null;
-
-  setByUserId?: string;
-  setByUsername?: User["username"];
-}
-
-// ─────────────────────────────────────────────
-// Assignee history
-// ─────────────────────────────────────────────
-
-export interface TaskAssigneeHistoryEntryDto {
+// ----------------------------------------------------------------------------
+// Minimal user snapshot used inside task DTO (DTO-safe)
+// ----------------------------------------------------------------------------
+export interface TeamTaskUserMiniDto {
   userId: string;
-  username: User["username"];
+  username: string;
 
-  from: ISODateString;
-  to?: ISODateString | null;
-
-  changedByUserId?: string;
-  changedByUsername?: User["username"];
-
-  reason?: string | null;
+  displayName?: string;
+  email?: string;
+  photoUrl?: string;
 }
 
-// ─────────────────────────────────────────────
-// Completion confirmation
-// ─────────────────────────────────────────────
+// ----------------------------------------------------------------------------
+// Evidence / attachments (align to backend FileMetaPacket + TaskEvidence DTO)
+// ----------------------------------------------------------------------------
+export interface TaskFileMetaDto {
+  relPath: string; // "public/uploads/..."
+  url: string; // client URL
+  originalName: string;
+  storedName: string;
+  mimeType: string;
+  sizeBytes: number;
 
-export type CompletionSignerRole = "customer" | "supervisor";
-
-export type CompletionConfirmationStatus =
-  | "not_required"
-  | "pending"
-  | "rejected"
-  | "confirmed";
-
-export interface TaskCompletionSignatureDto {
-  role: CompletionSignerRole;
-
-  signerUserId?: string;
-  signerUsername?: User["username"];
-  signerName?: string;
-
-  signatureFile?: FileMetaPacket;
-  signatureUrl?: string;
-  signatureStorageKey?: string;
-
-  signedAt?: ISODateString;
+  uploadedAt?: ISODateString;
+  label?: string;
 }
-
-export interface TaskCompletionConfirmationDto {
-  status: CompletionConfirmationStatus;
-
-  requiredRoles?: CompletionSignerRole[];
-  signatures?: TaskCompletionSignatureDto[];
-
-  confirmedAt?: ISODateString;
-  confirmedByUserId?: string;
-  confirmedByUsername?: User["username"];
-
-  rejectedAt?: ISODateString;
-  rejectedByUserId?: string;
-  rejectedByUsername?: User["username"];
-
-  rejectReason?: string;
-}
-
-// ─────────────────────────────────────────────
-// Evidence
-// ─────────────────────────────────────────────
 
 /**
- * FE-safe evidence:
- * - In JSON payloads: file is FileMetaBase
- * - In UI: you may temporarily hold File (never send File via JSON)
+ * Evidence packet used by TeamTask (backend usually stores label + file packet + storageKey).
  */
-export interface TaskEvidenceDto {
-  name: string;
+export interface TeamTaskEvidenceDto {
+  id?: string; // evidenceMongoId or internal id
+  label: string;
 
-  file?: FileMetaPacket | File;
+  file: TaskFileMetaDto;
 
-  url?: string;
-  storageKey?: string;
-
-  uploadedById?: string;
-  uploadedByName?: User["username"];
+  storageKey?: string; // used by backend deleteEvidence route
+  uploadedByUserId?: string;
+  uploadedByUsername?: string;
   uploadedAt?: ISODateString;
 }
 
-// ─────────────────────────────────────────────
-// Generic list wrapper (your standard pattern)
-// ─────────────────────────────────────────────
-
-export interface ListResult<T> {
-  items: T[];
-  other: { total: number };
+// ----------------------------------------------------------------------------
+// Location / Address (task optional)
+// ----------------------------------------------------------------------------
+export interface GeoPointDto {
+  lat: number;
+  lng: number;
 }
 
-export interface PaginationInput {
-  page: number;
-  limit: number;
-  skip?: number;
+export interface TaskAddressDto {
+  line1?: string;
+  line2?: string;
+  city?: string;
+  district?: string;
+  province?: string;
+  postalCode?: string;
+  country?: string;
 }
 
-export type TeamTaskSortKey =
-  | "createdAt"
-  | "updatedAt"
-  | "name"
-  | "status"
-  | "priority"
-  | "dueAt"
-  | "workItemCount";
+// ----------------------------------------------------------------------------
+// Timing / Audit / SLA shapes (kept generic but DTO-safe)
+// ----------------------------------------------------------------------------
+export interface TaskTimingDto {
+  createdAt?: ISODateString;
+  startedAt?: ISODateString;
+  completedAt?: ISODateString;
 
-export type SortDirection = "asc" | "desc";
-
-export interface TeamTaskSortInput {
-  key: TeamTaskSortKey;
-  dir: SortDirection;
+  // Optional durations computed by backend (seconds)
+  totalSeconds?: number;
+  activeSeconds?: number;
 }
 
-export type TeamTaskLoadMode = "minimal" | "full" | "users" | "advanced";
+export interface TaskAuditDto {
+  createdByUserId?: string;
+  createdByUsername?: string;
 
-// ─────────────────────────────────────────────
-// Filters (FE/API)
-// ─────────────────────────────────────────────
+  lastUpdatedByUserId?: string;
+  lastUpdatedByUsername?: string;
 
-export interface TeamTaskFilterInput {
-  teamCode?: string;
+  lastActivityAt?: ISODateString;
+}
+
+/**
+ * SLA / deadline policy data — backend may map SLA → deadlinePolicy.
+ */
+export interface TaskSlaDto {
+  deadlinePolicy?: DeadlinePolicy;
+
+  dueAt?: ISODateString;
+  graceMinutes?: number;
+}
+
+// ----------------------------------------------------------------------------
+// Main DTO
+// ----------------------------------------------------------------------------
+export interface TeamTaskDto {
+  _id: string;
+
+  // identity / grouping
+  teamCode: string;
   teamMongoId?: string;
 
-  domain?: TeamDomain;
+  domain?: string;
 
-  status?: TaskStatus | TaskStatus[];
-  priority?: TaskPriority | TaskPriority[];
-
-  assignedMemberId?: string;
-  assignedCaptainId?: string;
-
-  label?: string;
-
-  text?: string;
-
-  createdFrom?: ISODateString;
-  createdTo?: ISODateString;
-
-  updatedFrom?: ISODateString;
-  updatedTo?: ISODateString;
-
-  dueFrom?: ISODateString;
-  dueTo?: ISODateString;
-
-  hasEvidence?: boolean;
-  isActiveOnly?: boolean;
-}
-
-// ─────────────────────────────────────────────
-// User-lite DTOs for getTaskUsers (FE)
-// ─────────────────────────────────────────────
-
-export interface TaskUserLiteDto {
-  userId: string;
-  username: User["username"];
-
-  fullName?: string;
-  email?: string;
-  phone?: string;
-
-  role?: string;
-  isActive?: boolean;
-
-  imageUrl?: string;
-}
-
-export interface TaskUsersResultDto {
-  captain?: TaskUserLiteDto | null;
-  members: TaskUserLiteDto[];
-  other: { memberTotal: number };
-}
-
-// ─────────────────────────────────────────────
-// TeamTask DTO (FE canonical)
-// ─────────────────────────────────────────────
-
-export interface TeamTaskDto {
-  taskMongoId: string; // String(_id)
-  id: string;
-
-  teamCode: string;
-  teamMongoId: string;
-  domain: TeamDomain;
-
-  name: string;
-  description: string;
-
-  location?: GeoLocation;
-  address?: Address;
-
-  assignedMembers?: string[];
-  assignedTaskCaptain?: string;
-
-  workItemMongoIds?: string[];
-  workItemCount: number;
-
-  status: TaskStatus;
-  priority: TaskPriority;
-
-  plannedStartAt?: ISODateString | null;
-  plannedEndAt?: ISODateString | null;
-
-  timing: TaskTimingDto;
-
-  deadlinePolicy?: TaskDeadlinePolicyDto;
-
-  metrics?: TaskRuntimeMetricsDto;
-
-  blockedWindows?: TaskBlockedWindowDto[];
-  assigneeHistory?: TaskAssigneeHistoryEntryDto[];
-
-  completionConfirmation?: TaskCompletionConfirmationDto;
-
-  evidence?: TaskEvidenceDto[];
-
-  notes?: string;
-  labels?: string[];
-
-  audit?: TaskAuditMetaDto;
-
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
-}
-
-// ─────────────────────────────────────────────
-// Create / Update inputs (FE/API)
-// ─────────────────────────────────────────────
-
-export interface CreateTeamTaskInputDto {
-  id: string;
-
-  teamCode: string;
-  teamMongoId: string;
-  domain: TeamDomain;
-
-  name: string;
-  description: string;
-
-  location?: GeoLocation;
-  address?: Address;
-
-  assignedMembers?: string[];
-  assignedTaskCaptain?: string;
-
-  workItemMongoIds?: string[];
-  workItemCount: number;
-
-  status: TaskStatus;
-  priority: TaskPriority;
-
-  plannedStartAt?: ISODateString | null;
-  plannedEndAt?: ISODateString | null;
-
-  timing: TaskTimingDto;
-
-  deadlinePolicy?: TaskDeadlinePolicyDto;
-
-  metrics?: TaskRuntimeMetricsDto;
-
-  blockedWindows?: TaskBlockedWindowDto[];
-  assigneeHistory?: TaskAssigneeHistoryEntryDto[];
-
-  completionConfirmation?: TaskCompletionConfirmationDto;
-
-  evidence?: TaskEvidenceDto[];
-
-  notes?: string;
-  labels?: string[];
-
-  audit?: TaskAuditMetaDto;
-
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
-}
-
-export interface UpdateTeamTaskInputDto {
-  name?: string;
+  // main content
+  title: string;
   description?: string;
-  domain?: TeamDomain | null;
 
-  location?: GeoLocation | null;
-  address?: Address | null;
+  status: TeamTaskStatus;
+  priority: TeamTaskPriority;
 
-  assignedMembers?: string[] | null;
-  assignedTaskCaptain?: string | null;
+  labels?: string[];
 
-  plannedStartAt?: ISODateString | null;
-  plannedEndAt?: ISODateString | null;
+  // ownership
+  captainUserId?: string | null;
+  captainUsername?: string | null;
+  captainUser?: TeamTaskUserMiniDto | null;
 
-  status?: TaskStatus | null;
-  priority?: TaskPriority | null;
+  assignedMemberIds?: string[];
+  assignedMemberUsernames?: string[];
+  assignedMemberUsers?: TeamTaskUserMiniDto[];
 
-  timing?: TaskTimingDto | null;
+  // optional rich data
+  notes?: string | null;
 
-  deadlinePolicy?: TaskDeadlinePolicyDto | null;
+  location?: GeoPointDto | null;
+  address?: TaskAddressDto | null;
 
-  metrics?: TaskRuntimeMetricsDto | null;
+  evidence?: TeamTaskEvidenceDto[];
+
+  // audit/timing
+  audit?: TaskAuditDto;
+  timing?: TaskTimingDto;
+  sla?: TaskSlaDto;
+
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
+
+  isActive?: boolean;
+}
+
+// ----------------------------------------------------------------------------
+// REST payloads (separate from DTO)
+// ----------------------------------------------------------------------------
+export interface TeamTaskCreateRequest {
+  teamCode: string;
+
+  title: string;
+  description?: string;
+
+  status?: TeamTaskStatus;
+  priority?: TeamTaskPriority;
+
+  labels?: string[];
+
+  captainUserId?: string | null;
+  assignedMemberIds?: string[];
 
   notes?: string | null;
-  labels?: string[] | null;
 
-  completionConfirmation?: TaskCompletionConfirmationDto | null;
+  location?: GeoPointDto | null;
+  address?: TaskAddressDto | null;
 
-  audit?: TaskAuditMetaDto | null;
+  sla?: TaskSlaDto;
 }
 
-// ─────────────────────────────────────────────
-// Key-values payload (dropdown/autocomplete)
-// ─────────────────────────────────────────────
+export interface TeamTaskUpdateRequest {
+  title?: string;
+  description?: string;
 
-export interface TeamTaskKeyValuesDto {
-  taskMongoId: string;
-  id: string;
-  name: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  domain: TeamDomain;
-  updatedAt: ISODateString;
-}
+  status?: TeamTaskStatus;
+  priority?: TeamTaskPriority;
 
-export interface TeamTaskKeyValuesMetaDto {
-  domains: ReadonlyArray<TeamDomain>;
-  statuses: ReadonlyArray<TaskStatus>;
-  priorities: ReadonlyArray<TaskPriority>;
+  labels?: string[];
 
-  distinctLabels?: string[];
+  captainUserId?: string | null;
+  assignedMemberIds?: string[];
+
+  notes?: string | null;
+
+  location?: GeoPointDto | null;
+  address?: TaskAddressDto | null;
+
+  sla?: TaskSlaDto;
 }

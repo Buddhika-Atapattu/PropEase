@@ -158,22 +158,25 @@
               *ngFor="let n of list; trackBy: trackById"
               (click)="markOneRead(n, $event)"
             >
-              <div class="left">
-                <!-- iconFor(n) -->
-                <mat-icon class="kind" [ngClass]="n.severity">{{
-                  n.icon
-                }}</mat-icon>
+            <!-- <button type="button" class="btn btn-transparent" role="button" (click)="navigate(n)">
+
+            </button> -->
+            <div class="left">
+              <!-- iconFor(n) -->
+              <mat-icon class="kind" [ngClass]="n.notification.severity">{{
+                n.notification.icon
+              }}</mat-icon>
+            </div>
+            <div class="mid">
+              <div class="title">
+                {{ n.notification.title || "Notification" }}
+                <span class="dot" *ngIf="!n.isRead"></span>
               </div>
-              <div class="mid">
-                <div class="title">
-                  {{ n.title || "Notification" }}
-                  <span class="dot" *ngIf="!n.userState?.isRead"></span>
-                </div>
-                <div class="msg" [title]="n.title">{{ n.body }}</div>
-                <div class="meta">
-                  <span class="time">{{ n.createdAt | date : "short" }}</span>
-                </div>
+              <div class="msg" [title]="n.notification.title">{{ n.notification.body }}</div>
+              <div class="meta">
+                <span class="time">{{ n.notification.createdAt | date : "short" }}</span>
               </div>
+            </div>
               <div class="right">
                 <button
                   type="button"

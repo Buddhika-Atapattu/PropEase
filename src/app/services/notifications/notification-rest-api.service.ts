@@ -10,28 +10,22 @@ import type { MSG } from "../../types/api-message.types";
 import type {
   NotificationInboxItemDto,
   NotificationLoadFilters,
-  NotificationLoadRequest
+  NotificationLoadRequest,
+  NotificationScope,
+  NotificationPriorityScope,
 } from "../../types/notifications/notification.types";
 
 /* ============================================================================
  * NotificationRestApiService (Observable-first)
  * ----------------------------------------------------------------------------
- * Mirrors backend NotificationHubController routes (POST):
- *  - /api-notification/inbox/load
- *  - /api-notification/inbox/count
- *  - /api-notification/inbox/:inboxId/read
- *  - /api-notification/inbox/read-all
- *  - /api-notification/inbox/:inboxId/archive
- *
- * Backend response shapes used (ApiResponseBuilder.ok):
- *  - load:   system.notifications = NotificationInboxItemDto[], pagination.total = number
- *  - count:  other = { unread }, pagination.total = number
- *  - mut:    other = { changed/inboxId/unread }, pagination.total = number
- *
- * Rules:
- * - class-based only
- * - null-safe MSG parsing
- * - exactOptionalPropertyTypes-safe: omit optional fields when absent
+ * Mirrors backend NotificationHubController routes:
+ *  - POST /api-notification/inbox/load
+ *  - POST /api-notification/inbox/count
+ *  - POST /api-notification/inbox/scope/load
+ *  - POST /api-notification/inbox/scope/count
+ *  - POST /api-notification/inbox/:inboxId/read
+ *  - POST /api-notification/inbox/read-all
+ *  - POST /api-notification/inbox/:inboxId/archive
  * ========================================================================== */
 
 export interface NotificationInboxLoadResult {
@@ -42,6 +36,18 @@ export interface NotificationInboxLoadResult {
 export interface NotificationInboxCountResult {
   total: number;
   unread: number;
+}
+
+export interface NotificationInboxScopeLoadResult {
+  items: NotificationInboxItemDto[];
+  other: { total: number; unread: number; prioritized: number; unprioritized: number; };
+}
+
+export interface NotificationInboxScopeCountResult {
+  total: number;
+  unread: number;
+  prioritized: number;
+  unprioritized: number;
 }
 
 export interface NotificationInboxMutationResult {
@@ -55,16 +61,11 @@ export interface NotificationInboxMutationResult {
 
 @Injectable({ providedIn: "root" })
 export class NotificationRestApiService {
-  private readonly apiBase = environment.apiOrigin ?? 'http://localhost:3000';
+  private readonly apiBase = environment.apiOrigin ?? "http://localhost:3000";
 
   constructor(private readonly http: HttpClient) {}
 
-  // ---------------------------------------------------------------------------
-  // URL builders (single point of change)
-  // ---------------------------------------------------------------------------
-
   private buildBase(): string {
-    // Matches your controller comments: /api-notification/...
     return `${this.apiBase}/api-notification`;
   }
 
@@ -74,6 +75,14 @@ export class NotificationRestApiService {
 
   private urlCount(): string {
     return `${this.buildBase()}/inbox/count`;
+  }
+
+  private urlScopeLoad(): string {
+    return `${ this.buildBase() }/inbox/scope/load`;
+  }
+
+  private urlScopeCount(): string {
+    return `${ this.buildBase() }/inbox/scope/count`;
   }
 
   private urlMarkRead(inboxId: string): string {
@@ -89,7 +98,7 @@ export class NotificationRestApiService {
   }
 
   // ---------------------------------------------------------------------------
-  // API: Queries
+  // API: Queries (legacy/basic)
   // ---------------------------------------------------------------------------
 
   public loadInbox$(request: NotificationLoadRequest): Observable<NotificationInboxLoadResult> {
@@ -124,6 +133,108 @@ export class NotificationRestApiService {
   }
 
   // ---------------------------------------------------------------------------
+  // API: Queries (NEW scope endpoints)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * REST backup for scope-based listing:
+   * POST /api-notification/inbox/scope/load
+   *
+   * Backend forces username/role from auth, but request.username is still required by DTO,
+   * so we send a safe placeholder ("me").
+   */
+  public loadInboxByScope$(
+    scope: NotificationScope,
+    priorityScope: NotificationPriorityScope,
+    page: number,
+    limit: number,
+    filters: NotificationLoadFilters
+  ): Observable<NotificationInboxScopeLoadResult> {
+    const url = this.urlScopeLoad();
+
+    const request: NotificationLoadRequest = {
+      username: "me",
+      page: this.safePage( page ),
+      limit: this.safeLimit( limit ),
+      filters: this.normalizeFilters( filters ),
+    };
+
+    const body: {
+      scope: NotificationScope;
+      priorityScope: NotificationPriorityScope;
+      request: NotificationLoadRequest;
+    } = {
+      scope: this.safeScope( scope ),
+      priorityScope: this.safePriorityScope( priorityScope ),
+      request,
+    };
+
+    return this.http.post<MSG>( url, body ).pipe(
+      map( ( msg ) => this.assertSuccess( msg, "loadInboxByScope" ) ),
+      map( ( msg ) => {
+        const items = this.readSystemArray<NotificationInboxItemDto>( msg, "notifications" );
+        const other = this.readOtherObject<{
+          total?: unknown;
+          unread?: unknown;
+          prioritized?: unknown;
+          unprioritized?: unknown;
+        }>( msg );
+
+        // Backend also repeats total in pagination.total; we trust pagination for consistency.
+        const total = this.readPaginationTotal( msg );
+
+        return {
+          items,
+          other: {
+            total,
+            unread: this.safeInt( other.unread, 0 ),
+            prioritized: this.safeInt( other.prioritized, 0 ),
+            unprioritized: this.safeInt( other.unprioritized, 0 ),
+          },
+        };
+      } ),
+      catchError( ( err ) => this.toHttpError( "loadInboxByScope", err ) )
+    );
+  }
+
+  /**
+   * REST backup for scope-based counts:
+   * POST /api-notification/inbox/scope/count
+   */
+  public countInboxByScope$(
+    filters: NotificationLoadFilters
+  ): Observable<NotificationInboxScopeCountResult> {
+    const url = this.urlScopeCount();
+
+    const body: { filters: NotificationLoadFilters; } = {
+      filters: this.normalizeFilters( filters ),
+    };
+
+    return this.http.post<MSG>( url, body ).pipe(
+      map( ( msg ) => this.assertSuccess( msg, "countInboxByScope" ) ),
+      map( ( msg ) => {
+        const other = this.readOtherObject<{
+          total?: unknown;
+          unread?: unknown;
+          prioritized?: unknown;
+          unprioritized?: unknown;
+        }>( msg );
+
+        // Backend sets pagination.total = total, and other.total as well.
+        const total = this.readPaginationTotal( msg );
+
+        return {
+          total,
+          unread: this.safeInt( other.unread, 0 ),
+          prioritized: this.safeInt( other.prioritized, 0 ),
+          unprioritized: this.safeInt( other.unprioritized, 0 ),
+        };
+      } ),
+      catchError( ( err ) => this.toHttpError( "countInboxByScope", err ) )
+    );
+  }
+
+  // ---------------------------------------------------------------------------
   // API: Mutations
   // ---------------------------------------------------------------------------
 
@@ -133,15 +244,11 @@ export class NotificationRestApiService {
     return this.http.post<MSG>(url, {}).pipe(
       map((msg) => this.assertSuccess(msg, "markRead")),
       map((msg) => {
-        const other = this.readOtherObject<{
-          inboxId?: unknown;
-          changed?: unknown;
-          unread?: unknown;
-        }>(msg);
+        const other = this.readOtherObject<{ inboxId?: unknown; changed?: unknown; unread?: unknown; }>( msg );
 
         const out: NotificationInboxMutationResult = {
           total: this.readPaginationTotal(msg),
-          unread: this.safeInt(other.unread, 0)
+          unread: this.safeInt( other.unread, 0 ),
         };
 
         const inboxIdSafe = this.safeString(other.inboxId);
@@ -161,14 +268,11 @@ export class NotificationRestApiService {
     return this.http.post<MSG>(url, {}).pipe(
       map((msg) => this.assertSuccess(msg, "markAllRead")),
       map((msg) => {
-        const other = this.readOtherObject<{
-          changedCount?: unknown;
-          unread?: unknown;
-        }>(msg);
+        const other = this.readOtherObject<{ changedCount?: unknown; unread?: unknown; }>( msg );
 
         const out: NotificationInboxMutationResult = {
           total: this.readPaginationTotal(msg),
-          unread: this.safeInt(other.unread, 0)
+          unread: this.safeInt( other.unread, 0 ),
         };
 
         const changedCount = this.safeIntOrUndefined(other.changedCount);
@@ -186,15 +290,11 @@ export class NotificationRestApiService {
     return this.http.post<MSG>(url, {}).pipe(
       map((msg) => this.assertSuccess(msg, "archiveOne")),
       map((msg) => {
-        const other = this.readOtherObject<{
-          inboxId?: unknown;
-          changed?: unknown;
-          unread?: unknown;
-        }>(msg);
+        const other = this.readOtherObject<{ inboxId?: unknown; changed?: unknown; unread?: unknown; }>( msg );
 
         const out: NotificationInboxMutationResult = {
           total: this.readPaginationTotal(msg),
-          unread: this.safeInt(other.unread, 0)
+          unread: this.safeInt( other.unread, 0 ),
         };
 
         const inboxIdSafe = this.safeString(other.inboxId);
@@ -250,12 +350,9 @@ export class NotificationRestApiService {
     const out: NotificationLoadRequest = {
       username: this.mustString(input.username, "username"),
       page: this.safePage(input.page),
-      limit: this.safeLimit(input.limit)
+      limit: this.safeLimit( input.limit ),
+      filters: this.normalizeFilters( input.filters ?? {} ),
     };
-
-    // filters is optional on FE type, but backend safeLoadRequest defaults to {}
-    const filters = this.normalizeFilters(input.filters ?? {});
-    out.filters = filters;
 
     return out;
   }
@@ -310,6 +407,16 @@ export class NotificationRestApiService {
     return s;
   }
 
+  private safeScope( v: unknown ): NotificationScope {
+    if ( v === "user" || v === "role" || v === "company" ) return v;
+    return "user";
+  }
+
+  private safePriorityScope( v: unknown ): NotificationPriorityScope {
+    if ( v === "all" || v === "prioritized" || v === "unprioritized" ) return v;
+    return "all";
+  }
+
   private safePage(v: unknown): number {
     const n = typeof v === "number" ? v : Number(v);
     if (!Number.isFinite(n) || n < 1) return 1;
@@ -341,3 +448,5 @@ export class NotificationRestApiService {
     return throwError(() => new Error(msg));
   }
 }
+
+

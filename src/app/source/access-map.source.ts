@@ -1,11 +1,13 @@
-// Path: src/app/source/access-map.source.ts
+// Path: src/source/access-map.source.ts
 // =============================================================================
-// PropEase Access Matrix (SINGLE SOURCE OF TRUTH)
+// PropEase Access Matrix (SINGLE SOURCE OF TRUTH) — ENTERPRISE FULL SCALE
 // -----------------------------------------------------------------------------
 // ✅ Backend + Frontend shared (NO mongoose types)
 // ✅ Hierarchical modules supported (e.g., TeamManagement.WorkItems)
-// ✅ Short UI labels + rich descriptions
-// ✅ Material icons for every module + action
+// ✅ Every module MUST include CRUD (create/view/update/delete)
+// ✅ Min 4 actions per module, Max 20 actions per module
+// ✅ Action id + label <= 30 chars (UI-safe)
+// ✅ Enterprise-grade actions supported (approve, audit, export, policy, etc.)
 // =============================================================================
 
 /* ========================================================================== *
@@ -13,431 +15,776 @@
  * ========================================================================== */
 
 export interface AccessActionOption {
-  id: string;               // machine key used in guard + DB
-  label: string;            // SHORT UI label
-  description?: string;     // longer explanation shown in UI tooltip/details
-  icon?: string;            // Angular Material icon name (mat-icon)
+  id: string; // machine key used in guard + DB
+  label: string; // SHORT UI label (<= 30 chars)
+  description?: string; // longer explanation shown in UI tooltip/details
+  icon?: string; // Angular Material icon name (mat-icon)
 }
 
 export interface AccessModuleOption {
-  module: string;           // machine key used in guard routes map
-  label: string;            // SHORT UI label
-  actions: ReadonlyArray<AccessActionOption>;
-  description?: string;     // longer module explanation
-  icon?: string;            // module icon (mat-icon)
+  module: string; // machine key used in guard routes map
+  label: string; // SHORT UI label
+  actions: ReadonlyArray<AccessActionOption>; // MIN 4 / MAX 20 actions per module
+  description?: string; // longer module explanation
+  icon?: string; // module icon (mat-icon)
 }
 
 /* ========================================================================== *
- * CANONICAL ACCESS MATRIX
+ * CANONICAL ACCESS MATRIX (ENTERPRISE)
  * ========================================================================== */
 
 export const ACCESS_OPTIONS = [
   // ──────────────────────────────────────────────────────────────────────────
-  // USERS
+  // DASHBOARD / REPORTS (Ops visibility)
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    module: "Dashboard",
+    label: "Dashboard",
+    icon: "dashboard",
+    description: "Role-based dashboards, KPI highlights, and operational summaries.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // e.g., create widgets/layouts
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "configure", label: "Config", icon: "tune", description: "Configure dashboard layouts and visibility." },
+      { id: "export", label: "Export", icon: "file_download", description: "Export dashboard snapshots/metrics." },
+    ] as const,
+  },
+  {
+    module: "Reports",
+    label: "Reports",
+    icon: "summarize",
+    description: "Operational and compliance reports across modules.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add_chart" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "run", label: "Run", icon: "play_circle", description: "Generate reports on demand." },
+      { id: "schedule", label: "Schedule", icon: "schedule", description: "Schedule recurring report generation." },
+      { id: "export", label: "Export", icon: "file_download" },
+      { id: "share", label: "Share", icon: "share", description: "Share reports to roles/teams/users." },
+      { id: "audit", label: "Audit", icon: "fact_check", description: "View report generation history." },
+    ] as const,
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // ORGANIZATION / BRANCH / EMPLOYEES (Enterprise Core)
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    module: "OrganizationManagement",
+    label: "Organization",
+    icon: "domain",
+    description: "Company profile, departments, designations, governance policies.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add_business" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "policy", label: "Policies", icon: "policy", description: "Manage policy sets and rules (audited)." },
+      { id: "approve", label: "Approve", icon: "verified", description: "Approve high-risk org changes." },
+      { id: "audit", label: "Audit", icon: "fact_check", description: "Review change history and compliance evidence." },
+      { id: "export", label: "Export", icon: "file_download" },
+      { id: "import", label: "Import", icon: "file_upload", description: "Bulk import org structures (validated)." },
+    ] as const,
+  },
+  {
+    module: "BranchManagement",
+    label: "Branches",
+    icon: "location_city",
+    description: "Branch registry, branch managers, branch-level policy overrides.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add_location_alt" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "assign", label: "Assign", icon: "how_to_reg", description: "Assign branch manager / members." },
+      { id: "policy", label: "Policies", icon: "policy", description: "Branch overrides & rules." },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "EmployeeManagement",
+    label: "Employees",
+    icon: "badge",
+    description: "Employee records linked to users: lifecycle, documents, assignments.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "person_add", description: "Create/register employee profile." },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "assign", label: "Assign", icon: "how_to_reg", description: "Assign branch/department/supervisor." },
+      { id: "documents", label: "Documents", icon: "folder", description: "Manage employee documents (audited)." },
+      { id: "audit", label: "Audit", icon: "fact_check", description: "Employee change history." },
+      { id: "export", label: "Export", icon: "file_download" },
+      { id: "import", label: "Import", icon: "file_upload" },
+    ] as const,
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // HR MANAGEMENT (Full Scale)
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    module: "HRManagement",
+    label: "HR",
+    icon: "people",
+    description: "HR operations: cycles, scorecards, reviews, governance.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // e.g., cycles/programs
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "scorecards", label: "Scorecards", icon: "insights", description: "Manage KPI/MBO scorecards." },
+      { id: "reviews", label: "Reviews", icon: "rate_review", description: "Performance review workflows." },
+      { id: "policy", label: "Policies", icon: "policy" },
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "HR.Attendance",
+    label: "Attendance",
+    icon: "schedule",
+    description: "Attendance logs, shifts, overtime, exceptions.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // manual entries/shift rules
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "capture", label: "Capture", icon: "qr_code_scanner", description: "Capture attendance entries." },
+      { id: "approve", label: "Approve", icon: "verified", description: "Approve exceptions/overtime." },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "HR.Leave",
+    label: "Leave",
+    icon: "beach_access",
+    description: "Leave policies, requests, approvals, balances.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // request
+      { id: "update", label: "Update", icon: "edit" }, // edit request/policy
+      { id: "delete", label: "Delete", icon: "delete" }, // cancel/remove
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "policy", label: "Policies", icon: "policy" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "HR.Payroll",
+    label: "Payroll",
+    icon: "request_quote",
+    description: "Payroll inputs, runs, approvals, payslips (high-risk).",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // payroll batches
+      { id: "update", label: "Update", icon: "edit" }, // corrections
+      { id: "delete", label: "Delete", icon: "delete" }, // remove batch
+      { id: "inputs", label: "Inputs", icon: "tune" },
+      { id: "run", label: "Run", icon: "play_circle" },
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "payslips", label: "Payslips", icon: "receipt", description: "Generate/view payslips." },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "HR.Recruitment",
+    label: "Recruitment",
+    icon: "person_search",
+    description: "Vacancies, applicants, interviews, offers.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // vacancy/applicant
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "pipeline", label: "Pipeline", icon: "schema" },
+      { id: "offer", label: "Offer", icon: "assignment_turned_in" },
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "HR.Training",
+    label: "Training",
+    icon: "school",
+    description: "Training plans, certifications, tracking.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // plan/course
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "assign", label: "Assign", icon: "how_to_reg" },
+      { id: "certify", label: "Certify", icon: "workspace_premium" },
+      { id: "monitor", label: "Monitor", icon: "monitor_heart" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // USERS / ACCESS CONTROL / SECURITY
   // ──────────────────────────────────────────────────────────────────────────
   {
     module: "UserManagement",
     label: "Users",
     icon: "manage_accounts",
-    description:
-      "Identity and staff account management: create users, manage roles, and secure access.",
+    description: "Identity, accounts, roles, lifecycle and secure access.",
     actions: [
-      { id: "view", label: "View", icon: "visibility", description: "Read user profiles and account metadata." },
-      { id: "create", label: "Create", icon: "person_add", description: "Create new user accounts." },
-      { id: "update", label: "Update", icon: "edit", description: "Update user profile details." },
-      { id: "delete", label: "Delete", icon: "person_remove", description: "Delete user accounts (restricted)." },
-      { id: "activate", label: "Activate", icon: "toggle_on", description: "Activate/deactivate user accounts." },
-      { id: "resetPassword", label: "Reset PW", icon: "lock_reset", description: "Force reset password." },
-      { id: "assignRole", label: "Roles", icon: "admin_panel_settings", description: "Assign roles & permissions (high-risk)." },
-      { id: "export", label: "Export", icon: "file_download", description: "Export user lists for audits." },
-      { id: "impersonate", label: "Impersonate", icon: "supervisor_account", description: "Support-only impersonation (audited)." },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "person_add" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "disable", label: "Disable", icon: "toggle_off", description: "Activate/deactivate accounts." },
+      { id: "reset", label: "Reset", icon: "lock_reset", description: "Reset password / security state." },
+      { id: "roles", label: "Roles", icon: "admin_panel_settings" },
+      { id: "sessions", label: "Sessions", icon: "phonelink_lock", description: "Inspect/revoke sessions." },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+      { id: "import", label: "Import", icon: "file_upload" },
+    ] as const,
+  },
+  {
+    module: "AccessControl",
+    label: "Access",
+    icon: "security",
+    description: "Grant/revoke permissions, restrictions, session controls.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // e.g., roles/policies
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "grant", label: "Grant", icon: "key" },
+      { id: "revoke", label: "Revoke", icon: "vpn_key_off" },
+      { id: "restrict", label: "Restrict", icon: "do_not_disturb_on" },
+      { id: "mfa", label: "MFA", icon: "verified_user", description: "Manage MFA policies and enforcement." },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "SecurityOps",
+    label: "SecOps",
+    icon: "shield",
+    description: "Security monitoring, incident response, enforcement.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add", description: "Create incident cases/runbooks." },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "monitor", label: "Monitor", icon: "monitor_heart" },
+      { id: "enforce", label: "Enforce", icon: "gpp_good", description: "Lockdown / block / force policies." },
+      { id: "incidents", label: "Incidents", icon: "report" },
+      { id: "quarantine", label: "Quarantine", icon: "block", description: "Quarantine user/device/session." },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
     ] as const,
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // PROPERTIES
+  // PROPERTY / TENANT / LEASE / COMPLAINTS (Core Real Estate ERP)
   // ──────────────────────────────────────────────────────────────────────────
   {
     module: "PropertyManagement",
     label: "Properties",
     icon: "apartment",
-    description:
-      "Property inventory: listings, units, amenities, documents, and assignments.",
+    description: "Property inventory, units, documents, publishing and lifecycle.",
     actions: [
-      { id: "view", label: "View", icon: "visibility", description: "View properties and metadata." },
-      { id: "create", label: "Create", icon: "add_business", description: "Create new properties/units." },
-      { id: "update", label: "Update", icon: "edit", description: "Update property details." },
-      { id: "delete", label: "Delete", icon: "delete", description: "Delete property records (restricted)." },
-      { id: "assign", label: "Assign", icon: "how_to_reg", description: "Assign agent/owner/manager." },
-      { id: "upload", label: "Upload", icon: "upload_file", description: "Upload property documents." },
-      { id: "publish", label: "Publish", icon: "campaign", description: "Publish/unpublish listings." },
-      { id: "configure", label: "Config", icon: "tune", description: "Manage amenities/status/rules." },
-      { id: "export", label: "Export", icon: "file_download", description: "Export property reports." },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add_home" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "assign", label: "Assign", icon: "how_to_reg", description: "Assign agents/owners to properties." },
+      { id: "publish", label: "Publish", icon: "campaign" },
+      { id: "documents", label: "Documents", icon: "folder" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+      { id: "import", label: "Import", icon: "file_upload" },
     ] as const,
   },
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // TENANTS
-  // ──────────────────────────────────────────────────────────────────────────
   {
     module: "TenantManagement",
     label: "Tenants",
     icon: "groups",
-    description:
-      "Tenant registry: onboarding, profiles, assignments, and communications.",
+    description: "Tenant onboarding, profile, assignment, documents.",
     actions: [
-      { id: "view", label: "View", icon: "visibility", description: "View tenant profiles." },
-      { id: "create", label: "Create", icon: "person_add", description: "Create tenant records." },
-      { id: "update", label: "Update", icon: "edit", description: "Update tenant records." },
-      { id: "delete", label: "Delete", icon: "delete", description: "Delete tenant records (restricted)." },
-      { id: "assign", label: "Assign", icon: "domain_add", description: "Assign tenants to units." },
-      { id: "upload", label: "Upload", icon: "upload_file", description: "Upload tenant documents." },
-      { id: "sendNotification", label: "Notify", icon: "notifications_active", description: "Send tenant notifications." },
-      { id: "export", label: "Export", icon: "file_download", description: "Export tenant lists/reports." },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "person_add" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "assign", label: "Assign", icon: "domain_add" },
+      { id: "documents", label: "Documents", icon: "folder" },
+      { id: "notify", label: "Notify", icon: "notifications_active" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+      { id: "import", label: "Import", icon: "file_upload" },
     ] as const,
   },
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // LEASES
-  // ──────────────────────────────────────────────────────────────────────────
   {
     module: "LeaseManagement",
     label: "Leases",
     icon: "description",
-    description:
-      "Lease lifecycle: create, renew, terminate, approve, and manage documents.",
+    description: "Lease lifecycle, renewals, termination, approvals and documents.",
     actions: [
-      { id: "view", label: "View", icon: "visibility", description: "View leases and terms." },
-      { id: "create", label: "Create", icon: "note_add", description: "Create lease agreements." },
-      { id: "update", label: "Update", icon: "edit", description: "Update leases (controlled)." },
-      { id: "terminate", label: "Terminate", icon: "cancel", description: "Terminate leases." },
-      { id: "renew", label: "Renew", icon: "autorenew", description: "Renew/extend leases." },
-      { id: "upload", label: "Upload", icon: "upload_file", description: "Upload lease documents." },
-      { id: "approve", label: "Approve", icon: "verified", description: "Approve lease activation/changes (audited)." },
-      { id: "export", label: "Export", icon: "file_download", description: "Export lease reports." },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "note_add" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "workflow", label: "Workflow", icon: "published_with_changes" },
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "sign", label: "Sign", icon: "draw", description: "Manage signatures and signing flow." },
+      { id: "documents", label: "Documents", icon: "folder" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
     ] as const,
   },
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // COMPLAINTS
-  // ──────────────────────────────────────────────────────────────────────────
   {
     module: "ComplaintsManagement",
     label: "Complaints",
     icon: "report_problem",
-    description:
-      "Complaints and service requests: intake, assign, resolve, and report.",
+    description: "Service requests and complaints: assign, resolve, SLA, evidence.",
     actions: [
-      { id: "view", label: "View", icon: "visibility", description: "View complaints and history." },
-      { id: "create", label: "Create", icon: "add_comment", description: "Create complaints/requests." },
-      { id: "update", label: "Update", icon: "edit", description: "Update complaint details/status." },
-      { id: "delete", label: "Delete", icon: "delete", description: "Delete complaints (restricted)." },
-      { id: "assign", label: "Assign", icon: "assignment_ind", description: "Assign complaint to team/tech." },
-      { id: "close", label: "Close", icon: "task_alt", description: "Close complaint after resolution." },
-      { id: "reopen", label: "Reopen", icon: "restart_alt", description: "Reopen complaint if needed." },
-      { id: "export", label: "Export", icon: "file_download", description: "Export complaints SLA reports." },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "assign", label: "Assign", icon: "assignment_ind" },
+      { id: "workflow", label: "Workflow", icon: "published_with_changes" },
+      { id: "sla", label: "SLA", icon: "timer", description: "Manage SLA targets and escalations." },
+      { id: "evidence", label: "Evidence", icon: "attach_file" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
     ] as const,
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // PAYMENTS
+  // AGENT / OWNER (Real-estate specific ops)
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    module: "AgentManagement",
+    label: "Agents",
+    icon: "support_agent",
+    description: "Agent profiles, assignments, performance and monthly summaries.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "person_add" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "assign", label: "Assign", icon: "how_to_reg" },
+      { id: "kpis", label: "KPIs", icon: "insights" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "OwnerManagement",
+    label: "Owners",
+    icon: "real_estate_agent",
+    description: "Property owners, ownership mapping, payouts and statements.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "person_add" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "assign", label: "Assign", icon: "how_to_reg" },
+      { id: "statements", label: "Statements", icon: "receipt_long" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PAYMENTS / FINANCE (Business Perspective)
   // ──────────────────────────────────────────────────────────────────────────
   {
     module: "PaymentBilling",
     label: "Payments",
     icon: "payments",
-    description:
-      "Billing and payments: invoices, collections, approvals, refunds, exports.",
+    description: "Billing, invoices, collections, approvals, refunds.",
     actions: [
-      { id: "view", label: "View", icon: "visibility", description: "View invoices, balances, payment history." },
-      { id: "create", label: "Invoice", icon: "receipt_long", description: "Create invoices/billing statements." },
-      { id: "update", label: "Update", icon: "edit", description: "Update invoice details (controlled)." },
-      { id: "delete", label: "Delete", icon: "delete", description: "Delete invoices (restricted)." },
-      { id: "recordPayment", label: "Record", icon: "point_of_sale", description: "Record manual payments." },
-      { id: "refund", label: "Refund", icon: "currency_exchange", description: "Issue refunds (audited)." },
-      { id: "reverse", label: "Reverse", icon: "undo", description: "Reverse posted transactions (audited)." },
-      { id: "approve", label: "Approve", icon: "verified", description: "Approve payouts/settlements (high-risk)." },
-      { id: "export", label: "Export", icon: "file_download", description: "Export payment/arrears reports." },
-      { id: "configure", label: "Config", icon: "tune", description: "Configure fees, taxes, payment rules." },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // invoice/charge
+      { id: "update", label: "Update", icon: "edit" }, // adjust
+      { id: "delete", label: "Delete", icon: "delete" }, // void
+      { id: "invoice", label: "Invoice", icon: "receipt_long" },
+      { id: "record", label: "Record", icon: "point_of_sale" },
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "refund", label: "Refund", icon: "currency_exchange" },
+      { id: "reconcile", label: "Reconcile", icon: "rule", description: "Reconcile payments vs invoices." },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "Finance.Accounting",
+    label: "Accounting",
+    icon: "account_balance",
+    description: "GL, journals, period close, controls (audit-ready).",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // journals
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "post", label: "Post", icon: "post_add" },
+      { id: "close", label: "Close", icon: "lock" },
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "Finance.Procurement",
+    label: "Procurement",
+    icon: "shopping_cart",
+    description: "Purchase requests, POs, vendors, approvals.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // PR/PO/vendor
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "request", label: "Request", icon: "add_shopping_cart" },
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "vendors", label: "Vendors", icon: "store" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "Finance.Treasury",
+    label: "Treasury",
+    icon: "savings",
+    description: "Cash flow, bank settlement, approvals, audit logs.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // cash/bank item
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "settle", label: "Settle", icon: "sync_alt" },
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
     ] as const,
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // TEAM MANAGEMENT — TEAMS
+  // TEAM MANAGEMENT (Team Ops Engine)
   // ──────────────────────────────────────────────────────────────────────────
   {
     module: "TeamManagement.Teams",
     label: "Teams",
     icon: "groups_3",
-    description:
-      "Team governance: teams, membership, captain/lead, and team controls.",
+    description: "Team governance: teams, members, captain, controls.",
     actions: [
-      { id: "view", label: "View", icon: "visibility", description: "View teams and members." },
-      { id: "create", label: "Create", icon: "group_add", description: "Create teams." },
-      { id: "update", label: "Update", icon: "edit", description: "Update team settings." },
-      { id: "delete", label: "Delete", icon: "delete", description: "Delete teams (restricted)." },
-      { id: "assignMembers", label: "Members", icon: "how_to_reg", description: "Add/remove members; manage roles." },
-      { id: "assignCaptain", label: "Captain", icon: "military_tech", description: "Assign/replace captain/lead." },
-      { id: "upload", label: "Upload", icon: "upload_file", description: "Upload team documents." },
-      { id: "generate", label: "Reports", icon: "summarize", description: "Generate team reports." },
-      { id: "lock", label: "Lock", icon: "lock", description: "Lock team access." },
-      { id: "unlock", label: "Unlock", icon: "lock_open", description: "Unlock team access." },
-      { id: "export", label: "Export", icon: "file_download", description: "Export team reports." },
-      { id: "monitor", label: "Monitor", icon: "monitor_heart", description: "Monitor team dashboard performance." },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "group_add" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "members", label: "Members", icon: "how_to_reg" },
+      { id: "captain", label: "Captain", icon: "military_tech" },
+      { id: "monitor", label: "Monitor", icon: "monitor_heart" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
     ] as const,
   },
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // TEAM MANAGEMENT — WORK ITEMS
-  // ──────────────────────────────────────────────────────────────────────────
+  {
+    module: "TeamManagement.TeamTasks",
+    label: "Team Tasks",
+    icon: "task",
+    description: "Team task lifecycle: assign, status, evidence, flow.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add_task" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "assign", label: "Assign", icon: "assignment_ind" },
+      { id: "workflow", label: "Workflow", icon: "published_with_changes" },
+      { id: "evidence", label: "Evidence", icon: "attach_file" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
   {
     module: "TeamManagement.WorkItems",
     label: "Work Items",
     icon: "assignment",
-    description:
-      "Task execution: create, assign, status/priority, evidence, approvals.",
+    description: "Execution work: lifecycle, throughput, approvals, evidence.",
     actions: [
-      { id: "view", label: "View", icon: "visibility", description: "View work items (scope enforced)." },
-      { id: "create", label: "Create", icon: "add_task", description: "Create tasks under a team." },
-      { id: "update", label: "Update", icon: "edit", description: "Update task fields and schedules." },
-      { id: "delete", label: "Delete", icon: "delete", description: "Delete tasks (restricted)." },
-      { id: "assign", label: "Assign", icon: "assignment_ind", description: "Assign/reassign tasks." },
-      { id: "changeStatus", label: "Status", icon: "published_with_changes", description: "Change status with workflow rules." },
-      { id: "prioritize", label: "Priority", icon: "priority_high", description: "Set priority." },
-      { id: "uploadEvidence", label: "Evidence", icon: "attach_file", description: "Upload task evidence/attachments." },
-      { id: "requestApproval", label: "Request", icon: "mark_email_read", description: "Request completion approval." },
-      { id: "approveCompletion", label: "Approve", icon: "verified", description: "Approve completion (audited)." },
-      { id: "rejectCompletion", label: "Reject", icon: "block", description: "Reject completion with reasons." },
-      { id: "reopen", label: "Reopen", icon: "restart_alt", description: "Reopen task after verification failure." },
-      { id: "monitor", label: "Monitor", icon: "monitor_heart", description: "Monitor progress, delays, throughput." },
-      { id: "export", label: "Export", icon: "file_download", description: "Export task performance reports." },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "assign", label: "Assign", icon: "assignment_ind" },
+      { id: "workflow", label: "Workflow", icon: "published_with_changes" },
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "evidence", label: "Evidence", icon: "attach_file" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
     ] as const,
   },
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // TEAM MANAGEMENT — WORK EVENTS
-  // ──────────────────────────────────────────────────────────────────────────
   {
     module: "TeamManagement.WorkEvents",
     label: "Work Events",
     icon: "event_note",
-    description:
-      "Operations events: incidents, site logs, meetings, safety events.",
+    description: "Incidents, meetings, logs: assign, resolve, evidence.",
     actions: [
-      { id: "view", label: "View", icon: "visibility", description: "View events (scope enforced)." },
-      { id: "create", label: "Create", icon: "event_available", description: "Create event records." },
-      { id: "update", label: "Update", icon: "edit", description: "Update event details." },
-      { id: "delete", label: "Delete", icon: "delete", description: "Delete events (restricted)." },
-      { id: "assign", label: "Assign", icon: "assignment_ind", description: "Assign owners/responders." },
-      { id: "acknowledge", label: "Ack", icon: "done_all", description: "Acknowledge responsibility." },
-      { id: "resolve", label: "Resolve", icon: "task_alt", description: "Resolve/close after validation." },
-      { id: "reopen", label: "Reopen", icon: "restart_alt", description: "Reopen if unresolved." },
-      { id: "uploadEvidence", label: "Evidence", icon: "attach_file", description: "Upload event evidence." },
-      { id: "monitor", label: "Monitor", icon: "monitor_heart", description: "Monitor patterns/escalations." },
-      { id: "export", label: "Export", icon: "file_download", description: "Export event logs." },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "event_available" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "assign", label: "Assign", icon: "assignment_ind" },
+      { id: "workflow", label: "Workflow", icon: "published_with_changes" },
+      { id: "evidence", label: "Evidence", icon: "attach_file" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "TeamManagement.MemberActivities",
+    label: "Member Acts",
+    icon: "timeline",
+    description: "Member activity timeline: blockers, evidence, logs.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "blockers", label: "Blockers", icon: "report" },
+      { id: "evidence", label: "Evidence", icon: "attach_file" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "TeamManagement.Milestones",
+    label: "Milestones",
+    icon: "flag",
+    description: "Planning objects: priority, schedule, tags, evidence.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "workflow", label: "Workflow", icon: "published_with_changes" },
+      { id: "tags", label: "Tags", icon: "sell" },
+      { id: "evidence", label: "Evidence", icon: "attach_file" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
     ] as const,
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // COMMENT ENGINE
+  // COMMENT ENGINE (cross-module)
   // ──────────────────────────────────────────────────────────────────────────
   {
     module: "CommentEngine",
     label: "Comments",
     icon: "comment",
-    description:
-      "Universal comments: cross-module notes, attachments, moderation.",
+    description: "Universal comments: cross-module notes, threads, and moderation.",
     actions: [
-      { id: "view", label: "View", icon: "visibility", description: "View comments by audience and scope." },
-      { id: "create", label: "Create", icon: "add_comment", description: "Create new comments/replies." },
-      { id: "updateOwn", label: "Edit Own", icon: "edit_note", description: "Edit own comments only." },
-      { id: "deleteOwn", label: "Del Own", icon: "delete_forever", description: "Delete own comments only." },
-      { id: "moderate", label: "Mod", icon: "gavel", description: "Moderate all comments (audited)." },
-      { id: "upload", label: "Upload", icon: "attach_file", description: "Upload comment attachments." },
-      {
-        id: "pin",
-        label: "Pin",
-        icon: "push_pin",
-        description: "Pin comments to highlight important information.",
-      },
-      {
-        id: "unpin",
-        label: "Unpin",
-        icon: "push_pin",
-        description: "Remove pin from pinned comments.",
-      },
-      {
-        id: "pinToggle",
-        label: "Pin Toggle",
-        icon: "push_pin",
-        description:
-          "Toggle pin state (used by UI quick actions).",
-      },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add_comment" },
+      { id: "update", label: "Update", icon: "edit_note", description: "Edit comments (own or scoped)." },
+      { id: "delete", label: "Delete", icon: "delete_forever", description: "Delete comments (own or scoped)." },
+      { id: "pin", label: "Pin", icon: "push_pin" },
+      { id: "moderate", label: "Moderate", icon: "gavel" },
+      { id: "export", label: "Export", icon: "file_download" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
     ] as const,
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // KPI MONITORING
+  // NOTIFICATIONS (system-wide)
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    module: "NotificationCenter",
+    label: "Notify",
+    icon: "notifications",
+    description: "System and user notifications, alerts, broadcasts.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add_alert" }, // create/broadcast
+      { id: "update", label: "Update", icon: "edit" }, // templates/config
+      { id: "delete", label: "Delete", icon: "delete" }, // remove notification items
+      { id: "markRead", label: "Mark Read", icon: "done_all" },
+      { id: "broadcast", label: "Broadcast", icon: "campaign" },
+      { id: "configure", label: "Config", icon: "tune" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // KPI / AUDIT / COMPLIANCE / DATA GOVERNANCE / BACKUP
   // ──────────────────────────────────────────────────────────────────────────
   {
     module: "KpiMonitoring",
     label: "KPIs",
     icon: "insights",
-    description:
-      "KPI dashboards, ingestion, rebuilds, exports, and alert rules.",
+    description: "Dashboards, ingestion, rebuilds, thresholds and alerting.",
     actions: [
-      { id: "view", label: "View", icon: "dashboard", description: "View KPI dashboards and metrics." },
-      { id: "create", label: "Ingest", icon: "input", description: "Submit KPI facts (ingest pipeline)." },
-      { id: "update", label: "Rebuild", icon: "autorenew", description: "Recompute KPI projections." },
-      { id: "export", label: "Export", icon: "file_download", description: "Export KPI snapshots/trends." },
-      { id: "configure", label: "Config", icon: "tune", description: "Configure KPI thresholds and alerts." },
+      { id: "view", label: "View", icon: "dashboard" },
+      { id: "create", label: "Create", icon: "add" }, // KPI definitions
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "ingest", label: "Ingest", icon: "input" },
+      { id: "rebuild", label: "Rebuild", icon: "autorenew" },
+      { id: "configure", label: "Config", icon: "tune" },
+      { id: "alerts", label: "Alerts", icon: "notification_important" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
     ] as const,
   },
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // AUDIT LOGS
-  // ──────────────────────────────────────────────────────────────────────────
   {
     module: "AuditLogs",
     label: "Audit",
     icon: "policy",
-    description:
-      "Audit logs: view/search/export and monitor suspicious activity.",
+    description: "Audit logs: view/search/export, suspicious activity investigations.",
     actions: [
-      { id: "view", label: "View", icon: "visibility", description: "View audit logs (auth, changes, approvals)." },
-      { id: "filter", label: "Filter", icon: "filter_alt", description: "Filter/search logs." },
-      { id: "export", label: "Export", icon: "file_download", description: "Export logs for compliance." },
-      { id: "monitor", label: "Monitor", icon: "shield", description: "Monitor suspicious patterns." },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // create rules/views
+      { id: "update", label: "Update", icon: "edit" }, // retention/rules
+      { id: "delete", label: "Delete", icon: "delete" }, // delete saved views
+      { id: "filter", label: "Filter", icon: "filter_alt" },
+      { id: "investigate", label: "Investigate", icon: "manage_search" },
+      { id: "alerts", label: "Alerts", icon: "notification_important" },
+      { id: "retain", label: "Retention", icon: "schedule" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "Compliance",
+    label: "Compliance",
+    icon: "verified_user",
+    description: "Controls, evidence, incidents, regulatory reporting.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // controls/incidents
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "controls", label: "Controls", icon: "rule" },
+      { id: "evidence", label: "Evidence", icon: "attach_file" },
+      { id: "incidents", label: "Incidents", icon: "report" },
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "DataGovernance",
+    label: "Data Gov",
+    icon: "database",
+    description: "Retention, privacy, export controls, data quality rules.",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // policies/rules
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "privacy", label: "Privacy", icon: "privacy_tip" },
+      { id: "retain", label: "Retention", icon: "schedule" },
+      { id: "quality", label: "Quality", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+      { id: "audit", label: "Audit", icon: "policy" },
+    ] as const,
+  },
+  {
+    module: "BackupRecovery",
+    label: "Backup/DR",
+    icon: "backup",
+    description: "Backups, restores, DR drills (high-risk).",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // backup plans
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "backup", label: "Backup", icon: "backup" },
+      { id: "restore", label: "Restore", icon: "restore" },
+      { id: "drill", label: "DR Drill", icon: "emergency" },
+      { id: "approve", label: "Approve", icon: "verified" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
     ] as const,
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // SYSTEM SETTINGS
+  // SYSTEM SETTINGS / INTEGRATIONS
   // ──────────────────────────────────────────────────────────────────────────
   {
     module: "SystemSettings",
     label: "Settings",
     icon: "settings",
-    description:
-      "System configuration: roles, integrations, backups, preferences.",
+    description: "System preferences, global configuration, security policies.",
     actions: [
-      { id: "configure", label: "Config", icon: "tune", description: "Configure system preferences." },
-      { id: "manageRoles", label: "Roles", icon: "admin_panel_settings", description: "Manage roles & permissions (high-risk)." },
-      { id: "manageIntegrations", label: "Integrations", icon: "hub", description: "Manage external integrations." },
-      { id: "backupRestore", label: "Backup", icon: "backup", description: "Backup/restore system (high-risk)." },
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add" }, // config sets
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "configure", label: "Config", icon: "tune" },
+      { id: "roles", label: "Roles", icon: "admin_panel_settings" },
+      { id: "security", label: "Security", icon: "security" },
+      { id: "policy", label: "Policies", icon: "policy" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
+    ] as const,
+  },
+  {
+    module: "Integrations",
+    label: "Integrations",
+    icon: "hub",
+    description: "External systems (email/SMS, payments, maps, HR tools).",
+    actions: [
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add_link" },
+      { id: "update", label: "Update", icon: "edit" },
+      { id: "delete", label: "Delete", icon: "delete" },
+      { id: "configure", label: "Config", icon: "tune" },
+      { id: "secrets", label: "Secrets", icon: "key", description: "Manage API keys/secrets (restricted)." },
+      { id: "sync", label: "Sync", icon: "sync" },
+      { id: "monitor", label: "Monitor", icon: "monitor_heart" },
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "export", label: "Export", icon: "file_download" },
     ] as const,
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // ✅ ACCESS CONTROL (NEW — as requested)
+  // RECYCLE BIN OPERATIONS (step-up security candidate)
   // ──────────────────────────────────────────────────────────────────────────
   {
-    module: "AccessControl",
-    label: "Access",
-    icon: "security",
-    description:
-      "Permission administration: grant/revoke user access, set restrictions, control sessions. " +
-      "This module is REQUIRED to allow a user to change another user's permissions.",
+    module: "RecycleBin",
+    label: "Recycle Bin",
+    icon: "delete_sweep",
+    description: "Recover deleted items or permanently delete with audit and step-up security.",
     actions: [
-      {
-        id: "grantAccess",
-        label: "Grant",
-        icon: "key",
-        description: "Grant permissions to another user (high-risk, audited).",
-      },
-      {
-        id: "revokeAccess",
-        label: "Revoke",
-        icon: "vpn_key_off",
-        description: "Revoke permissions from another user (high-risk, audited).",
-      },
-      {
-        id: "setRestrictions",
-        label: "Restrict",
-        icon: "do_not_disturb_on",
-        description:
-          "Apply restrictions such as read-only, module lock, or time-based limits.",
-      },
-      {
-        id: "controlSessions",
-        label: "Sessions",
-        icon: "phonelink_lock",
-        description:
-          "Terminate / force re-login / manage active sessions for security incidents.",
-      },
-      {
-        id: "auditChanges",
-        label: "Audit",
-        icon: "fact_check",
-        description:
-          "View access-change history (who changed what, when, from where).",
-      },
-    ] as const,
+      // CRUD baseline (mapped to bin objects)
+      { id: "view", label: "View", icon: "visibility" },
+      { id: "create", label: "Create", icon: "add", description: "Create policies/retention rules (if enabled)." },
+      { id: "update", label: "Update", icon: "edit", description: "Update policies/retention rules (if enabled)." },
+      { id: "delete", label: "Delete", icon: "delete", description: "Delete policy entries (if enabled)." },
 
-  },
+      // Read-only operations
+      { id: "list", label: "List", icon: "list" },
+      { id: "count", label: "Count", icon: "tag" },
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // NOTIFICATION CENTER
-  // ──────────────────────────────────────────────────────────────────────────
-  {
-    module: "NotificationCenter",
-    label: "Notifications",
-    icon: "notifications",
-    description:
-      "System and user notifications: alerts, events, system messages, and recycle bin.",
+      // Sensitive reads (snapshot can contain private data)
+      { id: "view_snapshot", label: "View Snapshot", icon: "article" },
+      { id: "view_files", label: "View Files", icon: "folder_open" },
 
-    actions: [
-      {
-        id: "view",
-        label: "View",
-        icon: "visibility",
-        description: "View notifications and notification dashboards.",
-      },
+      // High-privilege mutations
+      { id: "restore", label: "Restore", icon: "restore" },
+      { id: "purge", label: "Permanent Delete", icon: "delete_forever" },
 
-      {
-        id: "markRead",
-        label: "Mark Read",
-        icon: "done_all",
-        description: "Mark notifications as read or unread.",
-      },
-
-      {
-        id: "delete",
-        label: "Delete",
-        icon: "delete",
-        description: "Delete notifications (soft-delete to recycle bin).",
-      },
-
-      {
-        id: "restore",
-        label: "Restore",
-        icon: "restore",
-        description: "Restore deleted notifications from recycle bin.",
-      },
-
-      {
-        id: "clear",
-        label: "Clear All",
-        icon: "clear_all",
-        description: "Bulk clear notifications (user scope).",
-      },
-
-      {
-        id: "broadcast",
-        label: "Broadcast",
-        icon: "campaign",
-        description: "Send system-wide or role-based notifications.",
-      },
-
-      {
-        id: "configure",
-        label: "Configure",
-        icon: "tune",
-        description: "Configure notification channels and preferences.",
-      },
+      // Governance
+      { id: "audit", label: "Audit", icon: "fact_check" },
+      { id: "policy", label: "Policy", icon: "gavel" },
+      { id: "export", label: "Export", icon: "file_download" },
     ] as const,
   },
-
 ] as const satisfies ReadonlyArray<AccessModuleOption>;
 
 /* ========================================================================== *

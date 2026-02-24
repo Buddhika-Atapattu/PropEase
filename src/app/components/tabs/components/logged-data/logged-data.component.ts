@@ -254,8 +254,8 @@ export class LoggedDataComponent implements OnInit, AfterViewInit {
       let safeDateRange: DateRange | undefined;
       if ( dateRange?.start || dateRange?.end ) {
         safeDateRange = {
-          start: new Date( dateRange.start ?? '' ),
-          end: new Date( dateRange.end ?? '' ),
+          start: typeof dateRange.start === 'string' ? dateRange.start : ( dateRange.start instanceof Date ? dateRange.start.toISOString() : new Date().toISOString() ),
+          end: typeof dateRange.end === 'string' ? dateRange.end : ( dateRange.end instanceof Date ? dateRange.end.toISOString() : new Date().toISOString() ),
         };
       }
 

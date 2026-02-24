@@ -19,9 +19,9 @@ import { switchMap, takeUntil } from 'rxjs/operators';
 import { MatIconModule } from '@angular/material/icon';
 import {
   APIsService,
-  MultiAuthData,
   User,
 } from '../../../services/APIs/apis.service';
+import { MultiAuthData } from '../../../services/auth/user.contract';
 import { MSG } from '../../../types/api-message.types';
 import { CloseBtnComponent } from '../../shared/buttons/close-btn/close-btn';
 import { PreloaderComponent } from '../../shared/preloader/preloader.component';

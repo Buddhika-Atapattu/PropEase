@@ -1,91 +1,153 @@
 // Path: src/app/types/team-management/milestone/milestone.types.ts
-// =============================================================================
-// Milestone Types (FE ↔ BE aligned)
-// Mirrors: src/types/teamManagement/milestones/milestone.types.ts
-// Rules:
-// - NO mongoose Types here (ObjectId => string)
-// - NO Date objects here (Date => ISODateString)
-// - Optional fields are OMITTED (never undefined)
-// =============================================================================
+// ============================================================================
+// Milestone Types (Frontend Mirror) — DTO-safe contract
+// ----------------------------------------------------------------------------
+// Key rules
+// - No mongoose Types in FE
+// - IDs are string
+// - Dates are ISO strings
+// - exactOptionalPropertyTypes-safe: optional props must be omitted (not undefined)
+// ============================================================================
 
-import type { ISODateString } from "../../common";
+export type ISODateString = string;
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
-
-export const MILESTONE_STATUS = [
-  "planned",
-  "active",
-  "done",
-  "missed",
-  "cancelled",
-] as const;
-
+export const MILESTONE_STATUS = [ "planned", "in_progress", "completed", "cancelled" ] as const;
 export type MilestoneStatus = (typeof MILESTONE_STATUS)[number];
 
 export const MILESTONE_PRIORITY = ["low", "medium", "high", "urgent"] as const;
 export type MilestonePriority = (typeof MILESTONE_PRIORITY)[number];
 
 // ----------------------------------------------------------------------------
-// Evidence packet
+// Attachments / evidence
 // ----------------------------------------------------------------------------
-
-export interface MilestoneEvidenceDto {
-  label: string;
+export interface MilestoneFileMetaDto {
   relPath: string;
   url: string;
-  mimeType: string;
   originalName: string;
+  storedName: string;
+  mimeType: string;
   sizeBytes: number;
-  uploadedAt: ISODateString;
+  uploadedAt?: ISODateString;
+  label?: string;
+}
+
+export interface MilestoneAttachmentDto {
+  id?: string;
+  label: string;
+  file: MilestoneFileMetaDto;
+
+  storageKey?: string;
+  uploadedByUserId?: string;
+  uploadedByUsername?: string;
+  uploadedAt?: ISODateString;
 }
 
 // ----------------------------------------------------------------------------
-// Milestone DTO (FE)
+// Minimal user snapshot
 // ----------------------------------------------------------------------------
+export interface MilestoneUserMiniDto {
+  userId: string;
+  username: string;
 
-export type MilestoneSource = "rest" | "ws" | "system";
+  displayName?: string;
+  email?: string;
+  photoUrl?: string;
+}
 
+// ----------------------------------------------------------------------------
+// Milestone DTO
+// ----------------------------------------------------------------------------
 export interface MilestoneDto {
-  milestoneMongoId: string; // String(_id)
+  _id: string;
 
-  // Relations (string IDs)
-  workItemMongoId: string;
-  teamMongoId: string;
+  // grouping
+  teamCode: string;
+  teamMongoId?: string;
+  domain?: string;
 
-  // Owner (member who planned this)
-  userMongoId: string;
-
-  // Audit
-  createdByUserMongoId: string;
-  updatedByUserMongoId?: string;
-
-  requestId?: string;
-  source?: MilestoneSource;
-
-  // Planning fields
+  // content
   title: string;
-  notes?: string;
-
-  startAt: ISODateString;
-  endAt: ISODateString;
-  allDay: boolean;
-  timezone?: string;
+  description?: string;
 
   status: MilestoneStatus;
   priority: MilestonePriority;
 
-  // Optional progress target impact
-  progressTarget?: number;
+  // scheduling
+  targetAt: ISODateString;
+  completedAt?: ISODateString;
 
-  // Optional tags
-  tags?: string[];
+  // ownership
+  createdByUserId?: string;
+  createdByUsername?: string;
 
-  // Optional evidence
-  evidence?: MilestoneEvidenceDto[];
+  ownerUserId?: string | null;
+  ownerUsername?: string | null;
+  ownerUser?: MilestoneUserMiniDto | null;
 
-  // Timestamps
+  // optional participants
+  participantUserIds?: string[];
+  participantUsernames?: string[];
+  participantUsers?: MilestoneUserMiniDto[];
+
+  // optional attachments
+  attachments?: MilestoneAttachmentDto[];
+
+  // audit
   createdAt: ISODateString;
   updatedAt: ISODateString;
+  isActive?: boolean;
+}
+
+// ----------------------------------------------------------------------------
+// REST payloads
+// ----------------------------------------------------------------------------
+export interface MilestoneCreateRequest {
+  teamCode: string;
+
+  title: string;
+  description?: string;
+
+  status?: MilestoneStatus;
+  priority?: MilestonePriority;
+
+  targetAt: ISODateString;
+
+  ownerUserId?: string | null;
+  participantUserIds?: string[];
+}
+
+export interface MilestoneUpdateRequest {
+  title?: string;
+  description?: string;
+
+  status?: MilestoneStatus;
+  priority?: MilestonePriority;
+
+  targetAt?: ISODateString;
+  completedAt?: ISODateString;
+
+  ownerUserId?: string | null;
+  participantUserIds?: string[];
+}
+
+// ----------------------------------------------------------------------------
+// List filters
+// ----------------------------------------------------------------------------
+export interface MilestoneListQuery {
+  teamCode?: string;
+  teamMongoId?: string;
+
+  status?: MilestoneStatus;
+  priority?: MilestonePriority;
+
+  from?: ISODateString;
+  to?: ISODateString;
+
+  q?: string;
+
+  page?: number;
+  limit?: number;
 }

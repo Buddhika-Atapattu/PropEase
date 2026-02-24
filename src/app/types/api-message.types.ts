@@ -20,8 +20,8 @@ import type { BackEndPropertyData } from "../services/property/property.service"
 
 // Team Management DTOs (DTO-safe)
 import type {
-  TeamManagementDto
-} from "./team-management/team-main/team-management.types";
+  TeamMainDto
+} from "./team-management/teamMain/team-main.types";
 
 import { WorkEventDto } from './team-management/work-events/work-event.types';
 
@@ -173,8 +173,8 @@ export interface SystemData {
   files?: FileMetaPacket[];
 
   // Team Management
-  team?: TeamManagementDto;
-  teams?: TeamManagementDto[];
+  team?: TeamMainDto;
+  teams?: TeamMainDto[];
 
   // Team Tasks
   teamTask?: TeamTaskDto;

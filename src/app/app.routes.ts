@@ -422,142 +422,7 @@ export const routes: Routes = [
       // ───────────────────────────────────────────────────────────────────────
       // TEAM MANAGEMENT
       // ───────────────────────────────────────────────────────────────────────
-      {
-        path: 'team-management',
-        data: { title: 'TEAM MANAGEMENT' },
-        loadComponent: () =>
-          import( './pages/team-management/team-management.component' ).then(
-            m => m.TeamManagementComponent
-          ),
-        children: [
-          { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
 
-          // DASHBOARD (module landing)
-          {
-            path: 'dashboard',
-            data: {
-              title: 'DASHBOARD',
-              actionKeys: [
-                'team:created',
-                'team:updated',
-                'team:deleted',
-                'team:kpi.threshold.breached',
-                // If member activity/task events have no direct params, land here
-                'team:member.added',
-                'team:member.removed',
-                'team:member.updatd',
-              ],
-              actionKeyPriority: 70,
-            },
-            loadComponent: () =>
-              import( './pages/team-management/home/home.component' ).then( m => m.HomeComponent ),
-          },
-
-          // CREATE (no actionKeys)
-          {
-            path: 'create',
-            data: { title: 'CREATE' },
-            loadComponent: () =>
-              import( './pages/team-management/create/create.component' ).then( m => m.CreateComponent ),
-          },
-
-          // EDIT (no actionKeys)
-          {
-            path: 'edit/:teamId',
-            data: {
-              title: 'EDIT',
-              requiredParams: [ 'teamId' ],
-            },
-            loadComponent: () =>
-              import( './pages/team-management/edit/edit.component' ).then( m => m.EditComponent ),
-          },
-
-          // VIEW (best landing when teamId is provided)
-          {
-            path: 'view/:teamId',
-            data: {
-              title: 'VIEW',
-              actionKeys: [ 'team:created', 'team:updated' ],
-              actionKeyPriority: 100,
-              requiredParams: [ 'teamId' ],
-            },
-            loadComponent: () =>
-              import( './pages/team-management/view/view.component' ).then( m => m.ViewComponent ),
-          },
-
-          // Member view (best landing when token provided by backend)
-          {
-            path: 'member/:token',
-            data: {
-              title: 'MEMBER VIEW',
-              actionKeys: [
-                'team:member.activities.added',
-                'team:member.activities.removed',
-                'team:member.activities.updated',
-              ],
-              actionKeyPriority: 100,
-              requiredParams: [ 'token' ],
-            },
-            loadComponent: () =>
-              import( './pages/team-management/member/member.component' ).then( m => m.MemberComponent ),
-          },
-
-          // Tasks area
-          {
-            path: 'assign-task/:teamId',
-            data: {
-              title: 'ASSIGN TASK',
-              requiredParams: [ 'teamId' ],
-            },
-            loadComponent: () =>
-              import( './pages/team-management/assignTask/assign-task.component' ).then(
-                m => m.AssignTaskComponent
-              ),
-            children: [
-              { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-
-              // Tasks dashboard (module landing)
-              {
-                path: 'dashboard',
-                data: {
-                  title: 'DASHBOARD',
-                  actionKeys: [
-                    'team:task.created',
-                    'team:task.assigned',
-                    'team:task.completed',
-                    'team:task.overdue',
-                  ],
-                  actionKeyPriority: 70,
-                },
-                loadComponent: () =>
-                  import( './pages/team-management/assignTask/taskHome/task-home.component' ).then(
-                    m => m.TaskHomeComponent
-                  ),
-              },
-
-              // Task view (best landing when taskId provided)
-              {
-                path: 'view/:taskId',
-                data: {
-                  title: 'TASK VIEW',
-                  actionKeys: [
-                    'team:task.created',
-                    'team:task.assigned',
-                    'team:task.completed',
-                    'team:task.overdue',
-                  ],
-                  actionKeyPriority: 100,
-                  requiredParams: [ 'taskId' ],
-                },
-                loadComponent: () =>
-                  import( './pages/team-management/assignTask/taskView/task-view.component' ).then(
-                    m => m.TaskViewComponent
-                  ),
-              },
-            ],
-          },
-        ],
-      },
 
       // ───────────────────────────────────────────────────────────────────────
       // NOTIFICATIONS CENTER (universal safe landing + fallback)
@@ -593,31 +458,12 @@ export const routes: Routes = [
               actionKeyPriority: 10,
             },
             loadComponent: () =>
-              import( './pages/notifications/notifications-main-page/notifications-main-page' ).then(
+              import( './pages/notifications/notifications-main-page' ).then(
                 m => m.NotificationsMainPage
               ),
           },
 
-          // Deleted/trash items (this will later become Recycle Bin UI)
-          {
-            path: 'deleted-items',
-            data: {
-              title: 'DELETE ITEM',
-              // If backend emits delete-like events without direct entity route,
-              // land here as "trash" UX.
-              actionKeys: [
-                'user:account.deleted',
-                'tenant:account.deleted',
-                'property:listing.deleted',
-                'lease:agreement.terminated',
-              ],
-              actionKeyPriority: 10,
-            },
-            loadComponent: () =>
-              import( './pages/notifications/deleted-item-notifications/deleted-item-notifications' ).then(
-                m => m.DeletedItemNotificationsPage
-              ),
-          },
+
         ],
       },
 

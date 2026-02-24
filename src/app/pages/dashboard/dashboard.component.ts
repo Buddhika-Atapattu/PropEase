@@ -14,13 +14,13 @@ import {
 } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import {
-  Router,
-  RouterModule,
-  NavigationStart,
-  NavigationEnd,
   NavigationCancel,
+  NavigationEnd,
   NavigationError,
-  Event as RouterEvent
+  NavigationStart,
+  Router,
+  Event as RouterEvent,
+  RouterModule
 } from '@angular/router';
 
 import { MatBadgeModule } from '@angular/material/badge';
@@ -38,7 +38,6 @@ import { User } from '../../services/APIs/apis.service';
 import { AssetUrlService } from '../../services/asset/asset-url.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { ExpandableService } from '../../services/expandable/expandable.service';
-import { NotificationService } from '../../services/notifications/notification-service';
 import { WindowsRefService } from '../../services/windowRef/windowRef.service';
 
 /* Fullscreen menu */
@@ -124,7 +123,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     private readonly zone: NgZone,
     private readonly dom: DomSanitizer,
     private readonly assets: AssetUrlService,
-    private readonly notificationService: NotificationService,
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
 

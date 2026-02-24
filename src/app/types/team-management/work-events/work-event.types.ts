@@ -1,132 +1,198 @@
 // Path: src/app/types/team-management/work-events/work-event.types.ts
-// =============================================================================
-// WorkEvent — Frontend Types (FE ↔ BE aligned)
-// -----------------------------------------------------------------------------
-// Mirrors backend DTO contract exported from:
-//   src/models/teamManagement/workEvent.model.ts  (WorkEventDto)
-// and uses shared enums from:
-//   - TeamMain: TeamDomain
-//   - WorkItem: WorkItemPriority / WorkItemStatus
-//
-// Rules:
-// - NO mongoose Types here (ObjectId => string)
-// - Dates are ISODateString (NOT Date objects)
-// - Optional fields are OMITTED (never undefined)
-// =============================================================================
+// ============================================================================
+// WorkEvent Types (Frontend Mirror) — DTO-safe contract
+// ----------------------------------------------------------------------------
+// Key rules
+// - No mongoose Types in FE
+// - IDs are string
+// - Dates are ISO strings
+// - exactOptionalPropertyTypes-safe: optional props must be omitted (not undefined)
+// ============================================================================
 
-import type { ISODateString } from "../../common";
-import type { TeamDomain } from "../team-main/team-management.types";
-import type {
-  WorkItemPriority,
-  WorkItemStatus,
-} from "../work-items/work-item.types";
+export type ISODateString = string;
 
-// ─────────────────────────────────────────────
+// ----------------------------------------------------------------------------
 // Enums
-// ─────────────────────────────────────────────
+// ----------------------------------------------------------------------------
+export const WORK_EVENT_TYPE = [
+  "meeting",
+  "deadline",
+  "milestone",
+  "site_visit",
+  "inspection",
+  "handover",
+  "call",
+  "note",
+  "other",
+] as const;
 
-export type WorkEventKind =
-  | "workitem_created"
-  | "status_changed"
-  | "priority_changed"
-  | "assigned_members_changed"
-  | "value_updated"
-  | "evidence_added"
-  | "comment_added"
-  | "team_changed"
-  | "domain_changed"
-  // KPI-ready extensions
-  | "sla_updated"
-  | "blocked"
-  | "unblocked"
-  | "timer_started"
-  | "timer_stopped"
-  | "completion_requested"
-  | "completion_confirmed"
-  | "completion_rejected"
-  | "reopened";
+export type WorkEventType = ( typeof WORK_EVENT_TYPE )[ number ];
 
-export type WorkEventSource = "ui" | "system" | "automation" | "import";
+export const WORK_EVENT_STATUS = [ "scheduled", "in_progress", "completed", "cancelled" ] as const;
+export type WorkEventStatus = ( typeof WORK_EVENT_STATUS )[ number ];
 
-// ─────────────────────────────────────────────
-// Delta + Snapshot
-// ─────────────────────────────────────────────
+export const WORK_EVENT_VISIBILITY = [ "team", "private", "company" ] as const;
+export type WorkEventVisibility = ( typeof WORK_EVENT_VISIBILITY )[ number ];
 
-export interface WorkEventDeltaDto {
-  /** ex: "status", "priority", "assignedMembers", "sla.dueAt" */
-  field: string;
-
-  from?: unknown;
-  to?: unknown;
+// ----------------------------------------------------------------------------
+// Location / Address
+// ----------------------------------------------------------------------------
+export interface GeoPointDto {
+  lat: number;
+  lng: number;
 }
 
-export interface WorkEventSnapshotDto {
-  teamName?: string;
-  teamCode?: string;
-
-  domain?: TeamDomain;
-
-  workItemName?: string;
-  workItemType?: string;
-
-  assigneeUserIds?: string[];
-  assigneeUsernames?: string[];
-
-  priority?: WorkItemPriority;
-  status?: WorkItemStatus;
+export interface EventAddressDto {
+  line1?: string;
+  line2?: string;
+  city?: string;
+  district?: string;
+  province?: string;
+  postalCode?: string;
+  country?: string;
 }
 
-// ─────────────────────────────────────────────
-// DTO (Lean-safe API contract) ✅
-// ─────────────────────────────────────────────
+// ----------------------------------------------------------------------------
+// Attachments / evidence
+// ----------------------------------------------------------------------------
+export interface EventFileMetaDto {
+  relPath: string;
+  url: string;
+  originalName: string;
+  storedName: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedAt?: ISODateString;
+  label?: string;
+}
 
+export interface WorkEventAttachmentDto {
+  id?: string;
+  label: string;
+  file: EventFileMetaDto;
+
+  storageKey?: string;
+  uploadedByUserId?: string;
+  uploadedByUsername?: string;
+  uploadedAt?: ISODateString;
+}
+
+// ----------------------------------------------------------------------------
+// Minimal user snapshot
+// ----------------------------------------------------------------------------
+export interface WorkEventUserMiniDto {
+  userId: string;
+  username: string;
+
+  displayName?: string;
+  email?: string;
+  photoUrl?: string;
+}
+
+// ----------------------------------------------------------------------------
+// WorkEvent DTO
+// ----------------------------------------------------------------------------
 export interface WorkEventDto {
-  workItemId: string;
-  workItemMongoId: string;
+  _id: string;
 
-  teamId: string;
-  teamMongoId: string;
+  // grouping
+  teamCode: string;
+  teamMongoId?: string;
+  domain?: string;
 
-  domain: TeamDomain;
+  // content
+  title: string;
+  description?: string;
 
-  kind: WorkEventKind;
+  type: WorkEventType;
+  status: WorkEventStatus;
+  visibility?: WorkEventVisibility;
 
-  actorUserId?: string;
-  actorUsername?: string;
-  actorRole?: string;
+  // scheduling
+  startAt: ISODateString;
+  endAt?: ISODateString;
 
-  source?: WorkEventSource;
-  requestId?: string;
-  deviceId?: string;
+  // ownership
+  createdByUserId?: string;
+  createdByUsername?: string;
 
-  fromStatus?: WorkItemStatus;
-  toStatus?: WorkItemStatus;
+  hostUserId?: string | null;
+  hostUsername?: string | null;
+  hostUser?: WorkEventUserMiniDto | null;
 
-  fromPriority?: WorkItemPriority;
-  toPriority?: WorkItemPriority;
+  participantUserIds?: string[];
+  participantUsernames?: string[];
+  participantUsers?: WorkEventUserMiniDto[];
 
-  delta?: WorkEventDeltaDto[];
+  // optional location/address
+  location?: GeoPointDto | null;
+  address?: EventAddressDto | null;
 
-  payload?: Record<string, unknown>;
+  // attachments
+  attachments?: WorkEventAttachmentDto[];
 
-  snapshot?: WorkEventSnapshotDto;
-
+  // audit
   createdAt: ISODateString;
-
-  year: number;
-  month: number;
-  day: number;
-  yearMonth: string;
-
-  weekOfYear?: number;
-  hour?: number;
+  updatedAt: ISODateString;
+  isActive?: boolean;
 }
 
-// ─────────────────────────────────────────────
-// Common list wrapper (matches your backend list style)
-// ─────────────────────────────────────────────
+// ----------------------------------------------------------------------------
+// REST payloads
+// ----------------------------------------------------------------------------
+export interface WorkEventCreateRequest {
+  teamCode: string;
 
-export interface ListResult<T> {
-  items: T[];
-  other: { total: number };
+  title: string;
+  description?: string;
+
+  type: WorkEventType;
+  status?: WorkEventStatus;
+  visibility?: WorkEventVisibility;
+
+  startAt: ISODateString;
+  endAt?: ISODateString;
+
+  hostUserId?: string | null;
+  participantUserIds?: string[];
+
+  location?: GeoPointDto | null;
+  address?: EventAddressDto | null;
+}
+
+export interface WorkEventUpdateRequest {
+  title?: string;
+  description?: string;
+
+  type?: WorkEventType;
+  status?: WorkEventStatus;
+  visibility?: WorkEventVisibility;
+
+  startAt?: ISODateString;
+  endAt?: ISODateString;
+
+  hostUserId?: string | null;
+  participantUserIds?: string[];
+
+  location?: GeoPointDto | null;
+  address?: EventAddressDto | null;
+}
+
+// ----------------------------------------------------------------------------
+// List filters (common calendar style)
+// ----------------------------------------------------------------------------
+export interface WorkEventListQuery {
+  teamCode?: string;
+  teamMongoId?: string;
+
+  type?: WorkEventType;
+  status?: WorkEventStatus;
+
+  from?: ISODateString;
+  to?: ISODateString;
+
+  q?: string;
+
+  page?: number;
+  limit?: number;
 }

@@ -1,347 +1,325 @@
-import { isPlatformBrowser } from "@angular/common";
+// Path: src/app/services/notifications/notification-socket.service.ts
+// =============================================================================
+// NotificationSocketService (WS Push + WS RPC)
+// =============================================================================
+
 import { Inject, Injectable, PLATFORM_ID } from "@angular/core";
-import { Observable, ReplaySubject, Subject } from "rxjs";
+import { isPlatformBrowser } from "@angular/common";
+import { BehaviorSubject, Observable, Subject } from "rxjs";
+import type { Socket } from "socket.io-client";
 
-import { environment } from "../../../environments/environment";
+import { SocketService } from "../socket/socket-service";
 
-import type { NotifyNewPayload, NotifyPatchPayload, NotifyCountPayload, NotifyBulkPayload } from "../../types/notifications/notification.ws.types";
+import type {
+  NotificationInboxItemDto,
+  NotificationCountResponse,
+  NotificationLoadFilters,
+} from "../../types/notifications/notification.types";
 
-/* ============================================================================
- * NotificationSocketService (Frontend)
- * ----------------------------------------------------------------------------
- * SINGLE gateway for Notification Hub WebSocket communication.
- *
- * - Holds event names inside the class (single source of truth)
- * - Exposes typed Observables to the rest of the app
- * - SSR/Electron safe: does not connect unless in browser
- * - No any, class-based only
+/* =============================================================================
+ * A) WS Push events (must match backend NotificationEvents)
  * ========================================================================== */
 
-type SocketIoClient = {
-  on: (event: string, cb: (payload: unknown) => void) => void;
-  off: (event: string) => void;
-  emit: (event: string, payload?: unknown) => void;
-  connect: () => void;
-  disconnect: () => void;
-  connected: boolean;
-};
+export class NotificationWsPushEvents {
+  private constructor() {}
+
+  public static readonly NEW = "notify:new";
+  public static readonly PATCH = "notify:patch";
+  public static readonly COUNT = "notify:count";
+  public static readonly BULK = "notify:bulk";
+}
+
+/* =============================================================================
+ * B) WS RPC events (MUST match backend NotificationRpcEvents exactly)
+ * Backend source:
+ *   src/socket/events/notifications/notification.rpc.events.ts
+ * ========================================================================== */
+
+export class NotificationWsRpcEvents {
+  private constructor() {}
+
+  public static readonly INBOX_LIST = "notification:rpc:inbox:list";
+  public static readonly INBOX_COUNTS = "notification:rpc:inbox:counts";
+  public static readonly MARK_READ = "notification:rpc:mark:read";
+  public static readonly MARK_ALL_READ = "notification:rpc:mark:all-read";
+}
+
+/* =============================================================================
+ * C) WS RPC payload shapes (FE <-> BE)
+ * ========================================================================== */
+
+export type NotificationScope = "user" | "role" | "company";
+export type NotificationPriorityScope = "all" | "prioritized" | "unprioritized";
+
+export type WsAck<T> =
+  | { ok: true; data: T }
+  | { ok: false; message: string };
+
+export interface WsInboxListReq {
+  scope: NotificationScope;
+  priorityScope: NotificationPriorityScope;
+  page: number;
+  limit: number;
+  filters: NotificationLoadFilters;
+}
+
+export interface WsInboxListRes {
+  items: NotificationInboxItemDto[];
+  other: { total: number; unread: number; prioritized: number; unprioritized: number };
+}
+
+export interface WsInboxCountsReq {
+  scope: NotificationScope;
+  priorityScope: NotificationPriorityScope;
+  filters: NotificationLoadFilters;
+}
+
+export interface WsInboxCountsRes {
+  total: number;
+  unread: number;
+  prioritized: number;
+  unprioritized: number;
+}
+
+export interface WsMarkReadReq {
+  inboxId: string;
+}
+
+export interface WsMarkReadRes {
+  changed: boolean;
+}
+
+export interface WsMarkAllReadRes {
+  changedCount: number;
+}
+
+/* =============================================================================
+ * D) Push payloads (match backend notification.events.ts)
+ * ========================================================================== */
+
+export interface NotifyNewPayload {
+  item: NotificationInboxItemDto;
+  count?: NotificationCountResponse;
+}
+
+export interface NotifyPatchPayload {
+  inboxId: string;
+  patch: {
+    isRead?: boolean;
+    readAt?: string;
+
+    isDeleted?: boolean;
+
+    isArchived?: boolean;
+    archivedAt?: string;
+  };
+  count?: NotificationCountResponse;
+}
+
+export type NotifyCountPayload = NotificationCountResponse;
+
+export interface NotifyBulkPayload {
+  reason: "bulk-update" | "server-sync" | "policy-change" | "unknown";
+  count?: NotificationCountResponse;
+}
 
 @Injectable({ providedIn: "root" })
 export class NotificationSocketService {
-  // ---------------------------------------------------------------------------
-  // 01) Event names (kept INSIDE class as you requested)
-  // ---------------------------------------------------------------------------
-
-  private readonly EVT_NEW = "notify:new";
-  private readonly EVT_PATCH = "notify:patch";
-  private readonly EVT_COUNT = "notify:count";
-  private readonly EVT_BULK = "notify:bulk";
-
-  // Optional system events (useful for monitoring)
-  private readonly EVT_CONNECT = "connect";
-  private readonly EVT_DISCONNECT = "disconnect";
-  private readonly EVT_CONNECT_ERROR = "connect_error";
-
-  // ---------------------------------------------------------------------------
-  // 02) Streams
-  // ---------------------------------------------------------------------------
-
-  private readonly new$ = new Subject<NotifyNewPayload>();
-  private readonly patch$ = new Subject<NotifyPatchPayload>();
-  private readonly count$ = new ReplaySubject<NotifyCountPayload>(1); // keep latest badge count
-  private readonly bulk$ = new Subject<NotifyBulkPayload>();
-
-  // Connection state streams
-  private readonly connected$ = new ReplaySubject<boolean>(1);
-
-  // ---------------------------------------------------------------------------
-  // 03) Runtime state
-  // ---------------------------------------------------------------------------
-
   private readonly isBrowser: boolean;
-  private socket: SocketIoClient | null = null;
-  private started = false;
 
-  // Auth token is optional here; depends on your backend socket auth design.
-  private authToken: string | null = null;
+  private readonly connected$ = new BehaviorSubject<boolean>(false);
 
-  constructor(@Inject(PLATFORM_ID) platformId: object) {
+  private readonly onNew$ = new Subject<NotifyNewPayload>();
+  private readonly onPatch$ = new Subject<NotifyPatchPayload>();
+  private readonly onCount$ = new Subject<NotifyCountPayload>();
+  private readonly onBulk$ = new Subject<NotifyBulkPayload>();
+
+  public constructor(
+    private readonly socketService: SocketService,
+    @Inject(PLATFORM_ID) platformId: object
+  ) {
     this.isBrowser = isPlatformBrowser(platformId);
-    this.connected$.next(false);
+    this.bindConnectionFlags();
+    this.bindPushEvents();
   }
 
-  // ---------------------------------------------------------------------------
-  // Public Observables (consumers subscribe here)
-  // ---------------------------------------------------------------------------
-
-  public onNew$(): Observable<NotifyNewPayload> {
-    return this.new$.asObservable();
-  }
-
-  public onPatch$(): Observable<NotifyPatchPayload> {
-    return this.patch$.asObservable();
-  }
-
-  public onCount$(): Observable<NotifyCountPayload> {
-    return this.count$.asObservable();
-  }
-
-  public onBulk$(): Observable<NotifyBulkPayload> {
-    return this.bulk$.asObservable();
-  }
-
-  public onConnected$(): Observable<boolean> {
+  public isConnected$(): Observable<boolean> {
     return this.connected$.asObservable();
   }
 
-  // ---------------------------------------------------------------------------
-  // Lifecycle
-  // ---------------------------------------------------------------------------
+  public onNewNotification$(): Observable<NotifyNewPayload> {
+    return this.onNew$.asObservable();
+  }
 
-  /**
-   * Call once after login / when you have a valid auth token.
-   * Safe to call multiple times; it will reconnect if token changed.
-   */
-  public async start(token?: string): Promise<void> {
+  public onPatchNotification$(): Observable<NotifyPatchPayload> {
+    return this.onPatch$.asObservable();
+  }
+
+  public onCountUpdate$(): Observable<NotifyCountPayload> {
+    return this.onCount$.asObservable();
+  }
+
+  public onBulkUpdate$(): Observable<NotifyBulkPayload> {
+    return this.onBulk$.asObservable();
+  }
+
+  public async rpcInboxList(req: WsInboxListReq): Promise<WsInboxListRes> {
+    const safeReq = this.safeListReq(req);
+    const ack = await this.emitAck<WsInboxListReq, WsInboxListRes>(
+      NotificationWsRpcEvents.INBOX_LIST,
+      safeReq,
+      15000
+    );
+    return this.mustOk(ack);
+  }
+
+  public async rpcInboxCounts(req: WsInboxCountsReq): Promise<WsInboxCountsRes> {
+    const safeReq = this.safeCountsReq(req);
+    const ack = await this.emitAck<WsInboxCountsReq, WsInboxCountsRes>(
+      NotificationWsRpcEvents.INBOX_COUNTS,
+      safeReq,
+      12000
+    );
+    return this.mustOk(ack);
+  }
+
+  public async rpcMarkRead(inboxId: string): Promise<WsMarkReadRes> {
+    const req: WsMarkReadReq = { inboxId: this.safeId(inboxId, "inboxId") };
+    const ack = await this.emitAck<WsMarkReadReq, WsMarkReadRes>(
+      NotificationWsRpcEvents.MARK_READ,
+      req,
+      12000
+    );
+    return this.mustOk(ack);
+  }
+
+  public async rpcMarkAllRead(): Promise<WsMarkAllReadRes> {
+    const ack = await this.emitAck<object, WsMarkAllReadRes>(
+      NotificationWsRpcEvents.MARK_ALL_READ,
+      {},
+      15000
+    );
+    return this.mustOk(ack);
+  }
+
+  private bindConnectionFlags(): void {
     if (!this.isBrowser) return;
 
-    const nextToken = this.safeString(token);
-    if (nextToken) this.authToken = nextToken;
+    const s = this.tryGetSocket();
+    if (!s) return;
 
-    // if already started and socket exists, just ensure connected
-    if (this.started && this.socket) {
-      if (!this.socket.connected) this.socket.connect();
-      return;
-    }
-
-    this.started = true;
-
-    try {
-      this.socket = await this.buildSocketClient();
-      this.bindCoreEvents(this.socket);
-      this.bindNotificationEvents(this.socket);
-
-      this.socket.connect();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      // eslint-disable-next-line no-console
-      console.error(`[Error:] [NotificationSocketService] start failed: ${msg}\n`);
-      this.connected$.next(false);
-    }
+    s.on("connect", () => this.connected$.next(true));
+    s.on("disconnect", () => this.connected$.next(false));
   }
 
-  public stop(): void {
-    if (!this.socket) return;
+  private bindPushEvents(): void {
+    if (!this.isBrowser) return;
 
-    try {
-      this.unbindNotificationEvents(this.socket);
-      this.socket.disconnect();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
-      // eslint-disable-next-line no-console
-      console.error(`[Error:] [NotificationSocketService] stop failed: ${msg}\n`);
-    } finally {
-      this.socket = null;
-      this.started = false;
-      this.connected$.next(false);
-    }
+    const s = this.tryGetSocket();
+    if (!s) return;
+
+    s.on(NotificationWsPushEvents.NEW, (p: NotifyNewPayload) => this.onNew$.next(p));
+    s.on(NotificationWsPushEvents.PATCH, (p: NotifyPatchPayload) => this.onPatch$.next(p));
+    s.on(NotificationWsPushEvents.COUNT, (p: NotifyCountPayload) => this.onCount$.next(p));
+    s.on(NotificationWsPushEvents.BULK, (p: NotifyBulkPayload) => this.onBulk$.next(p));
   }
 
-  public isConnected(): boolean {
-    return this.socket?.connected === true;
+  private tryGetSocket(): Socket | null {
+    const holder = this.socketService as unknown as { socket?: unknown };
+    if (!holder.socket) return null;
+    return holder.socket as Socket;
   }
 
-  // ---------------------------------------------------------------------------
-  // Optional outbound emits (if later needed)
-  // ----------------------------------------------------------------------------
-  // Today your backend pushes deltas; UI doesn't need to emit notification events.
-  // But keeping a safe hook helps future features (ack, preferences, etc.)
-  // ---------------------------------------------------------------------------
-
-  public emitClientPing(): void {
-    if (!this.socket) return;
-    this.socket.emit("notify:client-ping", { at: new Date().toISOString() });
+  private requireSocket(): Socket {
+    const s = this.tryGetSocket();
+    if (!s) throw new Error("NotificationSocketService: socket not ready");
+    return s;
   }
 
-  // ---------------------------------------------------------------------------
-  // Socket factory (lazy import for SSR safety)
-  // ---------------------------------------------------------------------------
+  private emitAck<Req, Res>(event: string, payload: Req, timeoutMs: number): Promise<WsAck<Res>> {
+    const s = this.requireSocket();
 
-  private async buildSocketClient(): Promise<SocketIoClient> {
-    // Dynamic import prevents SSR crash.
-    const mod = await import("socket.io-client");
-    const io = mod.io;
+    return new Promise<WsAck<Res>>((resolve) => {
+      let done = false;
 
-    const url = this.pickSocketUrl();
+      const t = window.setTimeout(() => {
+        if (done) return;
+        done = true;
+        resolve({ ok: false, message: `WS timeout for event: ${event}` });
+      }, Math.max(1000, timeoutMs));
 
-    // If your backend expects token in auth, this is correct for Socket.IO v4+
-    const socket = io(url, {
-      transports: ["websocket"],
-      autoConnect: false,
-      auth: this.authToken ? { token: this.authToken } : undefined
-    }) as unknown as SocketIoClient;
+      s.emit(event, payload, (ack: WsAck<Res>) => {
+        if (done) return;
+        done = true;
+        window.clearTimeout(t);
 
-    return socket;
-  }
+        if (!ack || typeof ack !== "object") {
+          resolve({ ok: false, message: `Invalid ACK for event: ${event}` });
+          return;
+        }
 
-  private pickSocketUrl(): string {
-    // Prefer a dedicated socket URL if you have it, otherwise fallback to API base.
-    const envAny = environment as unknown as { SOCKET_URL?: string; WS_URL?: string; API_BASE_URL?: string };
-
-    const v1 = this.safeString(envAny.SOCKET_URL);
-    if (v1) return v1;
-
-    const v2 = this.safeString(envAny.WS_URL);
-    if (v2) return v2;
-
-    const v3 = this.safeString(envAny.API_BASE_URL);
-    if (v3) return v3;
-
-    // worst-case fallback (still valid local dev)
-    return "http://localhost:3000";
-  }
-
-  // ---------------------------------------------------------------------------
-  // Binding
-  // ---------------------------------------------------------------------------
-
-  private bindCoreEvents(sock: SocketIoClient): void {
-    sock.on(this.EVT_CONNECT, () => {
-      this.connected$.next(true);
-      // eslint-disable-next-line no-console
-      console.log(`[Info:] [NotificationSocketService] connected\n`);
-    });
-
-    sock.on(this.EVT_DISCONNECT, () => {
-      this.connected$.next(false);
-      // eslint-disable-next-line no-console
-      console.log(`[Warning:] [NotificationSocketService] disconnected\n`);
-    });
-
-    sock.on(this.EVT_CONNECT_ERROR, (p: unknown) => {
-      const msg = this.safeString((p as { message?: unknown } | null)?.message);
-      // eslint-disable-next-line no-console
-      console.error(`[Error:] [NotificationSocketService] connect_error: ${msg || "unknown"}\n`);
-      this.connected$.next(false);
+        resolve(ack);
+      });
     });
   }
 
-  private bindNotificationEvents(sock: SocketIoClient): void {
-    sock.on(this.EVT_NEW, (payload: unknown) => {
-      const p = this.asNotifyNew(payload);
-      if (!p) return;
-      this.new$.next(p);
-
-      // optional: server can include count
-      if (p.count) this.count$.next(p.count);
-    });
-
-    sock.on(this.EVT_PATCH, (payload: unknown) => {
-      const p = this.asNotifyPatch(payload);
-      if (!p) return;
-      this.patch$.next(p);
-
-      if (p.count) this.count$.next(p.count);
-    });
-
-    sock.on(this.EVT_COUNT, (payload: unknown) => {
-      const p = this.asNotifyCount(payload);
-      if (!p) return;
-      this.count$.next(p);
-    });
-
-    sock.on(this.EVT_BULK, (payload: unknown) => {
-      const p = this.asNotifyBulk(payload);
-      if (!p) return;
-      this.bulk$.next(p);
-
-      if (p.count) this.count$.next(p.count);
-    });
+  private mustOk<T>(ack: WsAck<T>): T {
+    if (!ack.ok) throw new Error(ack.message || "WS request failed");
+    return ack.data;
   }
 
-  private unbindNotificationEvents(sock: SocketIoClient): void {
-    sock.off(this.EVT_NEW);
-    sock.off(this.EVT_PATCH);
-    sock.off(this.EVT_COUNT);
-    sock.off(this.EVT_BULK);
+  private safeId(v: unknown, label: string): string {
+    const s = typeof v === "string" ? v.trim() : "";
+    if (!s) throw new Error(`${label} is required`);
+    return s;
   }
 
-  // ---------------------------------------------------------------------------
-  // Payload guards (no any; minimal runtime validation)
-  // ---------------------------------------------------------------------------
-
-  private asNotifyNew(v: unknown): NotifyNewPayload | null {
-    if (!this.isObject(v)) return null;
-    const item = (v as { item?: unknown }).item;
-    if (!this.isObject(item)) return null;
-
-    const out: NotifyNewPayload = { item: item as any }; // typed via DTO contract; shape is validated elsewhere
-
-    const count = (v as { count?: unknown }).count;
-    if (this.isObject(count)) out.count = count as any;
-
-    return out;
-  }
-
-  private asNotifyPatch(v: unknown): NotifyPatchPayload | null {
-    if (!this.isObject(v)) return null;
-
-    const inboxId = this.safeString((v as { inboxId?: unknown }).inboxId);
-    if (!inboxId) return null;
-
-    const patch = (v as { patch?: unknown }).patch;
-    if (!this.isObject(patch)) return null;
-
-    const out: NotifyPatchPayload = { inboxId, patch: patch as any };
-
-    const count = (v as { count?: unknown }).count;
-    if (this.isObject(count)) out.count = count as any;
-
-    return out;
-  }
-
-  private asNotifyCount(v: unknown): NotifyCountPayload | null {
-    if (!this.isObject(v)) return null;
-
-    const total = this.safeInt((v as { total?: unknown }).total);
-    const unread = this.safeInt((v as { unread?: unknown }).unread);
-
-    if (total === null || unread === null) return null;
-
-    return { total, unread };
-  }
-
-  private asNotifyBulk(v: unknown): NotifyBulkPayload | null {
-    if (!this.isObject(v)) return null;
-
-    const reason = this.safeString((v as { reason?: unknown }).reason) as NotifyBulkPayload["reason"];
-    if (!reason) return null;
-
-    const out: NotifyBulkPayload = { reason };
-
-    const count = (v as { count?: unknown }).count;
-    if (this.isObject(count)) out.count = count as any;
-
-    return out;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Utils (class-based)
-  // ---------------------------------------------------------------------------
-
-  private isObject(v: unknown): v is Record<string, unknown> {
-    return typeof v === "object" && v !== null;
-  }
-
-  private safeString(v: unknown): string {
-    if (typeof v === "string") return v.trim();
-    if (typeof v === "number") return String(v);
-    return "";
-  }
-
-  private safeInt(v: unknown): number | null {
+  private safePage(v: unknown): number {
     const n = typeof v === "number" ? v : Number(v);
-    if (!Number.isFinite(n)) return null;
+    if (!Number.isFinite(n) || n < 1) return 1;
     return Math.floor(n);
+  }
+
+  private safeLimit(v: unknown): number {
+    const n = typeof v === "number" ? v : Number(v);
+    if (!Number.isFinite(n) || n < 1) return 10;
+    return Math.min(Math.floor(n), 100);
+  }
+
+  private safeFilters(filters: NotificationLoadFilters | null | undefined): NotificationLoadFilters {
+    const f = filters && typeof filters === "object" ? filters : {};
+    return f;
+  }
+
+  private safeScope(v: unknown): NotificationScope {
+    if (v === "user" || v === "role" || v === "company") return v;
+    return "user";
+  }
+
+  private safePriority(v: unknown): NotificationPriorityScope {
+    if (v === "all" || v === "prioritized" || v === "unprioritized") return v;
+    return "all";
+  }
+
+  private safeListReq(req: WsInboxListReq): WsInboxListReq {
+    if (!req) throw new Error("list request is required");
+
+    return {
+      scope: this.safeScope(req.scope),
+      priorityScope: this.safePriority(req.priorityScope),
+      page: this.safePage(req.page),
+      limit: this.safeLimit(req.limit),
+      filters: this.safeFilters(req.filters),
+    };
+  }
+
+  private safeCountsReq(req: WsInboxCountsReq): WsInboxCountsReq {
+    if (!req) throw new Error("counts request is required");
+
+    return {
+      scope: this.safeScope(req.scope),
+      priorityScope: this.safePriority(req.priorityScope),
+      filters: this.safeFilters(req.filters),
+    };
   }
 }

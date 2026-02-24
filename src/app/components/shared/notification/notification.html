@@ -97,33 +97,33 @@
       <!-- Direct tab -->
       <ng-container *ngIf="activeTab === 'direct'; else overallTab">
         <ng-container
-          *ngIf="(directNotifications$ | async)?.length; else empty"
+          *ngIf="(directItems$ | async)?.length; else empty"
         >
           <div
             class="notif-item"
-            *ngFor="let n of directNotifications$ | async; trackBy: trackById"
-            [class.unread]="!n.userState?.isRead"
+            *ngFor="let n of directItems$ | async; trackBy: trackById"
+            [class.unread]="!n.isRead"
             (click)="markOneRead(n)"
             (keydown.enter)="markOneRead(n)"
             tabindex="0"
             role="listitem"
-            [attr.aria-label]="(n.title || 'Notification') + ', ' + (n.severity || 'info')"
+            [attr.aria-label]="(n.notification.title || 'Notification') + ', ' + (n.notification.severity || 'info')"
           >
-            <div class="avatar" [attr.data-severity]="n.severity">
+            <div class="avatar" [attr.data-severity]="n.notification.severity">
               <!-- <mat-icon aria-hidden="true">{{ iconFor(n) }}</mat-icon> -->
-              <mat-icon aria-hidden="true">{{ n.icon }}</mat-icon>
+              <mat-icon aria-hidden="true">{{ n.notification.icon }}</mat-icon>
             </div>
 
             <div class="content">
               <div class="row-1">
-                <strong class="title">{{ n.title }}</strong>
-                <span class="time">{{ n.createdAt | date:'shortTime' }}</span>
+                <strong class="title">{{ n.notification.title }}</strong>
+                <span class="time">{{ n.notification.createdAt | date:'shortTime' }}</span>
               </div>
 
-              <div class="body">{{ n.body }}</div>
+              <div class="body">{{ n.notification.body }}</div>
 
               <div class="meta">
-                <span class="pill">{{ n.type || 'general' }}</span>
+                <span class="pill">{{ n.notification.category  }}</span>
               </div>
             </div>
           </div>
@@ -133,33 +133,33 @@
       <!-- Overall tab -->
       <ng-template #overallTab>
         <ng-container
-          *ngIf="(overallNotifications$ | async)?.length; else empty"
+          *ngIf="(overallItems$ | async)?.length; else empty"
         >
           <div
             class="notif-item"
-            *ngFor="let n of overallNotifications$ | async; trackBy: trackById"
-            [class.unread]="!n.userState?.isRead"
+            *ngFor="let n of overallItems$ | async; trackBy: trackById"
+            [class.unread]="!n.isRead"
             (click)="markOneRead(n)"
             (keydown.enter)="markOneRead(n)"
             tabindex="0"
             role="listitem"
-            [attr.aria-label]="(n.title || 'Notification') + ', ' + (n.severity || 'info')"
+            [attr.aria-label]="(n.notification.title || 'Notification') + ', ' + (n.notification.severity || 'info')"
           >
-            <div class="avatar" [attr.data-severity]="n.severity">
+            <div class="avatar" [attr.data-severity]="n.notification.severity">
               <!-- <mat-icon aria-hidden="true">{{ iconFor(n) }}</mat-icon> -->
-              <mat-icon aria-hidden="true">{{ n.icon }}</mat-icon>
+              <mat-icon aria-hidden="true">{{ n.notification.icon }}</mat-icon>
             </div>
 
             <div class="content">
               <div class="row-1">
-                <strong class="title">{{ n.title }}</strong>
-                <span class="time">{{ n.createdAt | date:'shortTime' }}</span>
+                <strong class="title">{{ n.notification.title }}</strong>
+                <span class="time">{{ n.notification.createdAt | date:'shortTime' }}</span>
               </div>
 
-              <div class="body">{{ n.body }}</div>
+              <div class="body">{{ n.notification.body }}</div>
 
               <div class="meta">
-                <span class="pill">{{ n.category }}</span>
+                <span class="pill">{{ n.notification.category }}</span>
               </div>
             </div>
           </div>

@@ -1,26 +1,30 @@
 // Path: src/app/types/recyclebin/recyclebin.types.ts
 // =============================================================================
-// RecycleBin — Frontend Contracts (FE Mirror of Backend)
+// RecycleBin — Frontend Contracts / DTOs / Request Shapes (FE-FRIENDLY MIRROR)
 // -----------------------------------------------------------------------------
-// PURPOSE
-// - This file is the FRONTEND mirror of the BACKEND canonical recycle-bin contract.
-// - No Mongo types here (no ObjectId, no Date objects). Use string ids + ISO strings.
+// ✅ Goal
+// - Mirror backend recyclebin contracts but remove backend-only dependencies
+// - FE uses string IDs + ISO date strings
 //
-// IMPORTANT (PropEase rules)
-// - exactOptionalPropertyTypes-safe:
-//   - optional fields must be omitted, NEVER set to undefined.
+// ✅ Key rules
+// - Dates are ISO strings (ISODateString)
+// - Mongo _id is exposed as entryId string
+// - Optional fields are OMITTED (never send undefined)
 // =============================================================================
 
+// IMPORTANT:
+// Keep these imports aligned with your FRONTEND common types.
+// If your FE uses a different path, update imports accordingly.
 import type { AuthUser, FileMetaPacket } from "../common";
 
 // =============================================================================
 // 0) Shared primitives
 // =============================================================================
 
-/** ISO string used across FE/BE */
+/** Your system uses ISO strings heavily for FE/API */
 export type ISODateString = string;
 
-/** Must match backend RecycleBinStatus union exactly */
+/** Matches the backend model RecycleBinStatus union exactly */
 export type RecycleBinStatus =
   | "recording"
   | "recorded"
@@ -36,9 +40,15 @@ export type RecycleBinStatus =
 export type RecycleSourceKey = string;
 
 // =============================================================================
-// 1) DTO Shapes (API/FE)
+// 1) DTO Shapes (Frontend/API)
 // =============================================================================
 
+/**
+ * Canonical DTO for a recycle bin entry for API/FE.
+ * - Dates are ISO strings
+ * - Mongo _id is exposed as entryId string
+ * - Mirrors the backend model fields 1:1 (but DTO conversions already applied)
+ */
 export interface RecycleBinEntryDto {
   entryId: string;
 
@@ -57,13 +67,7 @@ export interface RecycleBinEntryDto {
   filesDirRelPath: string;
 
   files: FileMetaPacket[];
-
-  /**
-   * NOTE
-   * - backend entry has snapshotData in the DB record, but list screens should avoid loading it.
-   * - for snapshot preview, use /:entryId/snapshot which returns snapshotData separately.
-   */
-  snapshotData?: Record<string, unknown>;
+  snapshotData: Record<string, unknown>;
 
   tags?: string[];
   module?: string;
@@ -80,8 +84,8 @@ export interface RecycleBinEntryDto {
 }
 
 /**
- * Lightweight DTO for list screens (preferred).
- * Mirrors backend list-item DTO: excludes snapshotData
+ * Lightweight DTO for list screens (faster + smaller payload).
+ * Mirrors the backend list item but intentionally excludes snapshotData.
  */
 export interface RecycleBinListItemDto {
   entryId: string;
@@ -109,12 +113,21 @@ export interface RecycleBinListItemDto {
   purgedAtIso?: ISODateString;
 }
 
+/**
+ * Snapshot read response used by "Preview" UI.
+ * - snapshotData prefers disk snapshot.json, but API returns the final resolved data
+ * - meta is loaded from meta.json (or fallback object)
+ */
 export interface RecycleBinSnapshotReadDto {
   entry: RecycleBinEntryDto;
   snapshotData: Record<string, unknown>;
   meta: Record<string, unknown>;
 }
 
+/**
+ * Restore prepare response
+ * - Caller uses snapshotData + files manifest to re-create record and move files back
+ */
 export interface RecycleBinRestorePrepareDto {
   entry: RecycleBinEntryDto;
   snapshotData: Record<string, unknown>;
@@ -122,36 +135,68 @@ export interface RecycleBinRestorePrepareDto {
 }
 
 // =============================================================================
-// 2) Filters / List / Count
+// 2) FE Request / Response payloads (Controller-facing contracts)
 // =============================================================================
 
+/**
+ * Listing filters (aligned to backend model fields)
+ * NOTE: All fields are optional; omit when not used.
+ */
 export interface RecycleBinListFilters {
   sourceKey?: string;
-  search?: string;
+  search?: string; // label/refId/deletedBy.username
 
   status?: RecycleBinStatus;
   deletedByUsername?: string;
 
   deletedFromIso?: ISODateString; // inclusive
-  deletedToIso?: ISODateString;   // inclusive
+  deletedToIso?: ISODateString; // inclusive
 
   tagsAny?: string[];
   module?: string;
   entity?: string;
 }
 
+/**
+ * Pagination request (1-based)
+ */
 export interface PageQuery {
-  page: number;  // 1-based
-  limit: number; // max 100 (backend clamps)
+  page: number;
+  limit: number;
 }
 
+/**
+ * List result (generic form returned by API)
+ */
 export interface RecycleBinListResult<TItem = RecycleBinListItemDto> {
   items: TItem[];
   other: { total: number };
 }
 
+/**
+ * Count result
+ */
 export interface RecycleBinCountResult {
   total: number;
+}
+
+/**
+ * Restore/Purge requests (what FE sends to backend)
+ * - FE cannot send session; session is backend-only
+ */
+export interface RecycleBinPrepareRestoreRequest {
+  entryId: string;
+  restoredBy: AuthUser;
+}
+
+export interface RecycleBinMarkRestoredRequest {
+  entryId: string;
+  restoredBy: AuthUser;
+}
+
+export interface RecycleBinPurgeRequest {
+  entryId: string;
+  purgedBy: AuthUser;
 }
 
 export interface RecycleBinPurgeResult {
@@ -160,26 +205,10 @@ export interface RecycleBinPurgeResult {
 }
 
 // =============================================================================
-// 3) FE-friendly API Response wrapper (fits ApiResponseBuilder pattern)
+// 3) Notes for FE usage
 // =============================================================================
-// Your backend uses ApiResponseBuilder.ok(res, key, data, msg, meta?).
-// Most PropEase APIs look like:
-//
-// {
-//   "status": true,
-//   "message": "...",
-//   "data": { "<key>": <payload> },
-//   "other": { ...optional... },
-//   "pagination": { "total": number }  // sometimes nested inside meta
-// }
-//
-// We keep it tolerant but typed.
+// - NEVER send optional props as `undefined` in payloads.
+//   Build payloads by conditionally adding fields.
+// - Treat snapshotData / meta as unknown JSON objects:
+//   UI should render safely (key/value viewer) and avoid assuming schema.
 // =============================================================================
-
-export interface ApiOkEnvelope<TDataKey extends string, TPayload> {
-  status: boolean;
-  message: string;
-  data: Record<TDataKey, TPayload>;
-  other?: Record<string, unknown>;
-  pagination?: { total?: number };
-}

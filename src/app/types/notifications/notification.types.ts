@@ -1,64 +1,113 @@
-// Path: src/app/types/notifications/notification.types.ts
-
 /* ============================================================================
- * Notification Hub — Frontend Canonical Types
+ * Notification Hub — Frontend Canonical Types (DTO-only)
  * ----------------------------------------------------------------------------
- * ✅ MUST match backend: src/types/notification/notification.types.ts
- * ✅ No mongoose / no express
- * ✅ IDs are strings
- * ✅ Dates are ISO strings
- * ✅ exactOptionalPropertyTypes-safe: omit optional props when absent
+ * GOAL
+ * - Mirror backend DTO contracts (NO mongoose, NO express, NO sessions)
+ * - IDs are strings
+ * - Dates are ISODateString
+ * - exactOptionalPropertyTypes-safe: optional props are OMITTED (never undefined)
+ *
+ * KEEP OUT of this file
+ * - Backend service/controller inputs (ClientSession, etc.)
+ * - Aggregation row shapes ($project interfaces)
+ * - Engine internals (DefaultRule, resolver contexts, etc.)
  * ========================================================================== */
 
-import type { ISODateString } from "../common";
+import type { ISODateString, Role } from "../common";
 import type { NotificationActionKey } from "./notification-action-keys.catalog";
 
 /* =============================================================================
- * 01) Basic domain enums / unions
+ * 01) Atomic primitives (smallest)
  * ========================================================================== */
 
-export type NotificationSeverity = "info" | "success" | "warning" | "error";
-
-export type NotificationCategory =
-  | "User"
-  | "Tenant"
-  | "Property"
-  | "Lease"
-  | "Complaint"
-  | "Payment"
-  | "Team"
-  | "Comment"
-  | "System";
-
+/** Backend event key string (ex: "lease:created", "payment:failed", etc.) */
 export type NotificationEventKey = string;
 
+/** Your UI/engine severity levels (must match backend union). */
+export type NotificationSeverity = "info" | "success" | "warning" | "error";
+
+/**
+ * Notification categories (must match backend).
+ *
+ * NOTE
+ * - Your earlier TS error shows backend has "Security" and "Audit".
+ * - Keep this union strictly aligned with backend categories.
+ */
+export type NotificationCategory =
+  | "System"
+  | "Security"
+  | "Audit"
+  | "User"
+  | "Team"
+  | "Tenant"
+  | "Lease"
+  | "Payment"
+  | "Property"
+  | "Complaint"
+  | "Comment";
+
+/** Allowed audience modes (mirrors backend). */
+export type NotificationAudienceMode = "User" | "Role" | "Team" | "Company";
+
+/** Scope used by WS-RPC / UI tabs */
+export type NotificationScope = "user" | "role" | "company";
+
+/** Priority segmentation used by WS-RPC / UI tabs */
+export type NotificationPriorityScope = "all" | "prioritized" | "unprioritized";
+
 /* =============================================================================
- * 02) Audience model
+ * 02) Audience DTOs (small → medium)
  * ========================================================================== */
 
+/**
+ * Audience descriptor (who should receive the notification).
+ *
+ * Usage
+ * - Stored in the master notification as an ARRAY: audiences: NotificationAudience[]
+ * - Filters can match on audiences.mode or elemMatch blocks (backend aggregation)
+ */
 export type NotificationAudience =
   | { mode: "Company" }
-  | { mode: "Role"; roleKey: string }
+  | { mode: "Role"; roleKey: Role; }
   | { mode: "Team"; teamCode: string }
   | { mode: "User"; userId: string };
 
 /* =============================================================================
- * 03) Actor model
+ * 03) Actor DTO (who triggered it)
  * ========================================================================== */
 
+/**
+ * Actor identity describing who caused the event.
+ *
+ * Usage
+ * - Display "Triggered by X"
+ * - Audit attribution
+ * - Targeting logic for “self vs others” UI decisions
+ */
 export interface NotificationActorDto {
   userId: string;
   username: string;
-  role: string;
+  role: Role;
 
+  /** Optional: user may belong to multiple teams */
   teamCodes?: string[];
+
+  /** Optional: branch scoping if your org model uses branches */
   branchId?: string;
 }
 
 /* =============================================================================
- * 04) Target navigation model
+ * 04) Target DTO (how UI should navigate/open context)
  * ========================================================================== */
 
+/**
+ * Target navigation object.
+ *
+ * Usage
+ * - Used by FE route-map service to decide navigation
+ * - actionKey is your canonical route action identifier
+ * - params carries route/query/state inputs (must be JSON-safe)
+ */
 export interface NotificationTarget {
   module?: string;
   category?: string;
@@ -68,13 +117,21 @@ export interface NotificationTarget {
 
   actionKey?: NotificationActionKey;
 
+  /** JSON-safe parameters */
   params?: Record<string, unknown>;
 }
 
 /* =============================================================================
- * 05) Delivery switches
+ * 05) Delivery driver switches (optional)
  * ========================================================================== */
 
+/**
+ * Delivery driver flags (mainly backend concern, but DTO-visible).
+ *
+ * Usage
+ * - FE might show icons (email/push/sms) for debugging or admin tooling.
+ * - For normal user UI, you can ignore this object.
+ */
 export interface NotificationDeliveryDrivers {
   audit: boolean;
   email: boolean;
@@ -85,23 +142,31 @@ export interface NotificationDeliveryDrivers {
 }
 
 /* =============================================================================
- * 06) Emit input (frontend usually doesn't emit; kept for completeness)
+ * 06) Emit input DTO (kept for completeness; FE usually does NOT emit)
  * ========================================================================== */
 
+/**
+ * Emit input contract (backend accepts this).
+ *
+ * Usage (FE)
+ * - Typically NOT used from UI
+ * - Useful for admin tools / manual emits / tests
+ *
+ * IMPORTANT
+ * - audiences MUST be an array (even if single recipient)
+ * - Do NOT include legacy `audience` here (remove drift); backend canonical is audiences[]
+ */
 export interface NotificationEmitInput {
   eventKey: NotificationEventKey;
 
-  // ✅ Always array even single
   audiences: NotificationAudience[];
-
-  // ⚠ legacy fallback
-  audience?: NotificationAudience;
 
   actor: NotificationActorDto;
 
   target?: NotificationTarget;
 
   delivery?: NotificationDeliveryDrivers;
+
   vars?: Record<string, unknown>;
 
   category?: NotificationCategory;
@@ -112,9 +177,16 @@ export interface NotificationEmitInput {
 }
 
 /* =============================================================================
- * 07) Core notification DTO
+ * 07) Core notification DTO (master notification document)
  * ========================================================================== */
 
+/**
+ * Master notification DTO (content + audiences + actor + target).
+ *
+ * Usage
+ * - Part of inbox items (NotificationInboxItemDto.notification)
+ * - Render title/body, badges, action buttons
+ */
 export interface NotificationCoreDto {
   id: string;
 
@@ -132,12 +204,24 @@ export interface NotificationCoreDto {
 
   actor: NotificationActorDto;
 
+  /** Always array */
   audiences: NotificationAudience[];
 
-  createdAt: string;
-  expiresAt?: string;
+  createdAt: ISODateString;
+  expiresAt?: ISODateString;
 }
 
+/* =============================================================================
+ * 08) User state DTO (optional, if you ever expose raw state rows)
+ * ========================================================================== */
+
+/**
+ * User-state row DTO (per-user inbox state).
+ *
+ * Usage
+ * - Most UI uses NotificationInboxItemDto instead.
+ * - Keep this only if you plan to expose “raw state rows” separately.
+ */
 export interface NotificationUserStateDto {
   userId: string;
   username?: string;
@@ -147,26 +231,31 @@ export interface NotificationUserStateDto {
   isRead: boolean;
   readAt?: ISODateString;
 
-  /**
-   * Soft delete (trash)
-   */
+  /** Soft delete (trash) */
   isDeleted: boolean;
-  deletedAt?: Date;
+  deletedAt?: ISODateString;
 
-  /**
-   * Archive (hide without deleting)
-   */
+  /** Archive (hide without deleting) */
   isArchived: boolean;
   archivedAt?: ISODateString;
 
   deliveredAt: ISODateString;
+
+  /** Optional joined master notification */
   notification?: NotificationCoreDto;
 }
 
 /* =============================================================================
- * 08) Inbox item DTO
+ * 09) Inbox item DTO (main UI consumption type)
  * ========================================================================== */
 
+/**
+ * Inbox item DTO = (user state + joined master notification)
+ *
+ * Usage
+ * - Primary list rendering model for UI
+ * - inboxId is the per-user row id (user_notifications._id as string)
+ */
 export interface NotificationInboxItemDto {
   inboxId: string;
 
@@ -174,7 +263,7 @@ export interface NotificationInboxItemDto {
   username: string;
 
   isRead: boolean;
-  readAt?: string;
+  readAt?: ISODateString;
 
   isDeleted: boolean;
 
@@ -182,37 +271,55 @@ export interface NotificationInboxItemDto {
 }
 
 /* =============================================================================
- * 09) Load / filter contracts
+ * 10) Query / load contracts (largest DTO layer)
  * ========================================================================== */
 
+/**
+ * Filters sent to backend for server-side filtering.
+ *
+ * exactOptionalPropertyTypes note
+ * - These are optional fields.
+ * - In builder functions, ONLY set them when defined.
+ */
 export interface NotificationLoadFilters {
   search?: string;
+
   category?: NotificationCategory;
   severity?: NotificationSeverity;
 
-  mode?: NotificationAudience["mode"];
+  /** Optional audience-mode filter (admin/tools) */
+  mode?: NotificationAudienceMode;
 
   unreadOnly?: boolean;
 
   includeDeleted?: boolean;
   includeArchived?: boolean;
 
-  from?: string;
-  to?: string;
+  from?: ISODateString;
+  to?: ISODateString;
 }
 
+/**
+ * Load request contract.
+ *
+ * IMPORTANT
+ * - filters is REQUIRED in backend (you enforced this already)
+ * - always pass {} when no filters are needed
+ */
 export interface NotificationLoadRequest {
   username: string;
   page: number;
   limit: number;
-  filters?: NotificationLoadFilters;
+  filters: NotificationLoadFilters;
 }
 
+/** List response for “classic inbox load”. */
 export interface NotificationLoadResponse {
   items: NotificationInboxItemDto[];
   other: { total: number };
 }
 
+/** Count response used for badges (classic total/unread). */
 export interface NotificationCountResponse {
   total: number;
   unread: number;

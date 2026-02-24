@@ -88,8 +88,8 @@ export type Extension =
    ====================================================================== */
 
 export interface DateRange {
-  start: string | Date | null;
-  end: string | Date | null;
+  start: string | Date;
+  end: string | Date;
 }
 
 interface DateRangeForm {

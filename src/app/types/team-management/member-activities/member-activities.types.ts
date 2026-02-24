@@ -1,114 +1,129 @@
 // Path: src/app/types/team-management/member-activities/member-activities.types.ts
-// =============================================================================
-// Member Activities Types (FE ↔ BE aligned)
-// Mirrors: src/types/teamManagement/memberActivities/memberActivities.types.ts
-// Rules:
-// - NO mongoose Types here (ObjectId => string)
-// - NO Date objects here (Date => ISODateString)
-// - Optional fields are OMITTED (never undefined)
-// =============================================================================
+// ============================================================================
+// MemberActivity Types (Frontend Mirror) — DTO-safe contract
+// ----------------------------------------------------------------------------
+// Key rules
+// - No mongoose Types in FE
+// - IDs are string
+// - Dates are ISO strings
+// - exactOptionalPropertyTypes-safe: optional props must be omitted (not undefined)
+// ============================================================================
 
-import type { ISODateString } from "../../common"
+export type ISODateString = string;
 
 // ----------------------------------------------------------------------------
 // Enums
 // ----------------------------------------------------------------------------
-
 export const MEMBER_ACTIVITY_TYPE = [
-  "milestone",
-  "progress_update",
-  "status_change",
-  "blocker_reported",
-  "evidence_added",
+  "login",
+  "logout",
+  "task_created",
+  "task_updated",
+  "task_completed",
+  "work_item_assigned",
+  "work_item_updated",
+  "event_created",
+  "event_updated",
+  "comment_added",
+  "file_uploaded",
+  "status_changed",
   "note",
+  "other",
 ] as const;
 
 export type MemberActivityType = (typeof MEMBER_ACTIVITY_TYPE)[number];
 
-export const MEMBER_ACTIVITY_STATUS = [
-  "planned",
-  "active",
-  "done",
-  "missed",
-  "cancelled",
-] as const;
-
-export type MemberActivityStatus = (typeof MEMBER_ACTIVITY_STATUS)[number];
+export const MEMBER_ACTIVITY_SEVERITY = [ "info", "success", "warning", "danger" ] as const;
+export type MemberActivitySeverity = ( typeof MEMBER_ACTIVITY_SEVERITY )[ number ];
 
 // ----------------------------------------------------------------------------
-// Evidence packet
+// Minimal actor snapshot
 // ----------------------------------------------------------------------------
+export interface MemberActivityActorDto {
+  userId: string;
+  username: string;
 
-export interface MemberActivityEvidenceDto {
-  label: string;
-  relPath: string;
-  url: string;
-  mimeType: string;
-  originalName: string;
-  sizeBytes: number;
-  uploadedAt: ISODateString;
+  displayName?: string;
+  email?: string;
+  photoUrl?: string;
 }
 
 // ----------------------------------------------------------------------------
-// Blocker structure
+// Target reference (cross-module navigation)
 // ----------------------------------------------------------------------------
-
-export type MemberActivityBlockerSeverity = "low" | "medium" | "high";
-
-export interface MemberActivityBlockerDto {
-  title: string;
-  details?: string;
-  severity: MemberActivityBlockerSeverity;
-
-  reportedAt: ISODateString;
-  resolvedAt?: ISODateString;
+export interface MemberActivityTargetDto {
+  module: string; // e.g. "TeamManagement", "WorkItems", "WorkEvents"
+  refId: string;  // domain entity id (string)
+  actionKey?: string; // optional deep-link hint
+  params?: Record<string, unknown>; // optional navigation params
 }
 
 // ----------------------------------------------------------------------------
-// MemberActivity DTO (FE)
+// MemberActivity DTO
 // ----------------------------------------------------------------------------
-
-export type MemberActivitySource = "rest" | "ws" | "system";
-
 export interface MemberActivityDto {
-  activityMongoId: string; // String(_id)
+  _id: string;
 
-  // Relations (string IDs)
-  workItemMongoId: string;
-  teamMongoId: string;
-  userMongoId: string;
+  teamCode?: string;
+  teamMongoId?: string;
 
-  // Audit
-  createdByUserMongoId: string;
-  requestId?: string;
-  source?: MemberActivitySource;
+  actor: MemberActivityActorDto;
 
-  // Activity classification
   type: MemberActivityType;
+  severity: MemberActivitySeverity;
 
-  // Calendar event fields
   title: string;
-  notes?: string;
+  message?: string;
 
-  startAt: ISODateString;
-  endAt: ISODateString;
-  allDay: boolean;
-  timezone?: string;
+  target?: MemberActivityTargetDto;
 
-  status: MemberActivityStatus;
-
-  // Optional progress impact
-  progressBefore?: number;
-  progressAfter?: number;
-
-  // Optional milestone identifier
-  milestoneId?: string;
-
-  // Evidence / blockers
-  evidence?: MemberActivityEvidenceDto[];
-  blockers?: MemberActivityBlockerDto[];
-
-  // Timestamps
   createdAt: ISODateString;
-  updatedAt: ISODateString;
+
+  // Optional context metadata for audit/analytics (DTO-safe)
+  ip?: string;
+  userAgent?: string;
+}
+
+// ----------------------------------------------------------------------------
+// Create payload
+// ----------------------------------------------------------------------------
+export interface MemberActivityCreateRequest {
+  teamCode?: string;
+  teamMongoId?: string;
+
+  actorUserId: string;
+  actorUsername: string;
+
+  type: MemberActivityType;
+  severity?: MemberActivitySeverity;
+
+  title: string;
+  message?: string;
+
+  target?: MemberActivityTargetDto;
+
+  ip?: string;
+  userAgent?: string;
+}
+
+// ----------------------------------------------------------------------------
+// List filters
+// ----------------------------------------------------------------------------
+export interface MemberActivityListQuery {
+  teamCode?: string;
+  teamMongoId?: string;
+
+  actorUserId?: string;
+  actorUsername?: string;
+
+  type?: MemberActivityType;
+  severity?: MemberActivitySeverity;
+
+  from?: ISODateString;
+  to?: ISODateString;
+
+  q?: string;
+
+  page?: number;
+  limit?: number;
 }

@@ -35,16 +35,14 @@ import { SkeletonLoaderComponent } from '../../../components/shared/skeleton-loa
 // Services
 import { APIsService, User } from '../../../services/APIs/apis.service';
 import { AuthService } from '../../../services/auth/auth.service';
-import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import {
   BackEndPropertyData,
   PropertyService,
 } from '../../../services/property/property.service';
 import {
   Lease,
-  LeaseWithProperty,
-  SWITCH_ON_ARRAY, // likely used in template
-  TenantService,
+  LeaseWithProperty, // likely used in template
+  TenantService
 } from '../../../services/tenant/tenant.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
 
@@ -52,7 +50,6 @@ import { WindowsRefService } from '../../../services/windowRef/windowRef.service
 import type { DateRange } from '../../../components/shared/paginator/paginator.component';
 
 import { PaginationUtil } from '../../../source/utility/pagination.utils';
-import { NotificationService } from '../../../services/notifications/notification-service';
 
 /**
  * Data shape passed to the custom table for leases.
@@ -199,8 +196,6 @@ export class TenantViewComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly propertyService: PropertyService,
     private readonly authService: AuthService,
     private readonly dialog: MatDialog,
-    private readonly cryptoService: CryptoService, // may be used in template
-    protected readonly notificationService: NotificationService,
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
 

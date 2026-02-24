@@ -1309,6 +1309,11 @@ body.dark {
   }
 }
 
+.btn-transparent{
+  background: none;
+  border: none;
+}
+
 /* ===== Your themed custom buttons (light/dark) using the mixin ===== */
 :host-context(html.light) {
   .btn-save {
