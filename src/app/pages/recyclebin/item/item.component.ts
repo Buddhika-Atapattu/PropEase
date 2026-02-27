@@ -1,3 +1,5 @@
+// Path: src/app/pages/recyclebin/item/item.component.ts
+
 import { Component } from '@angular/core';
 
 @Component({
@@ -6,6 +8,6 @@ import { Component } from '@angular/core';
   templateUrl: './item.component.html',
   styleUrl: './item.component.scss',
 })
-export class ItemComponent {
+export class RecycleBinItemComponent {
 
 }

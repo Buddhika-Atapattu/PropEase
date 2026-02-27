@@ -99,7 +99,7 @@ export class UserInfoPanelComponent implements OnInit, OnDestroy {
     }
 
     // ✅ Center service already exposes reactive counts
-    this.counts$ = this.notificationService.counts$();
+    this.counts$ = this.notificationService.countsSnapshot$();
     this.unreadCountNumber$ = this.counts$.pipe(map((c) => c.unread));
   }
 

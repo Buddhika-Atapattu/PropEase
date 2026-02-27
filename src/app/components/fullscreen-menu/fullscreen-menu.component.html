@@ -1,44 +1,64 @@
+<!-- Path: src/app/components/fullscreen-menu/fullscreen-menu.component.html -->
+
 <div
   class="fx-root"
   [class.open]="open"
   [attr.aria-hidden]="open ? 'false' : 'true'"
 >
   <!-- Backdrop -->
-  <div class="fx-backdrop" (click)="onBackdrop()" aria-label="Close menu"></div>
+  <div
+    class="fx-backdrop"
+    (click)="onBackdrop($event)"
+    aria-label="Close menu"
+  ></div>
 
-  <!-- Panel -->
+  <!-- Panel (IMPORTANT: stopPropagation boundary so inner clicks never close) -->
   <aside
     class="fx-panel"
     role="dialog"
     aria-label="Mobile menu"
     [attr.aria-modal]="open ? 'true' : null"
+    (click)="stopInside($event)"
   >
     <!-- Header -->
-    <header class="fx-head">
-      <button type="button" class="avatar" (click)="menuOpen = !menuOpen">
+    <header class="fx-head" (click)="stopInside($event)">
+      <button
+        type="button"
+        class="avatar"
+        (click)="viewUserProfile(); stopInside($event)"
+      >
         <img
           *ngIf="profile?.avatarSrc"
           [src]="profile?.avatarSrc!"
           alt="Profile"
         />
       </button>
-      <app-user-info-panel *ngIf="menuOpen" (closePanel)="signalToClose()" />
-      <div class="name">
-        {{ profile?.name }}
-      </div>
-      <button type="button" class="close" (click)="onBackdrop()">
+
+      <app-user-info-panel
+        *ngIf="open"
+        (closePanel)="signalToClose()"
+      ></app-user-info-panel>
+
+      <div class="name">{{ profile?.name }}</div>
+
+      <button
+        type="button"
+        class="close"
+        (click)="onBackdrop($event); stopInside($event)"
+      >
         <mat-icon>close</mat-icon>
       </button>
+
       <div class="email" *ngIf="profile?.email">{{ profile?.email }}</div>
     </header>
 
     <!-- Ultra-compact switch -->
-    <section class="fx-switch">
+    <section class="fx-switch" (click)="stopInside($event)">
       <button
         type="button"
         class="pill"
         [class.active]="activeView === 'menu'"
-        (click)="showMenu()"
+        (click)="showMenu($event)"
         aria-label="Show menu"
       >
         <mat-icon>menu</mat-icon>
@@ -49,11 +69,12 @@
         type="button"
         class="pill"
         [class.active]="activeView === 'notifications'"
-        (click)="showNotifications()"
+        (click)="showNotifications($event)"
         aria-label="Show notifications"
       >
         <mat-icon>notifications</mat-icon>
         <span>Notifications</span>
+
         <ng-container *ngIf="unreadCount$ | async as unread">
           <i class="badge" *ngIf="unread > 0">{{ unread }}</i>
         </ng-container>
@@ -61,7 +82,7 @@
     </section>
 
     <!-- Body -->
-    <section class="fx-body">
+    <section class="fx-body" (click)="stopInside($event)">
       <!-- MENU VIEW -->
       <ng-container *ngIf="activeView === 'menu'; else notifView">
         <ul class="list lvl-1-wrap">
@@ -74,9 +95,9 @@
               matRipple
               class="row row-1"
               [class.active]="isActive(p.url)"
-              (click)="p.sub?.length ? toggleTop(i) : go(p)"
+              (click)="p.sub?.length ? toggleTop(i, $event) : go(p, $event)"
               [attr.aria-expanded]="p.sub?.length ? 'true' : null"
-              [class.link-active]="this.activeItem(p, null)"
+              [class.link-active]="activeItem(p, null)"
             >
               <mat-icon class="ic" [svgIcon]="p.mat_icon"></mat-icon>
               <span class="txt">{{ p.icon_text }}</span>
@@ -94,9 +115,11 @@
                     matRipple
                     class="row row-2"
                     [class.active]="isActive(s.url)"
-                    (click)="s.sub?.length ? toggleSub(i, j) : go(s)"
+                    (click)="
+                      s.sub?.length ? toggleSub(i, j, $event) : go(s, $event)
+                    "
                     [attr.aria-expanded]="s.sub?.length ? 'true' : null"
-                    [class.link-active]="this.activeItem(null, s)"
+                    [class.link-active]="activeItem(null, s)"
                   >
                     <mat-icon class="ic" [svgIcon]="s.mat_icon"></mat-icon>
                     <span class="txt">{{ s.icon_text }}</span>
@@ -113,7 +136,7 @@
                           matRipple
                           class="row row-3"
                           [class.active]="isActive(g.url)"
-                          (click)="go(g)"
+                          (click)="go(g, $event)"
                         >
                           <mat-icon
                             class="ic"
@@ -133,20 +156,74 @@
 
       <!-- NOTIFICATIONS VIEW -->
       <ng-template #notifView>
-        <div class="notif-toolbar">
-          <button type="button" class="btn-ghost" (click)="markAllAsRead()">
-            <mat-icon>done_all</mat-icon><span>Mark all read</span>
-          </button>
-          <button
-            type="button"
-            class="btn-ghost"
-            (click)="viewAllNotifications()"
-          >
-            <mat-icon>open_in_new</mat-icon><span>Open inbox</span>
-          </button>
-        </div>
+        <!-- Tab pills -->
 
-        <ng-container *ngIf="directNotifications$ | async as list">
+        <section class="tool-box">
+          <section
+            class="fx-switch"
+            style="border-bottom: 0; padding-top: 0"
+            (click)="stopInside($event)"
+          >
+            <button
+              type="button"
+              class="pill"
+              [class.active]="activeTab === 'all'"
+              (click)="setTab('all', $event)"
+            >
+              <mat-icon>all_inbox</mat-icon>
+              <span>All</span>
+              <ng-container *ngIf="unreadAll$ | async as u">
+                <i class="badge" *ngIf="u > 0">{{ u }}</i>
+              </ng-container>
+            </button>
+
+            <button
+              type="button"
+              class="pill"
+              [class.active]="activeTab === 'direct'"
+              (click)="setTab('direct', $event)"
+            >
+              <mat-icon>person</mat-icon>
+              <span>Direct</span>
+              <ng-container *ngIf="unreadDirect$ | async as u">
+                <i class="badge" *ngIf="u > 0">{{ u }}</i>
+              </ng-container>
+            </button>
+
+            <button
+              *ngIf="canShowOverallTab()"
+              type="button"
+              class="pill"
+              [class.active]="activeTab === 'overall'"
+              (click)="setTab('overall', $event)"
+            >
+              <mat-icon>apartment</mat-icon>
+              <span>Overall</span>
+              <ng-container *ngIf="unreadOverall$ | async as u">
+                <i class="badge" *ngIf="u > 0">{{ u }}</i>
+              </ng-container>
+            </button>
+          </section>
+
+          <div class="notif-toolbar" (click)="stopInside($event)">
+            <button
+              type="button"
+              class="btn-ghost"
+              (click)="markAllAsRead($event)"
+            >
+              <mat-icon>done_all</mat-icon><span>Mark all read</span>
+            </button>
+            <button
+              type="button"
+              class="btn-ghost"
+              (click)="viewAllNotifications($event)"
+            >
+              <mat-icon>open_in_new</mat-icon><span>Open inbox</span>
+            </button>
+          </div>
+        </section>
+
+        <ng-container *ngIf="activeNotifications$ | async as list">
           <div class="empty" *ngIf="!list.length">
             <mat-icon>inbox</mat-icon>
             <p>No new notifications</p>
@@ -158,25 +235,27 @@
               *ngFor="let n of list; trackBy: trackById"
               (click)="markOneRead(n, $event)"
             >
-            <!-- <button type="button" class="btn btn-transparent" role="button" (click)="navigate(n)">
+              <div class="left">
+                <mat-icon class="kind" [ngClass]="n.notification.severity">{{
+                  n.notification.icon
+                }}</mat-icon>
+              </div>
 
-            </button> -->
-            <div class="left">
-              <!-- iconFor(n) -->
-              <mat-icon class="kind" [ngClass]="n.notification.severity">{{
-                n.notification.icon
-              }}</mat-icon>
-            </div>
-            <div class="mid">
-              <div class="title">
-                {{ n.notification.title || "Notification" }}
-                <span class="dot" *ngIf="!n.isRead"></span>
+              <div class="mid">
+                <div class="title">
+                  {{ n.notification.title || "Notification" }}
+                  <span class="dot" *ngIf="!n.isRead"></span>
+                </div>
+                <div class="msg" [title]="n.notification.title">
+                  {{ n.notification.body }}
+                </div>
+                <div class="meta">
+                  <span class="time">{{
+                    n.notification.createdAt | date: "short"
+                  }}</span>
+                </div>
               </div>
-              <div class="msg" [title]="n.notification.title">{{ n.notification.body }}</div>
-              <div class="meta">
-                <span class="time">{{ n.notification.createdAt | date : "short" }}</span>
-              </div>
-            </div>
+
               <div class="right">
                 <button
                   type="button"

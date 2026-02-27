@@ -1,5 +1,6 @@
 <!-- Trigger: bell with live badge + socket dot -->
 <app-notification-dialog></app-notification-dialog>
+
 <button
   mat-icon-button
   [matMenuTriggerFor]="notifMenu"
@@ -7,10 +8,10 @@
   #menuTrigger="matMenuTrigger"
   [disabled]="!isLoggedIn"
   class="notif-button"
-  [matBadge]="(unreadCount$ | async) || 0"
+  [matBadge]="(countAllUnread$ | async) || 0"
   matBadgeColor="warn"
   [matBadgeOverlap]="true"
-  [matBadgeHidden]="((unreadCount$ | async) || 0) === 0"
+  [matBadgeHidden]="((countAllUnread$ | async) || 0) === 0"
   matBadgePosition="above after"
   matBadgeSize="large"
   aria-label="Open notifications menu"
@@ -56,8 +57,28 @@
       </div>
     </div>
 
-    <!-- Tabs -->
+    <!-- Tabs (ALL / DIRECT / OVERALL) -->
     <div class="notif-tabs" role="tablist" aria-labelledby="notifMenuTitle">
+      <!-- ALL -->
+      <button
+        type="button"
+        class="tab"
+        [class.active]="activeTab === 'all'"
+        (click)="setTab('all', $event)"
+        role="tab"
+        [attr.aria-selected]="activeTab === 'all'"
+        [matBadge]="(countAllUnread$ | async) || 0"
+        matBadgeColor="warn"
+        [matBadgeOverlap]="true"
+        [matBadgeHidden]="((countAllUnread$ | async) || 0) === 0"
+        matBadgePosition="above after"
+        matBadgeSize="large"
+        aria-label="Open all notifications tab"
+      >
+        All
+      </button>
+
+      <!-- DIRECT -->
       <button
         type="button"
         class="tab"
@@ -65,10 +86,18 @@
         (click)="setTab('direct', $event)"
         role="tab"
         [attr.aria-selected]="activeTab === 'direct'"
+        [matBadge]="(countDirectUnread$ | async) || 0"
+        matBadgeColor="warn"
+        [matBadgeOverlap]="true"
+        [matBadgeHidden]="((countDirectUnread$ | async) || 0) === 0"
+        matBadgePosition="above after"
+        matBadgeSize="large"
+        aria-label="Open direct notifications tab"
       >
         Direct
       </button>
 
+      <!-- OVERALL (admin only) -->
       <button
         type="button"
         class="tab"
@@ -76,6 +105,13 @@
         (click)="setTab('overall', $event)"
         role="tab"
         [attr.aria-selected]="activeTab === 'overall'"
+        [matBadge]="(countOverallUnread$ | async) || 0"
+        matBadgeColor="warn"
+        [matBadgeOverlap]="true"
+        [matBadgeHidden]="((countOverallUnread$ | async) || 0) === 0"
+        matBadgePosition="above after"
+        matBadgeSize="large"
+        aria-label="Open overall notifications tab"
       >
         Overall
       </button>
@@ -90,79 +126,150 @@
       >
         Mark all as read
       </button>
+
+      <button
+        type="button"
+        class="tab action"
+        [class.isRefreshed]="isRefreshed"
+        (click)="refresh()"
+        aria-label="Mark all notifications as read"
+      >
+        <mat-icon>autorenew</mat-icon>
+      </button>
     </div>
 
     <!-- Lists -->
     <div class="notif-list" role="list" aria-label="Notifications list">
-      <!-- Direct tab -->
-      <ng-container *ngIf="activeTab === 'direct'; else overallTab">
-        <ng-container
-          *ngIf="(directItems$ | async)?.length; else empty"
-        >
-          <div
-            class="notif-item"
-            *ngFor="let n of directItems$ | async; trackBy: trackById"
-            [class.unread]="!n.isRead"
-            (click)="markOneRead(n)"
-            (keydown.enter)="markOneRead(n)"
-            tabindex="0"
-            role="listitem"
-            [attr.aria-label]="(n.notification.title || 'Notification') + ', ' + (n.notification.severity || 'info')"
-          >
-            <div class="avatar" [attr.data-severity]="n.notification.severity">
-              <!-- <mat-icon aria-hidden="true">{{ iconFor(n) }}</mat-icon> -->
-              <mat-icon aria-hidden="true">{{ n.notification.icon }}</mat-icon>
-            </div>
-
-            <div class="content">
-              <div class="row-1">
-                <strong class="title">{{ n.notification.title }}</strong>
-                <span class="time">{{ n.notification.createdAt | date:'shortTime' }}</span>
+      <!-- ALL -->
+      <ng-container *ngIf="activeTab === 'all'; else directTab">
+        <ng-container *ngIf="(allItems$ | async) as list">
+          <ng-container *ngIf="list.length; else empty">
+            <div
+              class="notif-item"
+              *ngFor="let n of list; trackBy: trackById"
+              [class.unread]="!(n.isRead === true)"
+              (click)="markOneRead(n, $event)"
+              (keydown.enter)="markOneRead(n, $event)"
+              tabindex="0"
+              role="listitem"
+              [attr.aria-label]="(n.notification.title || 'Notification') + ', ' + (n.notification.severity || 'info')"
+            >
+              <div
+                class="avatar"
+                [attr.data-severity]="n.notification.severity"
+              >
+                <mat-icon aria-hidden="true"
+                  >{{ n.notification.icon }}</mat-icon
+                >
               </div>
 
-              <div class="body">{{ n.notification.body }}</div>
+              <div class="content">
+                <div class="row-1">
+                  <strong class="title"
+                    >{{ n.notification.title || 'Notification' }}</strong
+                  >
+                  <span class="time"
+                    >{{ n.notification.createdAt | date:'short' }}</span>
+                </div>
 
-              <div class="meta">
-                <span class="pill">{{ n.notification.category  }}</span>
+                <div class="body">{{ n.notification.body }}</div>
+
+                <div class="meta">
+                  <span class="pill">{{ n.notification.category }}</span>
+                </div>
               </div>
             </div>
-          </div>
+          </ng-container>
         </ng-container>
       </ng-container>
 
-      <!-- Overall tab -->
+      <!-- DIRECT -->
+      <ng-template #directTab>
+        <ng-container *ngIf="activeTab === 'direct'; else overallTab">
+          <ng-container *ngIf="(directItems$ | async) as list">
+            <ng-container *ngIf="list.length; else empty">
+              <div
+                class="notif-item"
+                *ngFor="let n of list; trackBy: trackById"
+                [class.unread]="!(n.isRead === true)"
+                (click)="markOneRead(n, $event)"
+                (keydown.enter)="markOneRead(n, $event)"
+                tabindex="0"
+                role="listitem"
+                [attr.aria-label]="(n.notification.title || 'Notification') + ', ' + (n.notification.severity || 'info')"
+              >
+                <div
+                  class="avatar"
+                  [attr.data-severity]="n.notification.severity"
+                >
+                  <mat-icon aria-hidden="true"
+                    >{{ n.notification.icon }}</mat-icon
+                  >
+                </div>
+
+                <div class="content">
+                  <div class="row-1">
+                    <strong class="title"
+                      >{{ n.notification.title || 'Notification' }}</strong
+                    >
+                    <span class="time"
+                      >{{ n.notification.createdAt | date:'shortTime' }}</span
+                    >
+                  </div>
+
+                  <div class="body">{{ n.notification.body }}</div>
+
+                  <div class="meta">
+                    <span class="pill">{{ n.notification.category }}</span>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </ng-template>
+
+      <!-- OVERALL -->
       <ng-template #overallTab>
-        <ng-container
-          *ngIf="(overallItems$ | async)?.length; else empty"
-        >
-          <div
-            class="notif-item"
-            *ngFor="let n of overallItems$ | async; trackBy: trackById"
-            [class.unread]="!n.isRead"
-            (click)="markOneRead(n)"
-            (keydown.enter)="markOneRead(n)"
-            tabindex="0"
-            role="listitem"
-            [attr.aria-label]="(n.notification.title || 'Notification') + ', ' + (n.notification.severity || 'info')"
-          >
-            <div class="avatar" [attr.data-severity]="n.notification.severity">
-              <!-- <mat-icon aria-hidden="true">{{ iconFor(n) }}</mat-icon> -->
-              <mat-icon aria-hidden="true">{{ n.notification.icon }}</mat-icon>
-            </div>
-
-            <div class="content">
-              <div class="row-1">
-                <strong class="title">{{ n.notification.title }}</strong>
-                <span class="time">{{ n.notification.createdAt | date:'shortTime' }}</span>
+        <ng-container *ngIf="(overallItems$ | async) as list">
+          <ng-container *ngIf="list.length; else empty">
+            <div
+              class="notif-item"
+              *ngFor="let n of list; trackBy: trackById"
+              [class.unread]="!(n.isRead === true)"
+              (click)="markOneRead(n, $event)"
+              (keydown.enter)="markOneRead(n, $event)"
+              tabindex="0"
+              role="listitem"
+              [attr.aria-label]="(n.notification.title || 'Notification') + ', ' + (n.notification.severity || 'info')"
+            >
+              <div
+                class="avatar"
+                [attr.data-severity]="n.notification.severity"
+              >
+                <mat-icon aria-hidden="true"
+                  >{{ n.notification.icon }}</mat-icon
+                >
               </div>
 
-              <div class="body">{{ n.notification.body }}</div>
+              <div class="content">
+                <div class="row-1">
+                  <strong class="title"
+                    >{{ n.notification.title || 'Notification' }}</strong
+                  >
+                  <span class="time"
+                    >{{ n.notification.createdAt | date:'shortTime' }}</span
+                  >
+                </div>
 
-              <div class="meta">
-                <span class="pill">{{ n.notification.category }}</span>
+                <div class="body">{{ n.notification.body }}</div>
+
+                <div class="meta">
+                  <span class="pill">{{ n.notification.category }}</span>
+                </div>
               </div>
             </div>
-          </div>
+          </ng-container>
         </ng-container>
       </ng-template>
 

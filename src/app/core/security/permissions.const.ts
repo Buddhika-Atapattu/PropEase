@@ -1233,6 +1233,10 @@ export const PERM = {
       "module": "NotificationCenter",
       "action": "audit"
     },
+    "archive": {
+      "module": "NotificationCenter",
+      "action": "archive"
+    },
     "export": {
       "module": "NotificationCenter",
       "action": "export"

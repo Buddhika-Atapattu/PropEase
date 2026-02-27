@@ -990,6 +990,10 @@ export class AuthService {
       const sessionToken = tokenBundle?.session;
       const wsToken = tokenBundle?.wsToken;
 
+      if ( !this.getLoggedUser ) {
+        return;
+      }
+
       if ( !sessionToken ) {
         return;
       }
@@ -1019,6 +1023,7 @@ export class AuthService {
         page: 1,
         limit: 10,
         filters: {},
+        me: this.getLoggedUser
       } );
 
       this.notificationsInit = true;

@@ -1,5 +1,4 @@
 // Path: src/app/pages/notifications/notifications-main-page.ts
-
 import { CommonModule, isPlatformBrowser } from "@angular/common";
 import {
   AfterViewInit,
@@ -9,7 +8,6 @@ import {
   OnDestroy,
   OnInit,
   PLATFORM_ID,
-  Renderer2,
 } from "@angular/core";
 import { FormControl, ReactiveFormsModule } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -22,8 +20,9 @@ import {
   Observable,
   of,
   Subscription,
+  forkJoin,
 } from "rxjs";
-import { catchError, debounceTime, map, startWith } from "rxjs/operators";
+import { catchError, debounceTime, map, startWith, tap, take } from "rxjs/operators";
 
 import { MatBadgeModule } from "@angular/material/badge";
 import { MatButtonModule } from "@angular/material/button";
@@ -42,65 +41,26 @@ import { AuthService } from "../../services/auth/auth.service";
 import { WindowsRefService } from "../../services/windowRef/windowRef.service";
 import type { Role } from "../../services/auth/user.contract";
 
-// ✅ NEW single facade
 import { NotificationCenterService } from "../../services/notifications/notification-center.service";
-import { NotificationRouteMapService } from '../../services/notifications/notification-route-map.service';
+import { NotificationRouteMapService } from "../../services/notifications/notification-route-map.service";
+import {
+  NOTIFICATION_CATEGORY_VALUES,
+  type NotificationCategory,
+} from "../../types/notifications/notification.types";
 
-// ✅ NEW canonical DTOs
 import type {
+  NotificationAudience,
   NotificationInboxItemDto,
-  NotificationLoadRequest,
+  NotificationLoadFilters,
 } from "../../types/notifications/notification.types";
 
 /** Tabs */
 type TabKey = "all" | "unread" | "direct" | "overall";
 
-type TitleCategory =
-  | "User"
-  | "Tenant"
-  | "Property"
-  | "Lease"
-  | "Agent"
-  | "Developer"
-  | "Maintenance"
-  | "Complaint"
-  | "Team"
-  | "Registration"
-  | "Payment"
-  | "System";
-
-const CATEGORY_OPTIONS: Array<TitleCategory | "All"> = [
-  "All",
-  "User",
-  "Tenant",
-  "Property",
-  "Lease",
-  "Agent",
-  "Developer",
-  "Maintenance",
-  "Complaint",
-  "Team",
-  "Registration",
-  "Payment",
-  "System",
-];
-
-/* =============================================================================
- * NotificationsMainPage (Upgraded to NotificationCenterService integration)
- * -----------------------------------------------------------------------------
- * 01) Introduction to the class and its usage
- * - Full page notifications view: tabs, category chips, search, pagination.
- * - Uses REST snapshot list + WS count stream.
- * - Uses centralized routing (actionKey → route map) through NotificationCenterService.
- *
- * 02) Important matters
- * - Tabs/category/search remain LOCAL filters (do not affect backend query).
- * - Backend load is intentionally basic (page/limit) to keep UI stable.
- *
- * 03) Why upgrade
- * - One import/inject only (NotificationCenterService).
- * - Sound + WS + REST + routing handled centrally.
- * ============================================================================= */
+interface CountVm {
+  total: number;
+  unread: number;
+}
 
 @Component( {
   selector: "app-main",
@@ -125,61 +85,71 @@ const CATEGORY_OPTIONS: Array<TitleCategory | "All"> = [
   changeDetection: ChangeDetectionStrategy.OnPush,
 } )
 export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
-  /** Theme mode from global service (bool or null until first emit) */
   protected mode: boolean | null = null;
   protected isBrowser: boolean;
   private modeSub: Subscription | null = null;
 
-  /** Core streams (NEW DTOs) */
-  protected inboxItems$!: Observable<NotificationInboxItemDto[]>;
-  protected unreadInboxItems$!: Observable<NotificationInboxItemDto[]>;
-  protected unreadCount$!: Observable<number>;
+  private me: User | null = null;
+
+  // Auth identity (normalized)
+  private myUserId = "";
+  private myUsername = "";
+  private myRole: Role | null = null;
+  private myTeamCodes: string[] = [];
+
+  // Connection
   protected connected$!: Observable<boolean>;
 
-  /** Audience-derived subsets */
+  // ============================
+  // Deterministic state stores
+  // ============================
+  private readonly directState$ = new BehaviorSubject<NotificationInboxItemDto[]>( [] );
+  private readonly overallState$ = new BehaviorSubject<NotificationInboxItemDto[]>( [] );
+  private readonly allState$ = new BehaviorSubject<NotificationInboxItemDto[]>( [] );
+
+  /** Source list (ALWAYS deterministic ALL = direct + overall) */
+  protected inboxItems$!: Observable<NotificationInboxItemDto[]>;
+
+  /** Derived subsets */
+  protected unreadInboxItems$!: Observable<NotificationInboxItemDto[]>;
   protected directInboxItems$!: Observable<NotificationInboxItemDto[]>;
   protected overallInboxItems$!: Observable<NotificationInboxItemDto[]>;
 
-  /** Logged user */
-  private username = "";
-  private role: Role | null = null;
+  /** Three counts (All / Direct / Overall) */
+  protected allCounts$!: Observable<CountVm>;
+  protected directCounts$!: Observable<CountVm>;
+  protected overallCounts$!: Observable<CountVm>;
+  protected unreadCount$!: Observable<number>;
 
-  // Optional: if your AuthUser carries these fields, we use them for audience checks
-  private userId = "";
-  private teamCodes: string[] = [];
+  /** UI */
+  protected activeTab$ = new BehaviorSubject<TabKey>( "all" );
+  protected searchCtrl = new FormControl<string>( "", { nonNullable: true } );
 
-  /** UI state */
-  protected activeTab$: BehaviorSubject<TabKey> = new BehaviorSubject<TabKey>( "all" );
-  protected searchCtrl: FormControl<string> = new FormControl<string>( "", { nonNullable: true } );
+  protected readonly categories: ReadonlyArray<NotificationCategory | "All"> =
+    NOTIFICATION_CATEGORY_VALUES;
+  protected activeCategory$ = new BehaviorSubject<NotificationCategory | "All">( "All" );
 
-  /** Category chips */
-  protected categories: Array<TitleCategory | "All"> = CATEGORY_OPTIONS;
-  protected activeCategory$: BehaviorSubject<TitleCategory | "All"> = new BehaviorSubject<TitleCategory | "All">( "All" );
-
-  /** Pagination state */
   protected pageSizeOptions: number[] = [ 10, 20, 30, 50 ];
-  private pageIndex$: BehaviorSubject<number> = new BehaviorSubject<number>( 0 ); // 0-based
-  private pageSize$: BehaviorSubject<number> = new BehaviorSubject<number>( 10 );
+  private pageIndex$ = new BehaviorSubject<number>( 0 );
+  private pageSize$ = new BehaviorSubject<number>( 10 );
 
-  /** Loading (skeletons) */
-  protected loading$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>( false );
+  protected loading$ = new BehaviorSubject<boolean>( false );
 
-  /** View-model */
   protected filteredItems$!: Observable<NotificationInboxItemDto[]>;
   protected totalCount$!: Observable<number>;
   protected pageItems$!: Observable<NotificationInboxItemDto[]>;
 
-  /** Number-row paginator helpers */
   protected totalPages$!: Observable<number>;
   protected currentPage$!: Observable<number>;
   protected pageNumbers$!: Observable<number[]>;
 
-  /** Socket connected snapshot */
-  private connSub?: Subscription;
-  protected connected!: boolean;
+  private pageClampSub?: Subscription;
 
-  /** Logged User snapshot */
-  private me: User | null = null;
+  // Query defaults
+  private readonly defaultScope = "user" as const;
+  private readonly defaultPriority = "all" as const;
+  private readonly defaultFilters: NotificationLoadFilters = {};
+  private readonly initialLimit = 50;
 
   public constructor (
     private readonly windowRef: WindowsRefService,
@@ -187,12 +157,8 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly authService: AuthService,
-
-    // ✅ NEW single facade
     private readonly notify: NotificationCenterService,
-    private readonly notificationRouter: NotificationRouteMapService,
-
-    private readonly renderer: Renderer2
+    private readonly notificationRouter: NotificationRouteMapService
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
   }
@@ -205,50 +171,51 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
       } );
     }
 
-    // Logged user (for audience predicates)
+    // Auth snapshot
     this.me = this.authService.getLoggedUser;
-    this.username = this.me?.username || "";
-    this.role = this.me?.role || null;
 
-    // Optional extended identity (safe)
-    this.userId = this.safeStr( ( this.me as unknown as { userId?: string; } )?.userId );
-    this.teamCodes = this.safeArrStr( ( this.me as unknown as { teamCodes?: string[]; } )?.teamCodes );
+    this.myUsername = this.safeString( this.me?.username );
+    this.myRole = ( this.me?.role ?? null ) as Role | null;
 
-    // Connection (WS)
-    this.connected$ = this.notify.onConnected$();
-    this.connSub = this.connected$
-      .pipe( distinctUntilChanged() )
-      .subscribe( ( isOn: boolean ): void => {
-        // Keeping your legacy behaviour: connected flag inverted
-        this.connected = !isOn;
-      } );
+    // IMPORTANT: _id can be ObjectId-like at runtime => safeId()
+    this.myUserId = this.safeId( ( this.me as unknown as { _id?: unknown; } )?._id );
 
-    // Unread count (prefer WS count stream)
-    this.unreadCount$ = this.notify.counts$().pipe(
-      map( ( c ) => {
-        const n = ( c as unknown as { unread?: number; } )?.unread;
-        return typeof n === "number" && Number.isFinite( n ) ? n : 0;
-      } ),
-      startWith( 0 )
+    // Optional team codes (safe)
+    this.myTeamCodes = this.safeArrStr(
+      ( this.me as unknown as { teamCodes?: unknown; } )?.teamCodes
     );
 
-    // REST snapshot list (source of truth for list rendering)
-    this.inboxItems$ = this.loadInboxStream( { page: 1, limit: 50 } );
+    // WS connection (use observable directly; no inverted mirror flags)
+    this.connected$ = this.notify.connected$();
 
-    // Unread subset
+    // Start center ONCE (bind push streams etc.)
+    if ( this.me ) {
+      this.notify.start( {
+        scope: this.defaultScope,
+        priorityScope: this.defaultPriority,
+        page: 1,
+        limit: this.initialLimit,
+        filters: this.defaultFilters,
+        me: this.me,
+      } );
+    }
+
+    // Expose deterministic lists
+    this.directInboxItems$ = this.directState$.asObservable();
+    this.overallInboxItems$ = this.overallState$.asObservable();
+    this.inboxItems$ = this.allState$.asObservable();
+
+    // Unread subset from ALL
     this.unreadInboxItems$ = this.inboxItems$.pipe(
       map( ( list ) => list.filter( ( x ) => !this.isRead( x ) ) )
     );
 
-    // Audience derived (direct)
-    this.directInboxItems$ = this.inboxItems$.pipe(
-      map( ( list ) => list.filter( ( x ) => this.isDirectToMe( x?.notification?.audiences ?? [] ) ) )
-    );
+    // Counts from deterministic lists
+    this.allCounts$ = this.inboxItems$.pipe( map( ( list ) => this.countVm( list ) ) );
+    this.directCounts$ = this.directInboxItems$.pipe( map( ( list ) => this.countVm( list ) ) );
+    this.overallCounts$ = this.overallInboxItems$.pipe( map( ( list ) => this.countVm( list ) ) );
 
-    // Audience derived (overall – admin sees others)
-    this.overallInboxItems$ = this.inboxItems$.pipe(
-      map( ( list ) => list.filter( ( x ) => this.isOverallVisibleToAdmin( x?.notification?.audiences ?? [] ) ) )
-    );
+    this.unreadCount$ = this.allCounts$.pipe( map( ( c ) => c.unread ), startWith( 0 ) );
 
     // Tab + search + category filter (LOCAL ONLY)
     this.filteredItems$ = combineLatest( [
@@ -260,7 +227,6 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
       this.searchCtrl.valueChanges.pipe( startWith<string>( "" ), debounceTime( 150 ) ),
     ] ).pipe(
       map( ( [ all, direct, overall, tab, activeCat, q ] ) => {
-        // pick pool by tab
         const pool =
           tab === "all"
             ? all
@@ -270,13 +236,11 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
                 ? direct
                 : overall;
 
-        // category filter (local)
         const withCategory =
           activeCat && activeCat !== "All"
             ? pool.filter( ( n ) => this.categoryOf( n ) === activeCat )
             : pool;
 
-        // search filter (local)
         const query = ( q ?? "" ).trim().toLowerCase();
         if ( !query ) return withCategory;
 
@@ -284,8 +248,11 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
           const title = this.titleOf( n ).toLowerCase();
           const body = this.bodyOf( n ).toLowerCase();
           const tags = this.tagsOf( n ).map( ( t ) => t.toLowerCase() );
-
-          return title.includes( query ) || body.includes( query ) || tags.some( ( t ) => t.includes( query ) );
+          return (
+            title.includes( query ) ||
+            body.includes( query ) ||
+            tags.some( ( t ) => t.includes( query ) )
+          );
         } );
       } )
     );
@@ -325,61 +292,123 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
       } )
     );
 
-    // Initial fetch
-    this.fetchPage();
+    // Clamp pageIndex when total pages shrinks (live updates)
+    this.pageClampSub = combineLatest( [ this.totalPages$, this.pageIndex$ ] ).subscribe(
+      ( [ totalPages, pageIndex ] ) => {
+        const maxIndex = Math.max( 0, totalPages - 1 );
+        if ( pageIndex > maxIndex ) this.pageIndex$.next( maxIndex );
+      }
+    );
+
+    // Initial refresh
+    this.refresh();
   }
 
   public ngAfterViewInit(): void {}
 
   public ngOnDestroy(): void {
     this.modeSub?.unsubscribe();
-    this.connSub?.unsubscribe();
+    this.pageClampSub?.unsubscribe();
 
     this.loading$.complete();
     this.pageIndex$.complete();
     this.pageSize$.complete();
     this.activeTab$.complete();
     this.activeCategory$.complete();
+
+    this.directState$.complete();
+    this.overallState$.complete();
+    this.allState$.complete();
   }
 
-  /** Manual refresh – only re-calls backend */
+  /** Manual refresh – deterministic: load DIRECT + OVERALL then merge */
   protected refresh(): void {
-    this.fetchPage();
+    if ( !this.me ) return;
+
+    this.loading$.next( true );
+
+    this.refresh$()
+      .pipe(
+        take( 1 ),
+        catchError( () => of( void 0 ) )
+      )
+      .subscribe( {
+        next: async () => {
+          await new Promise<void>( ( resolve ) => setTimeout( resolve, 800 ) );
+          this.loading$.next( false );
+        },
+        error: async () => {
+          await new Promise<void>( ( resolve ) => setTimeout( resolve, 800 ) );
+          this.loading$.next( false );
+        },
+      } );
   }
 
-  /** Search – LOCAL filter only */
+  private refresh$(): Observable<void> {
+    if ( !this.me ) return of( void 0 );
+
+    const listFilters: NotificationLoadFilters = {
+      unreadOnly: false,
+      includeArchived: false,
+      includeDeleted: false,
+    };
+
+    const directItems$ = this.notify
+      .loadDirect$( this.defaultPriority, 1, 0, listFilters, this.me )
+      .pipe(
+        map( ( view ) => ( view.items ?? [] ) ),
+        map( ( items ) => items.filter( ( it ) => this.isDirectAudience( it?.notification?.audiences ?? [] ) ) ),
+        catchError( () => of( [] as NotificationInboxItemDto[] ) )
+      );
+
+    // Overall is for ALL users (not admin-only)
+    const overallItems$ = this.notify
+      .loadOverall$( this.defaultPriority, 1, 0, listFilters, this.me )
+      .pipe(
+        map( ( view ) => ( view.items ?? [] ) ),
+        map( ( items ) => items.filter( ( it ) => this.isOverallAudience( it?.notification?.audiences ?? [] ) ) ),
+        catchError( () => of( [] as NotificationInboxItemDto[] ) )
+      );
+
+    return forkJoin( { direct: directItems$, overall: overallItems$ } ).pipe(
+      tap( ( r ) => {
+        this.directState$.next( r.direct );
+        this.overallState$.next( r.overall );
+
+        const merged = [ ...( r.direct ?? [] ), ...( r.overall ?? [] ) ];
+        const all = this.sortLatestFirst( this.dedupeByInboxId( merged ) );
+        this.allState$.next( all );
+      } ),
+      map( () => void 0 )
+    );
+  }
+
   protected search( q: string ): void {
     const query = ( q ?? "" ).trim();
     if ( query === this.searchCtrl.value ) return;
-
     this.searchCtrl.setValue( query, { emitEvent: true } );
     this.pageIndex$.next( 0 );
   }
 
-  /** Category chip selection – LOCAL filter only */
-  protected onCategorySelect( cat: TitleCategory | "All", ev: MatChipSelectionChange ): void {
+  protected onCategorySelect( cat: NotificationCategory | "All", ev: MatChipSelectionChange ): void {
     if ( !ev.selected ) return;
     this.activeCategory$.next( cat );
     this.pageIndex$.next( 0 );
   }
 
-  /** Tab change – LOCAL filter only */
   protected onTabChange( idx: number ): void {
     const key: TabKey = idx === 0 ? "all" : idx === 1 ? "unread" : idx === 2 ? "direct" : "overall";
     this.activeTab$.next( key );
     this.pageIndex$.next( 0 );
   }
 
-  /** MatPaginator handler – LOCAL pagination only */
   protected onPage( e: PageEvent ): void {
     this.pageIndex$.next( e.pageIndex );
     this.pageSize$.next( e.pageSize );
   }
 
-  /** Number-row paginator actions (1-based) – LOCAL pagination only */
   protected async goToPage( p: number ): Promise<void> {
     if ( p < 1 ) return;
-
     const total = await firstValueFrom( this.totalPages$ );
     const clamped = Math.min( total, Math.max( 1, p ) );
     this.pageIndex$.next( clamped - 1 );
@@ -403,57 +432,55 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
     await this.nextPage( 3 );
   }
 
-  /** Mark a single inbox item as read */
   protected markRead( inboxId: string ): void {
-    const id = this.safeStr( inboxId );
+    const id = this.safeId( inboxId );
     if ( !id ) return;
 
-    this.notify.markRead$( id ).subscribe( {
-      next: () => this.refresh(),
+    this.notify.markRead$( id ).pipe( take( 1 ) ).subscribe( {
+      next: () => undefined,
       error: ( err ) => {
-        // eslint-disable-next-line no-console
         console.error( `[Error:] [NotificationsMainPage] markRead failed: ${ this.errMsg( err ) }\n` );
       },
     } );
   }
 
-  /** Mark all visible (paged) items as read */
   protected markAllVisibleAsRead( items: NotificationInboxItemDto[] | null | undefined ): void {
     if ( !items?.length ) return;
 
-    // Option A (preferred): your backend likely has markMany endpoint - if your REST service supports it.
-    // If not available, fall back to markAllRead.
-    // For now, safest: markAllRead
-    this.notify.markAllRead$().subscribe( {
-      next: () => this.refresh(),
+    this.notify.markAllRead$().pipe( take( 1 ) ).subscribe( {
+      next: () => undefined,
       error: ( err ) => {
-        // eslint-disable-next-line no-console
         console.error( `[Error:] [NotificationsMainPage] markAllRead failed: ${ this.errMsg( err ) }\n` );
       },
     } );
   }
 
-  /** Open inbox item and mark read if needed */
   protected async openNotification( item: NotificationInboxItemDto ): Promise<void> {
     await this.notificationRouter.navigateByTarget( item.notification.target );
 
     if ( !this.isRead( item ) ) {
-      const inboxId = this.safeStr( ( item as unknown as { inboxId?: string; } )?.inboxId );
+      const inboxId = this.inboxIdOf( item );
       if ( inboxId ) this.markRead( inboxId );
     }
   }
 
-  /** TrackBy for *ngFor perf */
-  protected trackById( _: number, item: NotificationInboxItemDto ): string {
-    const inboxId = this.safeStr( ( item as unknown as { inboxId?: string; } )?.inboxId );
-    if ( inboxId ) return inboxId;
-
-    return this.safeStr( ( item?.notification as unknown as { notificationId?: string; } )?.notificationId );
+  protected inboxIdOf( item: NotificationInboxItemDto ): string {
+    return this.safeId( ( item as unknown as { inboxId?: unknown; } )?.inboxId );
   }
 
-  /** Icon by severity (template calls) */
+  // ✅ keeps lexical "this"
+  protected readonly trackById = ( _: number, item: NotificationInboxItemDto ): string => {
+    const inboxId = this.safeId( ( item as unknown as { inboxId?: unknown; } )?.inboxId );
+    if ( inboxId ) return inboxId;
+
+    const notificationId = this.safeId(
+      ( item?.notification as unknown as { notificationId?: unknown; } )?.notificationId
+    );
+    return notificationId || String( _ );
+  };
+
   protected iconFor( item: NotificationInboxItemDto ): string {
-    const sev = this.safeStr( ( item?.notification as unknown as { severity?: string; } )?.severity );
+    const sev = this.safeString( ( item?.notification as unknown as { severity?: unknown; } )?.severity );
     switch ( sev ) {
       case "success":
         return "check_circle";
@@ -466,97 +493,60 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  /**
-   * Fetch from backend.
-   * ❗ Does NOT apply local filters (tab/category/search)
-   */
-  private async fetchPage(): Promise<void> {
-    this.loading$.next( true );
-
-    try {
-      // Keep backend fetch independent from local filters.
-      // We load a stable snapshot (page=1) and paginate locally for UI consistency.
-      // If you want true server-side paging, we can refactor later.
-      this.inboxItems$ = this.loadInboxStream( { page: 1, limit: 50 } );
-    } catch ( err ) {
-      // eslint-disable-next-line no-console
-      console.error( `[Error:] [NotificationsMainPage] fetchPage failed: ${ this.errMsg( err ) }\n` );
-    } finally {
-      // keep your skeleton delay
-      await new Promise<void>( ( resolve ) => setTimeout( resolve, 1000 ) );
-      this.loading$.next( false );
-    }
-  }
-
   // =============================================================================
-  // REST snapshot loader (maps your REST result shape to NotificationInboxItemDto[])
+  // Audience rules (aligned with your dialog, but Overall visible to ALL users)
   // =============================================================================
 
-  private loadInboxStream( options: { page: number; limit: number; } ): Observable<NotificationInboxItemDto[]> {
-    if ( !this.username ) return of( [] );
-
-    const req: NotificationLoadRequest = {
-      username: this.username,
-      page: options.page,
-      limit: options.limit,
-      filters:{}
-    };
-
-    return this.notify.load$( req ).pipe(
-      map( ( res ) => {
-        // NOTE:
-        // Adjust this mapping to match your real REST response shape.
-        // Typical shapes are:
-        //  - { items: NotificationInboxItemDto[] }
-        //  - { data: { items: NotificationInboxItemDto[] } }
-        const items = ( res as unknown as { items?: NotificationInboxItemDto[]; } )?.items;
-        return Array.isArray( items ) ? items : [];
-      } ),
-      catchError( () => of( [] ) )
-    );
-  }
-
-  // =============================================================================
-  // Audience model helpers (NEW union audiences)
-  // =============================================================================
-
-  private isDirectToMe( audiences: unknown[] ): boolean {
+  private isDirectAudience( audiences: ReadonlyArray<NotificationAudience> ): boolean {
     if ( !Array.isArray( audiences ) || audiences.length === 0 ) return false;
 
     for ( const a of audiences ) {
-      const mode = this.safeStr( ( a as { mode?: string; } )?.mode );
+      if ( a.mode !== "User" ) continue;
 
-      if ( mode === "Company" ) return true;
+      const userId = this.safeId( ( a as unknown as { userId?: unknown; } )?.userId );
+      const username = this.safeString( ( a as unknown as { username?: unknown; } )?.username );
 
-      if ( mode === "Role" ) {
-        const roleKeys = this.safeArrStr( ( a as { roleKeys?: string[]; } )?.roleKeys );
-        if ( this.role && roleKeys.includes( String( this.role ) ) ) return true;
+      if ( this.myUserId && userId && userId === this.myUserId ) return true;
+      if ( this.myUsername && username && username === this.myUsername ) return true;
+    }
+
+    return false;
+  }
+
+  private isOverallAudience( audiences: ReadonlyArray<NotificationAudience> ): boolean {
+    if ( !Array.isArray( audiences ) || audiences.length === 0 ) return false;
+
+    // must NOT be direct to ME
+    if ( this.isDirectAudience( audiences ) ) return false;
+
+    const myRoleKey = this.safeLower( this.myRole );
+    const myTeams = this.myTeamCodes;
+
+    for ( const a of audiences ) {
+      if ( !a || typeof a !== "object" ) continue;
+
+      if ( a.mode === "Company" ) return true;
+
+      if ( a.mode === "Role" ) {
+        // support both roleKey and role (defensive)
+        const roleKey = this.safeLower( ( a as unknown as { roleKey?: unknown; } )?.roleKey );
+        const role = this.safeLower( ( a as unknown as { role?: unknown; } )?.role );
+
+        if ( myRoleKey && roleKey && roleKey === myRoleKey ) return true;
+        if ( myRoleKey && role && role === myRoleKey ) return true;
       }
 
-      if ( mode === "Team" ) {
-        const teamCodes = this.safeArrStr( ( a as { teamCodes?: string[]; } )?.teamCodes );
-        if ( this.teamCodes.some( ( t ) => teamCodes.includes( t ) ) ) return true;
-      }
-
-      if ( mode === "User" ) {
-        const userIds = this.safeArrStr( ( a as { userIds?: string[]; } )?.userIds );
-        const usernames = this.safeArrStr( ( a as { usernames?: string[]; } )?.usernames );
-
-        if ( this.userId && userIds.includes( this.userId ) ) return true;
-        if ( this.username && usernames.includes( this.username ) ) return true;
+      if ( a.mode === "Team" ) {
+        const teamCode = this.safeString( ( a as unknown as { teamCode?: unknown; } )?.teamCode );
+        if ( teamCode && myTeams.includes( teamCode ) ) return true;
       }
     }
 
     return false;
   }
 
-  private isOverallVisibleToAdmin( audiences: unknown[] ): boolean {
-    if ( this.role !== ( "admin" as Role ) ) return false;
-    return !this.isDirectToMe( audiences );
-  }
-
   // =============================================================================
-  // DTO field accessors (centralize uncertain field names)
+  // DTO accessors
   // =============================================================================
 
   protected isRead( item: NotificationInboxItemDto ): boolean {
@@ -566,37 +556,135 @@ export class NotificationsMainPage implements OnInit, AfterViewInit, OnDestroy {
     const v2 = ( item as unknown as { userState?: { isRead?: boolean; }; } )?.userState?.isRead;
     if ( typeof v2 === "boolean" ) return v2;
 
+    const v3 = ( item as unknown as { isRead?: boolean; } )?.isRead;
+    if ( typeof v3 === "boolean" ) return v3;
+
     return false;
   }
 
   protected categoryOf( item: NotificationInboxItemDto ): string {
-    return this.safeStr( ( item?.notification as unknown as { category?: string; } )?.category );
+    return this.safeString( ( item?.notification as unknown as { category?: unknown; } )?.category );
   }
 
   protected titleOf( item: NotificationInboxItemDto ): string {
-    return this.safeStr( ( item?.notification as unknown as { title?: string; } )?.title );
+    return this.safeString( ( item?.notification as unknown as { title?: unknown; } )?.title );
   }
 
   protected bodyOf( item: NotificationInboxItemDto ): string {
-    return this.safeStr( ( item?.notification as unknown as { body?: string; } )?.body );
+    return this.safeString( ( item?.notification as unknown as { body?: unknown; } )?.body );
   }
 
   protected tagsOf( item: NotificationInboxItemDto ): string[] {
-    const t = ( item?.notification as unknown as { tags?: string[]; } )?.tags;
+    const t = ( item?.notification as unknown as { tags?: unknown; } )?.tags;
     return this.safeArrStr( t );
   }
 
   // =============================================================================
-  // safe helpers (class methods only)
+  // Count helpers
   // =============================================================================
 
-  private safeStr( v: unknown ): string {
-    return typeof v === "string" ? v.trim() : "";
+  private countVm( list: ReadonlyArray<NotificationInboxItemDto> ): CountVm {
+    const total = Array.isArray( list ) ? list.length : 0;
+    const unread = Array.isArray( list ) ? list.filter( ( x ) => !this.isRead( x ) ).length : 0;
+    return { total, unread };
+  }
+
+  // =============================================================================
+  // Sorting + dedupe (copied from your dialog logic)
+  // =============================================================================
+
+  private dedupeByInboxId( items: NotificationInboxItemDto[] ): NotificationInboxItemDto[] {
+    const seen = new Set<string>();
+    const out: NotificationInboxItemDto[] = [];
+
+    for ( const it of items ?? [] ) {
+      const inboxId = this.safeId( ( it as unknown as { inboxId?: unknown; } )?.inboxId );
+      if ( !inboxId ) continue;
+      if ( seen.has( inboxId ) ) continue;
+      seen.add( inboxId );
+      out.push( it );
+    }
+
+    return out;
+  }
+
+  private sortLatestFirst( items: NotificationInboxItemDto[] ): NotificationInboxItemDto[] {
+    const copy = [ ...( items ?? [] ) ];
+
+    copy.sort( ( a, b ) => {
+      const bt = this.getItemSortTimeMs( b );
+      const at = this.getItemSortTimeMs( a );
+      return bt - at;
+    } );
+
+    return copy;
+  }
+
+  private getItemSortTimeMs( item: NotificationInboxItemDto ): number {
+    const deliveredAt = ( item as unknown as { deliveredAt?: unknown; } )?.deliveredAt;
+    const createdAt = ( item?.notification as unknown as { createdAt?: unknown; } )?.createdAt;
+
+    const d1 = this.safeDateMs( deliveredAt );
+    if ( d1 > 0 ) return d1;
+
+    const d2 = this.safeDateMs( createdAt );
+    if ( d2 > 0 ) return d2;
+
+    return 0;
+  }
+
+  private safeDateMs( v: unknown ): number {
+    if ( typeof v === "number" && Number.isFinite( v ) ) return v;
+
+    if ( typeof v === "string" ) {
+      const t = Date.parse( v );
+      return Number.isFinite( t ) ? t : 0;
+    }
+
+    if ( v && typeof v === "object" ) {
+      const maybe = v as { toString?: () => string; };
+      if ( typeof maybe.toString === "function" ) {
+        const t = Date.parse( String( maybe.toString() ) );
+        return Number.isFinite( t ) ? t : 0;
+      }
+    }
+
+    return 0;
+  }
+
+  // =============================================================================
+  // Safe helpers
+  // =============================================================================
+
+  private safeLower( v: unknown ): string {
+    const s = typeof v === "string" ? v.trim() : "";
+    return s.toLowerCase();
+  }
+
+  private safeString( v: unknown ): string {
+    if ( typeof v === "string" ) return v.trim();
+    if ( typeof v === "number" ) return String( v );
+    return "";
+  }
+
+  private safeId( v: unknown ): string {
+    if ( typeof v === "string" ) return v.trim();
+    if ( v && typeof v === "object" ) {
+      const maybe = v as { toString?: () => string; };
+      if ( typeof maybe.toString === "function" ) {
+        const s = String( maybe.toString() ).trim();
+        if ( s && s !== "[object Object]" ) return s;
+      }
+    }
+    return "";
   }
 
   private safeArrStr( v: unknown ): string[] {
     if ( !Array.isArray( v ) ) return [];
-    return v.filter( ( x ) => typeof x === "string" ).map( ( x ) => x.trim() ).filter( ( x ) => !!x );
+    return v
+      .filter( ( x ) => typeof x === "string" )
+      .map( ( x ) => x.trim() )
+      .filter( ( x ) => !!x );
   }
 
   private errMsg( err: unknown ): string {

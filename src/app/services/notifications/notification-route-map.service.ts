@@ -64,7 +64,6 @@ export class NotificationRouteMapService {
   private readonly UserAccountTokenKeySet: Set<string> = new Set([
     "user:account.created",
     "user:account.updated",
-    "user:account.deleted",
     "user:account.activated",
     "user:account.deactivated",
     "user:account.password.reset",

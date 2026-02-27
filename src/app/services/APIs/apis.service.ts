@@ -465,16 +465,15 @@ export class APIsService {
   }
 
   /**
-   * DELETE /api-user/user-delete/:username/:deletedBy
-   *   → Soft/hard delete user with audit-field "deletedBy".
+   * DELETE /api-user/user-delete/:username
+   *   → Soft/hard delete user with audit-field.
    */
   public async deleteUserByUsername(
-    username: string,
-    deletedBy: string,
+    username: string
   ): Promise<MSG> {
     return await this.delete<MSG>(
       this.buildUserUrl(
-        `user-delete/${ username }/${ deletedBy }`,
+        `user-delete/${ username }`,
       ),
     );
   }

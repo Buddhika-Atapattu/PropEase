@@ -352,7 +352,15 @@ export const routes: Routes = [
           // COMPLAINTS shell
           {
             path: 'complaints',
-            data: { title: 'COMPLAINTS' },
+            data: {
+              title: 'COMPLAINTS',
+              actionKeys: [
+                "tenant:complaint.created",
+                "tenant:complaint.resolved",
+                "tenant:complaint.status-changed",
+              ],
+              actionKeyPriority: 40,
+            },
             loadComponent: () =>
               import( './pages/tenant/complaints-main/complaint-main.component' ).then(
                 m => m.ComplaintMainomponent
@@ -392,6 +400,12 @@ export const routes: Routes = [
                 path: 'edit-complaint/:complaintID',
                 data: {
                   title: 'UPDATE COMPLAINT',
+                  actionKeys: [
+                    "tenant:complaint.created",
+                    "tenant:complaint.resolved",
+                    "tenant:complaint.status-changed",
+                  ],
+                  actionKeyPriority: 70,
                   requiredParams: [ 'complaintID' ],
                 },
                 loadComponent: () =>
@@ -405,7 +419,11 @@ export const routes: Routes = [
                 path: 'view-complaint/:complaintID',
                 data: {
                   title: 'VIEW COMPLAINT',
-                  actionKeys: [ 'tenant:complaint.created', 'tenant:complaint.resolved' ],
+                  actionKeys: [
+                    "tenant:complaint.created",
+                    "tenant:complaint.resolved",
+                    "tenant:complaint.status-changed",
+                  ],
                   actionKeyPriority: 100,
                   requiredParams: [ 'complaintID' ],
                 },
@@ -468,6 +486,89 @@ export const routes: Routes = [
       },
 
       // ───────────────────────────────────────────────────────────────────────
+      // RECYCLE BIN CENTER
+      // ───────────────────────────────────────────────────────────────────────
+
+      {
+        path: 'recycle-bin',
+        data: {
+          title: 'RECYCLE BIN',
+          actionKeys: [
+            "user:account.deleted",
+            "property:listing.deleted",
+            "tenant:account.deleted",
+            "tenant:complaint.deleted",
+            "team:deleted",
+            "team:member.milestone.deleted",
+            "team:member.activities.evidence.removed",
+            "team:task.deleted",
+            "team:work-item.deleted",
+            "comment:deleted",
+            "system:auto.deleted",
+          ],
+          actionKeyPriority: 40,
+        },
+        loadComponent: () =>
+          import( './pages/recyclebin/recyclebin-main.component' ).then(
+            m => m.RecyclebinMainComponent
+          ),
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'recycle-bin-center' },
+
+          {
+            path: 'recycle-bin-center',
+            data: {
+              title: 'CENTER',
+              actionKeys: [
+                "user:account.deleted",
+                "property:listing.deleted",
+                "tenant:account.deleted",
+                "tenant:complaint.deleted",
+                "team:deleted",
+                "team:member.milestone.deleted",
+                "team:member.activities.evidence.removed",
+                "team:task.deleted",
+                "team:work-item.deleted",
+                "comment:deleted",
+                "system:auto.deleted",
+              ],
+              actionKeyPriority: 70,
+            },
+            loadComponent: () =>
+              import( './pages/recyclebin/dashboard/dashboard.component' ).then(
+                m => m.RecycleBinDashboardComponent
+              ),
+          },
+
+          {
+            path: 'recycle-bin-item/:recycleItemRef',
+            data: {
+              title: 'ITEM',
+              actionKeys: [
+                "user:account.deleted",
+                "property:listing.deleted",
+                "tenant:account.deleted",
+                "tenant:complaint.deleted",
+                "team:deleted",
+                "team:member.milestone.deleted",
+                "team:member.activities.evidence.removed",
+                "team:task.deleted",
+                "team:work-item.deleted",
+                "comment:deleted",
+                "system:auto.deleted",
+              ],
+              actionKeyPriority: 100,
+              requiredParams: [ 'irecycleItemRef' ],
+            },
+            loadComponent: () =>
+              import( './pages/recyclebin/item/item.component' ).then(
+                m => m.RecycleBinItemComponent
+              ),
+          },
+        ],
+      },
+
+      // ───────────────────────────────────────────────────────────────────────
       // Access control
       // ───────────────────────────────────────────────────────────────────────
       {
@@ -486,6 +587,8 @@ export const routes: Routes = [
         loadComponent: () =>
           import( './pages/error404/error404.component' ).then( m => m.Error404Component ),
       },
+
+
     ],
   },
 

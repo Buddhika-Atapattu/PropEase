@@ -415,8 +415,7 @@ export class UsersListComponent implements OnInit, OnDestroy {
           }
 
           await this.APIsService.deleteUserByUsername(
-            username,
-            this.LOGGED_USER.username,
+            username
           )
             .then( ( res ) => {
               this.notification.notification( res.status, res.message );
@@ -428,13 +427,16 @@ export class UsersListComponent implements OnInit, OnDestroy {
                 err.error?.error ?? 'error',
                 err.error?.message ?? 'Delete failed.',
               );
+              console.error( err );
             } );
         } catch ( err ) {
           this.notification.notification( 'error', String( err ) );
+          console.error( err );
         }
       } );
     } catch ( error ) {
       this.notification.notification( 'error', String( error ) );
+      console.error( error );
     }
   }
 

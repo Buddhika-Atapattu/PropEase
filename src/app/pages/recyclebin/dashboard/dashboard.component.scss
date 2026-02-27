@@ -1,0 +1,168 @@
+/* Path: src/app/pages/recyclebin/dashboard/dashboard.component.scss */
+@use "../../../styles/global.scss" as *;
+
+.rb-shell {
+  padding: 16px;
+  color: var(--on-surface);
+}
+
+.rb-toolbar {
+  @include card-shell(
+    var(--surface),
+    var(--on-surface),
+    var(--border-color),
+    var(--shadow-color)
+  );
+
+  display: grid;
+  grid-template-columns: 1fr auto 320px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 16px;
+
+  .rb-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+
+    mat-icon {
+      color: var(--on-surface);
+      opacity: 0.9;
+    }
+  }
+
+  .rb-actions {
+    display: inline-flex;
+    gap: 8px;
+
+    .rb-btn {
+      border-radius: 14px;
+    }
+
+    .rb-btn.danger {
+      color: var(--danger);
+    }
+  }
+
+  .rb-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-variant);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 6px 10px;
+
+    mat-icon {
+      opacity: 0.75;
+    }
+
+    input {
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--on-surface);
+    }
+  }
+}
+
+.rb-table-wrap {
+  margin-top: 14px;
+  @include card-shell(
+    var(--surface),
+    var(--on-surface),
+    var(--border-color),
+    var(--shadow-color)
+  );
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.rb-table {
+  width: 100%;
+
+  .col-select {
+    width: 48px;
+  }
+
+  th {
+    font-weight: 600;
+    color: var(--on-surface);
+    opacity: 0.9;
+    background: var(--surface);
+  }
+
+  td {
+    color: var(--on-surface);
+  }
+}
+
+.rb-row:hover {
+  background: var(--hover-bg);
+}
+
+.rb-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0; // enables ellipsis
+
+  .rb-expander {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--hover-bg);
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .rb-expander-spacer {
+    width: 28px;
+    height: 28px;
+    display: inline-block;
+  }
+
+  .rb-ico {
+    opacity: 0.9;
+  }
+
+  .rb-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.rb-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rb-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-color);
+
+  .muted {
+    color: var(--muted);
+    font-size: 12px;
+  }
+}

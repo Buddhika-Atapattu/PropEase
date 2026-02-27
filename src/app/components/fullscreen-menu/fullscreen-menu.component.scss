@@ -1,3 +1,4 @@
+/* Path: src/app/components/fullscreen-menu/fullscreen-menu.component.scss */
 @use "../../styles/global.scss" as *;
 @use "sass:color";
 
@@ -120,6 +121,12 @@
   }
 }
 
+.tool-box{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
 /* ── Super-compact view switch (under header) ─────────────── */
 .fx-switch {
   --pill-h: 30px; /* ← your compact button height */
@@ -194,6 +201,7 @@
   } /* icon-only */
   .fx-switch .pill {
     padding-inline: 8px;
+    margin-inline: 0.25rem;
   }
   .notif-toolbar {
     justify-content: center;
@@ -265,7 +273,6 @@
   text-align: left;
   align-content: center;
   justify-items: center;
-  /* hover should only run on devices that actually have hover */
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       background: var(--hover-bg);

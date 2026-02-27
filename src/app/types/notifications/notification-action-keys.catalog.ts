@@ -31,6 +31,8 @@ export const NOTIFICATION_ACTION_KEYS = [
   "user:account.locked",
   "user:account.unlocked",
   "user:account.role.changed",
+  "user:account.auto_delete.failed",
+  "user:account.auto_delete.executed",
   "user:profile.updated",
   "user:login.success",
   "user:login.failed",
@@ -56,6 +58,8 @@ export const NOTIFICATION_ACTION_KEYS = [
   "tenant:account.deleted",
   "tenant:complaint.created",
   "tenant:complaint.resolved",
+  "tenant:complaint.deleted",
+  "tenant:complaint.status-changed",
   "tenant:rent.overdue",
 
   /* =============================================================================
@@ -83,12 +87,22 @@ export const NOTIFICATION_ACTION_KEYS = [
   "team:created",
   "team:updated",
   "team:deleted",
+
   "team:member.added",
   "team:member.removed",
   "team:member.updatd",
+
   "team:member.activities.added",
   "team:member.activities.removed",
   "team:member.activities.updated",
+  "team:member.activities.evidence.added",
+  "team:member.activities.evidence.updated",
+  "team:member.activities.evidence.removed",
+  "team:member.activities.blocker.appended",
+  "team:member.activities.blocker.updated",
+  "team:member.activities.blocker.resolved",
+  "team:member.activities.blocker.removed",
+
   "team:member.milestone.created",
   "team:member.milestone.updated",
   "team:member.milestone.deleted",
@@ -98,10 +112,18 @@ export const NOTIFICATION_ACTION_KEYS = [
   "team:member.milestone.deadline.changed",
   "team:member.milestone.assigned",
   "team:member.milestone.unassigned",
+
   "team:task.created",
+  "team:task.updated",
+  "team:task.deleted",
   "team:task.assigned",
   "team:task.completed",
   "team:task.overdue",
+
+  "team:work-item.created",
+  "team:work-item.updated",
+  "team:work-item.deleted",
+
   "team:kpi.threshold.breached",
 
   /* =============================================================================
@@ -119,6 +141,7 @@ export const NOTIFICATION_ACTION_KEYS = [
   "system:update.available",
   "system:security.alert",
   "system:backup.completed",
+  "system:auto.deleted",
 
   /* =============================================================================
      NOTIFICATION SYSTEM

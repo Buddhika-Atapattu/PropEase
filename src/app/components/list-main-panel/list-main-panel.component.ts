@@ -255,21 +255,29 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
       icon_text: 'Payments',
       toolTip: 'Payments',
     },
+    // {
+    //   url: '/dashboard/report',
+    //   unit: 'report',
+    //   commands: [ 'report' ],
+    //   mat_icon: 'report-icon',
+    //   icon_text: 'Reports',
+    //   toolTip: 'Reports',
+    // },
+    // {
+    //   url: '/dashboard/log',
+    //   unit: 'log',
+    //   commands: [ 'log' ],
+    //   mat_icon: 'certification-icon',
+    //   icon_text: 'Log',
+    //   toolTip: 'Log',
+    // },
     {
-      url: '/dashboard/report',
-      unit: 'report',
-      commands: [ 'report' ],
-      mat_icon: 'report-icon',
-      icon_text: 'Reports',
-      toolTip: 'Reports',
-    },
-    {
-      url: '/dashboard/log',
-      unit: 'log',
-      commands: [ 'log' ],
-      mat_icon: 'certification-icon',
-      icon_text: 'Log',
-      toolTip: 'Log',
+      url: '/dashboard/recycle-bin/recycle-bin-center',
+      unit: 'recycle bin',
+      commands: [ 'recycle-bin', 'recycle-bin-center' ],
+      mat_icon: 'bin-icon',
+      icon_text: 'Recycle Bin',
+      toolTip: 'Recycle Bin',
     },
   ];
 
@@ -391,6 +399,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
       { name: 'notifications-icon', icon: 'Images/Icons/notification.svg' },
       { name: 'log-icon', icon: 'Images/Icons/log.svg' },
       { name: 'complaints-icon', icon: 'Images/Icons/complaints.svg' },
+      { name: 'bin-icon', icon: 'Images/Icons/delete.svg' },
     ];
 
     icons.forEach( ( iconDef: { name: string; icon: string; } ) => {

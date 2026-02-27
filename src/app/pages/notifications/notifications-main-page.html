@@ -240,7 +240,7 @@
                   <button
                     mat-stroked-button
                     *ngIf="!isRead(n)"
-                    (click)="markRead(trackById(0, n))"
+                    (click)="markRead(inboxIdOf(n))"
                     class="btn-mark-read"
                     type="button"
                   >

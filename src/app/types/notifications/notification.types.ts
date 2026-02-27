@@ -13,6 +13,7 @@
  * - Engine internals (DefaultRule, resolver contexts, etc.)
  * ========================================================================== */
 
+import type { User } from "../../services/APIs/apis.service";
 import type { ISODateString, Role } from "../common";
 import type { NotificationActionKey } from "./notification-action-keys.catalog";
 
@@ -34,6 +35,7 @@ export type NotificationSeverity = "info" | "success" | "warning" | "error";
  * - Keep this union strictly aligned with backend categories.
  */
 export type NotificationCategory =
+  | 'All'
   | "System"
   | "Security"
   | "Audit"
@@ -55,6 +57,36 @@ export type NotificationScope = "user" | "role" | "company";
 /** Priority segmentation used by WS-RPC / UI tabs */
 export type NotificationPriorityScope = "all" | "prioritized" | "unprioritized";
 
+/** ✅ Runtime enum lists used by WS/REST sanitizers (NO undefined values). */
+export const NOTIFICATION_CATEGORY_VALUES = [
+  "All",
+  "User",
+  "Tenant",
+  "Property",
+  "Lease",
+  "Complaint",
+  "Payment",
+  "Team",
+  "Comment",
+  "System",
+  "Security",
+  "Audit",
+] as const satisfies readonly NotificationCategory[];
+
+export const NOTIFICATION_SEVERITY_VALUES = [
+  "info",
+  "success",
+  "warning",
+  "error",
+] as const satisfies readonly NotificationSeverity[];
+
+export const NOTIFICATION_AUDIENCE_MODE_VALUES = [
+  "User",
+  "Team",
+  "Company",
+  "Role",
+] as const satisfies readonly NonNullable<NotificationLoadFilters[ "mode" ]>[];
+
 /* =============================================================================
  * 02) Audience DTOs (small → medium)
  * ========================================================================== */
@@ -67,10 +99,10 @@ export type NotificationPriorityScope = "all" | "prioritized" | "unprioritized";
  * - Filters can match on audiences.mode or elemMatch blocks (backend aggregation)
  */
 export type NotificationAudience =
-  | { mode: "Company" }
+  | { mode: "Company"; }
   | { mode: "Role"; roleKey: Role; }
-  | { mode: "Team"; teamCode: string }
-  | { mode: "User"; userId: string };
+  | { mode: "Team"; teamCode: string; }
+  | { mode: "User"; userId: string; };
 
 /* =============================================================================
  * 03) Actor DTO (who triggered it)
@@ -282,21 +314,15 @@ export interface NotificationInboxItemDto {
  * - In builder functions, ONLY set them when defined.
  */
 export interface NotificationLoadFilters {
-  search?: string;
-
   category?: NotificationCategory;
   severity?: NotificationSeverity;
-
-  /** Optional audience-mode filter (admin/tools) */
-  mode?: NotificationAudienceMode;
-
-  unreadOnly?: boolean;
-
-  includeDeleted?: boolean;
-  includeArchived?: boolean;
-
+  mode?: "User" | "Team" | "Company" | "Role";
+  search?: string;
   from?: ISODateString;
   to?: ISODateString;
+  unreadOnly?: boolean;
+  includeDeleted?: boolean;
+  includeArchived?: boolean;
 }
 
 /**
@@ -307,20 +333,31 @@ export interface NotificationLoadFilters {
  * - always pass {} when no filters are needed
  */
 export interface NotificationLoadRequest {
+  userId: string,
   username: string;
   page: number;
   limit: number;
   filters: NotificationLoadFilters;
+  me: User;
 }
 
 /** List response for “classic inbox load”. */
 export interface NotificationLoadResponse {
   items: NotificationInboxItemDto[];
-  other: { total: number };
+  other: { total: number; };
 }
 
 /** Count response used for badges (classic total/unread). */
 export interface NotificationCountResponse {
   total: number;
   unread: number;
+  prioritized: number;
+  unprioritized: number;
 }
+
+export interface NotificationTitleBodyPatch {
+  title?: string;
+  body?: string;
+}
+
+
