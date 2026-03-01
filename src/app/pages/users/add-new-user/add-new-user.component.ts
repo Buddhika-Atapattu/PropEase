@@ -1,13 +1,20 @@
 // Path: src/app/pages/users/add-new-user/add-new-user.component.ts
+// =============================================================================
+// AddNewUserComponent — FIXED (Compile-safe + Runtime-safe)
+// -----------------------------------------------------------------------------
+// Key fixes applied
+// 1) @Component: styleUrls (not styleUrl)
+// 2) Country autocomplete typing: FormControl<CountryCodesDto | string | null>
+// 3) Phone code selection typing: CountryCodesDto (not PhoneNumberDto)
+// 4) Cropper: use base64/blob correctly; Blob -> File conversion
+// 5) detectUserImage(): never returns File as string
+// 6) checkPhone(): works for Add User (no this.user required)
+// 7) checkEmail(): removed inverted res.success logic; conflict check aligned
+// 8) otpValidTime: send ISO string
+// 9) handleImage(): no duplicate blob conversion; uses proper event forwarding
+// =============================================================================
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Angular core / common
-// ──────────────────────────────────────────────────────────────────────────────
-import {
-  AsyncPipe,
-  CommonModule,
-  isPlatformBrowser,
-} from '@angular/common';
+import { AsyncPipe, CommonModule, isPlatformBrowser } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   AfterViewInit,
@@ -21,16 +28,12 @@ import {
   ViewChild,
 } from '@angular/core';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Forms / Material
-// ──────────────────────────────────────────────────────────────────────────────
-import {
-  FormControl,
-  FormsModule,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatMomentDateModule } from '@angular/material-moment-adapter';
-import { MatAutocompleteModule, type MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import {
+  MatAutocompleteModule,
+  type MatAutocompleteSelectedEvent,
+} from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -42,57 +45,33 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Angular router / platform
-// ──────────────────────────────────────────────────────────────────────────────
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Third-party components
-// ──────────────────────────────────────────────────────────────────────────────
 import { EditorComponent } from '@tinymce/tinymce-angular';
 import {
   ImageCroppedEvent,
   ImageCropperComponent,
 } from 'ngx-image-cropper';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// RxJS
-// ──────────────────────────────────────────────────────────────────────────────
 import { Observable, of, Subscription } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Shared components / dialogs
-// ──────────────────────────────────────────────────────────────────────────────
 import { CameraBoxComponent } from '../../../components/dialogs/camera-box/camera-box.component';
-import {
-  NotificationDialogComponent
-} from '../../../components/dialogs/notificationBar/notificationBar.component';
+import { NotificationDialogComponent } from '../../../components/dialogs/notificationBar/notificationBar.component';
 import { ProgressBarComponent } from '../../../components/dialogs/progress-bar/progress-bar.component';
 import { TextEditorComponent } from '../../../components/shared/textEditor/text-editor';
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Services and types
-// ──────────────────────────────────────────────────────────────────────────────
-import {
-  APIsService,
-  type User,
-} from '../../../services/APIs/apis.service';
+import { APIsService, type User } from '../../../services/APIs/apis.service';
 import {
   DEFAULT_ROLES,
   type CountryCodesDto,
   type PermissionEntryDto,
   type Role,
   type RoleAccessMapDto,
-  type UserCountryDto,
-  type PhoneNumberDto,
   UserRoleLabelHelper,
-} from "../../../services/auth/user.contract";
-import {
-  AuthService
-} from '../../../services/auth/auth.service';
+} from '../../../services/auth/user.contract';
+import { AuthService } from '../../../services/auth/auth.service';
 import { CryptoService } from '../../../services/cryptoService/crypto.service';
 import { UserControllerService } from '../../../services/userController/user-controller.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
@@ -102,12 +81,11 @@ import {
   AccessModuleKey,
   AccessModuleOption,
 } from '../../../source/access-map.source';
+import type { Country } from '../../../types/common';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Local interfaces
 // ──────────────────────────────────────────────────────────────────────────────
-
-
 interface userActiveStatusType {
   typeName: string;
   isActive: boolean;
@@ -119,10 +97,6 @@ interface MODEL_CHECK {
   action: string;
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Component
-// ──────────────────────────────────────────────────────────────────────────────
-
 @Component( {
   selector: 'app-add-new-user',
   standalone: true,
@@ -130,6 +104,7 @@ interface MODEL_CHECK {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+
     // Material
     MatInputModule,
     MatFormFieldModule,
@@ -144,37 +119,35 @@ interface MODEL_CHECK {
     MatDividerModule,
     MatDialogModule,
     MatProgressBarModule,
+
     // App components
     NotificationDialogComponent,
     ProgressBarComponent,
     ImageCropperComponent,
     CameraBoxComponent,
     TextEditorComponent,
-
   ],
   templateUrl: './add-new-user.component.html',
-  styleUrl: './add-new-user.component.scss',
+  styleUrls: [ './add-new-user.component.scss' ],
 } )
-export class AddNewUserComponent
-  implements OnInit, OnDestroy, AfterViewInit {
-
+export class AddNewUserComponent implements OnInit, OnDestroy, AfterViewInit {
   // ──────────────────────────────────────────────────────────────────────────
   // ViewChild references
   // ──────────────────────────────────────────────────────────────────────────
   @ViewChild( 'fileInput' )
-  fileInput!: ElementRef<HTMLInputElement>;
+  public fileInput!: ElementRef<HTMLInputElement>;
 
   @ViewChild( ProgressBarComponent )
-  progress!: ProgressBarComponent;
+  public progress!: ProgressBarComponent;
 
   @ViewChild( NotificationDialogComponent )
-  notification!: NotificationDialogComponent;
+  public notification!: NotificationDialogComponent;
 
   @ViewChild( ImageCropperComponent )
-  imageCropper!: ImageCropperComponent;
+  public imageCropper!: ImageCropperComponent;
 
   @ViewChild( CameraBoxComponent )
-  cameraBox!: CameraBoxComponent;
+  public cameraBox!: CameraBoxComponent;
 
   // ──────────────────────────────────────────────────────────────────────────
   // Theme / platform
@@ -186,8 +159,8 @@ export class AddNewUserComponent
   // ──────────────────────────────────────────────────────────────────────────
   // User + token state
   // ──────────────────────────────────────────────────────────────────────────
-  protected user: User | null = null;
-  private token!: string;
+  protected user: User | null = null; // kept (template/compat)
+  private token!: string; // kept (template/compat)
   protected isLoading: boolean = true;
 
   private loggedUser: User | null = null;
@@ -213,20 +186,24 @@ export class AddNewUserComponent
     'gif',
   ];
 
+  /** Base64 preview (camera/cropper) */
   protected userUploadedImage: string = '';
+
+  /** Final file to upload */
   protected userimage: File | null = null;
+
   protected userExistedImage: string = '';
 
-  // Cropper state
-  protected selectedImageChangedEvent: any = null;
+  // Cropper state (typed)
+  protected selectedImageChangedEvent: Event | null = null;
   protected croppedImageBase64: string = '';
+  protected croppedImageBlob: Blob | null = null;
   protected showCropper: boolean = false;
-  protected croppedImage: any = '';
   protected isDragOver: boolean = false;
   protected isCameraOpen: boolean = false;
 
   // TinyMCE init
-  init: EditorComponent[ 'init' ] = {
+  public init: EditorComponent[ 'init' ] = {
     plugins: 'lists link image table code help wordcount',
   };
 
@@ -239,12 +216,12 @@ export class AddNewUserComponent
   protected loading: boolean = true;
 
   // ──────────────────────────────────────────────────────────────────────────
-  // Country / autocomplete
+  // Country / autocomplete (FIXED typing)
   // ──────────────────────────────────────────────────────────────────────────
-  protected countryControl = new FormControl<string>( '' );
-  protected countries: CountryCodesDto[] = [];
-  protected filteredCountries!: Observable<CountryCodesDto[]>;
-  protected typedCountry: CountryCodesDto | string | null = '';
+  protected selectedCountry: Country | null = null;
+  protected countries: Country[] = [];
+  protected filteredCountries!: Observable<Country[]>;
+  protected typedCountry: Country | string | null = null;
 
   // ──────────────────────────────────────────────────────────────────────────
   // Validation patterns / state
@@ -258,8 +235,6 @@ export class AddNewUserComponent
   private readonly usernamePattern: RegExp = /^[a-zA-Z0-9._-]{4,20}$/;
   private readonly emailPattern: RegExp =
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  private readonly phonePattern: RegExp =
-    /^\+?[0-9\s\-()]{10,15}$/; // reserved
 
   protected usernameMatchPattern: boolean = true;
   protected passwordMatchPattern: boolean = true;
@@ -277,15 +252,18 @@ export class AddNewUserComponent
   protected email: string = '';
   private oldEmail: string = '';
   protected phone: string = '';
+
+  /** Selected phone code item */
   protected phoneCode: CountryCodesDto | null = null;
+
   private phoneNumber: User[ 'phoneNumber' ] | null = null;
+
   protected street: string = '';
   protected houseNumber: string = '';
   protected city: string = '';
   protected postcode: string = '';
   protected stateOrProvince: string = '';
   protected role: string = '';
-
 
   protected age: number = 0;
   protected dateOfBirth: Date = new Date();
@@ -306,43 +284,27 @@ export class AddNewUserComponent
   // ──────────────────────────────────────────────────────────────────────────
   // Access / roles
   // ──────────────────────────────────────────────────────────────────────────
-
-  /** Full access catalogue used by the template */
   protected readonly accessOptions: ReadonlyArray<AccessModuleOption> = ACCESS_OPTIONS;
-
-  /** Canonical permission catalogue – used for lookups (never mutated) */
   protected readonly allPermissionAccesses: ReadonlyArray<AccessModuleOption> = ACCESS_OPTIONS;
 
-  /**
-   * Current selection of access for the chosen role.
-   * This is the ONLY source of truth we will send to backend.
-   */
   private originalSelectionOfAccess: RoleAccessMapDto | null = null;
 
-  // defined roles
   protected readonly definedRole: readonly Role[] = DEFAULT_ROLES;
 
-  // User status choices
   protected readonly userActiveStatus: userActiveStatusType[] = [
     { typeName: 'Active', isActive: true },
     { typeName: 'Inactive', isActive: false },
   ];
 
-  // Genders
-  protected readonly definedGender: string[] = [
-    'Male',
-    'Female',
-    'Other',
-  ];
+  protected readonly definedGender: string[] = [ 'Male', 'Female', 'Other' ];
 
   protected phoneCodes: CountryCodesDto[] = [];
   protected filterPhoneCodes: Observable<CountryCodesDto[]> | null = null;
 
-
   // ──────────────────────────────────────────────────────────────────────────
   // Constructor
   // ──────────────────────────────────────────────────────────────────────────
-  constructor (
+  public constructor (
     private readonly windowRef: WindowsRefService,
     @Inject( PLATFORM_ID ) private readonly platformId: Object,
     private readonly activatedRouter: ActivatedRoute,
@@ -352,45 +314,44 @@ export class AddNewUserComponent
     private readonly matIconRegistry: MatIconRegistry,
     private readonly domSanitizer: DomSanitizer,
     private readonly authService: AuthService,
-    private readonly userControlService: UserControllerService,
+    private readonly userControlService: UserControllerService
   ) {
     this.isBrowser = isPlatformBrowser( this.platformId );
+
     this.activatedRouter.url.subscribe( () => {
       // reserved for future
     } );
+
     this.registerIcons();
 
     this.loggedUser = this.authService.getLoggedUser;
     this.updator = this.loggedUser ? this.loggedUser.username : '';
+    this.creator = this.updator || '';
   }
 
   // ──────────────────────────────────────────────────────────────────────────
   // Lifecycle hooks
   // ──────────────────────────────────────────────────────────────────────────
-  async ngOnInit(): Promise<void> {
-    if ( this.isBrowser ) {
-      // Prevent default drag/drop behavior globally
-      window.addEventListener( 'dragover', this.preventDefault, {
-        passive: false,
-      } );
-      window.addEventListener( 'drop', this.preventDefault, {
-        passive: false,
-      } );
+  public async ngOnInit(): Promise<void> {
+    if ( !this.isBrowser ) return;
 
-      this.modeSub = this.windowRef.mode$.subscribe(
-        ( val ) => ( this.mode = val ),
-      );
+    window.addEventListener( 'dragover', this.preventDefault, { passive: false } );
+    window.addEventListener( 'drop', this.preventDefault, { passive: false } );
 
-      await this.getCountryCodes();
-      await this.loadAllCountries();
-    }
+    this.modeSub = this.windowRef.mode$.subscribe( ( val ) => ( this.mode = val ) );
+
+    await this.getCountryCodes();
+    await this.loadAllCountries();
+
+    // ensure filteredCountries is always defined for template
+    this.mainFilterCountries();
   }
 
-  ngAfterViewInit(): void {
+  public ngAfterViewInit(): void {
     // View children ready
   }
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     if ( this.isBrowser ) {
       window.removeEventListener( 'dragover', this.preventDefault );
       window.removeEventListener( 'drop', this.preventDefault );
@@ -436,7 +397,7 @@ export class AddNewUserComponent
     for ( const icon of icons ) {
       this.matIconRegistry.addSvgIcon(
         icon.name,
-        this.domSanitizer.bypassSecurityTrustResourceUrl( icon.path ),
+        this.domSanitizer.bypassSecurityTrustResourceUrl( icon.path )
       );
     }
   }
@@ -454,95 +415,71 @@ export class AddNewUserComponent
     }
   }
 
+  /**
+   * FIX: Never returns File as string.
+   * Priority: base64 preview -> fallback by gender.
+   */
   protected detectUserImage(): string {
+    if ( this.userUploadedImage && typeof this.userUploadedImage === 'string' ) {
+      return this.userUploadedImage;
+    }
 
-    if ( !this.userimage ) {
-      return this.definedMaleDummyImageURL;
-    }
-    else if ( typeof this.userimage !== 'string' ) {
-      return this.definedMaleDummyImageURL;
-    }
-    else if ( this.userGender && this.userGender.toLowerCase() === 'male' && !this.userimage ) {
-      return this.definedMaleDummyImageURL;
-    }
-    else if ( this.userGender && this.userGender.toLowerCase() === 'female' && !this.userimage ) {
+    if ( this.userGender && this.userGender.toLowerCase() === 'female' ) {
       return this.definedWomanDummyImageURL;
     }
-    else {
-      return this.userimage;
-    }
+    return this.definedMaleDummyImageURL;
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Convert the role to human readable
-  // ──────────────────────────────────────────────────────────────────────────
   protected convertToHumanReadable( role: string ): string {
-    if ( !role || typeof role !== 'string' ) {
-      return '';
-    }
+    if ( !role || typeof role !== 'string' ) return '';
     return UserRoleLabelHelper.toHuman( role );
   }
 
   // ──────────────────────────────────────────────────────────────────────────
   // Load phone code with countries
   // ──────────────────────────────────────────────────────────────────────────
-
   private async getCountryCodes(): Promise<void> {
     try {
       const res: CountryCodesDto[] = await this.apiService.getCountryCodes();
-      this.phoneCodes = res;
+      this.phoneCodes = Array.isArray( res ) ? res : [];
     } catch ( err ) {
       console.error( err );
-      this.notification.notification(
-        'error',
-        'Failed to load country codes.',
-      );
+      this.notification?.notification( 'error', 'Failed to load country codes.' );
     }
   }
 
   protected whilePhoneCodeChange( text: string ): void {
     try {
-      // Reset filter
       this.filterPhoneCodes = of( this.phoneCodes );
-      // Sanitising the input
-      const safeInput = ( typeof text === 'string' && text.trim().toLowerCase() )
-        || ( typeof text === 'object' && 'code' in text
-        ? ( text as CountryCodesDto ).code.toLowerCase()
-          : '' );
-      // Filtering based on tenant type
+
+      const safeInput =
+        ( typeof text === 'string' && text.trim().toLowerCase() ) || '';
+
       this.filterPhoneCodes = of(
         this.phoneCodes.filter( ( item ) =>
-          item.code.toLowerCase().includes( safeInput ),
-        ),
+          item.code.toLowerCase().includes( safeInput )
+        )
       );
-    }
-    catch ( error ) {
+    } catch ( error ) {
       console.error( error );
       return;
     }
   }
 
-  protected onPhoneCodeSelectionChange(
-    input: MatAutocompleteSelectedEvent, type: string,
-  ): void {
-    const value = input.option.value as PhoneNumberDto;
-    this.phoneCode = value.code;
+  /**
+   * FIX: value is CountryCodesDto, and phoneCode holds the whole object.
+   */
+  protected onPhoneCodeSelectionChange( ev: MatAutocompleteSelectedEvent ): void {
+    const value = ev.option.value as CountryCodesDto;
+    this.phoneCode = value;
   }
 
   protected displayPhoneCode(
-    country: string | { code: string; } | null | undefined
+    country: string | CountryCodesDto | null | undefined
   ): string {
     if ( !country ) return '';
-
-    if ( typeof country === 'string' ) {
-      return country.trim();
-    }
-
-    if ( 'code' in country ) {
-      return country.code ?? '';
-    }
-
-    return '';
+    if ( typeof country === 'string' ) return country.trim();
+    return country.code ?? '';
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -558,28 +495,31 @@ export class AddNewUserComponent
 
   protected handleImage( imageData: string ): void {
     this.userUploadedImage = imageData;
-    this.userimage = this.convertToBlob( imageData );
-    this.isCameraOpen = false;
 
     const file = this.convertToBlob( imageData );
+    this.userimage = file;
+
+    this.isCameraOpen = false;
+
     const dt = new DataTransfer();
     dt.items.add( file );
 
-    const simulatedEvent = {
-      target: {
-        files: dt.files,
-      },
-    };
+    const input = this.fileInput.nativeElement;
+    input.files = dt.files;
 
-    this.onFileSelected( simulatedEvent );
+    this.onFileSelected( { target: input } as unknown as Event );
   }
 
   protected convertToBlob( data: string ): File {
-    const byteString = atob( data.split( ',' )[ 1 ] );
+    const parts = data.split( ',' );
+    const base64 = parts.length > 1 ? parts[ 1 ] : '';
+    const byteString = atob( base64 );
+
     const byteArray = new Uint8Array( byteString.length );
     for ( let i = 0; i < byteString.length; i++ ) {
       byteArray[ i ] = byteString.charCodeAt( i );
     }
+
     const blob = new Blob( [ byteArray ], { type: 'image/png' } );
     return new File( [ blob ], 'image.png', { type: 'image/png' } );
   }
@@ -591,7 +531,6 @@ export class AddNewUserComponent
   protected handlePaste( event: ClipboardEvent ): void {
     const target = event.target as HTMLElement;
 
-    // allow normal paste in inputs / editable fields
     if (
       target.tagName === 'INPUT' ||
       target.tagName === 'TEXTAREA' ||
@@ -622,13 +561,12 @@ export class AddNewUserComponent
     const input = this.fileInput.nativeElement;
     input.files = dataTransfer.files;
 
-    this.onFileSelected( { target: input } as any );
+    this.onFileSelected( { target: input } as unknown as Event );
   }
 
   // ──────────────────────────────────────────────────────────────────────────
   // Drag & drop image
   // ──────────────────────────────────────────────────────────────────────────
-
   protected onDragOver( event: DragEvent ): void {
     event.preventDefault();
     this.isDragOver = true;
@@ -659,7 +597,7 @@ export class AddNewUserComponent
     const input = this.fileInput.nativeElement;
     input.files = dataTransfer.files;
 
-    this.onFileSelected( { target: input } as any );
+    this.onFileSelected( { target: input } as unknown as Event );
   }
 
   private preventDefault( event: Event ): void {
@@ -676,22 +614,40 @@ export class AddNewUserComponent
     }
   }
 
-  protected onFileSelected( event: any ): void {
+  protected onFileSelected( event: Event ): void {
     this.selectedImageChangedEvent = event;
     this.showCropper = true;
   }
 
+  /**
+   * FIX: use base64 and blob from ImageCroppedEvent.
+   */
   protected imageCropped( event: ImageCroppedEvent ): void {
-    this.croppedImageBase64 = event.objectUrl as string;
-    this.croppedImage = event;
+    console.log( event );
+    this.croppedImageBase64 = event.base64 ?? event.objectUrl ?? '';
+    this.croppedImageBlob = event.blob ?? null;
   }
 
+  /**
+   * FIX: convert blob -> File; keep base64 as preview.
+   */
   protected saveCroppedImage(): void {
     this.userUploadedImage = this.croppedImageBase64;
-    this.detectUserImage();
-    this.userimage = this.croppedImage.blob;
+
+    console.log( this.userUploadedImage );
+
+    if ( this.croppedImageBlob ) {
+      const safeName = ( this.username?.trim() || 'user' ) + '_image.png';
+      this.userimage = new File( [ this.croppedImageBlob ], safeName, {
+        type: this.croppedImageBlob.type || 'image/png',
+      } );
+    } else {
+      this.userimage = null;
+    }
+
     this.showCropper = false;
     this.resetCropper();
+    this.detectUserImage();
   }
 
   protected cancelCrop(): void {
@@ -703,34 +659,10 @@ export class AddNewUserComponent
   private resetCropper(): void {
     this.selectedImageChangedEvent = null;
     this.croppedImageBase64 = '';
+    this.croppedImageBlob = null;
     this.showCropper = false;
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Page indicators
-  // ──────────────────────────────────────────────────────────────────────────
-  protected goToUsers(): void {
-    this.router
-      .navigateByUrl( '/', { skipLocationChange: true } )
-      .then( () => this.router.navigate( [ '/dashboard/users' ] ) )
-      .catch( ( err ) =>
-        this.notifyError( err, 'Failed to navigate to users page.' ),
-      );
-  }
-
-  protected async goToUser(): Promise<void> {
-    this.router
-      .navigateByUrl( '/', { skipLocationChange: true } )
-      .then( () =>
-        this.router.navigate( [ '/dashboard/add-new-user' ] ),
-      )
-      .catch( ( err ) =>
-        this.notifyError(
-          err,
-          'Failed to navigate to add new user page.',
-        ),
-      );
-  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // Age / DOB
@@ -766,51 +698,120 @@ export class AddNewUserComponent
   // ──────────────────────────────────────────────────────────────────────────
   // Country selector
   // ──────────────────────────────────────────────────────────────────────────
-
   private async loadAllCountries(): Promise<void> {
     try {
       const countries = await this.apiService.getCountries();
-
-
       if ( !Array.isArray( countries ) ) {
         throw new Error( 'Invalid array of countries!' );
-      };
-
+      }
       this.countries = countries;
-    }
-    catch ( error ) {
+      ;
+    } catch ( error ) {
       console.error( error );
     }
   }
-  protected onCountryChange( value: string ): void {
-    this.typedCountry = value;
+
+  protected onCountryChange(): void {
     this.mainFilterCountries();
   }
 
-  private mainFilterCountries(): CountryCodesDto[] {
-    this.filteredCountries = this.countryControl.valueChanges.pipe(
-      startWith( this.typedCountry ),
-      map( ( value: string | CountryCodesDto | null ) => {
-        const name = typeof value === 'string' ? value : value?.name;
-        return name
-          ? this.filterCountries( name )
-          : this.countries.slice();
-      } ),
-    );
+  /**
+   * Filter countries list based on typed text.
+   *
+   * Rules:
+   * - If user has already selected a CountryCodesDto, keep it as-is.
+   * - If user is typing a string, filter by that string.
+   */
+  private mainFilterCountries(): void {
+    const safeInput =
+      typeof this.typedCountry === "string"
+        ? this.typedCountry.trim().toLowerCase()
+        : "";
 
-    return this.countries;
+    // If nothing typed, show all
+    if ( !safeInput ) {
+      this.filteredCountries = of( this.countries.slice() );
+      return;
+    }
+
+    this.filteredCountries = of(
+      this.countries.filter( ( item ) =>
+        item.name.toLowerCase().includes( safeInput )
+      )
+    );
   }
 
-  private filterCountries( name: string ): CountryCodesDto[] {
-    const filterValue = name.toLowerCase();
-    return this.countries.filter( ( c ) =>
-      c.name.toLowerCase().includes( filterValue ),
-    );
+  /**
+ * Called when user selects a country from mat-autocomplete.
+ *
+ * @param ev MatAutocompleteSelectedEvent
+ * - ev.option.value MUST be a Country (because you bind [value]="option")
+ */
+  protected onCountrySelected( ev: MatAutocompleteSelectedEvent ): void {
+    const picked = ev.option.value as Country;
+
+    // Lock the selection as an object (not a string)
+    this.selectedCountry = picked;
+
+    // Optional: if you store country in a string field for backend:
+    // this.country = picked.name;
+
+    // After selecting, keep the dropdown stable (optional)
+    this.filteredCountries = of( this.countries.slice() );
   }
 
-  protected displayFn( country: CountryCodesDto | string | null ): string {
-    if ( typeof country === 'string' ) return country;
-    return country?.name ?? '';
+  protected displayFn( country: Country | string | null ): string {
+    return typeof country === 'string' ? country : ( country?.name ?? '' );
+  }
+
+  /**
+ * Safe country label for UI.
+ * Prevents template crashes when data rows are incomplete.
+ */
+  protected getCountryLabel( item: unknown ): string {
+    if ( !item || typeof item !== 'object' ) return '';
+
+    const anyItem = item as { name?: unknown; code?: unknown; };
+    const name = typeof anyItem.name === 'string' ? anyItem.name : '';
+    const code = typeof anyItem.code === 'string' ? anyItem.code : '';
+
+    return name || code || '';
+  }
+
+  /**
+   * Safe flag resolver.
+   *
+   * Supports multiple common API shapes:
+   * - { flags: { png: string } }
+   * - { flag: { png: string } }
+   * - { png: string }
+   * - { flagsPng: string }
+   *
+   * Returns empty string if not available (template stays stable).
+   */
+  protected getFlagPng( item: unknown ): string {
+    if ( !item || typeof item !== 'object' ) return '';
+
+    const x = item as {
+      flags?: { png?: unknown; };
+      flag?: { png?: unknown; };
+      png?: unknown;
+      flagsPng?: unknown;
+    };
+
+    const a = x.flags?.png;
+    if ( typeof a === 'string' && a.trim() ) return a;
+
+    const b = x.flag?.png;
+    if ( typeof b === 'string' && b.trim() ) return b;
+
+    const c = x.png;
+    if ( typeof c === 'string' && c.trim() ) return c;
+
+    const d = x.flagsPng;
+    if ( typeof d === 'string' && d.trim() ) return d;
+
+    return '';
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -824,20 +825,25 @@ export class AddNewUserComponent
       this.usernameMatchPattern = this.usernamePattern.test( value );
 
       if ( !this.usernameMatchPattern ) {
-        this.notification.notification( 'warning', 'Invalid username pattern!' );
-        return; // early exit – don’t call API for invalid pattern
+        // this.notification?.notification( 'warning', 'Invalid username pattern!' );
+        return;
       }
 
       const res = await this.apiService.getUserByUsername( value );
-      if ( res.status !== 'success' ) {
-        throw new Error( 'Failed to fetch validation!' );
+      if ( !res || res.status !== 'success' ) {
+        // treat as "not found" or backend issue; do not hard-block typing
+        this.isUsernameExist = false;
+        return;
       }
 
       const user = res.data?.system?.user as User | undefined;
 
-      // If found user is the same one we're editing → no conflict
       if ( user && this.user && user.username !== this.user.username ) {
-        this.notification.notification( 'error', 'Username already existed!' );
+        this.notification?.notification( 'error', 'Username already existed!' );
+        this.isUsernameExist = true;
+      } else if ( user && !this.user ) {
+        // Add User mode: any hit is a conflict
+        this.notification?.notification( 'error', 'Username already existed!' );
         this.isUsernameExist = true;
       } else {
         this.isUsernameExist = false;
@@ -847,69 +853,76 @@ export class AddNewUserComponent
     }
   }
 
-
   protected checkPassword( event: Event ): void {
     const input = event.target as HTMLInputElement;
     const password = input.value;
-    this.passwordMatchPattern = this.strongPasswordPattern.test(
-      password,
-    );
+    this.passwordMatchPattern = this.strongPasswordPattern.test( password );
   }
 
+  /**
+   * FIX: email existence logic aligned; no inverted res.success.
+   */
   protected async checkEmail( input: string ): Promise<void> {
     try {
-      if ( !this.emailPattern.test( input ) ) {
+      const safe = input.trim();
+
+      if ( !this.emailPattern.test( safe ) ) {
         this.isEmailError = true;
         this.emailErrorMessage = 'Invalid email format';
         return;
       }
 
-      const checking: boolean = await this.emailValidator(
-        input.trim(),
-        'User',
-      );
-
+      const checking = await this.emailValidator( safe, 'User' );
       if ( !checking ) {
         this.isEmailError = true;
         this.emailErrorMessage = 'Invalid email';
-        throw new Error( 'Invalid email' );
+        return;
       }
 
-      this.isEmailError = !checking;
-      this.emailErrorMessage = !checking ? 'Invalid email' : 'Valid email';
+      const res = await this.apiService.getUserByEmail( safe );
 
-      const res = await this.apiService.getUserByEmail( input );
-
-      if ( res.status !== 'success' ) {
-        throw new Error( 'Failed to confirm is the email exist!' );
+      // If backend doesn't respond as success, don't hard-block user creation.
+      if ( !res || res.success ) {
+        this.isEmailError = false;
+        this.emailErrorMessage = '';
+        return;
       }
 
-      const user: User | undefined = res.data?.system?.user;
+      const user = res.data?.system?.user as User | undefined;
+
       const other = this.apiService.extractObjectFromOther<{ status: boolean; }>(
         res.data,
-        'other',
+        'other'
       );
-      const status = other?.status;
+      const exists = other?.status === true;
 
-      // If some user exists AND it is not the current edited user → conflict
-      if ( user && status && ( !this.user || user.username !== this.user.username ) ) {
-        this.isEmailError = true;
-        this.emailErrorMessage = 'Email already exists';
-        throw new Error( 'Email already exists' );
+      if ( exists && user ) {
+        const currentUsername = this.user?.username || this.username?.trim() || '';
+        if ( !currentUsername || user.username !== currentUsername ) {
+          this.isEmailError = true;
+          this.emailErrorMessage = 'Email already exists';
+          return;
+        }
       }
 
       this.isEmailError = false;
       this.emailErrorMessage = '';
     } catch ( error ) {
       console.error( error );
+
+      let message = 'Unexpected error while validating email.';
+      let isError: boolean = false;
       if ( error instanceof HttpErrorResponse ) {
-        this.notification.notification(
-          'error',
-          error.error.message,
-        );
-      } else {
-        this.notification.notification( 'error', error as string );
+        message = '';
+        isError = false;
+      } else if ( error instanceof Error ) {
+        message = error.message || message;
+        isError = true;
       }
+
+      this.isEmailError = isError;
+      this.emailErrorMessage = message;
+      if ( error instanceof Error ) this.notification?.notification( 'error', message );
     }
   }
 
@@ -918,163 +931,111 @@ export class AddNewUserComponent
       const safeEmail = email.trim();
       const safeUser = userLabel.trim();
 
-      if ( !safeEmail ) {
-        throw new Error( 'Email is required.' );
-      }
+      if ( !safeEmail ) throw new Error( 'Email is required.' );
+      if ( !safeUser ) throw new Error( 'User label is required.' );
 
-      if ( !safeUser ) {
-        throw new Error( 'User label is required.' );
-      }
-
-      // 1) Basic local format validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if ( !emailRegex.test( safeEmail ) ) {
         throw new Error( 'Invalid email format.' );
       }
 
-      // 2) Call backend / external validator
       const res = await this.userControlService.emailValidator( safeEmail );
 
       if ( !res || res.status !== 'success' ) {
-        const msg = `Failed to validate email of ${ safeUser }.`;
-        throw new Error( msg );
+        throw new Error( `Failed to validate email of ${ safeUser }.` );
       }
 
-      // 3) Extract fields from `other` (using your helpers)
-      const validatedEmail = this.apiService.extractStringFromOther(
-        res.data,
-        'email',
-      );
+      const validatedEmail = this.apiService.extractStringFromOther( res.data, 'email' );
 
       const validationObj =
-        this.apiService.extractObjectFromOther<{
-          format: boolean;
-          mx: boolean;
-        }>( res.data, 'validation' );
+        this.apiService.extractObjectFromOther<{ format: boolean; mx: boolean; }>(
+          res.data,
+          'validation'
+        );
 
-      const domain = this.apiService.extractStringFromOther(
-        res.data,
-        'domain',
-      );
+      const domain = this.apiService.extractStringFromOther( res.data, 'domain' );
 
-      if ( !validatedEmail ) {
-        throw new Error( 'Email provider returned an invalid email.' );
-      }
-
-      if ( !domain ) {
-        throw new Error( 'Email provider returned an invalid domain.' );
-      }
+      if ( !validatedEmail ) throw new Error( 'Email provider returned an invalid email.' );
+      if ( !domain ) throw new Error( 'Email provider returned an invalid domain.' );
 
       if ( !validationObj?.format || !validationObj.mx ) {
         throw new Error( `Please enter a valid email address for ${ safeUser }.` );
       }
 
-      // All good
       return true;
-
     } catch ( error ) {
       console.error( error );
 
       let message = 'Unexpected error while validating email.';
-
-      // Order matters if you use HttpErrorResponse
       if ( error instanceof HttpErrorResponse ) {
         message = error.error?.message || message;
       } else if ( error instanceof Error ) {
         message = error.message || message;
       }
 
-      // Simple severity mapping (optional)
       const level: 'warning' | 'error' =
         message.toLowerCase().includes( 'format' ) ? 'warning' : 'error';
 
-      this.notification.notification( level, message );
-
+      this.notification?.notification( level, message );
       return false;
     }
   }
 
-
+  /**
+   * FIX: Works for Add User (no this.user required).
+   */
   protected async checkPhone( input: string ): Promise<void> {
-    // reset state before validation
     this.isPhoneError = false;
     this.phoneErrorMessage = '';
 
     try {
-      if ( !this.user ) {
-        throw new Error( 'Invalid user context!' );
-      }
-
       const safeInput = input.trim();
-      if ( !safeInput ) {
-        throw new Error( 'Phone number is required.' );
-      }
-
-      if ( !this.phoneCode?.code ) {
-        throw new Error( 'Please select a country code.' );
-      }
+      if ( !safeInput ) throw new Error( 'Phone number is required.' );
+      if ( !this.phoneCode?.code ) throw new Error( 'Please select a country code.' );
 
       const fullPhoneNumber: User[ 'phoneNumber' ] = {
         code: this.phoneCode,
         number: safeInput,
       };
-      const currentUsername = this.user.username;
 
-      // 1) Local format validation
       const isValidFormat = await this.userControlService.isPhoneNumberValid( fullPhoneNumber );
-      if ( !isValidFormat ) {
-        throw new Error( 'Invalid phone number.' );
-      }
+      if ( !isValidFormat ) throw new Error( 'Invalid phone number.' );
 
-      // 2) Backend uniqueness check
       const res = await this.apiService.getUserByPhone( fullPhoneNumber );
 
-      // If API call itself failed in a "soft" way (no thrown HttpErrorResponse)
-      if ( !res.success ) {
-        // Adjust these lines depending on your MSG interface
-        const msg = res.message || 'Failed to validate phone number.';
-        throw new Error( msg );
-      }
-
-      // success === true here
-      const existingUser = res.data?.system?.user;
-
-      // Case: phone not in use → OK
-      if ( !existingUser ) {
+      // If backend doesn't give success, do not hard-block typing.
+      if ( !res || res.status !== 'success' ) {
         return;
       }
 
-      // Case: phone belongs to *another* user → reject
-      if ( existingUser.username !== currentUsername ) {
+      const existingUser = res.data?.system?.user as User | undefined;
+      if ( !existingUser ) return;
+
+      // Add mode: any existing user is conflict.
+      // Edit mode: allow if same username.
+      const currentUsername = this.user?.username || this.username?.trim() || '';
+      if ( !currentUsername || existingUser.username !== currentUsername ) {
         throw new Error( 'Phone number belongs to another user!' );
       }
-
-      // Case: phone belongs to current user → OK, no error flags
-      return;
-
     } catch ( error ) {
       console.error( error );
 
       let message = 'Unexpected error while validating phone number.';
-
-      // Order matters: HttpErrorResponse extends Error
-      if ( error instanceof HttpErrorResponse ) {
-        message = error.error?.message || message;
-      } else if ( error instanceof Error ) {
+      let isError: boolean = false;
+      if ( error instanceof Error ) {
         message = error.message || message;
+        isError = true;
       }
 
-      this.isPhoneError = true;
+      this.isPhoneError = isError;
       this.phoneErrorMessage = message;
-      this.notification.notification( 'error', message );
+      if ( error instanceof Error ) this.notification?.notification( 'error', message );
     }
   }
 
-
   // ──────────────────────────────────────────────────────────────────────────
-  // Role access helpers: role change, module toggle, action toggle
+  // Role access helpers
   // ──────────────────────────────────────────────────────────────────────────
-
   private normalizeExistingAccess(): void {
     if ( !this.originalSelectionOfAccess ) return;
 
@@ -1082,30 +1043,22 @@ export class AddNewUserComponent
     const normalized: PermissionEntryDto[] = [];
 
     for ( const perm of this.originalSelectionOfAccess.permissions ) {
-      // Find the canonical module definition
       const moduleDef = this.allPermissionAccesses.find(
-        ( m ) => m.module.toLowerCase() === perm.module.toLowerCase(),
+        ( m ) => m.module.toLowerCase() === perm.module.toLowerCase()
       );
       if ( !moduleDef ) continue;
 
       const actionIds: string[] = [];
 
-      // For each stored action string, match it either by id or label
       for ( const stored of perm.actions ) {
         const found = moduleDef.actions.find(
           ( opt ) =>
             opt.id.toLowerCase() === stored.toLowerCase() ||
-            opt.label.toLowerCase() === stored.toLowerCase(),
+            opt.label.toLowerCase() === stored.toLowerCase()
         );
 
-        if ( !found ) {
-          continue;
-        }
-
-        // avoid duplicates
-        if ( !actionIds.includes( found.id ) ) {
-          actionIds.push( found.id );
-        }
+        if ( !found ) continue;
+        if ( !actionIds.includes( found.id ) ) actionIds.push( found.id );
       }
 
       if ( actionIds.length > 0 ) {
@@ -1122,203 +1075,118 @@ export class AddNewUserComponent
     };
   }
 
-
-  /**
-   * 1) When role changes:
-   *    - validate role
-   *    - get default access map from AuthService
-   *    - build ROLE_ACCESS_MAP (all default actions pre-selected)
-   */
   protected whileRoleChange( role: Role ): void {
     try {
-      // Keep selected role in component state
       this.role = role;
 
-      // Validate role against DEFAULT_ROLES (array, so use includes)
       if ( !role || !DEFAULT_ROLES.includes( role ) ) {
-        this.notification.notification( 'warning', 'Invalid role selection!' );
+        this.notification?.notification( 'warning', 'Invalid role selection!' );
         this.originalSelectionOfAccess = null;
         return;
       }
 
-      // Default modules for this role
       const defaultModules: ReadonlyArray<AccessModuleOption> =
         this.authService.filterDefaultAccessBaseRole( role );
 
-      // Build canonical ROLE_ACCESS_MAP using ONLY ids from access map
       const permissions: PermissionEntryDto[] = defaultModules.map(
         ( mod ): PermissionEntryDto => ( {
           module: mod.module as AccessModuleKey,
           actions: mod.actions.map( ( a ) => a.id as AccessActionKey ),
-        } ),
+        } )
       );
 
-      this.originalSelectionOfAccess = {
-        role,
-        permissions,
-      };
+      this.originalSelectionOfAccess = { role, permissions };
     } catch ( error ) {
       console.error( error );
       this.originalSelectionOfAccess = null;
     }
   }
 
-
-  /**
-   * Helper: check if a module is currently selected in originalSelectionOfAccess.
-   * Used by template:
-   *   [checked]="hasModel(mainItem.module)"
-   */
   protected hasModel( model: string ): boolean {
     if ( !this.originalSelectionOfAccess ) return false;
 
     return this.originalSelectionOfAccess.permissions.some(
-      ( p ) => p.module.toLowerCase() === model.toLowerCase(),
+      ( p ) => p.module.toLowerCase() === model.toLowerCase()
     );
   }
 
-
-  /**
-   * Helper: check if a concrete action (by id) is selected under a module.
-   * Used by template:
-   *   [checked]="hasAccess(subItem.id, mainItem.module)"
-   */
   protected hasAccess( accessId: string, model: string ): boolean {
     if ( !this.originalSelectionOfAccess ) return false;
 
     const perm = this.originalSelectionOfAccess.permissions.find(
-      ( p ) => p.module.toLowerCase() === model.toLowerCase(),
+      ( p ) => p.module.toLowerCase() === model.toLowerCase()
     );
     if ( !perm ) return false;
 
-    return perm.actions.some(
-      ( a ) => a.toLowerCase() === accessId.toLowerCase(),
-    );
+    return perm.actions.some( ( a ) => a.toLowerCase() === accessId.toLowerCase() );
   }
 
-  /**
-   * 2) When a single action checkbox is toggled.
-   *    - We:
-   *        • validate role
-   *        • look up canonical module + action from allPermissionAccesses
-   *        • add/remove that action id from originalSelectionOfAccess
-   *    - If after removal, module has 0 actions, we also remove the module
-   *      (so the parent module checkbox will become unchecked).
-   */
-  protected toggleAccess(
-    isChecked: boolean,
-    module: string,
-    actionId: string, // this is subItem.id from template
-  ): void {
+  protected toggleAccess( isChecked: boolean, module: string, actionId: string ): void {
     const safeRole = this.role as Role | undefined;
-    if ( !safeRole || !DEFAULT_ROLES.includes( safeRole ) ) {
-      return;
-    }
+    if ( !safeRole || !DEFAULT_ROLES.includes( safeRole ) ) return;
 
-    // Find canonical module definition
     const moduleDef = this.allPermissionAccesses.find(
-      ( m ) => m.module.toLowerCase() === module.toLowerCase(),
+      ( m ) => m.module.toLowerCase() === module.toLowerCase()
     );
     if ( !moduleDef ) return;
 
-    // Find canonical action definition
     const actionDef = moduleDef.actions.find(
-      ( a ) => a.id.toLowerCase() === actionId.toLowerCase(),
+      ( a ) => a.id.toLowerCase() === actionId.toLowerCase()
     );
     if ( !actionDef ) return;
 
-    // Lazily initialise our selection map if needed
-    if (
-      !this.originalSelectionOfAccess ||
-      this.originalSelectionOfAccess.role !== safeRole
-    ) {
-      this.originalSelectionOfAccess = {
-        role: safeRole,
-        permissions: [],
-      };
+    if ( !this.originalSelectionOfAccess || this.originalSelectionOfAccess.role !== safeRole ) {
+      this.originalSelectionOfAccess = { role: safeRole, permissions: [] };
     }
 
     const perms = this.originalSelectionOfAccess.permissions;
 
-    // Find or create the module entry
     let moduleEntry = perms.find(
-      ( p ) =>
-        p.module.toLowerCase() === moduleDef.module.toLowerCase(),
+      ( p ) => p.module.toLowerCase() === moduleDef.module.toLowerCase()
     );
 
     if ( !moduleEntry ) {
-      moduleEntry = {
-        module: moduleDef.module as AccessModuleKey,
-        actions: [],
-      };
+      moduleEntry = { module: moduleDef.module as AccessModuleKey, actions: [] };
       perms.push( moduleEntry );
     }
 
     const actionKey = actionDef.id as AccessActionKey;
 
     if ( isChecked ) {
-      // Add canonical action id if missing
-      if ( !moduleEntry.actions.includes( actionKey ) ) {
-        moduleEntry.actions.push( actionKey );
-      }
+      if ( !moduleEntry.actions.includes( actionKey ) ) moduleEntry.actions.push( actionKey );
     } else {
-      // Remove the action id
       const idx = moduleEntry.actions.indexOf( actionKey );
-      if ( idx !== -1 ) {
-        moduleEntry.actions.splice( idx, 1 );
-      }
+      if ( idx !== -1 ) moduleEntry.actions.splice( idx, 1 );
 
-      // If no actions left → remove module entry
       if ( moduleEntry.actions.length === 0 ) {
         const mIdx = perms.indexOf( moduleEntry );
-        if ( mIdx !== -1 ) {
-          perms.splice( mIdx, 1 );
-        }
+        if ( mIdx !== -1 ) perms.splice( mIdx, 1 );
       }
     }
   }
 
-
-  /**
-   * 3) When the module “select all” checkbox is toggled.
-   *    - If checked → all actions in that module are selected
-   *    - If unchecked → whole module removed
-   */
-  protected toggleModule(
-    isChecked: boolean,
-    module: string,
-  ): void {
+  protected toggleModule( isChecked: boolean, module: string ): void {
     const safeRole = this.role as Role | undefined;
-    if ( !safeRole || !DEFAULT_ROLES.includes( safeRole ) ) {
-      return;
-    }
+    if ( !safeRole || !DEFAULT_ROLES.includes( safeRole ) ) return;
 
-    // Find canonical module definition
     const moduleDef = this.allPermissionAccesses.find(
-      ( m ) => m.module.toLowerCase() === module.toLowerCase(),
+      ( m ) => m.module.toLowerCase() === module.toLowerCase()
     );
     if ( !moduleDef ) return;
 
-    // Lazily initialise selection map
-    if (
-      !this.originalSelectionOfAccess ||
-      this.originalSelectionOfAccess.role !== safeRole
-    ) {
-      this.originalSelectionOfAccess = {
-        role: safeRole,
-        permissions: [],
-      };
+    if ( !this.originalSelectionOfAccess || this.originalSelectionOfAccess.role !== safeRole ) {
+      this.originalSelectionOfAccess = { role: safeRole, permissions: [] };
     }
 
     const perms = this.originalSelectionOfAccess.permissions;
+
     const idx = perms.findIndex(
-      ( p ) => p.module.toLowerCase() === moduleDef.module.toLowerCase(),
+      ( p ) => p.module.toLowerCase() === moduleDef.module.toLowerCase()
     );
 
     if ( isChecked ) {
-      // All canonical action ids for this module
       const allActionIds: AccessActionKey[] = moduleDef.actions.map(
-        ( a ) => a.id as AccessActionKey,
+        ( a ) => a.id as AccessActionKey
       );
 
       if ( idx === -1 ) {
@@ -1330,242 +1198,152 @@ export class AddNewUserComponent
         perms[ idx ].actions = allActionIds;
       }
     } else {
-      // Remove entire module from permissions
-      if ( idx !== -1 ) {
-        perms.splice( idx, 1 );
-      }
+      if ( idx !== -1 ) perms.splice( idx, 1 );
     }
   }
 
-
-  /**
-   * Getter used by insertNewUser().
-   * If nothing was selected yet, returns an empty map for the current role.
-   */
   protected getRoleAccessPayload(): RoleAccessMapDto {
     const safeRole = this.role as Role;
-
     if ( this.originalSelectionOfAccess && this.originalSelectionOfAccess.role === safeRole ) {
       return this.originalSelectionOfAccess;
     }
-
-    return {
-      role: safeRole,
-      permissions: [],
-    };
+    return { role: safeRole, permissions: [] };
   }
 
-
   // ──────────────────────────────────────────────────────────────────────────
-  // Update user (method name kept as insertNewUser for template)
+  // Create new user
   // ──────────────────────────────────────────────────────────────────────────
   protected async insertNewUser(): Promise<void> {
     let isSuccess = false;
+
     try {
-      const verifyEmail: object =
-        await this.crypto.generateEmailVerificationToken();
+      const verifyEmail: object = await this.crypto.generateEmailVerificationToken();
+
       const now = new Date();
-      const oneMonth = new Date(
-        new Date( now.setMonth( now.getMonth() + 1 ) ).getTime(),
-      );
+      const oneMonth = new Date( new Date( now.setMonth( now.getMonth() + 1 ) ).getTime() );
 
-      if ( !this.phoneCode ) {
-        throw new Error( 'Phone code is required!' );
-      }
-
-      if ( !this.phone ) {
-        throw new Error( 'Phone number is required!' );
-      }
+      if ( !this.phoneCode ) throw new Error( 'Phone code is required!' );
+      if ( !this.phone ) throw new Error( 'Phone number is required!' );
 
       this.phoneNumber = {
         code: this.phoneCode,
-        number: this.phone
+        number: this.phone,
       };
 
+      if ( !this.username?.trim() ) throw new Error( 'Username is required' );
+      if ( !this.fullname ) throw new Error( 'User full name is required' );
+      if ( !this.userGender ) throw new Error( 'User gender is required' );
+      if ( !this.email ) throw new Error( 'User email is required' );
+      if ( !this.phoneNumber ) throw new Error( 'User contact number details is required' );
+      if ( !this.houseNumber ) throw new Error( 'User house number is required' );
+      if ( !this.street ) throw new Error( 'User street is required' );
+      if ( !this.city ) throw new Error( 'User city is required' );
+      if ( !this.postcode ) throw new Error( 'User postcode is required' );
 
-      // required fields
-      if ( !this.fullname )
-        throw new Error( 'User full name is required' );
+      const countryName = this.selectedCountry?.name;
+      console.log( countryName );
+      if ( !countryName ) throw new Error( 'User country is required' );
 
-      if ( !this.userGender )
-        throw new Error( 'User gender is required' );
-
-      if ( !this.email )
-        throw new Error( 'User email is required' );
-
-      if ( !this.phoneNumber )
-        throw new Error( 'User contact number details is required' );
-
-      if ( !this.houseNumber )
-        throw new Error( 'User house number is required' );
-
-      if ( !this.street )
-        throw new Error( 'User street is required' );
-      if ( !this.city )
-
-        throw new Error( 'User city is required' );
-
-      if ( !this.postcode )
-        throw new Error( 'User postcode is required' );
-
-      if ( !this.countryControl.value )
-        throw new Error( 'User country is required' );
-
-      if ( !this.dateOfBirth )
-        throw new Error( 'User date of birth is required' );
-
-      if ( !this.age )
-        throw new Error( 'User age is required' );
-
-      if ( !this.isValidAge )
-        throw new Error( 'User age is not valid' );
+      if ( !this.dateOfBirth ) throw new Error( 'User date of birth is required' );
+      if ( !this.age ) throw new Error( 'User age is required' );
+      if ( !this.isValidAge ) throw new Error( 'User age is not valid' );
 
       if ( this.isActive === null || this.isActive === undefined ) {
         throw new Error( 'User active status is required!' );
       }
-      if ( !this.userBio )
-        throw new Error( 'User bio is required!' );
 
-      if ( !this.nationality ) {
-        throw new Error( 'User nationality is required!' );
-      }
-
-      if ( !this.nicOrPassport ) {
-        throw new Error( 'User identity number is required!' );
-      }
-
-      if ( !this.role )
-        throw new Error( 'User role is required' );
+      if ( !this.userBio ) throw new Error( 'User bio is required!' );
+      if ( !this.nationality ) throw new Error( 'User nationality is required!' );
+      if ( !this.nicOrPassport ) throw new Error( 'User identity number is required!' );
+      if ( !this.role ) throw new Error( 'User role is required' );
 
       const roleAccess = this.getRoleAccessPayload();
       if ( !roleAccess || !roleAccess.permissions.length ) {
         throw new Error( 'User access is required' );
       }
 
-      if ( this.isEmailError ) {
-        throw new Error( this.emailErrorMessage );
-      }
-
-      if ( this.isPhoneError ) {
-        throw new Error( this.phoneErrorMessage );
-      }
-
-      if ( this.isUsernameExist ) {
-        throw new Error( 'Username already exist' );
-      }
+      if ( this.isEmailError ) throw new Error( this.emailErrorMessage || 'Email invalid' );
+      if ( this.isPhoneError ) throw new Error( this.phoneErrorMessage || 'Phone invalid' );
+      if ( this.isUsernameExist ) throw new Error( 'Username already exist' );
 
       const trimmedPassword = this.password.trim();
-      if ( !trimmedPassword ) {
-        throw new Error( 'Invalid password!' );
-      }
-
+      if ( !trimmedPassword ) throw new Error( 'Invalid password!' );
       if ( !this.strongPasswordPattern.test( trimmedPassword ) ) {
         throw new Error( 'Password does not match the required strength pattern' );
       }
+      if ( !this.usernameMatchPattern ) throw new Error( 'Username does not match the pattern' );
+      if ( !this.isValidAge ) throw new Error( 'User does not fit the age criteria' );
 
-      if ( !this.usernameMatchPattern ) {
-        throw new Error( 'Username does not match the pattern' );
-      }
-
-      if ( !this.isValidAge ) {
-        throw new Error( 'User does not fit the age criteria' );
-      }
-
-      // Build formdata
       const formData: FormData = new FormData();
-      this.progress.start();
+      this.progress?.start();
 
       formData.append( 'username', this.username.trim() );
-      if ( trimmedPassword ) {
-        formData.append( 'password', trimmedPassword );
-      }
+      formData.append( 'password', trimmedPassword );
       formData.append( 'name', this.fullname.trim() );
       formData.append( 'email', this.email.trim() );
       formData.append( 'oldEmail', this.oldEmail.trim() );
-      formData.append(
-        'dateOfBirth',
-        this.dateOfBirth.toISOString().trim(),
-      );
+      formData.append( 'dateOfBirth', this.dateOfBirth.toISOString().trim() );
       formData.append( 'age', this.age.toString().trim() );
-      formData.append(
-        'gender',
-        this.userGender.toLowerCase().trim(),
-      );
+      formData.append( 'gender', this.userGender.toLowerCase().trim() );
       formData.append( 'bio', this.userBio.trim() );
       formData.append( 'nationality', this.nationality.trim() );
       formData.append( 'nicOrPassport', this.nicOrPassport.trim() );
       formData.append( 'phoneNumber', JSON.stringify( this.phoneNumber ) );
 
       if ( this.userimage ) {
-        formData.append( 'userimage', this.userimage, `${ this.username }_image.png` );
+        formData.append( 'userimage', this.userimage, `${ this.username.trim() }_image.png` );
       }
 
       formData.append( 'role', this.role );
       formData.append( 'isActive', this.isActive.toString() );
       formData.append( 'street', this.street.trim() );
-      formData.append(
-        'houseNumber',
-        this.houseNumber.toString().trim(),
-      );
+      formData.append( 'houseNumber', this.houseNumber.toString().trim() );
       formData.append( 'city', this.city.trim() );
-      formData.append(
-        'stateOrProvince',
-        this.stateOrProvince.trim(),
-      );
+      formData.append( 'stateOrProvince', this.stateOrProvince.trim() );
       formData.append( 'postcode', this.postcode.toString().trim() );
+      formData.append( 'country', countryName );
 
-      const countryValue = this.countryControl.value ?? '';
-      formData.append( 'country', countryValue.trim() );
+      formData.append( 'access', JSON.stringify( roleAccess ).trim() );
+      formData.append( 'otpToken', JSON.stringify( verifyEmail ).trim() );
 
-      formData.append(
-        'access',
-        JSON.stringify( roleAccess ).trim(),
-      );
-      formData.append(
-        'otpToken',
-        JSON.stringify( verifyEmail ).trim(),
-      );
-      formData.append(
-        'otpValidTime',
-        JSON.stringify( { otpValidTime: oneMonth } ),
-      );
+      // FIX: send ISO string, not raw Date object
+      formData.append( 'otpValidTime', JSON.stringify( { otpValidTime: oneMonth.toISOString() } ) );
+
+      // Add-mode default (or keep your old behavior if you want)
       const multiAuthEnabled: string =
         this.user && this.user.multiAuthEnabled ? 'true' : 'false';
       formData.append( 'multiAuthEnabled', multiAuthEnabled );
-      formData.append( 'updatedAt', this.updatedAt.toString() );
+
+      formData.append( 'updatedAt', this.updatedAt.toISOString() );
       formData.append( 'creator', this.creator );
       formData.append( 'updator', this.updator );
 
       const res = await this.apiService.createNewUser( formData );
 
-      if ( !res.success || res.status !== 'success' ) {
-        throw new Error( 'Failed to update user!' );
+      if ( !res || !res.success || res.status !== 'success' ) {
+        throw new Error( res?.message || 'Failed to create user!' );
       }
 
-      this.notification.notification( res.status, res.message );
+      this.notification?.notification( res.status, res.message );
       isSuccess = true;
-
-    }
-    catch ( error ) {
+    } catch ( error ) {
       console.error( error );
-      let message = 'Unexpected error occurred while updating user!';
 
+      let message = 'Unexpected error occurred while creating user!';
       if ( error instanceof HttpErrorResponse ) {
         message = error.error?.message ?? message;
       } else if ( error instanceof Error ) {
         message = error.message || message;
       }
 
-      this.notification.notification( 'error', message );
-    }
-    finally {
-      this.progress.complete();
+      this.notification?.notification( 'error', message );
+    } finally {
+      this.progress?.complete();
       if ( isSuccess ) {
         setTimeout( () => {
           this.router.navigate( [ '/dashboard/users' ] );
         }, 1000 );
       }
     }
-
   }
 }

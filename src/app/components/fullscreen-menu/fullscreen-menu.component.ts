@@ -3,16 +3,16 @@
 // FullscreenMenuComponent (Menu + Notifications) — 3 Tabs + 3 Unread Counts
 // =============================================================================
 // Tabs:
-// - All      = Direct + Overall (deduped by inboxId)
+// - All      = Direct + Overall (deduped by notification.id; Direct wins)
 // - Direct   = notifications targeted to ME (mode:"User" via username/userId)
-// - Overall  = notifications targeted to role/company (NOT me-specific)
+// - Overall  = notifications targeted to role/company (EXCLUDING direct-to-me)
 //
-// Fixes:
-// - Prevents overlay closing when clicking inside panel (stopPropagation boundary)
-// - Restored menu collapse + active route highlight
-// - Correct audience parsing (Role uses roleKey)
-// - Deterministic refresh via forkJoin (items + counts)
-// - Unread counts per tab + list per activeTab
+// Fixes applied (critical):
+// ✅ No backend scope counts (they double-count mixed-audience notifications)
+// ✅ Counts computed from the SAME filtered lists shown in UI
+// ✅ ALL list deduped by notification.id (not inboxId)
+// ✅ ALL unread computed from deduped ALL list (not sum)
+// ✅ Overall is for ALL users (not admin-only)
 // =============================================================================
 
 import { CommonModule, isPlatformBrowser } from "@angular/common";
@@ -206,6 +206,7 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
     this.userId =
       this.safeId( ( this.me as unknown as { _id?: unknown; userId?: unknown; } )?._id ) ||
       this.safeId( ( this.me as unknown as { userId?: unknown; } )?.userId );
+
     this.role = ( this.me.role ?? "user" ) as Role;
 
     this.connected$ = this.notificationCenter.connected$();
@@ -351,8 +352,9 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
     this.activeTabState$.next( tab );
   }
 
+  /** Overall is for ALL users (role/company audiences), not admin-only. */
   protected canShowOverallTab(): boolean {
-    return this.safeLower( this.role ) === "admin";
+    return true;
   }
 
   // =============================================================================
@@ -403,7 +405,10 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
 
   protected readonly trackById = ( _: number, item: UiNotification ): string => {
     const inboxId = this.getInboxId( item );
-    return inboxId || String( _ );
+    if ( inboxId ) return inboxId;
+
+    const notifId = this.safeId( ( item?.notification as unknown as { id?: unknown; } )?.id );
+    return notifId || String( _ );
   };
 
   // =============================================================================
@@ -490,7 +495,7 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
   }
 
   // =============================================================================
-  // Refresh logic (Direct + Overall + Counts) -> All
+  // Refresh logic (Direct + Overall) -> All (counts from lists)
   // =============================================================================
 
   private refreshOnce(
@@ -516,57 +521,49 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
   private refresh$(): Observable<void> {
     if ( !this.me ) return of( void 0 );
 
-    const filters: NotificationLoadFilters = {};
+    // Keep consistent with NotificationComponent
+    const listFilters: NotificationLoadFilters = {
+      unreadOnly: false,
+      includeArchived: false,
+      includeDeleted: false,
+    };
 
     const directItems$ = this.notificationCenter
-      .loadDirect$( this.priorityScope, this.page, this.limit, filters, this.me )
+      .loadDirect$( this.priorityScope, this.page, this.limit, listFilters, this.me )
       .pipe(
         map( ( view ) => view.items ?? [] ),
-        // Enforce direct-to-me rule
         map( ( items ) => items.filter( ( x ) => this.isDirectToMe( x ) ) ),
         catchError( () => of( [] as UiNotification[] ) )
       );
 
-    const overallItems$ = this.canShowOverallTab()
-      ? this.notificationCenter.loadOverall$( this.priorityScope, this.page, this.limit, filters, this.me ).pipe(
+    const overallItems$ = this.notificationCenter
+      .loadOverall$( this.priorityScope, this.page, this.limit, listFilters, this.me )
+      .pipe(
         map( ( view ) => view.items ?? [] ),
-        // Enforce overall rule (role/company) excluding direct-to-me
         map( ( items ) => items.filter( ( x ) => this.isOverallToMe( x ) ) ),
         catchError( () => of( [] as UiNotification[] ) )
-      )
-      : of( [] as UiNotification[] );
-
-    const countDirect$ = this.notificationCenter.countsDirect$( this.priorityScope, filters ).pipe(
-      map( ( c ) => this.safeNum( ( c as unknown as { unread?: unknown; } )?.unread ) ),
-      catchError( () => of( 0 ) )
-    );
-
-    const countOverall$ = this.canShowOverallTab()
-      ? this.notificationCenter.countsOverall$( this.priorityScope, filters ).pipe(
-        map( ( c ) => this.safeNum( ( c as unknown as { unread?: unknown; } )?.unread ) ),
-        catchError( () => of( 0 ) )
-      )
-      : of( 0 );
+      );
 
     return forkJoin( {
       directItems: directItems$,
       overallItems: overallItems$,
-      directUnread: countDirect$,
-      overallUnread: countOverall$,
     } ).pipe(
       tap( ( r ) => {
         const direct = Array.isArray( r.directItems ) ? r.directItems : [];
         const overall = Array.isArray( r.overallItems ) ? r.overallItems : [];
 
-        const all = this.dedupeByInboxId( [ ...direct, ...overall ] );
+        // Store per-tab lists (already filtered by rules)
+        this.directItemsState$.next( this.sortLatestFirst( direct ) );
+        this.overallItemsState$.next( this.sortLatestFirst( overall ) );
 
-        this.directItemsState$.next( direct );
-        this.overallItemsState$.next( overall );
+        // ALL = Direct + Overall (dedupe by notification.id; direct wins)
+        const all = this.mergePreferByNotificationId( direct, overall );
         this.allItemsState$.next( all );
 
-        const unreadDirect = this.safeNum( r.directUnread );
-        const unreadOverall = this.safeNum( r.overallUnread );
-        const unreadAll = unreadDirect + unreadOverall;
+        // Counts from lists (NO backend counts => no double)
+        const unreadDirect = this.computeUnreadFromItems( direct );
+        const unreadOverall = this.computeUnreadFromItems( overall );
+        const unreadAll = this.computeUnreadFromItems( all ); // not sum
 
         this.unreadDirectState$.next( unreadDirect );
         this.unreadOverallState$.next( unreadOverall );
@@ -603,7 +600,7 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
   private isOverallToMe( n: UiNotification ): boolean {
     if ( !this.me ) return false;
 
-    // Overall excludes only "direct to ME" (not "direct to anyone")
+    // Overall excludes ONLY "direct to ME"
     if ( this.isDirectToMe( n ) ) return false;
 
     const audRaw = ( n?.notification as unknown as { audiences?: unknown; } )?.audiences;
@@ -618,7 +615,6 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
       if ( a.mode === "Company" ) return true;
 
       if ( a.mode === "Role" ) {
-        // ✅ backend uses roleKey
         const roleKey = this.safeLower( ( a as unknown as { roleKey?: unknown; } )?.roleKey );
         if ( roleKey && myRoleKey && roleKey === myRoleKey ) return true;
       }
@@ -628,26 +624,95 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
   }
 
   // =============================================================================
-  // Helpers: IDs / unread / dedupe
+  // Helpers: IDs / unread / merge / sort
   // =============================================================================
 
   private getInboxId( n: UiNotification ): string {
     return this.safeId( ( n as unknown as { inboxId?: unknown; } )?.inboxId );
   }
 
-  private dedupeByInboxId( items: UiNotification[] ): UiNotification[] {
+  /**
+   * ALL must dedupe by notification.id (not inboxId) because the same notification
+   * can create multiple inbox rows (direct + role/company).
+   * Direct wins if duplicate exists.
+   */
+  private mergePreferByNotificationId( direct: UiNotification[], overall: UiNotification[] ): UiNotification[] {
+    const a = Array.isArray( direct ) ? direct : [];
+    const b = Array.isArray( overall ) ? overall : [];
+
+    const merged = [ ...a, ...b ]; // direct first => direct wins
     const seen = new Set<string>();
     const out: UiNotification[] = [];
 
-    for ( const it of items ?? [] ) {
-      const id = this.getInboxId( it );
-      if ( !id ) continue;
-      if ( seen.has( id ) ) continue;
-      seen.add( id );
+    for ( const it of merged ) {
+      const nid = this.safeId( ( it as unknown as { notification?: { id?: unknown; }; } )?.notification?.id );
+      if ( !nid ) {
+        const iid = this.getInboxId( it );
+        if ( iid ) out.push( it );
+        continue;
+      }
+
+      if ( seen.has( nid ) ) continue;
+      seen.add( nid );
       out.push( it );
     }
 
-    return out;
+    return this.sortLatestFirst( out );
+  }
+
+  private computeUnreadFromItems( items: UiNotification[] ): number {
+    const arr = Array.isArray( items ) ? items : [];
+    let unread = 0;
+
+    for ( const it of arr ) {
+      if ( ( it as unknown as { isRead?: unknown; } )?.isRead !== true ) unread += 1;
+    }
+
+    return unread;
+  }
+
+  private sortLatestFirst( items: UiNotification[] ): UiNotification[] {
+    const copy = [ ...( items ?? [] ) ];
+
+    copy.sort( ( a, b ) => {
+      const bt = this.getItemSortTimeMs( b );
+      const at = this.getItemSortTimeMs( a );
+      return bt - at;
+    } );
+
+    return copy;
+  }
+
+  private getItemSortTimeMs( item: UiNotification ): number {
+    const deliveredAt = ( item as unknown as { deliveredAt?: unknown; } )?.deliveredAt;
+    const createdAt = ( item?.notification as unknown as { createdAt?: unknown; } )?.createdAt;
+
+    const d1 = this.safeDateMs( deliveredAt );
+    if ( d1 > 0 ) return d1;
+
+    const d2 = this.safeDateMs( createdAt );
+    if ( d2 > 0 ) return d2;
+
+    return 0;
+  }
+
+  private safeDateMs( v: unknown ): number {
+    if ( typeof v === "number" && Number.isFinite( v ) ) return v;
+
+    if ( typeof v === "string" ) {
+      const t = Date.parse( v );
+      return Number.isFinite( t ) ? t : 0;
+    }
+
+    if ( v && typeof v === "object" ) {
+      const maybe = v as { toString?: () => string; };
+      if ( typeof maybe.toString === "function" ) {
+        const t = Date.parse( String( maybe.toString() ) );
+        return Number.isFinite( t ) ? t : 0;
+      }
+    }
+
+    return 0;
   }
 
   // =============================================================================
@@ -746,7 +811,10 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
     ];
 
     for ( const i of icons ) {
-      this.matIconRegistry.addSvgIcon( i.name, this.domSanitizer.bypassSecurityTrustResourceUrl( i.icon ) );
+      this.matIconRegistry.addSvgIcon(
+        i.name,
+        this.domSanitizer.bypassSecurityTrustResourceUrl( i.icon )
+      );
     }
   }
 
@@ -772,10 +840,6 @@ export class FullscreenMenuComponent implements OnInit, AfterViewInit, OnChanges
       }
     }
     return "";
-  }
-
-  private safeNum( v: unknown ): number {
-    return typeof v === "number" && Number.isFinite( v ) ? v : 0;
   }
 
   private errMsg( err: unknown ): string {

@@ -1,38 +1,6 @@
 // Path: src/app/services/recyclebin/recyclebin.rest.service.ts
 // =============================================================================
-// RecycleBinRestService (Angular) — MSG-aligned (system.recyclebin / recyclebins)
-// -----------------------------------------------------------------------------
-// 01. Introduction
-// - Single REST access layer for Recycle Bin UI.
-// - Uses the universal backend envelope type: MSG.
-// - Extracts payload from res.data.system.recyclebin|recyclebins.
-//
-// 02. Important matters
-// - All endpoints return MSG.
-// - List payload is expected in: res.data.system.recyclebins (array)
-// - Single payload is expected in: res.data.system.recyclebin (object)
-// - Total count can be in:
-//     res.data.pagination.total
-//     res.data.other.pagination.total
-//
-// 03. Why we make this class
-// - Centralizes query param normalization + MSG decoding.
-// - Prevents UI components from knowing backend envelope details.
-//
-// 04. Parameter expectations
-// - entryId: non-empty string (typically Mongo ObjectId string)
-// - filters: optional, omitted when unused
-// - page: required { page, limit } (1-based)
-//
-// 05. Usage hint
-// - list({ page: {page:1,limit:20}, filters:{search:"LEASE"} })
-// - snapshot(entryId) -> preview modal
-// - restore flow: prepareRestore -> domain restore -> markRestored
-// - purge -> permanently delete
-//
-// 06. Keep in mind
-// - ISO/IEC 27001/27002 (Control 8.28): avoid logging sensitive payloads.
-// - Do NOT pass undefined query params; omit them.
+// RecycleBinRestService (Angular) — PHASE 1 ALIGNED (NO markRestored; REAL restore())
 // =============================================================================
 
 import { Injectable } from "@angular/core";
@@ -48,82 +16,73 @@ import type {
   RecycleBinPurgeResultDto,
   RecycleBinRestorePrepareDto,
   RecycleBinSnapshotReadDto,
+  FileMetaPacketDto,
 } from "../../types/recyclebin/recyclebin.types";
 
 import { environment } from "../../../environments/environment";
 
-import type { FileMetaPacketDto } from "../../types/recyclebin/recyclebin.types";
+/* =============================================================================
+ * A) Restore Result DTO (FE-local, based on backend controller response)
+ * - Controller returns:
+ *   ok(res, "recycleBinItem", result.entry, ..., { other: { result } })
+ * ========================================================================== */
+export interface RecycleBinRestoreResultUi {
+  entry: RecycleBinEntryDto;
+  result: Record<string, unknown>;
+}
 
 @Injectable( { providedIn: "root" } )
 export class RecycleBinRestService {
-  private readonly API_HOST = environment.apiOrigin;
-  private readonly API_BASE = `${ this.API_HOST }/api-recyclebin`;
+  private readonly API_HOST: string = environment.apiOrigin;
+  private readonly API_BASE: string = `${ this.API_HOST }/api-recyclebin`;
 
   public constructor ( private readonly http: HttpClient ) {}
 
-  /**
-   * List recycle bin entries with filters + pagination.
-   *
-   * @param options.filters
-   * - Optional filters used to narrow results.
-   *
-   * @param options.page
-   * - Required pagination info (1-based page, limit).
-   *
-   * @returns UI-normalized result { items, total, page, limit }
-   */
-  public list( options: {
-    filters?: RecycleBinListFilters;
-    page: PageQuery;
-  } ): Observable<RecycleBinListUiResult> {
-    const params = this.buildListParams( options.filters, options.page );
+  public list( options: { filters?: RecycleBinListFilters; page: PageQuery; } ): Observable<RecycleBinListUiResult> {
+    const params: HttpParams = this.buildListParams( options.filters, options.page );
 
     return this.http.get<MSG>( `${ this.API_BASE }/list`, { params } ).pipe(
       map( ( msg ) => {
-        const items = this.readSystemArray<RecycleBinEntryDto>( msg, "recyclebins" );
-        const total = this.readTotal( msg );
+        const items: RecycleBinEntryDto[] = this.readSystemArray<RecycleBinEntryDto>( msg, "recycleBinItems" );
+        const total: number = this.readTotal( msg );
 
-        return {
-          items,
-          total,
-          page: options.page.page,
-          limit: options.page.limit,
-        };
+        return { items, total, page: options.page.page, limit: options.page.limit };
       } )
     );
   }
 
-  /**
-   * Count recycle bin entries for a given filter set.
-   *
-   * @param filters
-   * - Optional list filters (same fields as list).
-   *
-   * @returns total count (number)
-   */
-  public count( filters?: RecycleBinListFilters ): Observable<number> {
-    const params = this.buildCountParams( filters );
+  public search( options: {
+    searchText: string;
+    filters?: Omit<RecycleBinListFilters, "search">;
+    page: PageQuery;
+  } ): Observable<RecycleBinListUiResult> {
+    const searchText: string = this.safeSearchText( options.searchText );
 
-    return this.http.get<MSG>( `${ this.API_BASE }/count`, { params } ).pipe(
-      map( ( msg ) => this.readTotal( msg ) )
-    );
+    const mergedFilters: RecycleBinListFilters = searchText
+      ? { ...( options.filters ?? {} ), search: searchText }
+      : { ...( options.filters ?? {} ) };
+
+    return this.list( { page: options.page, filters: mergedFilters } );
   }
 
   /**
-   * Read snapshot for preview UI.
-   *
-   * @param entryId
-   * - Expected: non-empty recycle bin entryId string.
-   *
-   * @returns SnapshotRead DTO with entry + snapshotData + meta.
+   * Count (total only) — ALIGNED WITH BACKEND:
+   * Controller:
+   *   ok(res, "other", {}, ..., { pagination:{ total: result.total } })
    */
+  public count( filters?: RecycleBinListFilters ): Observable<number> {
+    const params: HttpParams = this.buildCountParams( filters );
+
+    return this.http.get<MSG>( `${ this.API_BASE }/count`, { params } ).pipe( map( ( msg ) => this.readTotal( msg ) ) );
+  }
+
   public snapshot( entryId: string ): Observable<RecycleBinSnapshotReadDto> {
-    const id = this.safeId( entryId );
+    const id: string = this.safeId( entryId );
 
     return this.http.get<MSG>( `${ this.API_BASE }/${ encodeURIComponent( id ) }/snapshot` ).pipe(
       map( ( msg ) => {
-        const entry = this.readSystemObject<RecycleBinEntryDto>( msg, "recyclebin" );
-        const other = this.readOther( msg );
+        const entry: RecycleBinEntryDto = this.readSystemObjectOrThrow<RecycleBinEntryDto>( msg, "recycleBinItem" );
+        const other: Record<string, unknown> = this.readOther( msg );
 
         return {
           entry,
@@ -134,69 +93,61 @@ export class RecycleBinRestService {
     );
   }
 
-  /**
-   * Prepare restore (loads snapshot + files manifest).
-   *
-   * @param entryId
-   * - Expected: non-empty recycle bin entryId string.
-   *
-   * @returns RestorePrepare DTO.
-   */
   public prepareRestore( entryId: string ): Observable<RecycleBinRestorePrepareDto> {
-    const id = this.safeId( entryId );
+    const id: string = this.safeId( entryId );
 
-    return this.http
-      .post<MSG>( `${ this.API_BASE }/${ encodeURIComponent( id ) }/restore/prepare`, {} )
-      .pipe(
-        map( ( msg ) => {
-          const entry = this.readSystemObject<RecycleBinEntryDto>( msg, "recyclebin" );
-          const other = this.readOther( msg );
-
-          return {
-            entry,
-            snapshotData: this.readRecord( other, "snapshotData" ),
-            files: this.readArrayTyped<FileMetaPacketDto>( other, "files" ),
-          };
-        } )
-      );
-  }
-
-
-
-  /**
-   * Mark restored (call after domain restore succeeded).
-   *
-   * @param entryId
-   * - Expected: non-empty recycle bin entryId string.
-   *
-   * @returns { entryId } confirmation
-   */
-  public markRestored( entryId: string ): Observable<{ entryId: string; }> {
-    const id = this.safeId( entryId );
-
-    return this.http.post<MSG>( `${ this.API_BASE }/${ encodeURIComponent( id ) }/restore/mark`, {} ).pipe(
+    return this.http.post<MSG>( `${ this.API_BASE }/${ encodeURIComponent( id ) }/restore/prepare`, {} ).pipe(
       map( ( msg ) => {
-        const other = this.readOther( msg );
-        const v = this.readString( other, "entryId" );
-        return { entryId: v || id };
+        const entry: RecycleBinEntryDto = this.readSystemObjectOrThrow<RecycleBinEntryDto>( msg, "recycleBinItem" );
+        const other: Record<string, unknown> = this.readOther( msg );
+
+        return {
+          entry,
+          snapshotData: this.readRecord( other, "snapshotData" ),
+          files: this.readArrayTyped<FileMetaPacketDto>( other, "files" ),
+        };
       } )
     );
   }
 
   /**
-   * Purge (permanent delete).
+   * REAL RESTORE (DB + Files) — matches backend controller:
+   * POST /:entryId/restore
+   * body: { restoreMode?: "insert" | "upsert" }
    *
-   * @param entryId
-   * - Expected: non-empty recycle bin entryId string.
-   *
-   * @returns purge result { entryId, purged }
+   * @param options.restoreMode
+   * - Optional: "insert" | "upsert"
+   * - If omitted, backend/engine defaults apply
    */
+  public restore( options: {
+    entryId: string;
+    restoreMode?: "insert" | "upsert";
+  } ): Observable<RecycleBinRestoreResultUi> {
+    const id: string = this.safeId( options.entryId );
+
+    // exactOptionalPropertyTypes-safe: only attach restoreMode if present
+    const body: Record<string, unknown> = {};
+    if ( options.restoreMode ) body[ "restoreMode" ] = options.restoreMode;
+
+    console.log( 'restore' );
+
+    return this.http.post<MSG>( `${ this.API_BASE }/${ encodeURIComponent( id ) }/restore`, body ).pipe(
+      map( ( msg ) => {
+        const entry: RecycleBinEntryDto = this.readSystemObjectOrThrow<RecycleBinEntryDto>( msg, "recycleBinItem" );
+        const other: Record<string, unknown> = this.readOther( msg );
+        const result: Record<string, unknown> = this.readRecord( other, "result" );
+
+        return { entry, result };
+      } )
+    );
+  }
+
   public purge( entryId: string ): Observable<RecycleBinPurgeResultDto> {
-    const id = this.safeId( entryId );
+    const id: string = this.safeId( entryId );
 
     return this.http.delete<MSG>( `${ this.API_BASE }/${ encodeURIComponent( id ) }/purge` ).pipe(
       map( ( msg ) => {
-        const other = this.readOther( msg );
+        const other: Record<string, unknown> = this.readOther( msg );
         return {
           entryId: this.readString( other, "entryId" ) || id,
           purged: this.readBool( other, "purged" ),
@@ -209,19 +160,17 @@ export class RecycleBinRestService {
   // Internals (class-only helpers)
   // =============================================================================
 
-  /**
-   * Build list params (filters + page).
-   */
   private buildListParams( filters: RecycleBinListFilters | undefined, page: PageQuery ): HttpParams {
-    let params = new HttpParams();
+    let params: HttpParams = new HttpParams();
 
     params = params.set( "page", String( page.page ) );
     params = params.set( "limit", String( page.limit ) );
 
     if ( !filters ) return params;
 
-    params = this.setIfPresent( params, "sourceKey", filters.sourceKey );
     params = this.setIfPresent( params, "search", filters.search );
+
+    params = this.setIfPresent( params, "sourceKey", filters.sourceKey );
     params = this.setIfPresent( params, "status", filters.status );
     params = this.setIfPresent( params, "deletedByUsername", filters.deletedByUsername );
     params = this.setIfPresent( params, "deletedFromIso", filters.deletedFromIso );
@@ -229,26 +178,18 @@ export class RecycleBinRestService {
     params = this.setIfPresent( params, "module", filters.module );
     params = this.setIfPresent( params, "entity", filters.entity );
 
-    if ( Array.isArray( filters.tagsAny ) && filters.tagsAny.length > 0 ) {
-      const clean = filters.tagsAny
-        .map( ( x ) => ( typeof x === "string" ? x.trim() : "" ) )
-        .filter( ( x ) => x.length > 0 );
-
-      if ( clean.length > 0 ) params = params.set( "tagsAny", clean.join( "," ) );
-    }
+    params = this.setCsvIfPresent( params, "tagsAny", filters.tagsAny );
 
     return params;
   }
 
-  /**
-   * Build count params (filters only).
-   */
   private buildCountParams( filters: RecycleBinListFilters | undefined ): HttpParams {
-    let params = new HttpParams();
+    let params: HttpParams = new HttpParams();
     if ( !filters ) return params;
 
-    params = this.setIfPresent( params, "sourceKey", filters.sourceKey );
     params = this.setIfPresent( params, "search", filters.search );
+
+    params = this.setIfPresent( params, "sourceKey", filters.sourceKey );
     params = this.setIfPresent( params, "status", filters.status );
     params = this.setIfPresent( params, "deletedByUsername", filters.deletedByUsername );
     params = this.setIfPresent( params, "deletedFromIso", filters.deletedFromIso );
@@ -256,102 +197,86 @@ export class RecycleBinRestService {
     params = this.setIfPresent( params, "module", filters.module );
     params = this.setIfPresent( params, "entity", filters.entity );
 
-    if ( Array.isArray( filters.tagsAny ) && filters.tagsAny.length > 0 ) {
-      const clean = filters.tagsAny
-        .map( ( x ) => ( typeof x === "string" ? x.trim() : "" ) )
-        .filter( ( x ) => x.length > 0 );
-
-      if ( clean.length > 0 ) params = params.set( "tagsAny", clean.join( "," ) );
-    }
+    params = this.setCsvIfPresent( params, "tagsAny", filters.tagsAny );
 
     return params;
   }
 
-  /**
-   * Only attach a query param if value is a non-empty string.
-   */
   private setIfPresent( params: HttpParams, key: string, value: unknown ): HttpParams {
     if ( typeof value !== "string" ) return params;
-    const v = value.trim();
+    const v: string = value.trim();
     if ( !v ) return params;
     return params.set( key, v );
   }
 
-  /**
-   * Normalize & validate entryId input (basic hardening).
-   */
+  private setCsvIfPresent( params: HttpParams, key: string, list: unknown ): HttpParams {
+    if ( !Array.isArray( list ) || list.length === 0 ) return params;
+
+    const clean: string[] = list
+      .map( ( x ) => ( typeof x === "string" ? x.trim() : "" ) )
+      .filter( ( x ) => x.length > 0 );
+
+    if ( clean.length === 0 ) return params;
+
+    return params.set( key, clean.join( "," ) );
+  }
+
   private safeId( entryId: string ): string {
-    const id = typeof entryId === "string" ? entryId.trim() : "";
-    if ( !id ) throw new Error( "RecycleBin: entryId is required" );
+    const id: string = typeof entryId === "string" ? entryId.trim() : "";
+    if ( !id ) throw new Error( "[Error:] [RecycleBinRestService:] entryId is required\n" );
     return id;
   }
 
-  /**
-   * Read array from MSG.data.system[key].
-   *
-   * @param msg - MSG envelope
-   * @param key - system bucket key (e.g., "recyclebins")
-   */
+  private safeSearchText( searchText: string ): string {
+    const s: string = typeof searchText === "string" ? searchText.trim() : "";
+    if ( !s ) return "";
+    if ( s.length < 2 ) return "";
+    return s;
+  }
+
   private readSystemArray<T>( msg: MSG, key: string ): T[] {
-    const sys = this.readSystem( msg );
-    const raw = sys[ key ];
+    const sys: Record<string, unknown> = this.readSystem( msg );
+    const raw: unknown = sys[ key ];
     if ( !Array.isArray( raw ) ) return [];
     return raw as T[];
   }
 
-  /**
-   * Read object from MSG.data.system[key].
-   *
-   * @param msg - MSG envelope
-   * @param key - system bucket key (e.g., "recyclebin")
-   */
-  private readSystemObject<T>( msg: MSG, key: string ): T {
-    const sys = this.readSystem( msg );
-    const raw = sys[ key ];
+  private readSystemObjectOrThrow<T>( msg: MSG, key: string ): T {
+    const sys: Record<string, unknown> = this.readSystem( msg );
+    const raw: unknown = sys[ key ];
     if ( raw && typeof raw === "object" ) return raw as T;
-    return {} as T;
+    throw new Error( `[Error:] [RecycleBinRestService:] Missing system.${ key } in MSG\n` );
   }
 
-  /**
-   * Read the system bucket safely.
-   */
   private readSystem( msg: MSG ): Record<string, unknown> {
-    const data = ( msg as unknown as { data?: unknown; } ).data;
+    const data: unknown = ( msg as unknown as { data?: unknown; } ).data;
     if ( !data || typeof data !== "object" ) return {};
 
-    const sys = ( data as Record<string, unknown> )[ "system" ];
+    const sys: unknown = ( data as Record<string, unknown> )[ "system" ];
     if ( !sys || typeof sys !== "object" ) return {};
 
     return sys as Record<string, unknown>;
   }
 
-  /**
-   * Extract "other" payload safely (MSG.data.other).
-   */
   private readOther( msg: MSG ): Record<string, unknown> {
-    const data = ( msg as unknown as { data?: unknown; } ).data;
+    const data: unknown = ( msg as unknown as { data?: unknown; } ).data;
     if ( !data || typeof data !== "object" ) return {};
 
-    const other = ( data as Record<string, unknown> )[ "other" ];
+    const other: unknown = ( data as Record<string, unknown> )[ "other" ];
     if ( !other || typeof other !== "object" ) return {};
 
     return other as Record<string, unknown>;
   }
 
-  /**
-   * Read pagination.total from either:
-   * - MSG.data.pagination.total
-   * - MSG.data.other.pagination.total
-   */
   private readTotal( msg: MSG ): number {
-    const data = ( msg as unknown as { data?: unknown; } ).data;
+    const data: unknown = ( msg as unknown as { data?: unknown; } ).data;
     if ( !data || typeof data !== "object" ) return 0;
 
-    const direct = this.readTotalFromPagination( ( data as Record<string, unknown> )[ "pagination" ] );
+    const direct: number | null = this.readTotalFromPagination( ( data as Record<string, unknown> )[ "pagination" ] );
     if ( direct !== null ) return direct;
 
-    const other = this.readOther( msg );
-    const nested = this.readTotalFromPagination( other[ "pagination" ] );
+    const other: Record<string, unknown> = this.readOther( msg );
+    const nested: number | null = this.readTotalFromPagination( other[ "pagination" ] );
     if ( nested !== null ) return nested;
 
     return 0;
@@ -359,55 +284,31 @@ export class RecycleBinRestService {
 
   private readTotalFromPagination( pagination: unknown ): number | null {
     if ( !pagination || typeof pagination !== "object" ) return null;
-    const total = ( pagination as Record<string, unknown> )[ "total" ];
+
+    const total: unknown = ( pagination as Record<string, unknown> )[ "total" ];
     if ( typeof total !== "number" ) return null;
+
     return Number.isFinite( total ) ? total : 0;
   }
 
   private readRecord( parent: Record<string, unknown>, key: string ): Record<string, unknown> {
-    const v = parent[ key ];
+    const v: unknown = parent[ key ];
     if ( !v || typeof v !== "object" ) return {};
     return v as Record<string, unknown>;
   }
 
-  private readArrayUnknown( parent: Record<string, unknown>, key: string ): unknown[] {
-    const v = parent[ key ];
-    if ( !Array.isArray( v ) ) return [];
-    return v as unknown[];
-  }
-
   private readString( parent: Record<string, unknown>, key: string ): string {
-    const v = parent[ key ];
+    const v: unknown = parent[ key ];
     return typeof v === "string" ? v.trim() : "";
   }
 
   private readBool( parent: Record<string, unknown>, key: string ): boolean {
-    const v = parent[ key ];
+    const v: unknown = parent[ key ];
     return typeof v === "boolean" ? v : false;
   }
 
-  // =============================================================================
-  // Internals (class-only helpers)
-  // =============================================================================
-
-  /**
-   * Read an array from an object bucket and cast to a typed array.
-   *
-   * @param parent
-   * - Expected: Record bucket (e.g., msg.data.other)
-   *
-   * @param key
-   * - Expected: field name that contains an array (e.g., "files")
-   *
-   * @returns T[]
-   * - Returns [] if the key is missing or not an array.
-   *
-   * @important
-   * - This is a DTO boundary helper. The backend is the source of truth.
-   * - We do not deep-validate here to avoid runtime cost; UI can still guard.
-   */
   private readArrayTyped<T>( parent: Record<string, unknown>, key: string ): T[] {
-    const v = parent[ key ];
+    const v: unknown = parent[ key ];
     if ( !Array.isArray( v ) ) return [];
     return v as T[];
   }

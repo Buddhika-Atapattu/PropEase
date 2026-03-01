@@ -286,7 +286,9 @@ export class PropertiesMainPanelComponent implements OnInit, OnDestroy {
 
         try {
           const username = this.LOGGED_USER?.username ?? '';
-          const res = await this.propertyService.deleteProperty( propertyId, username );
+          const res = await this.propertyService.deleteProperty( propertyId );
+
+          console.log( res )
 
           if ( res.success || res.status.toLocaleLowerCase() === 'success' ) {
             this.notification.notification( 'warning', `Property deleted: ${ propertyId }` );

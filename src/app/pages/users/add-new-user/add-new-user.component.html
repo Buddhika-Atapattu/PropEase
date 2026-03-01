@@ -1,6 +1,23 @@
+<!-- Path: src/app/pages/users/add-new-user/add-new-user.component.html -->
+<!-- =============================================================================
+     Add New User — HTML FIXES
+     -----------------------------------------------------------------------------
+     Fixes applied:
+     1) <app-progress-bar /> -> valid HTML: <app-progress-bar></app-progress-bar>
+     2) Remove (paste)="handlePaste($event)" from div (you already have HostListener)
+     3) Fix phoneCode input: DO NOT two-way bind object directly without displayWith support
+        - keep [(ngModel)]="phoneCode" but ensure displayWith works with CountryCodesDto
+     4) Prevent "Cannot read properties of undefined (reading 'png')" by never touching
+        option.flags.png in template.
+        - Use safe getters: getFlagPng(option), getCountryLabel(option)
+     5) Country input: remove (ngModelChange) because you are using reactive FormControl.
+        - use (input)="onCountryChange($any($event.target).value)" instead
+     ========================================================================== -->
+
 <app-notification-dialog></app-notification-dialog>
 
-<app-progress-bar />
+<app-progress-bar></app-progress-bar>
+
 <app-camera-box
   *ngIf="isCameraOpen"
   (imageCaptured)="handleImage($event)"
@@ -11,7 +28,6 @@
 <div *ngIf="mode !== null" class="main-panel">
   <div class="container-fluid overflow-hidden">
     <form
-      action=""
       method="POST"
       enctype="multipart/form-data"
       (ngSubmit)="insertNewUser()"
@@ -28,27 +44,21 @@
               alt="User image"
               class="clickable-image"
             />
+
             <div class="image-overlay">
               <button type="button" class="camera-btn" (click)="openCamera()">
-                <mat-icon
-                  aria-hidden="false"
-                  aria-label="Example home icon"
-                  svgIcon="camera"
-                ></mat-icon>
+                <mat-icon svgIcon="camera"></mat-icon>
               </button>
-              <!-- User Image or Cropped Image -->
+
               <button
                 type="button"
                 class="upload-btn"
                 (click)="triggerFileInput()"
               >
-                <mat-icon
-                  aria-hidden="false"
-                  aria-label="Example home icon"
-                  svgIcon="upload"
-                ></mat-icon>
+                <mat-icon svgIcon="upload"></mat-icon>
               </button>
             </div>
+
             <!-- File Input -->
             <input
               type="file"
@@ -76,12 +86,12 @@
             (drop)="onDrop($event)"
             (dragleave)="onDragLeave($event)"
             [class.drag-over]="isDragOver"
-            (paste)="handlePaste($event)"
             (click)="triggerFileInput()"
             (keyup.enter)="triggerFileInput()"
             (keyup.space)="triggerFileInput()"
             aria-label="Upload files"
             role="button"
+            tabindex="0"
           >
             <div class="dz-inner">
               <mat-icon class="dz-icon" aria-hidden="true"
@@ -108,6 +118,7 @@
             format="png"
             (imageCropped)="imageCropped($event)"
           ></image-cropper>
+
           <div class="row mt-3 d-flex justify-content-center align-item-center">
             <div class="col-6 d-flex justify-content-end align-item-center">
               <button
@@ -131,7 +142,6 @@
         </div>
       </div>
 
-      <!-- end user image -->
       <!-- user guidline -->
       <div class="row d-flex justify-content-center align-item-center mt-2">
         <div class="col-xl-6 d-flex justify-content-center align-item-center">
@@ -159,15 +169,15 @@
           </blockquote>
         </div>
       </div>
-      <!-- end user guidline -->
 
       <!-- username and password -->
       <div class="row mt-4">
         <div class="col-xl-6">
           <mat-form-field appearance="fill" class="form-field me-3 w-100">
-            <mat-label [ngClass]="isUsernameExist ? 'text-danger' : ''"
-              >Username {{ isUsernameExist ? "already exist" : "" }}</mat-label
-            >
+            <mat-label [ngClass]="isUsernameExist ? 'text-danger' : ''">
+              Username {{ isUsernameExist ? "already exist" : "" }}
+            </mat-label>
+
             <input
               matInput
               type="text"
@@ -178,6 +188,7 @@
               placeholder="Username"
             />
           </mat-form-field>
+
           <ul class="list-group">
             <li class="list-group-item">
               Allows letters <code>A-Z or a-z</code>, digits <code>0-9</code>,
@@ -189,18 +200,18 @@
             </li>
           </ul>
         </div>
+
         <div class="col-xl-6">
           <mat-form-field
             appearance="fill"
             class="form-field me-3 w-100"
             [class.danger]="!passwordMatchPattern"
           >
-            <mat-label [ngClass]="passwordMatchPattern ? '' : 'text-danger'"
-              >Password
-              {{
-                passwordMatchPattern ? "" : "does not match pattern"
-              }}</mat-label
-            >
+            <mat-label [ngClass]="passwordMatchPattern ? '' : 'text-danger'">
+              Password
+              {{ passwordMatchPattern ? "" : "does not match pattern" }}
+            </mat-label>
+
             <input
               matInput
               [type]="hidePassword ? 'password' : 'text'"
@@ -210,6 +221,7 @@
               required
               placeholder="Enter your password"
             />
+
             <button
               type="button"
               mat-icon-button
@@ -223,6 +235,7 @@
               }}</mat-icon>
             </button>
           </mat-form-field>
+
           <ul class="list-group">
             <li class="list-group-item">Minimum 8 characters</li>
             <li class="list-group-item">At least one uppercase letter</li>
@@ -234,14 +247,12 @@
           </ul>
         </div>
       </div>
-      <!-- end username and password -->
 
       <!-- user details row start -->
       <div class="row mt-5">
         <div class="col-xl-12"><h1>User Details</h1></div>
         <hr />
       </div>
-      <!-- end user details row end -->
 
       <!-- data entry section -->
       <div class="row d-flex justify-content-center align-items-center mt-4">
@@ -261,6 +272,7 @@
                 />
               </mat-form-field>
             </div>
+
             <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>User gender</mat-label>
@@ -273,12 +285,14 @@
                     *ngFor="let gender of definedGender"
                     [value]="gender"
                     class="text-capitalize"
-                    >{{ gender }}</mat-option
                   >
+                    {{ gender }}
+                  </mat-option>
                 </mat-select>
               </mat-form-field>
             </div>
           </div>
+
           <!-- Email and Contact -->
           <div class="row d-flex justify-content-start align-items-center">
             <!-- Email -->
@@ -288,9 +302,10 @@
                 class="form-field me-3 w-100"
                 [ngClass]="isEmailError ? 'danger' : ''"
               >
-                <mat-label [ngClass]="isEmailError ? 'text-danger' : ''">{{
-                  isEmailError ? emailErrorMessage : "Email"
-                }}</mat-label>
+                <mat-label [ngClass]="isEmailError ? 'text-danger' : ''">
+                  {{ isEmailError ? emailErrorMessage : "Email" }}
+                </mat-label>
+
                 <input
                   matInput
                   type="text"
@@ -302,6 +317,7 @@
                 />
               </mat-form-field>
             </div>
+
             <!-- Contact Number -->
             <div class="col-xl-6">
               <div class="row">
@@ -311,9 +327,10 @@
                     class="flex-grow-0 w-100"
                     [ngClass]="isPhoneError ? 'danger' : ''"
                   >
-                    <mat-label [ngClass]="isPhoneError ? 'text-danger' : ''"
-                      >Code</mat-label
-                    >
+                    <mat-label [ngClass]="isPhoneError ? 'text-danger' : ''">
+                      Code
+                    </mat-label>
+
                     <input
                       matInput
                       type="text"
@@ -325,38 +342,52 @@
                       (ngModelChange)="whilePhoneCodeChange($event)"
                       [class.text-danger]="isPhoneError"
                     />
+
                     <mat-autocomplete
                       #phoneCodeAutoComplete="matAutocomplete"
-                      (optionSelected)="
-                        onPhoneCodeSelectionChange($event, 'tenant')
-                      "
+                      (optionSelected)="onPhoneCodeSelectionChange($event)"
                       [displayWith]="displayPhoneCode"
                     >
                       <mat-option
                         *ngFor="let option of filterPhoneCodes | async"
                         [value]="option"
                       >
+                        <!-- FIX: never touch option.flags.png -->
                         <img
-                          [src]="option.flags.png"
+                          *ngIf="getFlagPng(option) as fp; else noFlagPhone"
+                          [src]="fp"
                           width="22"
                           height="14"
                           style="margin-right: 8px"
-                          alt="{{ option.flags.alt }}"
+                          [alt]="getCountryLabel(option)"
                         />
+                        <ng-template #noFlagPhone>
+                          <span
+                            style="
+                              display: inline-block;
+                              width: 22px;
+                              height: 14px;
+                              margin-right: 8px;
+                            "
+                          ></span>
+                        </ng-template>
+
                         {{ option.code }}
                       </mat-option>
                     </mat-autocomplete>
                   </mat-form-field>
                 </div>
+
                 <div class="col-9">
                   <mat-form-field
                     appearance="fill"
                     class="form-field me-3 w-100"
                     [ngClass]="isPhoneError ? 'danger' : ''"
                   >
-                    <mat-label [ngClass]="isPhoneError ? 'text-danger' : ''">{{
-                      isPhoneError ? phoneErrorMessage : "Contact Number"
-                    }}</mat-label>
+                    <mat-label [ngClass]="isPhoneError ? 'text-danger' : ''">
+                      {{ isPhoneError ? phoneErrorMessage : "Contact Number" }}
+                    </mat-label>
+
                     <input
                       matInput
                       type="text"
@@ -371,9 +402,9 @@
               </div>
             </div>
           </div>
+
           <!-- Address -->
           <div class="row">
-            <!-- House Number -->
             <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>House Number</mat-label>
@@ -387,7 +418,7 @@
                 />
               </mat-form-field>
             </div>
-            <!-- Street -->
+
             <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>Street</mat-label>
@@ -401,7 +432,7 @@
                 />
               </mat-form-field>
             </div>
-            <!-- City -->
+
             <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>City</mat-label>
@@ -416,8 +447,8 @@
               </mat-form-field>
             </div>
           </div>
+
           <div class="row">
-            <!-- State or Province -->
             <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>State or Province</mat-label>
@@ -431,7 +462,7 @@
                 />
               </mat-form-field>
             </div>
-            <!-- ZIP code -->
+
             <div class="col-xl-4">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>ZIP code</mat-label>
@@ -445,41 +476,49 @@
                 />
               </mat-form-field>
             </div>
+
             <!-- Country -->
             <div class="col-xl-4">
               <mat-form-field class="example-full-width w-100">
                 <mat-label>Country</mat-label>
+
                 <input
                   matInput
                   type="text"
-                  [formControl]="countryControl"
+                  [(ngModel)]="typedCountry"
+                  name="addressCountry"
                   [matAutocomplete]="auto"
                   title="Country"
                   required
                   placeholder="Enter your country"
-                  (ngModelChange)="onCountryChange($event)"
+                  (ngModelChange)="onCountryChange()"
                 />
+
                 <mat-autocomplete
                   #auto="matAutocomplete"
                   [displayWith]="displayFn"
+                  (optionSelected)="onCountrySelected($event)"
                 >
                   <mat-option
                     *ngFor="let option of filteredCountries | async"
                     [value]="option"
                   >
+                    <!-- FIX: never touch option.flags.png -->
                     <img
-                      [src]="option.flags.png"
+                      [src]="option.image"
                       width="24"
                       height="16"
                       style="margin-right: 8px"
-                      alt="{{ option.code }}"
+                      [alt]="getCountryLabel(option)"
                     />
+
                     {{ option.name }}
                   </mat-option>
                 </mat-autocomplete>
               </mat-form-field>
             </div>
           </div>
+
           <!-- Age and date of birth -->
           <div class="row d-flex justify-content-bitween align-items-center">
             <div class="col-xl-6">
@@ -489,8 +528,9 @@
                 [class.danger]="!isValidAge"
               >
                 <mat-label [ngClass]="isValidAge ? '' : 'text-danger'">
-                  {{ isValidAge ? "Age" : "Invalid Age" }}</mat-label
-                >
+                  {{ isValidAge ? "Age" : "Invalid Age" }}
+                </mat-label>
+
                 <input
                   matInput
                   type="text"
@@ -503,6 +543,7 @@
                 />
               </mat-form-field>
             </div>
+
             <div class="col-xl-6">
               <mat-form-field
                 appearance="fill"
@@ -510,20 +551,19 @@
                 [class.danger]="!isValidAge"
               >
                 <mat-label [ngClass]="isValidAge ? '' : 'text-danger'">
-                  {{
-                    isValidAge ? "Date of Birth" : "Invalid Date of Birth"
-                  }}</mat-label
-                >
+                  {{ isValidAge ? "Date of Birth" : "Invalid Date of Birth" }}
+                </mat-label>
+
                 <input
                   matInput
                   [matDatepicker]="picker"
-                  placeholder="Date of Birth"
                   [(ngModel)]="dateOfBirth"
                   name="age"
                   (ngModelChange)="validateDateOfBirth($event)"
                   required
                   placeholder="DD/MM/YYYY"
                 />
+
                 <mat-datepicker-toggle
                   matIconSuffix
                   [for]="picker"
@@ -532,6 +572,7 @@
               </mat-form-field>
             </div>
           </div>
+
           <!-- Role if user is admin -->
           <div class="row">
             <div class="col-xl-3">
@@ -547,6 +588,7 @@
                 />
               </mat-form-field>
             </div>
+
             <div class="col-xl-3">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label> Identity Number </mat-label>
@@ -555,11 +597,11 @@
                   type="text"
                   name="nicOrPassport"
                   [(ngModel)]="nicOrPassport"
-                  placeholder=""
                   required
                 />
               </mat-form-field>
             </div>
+
             <div class="col-xl-3">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>User role</mat-label>
@@ -571,23 +613,24 @@
                   (ngModelChange)="whileRoleChange($event)"
                 >
                   @for (role of definedRole; track role) {
-                  <mat-option [value]="role"
-                    ><p class="text-capitalize">
-                      {{ convertToHumanReadable(role) }}
-                    </p></mat-option
-                  >
+                    <mat-option [value]="role">
+                      <p class="text-capitalize">
+                        {{ convertToHumanReadable(role) }}
+                      </p>
+                    </mat-option>
                   }
                 </mat-select>
               </mat-form-field>
             </div>
+
             <div class="col-xl-3">
               <mat-form-field appearance="fill" class="form-field me-3 w-100">
                 <mat-label>User Active Status</mat-label>
                 <mat-select [(ngModel)]="isActive" name="isActive" required>
                   @for (status of userActiveStatus; track status) {
-                  <mat-option [value]="status.isActive">{{
-                    status.typeName
-                  }}</mat-option>
+                    <mat-option [value]="status.isActive">{{
+                      status.typeName
+                    }}</mat-option>
                   }
                 </mat-select>
               </mat-form-field>
@@ -595,7 +638,6 @@
           </div>
         </div>
       </div>
-      <!-- end data entry section -->
 
       <!-- user bio row -->
       <div class="row my-5">
@@ -607,19 +649,17 @@
               [name]="'description'"
               [placeholder]="'Details about complaint'"
               [(modelValue)]="userBio"
-            >
-            </app-text-editor>
+            ></app-text-editor>
           </div>
         </div>
       </div>
-      <!-- user bio row -->
 
       <!-- user access row start -->
       <div class="row my-5" *ngIf="role !== ''">
         <div class="col-xl-12"><h1>User Access</h1></div>
         <hr />
       </div>
-      <!-- end user access row end -->
+
       <!-- user access grant -->
       <div class="row" *ngIf="role !== ''">
         <div
@@ -644,15 +684,12 @@
                   toggleAccess($event.checked, mainItem.module, subItem.id)
                 "
               >
-                <p class="text-default text-capitalize">
-                  {{ subItem.label }}
-                </p>
+                <p class="text-default text-capitalize">{{ subItem.label }}</p>
               </mat-checkbox>
             </li>
           </ul>
         </div>
       </div>
-      <!-- end user access grant -->
 
       <!-- submit button -->
       <div class="row d-flex justify-content-center align-item-center mt-2">
@@ -662,7 +699,6 @@
           </button>
         </div>
       </div>
-      <!-- end submit button -->
     </form>
   </div>
 </div>

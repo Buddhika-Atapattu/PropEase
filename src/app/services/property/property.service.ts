@@ -593,15 +593,16 @@ export class PropertyService {
   // }
 
   // Delete the property
-  public async deleteProperty( id: string, username: string ): Promise<MSG> {
+  public async deleteProperty( id: string ): Promise<MSG> {
     return firstValueFrom(
       this.http.delete<MSG>(
-        `${ this.propertyAPI }/delete-property/${ id.trim() }/${ username.trim() }`,
+        `${ this.propertyAPI }/delete-property/${ id.trim() }`,
       )
     );
   }
 
   public async updateProperty( data: FormData, id: string ): Promise<MSG> {
+
     return firstValueFrom(
       this.http.put<MSG>(
         `${ this.propertyAPI }/update-property/${ id }`,

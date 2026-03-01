@@ -1,1 +1,175 @@
-<p>item.component works!</p>
+<!-- Path: src/app/pages/recyclebin/item/item.component.html -->
+
+<section class="rb-item-root" *ngIf="vm$ | async as vm">
+  <!-- ========================================================= -->
+  <!-- Header -->
+  <!-- ========================================================= -->
+  <header class="rb-item-header">
+    <button mat-stroked-button type="button" (click)="backToList()">
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+
+    <div class="rb-item-title">
+      <!-- Icon only when OK -->
+      <mat-icon
+        class="rb-item-title-icon"
+        *ngIf="isOk(vm)"
+        [ngClass]="'ico-' + iconFor(vm.data)"
+      >
+        {{ iconFor(vm.data) }}
+      </mat-icon>
+
+      <span class="rb-item-title-text">
+        <!-- Loading -->
+        <span *ngIf="vm.state === 'loading'">Loading…</span>
+
+        <!-- Error -->
+        <span *ngIf="vm.state === 'error'">Recycle Bin Item</span>
+
+        <!-- OK (use type-guard so vm.data is safe) -->
+        <span *ngIf="isOk(vm)">{{ titleFor(vm.data) }}</span>
+      </span>
+    </div>
+
+    <span class="rb-item-id" *ngIf="vm.entryId">
+      ID: <b>{{ vm.entryId }}</b>
+    </span>
+  </header>
+
+  <mat-divider></mat-divider>
+
+  <!-- ========================================================= -->
+  <!-- Loading -->
+  <!-- ========================================================= -->
+  <div class="rb-item-loading" *ngIf="vm.state === 'loading'">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    <div class="rb-item-loading-text">Loading recycle bin item…</div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- Error -->
+  <!-- ========================================================= -->
+  <mat-card class="rb-item-card" *ngIf="vm.state === 'error'">
+    <mat-card-content class="rb-item-error">
+      <mat-icon>error</mat-icon>
+      <div class="rb-item-error-text">
+        <div class="rb-item-error-title">Unable to load item</div>
+        <div class="rb-item-error-msg">{{ vm.message }}</div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- ========================================================= -->
+  <!-- OK (type-guarded block) -->
+  <!-- ========================================================= -->
+  <ng-container *ngIf="isOk(vm)">
+    <!-- Entry details -->
+    <mat-card class="rb-item-card">
+      <div class="rb-card-header">
+        <mat-card-title>Details</mat-card-title>
+
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Copy JSON"
+          (click)="copyJson(vm.data.entry)"
+        >
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      </div>
+      <hr />
+      <mat-card-content>
+        <pre class="rb-json">{{ formatJson(vm.data.entry) }}</pre>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Snapshot -->
+    <mat-card class="rb-item-card">
+      <div class="rb-card-header">
+        <mat-card-title>Snapshot</mat-card-title>
+
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Copy JSON"
+          (click)="copyJson(vm.data.snapshotData)"
+        >
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      </div>
+      <hr />
+      <mat-card-content>
+        <pre class="rb-json">{{ formatJson(vm.data.snapshotData) }}</pre>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Meta -->
+    <mat-card class="rb-item-card">
+      <div class="rb-card-header">
+        <mat-card-title>Metadata</mat-card-title>
+
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Copy JSON"
+          (click)="copyJson(vm.data.meta)"
+        >
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      </div>
+      <hr />
+      <mat-card-content>
+        <pre class="rb-json">{{ formatJson(vm.data.meta) }}</pre>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Files -->
+    <mat-card class="rb-item-card">
+      <mat-card-title>Files</mat-card-title>
+      <hr />
+      <mat-card-content>
+        <ng-container *ngIf="vm.data.files.length > 0; else noFiles">
+          <div class="rb-files">
+            <div
+              class="rb-file"
+              *ngFor="let f of vm.data.files; trackBy: trackByIdx"
+            >
+              <mat-icon class="rb-file-ico">attach_file</mat-icon>
+
+              <div class="rb-file-meta">
+                <div class="rb-file-name">
+                  {{ f.originalName || f.storedName || "file" }}
+                </div>
+
+                <div class="rb-file-sub mono">
+                  {{ f.mimeType || "-" }} • {{ f.sizeBytes || 0 }} bytes •
+                  {{ f.fieldName || "-" }}
+                </div>
+              </div>
+
+              <div class="rb-file-actions">
+                <button
+                  mat-stroked-button
+                  type="button"
+                  [disabled]="!f.publicUrl"
+                  matTooltip="Open in viewer"
+                >
+                  <mat-icon>visibility</mat-icon>
+                  View
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #noFiles>
+          <div class="rb-empty">
+            <mat-icon>info</mat-icon>
+            <span>No files were recorded for this recycle bin entry.</span>
+          </div>
+        </ng-template>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+</section>

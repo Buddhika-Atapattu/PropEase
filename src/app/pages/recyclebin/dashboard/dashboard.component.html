@@ -1,4 +1,7 @@
 <!-- Path: src/app/pages/recyclebin/dashboard/dashboard.component.html -->
+<app-notification-dialog></app-notification-dialog>
+
+<app-progress-bar></app-progress-bar>
 
 <section class="rb-shell" role="main" aria-label="Recycle Bin">
   <!-- Windows-like command bar -->
@@ -9,12 +12,24 @@
     </div>
 
     <div class="rb-actions">
-      <button mat-button class="rb-btn" (click)="onRestoreSelected()" matTooltip="Restore selected items">
+      <button
+        mat-button
+        class="rb-btn primary"
+        (click)="onRestoreSelected()"
+        matTooltip="Restore selected items"
+        [disabled]="actionInFlight || ((selectedCount$ | async) ?? 0) === 0"
+      >
         <mat-icon>restore</mat-icon>
         <span>Restore</span>
       </button>
 
-      <button mat-button class="rb-btn danger" (click)="onDeleteSelected()" matTooltip="Permanently delete selected">
+      <button
+        mat-button
+        class="rb-btn danger"
+        (click)="onDeleteSelected()"
+        matTooltip="Permanently delete selected"
+        [disabled]="actionInFlight || ((selectedCount$ | async) ?? 0) === 0"
+      >
         <mat-icon>delete_forever</mat-icon>
         <span>Delete</span>
       </button>
@@ -28,15 +43,25 @@
         (ngModelChange)="onSearchChange()"
         placeholder="Search Recycle Bin"
         aria-label="Search Recycle Bin"
+        [disabled]="actionInFlight"
       />
     </div>
   </header>
 
-  <mat-progress-bar *ngIf="(isLoading$ | async) === true" mode="indeterminate"></mat-progress-bar>
+  <mat-progress-bar
+    *ngIf="(isLoading$ | async) === true"
+    mode="indeterminate"
+  ></mat-progress-bar>
 
   <!-- Windows details-view table -->
   <div class="rb-table-wrap" *ngIf="vm$ | async as vm">
-    <table mat-table [dataSource]="vm.rows" class="rb-table" role="table" aria-label="Recycle bin items table">
+    <table
+      mat-table
+      [dataSource]="vm.rows"
+      class="rb-table"
+      role="table"
+      aria-label="Recycle bin items table"
+    >
       <!-- Select -->
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef class="col-select"></th>
@@ -44,6 +69,8 @@
           <mat-checkbox
             [checked]="isRowSelected(r.rowId)"
             (change)="onToggleSelect(r.rowId)"
+            (click)="$event.stopPropagation()"
+            [disabled]="actionInFlight"
             [attr.aria-label]="'Select ' + r.name"
           ></mat-checkbox>
         </td>
@@ -55,32 +82,45 @@
         <td mat-cell *matCellDef="let r">
           <div class="rb-name" [style.padding-left.px]="r.depth * 18">
             <!-- expand arrow only for record rows -->
-            <button
+            <!-- <button
               *ngIf="r.isExpandable"
               type="button"
               class="rb-expander"
-              (click)="onToggleExpand(r.entryId)"
+              (click)="onToggleExpand(r.entryId); $event.stopPropagation()"
+              [disabled]="actionInFlight"
               [attr.aria-label]="r.isExpanded ? 'Collapse' : 'Expand'"
             >
-              <mat-icon>{{ r.isExpanded ? "expand_more" : "chevron_right" }}</mat-icon>
-            </button>
+              <mat-icon>{{
+                r.isExpanded ? "expand_more" : "chevron_right"
+              }}</mat-icon>
+            </button> -->
 
-            <span *ngIf="!r.isExpandable" class="rb-expander-spacer"></span>
+            <!-- <span *ngIf="!r.isExpandable" class="rb-expander-spacer"></span> -->
 
             <!-- icon -->
             <mat-icon class="rb-ico" aria-hidden="true">
               {{
-                r.iconKey === "folder" ? "folder" :
-                r.iconKey === "pdf" ? "picture_as_pdf" :
-                r.iconKey === "image" ? "image" :
-                r.iconKey === "doc" ? "description" :
-                r.iconKey === "xls" ? "grid_on" :
-                r.iconKey === "ppt" ? "slideshow" :
-                r.iconKey === "zip" ? "folder_zip" :
-                r.iconKey === "json" ? "data_object" :
-                r.iconKey === "txt" ? "article" :
-                r.iconKey === "code" ? "code" :
-                "insert_drive_file"
+                r.iconKey === "folder"
+                  ? "folder"
+                  : r.iconKey === "pdf"
+                    ? "picture_as_pdf"
+                    : r.iconKey === "image"
+                      ? "image"
+                      : r.iconKey === "doc"
+                        ? "description"
+                        : r.iconKey === "xls"
+                          ? "grid_on"
+                          : r.iconKey === "ppt"
+                            ? "slideshow"
+                            : r.iconKey === "zip"
+                              ? "folder_zip"
+                              : r.iconKey === "json"
+                                ? "data_object"
+                                : r.iconKey === "txt"
+                                  ? "article"
+                                  : r.iconKey === "code"
+                                    ? "code"
+                                    : "insert_drive_file"
               }}
             </mat-icon>
 
@@ -92,7 +132,12 @@
       <!-- Original Location -->
       <ng-container matColumnDef="originalLocation">
         <th mat-header-cell *matHeaderCellDef>Original location</th>
-        <td mat-cell *matCellDef="let r" [title]="r.originalLocation" class="rb-ellipsis">
+        <td
+          mat-cell
+          *matCellDef="let r"
+          [title]="r.originalLocation"
+          class="rb-ellipsis"
+        >
           {{ r.originalLocation }}
         </td>
       </ng-container>
@@ -101,7 +146,11 @@
       <ng-container matColumnDef="dateDeleted">
         <th mat-header-cell *matHeaderCellDef>Date deleted</th>
         <td mat-cell *matCellDef="let r">
-          {{ r.dateDeletedIso ? (r.dateDeletedIso | date : "yyyy-MM-dd HH:mm") : "" }}
+          {{
+            r.dateDeletedIso
+              ? (r.dateDeletedIso | date: "yyyy-MM-dd HH:mm")
+              : ""
+          }}
         </td>
       </ng-container>
 
@@ -114,19 +163,61 @@
       <!-- Size -->
       <ng-container matColumnDef="size">
         <th mat-header-cell *matHeaderCellDef>Size</th>
-        <td mat-cell *matCellDef="let r">{{ r.sizeBytes ? formatBytes(r.sizeBytes) : "" }}</td>
+        <td mat-cell *matCellDef="let r">
+          {{ r.sizeBytes ? formatBytes(r.sizeBytes) : "" }}
+        </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+
       <tr
         mat-row
         *matRowDef="let row; columns: displayedColumns"
         class="rb-row"
+        [class.rb-row-selected]="isRowSelected(row.rowId)"
+        (click)="visitTheItem(row)"
       ></tr>
+
+      <!-- Empty state row (Windows-like) -->
+      <tr
+        class="rb-empty"
+        *ngIf="vm.rows.length === 0 && (isLoading$ | async) !== true"
+      >
+        <td [attr.colspan]="displayedColumns.length">
+          <div class="rb-empty-inner">
+            <mat-icon aria-hidden="true">delete_outline</mat-icon>
+            <div>
+              <div class="rb-empty-title">Recycle Bin is empty</div>
+              <div class="rb-empty-sub">
+                No deleted items match your filters.
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
     </table>
 
     <div class="rb-footer">
-      <span class="muted">Items: {{ vm.total }}</span>
+      <div class="rb-footer-left">
+        <span class="muted">Items: {{ vm.total }}</span>
+
+        <span class="muted" *ngIf="selectedCount$ | async as sc">
+          • Selected: {{ sc }}
+        </span>
+
+        <span class="muted" *ngIf="actionInFlight"> • Working... </span>
+      </div>
+
+      <mat-paginator
+        class="rb-paginator"
+        [length]="vm.total"
+        [pageIndex]="vm.page - 1"
+        [pageSize]="vm.limit"
+        [pageSizeOptions]="[10, 25, 50, 100]"
+        [showFirstLastButtons]="true"
+        (page)="onPageChange($event)"
+        aria-label="Recycle bin pagination"
+      ></mat-paginator>
     </div>
   </div>
 </section>

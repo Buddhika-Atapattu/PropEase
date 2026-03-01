@@ -76,6 +76,8 @@ import { EditorModule, TINYMCE_SCRIPT_SRC } from '@tinymce/tinymce-angular';
 
 import { AppTitleStrategy } from './core/routing/app-title.strategy';
 
+import { RecycleBinWsRpcToken } from "./services/recyclebin/recyclebin-ws-rpc.token";
+
 // ── Custom Material date format (UK style: DD/MM/YYYY) ───────────────────────
 export const MY_DATE_FORMATS: MatDateFormats = {
   parse: { dateInput: 'DD/MM/YYYY' },
@@ -163,5 +165,6 @@ export const appConfig: ApplicationConfig = {
       deps: [ MAT_DATE_LOCALE, MAT_MOMENT_DATE_ADAPTER_OPTIONS ],
     },
     { provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS },
+
   ],
 };

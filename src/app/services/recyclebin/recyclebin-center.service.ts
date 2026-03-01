@@ -1,39 +1,57 @@
 // Path: src/app/services/recyclebin/recyclebin-center.service.ts
 // =============================================================================
-// RecycleBinCenterService — Windows-11-like "Recycle Bin Center" Aggregator
+// RecycleBinCenterService — WS-first then REST fallback (Phase 1)
 // =============================================================================
+//
 // 01) Introduction
-// - Builds a single flat "items list" that looks like Windows Recycle Bin.
-// - Your backend list() returns "entries" (deleted records), but Windows shows
-//   "items" (files/folders). We bridge that gap by flattening:
-//     A) one "record item" per entry (the deleted data itself)
-//     B) N "file items" per entry (loaded lazily via prepareRestore)
+// - Single state hub for Recycle Bin dashboard.
+// - Provides rows + loading + selection + expand(prepareRestore).
+// - Phase 1 focus: list + count integration (Windows-like list).
 //
 // 02) Important matters
-// - Avoid eager loading file manifests for all entries (performance).
-// - File manifests are fetched only when entry is expanded or selected.
-// - Never set optional props to undefined (strict + safe DTO boundary).
+// - WS-first: if WS RPC layer exists + connected -> use it.
+// - Fallback: if WS unavailable/failed -> use REST.
+// - No payload logging (ISO 27001/27002 control 8.28).
+// - exactOptionalPropertyTypes-safe: never pass undefined.
 //
 // 03) Why we make this class
-// - UI components must not know backend envelope structures or restore flows.
-// - Central place for icon mapping, flattening, caching, and selection state.
+// - UI must not know whether data came from WS or REST.
+// - Centralized caching and refresh triggers.
 //
-// 04) Parameter descriptions
-// - See each method JSDoc.
+// 04) Parameters
+// - api: RecycleBinRestService
+// - wsPush: RecycleBinSocketService (push refresh triggers)
+// - (optional) wsRpc: RecycleBinWsRpcApi (list/count via WS ACK)
 //
 // 05) Usage hint
-// - component calls:
-//     this.center.loadPage({ page: 1, limit: 25 });
-//     this.center.setSearch("LEASE");
-//     this.center.toggleExpand(entryId);
-//     this.center.restoreSelected();
+// - component:
+//     center.loadPage({ page:1, limit:25 });
+//     center.setSearch("LEASE");
+//     center.vm$().subscribe(...)
+//
 //
 // 06) Keep in mind
-// - ISO/IEC 27001/27002 (Control 8.28): do not console.log snapshot or file paths.
+// - Restore uses REAL backend restore: POST /:entryId/restore (no markRestored).
 // =============================================================================
 
-import { Injectable } from "@angular/core";
-import { BehaviorSubject, Observable, combineLatest, map, of, switchMap, tap } from "rxjs";
+import { Inject, Injectable, Optional } from "@angular/core";
+import {
+  BehaviorSubject,
+  Observable,
+  combineLatest,
+  map,
+  of,
+  switchMap,
+  tap,
+  catchError,
+  finalize,
+  Subject,
+  merge,
+  debounceTime,
+  mergeMap,
+  reduce,
+  from,
+} from "rxjs";
 
 import type {
   PageQuery,
@@ -43,12 +61,12 @@ import type {
   RecycleBinRestorePrepareDto,
 } from "../../types/recyclebin/recyclebin.types";
 
+
 import type { FileMetaPacketDto } from "../../types/recyclebin/recyclebin.types";
 import { RecycleBinRestService } from "./recyclebin.rest.service";
-
-// =============================================================================
-// Types (UI rows)
-// =============================================================================
+import { RecycleBinSocketService } from "./recyclebin.socket.service";
+import type { RecycleBinWsRpcApi } from "./recyclebin-ws-rpc.api";
+import { RecycleBinWsRpcToken } from "./recyclebin-ws-rpc.token";
 
 export type RecycleBinItemKind = "record" | "file";
 
@@ -67,463 +85,560 @@ export type RecycleBinItemIconKey =
   | "unknown";
 
 export interface RecycleBinCenterRow {
-  // stable row id (unique in table)
   rowId: string;
-
-  // parent entry id (needed for restore/purge actions)
   entryId: string;
 
-  // record item OR file item
   kind: RecycleBinItemKind;
 
-  // Windows-like columns
   name: string;
   typeLabel: string;
   originalLocation: string;
   dateDeletedIso: string;
   sizeBytes: number;
 
-  // hierarchy (expand/collapse)
-  depth: number; // 0=top, 1=file under entry
+  depth: number;
   isExpandable: boolean;
   isExpanded: boolean;
 
-  // icon mapping
   iconKey: RecycleBinItemIconKey;
 
-  // raw backing refs for action/preview
   entry: RecycleBinEntryDto;
   file?: FileMetaPacketDto;
 }
 
-// =============================================================================
+export interface RecycleBinCenterVm {
+  rows: RecycleBinCenterRow[];
+  total: number;
+  page: number;
+  limit: number;
+  selectedCount: number;
+}
 
-@Injectable({ providedIn: "root" })
+@Injectable( { providedIn: "root" } )
 export class RecycleBinCenterService {
-  private readonly page$ = new BehaviorSubject<PageQuery>({ page: 1, limit: 25 });
-  private readonly filters$ = new BehaviorSubject<RecycleBinListFilters>({});
-  private readonly loading$ = new BehaviorSubject<boolean>(false);
+  private readonly pageSubject = new BehaviorSubject<PageQuery>( { page: 1, limit: 25 } );
+  private readonly filtersSubject = new BehaviorSubject<RecycleBinListFilters>( {} );
+  private readonly loadingSubject = new BehaviorSubject<boolean>( false );
 
-  // expanded entry ids
-  private readonly expandedSet$ = new BehaviorSubject<Set<string>>(new Set());
+  private readonly expandedSetSubject = new BehaviorSubject<Set<string>>( new Set() );
+  private readonly selectedRowIdsSubject = new BehaviorSubject<Set<string>>( new Set() );
 
-  // cache for prepareRestore(entryId)
   private readonly prepareCache = new Map<string, RecycleBinRestorePrepareDto>();
 
-  // selection
-  private readonly selectedRowIds$ = new BehaviorSubject<Set<string>>(new Set());
+  /** Manual refresh trigger (used by WS push events + after actions) */
+  private readonly refreshSubject = new Subject<void>();
 
-  public constructor(private readonly api: RecycleBinRestService) {}
+  public constructor (
+    private readonly api: RecycleBinRestService,
+    private readonly wsPush: RecycleBinSocketService,
+    @Optional() @Inject( RecycleBinWsRpcToken.TOKEN )
+    private readonly wsRpc: RecycleBinWsRpcApi | null
+  ) {
+    this.bindPushRefreshTriggers();
+  }
 
   // =============================================================================
-  // Public streams (bind in component)
+  // Public streams
   // =============================================================================
 
   public isLoading$(): Observable<boolean> {
-    return this.loading$.asObservable();
+    return this.loadingSubject.asObservable();
   }
 
   public pageState$(): Observable<PageQuery> {
-    return this.page$.asObservable();
+    return this.pageSubject.asObservable();
   }
 
   public selectedCount$(): Observable<number> {
-    return this.selectedRowIds$.pipe(map((s) => s.size));
+    return this.selectedRowIdsSubject.pipe( map( ( s ) => s.size ) );
   }
 
   /**
-   * Windows-like "flat rows" stream.
+   * ViewModel stream (rows + pagination + selection count).
+   * - WS-first list
+   * - REST fallback
    */
-  public rows$(): Observable<{ rows: RecycleBinCenterRow[]; total: number; page: number; limit: number }> {
-    return combineLatest([this.page$, this.filters$, this.expandedSet$]).pipe(
-      tap(() => this.loading$.next(true)),
-      switchMap(([page, filters, expanded]) =>
-        this.api.list({ page, filters }).pipe(
-          switchMap((res) => this.buildRows(res, expanded)),
-          tap(() => this.loading$.next(false))
+  public vm$(): Observable<RecycleBinCenterVm> {
+    const refreshTick$ = merge( of( void 0 ), this.refreshSubject.pipe( debounceTime( 50 ) ) );
+
+    return combineLatest( [ this.pageSubject, this.filtersSubject, this.expandedSetSubject, refreshTick$ ] ).pipe(
+      tap( () => this.loadingSubject.next( true ) ),
+      switchMap( ( [ page, filters, expanded ] ) =>
+        this.loadListWsFirst( { page, filters } ).pipe(
+          switchMap( ( res ) => this.buildRows( res, expanded ) ),
+          map( ( built ) => ( {
+            ...built,
+            selectedCount: this.selectedRowIdsSubject.value.size,
+          } ) ),
+          catchError( () =>
+            of( {
+              rows: [],
+              total: 0,
+              page: page.page,
+              limit: page.limit,
+              selectedCount: 0,
+            } )
+          ),
+          finalize( () => this.loadingSubject.next( false ) )
         )
       )
     );
   }
 
-  // =============================================================================
-  // Commands (called from UI)
-  // =============================================================================
-
   /**
-   * Load a specific page (1-based).
-   *
-   * @param page
-   * - Expected: { page: 1..N, limit: 1..100 }
+   * Total count stream (Phase 1).
+   * - WS-first count
+   * - REST fallback
    */
-  public loadPage(page: PageQuery): void {
-    this.page$.next({ page: page.page, limit: page.limit });
-  }
+  public totalCount$(): Observable<number> {
+    const refreshTick$ = merge( of( void 0 ), this.refreshSubject.pipe( debounceTime( 50 ) ) );
 
-  /**
-   * Update search text (maps to filters.search).
-   *
-   * @param text
-   * - Expected: any string; empty clears search filter
-   */
-  public setSearch(text: string): void {
-    const clean = typeof text === "string" ? text.trim() : "";
-    const prev = this.filters$.value;
-    const next: RecycleBinListFilters = { ...prev };
-
-    if (clean) next.search = clean;
-    else delete (next as { search?: string }).search;
-
-    this.filters$.next(next);
-    this.clearSelection();
-  }
-
-  /**
-   * Toggle expand/collapse for an entry.
-   *
-   * @param entryId
-   * - Expected: non-empty entry id string
-   */
-  public toggleExpand(entryId: string): void {
-    const id = this.safeId(entryId);
-    const set = new Set(this.expandedSet$.value);
-
-    if (set.has(id)) set.delete(id);
-    else set.add(id);
-
-    this.expandedSet$.next(set);
-  }
-
-  /**
-   * Ensure file manifest exists in cache (lazy-load).
-   *
-   * @param entryId
-   * - Expected: non-empty entry id string
-   */
-  public ensurePrepared(entryId: string): Observable<RecycleBinRestorePrepareDto | null> {
-    const id = this.safeId(entryId);
-    const cached = this.prepareCache.get(id);
-    if (cached) return of(cached);
-
-    return this.api.prepareRestore(id).pipe(
-      tap((dto) => {
-        this.prepareCache.set(id, dto);
-      })
+    return combineLatest( [ this.filtersSubject, refreshTick$ ] ).pipe(
+      switchMap( ( [ filters ] ) => this.loadCountWsFirst( filters ).pipe( catchError( () => of( 0 ) ) ) )
     );
   }
 
   // =============================================================================
-  // Selection (Windows-like)
+  // Commands (component calls)
   // =============================================================================
 
-  public isSelected(rowId: string): boolean {
-    return this.selectedRowIds$.value.has(rowId);
+  public loadPage( page: PageQuery ): void {
+    const p =
+      typeof page?.page === "number" && Number.isFinite( page.page )
+        ? Math.max( 1, Math.floor( page.page ) )
+        : 1;
+    const l =
+      typeof page?.limit === "number" && Number.isFinite( page.limit )
+        ? Math.max( 1, Math.floor( page.limit ) )
+        : 25;
+
+    this.pageSubject.next( { page: p, limit: l } );
+    this.clearSelection();
+    this.refresh();
   }
 
-  public toggleRowSelection(rowId: string): void {
-    const id = this.safeRowId(rowId);
-    const set = new Set(this.selectedRowIds$.value);
-    if (set.has(id)) set.delete(id);
-    else set.add(id);
-    this.selectedRowIds$.next(set);
+  public setSearch( text: string ): void {
+    const clean = typeof text === "string" ? text.trim() : "";
+    const prev = this.filtersSubject.value;
+    const next: RecycleBinListFilters = { ...prev };
+
+    if ( clean ) next.search = clean;
+    else this.deleteSearch( next );
+
+    this.filtersSubject.next( next );
+    this.clearSelection();
+
+    const cur = this.pageSubject.value;
+    this.pageSubject.next( { page: 1, limit: cur.limit } );
+
+    this.refresh();
+  }
+
+  private deleteSearch( filters: RecycleBinListFilters ): void {
+    // exactOptionalPropertyTypes-safe: remove key entirely
+    const anyF = filters as unknown as { search?: string; };
+    delete anyF.search;
+  }
+
+  public toggleExpand( entryId: string ): void {
+    const id = this.safeId( entryId );
+    const set = new Set( this.expandedSetSubject.value );
+    if ( set.has( id ) ) set.delete( id );
+    else set.add( id );
+    this.expandedSetSubject.next( set );
+  }
+
+  public refresh(): void {
+    this.refreshSubject.next();
+  }
+
+  // =============================================================================
+  // Selection
+  // =============================================================================
+
+  public isSelected( rowId: string ): boolean {
+    return this.selectedRowIdsSubject.value.has( rowId );
+  }
+
+  public toggleRowSelection( rowId: string ): void {
+    const id = this.safeRowId( rowId );
+    const set = new Set( this.selectedRowIdsSubject.value );
+    if ( set.has( id ) ) set.delete( id );
+    else set.add( id );
+    this.selectedRowIdsSubject.next( set );
   }
 
   public clearSelection(): void {
-    this.selectedRowIds$.next(new Set());
+    this.selectedRowIdsSubject.next( new Set() );
   }
 
   // =============================================================================
-  // Actions (restore/purge)
+  // Actions (Phase 1)
+  // =============================================================================
+
+  public restoreSelected(): Observable<{ restored: number; }> {
+    const entryIds = this.getSelectedEntryIdsUnique();
+    if ( entryIds.length === 0 ) return of( { restored: 0 } );
+
+    // 4 concurrent restores (tune 2..6)
+    return this.restoreMultiple( entryIds, 4 );
+  }
+
+  public purgeSelected(): Observable<{ purged: number; }> {
+    const entryIds = this.getSelectedEntryIdsUnique();
+    if ( entryIds.length === 0 ) return of( { purged: 0 } );
+    return this.purgeSequential( entryIds, 0, 0 );
+  }
+
+  // =============================================================================
+  // Lazy prepare (files)
+  // =============================================================================
+
+  public ensurePrepared( entryId: string ): Observable<RecycleBinRestorePrepareDto | null> {
+    const id = this.safeId( entryId );
+    const cached = this.prepareCache.get( id );
+    if ( cached ) return of( cached );
+
+    return this.api.prepareRestore( id ).pipe(
+      tap( ( dto ) => {
+        this.prepareCache.set( id, dto );
+      } ),
+      catchError( () => of( null ) )
+    );
+  }
+
+  // =============================================================================
+  // WS-first loaders
   // =============================================================================
 
   /**
-   * Restore selected entries (Windows: "Restore the selected items").
-   * - If a user selects child file rows, we still restore the parent entry,
-   *   because backend restore is entry-based.
+   * WHY TS complained "possibly null":
+   * - `this.wsRpc` is nullable. Even inside `if (!this.wsRpc) return ...`,
+   *   TypeScript may not narrow it safely across RxJS callback boundaries.
+   *
+   * FIX:
+   * - Take a local non-null snapshot `const rpc = this.wsRpc;`
+   * - Use `rpc` inside the observable chain (stable reference).
    */
-  public restoreSelected(): Observable<{ restored: number }> {
-    const entryIds = this.getSelectedEntryIdsUnique();
-    if (entryIds.length === 0) return of({ restored: 0 });
+  private loadListWsFirst( options: {
+    page: PageQuery;
+    filters?: RecycleBinListFilters;
+  } ): Observable<RecycleBinListUiResult> {
+    const rpc = this.wsRpc;
+    if ( !rpc ) return this.api.list( { page: options.page, filters: options.filters } );
 
-    // Sequential restore to keep UI predictable (and avoid server burst).
-    return this.restoreSequential(entryIds, 0, 0);
+    return rpc.isReady$().pipe(
+      switchMap( ( ready ) => {
+        if ( !ready ) return this.api.list( { page: options.page, filters: options.filters } );
+
+        return rpc.list$( { page: options.page, filters: options.filters } ).pipe(
+          catchError( () => this.api.list( { page: options.page, filters: options.filters } ) )
+        );
+      } )
+    );
   }
 
-  /**
-   * Permanently delete selected (Windows: "Delete" in Recycle Bin).
-   */
-  public purgeSelected(): Observable<{ purged: number }> {
-    const entryIds = this.getSelectedEntryIdsUnique();
-    if (entryIds.length === 0) return of({ purged: 0 });
+  private loadCountWsFirst( filters?: RecycleBinListFilters ): Observable<number> {
+    const rpc = this.wsRpc;
+    if ( !rpc ) return this.api.count( filters );
 
-    return this.purgeSequential(entryIds, 0, 0);
+    return rpc.isReady$().pipe(
+      switchMap( ( ready ) => {
+        if ( !ready ) return this.api.count( filters );
+
+        return rpc.count$( filters ).pipe( catchError( () => this.api.count( filters ) ) );
+      } )
+    );
   }
 
   // =============================================================================
-  // Row builder (Windows columns + icons)
+  // Push triggers (WS)
+  // =============================================================================
+
+  private bindPushRefreshTriggers(): void {
+    // Phase 1 strategy:
+    // - Any change event triggers a refresh of list+count.
+    // - Debounce is applied via refreshSubject stream.
+
+    this.wsPush.softDeleted$.subscribe( () => this.refresh() );
+    this.wsPush.restored$.subscribe( () => this.refresh() );
+    this.wsPush.permanentDeleted$.subscribe( () => this.refresh() );
+    this.wsPush.bulk$.subscribe( () => this.refresh() );
+
+    // Count push: still refresh (keeps UI consistent even if count payload differs)
+    this.wsPush.count$.subscribe( () => this.refresh() );
+  }
+
+  // =============================================================================
+  // Row builder
   // =============================================================================
 
   private buildRows(
     res: RecycleBinListUiResult,
     expanded: Set<string>
-  ): Observable<{ rows: RecycleBinCenterRow[]; total: number; page: number; limit: number }> {
-    const entries = Array.isArray(res.items) ? res.items : [];
+  ): Observable<{ rows: RecycleBinCenterRow[]; total: number; page: number; limit: number; }> {
+    const entries = Array.isArray( res.items ) ? res.items : [];
     const requests: Observable<RecycleBinCenterRow[]>[] = [];
 
-    for (const e of entries) {
-      const entryId = this.safeId((e as { entryId?: string }).entryId || "");
-      const isExpanded = expanded.has(entryId);
+    for ( const e of entries ) {
+      const entryId = this.safeId( ( e as { entryId?: string; } ).entryId || "" );
+      const isExpanded = expanded.has( entryId );
 
-      // (A) record row (top-level)
       const recordRow: RecycleBinCenterRow = {
-        rowId: `record:${entryId}`,
+        rowId: `record:${ entryId }`,
         entryId,
         kind: "record",
-        name: this.getRecordName(e),
-        typeLabel: this.getRecordTypeLabel(e),
-        originalLocation: this.getOriginalLocationLabel(e),
-        dateDeletedIso: this.getDeletedIso(e),
+        name: this.getRecordName( e ),
+        typeLabel: this.getRecordTypeLabel( e ),
+        originalLocation: this.getOriginalLocationLabel( e ),
+        dateDeletedIso: this.getDeletedIso( e ),
         sizeBytes: 0,
         depth: 0,
-        isExpandable: true, // record expands to show files
+        isExpandable: true,
         isExpanded,
-        iconKey: this.getRecordIconKey(e),
+        iconKey: this.getRecordIconKey( e ),
         entry: e,
       };
 
-      // always push record row
-      if (!isExpanded) {
-        requests.push(of([recordRow]));
+      if ( !isExpanded ) {
+        requests.push( of( [ recordRow ] ) );
         continue;
       }
 
-      // (B) if expanded => add child file rows (lazy prepareRestore)
-      const obs = this.ensurePrepared(entryId).pipe(
-        map((prep) => {
-          const rows: RecycleBinCenterRow[] = [recordRow];
+      const obs = this.ensurePrepared( entryId ).pipe(
+        map( ( prep ) => {
+          const rows: RecycleBinCenterRow[] = [ recordRow ];
+          const files = prep && Array.isArray( prep.files ) ? prep.files : [];
 
-          const files = prep && Array.isArray(prep.files) ? prep.files : [];
-          for (const f of files) {
-            const fileRow: RecycleBinCenterRow = {
-              rowId: `file:${entryId}:${this.safeRowId(this.getFileStableKey(f))}`,
+          for ( const f of files ) {
+            rows.push( {
+              rowId: `file:${ entryId }:${ this.safeRowId( this.getFileStableKey( f ) ) }`,
               entryId,
               kind: "file",
-              name: this.getFileName(f),
-              typeLabel: this.getFileTypeLabel(f),
-              originalLocation: this.getFileOriginalLocationLabel(f, e),
-              dateDeletedIso: this.getDeletedIso(e),
-              sizeBytes: this.getFileSize(f),
+              name: this.getFileName( f ),
+              typeLabel: this.getFileTypeLabel( f ),
+              originalLocation: this.getFileOriginalLocationLabel( f, e ),
+              dateDeletedIso: this.getDeletedIso( e ),
+              sizeBytes: this.getFileSize( f ),
               depth: 1,
               isExpandable: false,
               isExpanded: false,
-              iconKey: this.getFileIconKey(f),
+              iconKey: this.getFileIconKey( f ),
               entry: e,
               file: f,
-            };
-            rows.push(fileRow);
+            } );
           }
 
           return rows;
-        })
+        } )
       );
 
-      requests.push(obs);
+      requests.push( obs );
     }
 
-    return combineLatest(requests).pipe(
-      map((chunks) => {
+    return combineLatest( requests.length ? requests : [ of( [] ) ] ).pipe(
+      map( ( chunks ) => {
         const rows = chunks.flat();
-        return {
-          rows,
-          total: res.total,
-          page: res.page,
-          limit: res.limit,
-        };
-      })
+        return { rows, total: res.total, page: res.page, limit: res.limit };
+      } )
     );
   }
 
   // =============================================================================
-  // Restore/Purge sequential helpers
+  // Sequential helpers (restore/purge)
   // =============================================================================
 
-  private restoreSequential(entryIds: string[], index: number, restored: number): Observable<{ restored: number }> {
-    if (index >= entryIds.length) {
+  private restoreSequential( entryIds: string[], index: number, restored: number ): Observable<{ restored: number; }> {
+    if ( index >= entryIds.length ) {
       this.clearSelection();
-      // refresh by re-emitting same page/filters (simple)
-      this.page$.next({ page: this.page$.value.page, limit: this.page$.value.limit });
-      return of({ restored });
+      this.refresh();
+      return of( { restored } );
     }
 
-    const id = entryIds[index];
+    const id = entryIds[ index ];
 
-    // Your backend flow is:
-    // 1) prepareRestore(entryId)  (optional precheck)
-    // 2) domain restore (not implemented here)
-    // 3) markRestored(entryId)
-    //
-    // Since your UI is "center", we do:
-    // - prepareRestore just to validate snapshot exists
-    // - then markRestored (assuming domain restore is handled elsewhere)
-    return this.ensurePrepared(id).pipe(
-      switchMap(() => this.api.markRestored(id)),
-      switchMap(() => this.restoreSequential(entryIds, index + 1, restored + 1))
+    return this.ensurePrepared( id ).pipe(
+      switchMap( () =>
+        // REAL RESTORE: backend POST /:entryId/restore (marks restored internally)
+        this.api.restore( { entryId: id } )
+      ),
+      switchMap( () => this.restoreSequential( entryIds, index + 1, restored + 1 ) ),
+      catchError( () => this.restoreSequential( entryIds, index + 1, restored ) )
     );
   }
 
-  private purgeSequential(entryIds: string[], index: number, purged: number): Observable<{ purged: number }> {
-    if (index >= entryIds.length) {
+
+  private restoreMultiple(
+    entryIds: string[],
+    concurrency: number = 4
+  ): Observable<{ restored: number; }> {
+    const ids = Array.isArray( entryIds ) ? entryIds.map( ( x ) => this.safeId( x ) ) : [];
+    if ( ids.length === 0 ) return of( { restored: 0 } );
+
+    return from( ids ).pipe(
+      // Ensure prepared per entry (optional but keeps your current behavior)
+      mergeMap(
+        ( id ) =>
+          this.ensurePrepared( id ).pipe(
+            switchMap( () => this.api.restore( { entryId: id } ) ),
+            map( () => 1 ),
+            catchError( () => of( 0 ) )
+          ),
+        Math.max( 1, Math.floor( concurrency ) )
+      ),
+      reduce( ( sum, v ) => sum + v, 0 ),
+      tap( () => {
+        this.clearSelection();
+        this.refresh();
+      } ),
+      map( ( restored ) => ( { restored } ) )
+    );
+  }
+
+  private purgeSequential( entryIds: string[], index: number, purged: number ): Observable<{ purged: number; }> {
+    if ( index >= entryIds.length ) {
       this.clearSelection();
-      this.page$.next({ page: this.page$.value.page, limit: this.page$.value.limit });
-      return of({ purged });
+      this.refresh();
+      return of( { purged } );
     }
 
-    const id = entryIds[index];
-    return this.api.purge(id).pipe(
-      switchMap(() => this.purgeSequential(entryIds, index + 1, purged + 1))
+    const id = entryIds[ index ];
+
+    return this.api.purge( id ).pipe(
+      switchMap( () => this.purgeSequential( entryIds, index + 1, purged + 1 ) ),
+      catchError( () => this.purgeSequential( entryIds, index + 1, purged ) )
     );
   }
 
   private getSelectedEntryIdsUnique(): string[] {
     const ids = new Set<string>();
-    for (const rowId of this.selectedRowIds$.value) {
-      // rowId is "record:<entryId>" OR "file:<entryId>:<...>"
-      const parts = rowId.split(":");
-      if (parts.length >= 2) {
-        const entryId = parts[1] || "";
-        if (entryId.trim()) ids.add(entryId.trim());
+
+    for ( const rowId of this.selectedRowIdsSubject.value ) {
+      const parts = rowId.split( ":" );
+      if ( parts.length >= 2 ) {
+        const entryId = ( parts[ 1 ] || "" ).trim();
+        if ( entryId ) ids.add( entryId );
       }
     }
-    return Array.from(ids);
+
+    return Array.from( ids );
   }
 
   // =============================================================================
-  // Icon + label mapping (Windows-like)
+  // Mapping helpers
   // =============================================================================
 
-  private getRecordName(e: RecycleBinEntryDto): string {
-    // Prefer "title/name" if your dto has it; fallback to entryId
+  private getRecordName( e: RecycleBinEntryDto ): string {
     const anyE = e as unknown as Record<string, unknown>;
-    const label = typeof anyE["title"] === "string" ? String(anyE["title"]).trim() : "";
-    const entity = typeof anyE["entity"] === "string" ? String(anyE["entity"]).trim() : "";
-    const entryId = typeof anyE["entryId"] === "string" ? String(anyE["entryId"]).trim() : "";
-    return label || entity || `Deleted Item (${entryId.slice(0, 6) || "Record"})`;
+    const label = typeof anyE[ "label" ] === "string" ? String( anyE[ "label" ] ).trim() : "";
+    const entity = typeof anyE[ "entity" ] === "string" ? String( anyE[ "entity" ] ).trim() : "";
+    const entryId = typeof anyE[ "entryId" ] === "string" ? String( anyE[ "entryId" ] ).trim() : "";
+    return label || entity || `Deleted Item (${ entryId.slice( 0, 6 ) || "Record" })`;
   }
 
-  private getRecordTypeLabel(e: RecycleBinEntryDto): string {
+  private getRecordTypeLabel( e: RecycleBinEntryDto ): string {
     const anyE = e as unknown as Record<string, unknown>;
-    const module = typeof anyE["module"] === "string" ? String(anyE["module"]).trim() : "";
-    const entity = typeof anyE["entity"] === "string" ? String(anyE["entity"]).trim() : "";
-    if (module && entity) return `${module} • ${entity}`;
+    const module = typeof anyE[ "module" ] === "string" ? String( anyE[ "module" ] ).trim() : "";
+    const entity = typeof anyE[ "entity" ] === "string" ? String( anyE[ "entity" ] ).trim() : "";
+    if ( module && entity ) return `${ module } • ${ entity }`;
     return module || entity || "Record";
   }
 
-  private getOriginalLocationLabel(e: RecycleBinEntryDto): string {
-    // Windows column "Original Location"
-    // Use sourceKey/module/entity style if backend doesn't store original path.
+  private getOriginalLocationLabel( e: RecycleBinEntryDto ): string {
     const anyE = e as unknown as Record<string, unknown>;
-    const module = typeof anyE["module"] === "string" ? String(anyE["module"]).trim() : "";
-    const entity = typeof anyE["entity"] === "string" ? String(anyE["entity"]).trim() : "";
-    const sourceKey = typeof anyE["sourceKey"] === "string" ? String(anyE["sourceKey"]).trim() : "";
-    const parts = [module, entity, sourceKey].filter((x) => !!x);
-    return parts.length ? parts.join(" / ") : "System";
+    const module = typeof anyE[ "module" ] === "string" ? String( anyE[ "module" ] ).trim() : "";
+    const entity = typeof anyE[ "entity" ] === "string" ? String( anyE[ "entity" ] ).trim() : "";
+    const sourceKey = typeof anyE[ "sourceKey" ] === "string" ? String( anyE[ "sourceKey" ] ).trim() : "";
+    const parts = [ module, entity, sourceKey ].filter( ( x ) => !!x );
+    return parts.length ? parts.join( " / " ) : "System";
   }
 
-  private getDeletedIso(e: RecycleBinEntryDto): string {
+  private getDeletedIso( e: RecycleBinEntryDto ): string {
     const anyE = e as unknown as Record<string, unknown>;
-    const iso = typeof anyE["deletedAtIso"] === "string" ? String(anyE["deletedAtIso"]).trim() : "";
-    // fallback keys if your dto uses a different field name
-    const alt = typeof anyE["deletedAt"] === "string" ? String(anyE["deletedAt"]).trim() : "";
-    return iso || alt || "";
+    const iso = typeof anyE[ "deletedAtIso" ] === "string" ? String( anyE[ "deletedAtIso" ] ).trim() : "";
+    return iso || "";
   }
 
-  private getRecordIconKey(e: RecycleBinEntryDto): RecycleBinItemIconKey {
-    // You can map by module/entity if you want (Lease->doc, Payments->xls, etc.)
+  private getRecordIconKey( e: RecycleBinEntryDto ): RecycleBinItemIconKey {
     const anyE = e as unknown as Record<string, unknown>;
-    const module = typeof anyE["module"] === "string" ? String(anyE["module"]).toLowerCase() : "";
-    if (module.includes("lease")) return "doc";
-    if (module.includes("payment")) return "xls";
-    if (module.includes("property")) return "folder";
+    const module = typeof anyE[ "module" ] === "string" ? String( anyE[ "module" ] ).toLowerCase() : "";
+    if ( module.includes( "lease" ) ) return "doc";
+    if ( module.includes( "payment" ) ) return "xls";
+    if ( module.includes( "property" ) ) return "folder";
     return "file";
   }
 
-  private getFileStableKey(f: FileMetaPacketDto): string {
+  private getFileStableKey( f: FileMetaPacketDto ): string {
     const anyF = f as unknown as Record<string, unknown>;
-    const stored = typeof anyF["storedName"] === "string" ? String(anyF["storedName"]).trim() : "";
-    const rel = typeof anyF["publicRel"] === "string" ? String(anyF["publicRel"]).trim() : "";
-    const orig = typeof anyF["originalName"] === "string" ? String(anyF["originalName"]).trim() : "";
+    const stored = typeof anyF[ "storedName" ] === "string" ? String( anyF[ "storedName" ] ).trim() : "";
+    const rel = typeof anyF[ "relativePath" ] === "string" ? String( anyF[ "relativePath" ] ).trim() : "";
+    const orig = typeof anyF[ "originalName" ] === "string" ? String( anyF[ "originalName" ] ).trim() : "";
     return stored || rel || orig || "file";
   }
 
-  private getFileName(f: FileMetaPacketDto): string {
+  private getFileName( f: FileMetaPacketDto ): string {
     const anyF = f as unknown as Record<string, unknown>;
-    const orig = typeof anyF["originalName"] === "string" ? String(anyF["originalName"]).trim() : "";
-    const stored = typeof anyF["storedName"] === "string" ? String(anyF["storedName"]).trim() : "";
+    const orig = typeof anyF[ "originalName" ] === "string" ? String( anyF[ "originalName" ] ).trim() : "";
+    const stored = typeof anyF[ "storedName" ] === "string" ? String( anyF[ "storedName" ] ).trim() : "";
     return orig || stored || "File";
   }
 
-  private getFileSize(f: FileMetaPacketDto): number {
+  private getFileSize( f: FileMetaPacketDto ): number {
     const anyF = f as unknown as Record<string, unknown>;
-    const size = anyF["sizeBytes"];
-    if (typeof size === "number" && Number.isFinite(size)) return size;
-    const alt = anyF["size"];
-    if (typeof alt === "number" && Number.isFinite(alt)) return alt;
+    const size = anyF[ "sizeBytes" ];
+    if ( typeof size === "number" && Number.isFinite( size ) ) return size;
     return 0;
   }
 
-  private getFileTypeLabel(f: FileMetaPacketDto): string {
-    // Windows column "Type"
-    const name = this.getFileName(f);
-    const ext = this.extOf(name);
-    if (!ext) return "File";
-    return `${ext.toUpperCase()} File`;
+  private getFileTypeLabel( f: FileMetaPacketDto ): string {
+    const name = this.getFileName( f );
+    const ext = this.extOf( name );
+    if ( !ext ) return "File";
+    return `${ ext.toUpperCase() } File`;
   }
 
-  private getFileOriginalLocationLabel(f: FileMetaPacketDto, e: RecycleBinEntryDto): string {
-    // If your file meta includes original path, use it.
-    // Otherwise use entry’s "Original Location" as a realistic substitute.
+  private getFileOriginalLocationLabel( f: FileMetaPacketDto, e: RecycleBinEntryDto ): string {
     const anyF = f as unknown as Record<string, unknown>;
-    const origRel = typeof anyF["originalRel"] === "string" ? String(anyF["originalRel"]).trim() : "";
-    const origAbs = typeof anyF["originalAbs"] === "string" ? String(anyF["originalAbs"]).trim() : "";
-    return origRel || origAbs || this.getOriginalLocationLabel(e);
+    const origRel = typeof anyF[ "originalRel" ] === "string" ? String( anyF[ "originalRel" ] ).trim() : "";
+    const origAbs = typeof anyF[ "originalAbs" ] === "string" ? String( anyF[ "originalAbs" ] ).trim() : "";
+    return origRel || origAbs || this.getOriginalLocationLabel( e );
   }
 
-  private getFileIconKey(f: FileMetaPacketDto): RecycleBinItemIconKey {
-    const name = this.getFileName(f);
-    const ext = this.extOf(name);
+  private getFileIconKey( f: FileMetaPacketDto ): RecycleBinItemIconKey {
+    const name = this.getFileName( f );
+    const ext = this.extOf( name );
 
-    if (!ext) return "file";
-    if (["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg"].includes(ext)) return "image";
-    if (["pdf"].includes(ext)) return "pdf";
-    if (["doc", "docx", "rtf"].includes(ext)) return "doc";
-    if (["xls", "xlsx", "csv"].includes(ext)) return "xls";
-    if (["ppt", "pptx"].includes(ext)) return "ppt";
-    if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) return "zip";
-    if (["json"].includes(ext)) return "json";
-    if (["txt", "log"].includes(ext)) return "txt";
-    if (["ts", "js", "html", "css", "scss", "md"].includes(ext)) return "code";
+    if ( !ext ) return "file";
+    if ( [ "png", "jpg", "jpeg", "webp", "gif", "bmp", "svg" ].includes( ext ) ) return "image";
+    if ( [ "pdf" ].includes( ext ) ) return "pdf";
+    if ( [ "doc", "docx", "rtf" ].includes( ext ) ) return "doc";
+    if ( [ "xls", "xlsx", "csv" ].includes( ext ) ) return "xls";
+    if ( [ "ppt", "pptx" ].includes( ext ) ) return "ppt";
+    if ( [ "zip", "rar", "7z", "tar", "gz" ].includes( ext ) ) return "zip";
+    if ( [ "json" ].includes( ext ) ) return "json";
+    if ( [ "txt", "log" ].includes( ext ) ) return "txt";
+    if ( [ "ts", "js", "html", "css", "scss", "md" ].includes( ext ) ) return "code";
     return "unknown";
   }
 
-  private extOf(filename: string): string {
+  private extOf( filename: string ): string {
     const n = typeof filename === "string" ? filename.trim() : "";
-    const i = n.lastIndexOf(".");
-    if (i <= 0) return "";
-    const ext = n.slice(i + 1).toLowerCase().trim();
-    return ext;
+    const i = n.lastIndexOf( "." );
+    if ( i <= 0 ) return "";
+    return n.slice( i + 1 ).toLowerCase().trim();
   }
 
   // =============================================================================
-  // Safety
+  // Safety + helpers
   // =============================================================================
 
-  private safeId(v: string): string {
+  private safeId( v: string ): string {
     const s = typeof v === "string" ? v.trim() : "";
-    if (!s) throw new Error("RecycleBinCenter: entryId is required");
+    if ( !s ) throw new Error( "[Error:] [RecycleBinCenterService:] entryId is required\n" );
     return s;
   }
 
-  private safeRowId(v: string): string {
+  private safeRowId( v: string ): string {
     const s = typeof v === "string" ? v.trim() : "";
     return s || "row";
   }

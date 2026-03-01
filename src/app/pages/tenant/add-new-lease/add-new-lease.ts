@@ -654,7 +654,9 @@ export class AddNewLease implements OnInit, AfterViewInit, OnDestroy {
         this.tenantCity = user.address.city ?? '';
         this.tenantStateOrProvince = user.address.stateOrProvince ?? '';
         this.tenantPostalCode = user.address.postcode ?? '';
-        this.tenantCountry = this.filterCountryFromFilterList( user.address.country?.name ?? '' );
+        this.tenantCountry = typeof user.address.country === 'object' ?
+          this.filterCountryFromFilterList( user.address.country?.name ) :
+          this.filterCountryFromFilterList( user.address.country );
       }
     }
     catch ( err ) {

@@ -18,6 +18,8 @@
 // - socket.emit(NotificationRpcEvents.INBOX_LIST, req, ack)
 // =============================================================================
 
+import { UniversalSocketRooms } from "../universal-socket.events";
+
 export class NotificationEvents {
   private constructor() {}
 
@@ -34,21 +36,21 @@ export class NotificationEvents {
 export class NotificationRooms {
   private constructor() {}
 
-  public static readonly COMPANY: string = "company";
+  public static readonly COMPANY: string = UniversalSocketRooms.COMPANY;
 
   public static user(username: string): string {
     const u = typeof username === "string" ? username.trim() : "";
-    return `user:${u || "unknown"}`;
+    return UniversalSocketRooms.user( username );
   }
 
   public static role(roleKey: string): string {
     const r = typeof roleKey === "string" ? roleKey.trim() : "";
-    return `role:${r || "Unknown"}`;
+    return UniversalSocketRooms.role( roleKey );
   }
 
   public static team(teamCode: string): string {
     const t = typeof teamCode === "string" ? teamCode.trim() : "";
-    return `team:${t || "Unknown"}`;
+    return UniversalSocketRooms.team( teamCode );
   }
 }
 

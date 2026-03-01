@@ -5,29 +5,28 @@
 // 01. Introduction
 // - Frontend-friendly DTO + filter contracts for the Recycle Bin UI.
 // - Mirrors backend `src/types/recyclebin/recyclebin.types.ts` but removes
-//   all mongoose-only types (ObjectId / ClientSession).
+//   mongoose-only types (ObjectId / ClientSession).
 //
 // 02. Important matters
-// - Dates are ISO strings in the UI/API layer.
-// - Optional properties should be omitted by callers (avoid passing undefined).
-// - `snapshotData` is heavy; list endpoints might still include it depending on backend.
-//   (Your backend currently returns RecycleBinEntryDto for list; UI can ignore snapshotData.)
+// - Dates are ISO strings in UI/API layer.
+// - Optional properties MUST be omitted by callers (never pass undefined).
+// - `snapshotData` can be heavy; UI should treat it as optional in list views.
 //
 // 03. Why we make these types
-// - Strong typing for table listing, filters, preview modal, restore workflow.
-// - Prevent DTO drift between frontend and backend.
+// - Strong typing for list, preview, restore, purge workflows.
+// - Prevent drift between backend and frontend contracts.
 //
 // 04. Usage hint
-// - Use `RecycleBinListFilters` + `PageQuery` for list requests.
-// - Use `RecycleBinSnapshotReadDto` for preview.
-// - Use `RecycleBinRestorePrepareDto` for restore prepare.
+// - Use RecycleBinListFilters + PageQuery for list/count.
+// - Use RecycleBinSnapshotReadDto for preview.
+// - Use RecycleBinRestorePrepareDto for restore prepare.
 //
 // 05. Keep in mind
-// - `tagsAny` is serialized as CSV in query params: "a,b,c".
+// - tagsAny is serialized as CSV in query params: "a,b,c".
 // =============================================================================
 
-/** ISO date string used across the UI/API boundary */
-export type ISODateString = string;
+import type { ISODateString, Role } from "../common";
+
 
 /** Must match backend union exactly */
 export type RecycleBinStatus =
@@ -41,14 +40,16 @@ export type RecycleBinStatus =
 /** Dynamic source key (module/domain) */
 export type RecycleSourceKey = string;
 
+
 /**
  * Minimal AuthUser shape used by UI.
  * - Keep only what UI needs (align with backend AuthUser contract).
+ * - Optional props must be OMITTED by callers (never set undefined).
  */
 export interface AuthUserDto {
   userId: string;
   username: string;
-  role: string;
+  role: Role;
 
   teamCodes?: string[];
   branchId?: string;
@@ -56,8 +57,9 @@ export interface AuthUserDto {
 }
 
 /**
- * File packet used across your system.
- * - Keep aligned with backend FileMetaPacket.
+ * File packet used across your system (Frontend DTO).
+ * - Keep aligned with backend FileMetaPacket as used in controllers.
+ * - UI should NOT depend on absDiskPath, but it may be present.
  */
 export interface FileMetaPacketDto {
   originalName: string;
@@ -67,11 +69,18 @@ export interface FileMetaPacketDto {
   mimeType: string;
   sizeBytes: number;
 
-  relativePath: string; // "public/...."
-  publicUrl: string;    // absolute URL built by backend
-  absDiskPath: string;  // backend internal path (UI may ignore)
+  /** e.g. "public/uploads/..." (your Electron-safe convention) */
+  relativePath: string;
+
+  /** absolute URL built by backend (UI can use directly) */
+  publicUrl: string;
+
+  /** backend internal path (UI should ignore; may not exist on some payloads) */
+  absDiskPath?: string;
 
   fieldName: string;
+
+  /** ISO timestamp (prefer this) */
   uploadedAtIso: ISODateString;
 
   encoding?: string;
@@ -81,6 +90,10 @@ export interface FileMetaPacketDto {
 /**
  * Canonical entry DTO returned by your backend.
  * Mirrors backend RecycleBinEntryDto.
+ *
+ * Important:
+ * - `snapshotData` is OPTIONAL in UI type to allow list endpoints to omit it.
+ *   (Even if backend currently includes it, keeping it optional prevents UI coupling.)
  */
 export interface RecycleBinEntryDto {
   entryId: string;
@@ -100,7 +113,9 @@ export interface RecycleBinEntryDto {
   filesDirRelPath: string;
 
   files: FileMetaPacketDto[];
-  snapshotData: Record<string, unknown>;
+
+  /** Heavy payload; might be omitted in list */
+  snapshotData?: Record<string, unknown>;
 
   tags?: string[];
   module?: string;
@@ -131,12 +146,16 @@ export interface RecycleBinListFilters {
   deletedToIso?: ISODateString;
 
   tagsAny?: string[];
+
   module?: string;
   entity?: string;
 }
 
 /**
- * Pagination (1-based page like backend)
+ * Pagination
+ * - Backend appears to use 1-based paging (keep consistent).
+ * - `limit` supports -1 / 0 semantics depending on your API,
+ *   but UI usually clamps it (service-level).
  */
 export interface PageQuery {
   page: number;
@@ -144,9 +163,7 @@ export interface PageQuery {
 }
 
 /**
- * What the UI wants after list is normalized:
- * - items array
- * - total count for paginator
+ * Normalized list payload for UI state.
  */
 export interface RecycleBinListUiResult {
   items: RecycleBinEntryDto[];
@@ -158,7 +175,11 @@ export interface RecycleBinListUiResult {
 /** Snapshot response used by Preview UI */
 export interface RecycleBinSnapshotReadDto {
   entry: RecycleBinEntryDto;
+
+  /** Full snapshot (domain-specific JSON) */
   snapshotData: Record<string, unknown>;
+
+  /** meta.json payload (file manifest, deletion plan, etc.) */
   meta: Record<string, unknown>;
 }
 
@@ -176,11 +197,15 @@ export interface RecycleBinPurgeResultDto {
 }
 
 /**
- * Generic backend envelope (your ApiResponseBuilder shape can vary).
- * We keep it flexible but safe.
+ * ApiResponseBuilder envelope (Frontend view).
+ *
+ * Important matters:
+ * - Keep flexible because some endpoints place pagination and extras under `other`.
+ * - data keys differ per endpoint: recycleBinItems / recycleBinItem / other
  */
-export interface MsgEnvelope {
+export interface MsgEnvelope<TData extends Record<string, unknown> = Record<string, unknown>> {
   status: boolean;
   message: string;
-  data: Record<string, unknown>;
+  data: TData;
+  other?: Record<string, unknown>;
 }

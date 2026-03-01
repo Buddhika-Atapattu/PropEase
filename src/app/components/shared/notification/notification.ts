@@ -336,8 +336,6 @@ export class NotificationComponent implements OnInit, OnDestroy {
       includeDeleted: false,
     };
 
-    const countFilters: NotificationLoadFilters = {};
-
     const directItems$ = this.notify
       .loadDirect$( this.priorityScope, 1, 0, listFilters, this.me )
       .pipe(
@@ -350,45 +348,34 @@ export class NotificationComponent implements OnInit, OnDestroy {
       .loadOverall$( this.priorityScope, 1, 0, listFilters, this.me )
       .pipe(
         map( ( view ) => ( view.items ?? [] ) ),
-        map( ( items ) => this.normalizeOverallList( items ) ),
+        map( ( items ) => this.normalizeOverallList( items ) ), // ✅ excludes "direct-to-me"
         catchError( () => of( [] as NotificationInboxItemDto[] ) )
       );
-
-    const countDirect$ = this.notify.countsDirect$( this.priorityScope, countFilters ).pipe(
-      map( ( c ) => this.safeNum( ( c as unknown as { unread?: unknown; } )?.unread ) ),
-      catchError( () => of( 0 ) )
-    );
-
-    const countOverall$ = this.notify.countsOverall$( this.priorityScope, countFilters ).pipe(
-      map( ( c ) => this.safeNum( ( c as unknown as { unread?: unknown; } )?.unread ) ),
-      catchError( () => of( 0 ) )
-    );
 
     return forkJoin( {
       directItems: directItems$,
       overallItems: overallItems$,
-      directUnread: countDirect$,
-      overallUnread: countOverall$,
     } ).pipe(
       tap( ( r ) => {
-        // stores
+        // store lists
         this.directItemsState$.next( r.directItems );
         this.overallItemsState$.next( r.overallItems );
 
-        this.countDirectState$.next( r.directUnread );
-        this.countOverallState$.next( r.overallUnread );
+        // ✅ counts derived from the SAME rules as lists
+        const directUnread = this.computeUnreadFromItems( r.directItems );
+        const overallUnread = this.computeUnreadFromItems( r.overallItems );
 
-        // ✅ ALL = Direct + Overall (single truth)
-        const merged = [ ...( r.directItems ?? [] ), ...( r.overallItems ?? [] ) ];
+        this.countDirectState$.next( directUnread );
+        this.countOverallState$.next( overallUnread );
 
-        const all = this.sortLatestFirst(
-          this.dedupeByInboxId( merged )
-        );
-
+        // ✅ ALL list must dedupe by notification.id (NOT inboxId)
+        const all = this.mergePreferByNotificationId( r.directItems, r.overallItems );
         this.allItemsState$.next( all );
 
-        // ✅ ALL unread = directUnread + overallUnread
-        this.countAllState$.next( ( r.directUnread ?? 0 ) + ( r.overallUnread ?? 0 ) );
+        // ✅ ALL unread must be computed from deduped ALL list (NOT sum)
+        const allUnread = this.computeUnreadFromItems( all );
+        this.countAllState$.next( allUnread );
+
       } ),
       map( () => void 0 )
     );
@@ -493,6 +480,54 @@ export class NotificationComponent implements OnInit, OnDestroy {
   // ---------------------------------------------------------------------------
   // SAFE helpers (important fixes: IDs + role normalization) + sorting
   // ---------------------------------------------------------------------------
+
+  /**
+ * Merge lists but dedupe by notification.id (NOT inboxId).
+ * Priority rule: DIRECT wins over OVERALL when same notification.id exists.
+ */
+  private mergePreferByNotificationId(
+    direct: NotificationInboxItemDto[],
+    overall: NotificationInboxItemDto[]
+  ): NotificationInboxItemDto[] {
+    const a = Array.isArray( direct ) ? direct : [];
+    const b = Array.isArray( overall ) ? overall : [];
+
+    const merged = [ ...a, ...b ]; // direct first => direct wins
+    const seen = new Set<string>();
+    const out: NotificationInboxItemDto[] = [];
+
+    for ( const it of merged ) {
+      const nid = this.safeId( ( it as any )?.notification?.id );
+      if ( !nid ) {
+        // fallback: keep item if no notif id (rare)
+        const inboxId = this.safeId( ( it as any )?.inboxId );
+        if ( inboxId ) out.push( it );
+        continue;
+      }
+
+      if ( seen.has( nid ) ) continue;
+      seen.add( nid );
+      out.push( it );
+    }
+
+    return this.sortLatestFirst( out );
+  }
+
+  /**
+   * Compute UNREAD count from merged list (after dedupe).
+   * This is your "ALL unread" that must not double.
+   */
+  private computeUnreadFromItems( items: NotificationInboxItemDto[] ): number {
+    const arr = Array.isArray( items ) ? items : [];
+    let unread = 0;
+
+    for ( const it of arr ) {
+      if ( ( it as any )?.isRead !== true ) unread += 1;
+    }
+
+    return unread;
+  }
+
   private sortLatestFirst( items: NotificationInboxItemDto[] ): NotificationInboxItemDto[] {
     const copy = [ ...( items ?? [] ) ];
 

@@ -295,11 +295,73 @@ export class NotificationCenterService implements OnDestroy {
 
   public countsOverall$(
     priorityScope: NotificationPriorityScope,
-    filters: NotificationLoadFilters
-  ): Observable<WsInboxCountsRes> {
-    return this.mergeTwoCounts$(
-      { scope: "role", priorityScope, filters },
-      { scope: "company", priorityScope, filters }
+    filters: NotificationLoadFilters,
+    me: User
+  ): Observable<NotificationCountResponse> {
+    const pg = 1;
+    const lim = 0; // safeLimit => 500
+
+    return this.loadOverall$(priorityScope, pg, lim, filters, me).pipe(
+      map((v) => ({
+        total: this.safeInt(v.other.total),
+        unread: this.safeInt(v.other.unread),
+        prioritized: this.safeInt(v.other.prioritized),
+        unprioritized: this.safeInt(v.other.unprioritized),
+      })),
+      catchError(() => of({ total: 0, unread: 0, prioritized: 0, unprioritized: 0 }))
+    );
+  }
+
+  // =============================================================================
+  // 5B) Unified (Direct + Overall) — FIXED: Direct wins, no double counts
+  // =============================================================================
+
+  public loadUnified$(
+    priorityScope: NotificationPriorityScope,
+    page: number,
+    limit: number,
+    filters: NotificationLoadFilters,
+    me: User
+  ): Observable<NotificationInboxView> {
+    // Direct first => direct wins if same notification.id exists in overall
+    return this.loadDirect$( priorityScope, page, limit, filters, me ).pipe(
+      switchMap( ( direct ) =>
+        this.loadOverall$( priorityScope, page, limit, filters, me ).pipe(
+          map( ( overall ) => {
+            const merged = this.mergePreferByNotificationId( direct.items, overall.items );
+            return { items: merged, other: this.computeCountsFromItems( merged ) };
+          } )
+        )
+      )
+    );
+  }
+
+  /**
+   * Unified counts without trusting backend counts (because backend counts rows).
+   * We compute from merged unique notifications to prevent doubling.
+   *
+   * NOTE:
+   * - For accurate counts, this must see enough items to represent the inbox.
+   * - Use limit<=0 (your code maps it to 500) to get the "latest 500" cap.
+   */
+  public countsUnified$(
+    priorityScope: NotificationPriorityScope,
+    filters: NotificationLoadFilters,
+    me: User
+  ): Observable<NotificationCountResponse> {
+    const pg = 1;
+    const lim = 0; // your safeLimit() => 500
+
+    return this.loadUnified$( priorityScope, pg, lim, filters, me ).pipe(
+      map( ( v ) => ( {
+        total: this.safeInt( v.other.total ),
+        unread: this.safeInt( v.other.unread ),
+        prioritized: this.safeInt( v.other.prioritized ),
+        unprioritized: this.safeInt( v.other.unprioritized ),
+      } ) ),
+      catchError( () =>
+        of( { total: 0, unread: 0, prioritized: 0, unprioritized: 0 } )
+      )
     );
   }
 
@@ -677,18 +739,14 @@ export class NotificationCenterService implements OnDestroy {
       switchMap( ( va ) =>
         this.loadByScope$( b.scope, b.priorityScope, b.page, b.limit, b.filters, b.me ).pipe(
           map( ( vb ) => {
-            const merged = this.mergeItems( va.items, vb.items );
+            // IMPORTANT:
+            // - Prefer A over B when notification.id duplicates exist
+            //   (A wins)
+            const merged = this.mergePreferByNotificationId( va.items, vb.items );
 
             return {
               items: merged,
-              other: {
-                total: this.safeInt( va.other.total ) + this.safeInt( vb.other.total ),
-                unread: this.safeInt( va.other.unread ) + this.safeInt( vb.other.unread ),
-                prioritized:
-                  this.safeInt( va.other.prioritized ) + this.safeInt( vb.other.prioritized ),
-                unprioritized:
-                  this.safeInt( va.other.unprioritized ) + this.safeInt( vb.other.unprioritized ),
-              },
+              other: this.computeCountsFromItems( merged ),
             };
           } )
         )
@@ -1052,6 +1110,90 @@ export class NotificationCenterService implements OnDestroy {
       return db - da;
     } );
     return arr;
+  }
+
+  // =============================================================================
+  // 13B) Merge / dedupe / sort (FIX: prefer DIRECT when same notification exists)
+  // =============================================================================
+
+  /**
+   * Deduplicate by notification.id (NOT inboxId).
+   *
+   * Why:
+   * - Same notification can create multiple inbox rows (direct + company/role),
+   *   each with a different inboxId.
+   * - UI must treat them as ONE logical notification for counts & lists.
+   *
+   * Priority rule:
+   * - Items from `preferred` array win over `fallback` when notification.id matches.
+   */
+  private mergePreferByNotificationId(
+    preferred: NotificationInboxItemDto[],
+    fallback: NotificationInboxItemDto[]
+  ): NotificationInboxItemDto[] {
+    const a = Array.isArray( preferred ) ? preferred : [];
+    const b = Array.isArray( fallback ) ? fallback : [];
+
+    // Preferred first => if same notification.id exists later, it is ignored.
+    const merged = [ ...a, ...b ];
+
+    const seenNotif = new Set<string>();
+    const out: NotificationInboxItemDto[] = [];
+
+    for ( const it of merged ) {
+      const nid = this.safeStr( ( it as any )?.notification?.id );
+      if ( !nid ) {
+        // If notification.id is missing, fallback to inboxId to avoid losing data.
+        const iid = this.safeStr( ( it as any )?.inboxId );
+        if ( !iid ) continue;
+        // treat as unique by inboxId in this edge case
+        out.push( it );
+        continue;
+      }
+
+      if ( seenNotif.has( nid ) ) continue;
+      seenNotif.add( nid );
+      out.push( it );
+    }
+
+    return this.sortByCreatedAtDesc( out );
+  }
+
+  /**
+   * Compute counts from list (after dedupe).
+   * This ensures "direct + overall duplicate delivery" is counted once.
+   */
+  private computeCountsFromItems( items: NotificationInboxItemDto[] ): NotificationInboxView[ "other" ] {
+    const arr = Array.isArray( items ) ? items : [];
+
+    let total = 0;
+    let unread = 0;
+    let prioritized = 0;
+    let unprioritized = 0;
+
+    for ( const it of arr ) {
+      total += 1;
+
+      const isRead = ( it as any )?.isRead === true;
+      if ( !isRead ) unread += 1;
+
+      // Keep your existing semantics:
+      // - If dto has isPrioritized boolean => use it
+      // - Else infer from notification.severity/priority if you have that shape
+      const ip = ( it as any )?.isPrioritized;
+      if ( typeof ip === "boolean" ) {
+        if ( ip ) prioritized += 1;
+        else unprioritized += 1;
+        continue;
+      }
+
+      // fallback inference (safe + non-breaking)
+      const sev = this.safeStr( ( it as any )?.notification?.severity ).toLowerCase();
+      if ( sev === "high" || sev === "critical" || sev === "urgent" ) prioritized += 1;
+      else unprioritized += 1;
+    }
+
+    return { total, unread, prioritized, unprioritized };
   }
 
   // =============================================================================

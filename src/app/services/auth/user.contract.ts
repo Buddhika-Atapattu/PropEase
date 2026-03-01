@@ -14,6 +14,8 @@
 //    • Keep this file stable: changes affect BOTH backend & frontend.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { Address, Country } from "../../types/common";
+
 
 
 /* ========================================================================== *
@@ -415,7 +417,7 @@ export interface AddressDto {
   city: string;
   postcode: string;
 
-  country?: UserCountryDto;
+  country: string;
 
   stateOrProvince?: string;
 }
@@ -796,7 +798,7 @@ export interface UserSafeDto {
   access: RoleAccessMapDto;
 
   // ── Address ───────────────────────────────────────────────────────────────
-  address: AddressDto;
+  address: Address;
 
   // ── Status ────────────────────────────────────────────────────────────────
   isActive: boolean;

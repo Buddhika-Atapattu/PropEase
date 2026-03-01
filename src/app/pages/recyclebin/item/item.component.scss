@@ -1,0 +1,452 @@
+/* Path: src/app/pages/recyclebin/item/item.component.scss */
+/* =============================================================================
+ * Recycle Bin Item — Modern + Colorful (theme-token safe)
+ * - Uses ONLY your design tokens (var(--...)) + your mixins.
+ * - Adds subtle gradient header, nicer cards, modern JSON viewer surface,
+ *   and colorful file list pills.
+ * ============================================================================= */
+
+@use "../../../styles/global.scss" as *;
+
+/* =============================================================================
+ * Page shell
+ * ========================================================================== */
+.rb-item-root {
+  padding: 16px;
+  color: var(--on-surface);
+
+  background:
+    radial-gradient(
+      900px 420px at 12% -10%,
+      color-mix(in oklab, var(--primary), transparent 85%),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 420px at 92% 0%,
+      color-mix(in oklab, var(--secondary), transparent 88%),
+      transparent 55%
+    ),
+    transparent;
+}
+
+/* =============================================================================
+ * Header (command bar style)
+ * ========================================================================== */
+.rb-item-header {
+  @include card-shell(
+    var(--surface),
+    var(--on-surface),
+    var(--border-color),
+    var(--shadow-color)
+  );
+
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+
+  padding: 12px 14px;
+  border-radius: 18px;
+  overflow: hidden;
+
+  /* subtle colorful sheen */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      120deg,
+      color-mix(in oklab, var(--primary), transparent 88%),
+      color-mix(in oklab, var(--secondary), transparent 90%),
+      transparent
+    );
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Back button polish (no html changes required) */
+  button[mat-stroked-button] {
+    border-radius: 14px;
+    border-color: color-mix(in oklab, var(--border-color), transparent 15%);
+    background: color-mix(in oklab, var(--surface), var(--primary) 3%);
+
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background 0.12s ease,
+      border-color 0.12s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 30px
+        color-mix(in oklab, var(--shadow-color), transparent 65%);
+      border-color: color-mix(
+        in oklab,
+        var(--primary),
+        var(--border-color) 70%
+      );
+      background: color-mix(in oklab, var(--surface), var(--primary) 6%);
+    }
+
+    mat-icon {
+      color: var(--primary);
+    }
+  }
+}
+
+.rb-item-title {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.rb-item-title-icon {
+  width: 30px;
+  height: 30px;
+  font-size: 22px;
+
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+
+  background: color-mix(in oklab, var(--primary), transparent 90%);
+  color: var(--primary);
+
+  box-shadow: 0 10px 24px
+    color-mix(in oklab, var(--shadow-color), transparent 72%);
+}
+
+.rb-item-title-text {
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rb-item-id {
+  font-size: 12px;
+  color: var(--muted);
+
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: color-mix(in oklab, var(--surface-variant), transparent 45%);
+}
+
+/* Divider spacing (Material) */
+mat-divider {
+  margin: 14px 0 4px 0;
+  opacity: 0.9;
+}
+
+/* =============================================================================
+ * Cards (Details/Snapshot/Meta/Files) — modern
+ * ========================================================================== */
+.rb-item-card {
+  margin-top: 16px;
+
+  @include card-shell(
+    var(--surface),
+    var(--on-surface),
+    var(--border-color),
+    var(--shadow-color)
+  );
+
+  border-radius: 18px;
+  padding: 0.65rem 1rem !important;
+
+  border: 1px solid color-mix(in oklab, var(--border-color), transparent 15%);
+  overflow: hidden;
+
+  /* soft inner gradient */
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--surface), var(--primary) 3%),
+    var(--surface)
+  );
+
+  .rb-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+
+    mat-card-title {
+      margin: 0;
+      font-weight: 850;
+      letter-spacing: 0.2px;
+    }
+
+    /* Copy button polish */
+    button[mat-icon-button] {
+      border-radius: 12px;
+      transition:
+        transform 0.12s ease,
+        background 0.12s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        background: color-mix(
+          in oklab,
+          var(--surface-variant),
+          transparent 25%
+        );
+      }
+
+      mat-icon {
+        color: var(--primary);
+      }
+    }
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 10px 0 12px 0;
+    opacity: 0.9;
+  }
+}
+
+/* =============================================================================
+ * JSON viewer — modern “code panel”
+ * ========================================================================== */
+.mono {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+.rb-json {
+  margin: 0;
+  padding: 12px 12px;
+
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+
+  /* layered panel */
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--surface-variant), transparent 22%),
+    color-mix(in oklab, var(--surface-variant), transparent 35%)
+  );
+
+  overflow: auto;
+  max-height: 460px;
+
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklab, var(--border-color), transparent 45%);
+}
+
+/* =============================================================================
+ * Loading block
+ * ========================================================================== */
+.rb-item-loading {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  padding: 28px 0;
+
+  mat-progress-spinner {
+    filter: drop-shadow(
+      0 12px 26px color-mix(in oklab, var(--shadow-color), transparent 70%)
+    );
+  }
+}
+
+.rb-item-loading-text {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* =============================================================================
+ * Error block
+ * ========================================================================== */
+.rb-item-error {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  padding: 8px 0;
+  color: var(--danger);
+
+  mat-icon {
+    display: flex;
+    justify-self: center;
+    align-self: center;
+    justify-content: center;
+    align-content: center;
+    width: 30px;
+    height: 30px;
+    font-size: 25px;
+
+    border-radius: 12px;
+    padding: 6px;
+
+    background: color-mix(in oklab, var(--danger), transparent 90%);
+    color: var(--danger);
+  }
+}
+
+.rb-item-error-title {
+  font-weight: 900;
+  color: var(--on-surface);
+}
+
+.rb-item-error-msg {
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* =============================================================================
+ * Files list — modern “pill rows”
+ * ========================================================================== */
+.rb-files {
+  display: grid;
+  gap: 10px;
+}
+
+.rb-file {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 12px;
+  border-radius: 16px;
+
+  border: 1px solid color-mix(in oklab, var(--border-color), transparent 15%);
+  background: linear-gradient(
+    120deg,
+    color-mix(in oklab, var(--info), transparent 92%),
+    color-mix(in oklab, var(--surface-variant), transparent 55%)
+  );
+
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    border-color 0.12s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 34px
+      color-mix(in oklab, var(--shadow-color), transparent 68%);
+    border-color: color-mix(in oklab, var(--primary), var(--border-color) 70%);
+  }
+}
+
+.rb-file-ico {
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--secondary), transparent 90%);
+  color: var(--secondary);
+
+  box-shadow: 0 10px 22px
+    color-mix(in oklab, var(--shadow-color), transparent 75%);
+}
+
+.rb-file-name {
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rb-file-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* View button */
+.rb-file-actions {
+  button[mat-stroked-button] {
+    border-radius: 14px;
+    border-color: color-mix(in oklab, var(--primary), var(--border-color) 70%);
+    background: color-mix(in oklab, var(--primary), transparent 92%);
+
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background 0.12s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px
+        color-mix(in oklab, var(--shadow-color), transparent 70%);
+      background: color-mix(in oklab, var(--primary), transparent 88%);
+    }
+
+    mat-icon {
+      color: var(--primary);
+    }
+  }
+}
+
+/* =============================================================================
+ * Empty state inside Files card
+ * ========================================================================== */
+.rb-empty {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  padding: 12px;
+  border-radius: 14px;
+
+  border: 1px dashed color-mix(in oklab, var(--border-color), transparent 10%);
+  background: color-mix(in oklab, var(--surface-variant), transparent 40%);
+  color: var(--muted);
+
+  mat-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 28px;
+
+    border-radius: 12px;
+    padding: 6px;
+
+    background: color-mix(in oklab, var(--info), transparent 90%);
+    color: var(--info);
+  }
+}
+
+.rb-item-title-icon.ico-picture_as_pdf {
+  background: color-mix(in oklab, var(--warning), transparent 90%);
+  color: var(--warning);
+}
+.rb-item-title-icon.ico-image {
+  background: color-mix(in oklab, var(--info), transparent 90%);
+  color: var(--info);
+}
+.rb-item-title-icon.ico-description {
+  background: color-mix(in oklab, var(--primary), transparent 90%);
+  color: var(--primary);
+}
+
+/* =============================================================================
+ * Responsive
+ * ========================================================================== */
+@media (max-width: 900px) {
+  .rb-item-header {
+    grid-template-columns: 1fr;
+    gap: 10px;
+
+    .rb-item-id {
+      justify-self: start;
+    }
+  }
+}
