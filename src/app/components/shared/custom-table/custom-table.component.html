@@ -202,7 +202,7 @@
                       @switch (column.edit?.kind) {
 
                         @case ('inlineText') {
-                          <mat-form-field appearance="outline" class="pe-table-field">
+                          <mat-form-field appearance="fill" class="pe-table-field">
                             <input
                               matInput
                               class="pe-table-input"
@@ -217,7 +217,7 @@
                         }
 
                         @case ('inlineNumber') {
-                          <mat-form-field appearance="outline" class="pe-table-field">
+                          <mat-form-field appearance="fill" class="pe-table-field">
                             <input
                               matInput
                               class="pe-table-input pe-table-input-number"
@@ -233,7 +233,7 @@
                         }
 
                         @case ('inlineSelect') {
-                          <mat-form-field appearance="outline" class="pe-table-field">
+                          <mat-form-field appearance="fill" class="pe-table-field">
                             <mat-select
                               class="pe-table-select"
                               [required]="column.edit?.required ?? false"
@@ -261,7 +261,7 @@
                         }
 
                         @case ('inlineDate') {
-                          <mat-form-field appearance="outline" class="pe-table-field">
+                          <mat-form-field appearance="fill" class="pe-table-field">
                             <input
                               matInput
                               class="pe-table-input pe-table-input-date"

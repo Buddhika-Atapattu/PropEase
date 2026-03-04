@@ -1,0 +1,267 @@
+/* Path: src/app/pages/payments/banks-item/banks-item.component.scss */
+@use "../../../styles/global.scss" as *;
+
+:host {
+  display: block;
+  color: var(--on-surface);
+}
+
+.bank-item-root {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Hero */
+.bank-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0));
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+}
+
+.bank-hero-left {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.bank-hero-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+
+  color: var(--on-primary);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0)) ,
+    var(--primary);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
+}
+
+.bank-hero-icon mat-icon {
+  font-size: 26px;
+  width: 26px;
+  height: 26px;
+}
+
+.bank-hero-title {
+  min-width: 0;
+}
+
+.bank-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bank-hero-title h2 {
+  margin: 0;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+  font-size: 22px;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 720px;
+}
+
+.bank-hero-sub {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.dot {
+  opacity: 0.7;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* Status pill */
+.bank-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.bank-pill .pill-ic {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+}
+
+.bank-pill.is-active {
+  border-color: rgba(0, 200, 120, 0.3);
+  background: rgba(0, 200, 120, 0.10);
+}
+
+/* Actions */
+.bank-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Error + loading */
+.bank-error {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 0, 0, 0.08);
+  border: 1px solid rgba(255, 0, 0, 0.22);
+  margin-bottom: 16px;
+}
+
+.bank-error mat-icon {
+  color: var(--danger);
+}
+
+.bank-error-text {
+  font-size: 14px;
+}
+
+.bank-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  background: var(--surface);
+  margin-bottom: 16px;
+}
+
+/* Cards grid */
+.bank-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.bank-card {
+  grid-column: span 6;
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+  overflow: hidden;
+
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+}
+
+.bank-card:nth-child(3) {
+  grid-column: span 12;
+}
+
+.bank-card-head {
+  padding: 14px 16px 10px 16px;
+}
+
+.bank-card-title {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.bank-card-title mat-icon {
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+.bank-card-title .t {
+  font-weight: 650;
+  font-size: 14px;
+}
+
+.bank-card-title .s {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Key-value grid */
+.bank-kv {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0 16px 16px 16px;
+}
+
+.kv {
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 12px 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.kv .k {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.kv .v {
+  font-size: 13px;
+  color: var(--on-surface);
+  word-break: break-word;
+}
+
+.kv.span-2 {
+  grid-column: span 2;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bank-footnote {
+  padding: 12px 16px 16px 16px;
+  font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 980px) {
+  .bank-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bank-card {
+    grid-column: span 12;
+  }
+
+  .bank-hero-title h2 {
+    max-width: 100%;
+  }
+}

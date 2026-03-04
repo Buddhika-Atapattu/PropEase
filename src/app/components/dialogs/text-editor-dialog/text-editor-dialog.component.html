@@ -1,23 +1,48 @@
-<h2 mat-dialog-title>{{ data.title }}</h2>
+<!-- =========================================================
+Dialog Header
+========================================================= -->
 
-<div mat-dialog-content>
-  <mat-form-field appearance="outline" class="w-100 pe-dialog-text-field">
+<div class="dialog-header">
+  <h2 class="dialog-title">{{ data.title }}</h2>
+</div>
+
+<!-- =========================================================
+Dialog Content
+========================================================= -->
+
+<div class="dialog-content">
+  <mat-form-field appearance="fill" class="pe-dialog-text-field">
     <mat-label>{{ data.label }}</mat-label>
+
     <textarea
       matInput
       [(ngModel)]="value"
+      rows="7"
       [attr.maxLength]="data.maxLength ?? null"
-      rows="8"
     ></textarea>
-    <mat-hint align="end" *ngIf="data.maxLength">
+
+    <mat-hint align="end" class="char-counter" *ngIf="data.maxLength">
       {{ value.length || 0 }}/{{ data.maxLength }}
     </mat-hint>
   </mat-form-field>
 </div>
 
-<div mat-dialog-actions align="end">
-  <button mat-button type="button" (click)="onCancel()">Cancel</button>
-  <button mat-raised-button color="primary" type="button" (click)="onSave()">
+<!-- =========================================================
+Actions
+========================================================= -->
+
+<div class="dialog-actions">
+  <button mat-button type="button" class="btn-cancel" (click)="onCancel()">
+    Cancel
+  </button>
+
+  <button
+    mat-flat-button
+    color="primary"
+    class="btn-save"
+    type="button"
+    (click)="onSave()"
+  >
     Save
   </button>
 </div>

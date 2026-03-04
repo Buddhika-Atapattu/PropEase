@@ -523,6 +523,11 @@ export class EditUserComponent implements OnInit, OnDestroy, AfterViewInit {
    * Priority: base64 preview -> fallback by gender.
    */
   protected detectUserImage(): string {
+
+    if ( this.user && this.user.image && typeof this.user.image === 'string' ) {
+      return this.user.image;
+    }
+
     if ( this.userUploadedImage && typeof this.userUploadedImage === 'string' ) {
       return this.userUploadedImage;
     }

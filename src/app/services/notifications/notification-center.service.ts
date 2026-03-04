@@ -118,7 +118,7 @@ export class NotificationCenterService implements OnDestroy {
   // =============================================================================
 
   private readonly notificationSoundUrl: string =
-    "public/sounds/notification-pop-up.mp3";
+    "sounds/notification-pop-up.mp3";
 
   private readonly isBrowser: boolean;
   private audio: HTMLAudioElement | null = null;

@@ -49,7 +49,7 @@ import { WindowsRefService } from '../../../services/windowRef/windowRef.service
 // Types
 import type { DateRange } from '../../../components/shared/paginator/paginator.component';
 
-import { PaginationUtil } from '../../../source/utility/pagination.utils';
+import { PaginationUtil } from '../../../source/utility/pagination.util';
 
 /**
  * Data shape passed to the custom table for leases.

@@ -1,0 +1,238 @@
+<app-notification-dialog></app-notification-dialog>
+<app-progress-bar></app-progress-bar>
+
+@if (item; as it) {
+  <section class="pay-item-root">
+    <!-- ======================================================= -->
+    <!-- Header -->
+    <!-- ======================================================= -->
+    <header class="pay-item-header">
+      <div class="pay-item-title-wrap">
+        <mat-icon class="pay-item-title-icon">account_balance_wallet</mat-icon>
+
+        <div class="pay-item-title">
+          <h2>Bank Account</h2>
+
+          @if (hasText(it.alias)) {
+            <p class="pay-item-subtitle">{{ it.alias }}</p>
+          } @else {
+            <p class="pay-item-subtitle">View bank account details (role-aware).</p>
+          }
+        </div>
+      </div>
+
+      <div class="pay-item-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="loading"
+          (click)="backToList()"
+        >
+          <mat-icon>arrow_back</mat-icon>
+          Back
+        </button>
+
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="loading"
+          (click)="goUpdate()"
+        >
+          <mat-icon>edit</mat-icon>
+          Update
+        </button>
+
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="loading"
+          (click)="setDefault()"
+        >
+          <mat-icon>star</mat-icon>
+          Set Default
+        </button>
+
+        <button
+          mat-flat-button
+          color="warn"
+          type="button"
+          [disabled]="loading"
+          (click)="delete()"
+        >
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      </div>
+    </header>
+
+    <!-- ======================================================= -->
+    <!-- Content -->
+    <!-- ======================================================= -->
+    <section class="pay-card">
+      <div class="pay-card-accent"></div>
+
+      <div class="pay-card-top">
+        <div class="chips">
+          <span [class]="statusChipClass">{{ statusLabel }}</span>
+
+          <span class="chip chip-default" [class.on]="!!it.isDefault">
+            {{ defaultLabel }}
+          </span>
+
+          @if (isAdminDto(it)) {
+            <span class="chip chip-role">Admin view</span>
+          } @else {
+            <span class="chip chip-role">Public view</span>
+          }
+        </div>
+
+        <div class="meta">
+          <div class="meta-row">
+            <span class="k">Account ID</span>
+            <span class="v">{{ it.accountId }}</span>
+          </div>
+
+          @if (hasText(it.bankId)) {
+            <div class="meta-row">
+              <span class="k">Bank ID</span>
+              <span class="v">{{ it.bankId }}</span>
+            </div>
+          }
+
+          @if (hasText(it.currencyCode)) {
+            <div class="meta-row">
+              <span class="k">Currency</span>
+              <span class="v">{{ it.currencyCode }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Snapshot / identity -->
+      <div class="pay-grid">
+        @if (hasText(it.bankNameSnapshot)) {
+          <div class="box">
+            <div class="k">Bank</div>
+            <div class="v">{{ it.bankNameSnapshot }}</div>
+          </div>
+        }
+
+        @if (hasText(it.bankCodeSnapshot)) {
+          <div class="box">
+            <div class="k">Bank Code</div>
+            <div class="v">{{ it.bankCodeSnapshot }}</div>
+          </div>
+        }
+
+        @if (hasText(it.swiftBicSnapshot)) {
+          <div class="box">
+            <div class="k">SWIFT / BIC</div>
+            <div class="v">{{ it.swiftBicSnapshot }}</div>
+          </div>
+        }
+
+        @if (hasText(it.bankCountrySnapshot)) {
+          <div class="box">
+            <div class="k">Bank Country</div>
+            <div class="v">{{ it.bankCountrySnapshot }}</div>
+          </div>
+        }
+
+        @if (hasText(it.accountHolderName)) {
+          <div class="box">
+            <div class="k">Account Holder</div>
+            <div class="v">{{ it.accountHolderName }}</div>
+          </div>
+        }
+
+        <div class="box">
+          <div class="k">Account Number (masked)</div>
+          <div class="v mono">
+            {{ it.accountNumberMasked }} (•••• {{ it.accountNumberLast4 }})
+          </div>
+        </div>
+
+        @if (isAdminDto(it)) {
+          <div class="box warn">
+            <div class="k">Account Number (raw)</div>
+            <div class="v mono">{{ it.accountNumber }}</div>
+          </div>
+
+          @if (hasText(it.iban)) {
+            <div class="box warn">
+              <div class="k">IBAN</div>
+              <div class="v mono">{{ it.iban }}</div>
+            </div>
+          }
+        }
+
+        @if (hasText(it.branchName)) {
+          <div class="box">
+            <div class="k">Branch Name</div>
+            <div class="v">{{ it.branchName }}</div>
+          </div>
+        }
+
+        @if (hasText(it.branchCode)) {
+          <div class="box">
+            <div class="k">Branch Code</div>
+            <div class="v">{{ it.branchCode }}</div>
+          </div>
+        }
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Audit -->
+      <div class="audit">
+        @if (it.createdBy) {
+          <div class="audit-row">
+            <span class="k">Created By</span>
+            <span class="v">
+              {{ it.createdBy.username }}
+              @if (hasText(it.createdBy.role)) {
+                <span class="muted">({{ it.createdBy.role }})</span>
+              }
+            </span>
+          </div>
+        }
+
+        @if (hasText(it.createdAt)) {
+          <div class="audit-row">
+            <span class="k">Created At</span>
+            <span class="v">{{ it.createdAt }}</span>
+          </div>
+        }
+
+        @if (it.updatedBy) {
+          <div class="audit-row">
+            <span class="k">Updated By</span>
+            <span class="v">
+              {{ it.updatedBy.username }}
+              @if (hasText(it.updatedBy.role)) {
+                <span class="muted">({{ it.updatedBy.role }})</span>
+              }
+            </span>
+          </div>
+        }
+
+        @if (hasText(it.updatedAt)) {
+          <div class="audit-row">
+            <span class="k">Updated At</span>
+            <span class="v">{{ it.updatedAt }}</span>
+          </div>
+        }
+      </div>
+    </section>
+  </section>
+} @else {
+  <section class="pay-empty">
+    <mat-icon>info</mat-icon>
+    <div>
+      <h3>No data</h3>
+      <p>Bank account not found or you don’t have access.</p>
+    </div>
+  </section>
+}

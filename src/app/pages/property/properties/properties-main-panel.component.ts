@@ -43,7 +43,7 @@ import {
   PropertyService,
 } from '../../../services/property/property.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { PaginationUtil } from '../../../source/utility/pagination.utils';
+import { PaginationUtil } from '../../../source/utility/pagination.util';
 
 // ─────────────────────────────────────────────────────────────
 // Local interfaces

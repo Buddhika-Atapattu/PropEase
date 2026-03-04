@@ -1,0 +1,325 @@
+<!-- Path: src/app/pages/payments/banks-account-create/banks-account-create.component.html -->
+
+<app-notification-dialog></app-notification-dialog>
+<app-progress-bar></app-progress-bar>
+
+<section class="pay-create-root">
+  <!-- ======================================================= -->
+  <!-- Header -->
+  <!-- ======================================================= -->
+  <header class="pay-create-header">
+    <div class="pay-create-title-wrap">
+      <mat-icon class="pay-create-title-icon">account_balance_wallet</mat-icon>
+
+      <div class="pay-create-title">
+        <h2>Create Bank Account</h2>
+        <p class="pay-create-subtitle">
+          Register a company-owned bank account for payments and receipts.
+        </p>
+      </div>
+    </div>
+
+    <div class="pay-create-header-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="loading"
+        (click)="clearForm()"
+      >
+        <mat-icon>refresh</mat-icon>
+        Reset
+      </button>
+
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="loading"
+        (click)="backToList()"
+      >
+        <mat-icon>arrow_back</mat-icon>
+        Back
+      </button>
+    </div>
+  </header>
+
+  <!-- ======================================================= -->
+  <!-- Form -->
+  <!-- ======================================================= -->
+  <form class="pay-form" [formGroup]="form" (ngSubmit)="submit()">
+    <!-- Step 1: Bank + Country/Currency -->
+    <section class="pay-panel">
+      <div class="pay-panel-accent"></div>
+
+      <header class="pay-panel-header">
+        <div class="pay-step-badge">1</div>
+        <div class="pay-panel-title">
+          <h3>Bank & Currency</h3>
+          <p>Type bank code, select country → currency auto-fills.</p>
+        </div>
+      </header>
+
+      <div class="pay-grid">
+        <!-- Bank Code (user input) -->
+        <mat-form-field appearance="fill" class="pay-field">
+          <mat-label>Bank Code</mat-label>
+          <input
+            matInput
+            formControlName="bankCode"
+            placeholder="e.g., BOC, HNB, COMB, NSB..."
+            autocomplete="off"
+          />
+          <mat-hint>
+            Type a bank code. The system resolves the Bank ID automatically.
+          </mat-hint>
+
+          <mat-error
+            *ngIf="form.controls.bankCode.touched && form.controls.bankCode.invalid"
+          >
+            Bank code is required.
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Resolved status (bankId internal) -->
+        <div class="pay-resolve-card" aria-live="polite">
+          <div class="pay-resolve-row">
+            <mat-icon
+              class="pay-resolve-icon"
+              [class.ok]="!!form.controls.bankId.value"
+              [class.bad]="!form.controls.bankId.value"
+            >
+              {{ form.controls.bankId.value ? "check_circle" : "error" }}
+            </mat-icon>
+
+            <div class="pay-resolve-text">
+              <div class="pay-resolve-title">
+                {{ form.controls.bankId.value ? "Bank resolved" : "Not resolved" }}
+              </div>
+              <div class="pay-resolve-sub">
+                {{
+                  form.controls.bankId.value
+                    ? "Bank code matched. You can continue."
+                    : "Enter a valid bank code to continue."
+                }}
+              </div>
+            </div>
+          </div>
+
+          <!-- keep bankId in form but hidden -->
+          <input type="hidden" formControlName="bankId" />
+        </div>
+
+        <!-- Country Autocomplete -->
+        <mat-form-field appearance="fill" class="pay-field">
+          <mat-label>Country</mat-label>
+          <input
+            matInput
+            formControlName="countryQuery"
+            [matAutocomplete]="countryAuto"
+            placeholder="Search by country name or currency"
+            autocomplete="off"
+          />
+
+          <mat-autocomplete
+            #countryAuto="matAutocomplete"
+            [displayWith]="displayCountry"
+            (optionSelected)="onCountrySelected($event.option.value)"
+          >
+            <mat-option
+              *ngFor="let c of (filteredCountries$ | async) ?? []"
+              [value]="c"
+            >
+            <div class="cc-option">
+              <img class="cc-flag" [src]="c.flag" [alt]="c.name" />
+              <div class="cc-meta">
+                <div class="cc-main">{{ c.name }}</div>
+                <div class="cc-sub">{{ c.currency }} • {{ c.cca2 }}</div>
+              </div>
+            </div>
+            </mat-option>
+          </mat-autocomplete>
+
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Clear country"
+            (click)="clearCountrySelection()"
+            [disabled]="loading"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+
+          <mat-error
+            *ngIf="form.controls.countryQuery.touched && !form.controls.currencyCode.value"
+          >
+            Country selection is required.
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Currency (derived, readonly) -->
+        <mat-form-field appearance="fill" class="pay-field">
+          <mat-label>Currency (auto)</mat-label>
+          <input
+            matInput
+            formControlName="currencyCode"
+            readonly
+            placeholder="Auto-filled from country"
+          />
+          <mat-hint>
+            Currency is derived from country selection.
+          </mat-hint>
+        </mat-form-field>
+
+        <!-- Alias -->
+        <mat-form-field appearance="fill" class="pay-field">
+          <mat-label>Alias</mat-label>
+          <input
+            matInput
+            formControlName="alias"
+            placeholder="e.g., Main LKR Account"
+          />
+          <mat-hint>Unique per company. Used as the primary selector in UI.</mat-hint>
+          <mat-error *ngIf="form.controls.alias.touched && form.controls.alias.invalid">
+            Alias is required (2–60 chars).
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </section>
+
+    <!-- Step 2: Account Identity -->
+    <section class="pay-panel">
+      <div class="pay-panel-accent"></div>
+
+      <header class="pay-panel-header">
+        <div class="pay-step-badge">2</div>
+        <div class="pay-panel-title">
+          <h3>Account Identity</h3>
+          <p>Enter account holder and account number.</p>
+        </div>
+      </header>
+
+      <div class="pay-grid">
+        <mat-form-field appearance="fill" class="pay-field">
+          <mat-label>Account Holder Name</mat-label>
+          <input
+            matInput
+            formControlName="accountHolderName"
+            placeholder="e.g., PropEase (Pvt) Ltd"
+          />
+          <mat-error
+            *ngIf="form.controls.accountHolderName.touched && form.controls.accountHolderName.invalid"
+          >
+            Account holder name is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="pay-field">
+          <mat-label>Account Number</mat-label>
+          <input
+            matInput
+            formControlName="accountNumber"
+            placeholder="Enter account number"
+            autocomplete="off"
+          />
+          <mat-hint>Do not share this outside admin screens.</mat-hint>
+          <mat-error
+            *ngIf="form.controls.accountNumber.touched && form.controls.accountNumber.invalid"
+          >
+            Account number is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="pay-field">
+          <mat-label>IBAN (optional)</mat-label>
+          <input
+            matInput
+            formControlName="iban"
+            placeholder="Enter IBAN if applicable"
+            autocomplete="off"
+          />
+          <mat-hint>Stored securely and only visible to privileged roles.</mat-hint>
+        </mat-form-field>
+      </div>
+    </section>
+
+    <!-- Step 3: Branch + Flags -->
+    <section class="pay-panel">
+      <div class="pay-panel-accent"></div>
+
+      <header class="pay-panel-header">
+        <div class="pay-step-badge">3</div>
+        <div class="pay-panel-title">
+          <h3>Branch & Status</h3>
+          <p>Optional branch info and account flags.</p>
+        </div>
+      </header>
+
+      <div class="pay-grid">
+        <mat-form-field appearance="fill" class="pay-field">
+          <mat-label>Branch Name (optional)</mat-label>
+          <input matInput formControlName="branchName" placeholder="e.g., Negombo Branch" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="pay-field">
+          <mat-label>Branch Code (optional)</mat-label>
+          <input matInput formControlName="branchCode" placeholder="e.g., 102" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="pay-field">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option [value]="BankAccountStatus.Active">Active</mat-option>
+            <mat-option [value]="BankAccountStatus.Inactive">Inactive</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="pay-toggles">
+          <mat-slide-toggle formControlName="isDefault">
+            Set as default
+          </mat-slide-toggle>
+        </div>
+
+        <mat-form-field appearance="fill" class="pay-field pay-field-full">
+          <mat-label>Notes (optional)</mat-label>
+          <textarea
+            matInput
+            rows="3"
+            formControlName="notes"
+            placeholder="Internal notes for admin use"
+          ></textarea>
+        </mat-form-field>
+      </div>
+    </section>
+
+    <!-- Actions (relative, NOT sticky) -->
+    <footer class="pay-actions">
+      <div class="pay-actions-left">
+        <mat-icon class="muted-icon">info</mat-icon>
+        <span class="muted-text">
+          Bank ID is resolved from bank code. Currency is derived from country.
+        </span>
+      </div>
+
+      <div class="pay-actions-right">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="loading"
+          (click)="clearForm()"
+        >
+          Reset
+        </button>
+
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          [disabled]="loading || form.invalid || !form.controls.bankId.value"
+        >
+          <mat-icon>save</mat-icon>
+          Create Bank Account
+        </button>
+      </div>
+    </footer>
+  </form>
+</section>

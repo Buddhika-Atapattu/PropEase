@@ -1,0 +1,251 @@
+@use "../../../styles/global.scss" as *;
+
+:host {
+  display: block;
+  color: var(--on-surface);
+}
+
+/* shell */
+.pay-create-root {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* header */
+.pay-create-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  position: relative;
+  padding: 14px 14px;
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0)
+  );
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+}
+
+.pay-create-title-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.pay-create-title-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 40px;
+  margin-top: 2px;
+  color: var(--primary);
+}
+
+.pay-create-title h2 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.pay-create-subtitle {
+  margin: 6px 0 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.pay-create-header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* toolbar */
+.pay-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+
+  margin-bottom: 14px;
+}
+
+.pay-search {
+  flex: 1 1 520px;
+  min-width: 260px;
+}
+
+.pay-toolbar-meta {
+  flex: 0 0 auto;
+}
+
+.pay-chip-strong {
+  margin-left: 6px;
+}
+
+/* list */
+.pay-list-wrap {
+  display: grid;
+  gap: 12px;
+}
+
+.pay-list-card {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 12px 12px;
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+  background: var(--elevated);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.pay-list-rail {
+  width: 6px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--primary), transparent);
+  opacity: 0.9;
+}
+
+.pay-list-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pay-list-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pay-list-title {
+  min-width: 0;
+}
+
+.pay-title-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pay-title-text {
+  font-weight: 650;
+  font-size: 15px;
+  line-height: 1.2;
+  color: var(--on-surface);
+}
+
+.pay-id {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pay-sub-line {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pay-sub {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.pay-dot {
+  opacity: 0.6;
+  color: var(--muted);
+}
+
+.pay-list-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+/* status row */
+.pay-status-row {
+  margin-top: 10px;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.pay-status {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* empty */
+.pay-empty {
+  padding: 26px 14px;
+  border-radius: 18px;
+  border: 1px dashed var(--border-color);
+  background: var(--surface-variant);
+  text-align: center;
+}
+
+.pay-empty-icon {
+  font-size: 44px;
+  width: 44px;
+  height: 44px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.pay-empty-title {
+  font-weight: 650;
+  font-size: 16px;
+}
+
+.pay-empty-sub {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* paginator */
+.pay-paginator {
+  margin-top: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  background: var(--surface);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+}
+
+/* responsive */
+@media (max-width: 640px) {
+  .pay-create-header {
+    flex-direction: column;
+  }
+
+  .pay-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pay-list-top {
+    flex-direction: column;
+  }
+
+  .pay-list-actions {
+    justify-content: flex-end;
+  }
+}

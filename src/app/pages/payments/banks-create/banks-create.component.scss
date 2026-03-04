@@ -1,0 +1,397 @@
+@use "../../../styles/global.scss" as *;
+
+/* Root */
+.pay-create-root {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Header (same as transaction create) */
+.pay-create-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  /* soft aura */
+  position: relative;
+  padding: 14px 14px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
+}
+
+.pay-create-title-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.pay-create-title-icon {
+  width: 42px;
+  height: 42px;
+  font-size: 42px;
+  margin-top: 2px;
+  color: var(--primary);
+}
+
+.pay-create-title h2 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.pay-create-subtitle {
+  margin: 6px 0 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.pay-create-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Error */
+.pay-create-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 0, 0, 0.08);
+  border: 1px solid rgba(255, 0, 0, 0.22);
+  margin-bottom: 16px;
+}
+
+.pay-create-error mat-icon {
+  color: var(--danger);
+}
+
+.pay-create-error-text {
+  color: var(--on-surface);
+  font-size: 14px;
+}
+
+/* Form layout */
+.pay-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Panels */
+.pay-panel {
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  position: relative;
+
+  /* subtle glass */
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+}
+
+/* Accent rail */
+.pay-panel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--primary), rgba(255, 255, 255, 0));
+  opacity: 0.85;
+}
+
+.pay-panel-head {
+  margin-bottom: 12px;
+  padding-left: 10px;
+}
+
+.pay-panel-title-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.pay-step-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--on-primary);
+  background: var(--primary);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+  flex: 0 0 auto;
+}
+
+.pay-panel-title h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pay-panel-title p {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Layout grids */
+.pay-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.pay-grid-1 {
+  grid-template-columns: 1fr;
+}
+
+.pay-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pay-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.w-100 {
+  width: 100%;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Country option row (autocomplete)                                           */
+/* -------------------------------------------------------------------------- */
+.cc-option {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.cc-flag {
+  width: 28px;
+  height: 20px;
+  border-radius: 2px;
+  object-fit: fill;
+  object-position: center;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.cc-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cc-main {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--on-surface);
+}
+
+.cc-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Phone code option row (autocomplete)                                        */
+/* -------------------------------------------------------------------------- */
+/* Phone code option row (autocomplete) */
+.pc-option {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+  min-width: 0; /* allow text ellipsis */
+}
+
+.pc-flag {
+  width: 20px;     /* was 28 */
+  height: 14px;    /* was 20 */
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+  box-shadow: none; /* remove heavy shadow */
+  flex: 0 0 auto;
+}
+
+.pc-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.pc-main {
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pc-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Phone split row layout                                                      */
+/* -------------------------------------------------------------------------- */
+.pay-phone-row {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr); /* was 260px */
+  gap: 12px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .pay-phone-row {
+    grid-template-columns: 160px minmax(0, 1fr);
+  }
+}
+
+/* Compact phone code field */
+.pay-phone-code {
+  max-width: 200px; /* hard cap */
+  height: 100%;
+}
+
+.pay-phone-code ::ng-deep .mat-mdc-form-field-infix {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  min-height: 44px;
+  height: 100%;
+}
+
+.pay-phone-code ::ng-deep .mat-mdc-text-field-wrapper {
+  padding-left: 10px;
+  padding-right: 10px;
+  height: 100%;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Disabled (read-only display) inputs should look intentional                */
+/* -------------------------------------------------------------------------- */
+:host ::ng-deep .mat-mdc-input-element:disabled {
+  /* Material often fades disabled too much; we keep it readable */
+  -webkit-text-fill-color: var(--on-surface);
+  opacity: 0.85;
+}
+
+:host ::ng-deep .mat-mdc-form-field.mat-form-field-disabled .mdc-notched-outline__leading,
+:host ::ng-deep .mat-mdc-form-field.mat-form-field-disabled .mdc-notched-outline__notch,
+:host ::ng-deep .mat-mdc-form-field.mat-form-field-disabled .mdc-notched-outline__trailing {
+  opacity: 0.7;
+}
+
+:host ::ng-deep .mat-mdc-option {
+  min-height: 40px; /* default is taller */
+}
+
+/* -------------------------------------------------------------------------- */
+/* Footer actions (sticky, modern)                                             */
+/* -------------------------------------------------------------------------- */
+.pay-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 2px 4px 2px;
+}
+
+.pay-actions-left {
+  flex: 1;
+}
+
+.pay-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pay-muted {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+/* Sticky action bar */
+.pay-actions-sticky {
+  position: relative;
+  bottom: 10px;
+  z-index: 10;
+
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Button spinner layout */
+.pay-btn-content {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.pay-btn-spinner {
+  display: inline-block;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Responsive                                                                  */
+/* -------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .pay-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pay-phone-row {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .pay-create-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pay-grid-2,
+  .pay-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .pay-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pay-actions-right {
+    justify-content: flex-end;
+  }
+
+  .pay-phone-row {
+    grid-template-columns: 1fr;
+  }
+}

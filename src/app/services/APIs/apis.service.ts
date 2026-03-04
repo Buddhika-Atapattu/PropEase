@@ -657,6 +657,19 @@ export class APIsService {
     return countries;
   }
 
+  public async getCountriesCurrencies(): Promise<CountryDetailsCustomType[]> {
+    const countries = ( await getCountries( {
+      fields: [
+        'name',
+        'currencies',
+        'flags',
+        'cca2',
+      ],
+    } ) ) as CountryDetailsCustomType[];
+
+    return countries;
+  }
+
   /**
    * getCountryCodes
    * ---------------

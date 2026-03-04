@@ -154,6 +154,7 @@
                   type="button"
                   [disabled]="!f.publicUrl"
                   matTooltip="Open in viewer"
+                  (click)="openFile(f)"
                 >
                   <mat-icon>visibility</mat-icon>
                   View

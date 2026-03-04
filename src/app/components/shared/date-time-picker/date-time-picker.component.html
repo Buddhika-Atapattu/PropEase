@@ -2,7 +2,7 @@
 
 <div class="pe-datetime-picker">
   <!-- DATE -->
-  <mat-form-field appearance="outline" class="pe-datetime-picker__date-field">
+  <mat-form-field appearance="fill" class="pe-datetime-picker__date-field">
     <mat-label>{{ label }}</mat-label>
 
     <input
@@ -27,7 +27,7 @@
     [class.pe-datetime-picker__time-row--disabled]="disabled"
   >
     <!-- Hour -->
-    <mat-form-field appearance="outline" class="pe-datetime-picker__time-field">
+    <mat-form-field appearance="fill" class="pe-datetime-picker__time-field">
       <mat-label>HH</mat-label>
       <mat-select
         [disabled]="disabled || !selectedDate"
@@ -45,7 +45,7 @@
     <span class="pe-datetime-picker__separator">:</span>
 
     <!-- Minute -->
-    <mat-form-field appearance="outline" class="pe-datetime-picker__time-field">
+    <mat-form-field appearance="fill" class="pe-datetime-picker__time-field">
       <mat-label>MM</mat-label>
       <mat-select
         [disabled]="disabled || !selectedDate"

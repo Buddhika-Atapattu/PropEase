@@ -216,6 +216,10 @@ export class RecycleBinItemComponent {
     return vm.state === "ok";
   }
 
+  public openFile( url: unknown ): void {
+    console.log( url );
+  }
+
   // =============================================================================
   // Internals
   // =============================================================================

@@ -16,6 +16,7 @@ import { MatIconModule, MatIconRegistry } from '@angular/material/icon';
 import { environment } from '../../../environments/environment';
 import { MSG } from '../../types/api-message.types';
 import { PhoneNumberDto } from '../auth/user.contract';
+import type { CountryFull } from '../../utils/country/countries-full.types';
 
 
 export interface Property {
@@ -130,48 +131,9 @@ export interface Address {
   country: string;
 }
 
-export interface CountryDetailsCustomType {
-  name: {
-    common: string; // Commonly used name (e.g., "Eritrea")
-    official: string; // Official full name
-    nativeName?: {
-      [ langCode: string ]: {
-        official: string;
-        common: string;
-      };
-    };
-  };
 
-  currencies?: {
-    [ code: string ]: {
-      name: string; // Currency name (e.g., "Eritrean nakfa")
-      symbol: string; // Currency symbol (e.g., "Nfk")
-    };
-  };
 
-  idd?: {
-    root: string; // Phone code root (e.g., "+2")
-    suffixes: string[]; // List of suffixes (e.g., ["91"])
-  };
-
-  flag?: string; // Emoji flag (e.g., 🇪🇷)
-
-  flags: {
-    png: string; // PNG flag image URL
-    svg: string; // SVG flag image URL
-    alt?: string; // Description of the flag
-  };
-
-  maps?: {
-    googleMaps: string;
-    openStreetMaps: string;
-  };
-
-  postalCode?: {
-    format?: string;
-    regex?: string;
-  };
-}
+export interface CountryDetailsCustomType extends CountryFull {}
 
 export interface CountryDetails {
   name: {

@@ -1,0 +1,200 @@
+<!-- Path: src/app/pages/payments/banks-item/banks-item.component.html -->
+
+<app-notification-dialog></app-notification-dialog>
+<app-progress-bar></app-progress-bar>
+
+<section class="bank-item-root">
+  <!-- Hero -->
+  <header class="bank-hero">
+    <div class="bank-hero-left">
+      <div class="bank-hero-icon">
+        <mat-icon>account_balance</mat-icon>
+      </div>
+
+      <div class="bank-hero-title">
+        <div class="bank-hero-top">
+          <h2>{{ bank?.name }}</h2>
+
+          <span class="bank-pill" [class.is-active]="(bank?.status || '').toLowerCase() === 'active'">
+            <mat-icon class="pill-ic">{{ (bank?.status || '').toLowerCase() === 'active' ? 'check_circle' : 'pause_circle' }}</mat-icon>
+            <span>{{ bank?.status || "-" }}</span>
+          </span>
+        </div>
+
+        <div class="bank-hero-sub">
+          <span class="muted">ID:</span> <span class="mono">{{ bankId || "-" }}</span>
+          <span class="dot">•</span>
+          <span class="muted">Country:</span> <span class="mono">{{ bank?.countryCca2 || "-" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bank-hero-actions">
+      <button mat-stroked-button type="button" [disabled]="loading" (click)="back()">
+        <mat-icon>arrow_back</mat-icon>
+        Back
+      </button>
+
+      <button mat-stroked-button type="button" [disabled]="loading" (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+
+      <button mat-raised-button color="primary" type="button" [disabled]="loading" (click)="edit()">
+        <mat-icon>edit</mat-icon>
+        Update
+      </button>
+
+      <button mat-stroked-button color="warn" type="button" [disabled]="loading" (click)="delete()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </div>
+  </header>
+
+  <!-- Error -->
+  <div class="bank-error" *ngIf="error as e">
+    <mat-icon>error</mat-icon>
+    <div class="bank-error-text">{{ e }}</div>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div class="bank-loading" *ngIf="loading && !bank">
+    <mat-progress-spinner mode="indeterminate" [diameter]="34" [strokeWidth]="3"></mat-progress-spinner>
+    <div class="muted">Loading bank details...</div>
+  </div>
+
+  <!-- Content -->
+  <ng-container *ngIf="bank as b">
+    <div class="bank-grid">
+      <!-- Identity -->
+      <mat-card class="bank-card">
+        <div class="bank-card-head">
+          <div class="bank-card-title">
+            <mat-icon>badge</mat-icon>
+            <div>
+              <div class="t">Identity</div>
+              <div class="s">Public codes and currency support</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bank-kv">
+          <div class="kv">
+            <div class="k">Bank Code</div>
+            <div class="v mono">{{ b.bankCode }}</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">SWIFT / BIC</div>
+            <div class="v mono">{{ b.swiftBic }}</div>
+          </div>
+
+          <div class="kv span-2">
+            <div class="k">Supported Currencies</div>
+            <div class="v">
+              <mat-chip-listbox class="chips" aria-label="Supported currencies" *ngIf="b.supportedCurrencyCodes.length > 0; else noCurrencies">
+                <mat-chip *ngFor="let c of b.supportedCurrencyCodes" [disableRipple]="true">{{ c }}</mat-chip>
+              </mat-chip-listbox>
+
+              <ng-template #noCurrencies>
+                <span class="muted">No currencies recorded</span>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </mat-card>
+
+      <!-- Address -->
+      <mat-card class="bank-card">
+        <div class="bank-card-head">
+          <div class="bank-card-title">
+            <mat-icon>location_on</mat-icon>
+            <div>
+              <div class="t">Address</div>
+              <div class="s">Official bank address details</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bank-kv">
+          <div class="kv span-2">
+            <div class="k">Address Line 1</div>
+            <div class="v">{{ b.addressLine1 }}</div>
+          </div>
+
+          <div class="kv span-2">
+            <div class="k">Address Line 2</div>
+            <div class="v">{{ b.addressLine2 }}</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">City</div>
+            <div class="v">{{ b.city }}</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">District</div>
+            <div class="v">{{ b.district }}</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">Province</div>
+            <div class="v">{{ b.province }}</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">Postal Code</div>
+            <div class="v mono">{{ b.postalCode }}</div>
+          </div>
+        </div>
+      </mat-card>
+
+      <!-- Contact + Audit -->
+      <mat-card class="bank-card">
+        <div class="bank-card-head">
+          <div class="bank-card-title">
+            <mat-icon>call</mat-icon>
+            <div>
+              <div class="t">Contact</div>
+              <div class="s">Phone and audit stamps</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bank-kv">
+          <div class="kv span-2">
+            <div class="k">Phone</div>
+            <div class="v mono">{{ b.phoneDisplay }}</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">Created By</div>
+            <div class="v">{{ b.createdBy }}</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">Created At</div>
+            <div class="v">{{ b.createdAt }}</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">Updated By</div>
+            <div class="v">{{ b.updatedBy }}</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">Updated At</div>
+            <div class="v">{{ b.updatedAt }}</div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="bank-footnote muted">
+          Tip: View is read-only. Use <b>Update</b> to change fields and keep the audit trail consistent.
+        </div>
+      </mat-card>
+    </div>
+  </ng-container>
+</section>

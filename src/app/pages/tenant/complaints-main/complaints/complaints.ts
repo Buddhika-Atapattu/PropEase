@@ -50,7 +50,7 @@ import { SkeletonLoaderComponent } from '../../../../components/shared/skeleton-
 // ──────────────────────────────────────────────────────────────────────────────
 // Utilities
 // ──────────────────────────────────────────────────────────────────────────────
-import { PaginationUtil } from '../../../../source/utility/pagination.utils';
+import { PaginationUtil } from '../../../../source/utility/pagination.util';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Table row view-model for complaints table

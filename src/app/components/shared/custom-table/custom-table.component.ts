@@ -95,7 +95,7 @@ import { User } from '../../../services/APIs/apis.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { ImageService } from '../../../services/imageService/image.service';
 import { TextService } from '../../../services/text/text.service';
-import { PaginationUtil } from '../../../source/utility/pagination.utils';
+import { PaginationUtil } from '../../../source/utility/pagination.util';
 
 import { DateRange, Extension, PaginatorComponent } from '../paginator/paginator.component';
 import { SwitchButton } from '../../../components/shared/buttons/switch-button/switch-button.component';

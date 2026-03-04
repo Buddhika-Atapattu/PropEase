@@ -1,0 +1,140 @@
+<!-- Path: src/app/pages/payments/banks-account-list/banks-accounts-list.component.html -->
+
+<app-notification-dialog></app-notification-dialog>
+<app-progress-bar></app-progress-bar>
+
+<section class="pay-list-root">
+  <!-- ======================================================= -->
+  <!-- Layer 1: Create CTA -->
+  <!-- ======================================================= -->
+  <header class="pay-hero">
+    <div class="pay-hero-left">
+      <mat-icon class="pay-hero-icon">account_balance_wallet</mat-icon>
+      <div class="pay-hero-title">
+        <h2>Bank Accounts</h2>
+        <p>Manage company receiving accounts used for external payments and receipts.</p>
+      </div>
+    </div>
+
+    <div class="pay-hero-actions">
+      <button mat-flat-button color="primary" (click)="goCreate()">
+        <mat-icon>add</mat-icon>
+        Create Bank Account
+      </button>
+    </div>
+  </header>
+
+  <!-- ======================================================= -->
+  <!-- Layer 2: Small descriptions + filters -->
+  <!-- ======================================================= -->
+  <section class="pay-note">
+    <div class="pay-note-left">
+      <mat-icon class="muted-icon">info</mat-icon>
+      <div class="pay-note-text">
+        <div class="pay-note-title">Role-aware security</div>
+        <div class="pay-note-sub">
+          Backend projects sensitive fields by role. Non-admin users see masked-only values.
+        </div>
+      </div>
+    </div>
+
+    <div class="pay-note-right">
+      <mat-slide-toggle
+        [checked]="includeInactive"
+        (change)="toggleIncludeInactive($event.checked)"
+      >
+        Include inactive
+      </mat-slide-toggle>
+
+      <button mat-stroked-button type="button" [disabled]="loading" (click)="load()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </section>
+
+  <!-- ======================================================= -->
+  <!-- Layer 3: List -->
+  <!-- ======================================================= -->
+  <section class="pay-panel">
+    <div class="pay-panel-accent"></div>
+
+    <header class="pay-panel-header">
+      <div class="pay-step-badge">3</div>
+      <div class="pay-panel-title">
+        <h3>Accounts List</h3>
+        <p>View, update, or delete bank accounts (delete goes to Recycle Bin).</p>
+      </div>
+    </header>
+
+    <div class="pay-empty" *ngIf="!loading && items.length === 0">
+      <mat-icon class="pay-empty-icon">inbox</mat-icon>
+      <div class="pay-empty-title">No bank accounts found</div>
+      <div class="pay-empty-sub">Create your first company account to start receiving payments.</div>
+
+      <button mat-flat-button color="primary" (click)="goCreate()">
+        <mat-icon>add</mat-icon>
+        Create Bank Account
+      </button>
+    </div>
+
+    <div class="pay-list" *ngIf="items.length > 0">
+      <article class="pay-row" *ngFor="let item of items; trackBy: trackByAccountId">
+        <div class="pay-row-main">
+          <div class="pay-row-title">
+            <div class="title-left">
+              <span class="alias">{{ item.alias }}</span>
+
+              <span class="badge default" *ngIf="item.isDefault" matTooltip="Default account">
+                Default
+              </span>
+
+              <span class="badge active" *ngIf="isActive(item)" matTooltip="Active">
+                Active
+              </span>
+              <span class="badge inactive" *ngIf="!isActive(item)" matTooltip="Inactive">
+                Inactive
+              </span>
+            </div>
+
+            <div class="title-right">
+              <span class="currency">{{ item.currencyCode }}</span>
+              <span class="masked">{{ item.accountNumberMasked }}</span>
+            </div>
+          </div>
+
+          <div class="pay-row-sub">
+            <span class="holder">{{ item.accountHolderName }}</span>
+            <span class="dot">•</span>
+            <span class="bank">{{ subtitle(item) || ("Bank: " + item.bankId) }}</span>
+            <span class="dot" *ngIf="item.branchName">•</span>
+            <span class="branch" *ngIf="item.branchName">{{ item.branchName }}</span>
+          </div>
+        </div>
+
+        <div class="pay-row-actions">
+          <button mat-stroked-button type="button" (click)="view(item.accountId)">
+            <mat-icon>visibility</mat-icon>
+            View
+          </button>
+
+          <button mat-stroked-button type="button" (click)="update(item.accountId)">
+            <mat-icon>edit</mat-icon>
+            Update
+          </button>
+
+          <button
+            mat-stroked-button
+            type="button"
+            class="danger"
+            [disabled]="deletingId === item.accountId"
+            (click)="delete(item.accountId)"
+          >
+            <mat-icon>delete</mat-icon>
+            Delete
+          </button>
+        </div>
+      </article>
+    </div>
+  </section>
+</section>

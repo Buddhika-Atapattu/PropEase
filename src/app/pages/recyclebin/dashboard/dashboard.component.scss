@@ -226,7 +226,7 @@ mat-progress-bar {
   );
 
   border-radius: 18px;
-  overflow: hidden;
+  overflow: auto;
 
   /* subtle inner frame */
   border: 1px solid color-mix(in oklab, var(--border-color), transparent 15%);

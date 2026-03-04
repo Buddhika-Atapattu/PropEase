@@ -1,0 +1,402 @@
+@use "../../../styles/global.scss" as *;
+
+:host {
+  display: block;
+  color: var(--on-surface);
+}
+
+/* ==========================================================================
+   Layout shell
+   ========================================================================== */
+.pay-create-root {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 18px 16px 80px 16px; /* extra bottom for sticky actions */
+  position: relative;
+}
+
+/* ==========================================================================
+   Hero header
+   ========================================================================== */
+.pay-create-header {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  border-radius: 20px;
+  padding: 16px 16px;
+  background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.01)
+    ),
+    var(--surface);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+/* soft aura blob */
+.pay-create-header::before {
+  content: "";
+  position: absolute;
+  inset: -40px -40px auto auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.14),
+    rgba(255, 255, 255, 0)
+  );
+  pointer-events: none;
+  filter: blur(2px);
+  opacity: 0.85;
+}
+
+.pay-create-title-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.pay-create-title-icon {
+  width: 44px;
+  height: 44px;
+  font-size: 44px;
+  margin-top: 2px;
+  color: var(--primary);
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.15));
+}
+
+.pay-create-title h2 {
+  margin: 0;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.15;
+  letter-spacing: 0.2px;
+}
+
+.pay-create-subtitle {
+  margin: 6px 0 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.pay-create-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   Form + Sections
+   ========================================================================== */
+.pay-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* “Gateway panel card” – unique accent rail + subtle glass */
+.pay-panel {
+  position: relative;
+  border-radius: 20px;
+  padding: 16px;
+
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(255, 255, 255, 0.01)
+    ),
+    var(--surface);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
+
+  overflow: hidden;
+}
+
+/* accent rail (left) */
+.pay-panel::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.18),
+    rgba(255, 255, 255, 0.02)
+  );
+  opacity: 0.85;
+}
+
+/* header row inside panel: title + step chip */
+.pay-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pay-panel-head-left h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.pay-panel-head-left p {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* step badge */
+.pay-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--elevated);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+  color: var(--on-surface);
+  white-space: nowrap;
+}
+
+.pay-step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.pay-step-text {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   Grids
+   ========================================================================== */
+.pay-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.pay-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pay-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.w-100 {
+  width: 100%;
+}
+
+/* ==========================================================================
+   Country option UI (autocomplete)
+   ========================================================================== */
+.cc-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.cc-flag {
+  width: 26px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.10);
+}
+
+.cc-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cc-sub {
+  font-size: 13px;
+  color: var(--on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Evidence area + list
+   ========================================================================== */
+.pay-evidence-uploader {
+  border-radius: 18px;
+  border: 1px dashed var(--border-color);
+  background: var(--elevated);
+  padding: 14px;
+}
+
+.pay-evidence-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pay-evidence-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 10px 12px;
+  border-radius: 16px;
+
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(255, 255, 255, 0.01)
+    ),
+    var(--surface);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+}
+
+.pay-evidence-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pay-evidence-icon {
+  width: 22px;
+  height: 22px;
+  font-size: 22px;
+  color: var(--primary);
+  flex: 0 0 auto;
+}
+
+.pay-evidence-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pay-evidence-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pay-evidence-sub {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pay-evidence-list > button[mat-stroked-button] {
+  align-self: flex-start;
+  border-radius: 14px;
+}
+
+/* ==========================================================================
+   Sticky footer actions (checkout feel)
+   ========================================================================== */
+.pay-actions {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin-top: 6px;
+  padding: 12px 12px;
+
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.02)
+    ),
+    var(--surface);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+
+  backdrop-filter: blur(8px);
+}
+
+.pay-actions-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.pay-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pay-muted {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@media (max-width: 960px) {
+  .pay-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .pay-create-root {
+    padding: 14px 12px 90px 12px;
+  }
+
+  .pay-create-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pay-grid-2,
+  .pay-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .pay-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pay-actions-right {
+    justify-content: flex-end;
+  }
+}

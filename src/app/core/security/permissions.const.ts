@@ -787,9 +787,21 @@ export const PERM = {
       "module": "PaymentBilling",
       "action": "view"
     },
-    "create": {
+    "count": {
       "module": "PaymentBilling",
-      "action": "create"
+      "action": "count"
+    },
+    "bank_manage": {
+      "module": "PaymentBilling",
+      "action": "bank_manage"
+    },
+    "bank_account_manage": {
+      "module": "PaymentBilling",
+      "action": "bank_account_manage"
+    },
+    "record": {
+      "module": "PaymentBilling",
+      "action": "record"
     },
     "update": {
       "module": "PaymentBilling",
@@ -799,25 +811,13 @@ export const PERM = {
       "module": "PaymentBilling",
       "action": "delete"
     },
-    "invoice": {
-      "module": "PaymentBilling",
-      "action": "invoice"
-    },
-    "record": {
-      "module": "PaymentBilling",
-      "action": "record"
-    },
     "approve": {
       "module": "PaymentBilling",
       "action": "approve"
     },
-    "refund": {
+    "reject": {
       "module": "PaymentBilling",
-      "action": "refund"
-    },
-    "reconcile": {
-      "module": "PaymentBilling",
-      "action": "reconcile"
+      "action": "reject"
     },
     "audit": {
       "module": "PaymentBilling",

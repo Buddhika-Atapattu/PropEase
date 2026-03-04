@@ -15,7 +15,7 @@ import * as XLSX from 'xlsx';
 
 import { ActivityTrackerService } from '../../../../services/activityTacker/activity-tracker.service';
 import { APIsService, User } from '../../../../services/APIs/apis.service';
-import { PaginationUtil } from '../../../../source/utility/pagination.utils';
+import { PaginationUtil } from '../../../../source/utility/pagination.util';
 
 import {
   NotificationDialogComponent

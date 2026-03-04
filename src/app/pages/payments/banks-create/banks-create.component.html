@@ -1,0 +1,496 @@
+<app-notification-dialog></app-notification-dialog>
+<app-progress-bar></app-progress-bar>
+
+<section class="pay-create-root">
+  <!-- ======================================================= -->
+  <!-- Header -->
+  <!-- ======================================================= -->
+  <header class="pay-create-header">
+    <div class="pay-create-title-wrap">
+      <mat-icon class="pay-create-title-icon">account_balance</mat-icon>
+
+      <div class="pay-create-title">
+        <h2>Create Bank</h2>
+        <p class="pay-create-subtitle">
+          Currency-first registry flow: Country/Currency → Bank Identity →
+          Address → Save
+        </p>
+      </div>
+    </div>
+
+    <div class="pay-create-header-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="loading"
+        (click)="clearCountrySelection()"
+      >
+        <mat-icon>refresh</mat-icon>
+        Reset Country
+      </button>
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="loading"
+        (click)="clearPhoneSelection()"
+      >
+        <mat-icon>phone_disabled</mat-icon>
+        Reset Phone
+      </button>
+    </div>
+  </header>
+
+  <!-- ======================================================= -->
+  <!-- Error -->
+  <!-- ======================================================= -->
+  <div class="pay-create-error" *ngIf="error as e">
+    <mat-icon>error</mat-icon>
+    <div class="pay-create-error-text">{{ e }}</div>
+  </div>
+
+  <form
+    class="pay-create-form"
+    [formGroup]="createForm"
+    (ngSubmit)="submitCreate()"
+  >
+    <!-- ======================================================= -->
+    <!-- Panel: Country / Currency -->
+    <!-- ======================================================= -->
+    <div class="pay-panel">
+      <div class="pay-panel-head">
+        <div class="pay-panel-title-row">
+          <div class="pay-step-badge">1</div>
+          <div class="pay-panel-title">
+            <h3>Country & Currency</h3>
+            <p>
+              Select a country. We auto-seed currency + CCA2 and show them as
+              read-only.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pay-grid pay-grid-2">
+        <!-- Country Autocomplete -->
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Country (search)</mat-label>
+
+          <input
+            matInput
+            type="text"
+            formControlName="countryQuery"
+            [matAutocomplete]="countryAuto"
+            placeholder="Search country / currency / code (Sri Lanka / LKR)"
+          />
+
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Clear country selection"
+            (click)="clearCountrySelection()"
+            *ngIf="createForm.controls.countryCurrency.value"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+
+          <mat-autocomplete
+            #countryAuto="matAutocomplete"
+            [displayWith]="displayCountryCard.bind(this)"
+            (optionSelected)="onCountryOptionSelected($event)"
+          >
+            <mat-option
+              *ngFor="let c of filteredCountries$ | async"
+              [value]="c"
+            >
+              <div class="cc-option">
+                <img class="cc-flag" [src]="c.flag" [alt]="c.name" />
+                <div class="cc-meta">
+                  <div class="cc-main">{{ c.name }}</div>
+                  <div class="cc-sub">{{ c.currency }} • {{ c.cca2 }}</div>
+                </div>
+              </div>
+            </mat-option>
+          </mat-autocomplete>
+
+          <mat-hint>Typing filters by country or currency code/name.</mat-hint>
+        </mat-form-field>
+
+        <!-- Supported Currency Codes (editable multi) -->
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Supported Currency Codes</mat-label>
+          <mat-select formControlName="supportedCurrencyCodes" multiple>
+            <mat-option value="LKR">LKR</mat-option>
+            <mat-option value="USD">USD</mat-option>
+            <mat-option value="EUR">EUR</mat-option>
+            <mat-option value="GBP">GBP</mat-option>
+            <mat-option value="AED">AED</mat-option>
+            <mat-option value="AUD">AUD</mat-option>
+            <mat-option value="CAD">CAD</mat-option>
+            <mat-option value="INR">INR</mat-option>
+            <mat-option value="JPY">JPY</mat-option>
+            <mat-option value="SGD">SGD</mat-option>
+          </mat-select>
+
+          <mat-hint
+            >Auto-seeded from country. Add more if the bank supports
+            multi-currency.</mat-hint
+          >
+          <mat-error
+            *ngIf="
+              createForm.controls.supportedCurrencyCodes.hasError('required')
+            "
+          >
+            At least one currency is required.
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Read-only displays (auto-filled) -->
+      <div class="pay-grid pay-grid-2">
+        <!-- Country CCA2 (disabled display) -->
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Country Code (CCA2)</mat-label>
+          <input
+            matInput
+            [value]="createForm.controls.countryCca2.value"
+            disabled
+            placeholder="LK"
+          />
+          <mat-hint>Auto-filled from selected country.</mat-hint>
+        </mat-form-field>
+
+        <!-- Primary currency (disabled display) -->
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Primary Currency (auto)</mat-label>
+          <input
+            matInput
+            [value]="createForm.controls.supportedCurrencyCodes.value[0] || ''"
+            disabled
+            placeholder="LKR"
+          />
+          <mat-hint
+            >Shown for clarity (first currency in Supported Currency
+            Codes).</mat-hint
+          >
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- Panel: Bank Identity -->
+    <!-- ======================================================= -->
+    <div class="pay-panel">
+      <div class="pay-panel-head">
+        <div class="pay-panel-title-row">
+          <div class="pay-step-badge">2</div>
+          <div class="pay-panel-title">
+            <h3>Bank Identity</h3>
+            <p>
+              Name is mandatory. Bank Code / SWIFT (BIC) are optional but help
+              with de-duplication.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pay-grid pay-grid-3">
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Bank Name</mat-label>
+          <input
+            matInput
+            formControlName="name"
+            placeholder="Bank of Ceylon"
+            required
+          />
+          <mat-hint
+            >Duplicate check: country + normalized name (+ optional
+            codes).</mat-hint
+          >
+
+          <mat-error *ngIf="createForm.controls.name.hasError('required')">
+            Bank name is required.
+          </mat-error>
+          <mat-error *ngIf="createForm.controls.name.hasError('minlength')">
+            Bank name must be at least 2 characters.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Bank Code</mat-label>
+          <input
+            matInput
+            formControlName="bankCode"
+            placeholder="BOC / COMB / HNB"
+          />
+          <mat-hint>Optional.</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>SWIFT / BIC</mat-label>
+          <input matInput formControlName="swiftBic" placeholder="BCEYLKLX" />
+          <mat-hint>Optional.</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="pay-grid pay-grid-2">
+        <!-- Status (missing previously) -->
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option *ngFor="let s of default_status" [value]="s">{{
+              s
+            }}</mat-option>
+          </mat-select>
+          <mat-hint>Controls visibility/selection in registry lists.</mat-hint>
+        </mat-form-field>
+
+        <!-- Spacer / optional future field -->
+        <div class="w-100"></div>
+      </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- Panel: Address & Contact -->
+    <!-- ======================================================= -->
+    <div class="pay-panel">
+      <div class="pay-panel-head">
+        <div class="pay-panel-title-row">
+          <div class="pay-step-badge">3</div>
+          <div class="pay-panel-title">
+            <h3>Address & Contact</h3>
+            <p>These are required by your backend contract.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pay-grid pay-grid-2">
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Address Line 1</mat-label>
+          <input
+            matInput
+            formControlName="addressLine1"
+            placeholder="No. 123, Main Street"
+          />
+          <mat-error
+            *ngIf="createForm.controls.addressLine1.hasError('required')"
+          >
+            Address line 1 is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Address Line 2</mat-label>
+          <input
+            matInput
+            formControlName="addressLine2"
+            placeholder="Business District"
+          />
+        </mat-form-field>
+      </div>
+
+      <div class="pay-grid pay-grid-3">
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city" placeholder="Colombo" />
+          <mat-error *ngIf="createForm.controls.city.hasError('required')"
+            >City is required.</mat-error
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>District</mat-label>
+          <input matInput formControlName="district" placeholder="Colombo" />
+          <mat-error *ngIf="createForm.controls.district.hasError('required')"
+            >District is required.</mat-error
+          >
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Province</mat-label>
+          <input matInput formControlName="province" placeholder="Western" />
+          <mat-error *ngIf="createForm.controls.province.hasError('required')"
+            >Province is required.</mat-error
+          >
+        </mat-form-field>
+      </div>
+
+      <div class="pay-grid pay-grid-2 h-100">
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Postal Code</mat-label>
+          <input matInput formControlName="postalCode" placeholder="00100" />
+          <mat-error
+            *ngIf="createForm.controls.postalCode.hasError('required')"
+          >
+            Postal code is required.
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Phone split: autocomplete + number-only -->
+        <div class="pay-phone-row w-100">
+          <!-- Phone code autocomplete -->
+          <mat-form-field appearance="fill" class="pay-phone-code">
+            <mat-label>Code</mat-label>
+
+            <input
+              matInput
+              type="text"
+              formControlName="phoneCodeQuery"
+              [matAutocomplete]="phoneAuto"
+              placeholder="Sri Lanka (+94)"
+            />
+
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              aria-label="Clear phone code"
+              (click)="clearPhoneSelection()"
+              *ngIf="createForm.controls.phoneCodeSelected.value"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+
+            <mat-autocomplete
+              #phoneAuto="matAutocomplete"
+              [displayWith]="displayPhoneCode.bind(this)"
+              (optionSelected)="onPhoneCodeSelected($event)"
+            >
+              <mat-option
+                *ngFor="let p of filteredPhoneCodes$ | async"
+                [value]="p"
+              >
+                <div class="pc-option">
+                  <img class="pc-flag" [src]="p.flags.png" [alt]="p.name" />
+                  <div class="pc-meta">
+                    <div class="pc-main">{{ p.name }}</div>
+                    <div class="pc-sub">{{ p.code }}</div>
+                  </div>
+                </div>
+              </mat-option>
+            </mat-autocomplete>
+
+            <mat-error
+              *ngIf="createForm.controls.phoneCodeSelected.hasError('required')"
+            >
+              Select a phone code.
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Number only -->
+          <mat-form-field appearance="fill" class="pay-phone-number">
+            <mat-label>Number</mat-label>
+            <input
+              matInput
+              formControlName="phoneNumberOnly"
+              placeholder="11 2xxxxxx"
+            />
+            <mat-hint
+              >Digits only (no +code). We build the PhoneNumber object on
+              submit.</mat-hint
+            >
+
+            <mat-error
+              *ngIf="createForm.controls.phoneNumberOnly.hasError('required')"
+            >
+              Phone number is required.
+            </mat-error>
+            <mat-error
+              *ngIf="createForm.controls.phoneNumberOnly.hasError('minlength')"
+            >
+              Phone number is too short.
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Read-only final phone preview (disabled display) -->
+      <div class="pay-grid pay-grid-1">
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Phone (preview)</mat-label>
+          <input
+            matInput
+            [value]="
+              (createForm.controls.phoneCodeSelected.value?.code || '') +
+              (createForm.controls.phoneNumberOnly.value
+                ? ' ' + createForm.controls.phoneNumberOnly.value
+                : '')
+            "
+            disabled
+            placeholder="+94 11 2xxxxxx"
+          />
+          <mat-hint>Auto-built before submit (not directly editable).</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- Panel: Notes -->
+    <!-- ======================================================= -->
+    <div class="pay-panel">
+      <div class="pay-panel-head">
+        <div class="pay-panel-title-row">
+          <div class="pay-step-badge">4</div>
+          <div class="pay-panel-title">
+            <h3>Notes</h3>
+            <p>Optional internal notes (sanitized before sending).</p>
+          </div>
+        </div>
+      </div>
+
+      <mat-form-field appearance="fill" class="w-100 mb-1">
+        <mat-label>Notes</mat-label>
+        <input
+          matInput
+          formControlName="notes"
+          placeholder="Any internal note..."
+        />
+        <mat-hint>Keep it short. Avoid pasting formatted content.</mat-hint>
+      </mat-form-field>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- Sticky Footer Actions -->
+    <!-- ======================================================= -->
+    <footer class="pay-actions pay-actions-sticky">
+      <div class="pay-actions-left">
+        <div class="pay-muted">
+          Duplicate protection: country + normalized name (+ optional
+          bankCode/SWIFT).
+        </div>
+      </div>
+
+      <div class="pay-actions-right">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="loading"
+          (click)="createForm.reset()"
+        >
+          Cancel
+        </button>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="loading"
+        >
+          <mat-icon *ngIf="!loading">check_circle</mat-icon>
+
+          <span class="pay-btn-content">
+            <mat-progress-spinner
+              *ngIf="loading"
+              class="pay-btn-spinner"
+              mode="indeterminate"
+              [diameter]="18"
+              [strokeWidth]="3"
+            ></mat-progress-spinner>
+
+            <span>{{ loading ? "Saving..." : "Create Bank" }}</span>
+          </span>
+        </button>
+      </div>
+    </footer>
+  </form>
+</section>

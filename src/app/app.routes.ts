@@ -556,6 +556,7 @@ export const routes: Routes = [
                 "team:work-item.deleted",
                 "comment:deleted",
                 "system:auto.deleted",
+                "payment:bank.account.deleted",
               ],
               actionKeyPriority: 100,
               requiredParams: [ 'irecycleItemRef' ],
@@ -565,6 +566,234 @@ export const routes: Routes = [
                 m => m.RecycleBinItemComponent
               ),
           },
+        ],
+      },
+
+      // ───────────────────────────────────────────────────────────────────────
+      // PAYMENT MANAGEMENT
+      // ───────────────────────────────────────────────────────────────────────
+      {
+        path: "payments",
+        data: {
+          title: "PAYMENTS",
+          actionKeys: [
+            "payment:invoice.generated",
+            "payment:invoice.sent",
+            "payment:invoice.paid",
+            "payment:transaction.failed",
+            "payment:refund.completed",
+            "payment:bank.account.created",
+            "payment:bank.account.updated",
+            "payment:bank.account.deleted",
+            "payment:bank.created",
+            "payment:bank.updated",
+            "payment:bank.deleted",
+            "payment:transaction.created",
+            "payment:transaction.updated",
+            "payment:transaction.deleted",
+            "payment:transaction.approved",
+            "payment:transaction.rejected",
+            "payment:transaction.change.payment.status",
+          ],
+          actionKeyPriority: 50,
+        },
+        loadComponent: () =>
+          import( "./pages/payments/main.component" ).then( ( m ) => m.PaymentMainComponent ),
+        children: [
+          { path: "", pathMatch: "full", redirectTo: "overview" },
+
+          // =========================================================================
+          // Overview (Payments dashboard)
+          // =========================================================================
+          {
+            path: "overview",
+            data: {
+              title: "OVERVIEW",
+            },
+            loadComponent: () =>
+              import( "./pages/payments/overview/overview.component" ).then(
+                ( m ) => m.PaymentOverviewComponent
+              ),
+          },
+
+          // =========================================================================
+          // BANKS
+          // =========================================================================
+          {
+            path: "banks-create",
+            data: {
+              title: "BANK CREATE",
+            },
+            loadComponent: () =>
+              import( "./pages/payments/banks-create/banks-create.component" ).then(
+                ( m ) => m.PaymentBanksCreateComponent
+              ),
+          },
+          {
+            path: "banks-update/:bankId",
+            data: {
+              title: "BANK UPDATE",
+            },
+            loadComponent: () =>
+              import( "./pages/payments/banks-update/banks-update.component" ).then(
+                ( m ) => m.BanksUpdateComponent
+              ),
+          },
+          {
+            path: "banks-list",
+            data: {
+              title: "BANK LIST",
+              actionKeys: [
+
+                "payment:bank.created",
+                "payment:bank.updated",
+                "payment:bank.deleted",
+              ],
+              actionKeyPriority: 70,
+            },
+            loadComponent: () =>
+              import( "./pages/payments/banks-list/banks-list.component" ).then(
+                ( m ) => m.BanksListComponent
+              ),
+          },
+          {
+            path: "banks-item/:bankId",
+            data: {
+              title: "BANK VIEW",
+              actionKeys: [
+                "payment:bank.created",
+                "payment:bank.updated",
+              ],
+              actionKeyPriority: 100,
+              requiredParams: [ 'bankId' ],
+            },
+            loadComponent: () =>
+              import( "./pages/payments/banks-item/banks-item.component" ).then(
+                ( m ) => m.BanksItemComponent
+              ),
+          },
+
+
+          // =========================================================================
+          // BANK ACCOUNTS
+          // =========================================================================
+          {
+            path: "banks-account-create",
+            data: {
+              title: "BANK ACCOUNT CREATE",
+            },
+            loadComponent: () =>
+              import( "./pages/payments/banks-account-create/banks-account-create.component" ).then(
+                ( m ) => m.BanksAccountCreateComponent
+              ),
+          },
+          {
+            path: "banks-account-update/:accountId",
+            data: {
+              title: "BANK ACCOUNT UPDATE",
+            },
+            loadComponent: () =>
+              import( "./pages/payments/banks-account-update/banks-account-update.component" ).then(
+                ( m ) => m.BanksAccountUpdateComponent
+              ),
+          },
+          {
+            path: "banks-account-item/:accountId",
+            data: {
+              title: "BANK ACCOUNT VIEW",
+            },
+            loadComponent: () =>
+              import( "./pages/payments/banks-account-item/banks-account-item.component" ).then(
+                ( m ) => m.BanksAccountItemComponent
+              ),
+          },
+          {
+            path: "banks-account-list",
+            data: {
+              title: "BANK ACCOUNT VIEW",
+              actionKeys: [
+                "payment:bank.account.created",
+                "payment:bank.account.updated",
+                "payment:bank.account.deleted",
+              ],
+              actionKeyPriority: 70,
+            },
+            loadComponent: () =>
+              import( "./pages/payments/banks-account-list/banks-accounts-list.component" ).then(
+                ( m ) => m.BanksAccountListComponent
+              ),
+          },
+
+
+
+          // =========================================================================
+          // TRANSACTIONS
+          // =========================================================================
+          {
+            path: "transactions-create",
+            data: {
+              title: "TRANSACTION CREATE",
+            },
+            loadComponent: () =>
+              import( "./pages/payments/transactions-create/transactions-create.component" ).then(
+                ( m ) => m.PaymentsTransactionsCreateComponent
+              ),
+          },
+          {
+            path: "transactions-item/:transactionId",
+            data: {
+              title: "TRANSACTION VIEW",
+              actionKeys: [
+                "payment:transaction.created",
+                "payment:transaction.updated",
+                "payment:transaction.deleted",
+                "payment:transaction.approved",
+                "payment:transaction.rejected",
+                "payment:transaction.change.payment.status",
+              ],
+              actionKeyPriority: 100,
+              requiredParams: [ 'transactionId' ],
+            },
+            loadComponent: () =>
+              import( "./pages/payments/transactions-item/transactions-item.component" ).then(
+                ( m ) => m.PaymentsTransactionsItemComponent
+              ),
+          },
+          {
+            path: "transactions-update/:transactionId",
+            data: {
+              title: "TRANSACTION UPDATE",
+            },
+            loadComponent: () =>
+              import( "./pages/payments/transactions-update/update-transactions.component" ).then(
+                ( m ) => m.PaymentsUpdateTransactionsComponent
+              ),
+          },
+          {
+            path: "transactions-list",
+            data: {
+              title: "TRANSACTION LIST",
+              actionKeys: [
+                "payment:transaction.created",
+                "payment:transaction.updated",
+                "payment:transaction.deleted",
+                "payment:transaction.approved",
+                "payment:transaction.rejected",
+                "payment:transaction.change.payment.status",
+              ],
+              actionKeyPriority: 70,
+            },
+            loadComponent: () =>
+              import( "./pages/payments/transactions-list/transactions-list.component" ).then(
+                ( m ) => m.PaymentsTransactionsListComponent
+              ),
+          },
+
+
+          // =========================================================================
+          // Safety: unknown child routes -> overview
+          // =========================================================================
+          { path: "**", redirectTo: "overview" },
         ],
       },
 

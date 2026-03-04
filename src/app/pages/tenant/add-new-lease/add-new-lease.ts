@@ -95,7 +95,7 @@ import {
 } from '../../../services/tenant/tenant.service';
 import { UserControllerService } from '../../../services/userController/user-controller.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { PaginationUtil } from '../../../source/utility/pagination.utils';
+import { PaginationUtil } from '../../../source/utility/pagination.util';
 
 // -----------------------------------------------------------------------------
 // Local interfaces for this component

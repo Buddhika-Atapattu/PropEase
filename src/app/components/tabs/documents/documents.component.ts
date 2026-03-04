@@ -18,7 +18,7 @@ import {
 import { AuthService } from '../../../services/auth/auth.service';
 import { DownloadService } from '../../../services/downloadService/download.service';
 
-import { PaginationUtil } from '../../../source/utility/pagination.utils';
+import { PaginationUtil } from '../../../source/utility/pagination.util';
 import type {
   UploadedFile,
   UserDocumentEntity,

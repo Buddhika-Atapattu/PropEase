@@ -9,9 +9,9 @@ import { UniversalSocketRooms } from "../universal-socket.events";
 /* =============================================================================
  * A) Rooms (Stable Forever) — MUST MATCH GLOBAL RULES
  * - company
- * - role.<role>
- * - team.<teamCode>
- * - user.<username>
+ * - role:<role>
+ * - team:<teamCode>
+ * - user:<username>
  * ========================================================================== */
 export class RecycleBinRooms {
   private constructor() {}

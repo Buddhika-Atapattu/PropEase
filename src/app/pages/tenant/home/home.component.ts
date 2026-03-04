@@ -100,7 +100,7 @@ import {
 
 import {
   PaginationUtil,
-} from '../../../source/utility/pagination.utils';
+} from '../../../source/utility/pagination.util';
 
 /* ========================================================================
    INTERFACES

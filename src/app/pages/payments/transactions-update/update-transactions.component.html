@@ -1,0 +1,282 @@
+<app-notification-dialog></app-notification-dialog>
+<app-progress-bar></app-progress-bar>
+
+<section class="pay-create-root">
+  <header class="pay-create-header">
+    <div class="pay-create-title-wrap">
+      <mat-icon class="pay-create-title-icon">edit_note</mat-icon>
+
+      <div class="pay-create-title">
+        <h2>Update Transaction</h2>
+        <p class="pay-create-subtitle">
+          Align values on initial load → edit → save. Currency-first gateway flow.
+        </p>
+      </div>
+    </div>
+
+    <div class="pay-create-header-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="loading"
+        (click)="backToOverview()"
+      >
+        <mat-icon>arrow_back</mat-icon>
+        Back
+      </button>
+    </div>
+  </header>
+
+  <form class="pay-create-form" [formGroup]="form" (ngSubmit)="submit()">
+    <!-- Panel: Currency -->
+    <div class="pay-panel">
+      <div class="pay-panel-head">
+        <div class="pay-panel-head-left">
+          <h3>Currency</h3>
+          <p>Search country. Currency code auto-fills (you can override manually).</p>
+        </div>
+
+        <div class="pay-step">
+          <span class="pay-step-dot"></span>
+          <span class="pay-step-text">Step 1 · Currency</span>
+        </div>
+      </div>
+
+      <div class="pay-grid pay-grid-2">
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Country (search)</mat-label>
+
+          <input
+            matInput
+            type="text"
+            formControlName="countryQuery"
+            [matAutocomplete]="countryAuto"
+            [matAutocompleteDisabled]="allCurencies.length === 0"
+            placeholder="Search country / currency / code (Sri Lanka / Rupee / LKR)"
+          />
+
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Clear country selection"
+            [disabled]="loading"
+            (click)="clearCountrySelection()"
+            *ngIf="form.controls.countryCurrency.value"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+
+          <mat-autocomplete
+            #countryAuto="matAutocomplete"
+            [displayWith]="displayCountryCard.bind(this)"
+            (optionSelected)="onCountryOptionSelected($event)"
+          >
+            <mat-option *ngFor="let c of (filteredCountries$ | async) ?? []" [value]="c">
+              <div class="cc-option">
+                <img class="cc-flag" [src]="c.flag" [alt]="c.name" />
+                <div class="cc-meta">
+                  <div class="cc-sub">{{ c.name }} — {{ c.currency }}</div>
+                </div>
+              </div>
+            </mat-option>
+          </mat-autocomplete>
+
+          <mat-hint>Typing filters by country, currency name, or code.</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Currency Code</mat-label>
+          <input matInput formControlName="currencyCode" placeholder="LKR" required />
+          <mat-hint>Auto-filled when you pick a country. Manual override is allowed.</mat-hint>
+
+          <mat-error *ngIf="form.controls.currencyCode.hasError('required')">
+            Currency code is required.
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Panel: Transaction -->
+    <div class="pay-panel">
+      <div class="pay-panel-head">
+        <div class="pay-panel-head-left">
+          <h3>Transaction</h3>
+          <p>Amount, method, and transaction date/time.</p>
+        </div>
+
+        <div class="pay-step">
+          <span class="pay-step-dot"></span>
+          <span class="pay-step-text">Step 2 · Details</span>
+        </div>
+      </div>
+
+      <div class="pay-grid pay-grid-3">
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Amount</mat-label>
+          <input
+            matInput
+            type="number"
+            inputmode="decimal"
+            formControlName="amount"
+            placeholder="0.00"
+            required
+          />
+          <mat-hint>Must be greater than 0.</mat-hint>
+
+          <mat-error *ngIf="form.controls.amount.hasError('required')">
+            Amount is required.
+          </mat-error>
+          <mat-error *ngIf="form.controls.amount.hasError('min')">
+            Amount must be at least 0.01.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Method</mat-label>
+          <mat-select formControlName="method" required>
+            <mat-option *ngFor="let m of DEFAULT_METHODS" [value]="m">
+              {{ m }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="form.controls.method.hasError('required')">
+            Method is required.
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Transaction At</mat-label>
+          <input matInput formControlName="transactionAt" [matDatepicker]="picker" />
+          <mat-hint>Recommended for audit accuracy.</mat-hint>
+
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker touchUi></mat-datepicker>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Panel: Bank / Reference -->
+    <div class="pay-panel">
+      <div class="pay-panel-head">
+        <div class="pay-panel-head-left">
+          <h3>Bank & Reference</h3>
+          <p>Bank account is required for Bank Transfer / Cheque.</p>
+        </div>
+
+        <div class="pay-step">
+          <span class="pay-step-dot"></span>
+          <span class="pay-step-text">Step 3 · Bank</span>
+        </div>
+      </div>
+
+      <div class="pay-grid pay-grid-3">
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Bank Account ID</mat-label>
+          <input matInput formControlName="bankAccountId" placeholder="BANK-ACC-001" />
+          <mat-hint>Required for Bank Transfer / Cheque.</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>External Ref</mat-label>
+          <input matInput formControlName="externalRef" placeholder="Bank ref / slip ref" />
+          <mat-hint>Empty string will be sent if not provided (DTO rule).</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Notes</mat-label>
+          <input matInput formControlName="notes" placeholder="Internal note..." />
+          <mat-hint>Empty string will be sent if not provided (DTO rule).</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Panel: Evidence Upload (optional for update, but supported) -->
+    <div class="pay-panel">
+      <div class="pay-panel-head">
+        <div class="pay-panel-head-left">
+          <h3>Evidence (Optional)</h3>
+          <p>
+            Add new evidence if needed. Uploaded as multipart field name:
+            <b>evidence</b>.
+          </p>
+        </div>
+
+        <div class="pay-step">
+          <span class="pay-step-dot"></span>
+          <span class="pay-step-text">Step 4 · Upload</span>
+        </div>
+      </div>
+
+      <section class="pay-evidence-uploader">
+        <app-dropdown
+          [accept]="'image/*'"
+          (filesChange)="filesChange($event)"
+        ></app-dropdown>
+
+        <div class="pay-evidence-list" *ngIf="evidence.length > 0">
+          <div class="pay-evidence-row" *ngFor="let f of evidence; let i = index">
+            <div class="pay-evidence-meta">
+              <mat-icon class="pay-evidence-icon">attach_file</mat-icon>
+
+              <div class="pay-evidence-text">
+                <div class="pay-evidence-name">{{ f.name }}</div>
+                <div class="pay-evidence-sub">
+                  {{ f.size }} bytes · {{ f.type || 'unknown type' }}
+                </div>
+              </div>
+            </div>
+
+            <button
+              mat-icon-button
+              type="button"
+              [disabled]="loading"
+              aria-label="Remove evidence"
+              (click)="removeEvidenceAt(i)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="loading"
+            (click)="clearEvidence()"
+          >
+            <mat-icon>delete_sweep</mat-icon>
+            Clear Evidence
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <footer class="pay-actions">
+      <div class="pay-actions-left">
+        <span class="pay-muted">
+          Update will submit DTO-safe fields. Evidence is optional for update unless backend enforces it.
+        </span>
+      </div>
+
+      <div class="pay-actions-right">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="loading"
+          (click)="backToOverview()"
+        >
+          Cancel
+        </button>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="form.invalid || loading"
+        >
+          <mat-icon>save</mat-icon>
+          Update Transaction
+        </button>
+      </div>
+    </footer>
+  </form>
+</section>

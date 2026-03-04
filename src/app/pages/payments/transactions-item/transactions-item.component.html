@@ -1,0 +1,270 @@
+<app-notification-dialog></app-notification-dialog>
+<app-progress-bar></app-progress-bar>
+
+<section class="pay-item-root" *ngIf="item as tx; else loadingState">
+  <!-- Header -->
+  <header class="pay-item-header">
+    <div class="pay-item-title-wrap">
+      <mat-icon class="pay-item-title-icon">receipt_long</mat-icon>
+
+      <div class="pay-item-title">
+        <h2>Transaction</h2>
+        <p class="pay-item-subtitle">
+          {{ tx.transactionId }} · {{ tx.currencyCode }} {{ tx.amount }}
+        </p>
+      </div>
+    </div>
+
+    <div class="pay-item-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="loading"
+        (click)="backToList()"
+      >
+        <mat-icon>arrow_back</mat-icon>
+        Back
+      </button>
+
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="loading"
+        (click)="goToUpdate()"
+      >
+        <mat-icon>edit</mat-icon>
+        Update
+      </button>
+
+      <!-- Verification Operations -->
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="loading || !canApprove()"
+        (click)="onApprove()"
+        matTooltip="Approve verification"
+      >
+        <mat-icon>check_circle</mat-icon>
+        Approve
+      </button>
+
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="loading || !canReject()"
+        (click)="onReject()"
+        matTooltip="Reject verification"
+      >
+        <mat-icon>cancel</mat-icon>
+        Reject
+      </button>
+
+      <button
+        mat-stroked-button
+        type="button"
+        class="danger"
+        [disabled]="loading"
+        (click)="onDelete()"
+      >
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </div>
+  </header>
+
+  <!-- Payment Status Update (matches panels) -->
+  <div class="pay-panel pay-panel-compact">
+    <div class="pay-panel-head">
+      <div class="pay-panel-head-left">
+        <h3>Status Update</h3>
+        <p>Change payment status (audited). Verification stays separate.</p>
+      </div>
+    </div>
+
+    <form (ngSubmit)="paymentStatusChange()" class="pay-inline-form">
+      <div class="pay-inline-left">
+        <mat-form-field appearance="fill" class="w-100">
+          <mat-label>Payment Status</mat-label>
+
+          <mat-select
+            [(ngModel)]="paymentStatus"
+            name="payment_status"
+            [disabled]="loading"
+            required
+          >
+            @for (s of DEFAULT_PAYMENT_STATUS; track s) {
+              <mat-option [value]="s">{{ s.toUpperCase() }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="pay-inline-right">
+        <button
+          mat-flat-button
+          type="submit"
+          [disabled]="loading || !paymentStatus"
+          class="pay-btn-warn"
+        >
+          <mat-icon>sync</mat-icon>
+          Update
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Panels -->
+  <div class="pay-panel">
+    <div class="pay-panel-head">
+      <div class="pay-panel-head-left">
+        <h3>Core</h3>
+        <p>Primary transaction details (DTO-safe).</p>
+      </div>
+    </div>
+
+    <div class="pay-grid pay-grid-3">
+      <div class="pay-kv">
+        <div class="k">Method</div>
+        <div class="v">{{ tx.method }}</div>
+      </div>
+
+      <div class="pay-kv">
+        <div class="k">Payment Status</div>
+        <div class="v">
+          <mat-chip-set>
+            <mat-chip>{{ tx.paymentStatus }}</mat-chip>
+          </mat-chip-set>
+        </div>
+      </div>
+
+      <div class="pay-kv">
+        <div class="k">Verification</div>
+        <div class="v">
+          <mat-chip-set>
+            <mat-chip
+              [class.bg-danger]="tx.verificationStatus === 'rejected'"
+              >{{ tx.verificationStatus }}</mat-chip
+            >
+          </mat-chip-set>
+        </div>
+      </div>
+
+      <div class="pay-kv">
+        <div class="k">Bank Account Alias</div>
+        <div class="v mono">{{ tx.bankAccountAlias }}</div>
+      </div>
+
+      <div class="pay-kv">
+        <div class="k">External Ref</div>
+        <div class="v">{{ tx.externalRef || "—" }}</div>
+      </div>
+
+      <div class="pay-kv">
+        <div class="k">Transaction At</div>
+        <div class="v mono">{{ tx.transactionAt | date:'mediumDate' }}</div>
+      </div>
+
+      <div class="pay-kv pay-kv-full">
+        <div class="k">Notes</div>
+        <div class="v">{{ tx.notes || "—" }}</div>
+      </div>
+
+      <div class="pay-kv pay-kv-full">
+        <div class="k">Verification Notes</div>
+        <div class="v">{{ tx.verificationNotes || "—" }}</div>
+      </div>
+
+      <!-- Optional verification metadata (Core DTO supports these) -->
+      <div class="pay-kv">
+        <div class="k">Verified By</div>
+        <div class="v">{{ tx.verifiedBy?.username || "—" }}</div>
+      </div>
+
+      <div class="pay-kv">
+        <div class="k">Verified At</div>
+        <div class="v mono">{{ tx.verifiedAt || "—" }}</div>
+      </div>
+
+      <div class="pay-kv pay-kv-full">
+        <div class="k">Rejected Reason</div>
+        <div class="v">{{ tx.rejectedReason || "—" }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pay-panel">
+    <div class="pay-panel-head">
+      <div class="pay-panel-head-left">
+        <h3>Evidence</h3>
+        <p>Attachments (publicRel / optional publicUrl).</p>
+      </div>
+    </div>
+
+    <div *ngIf="(tx.evidence?.length ?? 0) > 0; else noEvidence">
+      <div class="pay-evidence-list">
+        <div class="pay-evidence-row" *ngFor="let e of tx.evidence ?? []">
+          <div class="pay-evidence-meta">
+            <mat-icon class="pay-evidence-icon">attach_file</mat-icon>
+
+            <div class="pay-evidence-text">
+              <div class="pay-evidence-name">{{ e.label }}</div>
+              <div class="pay-evidence-sub">
+                {{ e.mime }} · {{ e.sizeBytes }} bytes · {{ e.uploadedAt }}
+              </div>
+              <div class="pay-evidence-sub mono">{{ e.publicRel }}</div>
+            </div>
+          </div>
+
+          <a
+            *ngIf="resolveEvidenceUrl(e) as href"
+            class="pay-evidence-link"
+            [href]="href"
+            target="_blank"
+            rel="noopener"
+            matTooltip="Open evidence"
+          >
+            <mat-icon>open_in_new</mat-icon>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noEvidence>
+      <div class="pay-empty">
+        <mat-icon>info</mat-icon>
+        <span>No evidence attached.</span>
+      </div>
+    </ng-template>
+  </div>
+
+  <footer class="pay-actions">
+    <div class="pay-actions-left">
+      <span class="pay-muted">
+        Company-scoped record. Evidence URLs depend on backend public serving /
+        RBAC.
+      </span>
+    </div>
+
+    <div class="pay-actions-right">
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="loading"
+        (click)="backToList()"
+      >
+        Close
+      </button>
+    </div>
+  </footer>
+</section>
+
+<ng-template #loadingState>
+  <section class="pay-item-root">
+    <div class="pay-panel">
+      <div class="pay-empty">
+        <mat-icon>hourglass_empty</mat-icon>
+        <span>Loading transaction…</span>
+      </div>
+    </div>
+  </section>
+</ng-template>

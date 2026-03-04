@@ -1,0 +1,72 @@
+<div class="payments-overview">
+  <!-- Header + Top CTA row -->
+  <div class="overview-header">
+    <div class="overview-title">
+      <h2>Payments Dashboard</h2>
+      <p>Manage bank directory, bank accounts, and payment transactions.</p>
+    </div>
+
+    <div class="overview-cta">
+      <button
+        mat-raised-button
+        type="button"
+        class="btn btn-primary d-flex justify-content-between align-items-center"
+        (click)="goTransactionCreate()"
+      >
+        <mat-icon>add</mat-icon>
+        Create Transaction
+      </button>
+    </div>
+  </div>
+
+  <!-- Second row navigation buttons -->
+  <div class="overview-nav-row">
+    <button mat-stroked-button type="button" (click)="goBanksList()">
+      <mat-icon>account_balance</mat-icon>
+      Banks List
+    </button>
+
+    <button mat-stroked-button type="button" (click)="goBankAccountsList()">
+      <mat-icon>account_balance_wallet</mat-icon>
+      Bank Accounts List
+    </button>
+
+    <button mat-stroked-button type="button" (click)="goTransactionsList()">
+      <mat-icon>receipt_long</mat-icon>
+      Transactions List
+    </button>
+  </div>
+
+  <!-- Existing tiles grid (optional: keep or remove) -->
+  <div class="tiles-grid">
+    <div class="tile" (click)="goTransactionCreate()">
+      <div class="tile-title">Create Payment</div>
+      <div class="tile-desc">Record a transaction + evidence</div>
+    </div>
+
+    <div class="tile" (click)="goTransactionsList()">
+      <div class="tile-title">Transactions</div>
+      <div class="tile-desc">Browse all transactions</div>
+    </div>
+
+    <div class="tile" (click)="goPending()">
+      <div class="tile-title">Pending</div>
+      <div class="tile-desc">Pending verification / unpaid</div>
+    </div>
+
+    <div class="tile" (click)="goPaid()">
+      <div class="tile-title">Paid</div>
+      <div class="tile-desc">Completed payments</div>
+    </div>
+
+    <div class="tile" (click)="goRefunded()">
+      <div class="tile-title">Refunded</div>
+      <div class="tile-desc">Refunded or reversed</div>
+    </div>
+
+    <div class="tile" (click)="goBanksList()">
+      <div class="tile-title">Bank Directory</div>
+      <div class="tile-desc">Manage banks</div>
+    </div>
+  </div>
+</div>

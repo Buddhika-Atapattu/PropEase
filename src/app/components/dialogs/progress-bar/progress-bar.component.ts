@@ -2,51 +2,52 @@ import { CommonModule } from "@angular/common";
 import { Component, EventEmitter, Input, OnDestroy, Output } from "@angular/core";
 import { MatIconModule } from "@angular/material/icon";
 
+type ProgressState = "idle" | "running" | "success" | "warning" | "error";
+
 @Component({
   selector: "app-progress-bar",
   imports: [ CommonModule, MatIconModule ],
   standalone: true,
   templateUrl: "./progress-bar.component.html",
-  styleUrl: "./progress-bar.component.scss",
+  styleUrls: [ "./progress-bar.component.scss" ], // ✅ FIX: styleUrls (array)
 })
 export class ProgressBarComponent implements OnDestroy {
-  /**
-   * NOTE:
-   * Keep @Input for compatibility, but treat it as "initial visibility".
-   * If parent binds [show]="something", parent can override your internal close.
-   * Best usage with ViewChild: DO NOT bind [show] from parent; call start()/complete().
-   */
-  @Input() public show = false;
 
+  @Input() public show = false;
   @Output() public closed = new EventEmitter<void>();
 
   public progressValue = 0;
 
-  protected isError = false;
-  protected isSuccess = false;
-  protected isWarning = false;
+  private state: ProgressState = "idle";
 
   private intervalId: ReturnType<typeof setInterval> | null = null;
+  private closeTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  // ===========================================================================
-  // Lifecycle
-  // ===========================================================================
-  public ngOnDestroy(): void {
-    this.clearTimer();
+  // ---------------------------------------------------------------------------
+  // Derived flags (Template-safe)
+  // ---------------------------------------------------------------------------
+  public get isError(): boolean {
+    return this.state === "error";
   }
 
-  // ===========================================================================
-  // Public API (called from parent via ViewChild)
-  // ===========================================================================
+  public get isSuccess(): boolean {
+    return this.state === "success";
+  }
+
+  public get isWarning(): boolean {
+    return this.state === "warning";
+  }
+
+  // ---------------------------------------------------------------------------
+  // Public API
+  // ---------------------------------------------------------------------------
   public start(): void {
-    // Reset state for a clean run
-    this.clearTimer();
-    this.resetFlags();
+    this.clearTimers();
+    this.state = "running";
 
     this.show = true;
     this.progressValue = 0;
 
-    // Simulated progress to 90% until complete()/error()/stop()
     this.intervalId = setInterval( () => {
       if (this.progressValue < 90) {
         this.progressValue += 2;
@@ -55,75 +56,58 @@ export class ProgressBarComponent implements OnDestroy {
   }
 
   public complete(): void {
-    this.clearTimer();
-    this.resetFlags();
-
-    this.progressValue = 100;
-    this.isSuccess = true;
-
-    // Smooth close
-    setTimeout( () => {
-      this.show = false;
-      this.closed.emit();
-      this.resetFlags();
-    }, 450 );
+    this.finish( "success", 450 );
   }
 
   public stop(): void {
-    this.clearTimer();
-    this.resetFlags();
-
-  // Keep current value, mark warning
-    this.isWarning = true;
-
-    setTimeout( () => {
-      this.show = false;
-      this.closed.emit();
-      this.resetFlags();
-    }, 450 );
+    this.finish( "warning", 450 );
   }
 
   public error(): void {
-    this.clearTimer();
-    this.resetFlags();
-
-  // Keep current value, mark error
-    this.isError = true;
-
-    setTimeout( () => {
-      this.show = false;
-      this.closed.emit();
-      this.resetFlags();
-    }, 650 );
+    this.finish( "error", 650 );
   }
 
   public reset(): void {
-    this.clearTimer();
-    this.resetFlags();
-
+    this.clearTimers();
+    this.state = "idle";
     this.progressValue = 0;
     this.show = false;
     this.closed.emit();
   }
 
   public close(): void {
-    // Close button uses this
     this.reset();
   }
 
-  // ===========================================================================
-  // Internal helpers (class-based only)
-  // ===========================================================================
-  private clearTimer(): void {
-    if ( this.intervalId ) {
+  // ---------------------------------------------------------------------------
+  // Internal
+  // ---------------------------------------------------------------------------
+  private finish( kind: ProgressState, delay: number ): void {
+    this.clearTimers();
+
+    this.progressValue = 100;
+    this.state = kind;
+
+    this.closeTimeoutId = setTimeout( () => {
+      this.show = false;
+      this.state = "idle";
+      this.closed.emit();
+      this.closeTimeoutId = null;
+    }, delay );
+  }
+
+  private clearTimers(): void {
+    if ( this.intervalId !== null ) {
       clearInterval( this.intervalId );
       this.intervalId = null;
     }
+    if ( this.closeTimeoutId !== null ) {
+      clearTimeout( this.closeTimeoutId );
+      this.closeTimeoutId = null;
+    }
   }
 
-  private resetFlags(): void {
-    this.isError = false;
-    this.isSuccess = false;
-    this.isWarning = false;
+  public ngOnDestroy(): void {
+    this.clearTimers();
   }
 }

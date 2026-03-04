@@ -24,7 +24,7 @@ import { UserViewCardComponent } from '../../../components/user-view-card/user-v
 import { APIsService, type User } from '../../../services/APIs/apis.service';
 import { AuthService } from '../../../services/auth/auth.service';
 import { WindowsRefService } from '../../../services/windowRef/windowRef.service';
-import { PaginationUtil } from '../../../source/utility/pagination.utils';
+import { PaginationUtil } from '../../../source/utility/pagination.util';
 
 /**
  * UsersListComponent

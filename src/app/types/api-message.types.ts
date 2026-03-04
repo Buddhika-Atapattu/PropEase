@@ -40,6 +40,9 @@ import type { RecycleBinEntryDto } from "./recyclebin/recyclebin.types";
 import type { CommentDto } from "../services/comments/contracts/comment.contract";
 import type { ISODateString } from "./common";
 import type { NotificationInboxItemDto } from "./notifications/notification.types";
+import type { BankCoreDto } from "./payments/bank-registry/banks/bank.types";
+import type { PaymentTransactionCoreDto, PaymentTransactionListItemDto } from "./payments/transactions/payment-transaction.types";
+import type { BankAccountDto } from "./payments/bank-registry/bank-accounts/bank-account.types";
 
 /* ──────────────────────────────────────────────────────────────
    01) Core primitives
@@ -205,6 +208,16 @@ export interface SystemData {
   // Notification
   notification?: NotificationInboxItemDto;
   notifications?: NotificationInboxItemDto[];
+
+  //Payments
+  bank?: BankCoreDto;
+  banks?: BankCoreDto[];
+
+  bankAccount?: BankAccountDto;
+  bankAccounts?: BankAccountDto[];
+
+  transaction?: PaymentTransactionCoreDto;
+  transactions?: PaymentTransactionCoreDto[] | PaymentTransactionListItemDto[];
 
   // Dashboard summaries
   totalUsers?: number;

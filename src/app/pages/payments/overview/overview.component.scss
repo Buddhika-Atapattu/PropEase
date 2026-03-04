@@ -1,0 +1,112 @@
+/* Path: src/app/pages/payments/overview/overview.component.scss */
+@use "../../../styles/global.scss" as *;
+
+:host {
+  display: block;
+  color: var(--on-surface);
+}
+
+.payments-overview {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.overview-header {
+  // card-shell requires 4 args in your global.scss
+  @include card-shell(var(--surface), var(--on-surface), var(--border-color), var(--shadow-color));
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.overview-title h2 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.overview-title p {
+  margin: 6px 0 0 0;
+  color: var(--muted);
+}
+
+.overview-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  button{
+    flex-wrap: nowrap;
+  }
+}
+
+.btn-primary {
+  @include button-filled(var(--primary), var(--on-primary));
+}
+
+.overview-nav-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+
+  button {
+    justify-content: center;
+    gap: 8px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    background: var(--surface);
+  }
+}
+
+.tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tile {
+  // card-shell requires 4 args in your global.scss
+  @include card-shell(var(--surface), var(--on-surface), var(--border-color), var(--shadow-color));
+
+  cursor: pointer;
+  padding: 16px;
+  border-radius: 16px;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    background: var(--hover-bg);
+  }
+}
+
+.tile-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.tile-desc {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+  .overview-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .overview-nav-row {
+    grid-template-columns: 1fr;
+  }
+
+  .tiles-grid {
+    grid-template-columns: 1fr;
+  }
+}

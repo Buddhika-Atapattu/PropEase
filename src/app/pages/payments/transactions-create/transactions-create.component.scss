@@ -1,0 +1,450 @@
+@use "../../../styles/global.scss" as *;
+
+
+/* ========================================================================== */
+/* Root + header (keep your existing header styles if already premium)         */
+/* ========================================================================== */
+.pay-create-header{
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+.pay-create-root {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 18px 16px 80px 16px;
+}
+
+/* Header meta pills */
+.pay-header-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--elevated);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.meta-pill mat-icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  color: var(--primary);
+}
+
+/* ========================================================================== */
+/* New: Premium section cards                                                 */
+/* ========================================================================== */
+.pay-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Card shell */
+.pay-card {
+  position: relative;
+  border-radius: 22px;
+  padding: 16px;
+
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.01)
+    ),
+    var(--surface);
+
+  border: 1px solid var(--border-color);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.10);
+  overflow: hidden;
+}
+
+/* Accent rail */
+.pay-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.20),
+    rgba(255, 255, 255, 0.02)
+  );
+  opacity: 0.9;
+}
+
+/* Corner glow */
+.pay-card::after {
+  content: "";
+  position: absolute;
+  inset: -60px -60px auto auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.14),
+    rgba(255, 255, 255, 0)
+  );
+  filter: blur(2px);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.pay-card-head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pay-card-head-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.pay-card-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+
+  border: 1px solid var(--border-color);
+  background: var(--elevated);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.08);
+}
+
+.pay-card-badge mat-icon {
+  width: 22px;
+  height: 22px;
+  font-size: 22px;
+  color: var(--primary);
+}
+
+.pay-card-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.pay-card-head p {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* step badge (keep your existing if you already have it) */
+.pay-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--elevated);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
+}
+
+.pay-step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+}
+
+.pay-step-text {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* card footer hint */
+.pay-card-foot {
+  position: relative;
+  z-index: 1;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.pay-mini {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.pay-mini mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  color: var(--primary);
+}
+
+/* ========================================================================== */
+/* Grids                                                                      */
+/* ========================================================================== */
+.pay-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 16px;
+}
+
+.pay-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pay-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.w-100 {
+  width: 100%;
+}
+
+/* ========================================================================== */
+/* Autocomplete option (keep your existing)                                   */
+/* ========================================================================== */
+.cc-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.cc-flag {
+  width: 26px;
+  height: 18px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.10);
+}
+
+.cc-sub {
+  font-size: 13px;
+  color: var(--on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ========================================================================== */
+/* Evidence: premium dropzone + tiles                                         */
+/* ========================================================================== */
+.pay-dropzone {
+  position: relative;
+  z-index: 1;
+
+  border-radius: 18px;
+  border: 1px dashed var(--border-color);
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(255, 255, 255, 0.01)
+    ),
+    var(--elevated);
+
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+}
+
+/* Tiles */
+.pay-evidence-grid {
+  position: relative;
+  z-index: 1;
+  margin-top: 12px;
+
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pay-file-tile {
+  border-radius: 18px;
+  padding: 12px;
+
+  border: 1px solid var(--border-color);
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(255, 255, 255, 0.01)
+    ),
+    var(--surface);
+
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.pay-file-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pay-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  border: 1px solid var(--border-color);
+  background: var(--elevated);
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.pay-file-chip mat-icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.pay-file-remove {
+  border-radius: 12px;
+}
+
+.pay-file-name {
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pay-file-meta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.pay-file-meta .dot {
+  opacity: 0.7;
+}
+
+.pay-evidence-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* ========================================================================== */
+/* Sticky footer actions (keep your premium style)                             */
+/* ========================================================================== */
+.pay-actions {
+  position: relative;
+  bottom: 12px;
+  z-index: 5;
+  margin-top: 2rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 12px 12px;
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.02)
+    ),
+    var(--surface);
+
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.pay-actions-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.pay-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pay-muted {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+/* ========================================================================== */
+/* Responsive                                                                  */
+/* ========================================================================== */
+@media (max-width: 960px) {
+  .pay-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pay-evidence-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .pay-create-root {
+    padding: 14px 12px 90px 12px;
+  }
+
+  .pay-grid-2,
+  .pay-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .pay-evidence-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pay-dropzone {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pay-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pay-actions-right {
+    justify-content: flex-end;
+  }
+}

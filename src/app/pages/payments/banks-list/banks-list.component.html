@@ -1,0 +1,222 @@
+<!-- Path: src/app/pages/payments/banks-list/banks-list.component.html -->
+
+<app-notification-dialog></app-notification-dialog>
+<app-progress-bar></app-progress-bar>
+
+<section class="pay-list-root">
+  <!-- ======================================================= -->
+  <!-- Layer 1: Create CTA (same style pattern as bank account list) -->
+  <!-- ======================================================= -->
+  <header class="pay-hero">
+    <div class="pay-hero-left">
+      <mat-icon class="pay-hero-icon">account_balance</mat-icon>
+
+      <div class="pay-hero-title">
+        <h2>Banks</h2>
+        <p>Registry list with View / Update / Delete actions (no table view).</p>
+      </div>
+    </div>
+
+    <div class="pay-hero-actions">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        [disabled]="loading"
+        [routerLink]="['/dashboard/payments/banks-create']"
+      >
+        <mat-icon>add</mat-icon>
+        Create Bank
+      </button>
+    </div>
+  </header>
+
+  <!-- Error -->
+  <div class="pay-create-error" *ngIf="error as e">
+    <mat-icon>error</mat-icon>
+    <div class="pay-create-error-text">{{ e }}</div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- Layer 2: Info + Filters (bank-account list has a note layer) -->
+  <!-- ======================================================= -->
+  <section class="pay-note">
+    <div class="pay-note-left">
+      <mat-icon class="muted-icon">info</mat-icon>
+
+      <div class="pay-note-text">
+        <div class="pay-note-title">Filters</div>
+        <div class="pay-note-sub">
+          Search by name; filter by country and status. Use Clear / Refresh to reload.
+        </div>
+      </div>
+    </div>
+
+    <div class="pay-note-right">
+      <div class="pay-filters">
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Search</mat-label>
+          <input
+            matInput
+            [formControl]="form.controls.search"
+            placeholder="Bank name..."
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Country CCA2</mat-label>
+          <input
+            matInput
+            [formControl]="form.controls.countryCca2"
+            placeholder="LK / AE / US"
+            maxlength="2"
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="w-100 mb-1">
+          <mat-label>Status</mat-label>
+          <mat-select [formControl]="form.controls.onlyActive">
+            <mat-option value="all">All</mat-option>
+            <mat-option value="active">Active</mat-option>
+            <mat-option value="inactive">Inactive</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="pay-note-actions">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="loading"
+          (click)="clearFilters()"
+        >
+          <mat-icon>filter_alt_off</mat-icon>
+          Clear
+        </button>
+
+        <button mat-stroked-button type="button" [disabled]="loading" (click)="clearFilters()">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================= -->
+  <!-- Layer 3: List (same list-card pattern as bank account list) -->
+  <!-- ======================================================= -->
+  <section class="pay-panel">
+    <div class="pay-panel-accent"></div>
+
+    <header class="pay-panel-header">
+      <div class="pay-step-badge">3</div>
+      <div class="pay-panel-title">
+        <h3>Banks List</h3>
+        <p>
+          Total:
+          <span class="mono">{{ total }}</span>
+          <span class="dot" *ngIf="loading">•</span>
+          <span class="mono" *ngIf="loading">Loading...</span>
+        </p>
+      </div>
+    </header>
+
+    <!-- Empty -->
+    <div class="pay-empty" *ngIf="!loading && dataSource.data.length === 0">
+      <mat-icon class="pay-empty-icon">inbox</mat-icon>
+      <div class="pay-empty-title">No banks found</div>
+      <div class="pay-empty-sub">Create your first bank to start adding accounts and transactions.</div>
+
+      <button mat-flat-button color="primary" [routerLink]="['/dashboard/payments/banks-create']">
+        <mat-icon>add</mat-icon>
+        Create Bank
+      </button>
+    </div>
+
+    <!-- List -->
+    <div class="pay-list" *ngIf="dataSource.data.length > 0">
+      <article class="pay-row" *ngFor="let r of dataSource.data">
+        <div class="pay-row-main">
+          <div class="pay-row-title">
+            <div class="title-left">
+              <span class="alias">{{ r.name }}</span>
+
+              <span
+                class="badge"
+                [ngClass]="{
+                  active: (r.status || '').toLowerCase() === 'active',
+                  inactive: (r.status || '').toLowerCase() !== 'active'
+                }"
+              >
+                {{ r.status || "unknown" }}
+              </span>
+            </div>
+
+            <div class="title-right">
+              <span class="mono">{{ r.countryCca2 }}</span>
+              <span class="mono" *ngIf="r.bankCode">{{ r.bankCode }}</span>
+            </div>
+          </div>
+
+          <div class="pay-row-sub">
+            <span class="mono">SWIFT:</span>
+            <span class="mono">{{ r.swiftBic || "-" }}</span>
+
+            <span class="dot">•</span>
+
+            <span class="mono">Currencies:</span>
+            <ng-container *ngIf="r.supportedCurrencyCodes.length; else noCurr">
+              <span class="chip-row">
+                <mat-chip-listbox aria-label="Supported currencies">
+                  <mat-chip *ngFor="let c of r.supportedCurrencyCodes" [disableRipple]="true">
+                    {{ c }}
+                  </mat-chip>
+                </mat-chip-listbox>
+              </span>
+            </ng-container>
+            <ng-template #noCurr>
+              <span>-</span>
+            </ng-template>
+
+            <span class="dot">•</span>
+
+            <span class="mono">Created:</span>
+            <span>{{ r.createdBy || "-" }}</span>
+            <span class="mono">{{ r.createdAt || "-" }}</span>
+
+            <span class="dot">•</span>
+
+            <span class="mono">Updated:</span>
+            <span>{{ r.updatedBy || "-" }}</span>
+            <span class="mono">{{ r.updatedAt || "-" }}</span>
+          </div>
+        </div>
+
+        <div class="pay-row-actions">
+          <button mat-stroked-button type="button" (click)="view(r)">
+            <mat-icon>visibility</mat-icon>
+            View
+          </button>
+
+          <button mat-stroked-button type="button" (click)="update(r)">
+            <mat-icon>edit</mat-icon>
+            Update
+          </button>
+
+          <button mat-stroked-button type="button" class="danger" (click)="delete(r)">
+            <mat-icon>delete</mat-icon>
+            Delete
+          </button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Keep paginator (same behavior, just not table UI) -->
+    <mat-paginator
+      [length]="total"
+      [pageSize]="form.controls.limit.value"
+      [pageSizeOptions]="[10, 25, 50, 100]"
+      (page)="onPage($event)"
+    ></mat-paginator>
+  </section>
+</section>

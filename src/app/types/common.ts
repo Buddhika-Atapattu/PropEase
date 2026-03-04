@@ -329,6 +329,12 @@ export type AuthUser = {
  */
 export type AuthUserNormalized = Omit<AuthUser, "userId"> & { userId: string; };
 
+export interface ActorMini {
+  userId: string;
+  username: string;
+  role?: string;
+}
+
 // -----------------------------------------------------------------------------
 // 05) File metadata packet (standard upload result across the platform)
 // -----------------------------------------------------------------------------

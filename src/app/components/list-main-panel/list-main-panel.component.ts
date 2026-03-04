@@ -248,7 +248,7 @@ export class ListMainPanelComponent implements OnInit, OnDestroy {
       toolTip: 'Team Management',
     },
     {
-      url: '/dashboard/payments',
+      url: '/dashboard/payments/overview',
       unit: 'payments',
       commands: [ 'payments' ],
       mat_icon: 'payment-icon',

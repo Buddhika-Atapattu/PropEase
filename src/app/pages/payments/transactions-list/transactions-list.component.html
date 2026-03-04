@@ -1,0 +1,202 @@
+<section class="pay-create-root">
+  <!-- ======================================================= -->
+  <!-- Header (matches bank / bank-account list vibe) -->
+  <!-- ======================================================= -->
+  <header class="pay-create-header">
+    <div class="pay-create-title-wrap">
+      <mat-icon class="pay-create-title-icon">receipt_long</mat-icon>
+
+      <div class="pay-create-title">
+        <h2>Transactions</h2>
+        <p class="pay-create-subtitle">
+          External payment transactions (list / view / update / delete).
+        </p>
+      </div>
+    </div>
+
+    <div class="pay-create-header-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        [disabled]="loading"
+        (click)="onRefresh()"
+      >
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+
+      <button
+        mat-flat-button
+        type="button"
+        [disabled]="loading"
+        (click)="onCreate()"
+      >
+        <mat-icon>add</mat-icon>
+        New Transaction
+      </button>
+    </div>
+  </header>
+
+  <!-- ======================================================= -->
+  <!-- Filters -->
+  <!-- ======================================================= -->
+  <div class="pay-toolbar">
+    <mat-form-field class="pay-search" appearance="fill">
+      <mat-label>Search</mat-label>
+      <input
+        matInput
+        [formControl]="searchCtrl"
+        placeholder="Search by alias / ref / notes..."
+      />
+      <button
+        *ngIf="searchCtrl.value"
+        mat-icon-button
+        matSuffix
+        type="button"
+        aria-label="Clear"
+        (click)="searchCtrl.setValue('')"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <div class="pay-toolbar-meta">
+      <mat-chip-set aria-label="Meta">
+        <mat-chip>
+          Total: <strong class="pay-chip-strong">{{ total }}</strong>
+        </mat-chip>
+
+        <mat-chip *ngIf="loading || !hasLoaded">
+          <mat-spinner diameter="16"></mat-spinner>
+          Loading
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- List -->
+  <!-- ======================================================= -->
+  <div class="pay-list-wrap">
+    <ng-container *ngIf="hasLoaded && !loading && items.length === 0; else listTpl">
+      <div class="pay-empty">
+        <mat-icon class="pay-empty-icon">hourglass_empty</mat-icon>
+        <div class="pay-empty-title">No transactions found</div>
+        <div class="pay-empty-sub">
+          Try a different search or create a new transaction.
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #listTpl>
+      <article
+        class="pay-list-card"
+        *ngFor="let item of items; trackBy: trackById"
+      >
+        <div class="pay-list-rail"></div>
+
+        <div class="pay-list-main">
+          <div class="pay-list-top">
+            <div class="pay-list-title">
+              <div class="pay-title-line">
+                <span class="pay-title-text">
+                  Transaction • {{ item.transactionId }}
+                </span>
+
+                <span class="pay-id">#{{ item.transactionId }}</span>
+              </div>
+
+              <div class="pay-sub-line">
+                <span class="pay-sub">
+                  Account:
+                  <strong>{{ item.bankAccountAlias || "—" }}</strong>
+                </span>
+
+                <span class="pay-dot">•</span>
+
+                <span class="pay-sub">
+                  Date:
+                  <strong>{{ item.transactionAt || "—" }}</strong>
+                </span>
+
+                <span class="pay-dot">•</span>
+
+                <span class="pay-sub">
+                  Amount:
+                  <strong>
+                    {{ item.amount }} {{ item.currencyCode || "" }}
+                  </strong>
+                </span>
+
+                <span class="pay-dot">•</span>
+
+                <span class="pay-sub">
+                  Method:
+                  <strong>{{ item.method || "—" }}</strong>
+                </span>
+              </div>
+            </div>
+
+            <div class="pay-list-actions">
+              <button
+                mat-icon-button
+                type="button"
+                matTooltip="View"
+                [disabled]="loading"
+                (click)="onView(item)"
+              >
+                <mat-icon>visibility</mat-icon>
+              </button>
+
+              <button
+                mat-icon-button
+                type="button"
+                matTooltip="Update"
+                [disabled]="loading"
+                (click)="onUpdate(item)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+
+              <button
+                mat-icon-button
+                type="button"
+                matTooltip="Delete"
+                [disabled]="loading || deletingId === item.transactionId"
+                (click)="onDelete(item)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="pay-status-row">
+            <span class="pay-status">
+              Payment:
+              <strong>{{ item.paymentStatus }}</strong>
+            </span>
+
+            <span class="pay-status">
+              Verify:
+              <strong>{{ item.verificationStatus }}</strong>
+            </span>
+          </div>
+        </div>
+      </article>
+    </ng-template>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- Paginator -->
+  <!-- ======================================================= -->
+  <mat-paginator
+    class="pay-paginator"
+    [length]="total"
+    [pageIndex]="page - 1"
+    [pageSize]="limit"
+    [pageSizeOptions]="[5, 10, 20, 50]"
+    [disabled]="loading"
+    (page)="onPage($event)"
+  >
+  </mat-paginator>
+</section>

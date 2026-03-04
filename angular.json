@@ -92,7 +92,6 @@
             "development": {
               "index": "src/index.html",
               "baseHref": "/",
-              "serviceWorker": "ngsw-config.json",
               "optimization": false,
               "sourceMap": true,
               "outputHashing": "none"
